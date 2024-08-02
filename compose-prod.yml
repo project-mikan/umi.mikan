@@ -1,0 +1,15 @@
+services:
+  backend:
+    image:
+    environment:
+      TZ: Asia/Tokyo
+    tty: true
+    ports:
+      - 8080:8080
+
+  tunnel:
+    restart: always
+    image: cloudflare/cloudflared
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
