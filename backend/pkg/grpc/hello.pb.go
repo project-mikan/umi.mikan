@@ -11,10 +11,11 @@
 package grpc
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -149,11 +150,13 @@ func file_proto_hello_proto_rawDescGZIP() []byte {
 	return file_proto_hello_proto_rawDescData
 }
 
-var file_proto_hello_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_proto_hello_proto_goTypes = []any{
-	(*HelloRequest)(nil),  // 0: myapp.HelloRequest
-	(*HelloResponse)(nil), // 1: myapp.HelloResponse
-}
+var (
+	file_proto_hello_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+	file_proto_hello_proto_goTypes  = []any{
+		(*HelloRequest)(nil),  // 0: myapp.HelloRequest
+		(*HelloResponse)(nil), // 1: myapp.HelloResponse
+	}
+)
 var file_proto_hello_proto_depIdxs = []int32{
 	0, // 0: myapp.GreetingService.Hello:input_type -> myapp.HelloRequest
 	1, // 1: myapp.GreetingService.Hello:output_type -> myapp.HelloResponse
