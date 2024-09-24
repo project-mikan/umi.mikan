@@ -1,4 +1,4 @@
-module github.com/project-mikan/umi.mikan
+module github.com/project-mikan/umi.mikan/backend
 
 go 1.22.5
 
