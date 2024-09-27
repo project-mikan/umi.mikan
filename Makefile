@@ -1,4 +1,4 @@
-f-dev:
+pnpm-dev:
 	docker compose exec frontend pnpm dev --host 0.0.0.0
 f-sh:
 	docker compose exec frontend bash
