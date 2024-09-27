@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+option go_package = "github.com/project-mikan/umi.mikan/backend/pkg/grpc";
+
+package diary;
+
+// 日記エントリのメッセージ
+message DiaryEntry {
+  string id = 1;         // エントリのID
+  string title = 2;      // タイトル
+  string content = 3;    // 内容
+  string created_at = 4; // 作成日時 (ISO 8601形式など)
+  string updated_at = 5; // 更新日時 (ISO 8601形式など)
+}
+
+// 新しい日記エントリを作成するためのリクエスト
+message CreateDiaryEntryRequest {
+  string title = 1;
+  string content = 2;
+}
+
+// 日記エントリを作成した結果を返すレスポンス
+message CreateDiaryEntryResponse { DiaryEntry entry = 1; }
+
+// 特定の日記エントリを取得するためのリクエスト
+message GetDiaryEntryRequest { string id = 1; }
+
+// 日記エントリを取得した結果を返すレスポンス
+message GetDiaryEntryResponse { DiaryEntry entry = 1; }
+
+// すべての日記エントリをリストするためのリクエスト
+message ListDiaryEntriesRequest {}
+
+// 複数の日記エントリを返すレスポンス
+message ListDiaryEntriesResponse { repeated DiaryEntry entries = 1; }
+
+// 日記エントリを更新するためのリクエスト
+message UpdateDiaryEntryRequest {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+}
+
+// 更新された日記エントリを返すレスポンス
+message UpdateDiaryEntryResponse { DiaryEntry entry = 1; }
+
+// 日記エントリを削除するためのリクエスト
+message DeleteDiaryEntryRequest { string id = 1; }
+
+// 削除操作の結果を返すレスポンス
+message DeleteDiaryEntryResponse { bool success = 1; }
+
+// 日記エントリサービスの定義
+service DiaryService {
+  rpc CreateDiaryEntry(CreateDiaryEntryRequest)
+      returns (CreateDiaryEntryResponse);
+  rpc GetDiaryEntry(GetDiaryEntryRequest) returns (GetDiaryEntryResponse);
+  rpc ListDiaryEntries(ListDiaryEntriesRequest)
+      returns (ListDiaryEntriesResponse);
+  rpc UpdateDiaryEntry(UpdateDiaryEntryRequest)
+      returns (UpdateDiaryEntryResponse);
+  rpc DeleteDiaryEntry(DeleteDiaryEntryRequest)
+      returns (DeleteDiaryEntryResponse);
+}
