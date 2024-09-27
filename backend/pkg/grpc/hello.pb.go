@@ -7,10 +7,11 @@
 package grpc
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -692,20 +693,22 @@ func file_proto_hello_proto_rawDescGZIP() []byte {
 	return file_proto_hello_proto_rawDescData
 }
 
-var file_proto_hello_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
-var file_proto_hello_proto_goTypes = []any{
-	(*DiaryEntry)(nil),               // 0: diary.DiaryEntry
-	(*CreateDiaryEntryRequest)(nil),  // 1: diary.CreateDiaryEntryRequest
-	(*CreateDiaryEntryResponse)(nil), // 2: diary.CreateDiaryEntryResponse
-	(*GetDiaryEntryRequest)(nil),     // 3: diary.GetDiaryEntryRequest
-	(*GetDiaryEntryResponse)(nil),    // 4: diary.GetDiaryEntryResponse
-	(*ListDiaryEntriesRequest)(nil),  // 5: diary.ListDiaryEntriesRequest
-	(*ListDiaryEntriesResponse)(nil), // 6: diary.ListDiaryEntriesResponse
-	(*UpdateDiaryEntryRequest)(nil),  // 7: diary.UpdateDiaryEntryRequest
-	(*UpdateDiaryEntryResponse)(nil), // 8: diary.UpdateDiaryEntryResponse
-	(*DeleteDiaryEntryRequest)(nil),  // 9: diary.DeleteDiaryEntryRequest
-	(*DeleteDiaryEntryResponse)(nil), // 10: diary.DeleteDiaryEntryResponse
-}
+var (
+	file_proto_hello_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+	file_proto_hello_proto_goTypes  = []any{
+		(*DiaryEntry)(nil),               // 0: diary.DiaryEntry
+		(*CreateDiaryEntryRequest)(nil),  // 1: diary.CreateDiaryEntryRequest
+		(*CreateDiaryEntryResponse)(nil), // 2: diary.CreateDiaryEntryResponse
+		(*GetDiaryEntryRequest)(nil),     // 3: diary.GetDiaryEntryRequest
+		(*GetDiaryEntryResponse)(nil),    // 4: diary.GetDiaryEntryResponse
+		(*ListDiaryEntriesRequest)(nil),  // 5: diary.ListDiaryEntriesRequest
+		(*ListDiaryEntriesResponse)(nil), // 6: diary.ListDiaryEntriesResponse
+		(*UpdateDiaryEntryRequest)(nil),  // 7: diary.UpdateDiaryEntryRequest
+		(*UpdateDiaryEntryResponse)(nil), // 8: diary.UpdateDiaryEntryResponse
+		(*DeleteDiaryEntryRequest)(nil),  // 9: diary.DeleteDiaryEntryRequest
+		(*DeleteDiaryEntryResponse)(nil), // 10: diary.DeleteDiaryEntryResponse
+	}
+)
 var file_proto_hello_proto_depIdxs = []int32{
 	0,  // 0: diary.CreateDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
 	0,  // 1: diary.GetDiaryEntryResponse.entry:type_name -> diary.DiaryEntry

@@ -8,6 +8,7 @@ package grpc
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -121,15 +122,19 @@ type UnimplementedDiaryServiceServer struct{}
 func (UnimplementedDiaryServiceServer) CreateDiaryEntry(context.Context, *CreateDiaryEntryRequest) (*CreateDiaryEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDiaryEntry not implemented")
 }
+
 func (UnimplementedDiaryServiceServer) GetDiaryEntry(context.Context, *GetDiaryEntryRequest) (*GetDiaryEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDiaryEntry not implemented")
 }
+
 func (UnimplementedDiaryServiceServer) ListDiaryEntries(context.Context, *ListDiaryEntriesRequest) (*ListDiaryEntriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDiaryEntries not implemented")
 }
+
 func (UnimplementedDiaryServiceServer) UpdateDiaryEntry(context.Context, *UpdateDiaryEntryRequest) (*UpdateDiaryEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDiaryEntry not implemented")
 }
+
 func (UnimplementedDiaryServiceServer) DeleteDiaryEntry(context.Context, *DeleteDiaryEntryRequest) (*DeleteDiaryEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDiaryEntry not implemented")
 }
