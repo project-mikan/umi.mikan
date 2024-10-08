@@ -7,6 +7,17 @@ f-sh:
 # 	docker compose exec backend go run cmd/main.go
 db:
 	docker compose exec postgres psql -U postgres -d umi_mikan  
+db-init:
+	docker compose down postgres -v
+	docker compose up postgres -d
+	# dbのログはすぐに取れないので別コマンドで取得する
+
+log-f:
+	docker compose logs frontend
+log-b:
+	docker compose logs backend
+log-p:
+	docker compose logs postgres
 
 grpc-go:
 	protoc --go_out=backend/ \
