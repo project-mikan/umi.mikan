@@ -2,6 +2,11 @@ pnpm-dev:
 	docker compose exec frontend pnpm dev --host 0.0.0.0
 f-sh:
 	docker compose exec frontend bash
+
+xo:
+	docker compose exec backend xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable"
+go-mod-tidy:
+	docker compose exec backend go mod tidy
 # airを使うので不要↓
 # b-dev:
 # 	docker compose exec backend go run cmd/main.go
