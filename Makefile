@@ -4,7 +4,7 @@ f-sh:
 	docker compose exec frontend bash
 
 xo:
-	docker compose exec backend xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable"
+	docker compose exec backend xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
 go-mod-tidy:
 	docker compose exec backend go mod tidy
 # airを使うので不要↓

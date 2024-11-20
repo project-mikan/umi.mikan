@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/project-mikan/umi.mikan/backend/pkg/grpc";
+option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
 
 package diary;
 
