@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build cmd/main.go -o binary
+RUN CGO_ENABLED=0 GOOS=linux go build cmd/server/main.go -o binary
 
 
 FROM scratch as prod
