@@ -104,46 +104,46 @@ export namespace GetDiaryEntryRequest {
     }
 }
 
-export class SearchDiariesEntryRequest extends jspb.Message { 
+export class SearchDiaryEntriesRequest extends jspb.Message { 
     getUserid(): string;
-    setUserid(value: string): SearchDiariesEntryRequest;
+    setUserid(value: string): SearchDiaryEntriesRequest;
     getKeyword(): string;
-    setKeyword(value: string): SearchDiariesEntryRequest;
+    setKeyword(value: string): SearchDiaryEntriesRequest;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): SearchDiariesEntryRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: SearchDiariesEntryRequest): SearchDiariesEntryRequest.AsObject;
+    toObject(includeInstance?: boolean): SearchDiaryEntriesRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: SearchDiaryEntriesRequest): SearchDiaryEntriesRequest.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: SearchDiariesEntryRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): SearchDiariesEntryRequest;
-    static deserializeBinaryFromReader(message: SearchDiariesEntryRequest, reader: jspb.BinaryReader): SearchDiariesEntryRequest;
+    static serializeBinaryToWriter(message: SearchDiaryEntriesRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): SearchDiaryEntriesRequest;
+    static deserializeBinaryFromReader(message: SearchDiaryEntriesRequest, reader: jspb.BinaryReader): SearchDiaryEntriesRequest;
 }
 
-export namespace SearchDiariesEntryRequest {
+export namespace SearchDiaryEntriesRequest {
     export type AsObject = {
         userid: string,
         keyword: string,
     }
 }
 
-export class SearchDiariesEntryResponse extends jspb.Message { 
+export class SearchDiaryEntriesResponse extends jspb.Message { 
     clearEntriesList(): void;
     getEntriesList(): Array<DiaryEntry>;
-    setEntriesList(value: Array<DiaryEntry>): SearchDiariesEntryResponse;
+    setEntriesList(value: Array<DiaryEntry>): SearchDiaryEntriesResponse;
     addEntries(value?: DiaryEntry, index?: number): DiaryEntry;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): SearchDiariesEntryResponse.AsObject;
-    static toObject(includeInstance: boolean, msg: SearchDiariesEntryResponse): SearchDiariesEntryResponse.AsObject;
+    toObject(includeInstance?: boolean): SearchDiaryEntriesResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: SearchDiaryEntriesResponse): SearchDiaryEntriesResponse.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: SearchDiariesEntryResponse, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): SearchDiariesEntryResponse;
-    static deserializeBinaryFromReader(message: SearchDiariesEntryResponse, reader: jspb.BinaryReader): SearchDiariesEntryResponse;
+    static serializeBinaryToWriter(message: SearchDiaryEntriesResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): SearchDiaryEntriesResponse;
+    static deserializeBinaryFromReader(message: SearchDiaryEntriesResponse, reader: jspb.BinaryReader): SearchDiaryEntriesResponse;
 }
 
-export namespace SearchDiariesEntryResponse {
+export namespace SearchDiaryEntriesResponse {
     export type AsObject = {
         entriesList: Array<DiaryEntry.AsObject>,
     }

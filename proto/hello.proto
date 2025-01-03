@@ -25,11 +25,11 @@ message CreateDiaryEntryResponse { DiaryEntry entry = 1; }
 // 特定の日記エントリを取得するためのリクエスト
 message GetDiaryEntryRequest { string id = 1; }
 
-message SearchDiariesEntryRequest {
+message SearchDiaryEntriesRequest {
   string userID = 1;
   string keyword = 2;
 }
-message SearchDiariesEntryResponse { repeated DiaryEntry entries = 1; }
+message SearchDiaryEntriesResponse { repeated DiaryEntry entries = 1; }
 
 // 日記エントリを取得した結果を返すレスポンス
 message GetDiaryEntryResponse { DiaryEntry entry = 1; }
@@ -63,8 +63,8 @@ service DiaryService {
   rpc GetDiaryEntry(GetDiaryEntryRequest) returns (GetDiaryEntryResponse);
   rpc ListDiaryEntries(ListDiaryEntriesRequest)
       returns (ListDiaryEntriesResponse);
-  rpc SearchDiariesEntries(SearchDiariesEntryRequest)
-      returns (SearchDiariesEntryResponse);
+  rpc SearchDiaryEntries(SearchDiaryEntriesRequest)
+      returns (SearchDiaryEntriesResponse);
   rpc UpdateDiaryEntry(UpdateDiaryEntryRequest)
       returns (UpdateDiaryEntryResponse);
   rpc DeleteDiaryEntry(DeleteDiaryEntryRequest)
