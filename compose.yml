@@ -5,10 +5,14 @@ services:
       dockerfile: ../infra/dev/backend/Dockerfile
     volumes:
       - ./backend:/backend
-    env_file:
-      - .env
     environment:
       TZ: Asia/Tokyo
+      PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: dev-pass
+      DB_NAME: umi_mikan
     tty: true
     ports:
       - 8080:8080

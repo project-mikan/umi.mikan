@@ -1,3 +1,4 @@
+# Goはairで常時起動なので不要
 pnpm-dev:
 	docker compose exec frontend pnpm dev --host 0.0.0.0
 f-sh:
@@ -18,17 +19,24 @@ db-init:
 	# dbのログはすぐに取れないので別コマンドで取得する
 
 log-f:
-	docker compose logs frontend
+	docker compose logs -f frontend
 log-b:
-	docker compose logs backend
+	docker compose logs -f backend
 log-p:
-	docker compose logs postgres
+	docker compose logs -f postgres
 
 grpc-go:
 	protoc --go_out=backend/ \
 	--go_opt=module=github.com/project-mikan/umi.mikan/backend \
+	--go-grpc_out=backend/ \
+	--go-grpc_opt=module=github.com/project-mikan/umi.mikan/backend \
 	proto/hello.proto
 
 grpc-ts:
 	protoc --ts_out=grpc_js:frontend/src/lib/proto \
 	-I ./proto proto/*.proto
+
+
+grpc:
+	make grpc-go
+	make grpc-ts

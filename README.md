@@ -52,3 +52,9 @@ remote call
 ```bash
 grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'
 ```
+
+日記検索
+
+```bash
+grpc_cli call localhost:8080 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'
+```
