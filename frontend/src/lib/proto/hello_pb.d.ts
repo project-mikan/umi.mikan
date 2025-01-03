@@ -104,6 +104,51 @@ export namespace GetDiaryEntryRequest {
     }
 }
 
+export class SearchDiariesEntryRequest extends jspb.Message { 
+    getUserid(): string;
+    setUserid(value: string): SearchDiariesEntryRequest;
+    getKeyword(): string;
+    setKeyword(value: string): SearchDiariesEntryRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): SearchDiariesEntryRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: SearchDiariesEntryRequest): SearchDiariesEntryRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: SearchDiariesEntryRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): SearchDiariesEntryRequest;
+    static deserializeBinaryFromReader(message: SearchDiariesEntryRequest, reader: jspb.BinaryReader): SearchDiariesEntryRequest;
+}
+
+export namespace SearchDiariesEntryRequest {
+    export type AsObject = {
+        userid: string,
+        keyword: string,
+    }
+}
+
+export class SearchDiariesEntryResponse extends jspb.Message { 
+    clearEntriesList(): void;
+    getEntriesList(): Array<DiaryEntry>;
+    setEntriesList(value: Array<DiaryEntry>): SearchDiariesEntryResponse;
+    addEntries(value?: DiaryEntry, index?: number): DiaryEntry;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): SearchDiariesEntryResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: SearchDiariesEntryResponse): SearchDiariesEntryResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: SearchDiariesEntryResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): SearchDiariesEntryResponse;
+    static deserializeBinaryFromReader(message: SearchDiariesEntryResponse, reader: jspb.BinaryReader): SearchDiariesEntryResponse;
+}
+
+export namespace SearchDiariesEntryResponse {
+    export type AsObject = {
+        entriesList: Array<DiaryEntry.AsObject>,
+    }
+}
+
 export class GetDiaryEntryResponse extends jspb.Message { 
 
     hasEntry(): boolean;

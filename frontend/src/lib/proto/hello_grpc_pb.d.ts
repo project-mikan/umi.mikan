@@ -11,6 +11,7 @@ interface IDiaryServiceService extends grpc.ServiceDefinition<grpc.UntypedServic
     createDiaryEntry: IDiaryServiceService_ICreateDiaryEntry;
     getDiaryEntry: IDiaryServiceService_IGetDiaryEntry;
     listDiaryEntries: IDiaryServiceService_IListDiaryEntries;
+    searchDiariesEntries: IDiaryServiceService_ISearchDiariesEntries;
     updateDiaryEntry: IDiaryServiceService_IUpdateDiaryEntry;
     deleteDiaryEntry: IDiaryServiceService_IDeleteDiaryEntry;
 }
@@ -42,6 +43,15 @@ interface IDiaryServiceService_IListDiaryEntries extends grpc.MethodDefinition<h
     responseSerialize: grpc.serialize<hello_pb.ListDiaryEntriesResponse>;
     responseDeserialize: grpc.deserialize<hello_pb.ListDiaryEntriesResponse>;
 }
+interface IDiaryServiceService_ISearchDiariesEntries extends grpc.MethodDefinition<hello_pb.SearchDiariesEntryRequest, hello_pb.SearchDiariesEntryResponse> {
+    path: "/diary.DiaryService/SearchDiariesEntries";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<hello_pb.SearchDiariesEntryRequest>;
+    requestDeserialize: grpc.deserialize<hello_pb.SearchDiariesEntryRequest>;
+    responseSerialize: grpc.serialize<hello_pb.SearchDiariesEntryResponse>;
+    responseDeserialize: grpc.deserialize<hello_pb.SearchDiariesEntryResponse>;
+}
 interface IDiaryServiceService_IUpdateDiaryEntry extends grpc.MethodDefinition<hello_pb.UpdateDiaryEntryRequest, hello_pb.UpdateDiaryEntryResponse> {
     path: "/diary.DiaryService/UpdateDiaryEntry";
     requestStream: false;
@@ -67,6 +77,7 @@ export interface IDiaryServiceServer extends grpc.UntypedServiceImplementation {
     createDiaryEntry: grpc.handleUnaryCall<hello_pb.CreateDiaryEntryRequest, hello_pb.CreateDiaryEntryResponse>;
     getDiaryEntry: grpc.handleUnaryCall<hello_pb.GetDiaryEntryRequest, hello_pb.GetDiaryEntryResponse>;
     listDiaryEntries: grpc.handleUnaryCall<hello_pb.ListDiaryEntriesRequest, hello_pb.ListDiaryEntriesResponse>;
+    searchDiariesEntries: grpc.handleUnaryCall<hello_pb.SearchDiariesEntryRequest, hello_pb.SearchDiariesEntryResponse>;
     updateDiaryEntry: grpc.handleUnaryCall<hello_pb.UpdateDiaryEntryRequest, hello_pb.UpdateDiaryEntryResponse>;
     deleteDiaryEntry: grpc.handleUnaryCall<hello_pb.DeleteDiaryEntryRequest, hello_pb.DeleteDiaryEntryResponse>;
 }
@@ -81,6 +92,9 @@ export interface IDiaryServiceClient {
     listDiaryEntries(request: hello_pb.ListDiaryEntriesRequest, callback: (error: grpc.ServiceError | null, response: hello_pb.ListDiaryEntriesResponse) => void): grpc.ClientUnaryCall;
     listDiaryEntries(request: hello_pb.ListDiaryEntriesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: hello_pb.ListDiaryEntriesResponse) => void): grpc.ClientUnaryCall;
     listDiaryEntries(request: hello_pb.ListDiaryEntriesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: hello_pb.ListDiaryEntriesResponse) => void): grpc.ClientUnaryCall;
+    searchDiariesEntries(request: hello_pb.SearchDiariesEntryRequest, callback: (error: grpc.ServiceError | null, response: hello_pb.SearchDiariesEntryResponse) => void): grpc.ClientUnaryCall;
+    searchDiariesEntries(request: hello_pb.SearchDiariesEntryRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: hello_pb.SearchDiariesEntryResponse) => void): grpc.ClientUnaryCall;
+    searchDiariesEntries(request: hello_pb.SearchDiariesEntryRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: hello_pb.SearchDiariesEntryResponse) => void): grpc.ClientUnaryCall;
     updateDiaryEntry(request: hello_pb.UpdateDiaryEntryRequest, callback: (error: grpc.ServiceError | null, response: hello_pb.UpdateDiaryEntryResponse) => void): grpc.ClientUnaryCall;
     updateDiaryEntry(request: hello_pb.UpdateDiaryEntryRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: hello_pb.UpdateDiaryEntryResponse) => void): grpc.ClientUnaryCall;
     updateDiaryEntry(request: hello_pb.UpdateDiaryEntryRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: hello_pb.UpdateDiaryEntryResponse) => void): grpc.ClientUnaryCall;
@@ -100,6 +114,9 @@ export class DiaryServiceClient extends grpc.Client implements IDiaryServiceClie
     public listDiaryEntries(request: hello_pb.ListDiaryEntriesRequest, callback: (error: grpc.ServiceError | null, response: hello_pb.ListDiaryEntriesResponse) => void): grpc.ClientUnaryCall;
     public listDiaryEntries(request: hello_pb.ListDiaryEntriesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: hello_pb.ListDiaryEntriesResponse) => void): grpc.ClientUnaryCall;
     public listDiaryEntries(request: hello_pb.ListDiaryEntriesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: hello_pb.ListDiaryEntriesResponse) => void): grpc.ClientUnaryCall;
+    public searchDiariesEntries(request: hello_pb.SearchDiariesEntryRequest, callback: (error: grpc.ServiceError | null, response: hello_pb.SearchDiariesEntryResponse) => void): grpc.ClientUnaryCall;
+    public searchDiariesEntries(request: hello_pb.SearchDiariesEntryRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: hello_pb.SearchDiariesEntryResponse) => void): grpc.ClientUnaryCall;
+    public searchDiariesEntries(request: hello_pb.SearchDiariesEntryRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: hello_pb.SearchDiariesEntryResponse) => void): grpc.ClientUnaryCall;
     public updateDiaryEntry(request: hello_pb.UpdateDiaryEntryRequest, callback: (error: grpc.ServiceError | null, response: hello_pb.UpdateDiaryEntryResponse) => void): grpc.ClientUnaryCall;
     public updateDiaryEntry(request: hello_pb.UpdateDiaryEntryRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: hello_pb.UpdateDiaryEntryResponse) => void): grpc.ClientUnaryCall;
     public updateDiaryEntry(request: hello_pb.UpdateDiaryEntryRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: hello_pb.UpdateDiaryEntryResponse) => void): grpc.ClientUnaryCall;
