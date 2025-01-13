@@ -4,13 +4,16 @@ option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/g
 
 package diary;
 
+message Date {
+  uint32 year = 1;
+  uint32 month = 2;
+  uint32 day = 3;
+}
 // 日記エントリのメッセージ
 message DiaryEntry {
-  string id = 1;         // エントリのID
-  string title = 2;      // タイトル
-  string content = 3;    // 内容
-  string created_at = 4; // 作成日時 (ISO 8601形式など)
-  string updated_at = 5; // 更新日時 (ISO 8601形式など)
+  string id = 1;      // 日記ID
+  string content = 2; // 内容
+  Date date = 3;      // 日付
 }
 
 // 新しい日記エントリを作成するためのリクエスト

@@ -49,7 +49,7 @@ func LoadDBConfig() (*DBConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	password, err := LoadEnv("DB_PASSWORD")
+	password, err := LoadEnv("DB_PASS")
 	if err != nil {
 		return nil, err
 	}

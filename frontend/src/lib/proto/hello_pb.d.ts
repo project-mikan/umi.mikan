@@ -6,17 +6,42 @@
 
 import * as jspb from "google-protobuf";
 
+export class Date extends jspb.Message { 
+    getYear(): number;
+    setYear(value: number): Date;
+    getMonth(): number;
+    setMonth(value: number): Date;
+    getDay(): number;
+    setDay(value: number): Date;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Date.AsObject;
+    static toObject(includeInstance: boolean, msg: Date): Date.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: Date, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Date;
+    static deserializeBinaryFromReader(message: Date, reader: jspb.BinaryReader): Date;
+}
+
+export namespace Date {
+    export type AsObject = {
+        year: number,
+        month: number,
+        day: number,
+    }
+}
+
 export class DiaryEntry extends jspb.Message { 
     getId(): string;
     setId(value: string): DiaryEntry;
-    getTitle(): string;
-    setTitle(value: string): DiaryEntry;
     getContent(): string;
     setContent(value: string): DiaryEntry;
-    getCreatedAt(): string;
-    setCreatedAt(value: string): DiaryEntry;
-    getUpdatedAt(): string;
-    setUpdatedAt(value: string): DiaryEntry;
+
+    hasDate(): boolean;
+    clearDate(): void;
+    getDate(): Date | undefined;
+    setDate(value?: Date): DiaryEntry;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DiaryEntry.AsObject;
@@ -31,10 +56,8 @@ export class DiaryEntry extends jspb.Message {
 export namespace DiaryEntry {
     export type AsObject = {
         id: string,
-        title: string,
         content: string,
-        createdAt: string,
-        updatedAt: string,
+        date?: Date.AsObject,
     }
 }
 
