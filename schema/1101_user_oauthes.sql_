@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS user_oauthes (
-    id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id) NOT NULL,
+    user_id UUID REFERENCES users(id) PRIMARY KEY,                           
     provider_name VARCHAR(20) NOT NULL, -- provider名
     provider_user_id VARCHAR(255) NOT NULL,
     access_token TEXT NOT NULL,
