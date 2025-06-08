@@ -8,7 +8,7 @@ f-format:
 
 xo:
 	rm -rf backend/infrastructure/database/*.xo.go
-	docker compose exec backend xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
+	docker compose exec backend go tool xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
 go-mod-tidy:
 	docker compose exec backend go mod tidy
 # airを使うので不要↓
