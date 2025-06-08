@@ -1,8 +1,21 @@
 syntax = "proto3";
-
 option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
 
 package diary;
+
+service DiaryService {
+  rpc CreateDiaryEntry(CreateDiaryEntryRequest)
+      returns (CreateDiaryEntryResponse);
+  rpc GetDiaryEntry(GetDiaryEntryRequest) returns (GetDiaryEntryResponse);
+  rpc ListDiaryEntries(ListDiaryEntriesRequest)
+      returns (ListDiaryEntriesResponse);
+  rpc SearchDiaryEntries(SearchDiaryEntriesRequest)
+      returns (SearchDiaryEntriesResponse);
+  rpc UpdateDiaryEntry(UpdateDiaryEntryRequest)
+      returns (UpdateDiaryEntryResponse);
+  rpc DeleteDiaryEntry(DeleteDiaryEntryRequest)
+      returns (DeleteDiaryEntryResponse);
+}
 
 message Date {
   uint32 year = 1;
@@ -58,18 +71,3 @@ message DeleteDiaryEntryRequest { string id = 1; }
 
 // 削除操作の結果を返すレスポンス
 message DeleteDiaryEntryResponse { bool success = 1; }
-
-// 日記エントリサービスの定義
-service DiaryService {
-  rpc CreateDiaryEntry(CreateDiaryEntryRequest)
-      returns (CreateDiaryEntryResponse);
-  rpc GetDiaryEntry(GetDiaryEntryRequest) returns (GetDiaryEntryResponse);
-  rpc ListDiaryEntries(ListDiaryEntriesRequest)
-      returns (ListDiaryEntriesResponse);
-  rpc SearchDiaryEntries(SearchDiaryEntriesRequest)
-      returns (SearchDiaryEntriesResponse);
-  rpc UpdateDiaryEntry(UpdateDiaryEntryRequest)
-      returns (UpdateDiaryEntryResponse);
-  rpc DeleteDiaryEntry(DeleteDiaryEntryRequest)
-      returns (DeleteDiaryEntryResponse);
-}
