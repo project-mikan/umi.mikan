@@ -9,6 +9,7 @@ sudo pacman -S protobuf
 ```
 
 ```bash
+go install tools
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 go install github.com/xo/xo@latest
@@ -37,7 +38,7 @@ grpc_cli ls localhost:8080
 
 詳細
 
-```bash
+```basrh
 grpc_cli ls localhost:8080 diary.DiaryService -l
 ```
 

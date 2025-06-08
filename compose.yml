@@ -13,6 +13,8 @@ services:
       DB_USER: postgres
       DB_PASS: dev-pass
       DB_NAME: umi_mikan
+      HOST: localhost
+      FRONTEND_URL: "http://localhost:5173"
     tty: true
     ports:
       - 8080:8080
