@@ -1,5 +1,5 @@
 // package: diary
-// file: hello.proto
+// file: diary/diary.proto
 
 /* tslint:disable */
 /* eslint-disable */
