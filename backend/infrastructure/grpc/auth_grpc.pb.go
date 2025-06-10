@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.31.0
-// source: proto/auth/auth_password.proto
+// source: proto/auth/auth.proto
 
 package grpc
 
@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	AuthService_RegisterByPassword_FullMethodName = "/auth.AuthService/RegisterByPassword"
 	AuthService_LoginByPassword_FullMethodName    = "/auth.AuthService/LoginByPassword"
+	AuthService_RefreshAccessToken_FullMethodName = "/auth.AuthService/RefreshAccessToken"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -30,9 +31,11 @@ const (
 // 認証サービス定義
 type AuthServiceClient interface {
 	// 新規登録
-	RegisterByPassword(ctx context.Context, in *RegisterByPasswordRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	RegisterByPassword(ctx context.Context, in *RegisterByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error)
 	// ログイン
-	LoginByPassword(ctx context.Context, in *LoginByPasswordRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	LoginByPassword(ctx context.Context, in *LoginByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error)
+	// AccessTokenの更新
+	RefreshAccessToken(ctx context.Context, in *RefreshAccessTokenRequest, opts ...grpc.CallOption) (*AuthResponse, error)
 }
 
 type authServiceClient struct {
@@ -43,9 +46,9 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 	return &authServiceClient{cc}
 }
 
-func (c *authServiceClient) RegisterByPassword(ctx context.Context, in *RegisterByPasswordRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+func (c *authServiceClient) RegisterByPassword(ctx context.Context, in *RegisterByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterResponse)
+	out := new(AuthResponse)
 	err := c.cc.Invoke(ctx, AuthService_RegisterByPassword_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -53,10 +56,20 @@ func (c *authServiceClient) RegisterByPassword(ctx context.Context, in *Register
 	return out, nil
 }
 
-func (c *authServiceClient) LoginByPassword(ctx context.Context, in *LoginByPasswordRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+func (c *authServiceClient) LoginByPassword(ctx context.Context, in *LoginByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LoginResponse)
+	out := new(AuthResponse)
 	err := c.cc.Invoke(ctx, AuthService_LoginByPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) RefreshAccessToken(ctx context.Context, in *RefreshAccessTokenRequest, opts ...grpc.CallOption) (*AuthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthResponse)
+	err := c.cc.Invoke(ctx, AuthService_RefreshAccessToken_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +83,11 @@ func (c *authServiceClient) LoginByPassword(ctx context.Context, in *LoginByPass
 // 認証サービス定義
 type AuthServiceServer interface {
 	// 新規登録
-	RegisterByPassword(context.Context, *RegisterByPasswordRequest) (*RegisterResponse, error)
+	RegisterByPassword(context.Context, *RegisterByPasswordRequest) (*AuthResponse, error)
 	// ログイン
-	LoginByPassword(context.Context, *LoginByPasswordRequest) (*LoginResponse, error)
+	LoginByPassword(context.Context, *LoginByPasswordRequest) (*AuthResponse, error)
+	// AccessTokenの更新
+	RefreshAccessToken(context.Context, *RefreshAccessTokenRequest) (*AuthResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -83,11 +98,14 @@ type AuthServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthServiceServer struct{}
 
-func (UnimplementedAuthServiceServer) RegisterByPassword(context.Context, *RegisterByPasswordRequest) (*RegisterResponse, error) {
+func (UnimplementedAuthServiceServer) RegisterByPassword(context.Context, *RegisterByPasswordRequest) (*AuthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterByPassword not implemented")
 }
-func (UnimplementedAuthServiceServer) LoginByPassword(context.Context, *LoginByPasswordRequest) (*LoginResponse, error) {
+func (UnimplementedAuthServiceServer) LoginByPassword(context.Context, *LoginByPasswordRequest) (*AuthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginByPassword not implemented")
+}
+func (UnimplementedAuthServiceServer) RefreshAccessToken(context.Context, *RefreshAccessTokenRequest) (*AuthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshAccessToken not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -146,6 +164,24 @@ func _AuthService_LoginByPassword_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_RefreshAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshAccessTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).RefreshAccessToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_RefreshAccessToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).RefreshAccessToken(ctx, req.(*RefreshAccessTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -161,7 +197,11 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "LoginByPassword",
 			Handler:    _AuthService_LoginByPassword_Handler,
 		},
+		{
+			MethodName: "RefreshAccessToken",
+			Handler:    _AuthService_RefreshAccessToken_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/auth/auth_password.proto",
+	Metadata: "proto/auth/auth.proto",
 }

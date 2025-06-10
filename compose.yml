@@ -15,6 +15,7 @@ services:
       DB_NAME: umi_mikan
       HOST: localhost
       FRONTEND_URL: "http://localhost:5173"
+      JWT_SECRET: "hogehoge"
     tty: true
     ports:
       - 8080:8080

@@ -3,10 +3,14 @@ option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/g
 
 package auth;
 
+// アクセストークン更新用のリクエスト
+message RefreshAccessTokenRequest { string refresh_token = 1; }
+
 // パスワード新規登録用のリクエスト
 message RegisterByPasswordRequest {
   string email = 1;
   string password = 2;
+  string name = 3;
 }
 
 // パスワードログイン用のリクエスト
@@ -16,22 +20,21 @@ message LoginByPasswordRequest {
 }
 
 // レスポンスはログイン方法に関わらず共通
-// 新規登録のレスポンス
-message RegisterResponse {
-  string jwt = 1;
-  string message = 2;
-}
-// ログインのレスポンス
-message LoginResponse {
-  string jwt = 1;
-  string message = 2;
+message AuthResponse {
+  string access_token = 1;
+  string token_type = 2;
+  int32 expires_in = 3; // 秒単位
+  string refresh_token = 4;
 }
 
 // 認証サービス定義
 service AuthService {
   // 新規登録
-  rpc RegisterByPassword(RegisterByPasswordRequest) returns (RegisterResponse);
+  rpc RegisterByPassword(RegisterByPasswordRequest) returns (AuthResponse);
 
   // ログイン
-  rpc LoginByPassword(LoginByPasswordRequest) returns (LoginResponse);
+  rpc LoginByPassword(LoginByPasswordRequest) returns (AuthResponse);
+
+  // AccessTokenの更新
+  rpc RefreshAccessToken(RefreshAccessTokenRequest) returns (AuthResponse);
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/service/auth"
 	"github.com/project-mikan/umi.mikan/backend/service/diary"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -20,7 +21,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	// grpc のリッスンを開始
+
+	// grpc
 	listen, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -37,6 +39,7 @@ func main() {
 
 	// サービス登録
 	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db})
+	g.RegisterAuthServiceServer(grpcServer, &auth.AuthEntry{DB: db})
 
 	// localでcliからデバッグできるようにする
 	// TODO: 環境変数で本番では有効にならないようにする

@@ -7,6 +7,7 @@ f-format:
 	docker compose exec frontend pnpm format
 
 xo:
+	# db-initも実行したいが立ち上げてすぐは起動できないので別でコマンド
 	rm -rf backend/infrastructure/database/*.xo.go
 	docker compose exec backend go tool xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
 go-mod-tidy:

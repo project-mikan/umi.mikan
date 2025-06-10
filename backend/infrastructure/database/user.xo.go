@@ -129,6 +129,60 @@ func (u *User) Delete(ctx context.Context, db DB) error {
 	return nil
 }
 
+// UsersByEmail retrieves a row from 'public.users' as a [User].
+//
+// Generated from index 'idx_users_email'.
+func UsersByEmail(ctx context.Context, db DB, email string) ([]*User, error) {
+	// query
+	const sqlstr = `SELECT ` +
+		`id, email, name, auth_type, created_at, updated_at ` +
+		`FROM public.users ` +
+		`WHERE email = $1`
+	// run
+	logf(sqlstr, email)
+	rows, err := db.QueryContext(ctx, sqlstr, email)
+	if err != nil {
+		return nil, logerror(err)
+	}
+	defer rows.Close()
+	// process
+	var res []*User
+	for rows.Next() {
+		u := User{
+			_exists: true,
+		}
+		// scan
+		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.AuthType, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, logerror(err)
+		}
+		res = append(res, &u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, logerror(err)
+	}
+	return res, nil
+}
+
+// UserByEmail retrieves a row from 'public.users' as a [User].
+//
+// Generated from index 'users_email_key'.
+func UserByEmail(ctx context.Context, db DB, email string) (*User, error) {
+	// query
+	const sqlstr = `SELECT ` +
+		`id, email, name, auth_type, created_at, updated_at ` +
+		`FROM public.users ` +
+		`WHERE email = $1`
+	// run
+	logf(sqlstr, email)
+	u := User{
+		_exists: true,
+	}
+	if err := db.QueryRowContext(ctx, sqlstr, email).Scan(&u.ID, &u.Email, &u.Name, &u.AuthType, &u.CreatedAt, &u.UpdatedAt); err != nil {
+		return nil, logerror(err)
+	}
+	return &u, nil
+}
+
 // UserByID retrieves a row from 'public.users' as a [User].
 //
 // Generated from index 'users_pkey'.

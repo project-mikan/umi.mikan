@@ -30,6 +30,14 @@ func LoadPort() (int, error) {
 	return strconv.Atoi(portString)
 }
 
+func LoadJWTSecret() (string, error) {
+	value, err := LoadEnv("JWT_SECRET")
+	if err != nil {
+		return "", err
+	}
+	return value, nil
+}
+
 func LoadDBConfig() (*DBConfig, error) {
 	host, err := LoadEnv("DB_HOST")
 	if err != nil {
