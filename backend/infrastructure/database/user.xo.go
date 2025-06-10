@@ -131,7 +131,7 @@ func (u *User) Delete(ctx context.Context, db DB) error {
 
 // UsersByEmail retrieves a row from 'public.users' as a [User].
 //
-// Generated from index 'idx_users_email'.
+// Generated from index 'index_users_email'.
 func UsersByEmail(ctx context.Context, db DB, email string) ([]*User, error) {
 	// query
 	const sqlstr = `SELECT ` +

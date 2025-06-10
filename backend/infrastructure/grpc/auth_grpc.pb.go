@@ -27,8 +27,6 @@ const (
 // AuthServiceClient is the client API for AuthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// 認証サービス定義
 type AuthServiceClient interface {
 	// 新規登録
 	RegisterByPassword(ctx context.Context, in *RegisterByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error)
@@ -79,8 +77,6 @@ func (c *authServiceClient) RefreshAccessToken(ctx context.Context, in *RefreshA
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
-//
-// 認証サービス定義
 type AuthServiceServer interface {
 	// 新規登録
 	RegisterByPassword(context.Context, *RegisterByPasswordRequest) (*AuthResponse, error)

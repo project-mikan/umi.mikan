@@ -6,4 +6,4 @@ CREATE TABLE IF NOT EXISTS users (
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL
 );
-CREATE INDEX idx_users_email ON users (email);
+CREATE INDEX index_users_email ON users (email);

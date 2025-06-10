@@ -19,24 +19,33 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DiaryService_CreateDiaryEntry_FullMethodName   = "/diary.DiaryService/CreateDiaryEntry"
-	DiaryService_GetDiaryEntry_FullMethodName      = "/diary.DiaryService/GetDiaryEntry"
-	DiaryService_ListDiaryEntries_FullMethodName   = "/diary.DiaryService/ListDiaryEntries"
-	DiaryService_SearchDiaryEntries_FullMethodName = "/diary.DiaryService/SearchDiaryEntries"
-	DiaryService_UpdateDiaryEntry_FullMethodName   = "/diary.DiaryService/UpdateDiaryEntry"
-	DiaryService_DeleteDiaryEntry_FullMethodName   = "/diary.DiaryService/DeleteDiaryEntry"
+	DiaryService_CreateDiaryEntry_FullMethodName       = "/diary.DiaryService/CreateDiaryEntry"
+	DiaryService_UpdateDiaryEntry_FullMethodName       = "/diary.DiaryService/UpdateDiaryEntry"
+	DiaryService_DeleteDiaryEntry_FullMethodName       = "/diary.DiaryService/DeleteDiaryEntry"
+	DiaryService_GetDiaryEntry_FullMethodName          = "/diary.DiaryService/GetDiaryEntry"
+	DiaryService_GetDiaryEntries_FullMethodName        = "/diary.DiaryService/GetDiaryEntries"
+	DiaryService_GetDiaryEntriesByMonth_FullMethodName = "/diary.DiaryService/GetDiaryEntriesByMonth"
+	DiaryService_SearchDiaryEntries_FullMethodName     = "/diary.DiaryService/SearchDiaryEntries"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DiaryServiceClient interface {
+	// 作成
 	CreateDiaryEntry(ctx context.Context, in *CreateDiaryEntryRequest, opts ...grpc.CallOption) (*CreateDiaryEntryResponse, error)
-	GetDiaryEntry(ctx context.Context, in *GetDiaryEntryRequest, opts ...grpc.CallOption) (*GetDiaryEntryResponse, error)
-	ListDiaryEntries(ctx context.Context, in *ListDiaryEntriesRequest, opts ...grpc.CallOption) (*ListDiaryEntriesResponse, error)
-	SearchDiaryEntries(ctx context.Context, in *SearchDiaryEntriesRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesResponse, error)
+	// 更新
 	UpdateDiaryEntry(ctx context.Context, in *UpdateDiaryEntryRequest, opts ...grpc.CallOption) (*UpdateDiaryEntryResponse, error)
+	// 削除
 	DeleteDiaryEntry(ctx context.Context, in *DeleteDiaryEntryRequest, opts ...grpc.CallOption) (*DeleteDiaryEntryResponse, error)
+	// 日付指定で単体取得
+	GetDiaryEntry(ctx context.Context, in *GetDiaryEntryRequest, opts ...grpc.CallOption) (*GetDiaryEntryResponse, error)
+	// 日付指定で複数取得(ホームでの表示などで直近3日とかほしいケースや過去数年分ほしいケースに対応)
+	GetDiaryEntries(ctx context.Context, in *GetDiaryEntriesRequest, opts ...grpc.CallOption) (*GetDiaryEntriesResponse, error)
+	// 月ごとに取得
+	GetDiaryEntriesByMonth(ctx context.Context, in *GetDiaryEntriesByMonthRequest, opts ...grpc.CallOption) (*GetDiaryEntriesByMonthResponse, error)
+	// 検索
+	SearchDiaryEntries(ctx context.Context, in *SearchDiaryEntriesRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -51,36 +60,6 @@ func (c *diaryServiceClient) CreateDiaryEntry(ctx context.Context, in *CreateDia
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateDiaryEntryResponse)
 	err := c.cc.Invoke(ctx, DiaryService_CreateDiaryEntry_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *diaryServiceClient) GetDiaryEntry(ctx context.Context, in *GetDiaryEntryRequest, opts ...grpc.CallOption) (*GetDiaryEntryResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetDiaryEntryResponse)
-	err := c.cc.Invoke(ctx, DiaryService_GetDiaryEntry_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *diaryServiceClient) ListDiaryEntries(ctx context.Context, in *ListDiaryEntriesRequest, opts ...grpc.CallOption) (*ListDiaryEntriesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListDiaryEntriesResponse)
-	err := c.cc.Invoke(ctx, DiaryService_ListDiaryEntries_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *diaryServiceClient) SearchDiaryEntries(ctx context.Context, in *SearchDiaryEntriesRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SearchDiaryEntriesResponse)
-	err := c.cc.Invoke(ctx, DiaryService_SearchDiaryEntries_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,16 +86,64 @@ func (c *diaryServiceClient) DeleteDiaryEntry(ctx context.Context, in *DeleteDia
 	return out, nil
 }
 
+func (c *diaryServiceClient) GetDiaryEntry(ctx context.Context, in *GetDiaryEntryRequest, opts ...grpc.CallOption) (*GetDiaryEntryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDiaryEntryResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetDiaryEntry_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) GetDiaryEntries(ctx context.Context, in *GetDiaryEntriesRequest, opts ...grpc.CallOption) (*GetDiaryEntriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDiaryEntriesResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetDiaryEntries_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) GetDiaryEntriesByMonth(ctx context.Context, in *GetDiaryEntriesByMonthRequest, opts ...grpc.CallOption) (*GetDiaryEntriesByMonthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDiaryEntriesByMonthResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetDiaryEntriesByMonth_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) SearchDiaryEntries(ctx context.Context, in *SearchDiaryEntriesRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchDiaryEntriesResponse)
+	err := c.cc.Invoke(ctx, DiaryService_SearchDiaryEntries_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DiaryServiceServer is the server API for DiaryService service.
 // All implementations must embed UnimplementedDiaryServiceServer
 // for forward compatibility.
 type DiaryServiceServer interface {
+	// 作成
 	CreateDiaryEntry(context.Context, *CreateDiaryEntryRequest) (*CreateDiaryEntryResponse, error)
-	GetDiaryEntry(context.Context, *GetDiaryEntryRequest) (*GetDiaryEntryResponse, error)
-	ListDiaryEntries(context.Context, *ListDiaryEntriesRequest) (*ListDiaryEntriesResponse, error)
-	SearchDiaryEntries(context.Context, *SearchDiaryEntriesRequest) (*SearchDiaryEntriesResponse, error)
+	// 更新
 	UpdateDiaryEntry(context.Context, *UpdateDiaryEntryRequest) (*UpdateDiaryEntryResponse, error)
+	// 削除
 	DeleteDiaryEntry(context.Context, *DeleteDiaryEntryRequest) (*DeleteDiaryEntryResponse, error)
+	// 日付指定で単体取得
+	GetDiaryEntry(context.Context, *GetDiaryEntryRequest) (*GetDiaryEntryResponse, error)
+	// 日付指定で複数取得(ホームでの表示などで直近3日とかほしいケースや過去数年分ほしいケースに対応)
+	GetDiaryEntries(context.Context, *GetDiaryEntriesRequest) (*GetDiaryEntriesResponse, error)
+	// 月ごとに取得
+	GetDiaryEntriesByMonth(context.Context, *GetDiaryEntriesByMonthRequest) (*GetDiaryEntriesByMonthResponse, error)
+	// 検索
+	SearchDiaryEntries(context.Context, *SearchDiaryEntriesRequest) (*SearchDiaryEntriesResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -130,20 +157,23 @@ type UnimplementedDiaryServiceServer struct{}
 func (UnimplementedDiaryServiceServer) CreateDiaryEntry(context.Context, *CreateDiaryEntryRequest) (*CreateDiaryEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDiaryEntry not implemented")
 }
-func (UnimplementedDiaryServiceServer) GetDiaryEntry(context.Context, *GetDiaryEntryRequest) (*GetDiaryEntryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDiaryEntry not implemented")
-}
-func (UnimplementedDiaryServiceServer) ListDiaryEntries(context.Context, *ListDiaryEntriesRequest) (*ListDiaryEntriesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListDiaryEntries not implemented")
-}
-func (UnimplementedDiaryServiceServer) SearchDiaryEntries(context.Context, *SearchDiaryEntriesRequest) (*SearchDiaryEntriesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SearchDiaryEntries not implemented")
-}
 func (UnimplementedDiaryServiceServer) UpdateDiaryEntry(context.Context, *UpdateDiaryEntryRequest) (*UpdateDiaryEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDiaryEntry not implemented")
 }
 func (UnimplementedDiaryServiceServer) DeleteDiaryEntry(context.Context, *DeleteDiaryEntryRequest) (*DeleteDiaryEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDiaryEntry not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetDiaryEntry(context.Context, *GetDiaryEntryRequest) (*GetDiaryEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiaryEntry not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetDiaryEntries(context.Context, *GetDiaryEntriesRequest) (*GetDiaryEntriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiaryEntries not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetDiaryEntriesByMonth(context.Context, *GetDiaryEntriesByMonthRequest) (*GetDiaryEntriesByMonthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiaryEntriesByMonth not implemented")
+}
+func (UnimplementedDiaryServiceServer) SearchDiaryEntries(context.Context, *SearchDiaryEntriesRequest) (*SearchDiaryEntriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchDiaryEntries not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -184,60 +214,6 @@ func _DiaryService_CreateDiaryEntry_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DiaryService_GetDiaryEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDiaryEntryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DiaryServiceServer).GetDiaryEntry(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DiaryService_GetDiaryEntry_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiaryServiceServer).GetDiaryEntry(ctx, req.(*GetDiaryEntryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DiaryService_ListDiaryEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListDiaryEntriesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DiaryServiceServer).ListDiaryEntries(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DiaryService_ListDiaryEntries_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiaryServiceServer).ListDiaryEntries(ctx, req.(*ListDiaryEntriesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DiaryService_SearchDiaryEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SearchDiaryEntriesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DiaryServiceServer).SearchDiaryEntries(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DiaryService_SearchDiaryEntries_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiaryServiceServer).SearchDiaryEntries(ctx, req.(*SearchDiaryEntriesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _DiaryService_UpdateDiaryEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateDiaryEntryRequest)
 	if err := dec(in); err != nil {
@@ -274,6 +250,78 @@ func _DiaryService_DeleteDiaryEntry_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_GetDiaryEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiaryEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetDiaryEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetDiaryEntry_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetDiaryEntry(ctx, req.(*GetDiaryEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_GetDiaryEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiaryEntriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetDiaryEntries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetDiaryEntries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetDiaryEntries(ctx, req.(*GetDiaryEntriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_GetDiaryEntriesByMonth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiaryEntriesByMonthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetDiaryEntriesByMonth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetDiaryEntriesByMonth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetDiaryEntriesByMonth(ctx, req.(*GetDiaryEntriesByMonthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_SearchDiaryEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchDiaryEntriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).SearchDiaryEntries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_SearchDiaryEntries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).SearchDiaryEntries(ctx, req.(*SearchDiaryEntriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiaryService_ServiceDesc is the grpc.ServiceDesc for DiaryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -286,24 +334,28 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DiaryService_CreateDiaryEntry_Handler,
 		},
 		{
-			MethodName: "GetDiaryEntry",
-			Handler:    _DiaryService_GetDiaryEntry_Handler,
-		},
-		{
-			MethodName: "ListDiaryEntries",
-			Handler:    _DiaryService_ListDiaryEntries_Handler,
-		},
-		{
-			MethodName: "SearchDiaryEntries",
-			Handler:    _DiaryService_SearchDiaryEntries_Handler,
-		},
-		{
 			MethodName: "UpdateDiaryEntry",
 			Handler:    _DiaryService_UpdateDiaryEntry_Handler,
 		},
 		{
 			MethodName: "DeleteDiaryEntry",
 			Handler:    _DiaryService_DeleteDiaryEntry_Handler,
+		},
+		{
+			MethodName: "GetDiaryEntry",
+			Handler:    _DiaryService_GetDiaryEntry_Handler,
+		},
+		{
+			MethodName: "GetDiaryEntries",
+			Handler:    _DiaryService_GetDiaryEntries_Handler,
+		},
+		{
+			MethodName: "GetDiaryEntriesByMonth",
+			Handler:    _DiaryService_GetDiaryEntriesByMonth_Handler,
+		},
+		{
+			MethodName: "SearchDiaryEntries",
+			Handler:    _DiaryService_SearchDiaryEntries_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

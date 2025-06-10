@@ -149,3 +149,64 @@ func DiaryByID(ctx context.Context, db DB, id uuid.UUID) (*Diary, error) {
 	}
 	return &d, nil
 }
+
+// DiariesByUserIDDate retrieves a row from 'public.diaries' as a [Diary].
+//
+// Generated from index 'index_diaries_user_id_and_date'.
+func DiariesByUserIDDate(ctx context.Context, db DB, userID uuid.UUID, date time.Time) ([]*Diary, error) {
+	// query
+	const sqlstr = `SELECT ` +
+		`id, user_id, content, date, created_at, updated_at ` +
+		`FROM public.diaries ` +
+		`WHERE user_id = $1 AND date = $2`
+	// run
+	logf(sqlstr, userID, date)
+	rows, err := db.QueryContext(ctx, sqlstr, userID, date)
+	if err != nil {
+		return nil, logerror(err)
+	}
+	defer rows.Close()
+	// process
+	var res []*Diary
+	for rows.Next() {
+		d := Diary{
+			_exists: true,
+		}
+		// scan
+		if err := rows.Scan(&d.ID, &d.UserID, &d.Content, &d.Date, &d.CreatedAt, &d.UpdatedAt); err != nil {
+			return nil, logerror(err)
+		}
+		res = append(res, &d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, logerror(err)
+	}
+	return res, nil
+}
+
+// DiaryByUserIDDate retrieves a row from 'public.diaries' as a [Diary].
+//
+// Generated from index 'unique_user_date'.
+func DiaryByUserIDDate(ctx context.Context, db DB, userID uuid.UUID, date time.Time) (*Diary, error) {
+	// query
+	const sqlstr = `SELECT ` +
+		`id, user_id, content, date, created_at, updated_at ` +
+		`FROM public.diaries ` +
+		`WHERE user_id = $1 AND date = $2`
+	// run
+	logf(sqlstr, userID, date)
+	d := Diary{
+		_exists: true,
+	}
+	if err := db.QueryRowContext(ctx, sqlstr, userID, date).Scan(&d.ID, &d.UserID, &d.Content, &d.Date, &d.CreatedAt, &d.UpdatedAt); err != nil {
+		return nil, logerror(err)
+	}
+	return &d, nil
+}
+
+// User returns the User associated with the [Diary]'s (UserID).
+//
+// Generated from foreign key 'diaries_user_id_fkey'.
+func (d *Diary) User(ctx context.Context, db DB) (*User, error) {
+	return UserByID(ctx, db, d.UserID)
+}

@@ -1,73 +1,115 @@
 syntax = "proto3";
-option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
 
 package diary;
 
+option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
+
 service DiaryService {
-  rpc CreateDiaryEntry(CreateDiaryEntryRequest)
-      returns (CreateDiaryEntryResponse);
+  // 作成
+  rpc CreateDiaryEntry(CreateDiaryEntryRequest) returns (CreateDiaryEntryResponse);
+  // 更新
+  rpc UpdateDiaryEntry(UpdateDiaryEntryRequest) returns (UpdateDiaryEntryResponse);
+  // 削除
+  rpc DeleteDiaryEntry(DeleteDiaryEntryRequest) returns (DeleteDiaryEntryResponse);
+
+  // 日付指定で単体取得
   rpc GetDiaryEntry(GetDiaryEntryRequest) returns (GetDiaryEntryResponse);
-  rpc ListDiaryEntries(ListDiaryEntriesRequest)
-      returns (ListDiaryEntriesResponse);
-  rpc SearchDiaryEntries(SearchDiaryEntriesRequest)
-      returns (SearchDiaryEntriesResponse);
-  rpc UpdateDiaryEntry(UpdateDiaryEntryRequest)
-      returns (UpdateDiaryEntryResponse);
-  rpc DeleteDiaryEntry(DeleteDiaryEntryRequest)
-      returns (DeleteDiaryEntryResponse);
+
+  // 日付指定で複数取得(ホームでの表示などで直近3日とかほしいケースや過去数年分ほしいケースに対応)
+  rpc GetDiaryEntries(GetDiaryEntriesRequest) returns (GetDiaryEntriesResponse);
+
+  // 月ごとに取得
+  rpc GetDiaryEntriesByMonth(GetDiaryEntriesByMonthRequest) returns (GetDiaryEntriesByMonthResponse);
+
+  // 検索
+  rpc SearchDiaryEntries(SearchDiaryEntriesRequest) returns (SearchDiaryEntriesResponse);
 }
 
-message Date {
+message YMD {
   uint32 year = 1;
   uint32 month = 2;
   uint32 day = 3;
 }
+message YM {
+  uint32 year = 1;
+  uint32 month = 2;
+}
+
 // 日記エントリのメッセージ
 message DiaryEntry {
-  string id = 1;      // 日記ID
-  string content = 2; // 内容
-  Date date = 3;      // 日付
+  string id = 1; // 日記ID
+  YMD date = 2; // 日付
+  string content = 3; // 内容
 }
 
 // 新しい日記エントリを作成するためのリクエスト
 message CreateDiaryEntryRequest {
-  string title = 1;
-  string content = 2;
+  string content = 1;
+  YMD date = 2;
 }
 
 // 日記エントリを作成した結果を返すレスポンス
-message CreateDiaryEntryResponse { DiaryEntry entry = 1; }
+message CreateDiaryEntryResponse {
+  DiaryEntry entry = 1;
+}
 
 // 特定の日記エントリを取得するためのリクエスト
-message GetDiaryEntryRequest { string id = 1; }
+message GetDiaryEntryRequest {
+  YMD date = 1; // 日付を指定して取得
+}
+
+// 複数日記エントリを取得するためのリクエスト (e.g., by range or count)
+message GetDiaryEntriesRequest {
+  repeated YMD dates = 1; // 取得したい日付の配列
+}
+
+// 月ごとに日記エントリを取得するためのリクエスト
+message GetDiaryEntriesByMonthRequest {
+  YM month = 1; // 年月を指定
+}
 
 message SearchDiaryEntriesRequest {
   string userID = 1;
   string keyword = 2;
 }
-message SearchDiaryEntriesResponse { repeated DiaryEntry entries = 1; }
+
+message SearchDiaryEntriesResponse {
+  string searched_keyword = 1; // 実際に検索した単語
+  repeated DiaryEntry entries = 2;
+}
+
+message GetDiaryEntriesResponse {
+  repeated DiaryEntry entries = 1;
+}
+
+message GetDiaryEntriesByMonthResponse {
+  repeated DiaryEntry entries = 1;
+}
 
 // 日記エントリを取得した結果を返すレスポンス
-message GetDiaryEntryResponse { DiaryEntry entry = 1; }
-
-// すべての日記エントリをリストするためのリクエスト
-message ListDiaryEntriesRequest {}
-
-// 複数の日記エントリを返すレスポンス
-message ListDiaryEntriesResponse { repeated DiaryEntry entries = 1; }
+message GetDiaryEntryResponse {
+  DiaryEntry entry = 1;
+}
 
 // 日記エントリを更新するためのリクエスト
 message UpdateDiaryEntryRequest {
   string id = 1;
   string title = 2;
   string content = 3;
+  YMD date = 4;
 }
 
 // 更新された日記エントリを返すレスポンス
-message UpdateDiaryEntryResponse { DiaryEntry entry = 1; }
+message UpdateDiaryEntryResponse {
+  DiaryEntry entry = 1;
+}
 
 // 日記エントリを削除するためのリクエスト
-message DeleteDiaryEntryRequest { string id = 1; }
+message DeleteDiaryEntryRequest {
+  string id = 1;
+}
 
 // 削除操作の結果を返すレスポンス
-message DeleteDiaryEntryResponse { bool success = 1; }
+message DeleteDiaryEntryResponse {
+  bool success = 1;
+}
