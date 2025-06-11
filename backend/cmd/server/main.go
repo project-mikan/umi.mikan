@@ -8,6 +8,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/project-mikan/umi.mikan/backend/service/auth"
 	"github.com/project-mikan/umi.mikan/backend/service/diary"
 	"google.golang.org/grpc"
@@ -27,7 +28,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.AuthInterceptor),
+	)
 
 	// DB接続
 	dbConfig, err := constants.LoadDBConfig()
