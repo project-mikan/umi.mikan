@@ -28,6 +28,7 @@
 		]
 	},
 	"dependencies": {
+		"@grpc/grpc-js": "^1.13.4",
 		"svelte-i18n": "^4.0.1"
 	}
 }
