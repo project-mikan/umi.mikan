@@ -8,6 +8,8 @@
 sudo pacman -S protobuf
 ```
 
+メモ：go toolにしたいがdockerの外なので悩ましい
+
 ```bash
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
@@ -36,7 +38,7 @@ grpc_cli ls localhost:8080
 
 詳細
 
-```bash
+```basrh
 grpc_cli ls localhost:8080 diary.DiaryService -l
 ```
 
@@ -50,4 +52,10 @@ remote call
 
 ```bash
 grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'
+```
+
+日記検索
+
+```bash
+grpc_cli call localhost:8080 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'
 ```

@@ -1,4 +1,4 @@
-FROM golang:1.22
+FROM golang:1.24.4
 WORKDIR /backend
-RUN go install github.com/air-verse/air@latest
-CMD ["air"]
+RUN go install tool
+CMD ["go", "tool", "air"]

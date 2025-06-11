@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine as builder
+FROM golang:1.24.4-alpine as builder
 
 WORKDIR /build
 
@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build cmd/main.go -o binary
+RUN CGO_ENABLED=0 GOOS=linux go build cmd/server/main.go -o binary
 
 
 FROM scratch as prod
