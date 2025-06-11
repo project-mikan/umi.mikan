@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 sudo pacman -S protobuf
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-npm install -g grpc_tools_node_protoc_ts
+npm install -g @grpc/proto-loader
 ```
 
 ### Starting Development Environment

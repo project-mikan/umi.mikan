@@ -16,7 +16,7 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
 
 ```bash
-npm install -g grpc_tools_node_protoc_ts
+npm install -g @grpc/proto-loader
 ```
 
 ### run
