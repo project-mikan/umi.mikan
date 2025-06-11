@@ -6,25 +6,25 @@
 
 import * as jspb from "google-protobuf";
 
-export class Date extends jspb.Message { 
+export class YMD extends jspb.Message { 
     getYear(): number;
-    setYear(value: number): Date;
+    setYear(value: number): YMD;
     getMonth(): number;
-    setMonth(value: number): Date;
+    setMonth(value: number): YMD;
     getDay(): number;
-    setDay(value: number): Date;
+    setDay(value: number): YMD;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): Date.AsObject;
-    static toObject(includeInstance: boolean, msg: Date): Date.AsObject;
+    toObject(includeInstance?: boolean): YMD.AsObject;
+    static toObject(includeInstance: boolean, msg: YMD): YMD.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: Date, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): Date;
-    static deserializeBinaryFromReader(message: Date, reader: jspb.BinaryReader): Date;
+    static serializeBinaryToWriter(message: YMD, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): YMD;
+    static deserializeBinaryFromReader(message: YMD, reader: jspb.BinaryReader): YMD;
 }
 
-export namespace Date {
+export namespace YMD {
     export type AsObject = {
         year: number,
         month: number,
@@ -32,16 +32,39 @@ export namespace Date {
     }
 }
 
+export class YM extends jspb.Message { 
+    getYear(): number;
+    setYear(value: number): YM;
+    getMonth(): number;
+    setMonth(value: number): YM;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): YM.AsObject;
+    static toObject(includeInstance: boolean, msg: YM): YM.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: YM, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): YM;
+    static deserializeBinaryFromReader(message: YM, reader: jspb.BinaryReader): YM;
+}
+
+export namespace YM {
+    export type AsObject = {
+        year: number,
+        month: number,
+    }
+}
+
 export class DiaryEntry extends jspb.Message { 
     getId(): string;
     setId(value: string): DiaryEntry;
-    getContent(): string;
-    setContent(value: string): DiaryEntry;
 
     hasDate(): boolean;
     clearDate(): void;
-    getDate(): Date | undefined;
-    setDate(value?: Date): DiaryEntry;
+    getDate(): YMD | undefined;
+    setDate(value?: YMD): DiaryEntry;
+    getContent(): string;
+    setContent(value: string): DiaryEntry;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DiaryEntry.AsObject;
@@ -56,16 +79,19 @@ export class DiaryEntry extends jspb.Message {
 export namespace DiaryEntry {
     export type AsObject = {
         id: string,
+        date?: YMD.AsObject,
         content: string,
-        date?: Date.AsObject,
     }
 }
 
 export class CreateDiaryEntryRequest extends jspb.Message { 
-    getTitle(): string;
-    setTitle(value: string): CreateDiaryEntryRequest;
     getContent(): string;
     setContent(value: string): CreateDiaryEntryRequest;
+
+    hasDate(): boolean;
+    clearDate(): void;
+    getDate(): YMD | undefined;
+    setDate(value?: YMD): CreateDiaryEntryRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): CreateDiaryEntryRequest.AsObject;
@@ -79,8 +105,8 @@ export class CreateDiaryEntryRequest extends jspb.Message {
 
 export namespace CreateDiaryEntryRequest {
     export type AsObject = {
-        title: string,
         content: string,
+        date?: YMD.AsObject,
     }
 }
 
@@ -108,8 +134,11 @@ export namespace CreateDiaryEntryResponse {
 }
 
 export class GetDiaryEntryRequest extends jspb.Message { 
-    getId(): string;
-    setId(value: string): GetDiaryEntryRequest;
+
+    hasDate(): boolean;
+    clearDate(): void;
+    getDate(): YMD | undefined;
+    setDate(value?: YMD): GetDiaryEntryRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): GetDiaryEntryRequest.AsObject;
@@ -123,7 +152,52 @@ export class GetDiaryEntryRequest extends jspb.Message {
 
 export namespace GetDiaryEntryRequest {
     export type AsObject = {
-        id: string,
+        date?: YMD.AsObject,
+    }
+}
+
+export class GetDiaryEntriesRequest extends jspb.Message { 
+    clearDatesList(): void;
+    getDatesList(): Array<YMD>;
+    setDatesList(value: Array<YMD>): GetDiaryEntriesRequest;
+    addDates(value?: YMD, index?: number): YMD;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetDiaryEntriesRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: GetDiaryEntriesRequest): GetDiaryEntriesRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: GetDiaryEntriesRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetDiaryEntriesRequest;
+    static deserializeBinaryFromReader(message: GetDiaryEntriesRequest, reader: jspb.BinaryReader): GetDiaryEntriesRequest;
+}
+
+export namespace GetDiaryEntriesRequest {
+    export type AsObject = {
+        datesList: Array<YMD.AsObject>,
+    }
+}
+
+export class GetDiaryEntriesByMonthRequest extends jspb.Message { 
+
+    hasMonth(): boolean;
+    clearMonth(): void;
+    getMonth(): YM | undefined;
+    setMonth(value?: YM): GetDiaryEntriesByMonthRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetDiaryEntriesByMonthRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: GetDiaryEntriesByMonthRequest): GetDiaryEntriesByMonthRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: GetDiaryEntriesByMonthRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetDiaryEntriesByMonthRequest;
+    static deserializeBinaryFromReader(message: GetDiaryEntriesByMonthRequest, reader: jspb.BinaryReader): GetDiaryEntriesByMonthRequest;
+}
+
+export namespace GetDiaryEntriesByMonthRequest {
+    export type AsObject = {
+        month?: YM.AsObject,
     }
 }
 
@@ -151,6 +225,8 @@ export namespace SearchDiaryEntriesRequest {
 }
 
 export class SearchDiaryEntriesResponse extends jspb.Message { 
+    getSearchedKeyword(): string;
+    setSearchedKeyword(value: string): SearchDiaryEntriesResponse;
     clearEntriesList(): void;
     getEntriesList(): Array<DiaryEntry>;
     setEntriesList(value: Array<DiaryEntry>): SearchDiaryEntriesResponse;
@@ -167,6 +243,51 @@ export class SearchDiaryEntriesResponse extends jspb.Message {
 }
 
 export namespace SearchDiaryEntriesResponse {
+    export type AsObject = {
+        searchedKeyword: string,
+        entriesList: Array<DiaryEntry.AsObject>,
+    }
+}
+
+export class GetDiaryEntriesResponse extends jspb.Message { 
+    clearEntriesList(): void;
+    getEntriesList(): Array<DiaryEntry>;
+    setEntriesList(value: Array<DiaryEntry>): GetDiaryEntriesResponse;
+    addEntries(value?: DiaryEntry, index?: number): DiaryEntry;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetDiaryEntriesResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: GetDiaryEntriesResponse): GetDiaryEntriesResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: GetDiaryEntriesResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetDiaryEntriesResponse;
+    static deserializeBinaryFromReader(message: GetDiaryEntriesResponse, reader: jspb.BinaryReader): GetDiaryEntriesResponse;
+}
+
+export namespace GetDiaryEntriesResponse {
+    export type AsObject = {
+        entriesList: Array<DiaryEntry.AsObject>,
+    }
+}
+
+export class GetDiaryEntriesByMonthResponse extends jspb.Message { 
+    clearEntriesList(): void;
+    getEntriesList(): Array<DiaryEntry>;
+    setEntriesList(value: Array<DiaryEntry>): GetDiaryEntriesByMonthResponse;
+    addEntries(value?: DiaryEntry, index?: number): DiaryEntry;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetDiaryEntriesByMonthResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: GetDiaryEntriesByMonthResponse): GetDiaryEntriesByMonthResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: GetDiaryEntriesByMonthResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetDiaryEntriesByMonthResponse;
+    static deserializeBinaryFromReader(message: GetDiaryEntriesByMonthResponse, reader: jspb.BinaryReader): GetDiaryEntriesByMonthResponse;
+}
+
+export namespace GetDiaryEntriesByMonthResponse {
     export type AsObject = {
         entriesList: Array<DiaryEntry.AsObject>,
     }
@@ -195,45 +316,6 @@ export namespace GetDiaryEntryResponse {
     }
 }
 
-export class ListDiaryEntriesRequest extends jspb.Message { 
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ListDiaryEntriesRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: ListDiaryEntriesRequest): ListDiaryEntriesRequest.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ListDiaryEntriesRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ListDiaryEntriesRequest;
-    static deserializeBinaryFromReader(message: ListDiaryEntriesRequest, reader: jspb.BinaryReader): ListDiaryEntriesRequest;
-}
-
-export namespace ListDiaryEntriesRequest {
-    export type AsObject = {
-    }
-}
-
-export class ListDiaryEntriesResponse extends jspb.Message { 
-    clearEntriesList(): void;
-    getEntriesList(): Array<DiaryEntry>;
-    setEntriesList(value: Array<DiaryEntry>): ListDiaryEntriesResponse;
-    addEntries(value?: DiaryEntry, index?: number): DiaryEntry;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ListDiaryEntriesResponse.AsObject;
-    static toObject(includeInstance: boolean, msg: ListDiaryEntriesResponse): ListDiaryEntriesResponse.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ListDiaryEntriesResponse, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ListDiaryEntriesResponse;
-    static deserializeBinaryFromReader(message: ListDiaryEntriesResponse, reader: jspb.BinaryReader): ListDiaryEntriesResponse;
-}
-
-export namespace ListDiaryEntriesResponse {
-    export type AsObject = {
-        entriesList: Array<DiaryEntry.AsObject>,
-    }
-}
-
 export class UpdateDiaryEntryRequest extends jspb.Message { 
     getId(): string;
     setId(value: string): UpdateDiaryEntryRequest;
@@ -241,6 +323,11 @@ export class UpdateDiaryEntryRequest extends jspb.Message {
     setTitle(value: string): UpdateDiaryEntryRequest;
     getContent(): string;
     setContent(value: string): UpdateDiaryEntryRequest;
+
+    hasDate(): boolean;
+    clearDate(): void;
+    getDate(): YMD | undefined;
+    setDate(value?: YMD): UpdateDiaryEntryRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): UpdateDiaryEntryRequest.AsObject;
@@ -257,6 +344,7 @@ export namespace UpdateDiaryEntryRequest {
         id: string,
         title: string,
         content: string,
+        date?: YMD.AsObject,
     }
 }
 
