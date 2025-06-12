@@ -66,7 +66,8 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 	if err != nil {
 		return nil, fmt.Errorf("failed to get password auth: %w", err)
 	}
-	if passwordAuth.PasswordHashed != passwordAuthDB.PasswordHashed {
+	// bcryptを使って平文パスワードとハッシュを比較
+	if err := request.VerifyPassword(passwordAuth.Password, passwordAuthDB.PasswordHashed); err != nil {
 		return nil, fmt.Errorf("password does not match")
 	}
 
