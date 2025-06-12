@@ -1,10 +1,9 @@
 // Original file: proto/diary/diary.proto
 
-
 export interface DeleteDiaryEntryRequest {
-  'id'?: (string);
+	id?: string;
 }
 
 export interface DeleteDiaryEntryRequest__Output {
-  'id': (string);
+	id: string;
 }

@@ -1,33 +1,12 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { _ } from 'svelte-i18n';
-	import '$lib/i18n';
-	import { register } from '$lib/auth';
+import { enhance } from "$app/forms";
+import { _ } from "svelte-i18n";
+import "$lib/i18n";
+import type { ActionData } from "./$types";
 
-	let name = '';
-	let email = '';
-	let password = '';
-	let error = '';
-	let loading = false;
+export let form: ActionData;
 
-	async function handleRegister() {
-		if (!name || !email || !password) {
-			error = $_('auth.register.required');
-			return;
-		}
-
-		loading = true;
-		error = '';
-
-		try {
-			await register(name, email, password);
-			goto('/');
-		} catch (err: any) {
-			error = err.message || $_('auth.register.failed');
-		} finally {
-			loading = false;
-		}
-	}
+let loading = false;
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">
@@ -37,7 +16,17 @@
 				{$_('auth.register.title')}
 			</h2>
 		</div>
-		<form class="mt-8 space-y-6" on:submit|preventDefault={handleRegister}>
+		<form 
+			class="mt-8 space-y-6" 
+			method="POST" 
+			use:enhance={({ formElement, formData, action, cancel }) => {
+				loading = true;
+				return async ({ result, update }) => {
+					loading = false;
+					await update();
+				};
+			}}
+		>
 			<div class="space-y-4">
 				<div>
 					<label for="name" class="sr-only">{$_('auth.register.name')}</label>
@@ -49,7 +38,6 @@
 						required
 						class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 						placeholder={$_('auth.register.name')}
-						bind:value={name}
 					/>
 				</div>
 				<div>
@@ -62,7 +50,6 @@
 						required
 						class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 						placeholder={$_('auth.register.email')}
-						bind:value={email}
 					/>
 				</div>
 				<div>
@@ -75,14 +62,13 @@
 						required
 						class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 						placeholder={$_('auth.register.password')}
-						bind:value={password}
 					/>
 				</div>
 			</div>
 
-			{#if error}
+			{#if form?.error}
 				<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-					{error}
+					{form.error}
 				</div>
 			{/if}
 

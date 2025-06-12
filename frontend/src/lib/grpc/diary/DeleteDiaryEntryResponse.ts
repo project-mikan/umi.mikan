@@ -1,10 +1,9 @@
 // Original file: proto/diary/diary.proto
 
-
 export interface DeleteDiaryEntryResponse {
-  'success'?: (boolean);
+	success?: boolean;
 }
 
 export interface DeleteDiaryEntryResponse__Output {
-  'success': (boolean);
+	success: boolean;
 }

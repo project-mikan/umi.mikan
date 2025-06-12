@@ -1,32 +1,12 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { _ } from 'svelte-i18n';
-	import '$lib/i18n';
-	import { login } from '$lib/auth';
+import { enhance } from "$app/forms";
+import { _ } from "svelte-i18n";
+import "$lib/i18n";
+import type { ActionData } from "./$types";
 
-	let email = '';
-	let password = '';
-	let error = '';
-	let loading = false;
+export let form: ActionData;
 
-	async function handleLogin() {
-		if (!email || !password) {
-			error = $_('auth.login.required');
-			return;
-		}
-
-		loading = true;
-		error = '';
-
-		try {
-			await login(email, password);
-			goto('/');
-		} catch (err: any) {
-			error = err.message || $_('auth.login.failed');
-		} finally {
-			loading = false;
-		}
-	}
+let loading = false;
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">
@@ -36,7 +16,17 @@
 				{$_('auth.login.title')}
 			</h2>
 		</div>
-		<form class="mt-8 space-y-6" on:submit|preventDefault={handleLogin}>
+		<form 
+			class="mt-8 space-y-6" 
+			method="POST" 
+			use:enhance={({ formElement, formData, action, cancel }) => {
+				loading = true;
+				return async ({ result, update }) => {
+					loading = false;
+					await update();
+				};
+			}}
+		>
 			<div class="space-y-4">
 				<div>
 					<label for="email" class="sr-only">{$_('auth.login.email')}</label>
@@ -48,7 +38,6 @@
 						required
 						class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 						placeholder={$_('auth.login.email')}
-						bind:value={email}
 					/>
 				</div>
 				<div>
@@ -61,14 +50,13 @@
 						required
 						class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 						placeholder={$_('auth.login.password')}
-						bind:value={password}
 					/>
 				</div>
 			</div>
 
-			{#if error}
+			{#if form?.error}
 				<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-					{error}
+					{form.error}
 				</div>
 			{/if}
 
