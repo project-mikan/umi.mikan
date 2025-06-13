@@ -30,6 +30,7 @@
 	"dependencies": {
 		"@grpc/grpc-js": "^1.13.4",
 		"@grpc/proto-loader": "^0.7.15",
+		"@protobuf-ts/plugin": "^2.11.0",
 		"svelte-i18n": "^4.0.1"
 	}
 }

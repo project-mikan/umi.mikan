@@ -43,11 +43,7 @@ grpc-go:
 grpc-ts:
 	# 削除分は反映されないのでrm -rfしてから実行
 	rm -rf frontend/src/lib/grpc/*
-	npx proto-loader-gen-types \
-    	--keepCase --longs=String --enums=Number --defaults --oneofs \
-    	--grpcLib=@grpc/grpc-js \
-    	--outDir=./frontend/src/lib/grpc \
-    	./proto/**/*.proto
+	npx protoc --ts_out ./frontend/src/lib/grpc --proto_path proto proto/**/*.proto 
 
 
 grpc:
