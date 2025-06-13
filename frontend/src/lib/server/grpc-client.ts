@@ -1,7 +1,7 @@
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import type { ProtoGrpcType as AuthProtoGrpcType } from '../grpc/auth';
 import type { ProtoGrpcType as DiaryProtoGrpcType } from '../grpc/diary';
 
@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Backend gRPC server address
-const GRPC_SERVER_ADDRESS = 'localhost:8080';
+const GRPC_SERVER_ADDRESS = process.env.GRPC_SERVER_ADDRESS || 'backend:8080';
 
 // Proto file paths (relative to project root)
 const AUTH_PROTO_PATH = join(__dirname, '../../../../../proto/auth/auth.proto');
