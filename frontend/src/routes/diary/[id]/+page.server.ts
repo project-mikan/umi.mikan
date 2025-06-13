@@ -1,6 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { createDiaryClient, promisifyGrpcCall } from '$lib/server/grpc-client';
-import * as grpc from '@grpc/grpc-js';
+import { getDiaryEntry } from '$lib/server/diary-api';
 import { error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
@@ -11,23 +10,25 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	}
 
 	try {
-		const client = createDiaryClient();
-		const metadata = new grpc.Metadata();
-		metadata.add('authorization', `Bearer ${accessToken}`);
-		
-		const response = await promisifyGrpcCall(
-			client,
-			'getDiaryEntry',
-			{ id: params.id },
-			metadata
-		);
+		// params.id should be in format YYYY-MM-DD
+		const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+		if (!dateMatch) {
+			throw error(400, 'Invalid date format');
+		}
 
-		if (!response.entry) {
+		const [, year, month, day] = dateMatch;
+		const entry = await getDiaryEntry({
+			year: parseInt(year, 10),
+			month: parseInt(month, 10),
+			day: parseInt(day, 10)
+		});
+
+		if (!entry) {
 			throw error(404, 'Diary entry not found');
 		}
 
 		return {
-			entry: response.entry
+			entry
 		};
 	} catch (err) {
 		if (err instanceof Response) {

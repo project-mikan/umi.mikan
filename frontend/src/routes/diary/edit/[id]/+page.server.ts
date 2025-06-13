@@ -1,6 +1,5 @@
 import type { PageServerLoad, Actions } from './$types';
-import { createDiaryClient, promisifyGrpcCall } from '$lib/server/grpc-client';
-import * as grpc from '@grpc/grpc-js';
+import { getDiaryEntry, updateDiaryEntry, deleteDiaryEntry } from '$lib/server/diary-api';
 import { error, redirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
@@ -11,23 +10,25 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	}
 
 	try {
-		const client = createDiaryClient();
-		const metadata = new grpc.Metadata();
-		metadata.add('authorization', `Bearer ${accessToken}`);
-		
-		const response = await promisifyGrpcCall(
-			client,
-			'getDiaryEntry',
-			{ id: params.id },
-			metadata
-		);
+		// params.id should be in format YYYY-MM-DD
+		const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+		if (!dateMatch) {
+			throw error(400, 'Invalid date format');
+		}
 
-		if (!response.entry) {
+		const [, year, month, day] = dateMatch;
+		const entry = await getDiaryEntry({
+			year: parseInt(year, 10),
+			month: parseInt(month, 10),
+			day: parseInt(day, 10)
+		});
+
+		if (!entry) {
 			throw error(404, 'Diary entry not found');
 		}
 
 		return {
-			entry: response.entry
+			entry
 		};
 	} catch (err) {
 		if (err instanceof Response) {
@@ -48,6 +49,7 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const content = data.get('content') as string;
+		const title = data.get('title') as string || '';
 		const dateStr = data.get('date') as string;
 		
 		if (!content || !dateStr) {
@@ -57,25 +59,34 @@ export const actions: Actions = {
 		}
 
 		try {
+			// First, get the current entry to get the ID
+			const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+			if (!dateMatch) {
+				throw error(400, 'Invalid date format');
+			}
+
+			const [, year, month, day] = dateMatch;
+			const currentEntry = await getDiaryEntry({
+				year: parseInt(year, 10),
+				month: parseInt(month, 10),
+				day: parseInt(day, 10)
+			});
+
+			if (!currentEntry) {
+				throw error(404, 'Diary entry not found');
+			}
+
 			const date = new Date(dateStr);
-			const client = createDiaryClient();
-			const metadata = new grpc.Metadata();
-			metadata.add('authorization', `Bearer ${accessToken}`);
-			
-			await promisifyGrpcCall(
-				client,
-				'updateDiaryEntry',
-				{
-					id: params.id,
-					content,
-					date: {
-						year: date.getFullYear(),
-						month: date.getMonth() + 1,
-						day: date.getDate()
-					}
-				},
-				metadata
-			);
+			await updateDiaryEntry({
+				id: currentEntry.id,
+				title,
+				content,
+				date: {
+					year: date.getFullYear(),
+					month: date.getMonth() + 1,
+					day: date.getDate()
+				}
+			});
 
 			throw redirect(303, '/diary');
 		} catch (err) {
@@ -97,16 +108,24 @@ export const actions: Actions = {
 		}
 
 		try {
-			const client = createDiaryClient();
-			const metadata = new grpc.Metadata();
-			metadata.add('authorization', `Bearer ${accessToken}`);
-			
-			await promisifyGrpcCall(
-				client,
-				'deleteDiaryEntry',
-				{ id: params.id },
-				metadata
-			);
+			// First, get the current entry to get the ID
+			const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+			if (!dateMatch) {
+				throw error(400, 'Invalid date format');
+			}
+
+			const [, year, month, day] = dateMatch;
+			const currentEntry = await getDiaryEntry({
+				year: parseInt(year, 10),
+				month: parseInt(month, 10),
+				day: parseInt(day, 10)
+			});
+
+			if (!currentEntry) {
+				throw error(404, 'Diary entry not found');
+			}
+
+			await deleteDiaryEntry(currentEntry.id);
 
 			throw redirect(303, '/diary');
 		} catch (err) {

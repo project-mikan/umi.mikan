@@ -1,8 +1,9 @@
 // gRPC APIを使用したバックエンドとの通信
 import { createAuthClient, promisifyGrpcCall } from './grpc-client';
-import type { LoginByPasswordRequest } from '../grpc/auth/LoginByPasswordRequest';
-import type { RegisterByPasswordRequest } from '../grpc/auth/RegisterByPasswordRequest';
-import type { AuthResponse__Output } from '../grpc/auth/AuthResponse';
+import { LoginByPasswordRequest } from '../grpc/auth/auth_pb';
+import { RegisterByPasswordRequest } from '../grpc/auth/auth_pb';
+import { RefreshAccessTokenRequest } from '../grpc/auth/auth_pb';
+import { AuthResponse } from '../grpc/auth/auth_pb';
 import * as grpc from '@grpc/grpc-js';
 
 interface LoginRequest {
@@ -16,35 +17,34 @@ interface RegisterRequest {
 	password: string;
 }
 
-interface AuthResponse {
+interface AuthResult {
 	access_token: string;
 	refresh_token: string;
 	token_type: string;
 	expires_in: number;
 }
 
-export async function loginByPassword(request: LoginRequest): Promise<AuthResponse> {
+export async function loginByPassword(request: LoginRequest): Promise<AuthResult> {
 	try {
 		const client = createAuthClient();
 		
-		const grpcRequest: LoginByPasswordRequest = {
-			email: request.email,
-			password: request.password
-		};
+		const grpcRequest = new LoginByPasswordRequest();
+		grpcRequest.setEmail(request.email);
+		grpcRequest.setPassword(request.password);
 
-		const response = await promisifyGrpcCall<LoginByPasswordRequest, AuthResponse__Output>(
+		const response = await promisifyGrpcCall<LoginByPasswordRequest, AuthResponse>(
 			client,
 			'loginByPassword',
 			grpcRequest
 		);
 
-		client.close();
+		// client.close(); // Close method not available on generated client
 
 		return {
-			access_token: response.access_token,
-			refresh_token: response.refresh_token,
-			token_type: response.token_type,
-			expires_in: response.expires_in
+			access_token: response.getAccessToken(),
+			refresh_token: response.getRefreshToken(),
+			token_type: response.getTokenType(),
+			expires_in: response.getExpiresIn()
 		};
 	} catch (error) {
 		if (error instanceof Error && 'code' in error) {
@@ -61,29 +61,28 @@ export async function loginByPassword(request: LoginRequest): Promise<AuthRespon
 	}
 }
 
-export async function registerByPassword(request: RegisterRequest): Promise<AuthResponse> {
+export async function registerByPassword(request: RegisterRequest): Promise<AuthResult> {
 	try {
 		const client = createAuthClient();
 		
-		const grpcRequest: RegisterByPasswordRequest = {
-			email: request.email,
-			password: request.password,
-			name: request.name
-		};
+		const grpcRequest = new RegisterByPasswordRequest();
+		grpcRequest.setEmail(request.email);
+		grpcRequest.setPassword(request.password);
+		grpcRequest.setName(request.name);
 
-		const response = await promisifyGrpcCall<RegisterByPasswordRequest, AuthResponse__Output>(
+		const response = await promisifyGrpcCall<RegisterByPasswordRequest, AuthResponse>(
 			client,
 			'registerByPassword',
 			grpcRequest
 		);
 
-		client.close();
+		// client.close(); // Close method not available on generated client
 
 		return {
-			access_token: response.access_token,
-			refresh_token: response.refresh_token,
-			token_type: response.token_type,
-			expires_in: response.expires_in
+			access_token: response.getAccessToken(),
+			refresh_token: response.getRefreshToken(),
+			token_type: response.getTokenType(),
+			expires_in: response.getExpiresIn()
 		};
 	} catch (error) {
 		if (error instanceof Error && 'code' in error) {
@@ -99,5 +98,41 @@ export async function registerByPassword(request: RegisterRequest): Promise<Auth
 		}
 		
 		throw new Error('Registration failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+	}
+}
+
+export async function refreshAccessToken(refreshToken: string): Promise<AuthResult> {
+	try {
+		const client = createAuthClient();
+		
+		const grpcRequest = new RefreshAccessTokenRequest();
+		grpcRequest.setRefreshToken(refreshToken);
+
+		const response = await promisifyGrpcCall<RefreshAccessTokenRequest, AuthResponse>(
+			client,
+			'refreshAccessToken',
+			grpcRequest
+		);
+
+		// client.close(); // Close method not available on generated client
+
+		return {
+			access_token: response.getAccessToken(),
+			refresh_token: response.getRefreshToken(),
+			token_type: response.getTokenType(),
+			expires_in: response.getExpiresIn()
+		};
+	} catch (error) {
+		if (error instanceof Error && 'code' in error) {
+			const grpcError = error as grpc.ServiceError;
+			
+			if (grpcError.code === grpc.status.UNAUTHENTICATED) {
+				throw new Error('Invalid refresh token');
+			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
+				throw new Error('Backend service unavailable');
+			}
+		}
+		
+		throw new Error('Token refresh failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
 	}
 }

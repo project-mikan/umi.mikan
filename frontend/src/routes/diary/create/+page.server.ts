@@ -1,6 +1,5 @@
 import type { Actions } from './$types';
-import { createDiaryClient, promisifyGrpcCall } from '$lib/server/grpc-client';
-import * as grpc from '@grpc/grpc-js';
+import { createDiaryEntry } from '$lib/server/diary-api';
 import { error, redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
@@ -23,23 +22,14 @@ export const actions: Actions = {
 
 		try {
 			const date = new Date(dateStr);
-			const client = createDiaryClient();
-			const metadata = new grpc.Metadata();
-			metadata.add('authorization', `Bearer ${accessToken}`);
-			
-			await promisifyGrpcCall(
-				client,
-				'createDiaryEntry',
-				{
-					content,
-					date: {
-						year: date.getFullYear(),
-						month: date.getMonth() + 1,
-						day: date.getDate()
-					}
-				},
-				metadata
-			);
+			await createDiaryEntry({
+				content,
+				date: {
+					year: date.getFullYear(),
+					month: date.getMonth() + 1,
+					day: date.getDate()
+				}
+			});
 
 			throw redirect(303, '/diary');
 		} catch (err) {
