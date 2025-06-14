@@ -1,0 +1,20 @@
+frontend:
+  - frontend/
+backend:
+  - backend/
+schema:
+  - proto/
+  - schema/
+infra:
+  - .github/
+  - infra/
+  - wiki/
+  - Makefile
+  - compose.yml
+  - compose.prod.example.yml
+docs:
+  - adr/
+  - README.md
+  - USAGE.md
+  - CLAUDE.md
+  - LICENSE
