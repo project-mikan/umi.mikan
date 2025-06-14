@@ -1,26 +1,26 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { enhance } from '$app/forms';
-	import type { PageData, ActionData } from './$types';
+import { enhance } from "$app/forms";
+import { goto } from "$app/navigation";
+import type { ActionData, PageData } from "./$types";
 
-	export let data: PageData;
-	export let form: ActionData;
+export let data: PageData;
+export let form: ActionData;
 
-	let content = data.entry.content;
-	let date = `${data.entry.date.year}-${String(data.entry.date.month).padStart(2, '0')}-${String(data.entry.date.day).padStart(2, '0')}`;
-	let showDeleteConfirm = false;
+let content = data.entry.content;
+let date = data.entry.date ? `${data.entry.date.year}-${String(data.entry.date.month).padStart(2, "0")}-${String(data.entry.date.day).padStart(2, "0")}` : new Date().toISOString().split("T")[0];
+let showDeleteConfirm = false;
 
-	function cancel() {
-		goto('/diary');
-	}
+function cancel() {
+	goto("/diary");
+}
 
-	function confirmDelete() {
-		showDeleteConfirm = true;
-	}
+function confirmDelete() {
+	showDeleteConfirm = true;
+}
 
-	function cancelDelete() {
-		showDeleteConfirm = false;
-	}
+function cancelDelete() {
+	showDeleteConfirm = false;
+}
 </script>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

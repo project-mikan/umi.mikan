@@ -1,119 +1,47 @@
-// gRPC APIを使用したバックエンドとの通信
-import { authService } from "./grpc-client";
-import type { LoginByPasswordRequest, RegisterByPasswordRequest, RefreshAccessTokenRequest, AuthResponse } from "../grpc/auth/auth_pb";
+import { create } from '@bufbuild/protobuf';
+import { createClient } from '@connectrpc/connect';
+import { createGrpcWebTransport } from '@connectrpc/connect-web';
+import { 
+  AuthService, 
+  LoginByPasswordRequestSchema, 
+  RegisterByPasswordRequestSchema,
+  type AuthResponse
+} from '$lib/grpc/auth/auth_pb.js';
 
-interface LoginRequest {
-	email: string;
-	password: string;
+const transport = createGrpcWebTransport({
+  baseUrl: 'http://backend:8080'
+});
+
+const authClient = createClient(AuthService, transport);
+
+export interface LoginByPasswordParams {
+  email: string;
+  password: string;
 }
 
-interface RegisterRequest {
-	name: string;
-	email: string;
-	password: string;
+export interface RegisterByPasswordParams {
+  email: string;
+  password: string;
+  name: string;
 }
 
-interface AuthResult {
-	access_token: string;
-	refresh_token: string;
-	token_type: string;
-	expires_in: number;
+export async function loginByPassword(params: LoginByPasswordParams): Promise<AuthResponse> {
+  const request = create(LoginByPasswordRequestSchema, {
+    email: params.email,
+    password: params.password
+  });
+
+  const response = await authClient.loginByPassword(request);
+  return response;
 }
 
-export async function loginByPassword(
-	request: LoginRequest,
-): Promise<AuthResult> {
-	try {
-		const response = await authService.loginByPassword({
-			email: request.email,
-			password: request.password,
-		});
+export async function registerByPassword(params: RegisterByPasswordParams): Promise<AuthResponse> {
+  const request = create(RegisterByPasswordRequestSchema, {
+    email: params.email,
+    password: params.password,
+    name: params.name
+  });
 
-		return {
-			access_token: response.accessToken,
-			refresh_token: response.refreshToken,
-			token_type: response.tokenType,
-			expires_in: response.expiresIn,
-		};
-	} catch (error) {
-		// Handle specific gRPC errors
-		if (error instanceof Error) {
-			if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
-				throw new Error("Invalid credentials");
-			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
-				throw new Error("Backend service unavailable");
-			}
-		}
-
-		throw new Error(
-			"Login failed: " +
-				(error instanceof Error ? error.message : "Unknown error"),
-		);
-	}
-}
-
-export async function registerByPassword(
-	request: RegisterRequest,
-): Promise<AuthResult> {
-	try {
-		const response = await authService.registerByPassword({
-			email: request.email,
-			password: request.password,
-			name: request.name,
-		});
-
-		return {
-			access_token: response.accessToken,
-			refresh_token: response.refreshToken,
-			token_type: response.tokenType,
-			expires_in: response.expiresIn,
-		};
-	} catch (error) {
-		// Handle specific gRPC errors
-		if (error instanceof Error) {
-			if (error.message.includes('409') || error.message.includes('ALREADY_EXISTS')) {
-				throw new Error("Email already registered");
-			} else if (error.message.includes('400') || error.message.includes('INVALID_ARGUMENT')) {
-				throw new Error("Invalid registration data");
-			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
-				throw new Error("Backend service unavailable");
-			}
-		}
-
-		throw new Error(
-			"Registration failed: " +
-				(error instanceof Error ? error.message : "Unknown error"),
-		);
-	}
-}
-
-export async function refreshAccessToken(
-	refreshToken: string,
-): Promise<AuthResult> {
-	try {
-		const response = await authService.refreshAccessToken({
-			refreshToken: refreshToken,
-		});
-
-		return {
-			access_token: response.accessToken,
-			refresh_token: response.refreshToken,
-			token_type: response.tokenType,
-			expires_in: response.expiresIn,
-		};
-	} catch (error) {
-		// Handle specific gRPC errors
-		if (error instanceof Error) {
-			if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
-				throw new Error("Invalid refresh token");
-			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
-				throw new Error("Backend service unavailable");
-			}
-		}
-
-		throw new Error(
-			"Token refresh failed: " +
-				(error instanceof Error ? error.message : "Unknown error"),
-		);
-	}
+  const response = await authClient.registerByPassword(request);
+  return response;
 }

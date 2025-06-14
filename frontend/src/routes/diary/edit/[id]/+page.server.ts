@@ -1,60 +1,64 @@
-import type { PageServerLoad, Actions } from './$types';
-import { getDiaryEntry, updateDiaryEntry, deleteDiaryEntry } from '$lib/server/diary-api';
-import { error, redirect } from '@sveltejs/kit';
+import {
+	deleteDiaryEntry,
+	getDiaryEntry,
+	updateDiaryEntry,
+	createYMD
+} from "$lib/server/diary-api";
+import { error, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
-	const accessToken = cookies.get('accessToken');
-	
+	const accessToken = cookies.get("accessToken");
+
 	if (!accessToken) {
-		throw error(401, 'Unauthorized');
+		throw error(401, "Unauthorized");
 	}
 
 	try {
 		// params.id should be in format YYYY-MM-DD
 		const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 		if (!dateMatch) {
-			throw error(400, 'Invalid date format');
+			throw error(400, "Invalid date format");
 		}
 
 		const [, year, month, day] = dateMatch;
-		const entry = await getDiaryEntry({
-			year: parseInt(year, 10),
-			month: parseInt(month, 10),
-			day: parseInt(day, 10)
+		const response = await getDiaryEntry({
+			date: createYMD(Number.parseInt(year, 10), Number.parseInt(month, 10), Number.parseInt(day, 10)),
+			accessToken
 		});
 
-		if (!entry) {
-			throw error(404, 'Diary entry not found');
+		if (!response.entry) {
+			throw error(404, "Diary entry not found");
 		}
 
 		return {
-			entry
+			entry: response.entry,
 		};
 	} catch (err) {
 		if (err instanceof Response) {
 			throw err;
 		}
-		console.error('Failed to load diary entry:', err);
-		throw error(500, 'Failed to load diary entry');
+		console.error("Failed to load diary entry:", err);
+		throw error(500, "Failed to load diary entry");
 	}
 };
 
 export const actions: Actions = {
 	update: async ({ request, params, cookies }) => {
-		const accessToken = cookies.get('accessToken');
-		
+		const accessToken = cookies.get("accessToken");
+
 		if (!accessToken) {
-			throw error(401, 'Unauthorized');
+			throw error(401, "Unauthorized");
 		}
 
 		const data = await request.formData();
-		const content = data.get('content') as string;
-		const title = data.get('title') as string || '';
-		const dateStr = data.get('date') as string;
-		
+		const content = data.get("content") as string;
+		const title = (data.get("title") as string) || "";
+		const dateStr = data.get("date") as string;
+
 		if (!content || !dateStr) {
 			return {
-				error: 'コンテンツと日付は必須です'
+				error: "コンテンツと日付は必須です",
 			};
 		}
 
@@ -62,80 +66,78 @@ export const actions: Actions = {
 			// First, get the current entry to get the ID
 			const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 			if (!dateMatch) {
-				throw error(400, 'Invalid date format');
+				throw error(400, "Invalid date format");
 			}
 
 			const [, year, month, day] = dateMatch;
-			const currentEntry = await getDiaryEntry({
-				year: parseInt(year, 10),
-				month: parseInt(month, 10),
-				day: parseInt(day, 10)
+			const currentResponse = await getDiaryEntry({
+				date: createYMD(Number.parseInt(year, 10), Number.parseInt(month, 10), Number.parseInt(day, 10)),
+				accessToken
 			});
 
-			if (!currentEntry) {
-				throw error(404, 'Diary entry not found');
+			if (!currentResponse.entry) {
+				throw error(404, "Diary entry not found");
 			}
 
 			const date = new Date(dateStr);
 			await updateDiaryEntry({
-				id: currentEntry.id,
+				id: currentResponse.entry.id,
 				title,
 				content,
-				date: {
-					year: date.getFullYear(),
-					month: date.getMonth() + 1,
-					day: date.getDate()
-				}
+				date: createYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
+				accessToken
 			});
 
-			throw redirect(303, '/diary');
+			throw redirect(303, "/diary");
 		} catch (err) {
 			if (err instanceof Response) {
 				throw err;
 			}
-			console.error('Failed to update diary entry:', err);
+			console.error("Failed to update diary entry:", err);
 			return {
-				error: '日記の更新に失敗しました'
+				error: "日記の更新に失敗しました",
 			};
 		}
 	},
 
 	delete: async ({ params, cookies }) => {
-		const accessToken = cookies.get('accessToken');
-		
+		const accessToken = cookies.get("accessToken");
+
 		if (!accessToken) {
-			throw error(401, 'Unauthorized');
+			throw error(401, "Unauthorized");
 		}
 
 		try {
 			// First, get the current entry to get the ID
 			const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 			if (!dateMatch) {
-				throw error(400, 'Invalid date format');
+				throw error(400, "Invalid date format");
 			}
 
 			const [, year, month, day] = dateMatch;
-			const currentEntry = await getDiaryEntry({
-				year: parseInt(year, 10),
-				month: parseInt(month, 10),
-				day: parseInt(day, 10)
+			const currentResponse = await getDiaryEntry({
+				date: createYMD(Number.parseInt(year, 10), Number.parseInt(month, 10), Number.parseInt(day, 10)),
+				accessToken
 			});
 
-			if (!currentEntry) {
-				throw error(404, 'Diary entry not found');
+			if (!currentResponse.entry) {
+				throw error(404, "Diary entry not found");
 			}
 
-			await deleteDiaryEntry(currentEntry.id);
+			await deleteDiaryEntry({
+				id: currentResponse.entry.id,
+				accessToken
+			});
 
-			throw redirect(303, '/diary');
+			throw redirect(303, "/diary");
 		} catch (err) {
 			if (err instanceof Response) {
 				throw err;
 			}
-			console.error('Failed to delete diary entry:', err);
+			console.error("Failed to delete diary entry:", err);
 			return {
-				error: '日記の削除に失敗しました'
+				error: "日記の削除に失敗しました",
 			};
 		}
-	}
+	},
 };

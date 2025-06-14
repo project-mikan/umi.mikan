@@ -1,4 +1,4 @@
-import { loginByPassword } from "$lib/server/auth-api.js";
+import { loginByPassword } from "$lib/server/auth-api";
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -25,7 +25,7 @@ export const actions: Actions = {
 				password,
 			});
 
-			cookies.set("accessToken", response.access_token, {
+			cookies.set("accessToken", response.accessToken, {
 				path: "/",
 				httpOnly: true,
 				secure: false, // Set to true in production with HTTPS
@@ -33,7 +33,7 @@ export const actions: Actions = {
 				maxAge: 60 * 15, // 15 minutes
 			});
 
-			cookies.set("refreshToken", response.refresh_token, {
+			cookies.set("refreshToken", response.refreshToken, {
 				path: "/",
 				httpOnly: true,
 				secure: false, // Set to true in production with HTTPS
@@ -44,7 +44,9 @@ export const actions: Actions = {
 			throw redirect(302, "/");
 		} catch (error: unknown) {
 			console.error("Login error:", error);
-			return fail(400, { error: error instanceof Error ? error.message : "Login failed" });
+			return fail(400, {
+				error: error instanceof Error ? error.message : "Login failed",
+			});
 		}
 	},
 };

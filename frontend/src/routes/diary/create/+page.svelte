@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { enhance } from '$app/forms';
-	import type { ActionData } from './$types';
+import { enhance } from "$app/forms";
+import { goto } from "$app/navigation";
+import type { ActionData } from "./$types";
 
-	export let form: ActionData;
+export let form: ActionData;
 
-	let content = '';
-	let date = new Date().toISOString().split('T')[0];
+let content = "";
+let date = new Date().toISOString().split("T")[0];
 
-	function cancel() {
-		goto('/diary');
-	}
+function cancel() {
+	goto("/diary");
+}
 </script>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
