@@ -5,10 +5,6 @@ export const load: PageServerLoad = async ({ cookies }) => {
 	const accessToken = cookies.get("accessToken");
 	const isAuthenticated = !!accessToken;
 
-	if (!isAuthenticated) {
-		throw redirect(302, "/login");
-	}
-
 	return {
 		isAuthenticated,
 	};

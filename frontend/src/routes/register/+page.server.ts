@@ -5,7 +5,7 @@ import type { Actions, PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ cookies }) => {
 	const accessToken = cookies.get("accessToken");
 	if (accessToken) {
-		throw redirect(302, "/");
+		throw redirect(302, "/diary");
 	}
 };
 
@@ -46,7 +46,9 @@ export const actions: Actions = {
 			throw redirect(302, "/");
 		} catch (error: unknown) {
 			console.error("Register error:", error);
-			return fail(400, { error: error instanceof Error ? error.message : "Registration failed" });
+			return fail(400, {
+				error: error instanceof Error ? error.message : "Registration failed",
+			});
 		}
 	},
 };

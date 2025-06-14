@@ -1,25 +1,13 @@
 // gRPC APIを使用したバックエンドとの通信（Diary Service）
-import { createDiaryClient, promisifyGrpcCall } from './grpc-client';
+import { diaryService } from './grpc-client';
+import { create } from '@bufbuild/protobuf';
 import { 
-	CreateDiaryEntryRequest,
-	CreateDiaryEntryResponse,
-	GetDiaryEntryRequest,
-	GetDiaryEntryResponse,
-	GetDiaryEntriesRequest,
-	GetDiaryEntriesResponse,
-	GetDiaryEntriesByMonthRequest,
-	GetDiaryEntriesByMonthResponse,
-	UpdateDiaryEntryRequest,
-	UpdateDiaryEntryResponse,
-	DeleteDiaryEntryRequest,
-	DeleteDiaryEntryResponse,
-	SearchDiaryEntriesRequest,
-	SearchDiaryEntriesResponse,
-	DiaryEntry,
-	YMD,
-	YM
+	YMDSchema,
+	YMSchema,
+	type YMD,
+	type YM,
+	type DiaryEntry
 } from '../grpc/diary/diary_pb';
-import * as grpc from '@grpc/grpc-js';
 
 // Interface definitions
 interface DateInput {
@@ -58,67 +46,57 @@ interface DiaryEntryResult {
 
 // Helper function to create YMD message
 function createYMD(date: DateInput): YMD {
-	const ymd = new YMD();
-	ymd.setYear(date.year);
-	ymd.setMonth(date.month);
-	ymd.setDay(date.day);
-	return ymd;
+	return create(YMDSchema, {
+		year: date.year,
+		month: date.month,
+		day: date.day
+	});
 }
 
 // Helper function to create YM message
 function createYM(month: MonthInput): YM {
-	const ym = new YM();
-	ym.setYear(month.year);
-	ym.setMonth(month.month);
-	return ym;
+	return create(YMSchema, {
+		year: month.year,
+		month: month.month
+	});
 }
 
 // Helper function to convert DiaryEntry to result
 function convertDiaryEntry(entry: DiaryEntry): DiaryEntryResult {
-	const date = entry.getDate();
+	const date = entry.date;
 	return {
-		id: entry.getId(),
+		id: entry.id,
 		date: {
-			year: date?.getYear() || 0,
-			month: date?.getMonth() || 0,
-			day: date?.getDay() || 0
+			year: date?.year || 0,
+			month: date?.month || 0,
+			day: date?.day || 0
 		},
-		content: entry.getContent()
+		content: entry.content
 	};
 }
 
 // API functions
 export async function createDiaryEntry(request: CreateDiaryRequest): Promise<DiaryEntryResult> {
 	try {
-		const client = createDiaryClient();
-		
-		const grpcRequest = new CreateDiaryEntryRequest();
-		grpcRequest.setContent(request.content);
-		grpcRequest.setDate(createYMD(request.date));
+		const response = await diaryService.createDiaryEntry({
+			content: request.content,
+			date: createYMD(request.date)
+		});
 
-		const response = await promisifyGrpcCall<CreateDiaryEntryRequest, CreateDiaryEntryResponse>(
-			client,
-			'createDiaryEntry',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
-
-		const entry = response.getEntry();
+		const entry = response.entry;
 		if (!entry) {
 			throw new Error('No diary entry returned');
 		}
 
 		return convertDiaryEntry(entry);
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.ALREADY_EXISTS) {
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('409') || error.message.includes('ALREADY_EXISTS')) {
 				throw new Error('Diary entry for this date already exists');
-			} else if (grpcError.code === grpc.status.UNAUTHENTICATED) {
+			} else if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
 				throw new Error('Authentication required');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
 				throw new Error('Backend service unavailable');
 			}
 		}
@@ -129,34 +107,24 @@ export async function createDiaryEntry(request: CreateDiaryRequest): Promise<Dia
 
 export async function getDiaryEntry(date: DateInput): Promise<DiaryEntryResult | null> {
 	try {
-		const client = createDiaryClient();
-		
-		const grpcRequest = new GetDiaryEntryRequest();
-		grpcRequest.setDate(createYMD(date));
+		const response = await diaryService.getDiaryEntry({
+			date: createYMD(date)
+		});
 
-		const response = await promisifyGrpcCall<GetDiaryEntryRequest, GetDiaryEntryResponse>(
-			client,
-			'getDiaryEntry',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
-
-		const entry = response.getEntry();
+		const entry = response.entry;
 		if (!entry) {
 			return null;
 		}
 
 		return convertDiaryEntry(entry);
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.NOT_FOUND) {
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('404') || error.message.includes('NOT_FOUND')) {
 				return null;
-			} else if (grpcError.code === grpc.status.UNAUTHENTICATED) {
+			} else if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
 				throw new Error('Authentication required');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
 				throw new Error('Backend service unavailable');
 			}
 		}
@@ -165,61 +133,38 @@ export async function getDiaryEntry(date: DateInput): Promise<DiaryEntryResult |
 	}
 }
 
-export async function getDiaryEntries(dates: DateInput[]): Promise<DiaryEntryResult[]> {
-	try {
-		const client = createDiaryClient();
-		
-		const grpcRequest = new GetDiaryEntriesRequest();
-		const ymdDates = dates.map(createYMD);
-		grpcRequest.setDatesList(ymdDates);
+// Additional diary service methods using simplified HTTP calls
+async function callDiaryEndpoint(path: string, data: any): Promise<any> {
+	const GRPC_SERVER_ADDRESS = process.env.GRPC_SERVER_ADDRESS || 'http://backend:8080';
+	const response = await fetch(`${GRPC_SERVER_ADDRESS}${path}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
+		},
+		body: JSON.stringify(data)
+	});
 
-		const response = await promisifyGrpcCall<GetDiaryEntriesRequest, GetDiaryEntriesResponse>(
-			client,
-			'getDiaryEntries',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
-
-		return response.getEntriesList().map(convertDiaryEntry);
-	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.UNAUTHENTICATED) {
-				throw new Error('Authentication required');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
-				throw new Error('Backend service unavailable');
-			}
-		}
-		
-		throw new Error('Failed to get diary entries: ' + (error instanceof Error ? error.message : 'Unknown error'));
+	if (!response.ok) {
+		throw new Error(`gRPC call failed: ${response.status} ${response.statusText}`);
 	}
+
+	return await response.json();
 }
 
 export async function getDiaryEntriesByMonth(month: MonthInput): Promise<DiaryEntryResult[]> {
 	try {
-		const client = createDiaryClient();
-		
-		const grpcRequest = new GetDiaryEntriesByMonthRequest();
-		grpcRequest.setMonth(createYM(month));
+		const response = await callDiaryEndpoint('/diary.DiaryService/GetDiaryEntriesByMonth', {
+			month: createYM(month)
+		});
 
-		const response = await promisifyGrpcCall<GetDiaryEntriesByMonthRequest, GetDiaryEntriesByMonthResponse>(
-			client,
-			'getDiaryEntriesByMonth',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
-
-		return response.getEntriesList().map(convertDiaryEntry);
+		return response.entries.map(convertDiaryEntry);
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.UNAUTHENTICATED) {
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
 				throw new Error('Authentication required');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
 				throw new Error('Backend service unavailable');
 			}
 		}
@@ -230,37 +175,27 @@ export async function getDiaryEntriesByMonth(month: MonthInput): Promise<DiaryEn
 
 export async function updateDiaryEntry(request: UpdateDiaryRequest): Promise<DiaryEntryResult> {
 	try {
-		const client = createDiaryClient();
-		
-		const grpcRequest = new UpdateDiaryEntryRequest();
-		grpcRequest.setId(request.id);
-		grpcRequest.setTitle(request.title);
-		grpcRequest.setContent(request.content);
-		grpcRequest.setDate(createYMD(request.date));
+		const response = await callDiaryEndpoint('/diary.DiaryService/UpdateDiaryEntry', {
+			id: request.id,
+			title: request.title,
+			content: request.content,
+			date: createYMD(request.date)
+		});
 
-		const response = await promisifyGrpcCall<UpdateDiaryEntryRequest, UpdateDiaryEntryResponse>(
-			client,
-			'updateDiaryEntry',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
-
-		const entry = response.getEntry();
+		const entry = response.entry;
 		if (!entry) {
 			throw new Error('No diary entry returned');
 		}
 
 		return convertDiaryEntry(entry);
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.NOT_FOUND) {
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('404') || error.message.includes('NOT_FOUND')) {
 				throw new Error('Diary entry not found');
-			} else if (grpcError.code === grpc.status.UNAUTHENTICATED) {
+			} else if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
 				throw new Error('Authentication required');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
 				throw new Error('Backend service unavailable');
 			}
 		}
@@ -271,29 +206,16 @@ export async function updateDiaryEntry(request: UpdateDiaryRequest): Promise<Dia
 
 export async function deleteDiaryEntry(id: string): Promise<boolean> {
 	try {
-		const client = createDiaryClient();
-		
-		const grpcRequest = new DeleteDiaryEntryRequest();
-		grpcRequest.setId(id);
-
-		const response = await promisifyGrpcCall<DeleteDiaryEntryRequest, DeleteDiaryEntryResponse>(
-			client,
-			'deleteDiaryEntry',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
-
-		return response.getSuccess();
+		const response = await callDiaryEndpoint('/diary.DiaryService/DeleteDiaryEntry', { id });
+		return response.success;
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.NOT_FOUND) {
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('404') || error.message.includes('NOT_FOUND')) {
 				throw new Error('Diary entry not found');
-			} else if (grpcError.code === grpc.status.UNAUTHENTICATED) {
+			} else if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
 				throw new Error('Authentication required');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
 				throw new Error('Backend service unavailable');
 			}
 		}
@@ -304,31 +226,21 @@ export async function deleteDiaryEntry(id: string): Promise<boolean> {
 
 export async function searchDiaryEntries(request: SearchRequest): Promise<{ keyword: string; entries: DiaryEntryResult[] }> {
 	try {
-		const client = createDiaryClient();
-		
-		const grpcRequest = new SearchDiaryEntriesRequest();
-		grpcRequest.setUserid(request.userId);
-		grpcRequest.setKeyword(request.keyword);
-
-		const response = await promisifyGrpcCall<SearchDiaryEntriesRequest, SearchDiaryEntriesResponse>(
-			client,
-			'searchDiaryEntries',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
+		const response = await callDiaryEndpoint('/diary.DiaryService/SearchDiaryEntries', {
+			userID: request.userId,
+			keyword: request.keyword
+		});
 
 		return {
-			keyword: response.getSearchedKeyword(),
-			entries: response.getEntriesList().map(convertDiaryEntry)
+			keyword: response.searchedKeyword,
+			entries: response.entries.map(convertDiaryEntry)
 		};
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.UNAUTHENTICATED) {
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
 				throw new Error('Authentication required');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
 				throw new Error('Backend service unavailable');
 			}
 		}

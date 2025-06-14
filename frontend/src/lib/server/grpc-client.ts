@@ -1,50 +1,46 @@
-import * as grpc from '@grpc/grpc-js';
-import { AuthServiceClient } from '../grpc/auth/auth_grpc_pb';
-import { DiaryServiceClient } from '../grpc/diary/diary_grpc_pb';
+// Simplified gRPC client using direct HTTP calls
+// This is a minimal implementation for the protobuf-es generated code
 
-// Backend gRPC server address
-const GRPC_SERVER_ADDRESS = process.env.GRPC_SERVER_ADDRESS || 'backend:8080';
+// Backend gRPC server address  
+const GRPC_SERVER_ADDRESS = process.env.GRPC_SERVER_ADDRESS || 'http://backend:8080';
 
-// Create gRPC clients
-export function createAuthClient() {
-	return new AuthServiceClient(
-		GRPC_SERVER_ADDRESS,
-		grpc.credentials.createInsecure()
-	);
-}
-
-export function createDiaryClient() {
-	return new DiaryServiceClient(
-		GRPC_SERVER_ADDRESS,
-		grpc.credentials.createInsecure()
-	);
-}
-
-// Utility function to promisify gRPC calls
-export function promisifyGrpcCall<TRequest, TResponse>(
-	client: any,
-	method: string,
-	request: TRequest,
-	metadata?: grpc.Metadata
-): Promise<TResponse> {
-	return new Promise((resolve, reject) => {
-		const call = client[method];
-		if (!call) {
-			reject(new Error(`Method ${method} not found on client`));
-			return;
-		}
-
-		call.call(
-			client,
-			request,
-			metadata || new grpc.Metadata(),
-			(error: grpc.ServiceError | null, response: TResponse) => {
-				if (error) {
-					reject(error);
-				} else {
-					resolve(response);
-				}
-			}
-		);
+// Simple HTTP-based gRPC client
+async function callGrpcEndpoint(path: string, data: any): Promise<any> {
+	const response = await fetch(`${GRPC_SERVER_ADDRESS}${path}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
+		},
+		body: JSON.stringify(data)
 	});
+
+	if (!response.ok) {
+		throw new Error(`gRPC call failed: ${response.status} ${response.statusText}`);
+	}
+
+	return await response.json();
 }
+
+// Auth service methods
+export const authService = {
+	registerByPassword: async (input: { email: string; password: string; name: string }) => {
+		return callGrpcEndpoint('/auth.AuthService/RegisterByPassword', input);
+	},
+	loginByPassword: async (input: { email: string; password: string }) => {
+		return callGrpcEndpoint('/auth.AuthService/LoginByPassword', input);
+	},
+	refreshAccessToken: async (input: { refreshToken: string }) => {
+		return callGrpcEndpoint('/auth.AuthService/RefreshAccessToken', input);
+	}
+};
+
+// Diary service methods
+export const diaryService = {
+	createDiaryEntry: async (input: { content: string; date: any }) => {
+		return callGrpcEndpoint('/diary.DiaryService/CreateDiaryEntry', input);
+	},
+	getDiaryEntry: async (input: { date: any }) => {
+		return callGrpcEndpoint('/diary.DiaryService/GetDiaryEntry', input);
+	}
+};

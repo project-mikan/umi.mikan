@@ -1,10 +1,6 @@
 // gRPC APIを使用したバックエンドとの通信
-import { createAuthClient, promisifyGrpcCall } from './grpc-client';
-import { LoginByPasswordRequest } from '../grpc/auth/auth_pb';
-import { RegisterByPasswordRequest } from '../grpc/auth/auth_pb';
-import { RefreshAccessTokenRequest } from '../grpc/auth/auth_pb';
-import { AuthResponse } from '../grpc/auth/auth_pb';
-import * as grpc from '@grpc/grpc-js';
+import { authService } from "./grpc-client";
+import type { LoginByPasswordRequest, RegisterByPasswordRequest, RefreshAccessTokenRequest, AuthResponse } from "../grpc/auth/auth_pb";
 
 interface LoginRequest {
 	email: string;
@@ -24,115 +20,100 @@ interface AuthResult {
 	expires_in: number;
 }
 
-export async function loginByPassword(request: LoginRequest): Promise<AuthResult> {
+export async function loginByPassword(
+	request: LoginRequest,
+): Promise<AuthResult> {
 	try {
-		const client = createAuthClient();
-		
-		const grpcRequest = new LoginByPasswordRequest();
-		grpcRequest.setEmail(request.email);
-		grpcRequest.setPassword(request.password);
-
-		const response = await promisifyGrpcCall<LoginByPasswordRequest, AuthResponse>(
-			client,
-			'loginByPassword',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
+		const response = await authService.loginByPassword({
+			email: request.email,
+			password: request.password,
+		});
 
 		return {
-			access_token: response.getAccessToken(),
-			refresh_token: response.getRefreshToken(),
-			token_type: response.getTokenType(),
-			expires_in: response.getExpiresIn()
+			access_token: response.accessToken,
+			refresh_token: response.refreshToken,
+			token_type: response.tokenType,
+			expires_in: response.expiresIn,
 		};
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.UNAUTHENTICATED) {
-				throw new Error('Invalid credentials');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
-				throw new Error('Backend service unavailable');
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
+				throw new Error("Invalid credentials");
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
+				throw new Error("Backend service unavailable");
 			}
 		}
-		
-		throw new Error('Login failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+
+		throw new Error(
+			"Login failed: " +
+				(error instanceof Error ? error.message : "Unknown error"),
+		);
 	}
 }
 
-export async function registerByPassword(request: RegisterRequest): Promise<AuthResult> {
+export async function registerByPassword(
+	request: RegisterRequest,
+): Promise<AuthResult> {
 	try {
-		const client = createAuthClient();
-		
-		const grpcRequest = new RegisterByPasswordRequest();
-		grpcRequest.setEmail(request.email);
-		grpcRequest.setPassword(request.password);
-		grpcRequest.setName(request.name);
-
-		const response = await promisifyGrpcCall<RegisterByPasswordRequest, AuthResponse>(
-			client,
-			'registerByPassword',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
+		const response = await authService.registerByPassword({
+			email: request.email,
+			password: request.password,
+			name: request.name,
+		});
 
 		return {
-			access_token: response.getAccessToken(),
-			refresh_token: response.getRefreshToken(),
-			token_type: response.getTokenType(),
-			expires_in: response.getExpiresIn()
+			access_token: response.accessToken,
+			refresh_token: response.refreshToken,
+			token_type: response.tokenType,
+			expires_in: response.expiresIn,
 		};
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.ALREADY_EXISTS) {
-				throw new Error('Email already registered');
-			} else if (grpcError.code === grpc.status.INVALID_ARGUMENT) {
-				throw new Error('Invalid registration data');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
-				throw new Error('Backend service unavailable');
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('409') || error.message.includes('ALREADY_EXISTS')) {
+				throw new Error("Email already registered");
+			} else if (error.message.includes('400') || error.message.includes('INVALID_ARGUMENT')) {
+				throw new Error("Invalid registration data");
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
+				throw new Error("Backend service unavailable");
 			}
 		}
-		
-		throw new Error('Registration failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+
+		throw new Error(
+			"Registration failed: " +
+				(error instanceof Error ? error.message : "Unknown error"),
+		);
 	}
 }
 
-export async function refreshAccessToken(refreshToken: string): Promise<AuthResult> {
+export async function refreshAccessToken(
+	refreshToken: string,
+): Promise<AuthResult> {
 	try {
-		const client = createAuthClient();
-		
-		const grpcRequest = new RefreshAccessTokenRequest();
-		grpcRequest.setRefreshToken(refreshToken);
-
-		const response = await promisifyGrpcCall<RefreshAccessTokenRequest, AuthResponse>(
-			client,
-			'refreshAccessToken',
-			grpcRequest
-		);
-
-		// client.close(); // Close method not available on generated client
+		const response = await authService.refreshAccessToken({
+			refreshToken: refreshToken,
+		});
 
 		return {
-			access_token: response.getAccessToken(),
-			refresh_token: response.getRefreshToken(),
-			token_type: response.getTokenType(),
-			expires_in: response.getExpiresIn()
+			access_token: response.accessToken,
+			refresh_token: response.refreshToken,
+			token_type: response.tokenType,
+			expires_in: response.expiresIn,
 		};
 	} catch (error) {
-		if (error instanceof Error && 'code' in error) {
-			const grpcError = error as grpc.ServiceError;
-			
-			if (grpcError.code === grpc.status.UNAUTHENTICATED) {
-				throw new Error('Invalid refresh token');
-			} else if (grpcError.code === grpc.status.UNAVAILABLE) {
-				throw new Error('Backend service unavailable');
+		// Handle specific gRPC errors
+		if (error instanceof Error) {
+			if (error.message.includes('401') || error.message.includes('UNAUTHENTICATED')) {
+				throw new Error("Invalid refresh token");
+			} else if (error.message.includes('503') || error.message.includes('UNAVAILABLE')) {
+				throw new Error("Backend service unavailable");
 			}
 		}
-		
-		throw new Error('Token refresh failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+
+		throw new Error(
+			"Token refresh failed: " +
+				(error instanceof Error ? error.message : "Unknown error"),
+		);
 	}
 }
