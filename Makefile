@@ -43,7 +43,7 @@ grpc-go:
 grpc-ts:
 	# 削除分は反映されないのでrm -rfしてから実行
 	rm -rf frontend/src/lib/grpc/*
-	npx protoc --ts_out ./frontend/src/lib/grpc --proto_path proto proto/**/*.proto 
+	docker compose exec frontend pnpm dlx buf generate
 
 
 grpc:
