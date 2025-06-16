@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 )
@@ -22,10 +24,13 @@ func GenUser(email, name string, authType AuthType) *User {
 }
 
 func (u *User) ConvertToDBModel() database.User {
+	currentTime := time.Now().Unix()
 	return database.User{
-		ID:       u.ID,
-		Email:    u.Email,
-		Name:     u.Name,
-		AuthType: u.AuthType.Int16(),
+		ID:        u.ID,
+		Email:     u.Email,
+		Name:      u.Name,
+		AuthType:  u.AuthType.Int16(),
+		CreatedAt: currentTime,
+		UpdatedAt: currentTime,
 	}
 }

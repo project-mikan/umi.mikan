@@ -46,8 +46,20 @@ export const actions: Actions = {
 			throw redirect(302, "/");
 		} catch (error: unknown) {
 			console.error("Register error:", error);
+			let errorMessage = "Registration failed";
+			
+			if (error instanceof Error) {
+				if (error.message.includes("already exists")) {
+					errorMessage = "このメールアドレスは既に登録済みです";
+				} else if (error.message.includes("validation error")) {
+					errorMessage = "入力内容に問題があります";
+				} else {
+					errorMessage = error.message;
+				}
+			}
+			
 			return fail(400, {
-				error: error instanceof Error ? error.message : "Registration failed",
+				error: errorMessage,
 			});
 		}
 	},

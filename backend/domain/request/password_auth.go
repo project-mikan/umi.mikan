@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
@@ -18,9 +19,12 @@ type PasswordAuth struct {
 }
 
 func (u *PasswordAuth) ConvertToDBModel(userID uuid.UUID) database.UserPasswordAuthe {
+	currentTime := time.Now().Unix()
 	return database.UserPasswordAuthe{
 		UserID:         userID,
 		PasswordHashed: u.PasswordHashed,
+		CreatedAt:      currentTime,
+		UpdatedAt:      currentTime,
 	}
 }
 
