@@ -1,6 +1,6 @@
 import { getDiaryEntriesByMonth, createYM } from "$lib/server/diary-api";
-import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import { error, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies }) => {
 	const accessToken = cookies.get("accessToken");
@@ -26,4 +26,12 @@ export const load: PageServerLoad = async ({ cookies }) => {
 			entries: [],
 		};
 	}
+};
+
+export const actions: Actions = {
+	logout: async ({ cookies }) => {
+		cookies.delete("accessToken", { path: "/" });
+		cookies.delete("refreshToken", { path: "/" });
+		throw redirect(302, "/login");
+	},
 };
