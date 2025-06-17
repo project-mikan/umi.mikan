@@ -3,13 +3,16 @@ package testkit
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
+	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
 
 func TestTransactionFunctions(t *testing.T) {
-	db, err := sql.Open("postgres", "host=postgres port=5432 user=postgres password=dev-pass dbname=umi_mikan sslmode=disable")
+	config := testutil.DefaultTestDBConfig()
+	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.Host, config.Port, config.User, config.Password, config.DBName))
 	if err != nil {
 		t.Skip("Database connection not available, skipping test")
 	}
@@ -57,4 +60,3 @@ func TestTransactionFunctions(t *testing.T) {
 		}
 	})
 }
-
