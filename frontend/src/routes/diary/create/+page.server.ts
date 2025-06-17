@@ -27,8 +27,6 @@ export const actions: Actions = {
 				date: createYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
 				accessToken
 			});
-
-			throw redirect(303, "/diary");
 		} catch (err) {
 			if (err instanceof Response) {
 				throw err;
@@ -38,5 +36,7 @@ export const actions: Actions = {
 				error: "日記の作成に失敗しました",
 			};
 		}
+
+		redirect(303, "/diary");
 	},
 };

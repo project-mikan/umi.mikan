@@ -87,8 +87,6 @@ export const actions: Actions = {
 				date: createYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
 				accessToken
 			});
-
-			throw redirect(303, "/diary");
 		} catch (err) {
 			if (err instanceof Response) {
 				throw err;
@@ -98,6 +96,8 @@ export const actions: Actions = {
 				error: "日記の更新に失敗しました",
 			};
 		}
+
+		redirect(303, "/diary");
 	},
 
 	delete: async ({ params, cookies }) => {
@@ -128,8 +128,6 @@ export const actions: Actions = {
 				id: currentResponse.entry.id,
 				accessToken
 			});
-
-			throw redirect(303, "/diary");
 		} catch (err) {
 			if (err instanceof Response) {
 				throw err;
@@ -139,5 +137,7 @@ export const actions: Actions = {
 				error: "日記の削除に失敗しました",
 			};
 		}
+
+		redirect(303, "/diary");
 	},
 };

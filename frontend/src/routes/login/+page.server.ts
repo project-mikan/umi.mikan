@@ -40,13 +40,13 @@ export const actions: Actions = {
 				sameSite: "strict",
 				maxAge: 60 * 60 * 24 * 30, // 30 days
 			});
-
-			throw redirect(302, "/");
 		} catch (error: unknown) {
 			console.error("Login error:", error);
 			return fail(400, {
 				error: error instanceof Error ? error.message : "Login failed",
 			});
 		}
+
+		redirect(303, "/");
 	},
 };

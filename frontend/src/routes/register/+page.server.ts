@@ -42,8 +42,6 @@ export const actions: Actions = {
 				sameSite: "strict",
 				maxAge: 60 * 60 * 24 * 30, // 30 days
 			});
-
-			throw redirect(302, "/");
 		} catch (error: unknown) {
 			console.error("Register error:", error);
 			let errorMessage = "Registration failed";
@@ -62,5 +60,7 @@ export const actions: Actions = {
 				error: errorMessage,
 			});
 		}
+
+		redirect(303, "/");
 	},
 };
