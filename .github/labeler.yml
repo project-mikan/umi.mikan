@@ -1,20 +1,25 @@
 frontend:
-  - frontend/
+  - 'frontend/**/*'
+
 backend:
-  - backend/
-schema:
-  - proto/
-  - schema/
-infra:
-  - .github/
-  - infra/
-  - wiki/
-  - Makefile
-  - compose.yml
-  - compose.prod.example.yml
+  - 'backend/**/*'
+
+proto:
+  - 'proto/**/*'
+
+database:
+  - 'schema/**/*'
+
+docker:
+  - 'infra/**/*'
+  - 'compose*.yml'
+  - '**/Dockerfile'
+
 docs:
-  - adr/
-  - README.md
-  - USAGE.md
-  - CLAUDE.md
-  - LICENSE
+  - 'adr/**/*'
+  - '*.md'
+  - 'LICENSE'
+
+config:
+  - 'Makefile'
+  - '.github/**/*'
