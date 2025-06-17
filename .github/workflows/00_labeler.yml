@@ -1,6 +1,6 @@
 name: 【infra】PR自動ラベル付与
 on:
-  - pull_request
+  - pull_request_target
 
 jobs:
   labeler:
