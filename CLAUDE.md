@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 sudo pacman -S protobuf
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-npm install -g grpc_tools_node_protoc_ts
+npm install -g @grpc/proto-loader
 ```
 
 ### Starting Development Environment
@@ -42,6 +42,8 @@ make log-f             # View frontend logs
 
 If you want to use pnpm commands, use `docker compose exec frontend pnpm`.
 
+backend/infrastructure/grpc dir is automatically generated. DO NOT EDIT MANUALLY.
+
 ### Backend Development
 
 ```bash
@@ -51,6 +53,8 @@ make log-b             # View backend logs
 ```
 
 If you want to use the go command, use `docker compose exec backend go`.
+
+frontend/src/lib/grpc dir is automatically generated. DO NOT EDIT MANUALLY.
 
 ### Database Operations
 

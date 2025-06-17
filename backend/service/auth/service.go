@@ -22,6 +22,15 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
+	// --- 既存ユーザーの確認 ---
+	existingUser, err := database.UserByEmail(ctx, s.DB, passwordAuth.Email)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check existing user: %w", err)
+	}
+	if existingUser != nil {
+		return nil, fmt.Errorf("user with email %s already exists", passwordAuth.Email)
+	}
+
 	// --- 登録 ---
 	user := model.GenUser(passwordAuth.Email, passwordAuth.Name, model.AuthTypeEmailPassword)
 	// TODO: トランザクション張るようにする
@@ -66,7 +75,8 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 	if err != nil {
 		return nil, fmt.Errorf("failed to get password auth: %w", err)
 	}
-	if passwordAuth.PasswordHashed != passwordAuthDB.PasswordHashed {
+	// bcryptを使って平文パスワードとハッシュを比較
+	if err := request.VerifyPassword(passwordAuth.Password, passwordAuthDB.PasswordHashed); err != nil {
 		return nil, fmt.Errorf("password does not match")
 	}
 

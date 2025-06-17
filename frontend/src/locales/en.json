@@ -1,0 +1,25 @@
+{
+	"auth": {
+		"login": {
+			"title": "Sign in to your account",
+			"email": "Email address",
+			"password": "Password",
+			"submit": "Sign in",
+			"submitting": "Signing in...",
+			"noAccount": "Don't have an account? Sign up",
+			"required": "Email and password are required",
+			"failed": "Login failed"
+		},
+		"register": {
+			"title": "Create your account",
+			"name": "Full name",
+			"email": "Email address",
+			"password": "Password",
+			"submit": "Sign up",
+			"submitting": "Signing up...",
+			"hasAccount": "Already have an account? Sign in",
+			"required": "Name, email and password are required",
+			"failed": "Registration failed"
+		}
+	}
+}

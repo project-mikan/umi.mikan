@@ -1,0 +1,35 @@
+frontend:
+- changed-files:
+  - any-glob-to-any-file: 'frontend/**/*'
+
+backend:
+- changed-files:
+  - any-glob-to-any-file: 'backend/**/*'
+
+proto:
+- changed-files:
+  - any-glob-to-any-file: 'proto/**/*'
+
+database:
+- changed-files:
+  - any-glob-to-any-file: 'schema/**/*'
+
+docker:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'infra/**/*'
+    - 'compose*.yml'
+    - '**/Dockerfile'
+
+docs:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'adr/**/*'
+    - '*.md'
+    - 'LICENSE'
+
+config:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'Makefile'
+    - '.github/**/*'

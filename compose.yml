@@ -5,6 +5,7 @@ services:
       dockerfile: ../infra/dev/backend/Dockerfile
     volumes:
       - ./backend:/backend
+      - ./proto:/proto # 内部で解決できるようにマウント
     environment:
       TZ: Asia/Tokyo
       PORT: 8080
@@ -33,6 +34,7 @@ services:
     user: "1000:1000"
     volumes:
       - ./frontend:/frontend
+      - ./proto:/proto # 内部で解決できるようにマウント
 
   postgres:
     image: postgres:17
