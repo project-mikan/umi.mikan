@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -33,16 +34,20 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 
 	// --- 登録 ---
 	user := model.GenUser(passwordAuth.Email, passwordAuth.Name, model.AuthTypeEmailPassword)
-	// TODO: トランザクション張るようにする
-	userDB := user.ConvertToDBModel()
-	err = userDB.Save(ctx, s.DB)
+	// トランザクション内でユーザー作成とパスワード認証を同時に実行
+	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+		userDB := user.ConvertToDBModel()
+		if err := userDB.Save(ctx, tx); err != nil {
+			return fmt.Errorf("failed to insert user: %w", err)
+		}
+		passwordAuthDB := passwordAuth.ConvertToDBModel(user.ID)
+		if err := passwordAuthDB.Save(ctx, tx); err != nil {
+			return fmt.Errorf("failed to insert password auth: %w", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to insert user: %w", err)
-	}
-	passwordAuthDB := passwordAuth.ConvertToDBModel(user.ID)
-	err = passwordAuthDB.Save(ctx, s.DB)
-	if err != nil {
-		return nil, fmt.Errorf("failed to insert password auth: %w", err)
+		return nil, err
 	}
 
 	// --- JWTトークンの生成 ---
@@ -55,7 +60,6 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 }
 
 func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordRequest) (*g.AuthResponse, error) {
-	// TODO: トランザクション張るようにする
 	passwordAuth, err := request.ValidateLoginByPasswordRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)

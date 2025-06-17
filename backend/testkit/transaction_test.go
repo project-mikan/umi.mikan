@@ -1,0 +1,55 @@
+package testkit
+
+import (
+	"context"
+	"database/sql"
+	"testing"
+
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
+)
+
+func TestTransactionFunctions(t *testing.T) {
+	// テスト用のDB接続（実際のテストではモックまたはテスト用DBを使用）
+	db, err := sql.Open("postgres", "host=localhost port=5432 user=test password=test dbname=test sslmode=disable")
+	if err != nil {
+		t.Skip("Database connection not available, skipping test")
+	}
+	defer db.Close()
+
+	ctx := context.Background()
+
+	// RwTransactionのテスト
+	t.Run("RwTransaction", func(t *testing.T) {
+		err := database.RwTransaction(ctx, db, func(tx *sql.Tx) error {
+			// トランザクション内でのテスト処理
+			_, err := tx.ExecContext(ctx, "SELECT 1")
+			return err
+		})
+		if err != nil {
+			t.Errorf("RwTransaction failed: %v", err)
+		}
+	})
+
+	// RoTransactionのテスト
+	t.Run("RoTransaction", func(t *testing.T) {
+		err := database.RoTransaction(ctx, db, func(tx *sql.Tx) error {
+			// 読み取り専用トランザクション内でのテスト処理
+			_, err := tx.QueryContext(ctx, "SELECT 1")
+			return err
+		})
+		if err != nil {
+			t.Errorf("RoTransaction failed: %v", err)
+		}
+	})
+
+	// エラーハンドリングのテスト
+	t.Run("TransactionRollback", func(t *testing.T) {
+		err := database.RwTransaction(ctx, db, func(tx *sql.Tx) error {
+			// 意図的にエラーを発生させる
+			return sql.ErrNoRows
+		})
+		if err != sql.ErrNoRows {
+			t.Errorf("Expected error to be returned, got: %v", err)
+		}
+	})
+}
