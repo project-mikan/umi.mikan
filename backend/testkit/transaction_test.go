@@ -9,12 +9,16 @@ import (
 )
 
 func TestTransactionFunctions(t *testing.T) {
-	// テスト用のDB接続（実際のテストではモックまたはテスト用DBを使用）
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=test password=test dbname=test sslmode=disable")
+	db, err := sql.Open("postgres", "host=postgres port=5432 user=postgres password=dev-pass dbname=umi_mikan sslmode=disable")
 	if err != nil {
 		t.Skip("Database connection not available, skipping test")
 	}
 	defer db.Close()
+
+	// Test connection
+	if err := db.Ping(); err != nil {
+		t.Skip("Database ping failed, skipping test")
+	}
 
 	ctx := context.Background()
 
@@ -53,3 +57,4 @@ func TestTransactionFunctions(t *testing.T) {
 		}
 	})
 }
+

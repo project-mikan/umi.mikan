@@ -25,7 +25,7 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 
 	// --- 既存ユーザーの確認 ---
 	existingUser, err := database.UserByEmail(ctx, s.DB, passwordAuth.Email)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("failed to check existing user: %w", err)
 	}
 	if existingUser != nil {
@@ -68,10 +68,10 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 	// --- ユーザーの取得 ---
 	userDB, err := database.UserByEmail(ctx, s.DB, passwordAuth.Email)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
 		return nil, fmt.Errorf("failed to get user by email: %w", err)
-	}
-	if userDB == nil {
-		return nil, fmt.Errorf("user not found")
 	}
 
 	// --- パスワードの検証 ---
