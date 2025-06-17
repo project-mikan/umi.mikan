@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,10 +30,27 @@ func (u *PasswordAuth) ConvertToDBModel(userID uuid.UUID) database.UserPasswordA
 }
 
 func ValidateRegisterByPasswordRequest(req *g.RegisterByPasswordRequest) (*PasswordAuth, error) {
-	// TODO: 細かくやる
-	if req.GetEmail() == "" || req.GetPassword() == "" || req.GetName() == "" {
-		return nil, fmt.Errorf("email and password and name must not be empty")
+	// Check if required fields are not empty
+	if req.GetEmail() == "" {
+		return nil, fmt.Errorf("email must not be empty")
 	}
+	if req.GetPassword() == "" {
+		return nil, fmt.Errorf("password must not be empty")
+	}
+	if req.GetName() == "" {
+		return nil, fmt.Errorf("name must not be empty")
+	}
+
+	// Validate email format
+	if !isValidEmail(req.GetEmail()) {
+		return nil, fmt.Errorf("invalid email format")
+	}
+
+	// Validate password strength
+	if len(req.GetPassword()) < 8 {
+		return nil, fmt.Errorf("password must be at least 8 characters long")
+	}
+
 	hashedPassword, err := encryptPassword(req.GetPassword())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
@@ -86,4 +104,10 @@ func encryptPassword(password string) (string, error) {
 // VerifyPassword パスワードとハッシュを比較して検証する
 func VerifyPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+// isValidEmail validates email format using regex
+func isValidEmail(email string) bool {
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	return emailRegex.MatchString(email)
 }

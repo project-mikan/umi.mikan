@@ -2,6 +2,7 @@ package diary
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -185,13 +186,20 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to update this diary entry")
 	}
 
-	diary.Content = message.Content
-	if message.Date != nil {
-		diary.Date = time.Date(int(message.Date.Year), time.Month(message.Date.Month), int(message.Date.Day), 0, 0, 0, 0, time.UTC)
-	}
-	diary.UpdatedAt = time.Now().Unix()
+	// トランザクション内で日記を更新
+	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+		diary.Content = message.Content
+		if message.Date != nil {
+			diary.Date = time.Date(int(message.Date.Year), time.Month(message.Date.Month), int(message.Date.Day), 0, 0, 0, 0, time.UTC)
+		}
+		diary.UpdatedAt = time.Now().Unix()
 
-	if err := diary.Update(ctx, s.DB); err != nil {
+		if err := diary.Update(ctx, tx); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -232,7 +240,11 @@ func (s *DiaryEntry) DeleteDiaryEntry(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to delete this diary entry")
 	}
 
-	if err := diary.Delete(ctx, s.DB); err != nil {
+	// トランザクション内で日記を削除
+	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+		return diary.Delete(ctx, tx)
+	})
+	if err != nil {
 		return nil, err
 	}
 

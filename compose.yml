@@ -17,6 +17,11 @@ services:
       HOST: localhost
       FRONTEND_URL: "http://localhost:5173"
       JWT_SECRET: "hogehoge"
+      TEST_DB_HOST: postgres_test
+      TEST_DB_PORT: 5432
+      TEST_DB_USER: postgres
+      TEST_DB_PASSWORD: test-pass
+      TEST_DB_NAME: umi_mikan_test
     tty: true
     ports:
       - 8080:8080
@@ -50,5 +55,20 @@ services:
       - postgres_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
 
+  postgres_test:
+    image: postgres:17
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "test-pass"
+      POSTGRES_DB: "umi_mikan_test"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_volume:/var/lib/postgresql/data
+      - ./schema:/docker-entrypoint-initdb.d
+
 volumes:
   postgres_volume:
+  postgres_test_volume:
