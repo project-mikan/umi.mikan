@@ -34,7 +34,6 @@ services:
     user: "1000:1000"
     volumes:
       - ./frontend:/frontend
-      - /frontend/node_modules
       - ./proto:/proto # 内部で解決できるようにマウント
 
   postgres:
