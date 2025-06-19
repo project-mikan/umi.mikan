@@ -64,6 +64,10 @@ jobs:
       env:
         DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
         JWT_SECRET: test-secret-for-ci
+        TEST_DB_HOST: localhost
+        TEST_DB_USER: postgres
+        TEST_DB_PASSWORD: dev-pass
+        TEST_DB_NAME: umi_mikan
 
     - name: Run tests with coverage
       working-directory: ./backend
@@ -71,6 +75,10 @@ jobs:
       env:
         DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
         JWT_SECRET: test-secret-for-ci
+        TEST_DB_HOST: localhost
+        TEST_DB_USER: postgres
+        TEST_DB_PASSWORD: dev-pass
+        TEST_DB_NAME: umi_mikan
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
