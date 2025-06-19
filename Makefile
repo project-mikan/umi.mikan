@@ -78,3 +78,10 @@ test-benchmark:
 
 test-race:
 	docker compose exec backend go test -race ./...
+
+# Backend Linting Commands
+lint:
+	docker compose exec backend go tool golangci-lint run
+
+lint-fix:
+	docker compose exec backend go tool golangci-lint run --fix

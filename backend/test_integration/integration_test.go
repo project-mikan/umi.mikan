@@ -61,14 +61,17 @@ func TestCompleteUserJourney(t *testing.T) {
 	authCtx := testutil.CreateAuthenticatedContext(user.ID)
 
 	// Step 4: Create diary entries with unique dates
-	baseDate := uint32(time.Now().Unix() % 28 + 1) // Get a day between 1-28
+	// Use nanoseconds to get more unique values for each test run
+	nanoTime := time.Now().UnixNano()
+	baseDate := uint32((nanoTime % 25) + 1) // Get a day between 1-25 (leaving room for +2)
+	year := uint32(2025 + (nanoTime%5))     // Use different years too
 	diaryEntries := []struct {
 		content string
 		date    *g.YMD
 	}{
-		{"First diary entry", &g.YMD{Year: 2025, Month: 1, Day: baseDate}},
-		{"Second diary entry", &g.YMD{Year: 2025, Month: 1, Day: baseDate + 1}},
-		{"Third diary entry", &g.YMD{Year: 2025, Month: 1, Day: baseDate + 2}},
+		{"First diary entry", &g.YMD{Year: year, Month: 1, Day: baseDate}},
+		{"Second diary entry", &g.YMD{Year: year, Month: 1, Day: baseDate + 1}},
+		{"Third diary entry", &g.YMD{Year: year, Month: 1, Day: baseDate + 2}},
 	}
 
 	createdEntries := []*g.DiaryEntry{}
@@ -220,9 +223,13 @@ func TestUserIsolation(t *testing.T) {
 	user2Ctx := testutil.CreateAuthenticatedContext(user2.ID)
 
 	// User 1 creates a diary entry
+	nanoTime := time.Now().UnixNano()
+	baseDate := uint32((nanoTime % 25) + 1)
+	year := uint32(2024 + (nanoTime%5))
+	
 	user1CreateReq := &g.CreateDiaryEntryRequest{
 		Content: "User 1's private diary",
-		Date:    &g.YMD{Year: 2024, Month: 2, Day: 1},
+		Date:    &g.YMD{Year: year, Month: 2, Day: baseDate},
 	}
 	_, err = diaryService.CreateDiaryEntry(user1Ctx, user1CreateReq)
 	if err != nil {
@@ -232,7 +239,7 @@ func TestUserIsolation(t *testing.T) {
 	// User 2 creates a diary entry
 	user2CreateReq := &g.CreateDiaryEntryRequest{
 		Content: "User 2's private diary",
-		Date:    &g.YMD{Year: 2024, Month: 2, Day: 2},
+		Date:    &g.YMD{Year: year, Month: 2, Day: baseDate + 1},
 	}
 	_, err = diaryService.CreateDiaryEntry(user2Ctx, user2CreateReq)
 	if err != nil {

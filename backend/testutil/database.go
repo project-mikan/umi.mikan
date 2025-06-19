@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	_ "github.com/lib/pq"
@@ -43,17 +44,18 @@ func SetupTestDB(t *testing.T) *sql.DB {
 	
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		t.Skipf("Database ping failed, skipping test: %v", err)
 	}
 	
-	// Clean up test data at start
-	cleanupTestData(t, db)
+	// Don't clean up test data at start to avoid interfering with other tests
+	// cleanupTestData(t, db)
 	
 	// Schedule cleanup at the end of the test using t.Cleanup
 	t.Cleanup(func() {
+		// Only clean data at the end, not at the start
 		cleanupTestData(t, db)
-		db.Close()
+		_ = db.Close()
 	})
 	
 	return db
@@ -61,16 +63,34 @@ func SetupTestDB(t *testing.T) *sql.DB {
 
 // cleanupTestData removes test data from the database
 func cleanupTestData(t *testing.T, db *sql.DB) {
+	// Use transaction to ensure cleanup order is maintained
+	tx, err := db.Begin()
+	if err != nil {
+		t.Logf("Warning: failed to begin cleanup transaction: %v", err)
+		return
+	}
+	defer func() { _ = tx.Rollback() }()
+	
+	// Only clean up data from tests that have definitely completed
+	// Use test name and process ID to avoid cleaning up data from running tests
+	testPrefix := fmt.Sprintf("%s-%d-", t.Name(), os.Getpid())
+	testPrefix = strings.ReplaceAll(testPrefix, "/", "-")
+	testPrefix = strings.ReplaceAll(testPrefix, " ", "-")
+	
 	cleanupQueries := []string{
-		"DELETE FROM diaries WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%')",
-		"DELETE FROM user_password_authes WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%')",
-		"DELETE FROM users WHERE email LIKE '%test%'",
+		fmt.Sprintf("DELETE FROM diaries WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%%test-suite-%s%%')", testPrefix),
+		fmt.Sprintf("DELETE FROM user_password_authes WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%%test-suite-%s%%')", testPrefix),
+		fmt.Sprintf("DELETE FROM users WHERE email LIKE '%%test-suite-%s%%'", testPrefix),
 	}
 	
 	for _, query := range cleanupQueries {
-		if _, err := db.Exec(query); err != nil {
+		if _, err := tx.Exec(query); err != nil {
 			t.Logf("Warning: cleanup query failed: %v", err)
 		}
+	}
+	
+	if err := tx.Commit(); err != nil {
+		t.Logf("Warning: failed to commit cleanup transaction: %v", err)
 	}
 }
 
@@ -88,7 +108,7 @@ func SetupTestDBForSuite(t *testing.T) *sql.DB {
 	
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		t.Skipf("Database ping failed, skipping test: %v", err)
 	}
 	
@@ -100,7 +120,7 @@ func SetupTestDBForSuite(t *testing.T) *sql.DB {
 func CleanupTestDB(t *testing.T, db *sql.DB) {
 	if db != nil {
 		cleanupTestData(t, db)
-		db.Close()
+		_ = db.Close()
 	}
 }
 

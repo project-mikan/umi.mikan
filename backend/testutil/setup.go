@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,7 +66,13 @@ type TestData struct {
 
 // AddTestUser adds another test user to the test data
 func (td *TestData) AddTestUser(email, name, password string) uuid.UUID {
-	userID := CreateTestUserWithPassword(td.suite.t, td.suite.DB, email, name, password)
+	// Make email unique by adding test identifier and timestamp
+	testRunID := fmt.Sprintf("%s-%d-%d", td.suite.t.Name(), os.Getpid(), time.Now().UnixNano())
+	testRunID = strings.ReplaceAll(testRunID, "/", "-")
+	testRunID = strings.ReplaceAll(testRunID, " ", "-")
+	uniqueEmail := fmt.Sprintf("%s-%s", testRunID, email)
+	
+	userID := CreateTestUserWithPassword(td.suite.t, td.suite.DB, uniqueEmail, name, password)
 	td.Users = append(td.Users, userID)
 	return userID
 }
@@ -81,8 +89,11 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 	userID := uuid.New()
 	currentTime := time.Now().Unix()
 	
-	// Generate unique email for this test run
-	testRunID := fmt.Sprintf("%d", time.Now().UnixNano())
+	// Generate unique email for this test run using test name, process ID, and timestamp
+	testRunID := fmt.Sprintf("%s-%d-%d", t.Name(), os.Getpid(), time.Now().UnixNano())
+	// Replace characters that might cause issues in email addresses
+	testRunID = strings.ReplaceAll(testRunID, "/", "-")
+	testRunID = strings.ReplaceAll(testRunID, " ", "-")
 	email := fmt.Sprintf("test-suite-%s@example.com", testRunID)
 	
 	// Hash password first
@@ -97,7 +108,7 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 	if err != nil {
 		t.Fatalf("Failed to begin transaction: %v", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	
 	// Create test user
 	_, err = tx.Exec(
@@ -127,6 +138,13 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 
 // cleanupTestSuiteData removes all data for a specific user
 func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("Warning: failed to begin cleanup transaction: %v", err)
+		return
+	}
+	defer func() { _ = tx.Rollback() }()
+	
 	cleanupQueries := []string{
 		"DELETE FROM diaries WHERE user_id = $1",
 		"DELETE FROM user_password_authes WHERE user_id = $1",
@@ -134,9 +152,13 @@ func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
 	}
 	
 	for _, query := range cleanupQueries {
-		if _, err := db.Exec(query, userID); err != nil {
+		if _, err := tx.Exec(query, userID); err != nil {
 			log.Printf("Warning: cleanup query failed: %v", err)
 		}
+	}
+	
+	if err := tx.Commit(); err != nil {
+		log.Printf("Warning: failed to commit cleanup transaction: %v", err)
 	}
 }
 
