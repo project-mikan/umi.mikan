@@ -30,7 +30,11 @@
 			"esbuild",
 			"@bufbuild/buf"
 		],
-		"ignoredBuiltDependencies": []
+		"ignoredBuiltDependencies": [
+			"@biomejs/biome",
+			"es5-ext",
+			"protoc-gen-grpc-web"
+		]
 	},
 	"dependencies": {
 		"@bufbuild/protobuf": "^2.5.2",

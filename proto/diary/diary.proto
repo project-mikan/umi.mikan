@@ -69,8 +69,7 @@ message GetDiaryEntriesByMonthRequest {
 }
 
 message SearchDiaryEntriesRequest {
-  string userID = 1;
-  string keyword = 2;
+  string keyword = 1;
 }
 
 message SearchDiaryEntriesResponse {

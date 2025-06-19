@@ -257,12 +257,17 @@ func (s *DiaryEntry) SearchDiaryEntries(
 	ctx context.Context,
 	message *g.SearchDiaryEntriesRequest,
 ) (*g.SearchDiaryEntriesResponse, error) {
+	// 認証されたユーザーIDを取得（リクエストのuserIDは無視）
 	userIDStr, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
 
-	ds, err := database.DiariesByUserIDAndContent(ctx, s.DB, userIDStr, message.Keyword)
+	ds, err := database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), message.Keyword)
 	if err != nil {
 		return nil, err
 	}

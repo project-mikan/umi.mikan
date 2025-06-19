@@ -8,6 +8,7 @@ import {
   GetDiaryEntriesByMonthRequestSchema,
   UpdateDiaryEntryRequestSchema,
   DeleteDiaryEntryRequestSchema,
+  SearchDiaryEntriesRequestSchema,
   YMDSchema,
   YMSchema,
   type CreateDiaryEntryResponse,
@@ -15,6 +16,7 @@ import {
   type GetDiaryEntriesByMonthResponse,
   type UpdateDiaryEntryResponse,
   type DeleteDiaryEntryResponse,
+  type SearchDiaryEntriesResponse,
   type YMD,
   type YM
 } from '$lib/grpc/diary/diary_pb.js';
@@ -57,6 +59,11 @@ export interface UpdateDiaryEntryParams {
 
 export interface DeleteDiaryEntryParams {
   id: string;
+  accessToken: string;
+}
+
+export interface SearchDiaryEntriesParams {
+  keyword: string;
   accessToken: string;
 }
 
@@ -125,4 +132,15 @@ export function createYMD(year: number, month: number, day: number): YMD {
 
 export function createYM(year: number, month: number): YM {
   return create(YMSchema, { year, month });
+}
+
+export async function searchDiaryEntries(params: SearchDiaryEntriesParams): Promise<SearchDiaryEntriesResponse> {
+  const transport = createAuthenticatedTransport(params.accessToken);
+  const client = createClient(DiaryService, transport);
+  
+  const request = create(SearchDiaryEntriesRequestSchema, {
+    keyword: params.keyword
+  });
+
+  return await client.searchDiaryEntries(request);
 }
