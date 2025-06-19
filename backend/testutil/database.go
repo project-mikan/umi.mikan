@@ -47,11 +47,12 @@ func SetupTestDB(t *testing.T) *sql.DB {
 		t.Skipf("Database ping failed, skipping test: %v", err)
 	}
 	
-	// Clean up test data at start
-	cleanupTestData(t, db)
+	// Don't clean up test data at start to avoid interfering with other tests
+	// cleanupTestData(t, db)
 	
 	// Schedule cleanup at the end of the test using t.Cleanup
 	t.Cleanup(func() {
+		// Only clean data at the end, not at the start
 		cleanupTestData(t, db)
 		db.Close()
 	})
@@ -61,16 +62,28 @@ func SetupTestDB(t *testing.T) *sql.DB {
 
 // cleanupTestData removes test data from the database
 func cleanupTestData(t *testing.T, db *sql.DB) {
+	// Use transaction to ensure cleanup order is maintained
+	tx, err := db.Begin()
+	if err != nil {
+		t.Logf("Warning: failed to begin cleanup transaction: %v", err)
+		return
+	}
+	defer tx.Rollback()
+	
 	cleanupQueries := []string{
-		"DELETE FROM diaries WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%')",
-		"DELETE FROM user_password_authes WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%')",
-		"DELETE FROM users WHERE email LIKE '%test%'",
+		"DELETE FROM diaries WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%' OR email LIKE '%suite%')",
+		"DELETE FROM user_password_authes WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%' OR email LIKE '%suite%')",
+		"DELETE FROM users WHERE email LIKE '%test%' OR email LIKE '%suite%'",
 	}
 	
 	for _, query := range cleanupQueries {
-		if _, err := db.Exec(query); err != nil {
+		if _, err := tx.Exec(query); err != nil {
 			t.Logf("Warning: cleanup query failed: %v", err)
 		}
+	}
+	
+	if err := tx.Commit(); err != nil {
+		t.Logf("Warning: failed to commit cleanup transaction: %v", err)
 	}
 }
 

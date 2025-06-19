@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
@@ -14,9 +16,10 @@ func TestAuthSuite_RegisterAndLogin(t *testing.T) {
 		authService := &AuthEntry{DB: suite.DB}
 		ctx := context.Background()
 
-		// Register a new user
+		// Register a new user with unique email
+		testID := fmt.Sprintf("%d", time.Now().UnixNano())
 		registerReq := &g.RegisterByPasswordRequest{
-			Email:    "suite-test@example.com",
+			Email:    fmt.Sprintf("auth-suite-test-%s@example.com", testID),
 			Password: "securePassword123",
 			Name:     "Suite Test User",
 		}

@@ -24,6 +24,9 @@ type TestSuite struct {
 func SetupTestSuite(t *testing.T) *TestSuite {
 	db := SetupTestDBForSuite(t)
 	
+	// Don't clean all test data - only clean conflicting data if needed
+	// cleanupAllTestData(t, db)
+	
 	// Create a test user for the suite
 	userID := createTestUserForSuite(t, db)
 	
@@ -81,8 +84,8 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 	userID := uuid.New()
 	currentTime := time.Now().Unix()
 	
-	// Generate unique email for this test run
-	testRunID := fmt.Sprintf("%d", time.Now().UnixNano())
+	// Generate unique email for this test run using test name and timestamp
+	testRunID := fmt.Sprintf("%s-%d", t.Name(), time.Now().UnixNano())
 	email := fmt.Sprintf("test-suite-%s@example.com", testRunID)
 	
 	// Hash password first
@@ -127,6 +130,13 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 
 // cleanupTestSuiteData removes all data for a specific user
 func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("Warning: failed to begin cleanup transaction: %v", err)
+		return
+	}
+	defer tx.Rollback()
+	
 	cleanupQueries := []string{
 		"DELETE FROM diaries WHERE user_id = $1",
 		"DELETE FROM user_password_authes WHERE user_id = $1",
@@ -134,9 +144,39 @@ func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
 	}
 	
 	for _, query := range cleanupQueries {
-		if _, err := db.Exec(query, userID); err != nil {
+		if _, err := tx.Exec(query, userID); err != nil {
 			log.Printf("Warning: cleanup query failed: %v", err)
 		}
+	}
+	
+	if err := tx.Commit(); err != nil {
+		log.Printf("Warning: failed to commit cleanup transaction: %v", err)
+	}
+}
+
+// cleanupAllTestData removes all test data from the database
+func cleanupAllTestData(t *testing.T, db *sql.DB) {
+	tx, err := db.Begin()
+	if err != nil {
+		t.Logf("Warning: failed to begin cleanup transaction: %v", err)
+		return
+	}
+	defer tx.Rollback()
+	
+	cleanupQueries := []string{
+		"DELETE FROM diaries WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%' OR email LIKE '%suite%')",
+		"DELETE FROM user_password_authes WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%test%' OR email LIKE '%suite%')",
+		"DELETE FROM users WHERE email LIKE '%test%' OR email LIKE '%suite%'",
+	}
+	
+	for _, query := range cleanupQueries {
+		if _, err := tx.Exec(query); err != nil {
+			t.Logf("Warning: cleanup query failed: %v", err)
+		}
+	}
+	
+	if err := tx.Commit(); err != nil {
+		t.Logf("Warning: failed to commit cleanup transaction: %v", err)
 	}
 }
 
