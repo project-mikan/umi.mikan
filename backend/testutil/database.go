@@ -44,7 +44,7 @@ func SetupTestDB(t *testing.T) *sql.DB {
 	
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		t.Skipf("Database ping failed, skipping test: %v", err)
 	}
 	
@@ -55,7 +55,7 @@ func SetupTestDB(t *testing.T) *sql.DB {
 	t.Cleanup(func() {
 		// Only clean data at the end, not at the start
 		cleanupTestData(t, db)
-		db.Close()
+		_ = db.Close()
 	})
 	
 	return db
@@ -69,7 +69,7 @@ func cleanupTestData(t *testing.T, db *sql.DB) {
 		t.Logf("Warning: failed to begin cleanup transaction: %v", err)
 		return
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	
 	// Only clean up data from tests that have definitely completed
 	// Use test name and process ID to avoid cleaning up data from running tests
@@ -108,7 +108,7 @@ func SetupTestDBForSuite(t *testing.T) *sql.DB {
 	
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		t.Skipf("Database ping failed, skipping test: %v", err)
 	}
 	
@@ -120,7 +120,7 @@ func SetupTestDBForSuite(t *testing.T) *sql.DB {
 func CleanupTestDB(t *testing.T, db *sql.DB) {
 	if db != nil {
 		cleanupTestData(t, db)
-		db.Close()
+		_ = db.Close()
 	}
 }
 

@@ -12,6 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type contextKey string
+
+const userIDKey contextKey = "userID"
+
 // AuthInterceptor gRPCの認証インターセプター
 func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// 認証が不要なメソッドをスキップ
@@ -49,7 +53,7 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 	}
 
 	// ユーザーIDをコンテキストに追加
-	ctx = context.WithValue(ctx, "userID", userID)
+	ctx = context.WithValue(ctx, userIDKey, userID)
 
 	// 認証済みのリクエストを処理
 	return handler(ctx, req)
@@ -73,7 +77,7 @@ func isAuthExempt(method string) bool {
 
 // GetUserIDFromContext コンテキストからユーザーIDを取得
 func GetUserIDFromContext(ctx context.Context) (string, error) {
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value(userIDKey).(string)
 	if !ok || userID == "" {
 		return "", fmt.Errorf("user ID not found in context")
 	}

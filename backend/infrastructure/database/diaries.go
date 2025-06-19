@@ -15,7 +15,7 @@ func DiariesByUserIDAndContent(ctx context.Context, db DB, userID string, conten
 	if err != nil {
 		return nil, logerror(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	// 結果をマップに格納
 	diaries := make([]*Diary, 0)

@@ -108,7 +108,7 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 	if err != nil {
 		t.Fatalf("Failed to begin transaction: %v", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	
 	// Create test user
 	_, err = tx.Exec(
@@ -143,7 +143,7 @@ func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
 		log.Printf("Warning: failed to begin cleanup transaction: %v", err)
 		return
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	
 	cleanupQueries := []string{
 		"DELETE FROM diaries WHERE user_id = $1",

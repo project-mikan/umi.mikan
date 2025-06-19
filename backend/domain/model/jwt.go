@@ -31,7 +31,7 @@ type Claims struct {
 func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	jwtS, err := constants.LoadJWTSecret()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to load JWT Secret: %w", err)
+		return nil, fmt.Errorf("failed to load JWT Secret: %w", err)
 	}
 	jwtSecret := []byte(jwtS)
 
@@ -49,7 +49,7 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	signedAccessToken, err := accessToken.SignedString(jwtSecret)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to sign access token: %w", err)
+		return nil, fmt.Errorf("failed to sign access token: %w", err)
 	}
 
 	// --- Refresh Token の生成 ---
@@ -67,7 +67,7 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	signedRefreshToken, err := refreshToken.SignedString(jwtSecret)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to sign refresh token: %w", err)
+		return nil, fmt.Errorf("failed to sign refresh token: %w", err)
 	}
 
 	return &TokenDetails{
@@ -82,7 +82,7 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 func GenerateAccessToken(userID string) (*TokenDetails, error) {
 	jwtS, err := constants.LoadJWTSecret()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to load JWT Secret: %w", err)
+		return nil, fmt.Errorf("failed to load JWT Secret: %w", err)
 	}
 	jwtSecret := []byte(jwtS)
 
@@ -99,6 +99,9 @@ func GenerateAccessToken(userID string) (*TokenDetails, error) {
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	signedAccessToken, err := accessToken.SignedString(jwtSecret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign access token: %w", err)
+	}
 	return &TokenDetails{
 		AccessToken:  signedAccessToken,
 		TokenType:    "Bearer",
@@ -110,7 +113,7 @@ func GenerateAccessToken(userID string) (*TokenDetails, error) {
 func ParseAuthTokens(tokenString string) (*TokenDetails, string, error) {
 	jwtS, err := constants.LoadJWTSecret()
 	if err != nil {
-		return nil, "", fmt.Errorf("Failed to load JWT Secret: %w", err)
+		return nil, "", fmt.Errorf("failed to load JWT Secret: %w", err)
 	}
 	jwtSecret := []byte(jwtS)
 
