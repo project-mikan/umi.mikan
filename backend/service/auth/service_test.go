@@ -3,8 +3,11 @@ package auth
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
+	"time"
 
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
@@ -12,6 +15,13 @@ import (
 
 func setupTestDB(t *testing.T) *sql.DB {
 	return testutil.SetupTestDB(t)
+}
+
+func generateTestEmail(t *testing.T, prefix string) string {
+	testID := fmt.Sprintf("%s-%d-%d", t.Name(), os.Getpid(), time.Now().UnixNano())
+	testID = strings.ReplaceAll(testID, "/", "-")
+	testID = strings.ReplaceAll(testID, " ", "-")
+	return fmt.Sprintf("%s-%s@example.com", prefix, testID)
 }
 
 func TestAuthEntry_RegisterByPassword(t *testing.T) {
@@ -29,7 +39,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 		{
 			name: "Valid registration",
 			request: &g.RegisterByPasswordRequest{
-				Email:    "test@example.com",
+				Email:    generateTestEmail(t, "test"),
 				Password: "validPassword123",
 				Name:     "Test User",
 			},
@@ -122,8 +132,9 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 	ctx := context.Background()
 
 	// First, register a user
+	testEmail := generateTestEmail(t, "login-test")
 	registerReq := &g.RegisterByPasswordRequest{
-		Email:    "login-test@example.com",
+		Email:    testEmail,
 		Password: "validPassword123",
 		Name:     "Login Test User",
 	}
@@ -141,7 +152,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 		{
 			name: "Valid login",
 			request: &g.LoginByPasswordRequest{
-				Email:    "login-test@example.com",
+				Email:    testEmail,
 				Password: "validPassword123",
 			},
 			shouldSucceed: true,
@@ -158,7 +169,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 		{
 			name: "Invalid password",
 			request: &g.LoginByPasswordRequest{
-				Email:    "login-test@example.com",
+				Email:    testEmail,
 				Password: "wrongPassword",
 			},
 			shouldSucceed: false,
@@ -227,7 +238,7 @@ func TestAuthEntry_RefreshAccessToken(t *testing.T) {
 
 	// First, register a user and get tokens
 	registerReq := &g.RegisterByPasswordRequest{
-		Email:    "refresh-test@example.com",
+		Email:    generateTestEmail(t, "refresh-test"),
 		Password: "validPassword123",
 		Name:     "Refresh Test User",
 	}
@@ -307,8 +318,9 @@ func TestAuthEntry_DuplicateRegistration(t *testing.T) {
 	ctx := context.Background()
 
 	// Register a user
+	testEmail := generateTestEmail(t, "duplicate-test")
 	registerReq := &g.RegisterByPasswordRequest{
-		Email:    "duplicate-test@example.com",
+		Email:    testEmail,
 		Password: "validPassword123",
 		Name:     "Duplicate Test User",
 	}

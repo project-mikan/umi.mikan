@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,7 +19,9 @@ func TestAuthSuite_RegisterAndLogin(t *testing.T) {
 		ctx := context.Background()
 
 		// Register a new user with unique email
-		testID := fmt.Sprintf("%d", time.Now().UnixNano())
+		testID := fmt.Sprintf("%s-%d-%d", t.Name(), os.Getpid(), time.Now().UnixNano())
+		testID = strings.ReplaceAll(testID, "/", "-")
+		testID = strings.ReplaceAll(testID, " ", "-")
 		registerReq := &g.RegisterByPasswordRequest{
 			Email:    fmt.Sprintf("auth-suite-test-%s@example.com", testID),
 			Password: "securePassword123",

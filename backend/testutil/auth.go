@@ -3,6 +3,9 @@ package testutil
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,10 +19,13 @@ func CreateTestUser(t *testing.T, db *sql.DB, email, name string) uuid.UUID {
 	userID := uuid.New()
 	currentTime := time.Now().Unix()
 	
+	// Make email unique by adding test information
+	uniqueEmail := generateUniqueEmail(t, email)
+	
 	// Create test user
 	_, err := db.Exec(
 		"INSERT INTO users (id, email, name, auth_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-		userID, email, name, model.AuthTypeEmailPassword.Int16(), currentTime, currentTime,
+		userID, uniqueEmail, name, model.AuthTypeEmailPassword.Int16(), currentTime, currentTime,
 	)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -32,6 +38,9 @@ func CreateTestUser(t *testing.T, db *sql.DB, email, name string) uuid.UUID {
 func CreateTestUserWithPassword(t *testing.T, db *sql.DB, email, name, password string) uuid.UUID {
 	userID := uuid.New()
 	currentTime := time.Now().Unix()
+	
+	// Make email unique by adding test information
+	uniqueEmail := generateUniqueEmail(t, email)
 	
 	// Hash the password
 	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -50,7 +59,7 @@ func CreateTestUserWithPassword(t *testing.T, db *sql.DB, email, name, password 
 	// Create test user
 	_, err = tx.Exec(
 		"INSERT INTO users (id, email, name, auth_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-		userID, email, name, model.AuthTypeEmailPassword.Int16(), currentTime, currentTime,
+		userID, uniqueEmail, name, model.AuthTypeEmailPassword.Int16(), currentTime, currentTime,
 	)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -90,4 +99,19 @@ func GenerateTestTokens(t *testing.T, userID uuid.UUID) *model.TokenDetails {
 		t.Fatalf("Failed to generate test tokens: %v", err)
 	}
 	return tokens
+}
+
+// generateUniqueEmail creates a unique email address for testing
+func generateUniqueEmail(t *testing.T, baseEmail string) string {
+	testID := fmt.Sprintf("%s-%d-%d", t.Name(), os.Getpid(), time.Now().UnixNano())
+	testID = strings.ReplaceAll(testID, "/", "-")
+	testID = strings.ReplaceAll(testID, " ", "-")
+	
+	// Split email into local and domain parts
+	parts := strings.Split(baseEmail, "@")
+	if len(parts) == 2 {
+		return fmt.Sprintf("%s-%s@%s", parts[0], testID, parts[1])
+	}
+	// If no @ symbol, just append the test ID
+	return fmt.Sprintf("%s-%s", baseEmail, testID)
 }
