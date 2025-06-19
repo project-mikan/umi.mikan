@@ -14,7 +14,7 @@ import (
 
 type contextKey string
 
-const userIDKey contextKey = "userID"
+const UserIDKey contextKey = "userID"
 
 // AuthInterceptor gRPCの認証インターセプター
 func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -53,7 +53,7 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 	}
 
 	// ユーザーIDをコンテキストに追加
-	ctx = context.WithValue(ctx, userIDKey, userID)
+	ctx = context.WithValue(ctx, UserIDKey, userID)
 
 	// 認証済みのリクエストを処理
 	return handler(ctx, req)
@@ -77,7 +77,7 @@ func isAuthExempt(method string) bool {
 
 // GetUserIDFromContext コンテキストからユーザーIDを取得
 func GetUserIDFromContext(ctx context.Context) (string, error) {
-	userID, ok := ctx.Value(userIDKey).(string)
+	userID, ok := ctx.Value(UserIDKey).(string)
 	if !ok || userID == "" {
 		return "", fmt.Errorf("user ID not found in context")
 	}

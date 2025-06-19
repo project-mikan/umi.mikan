@@ -11,12 +11,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
+	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type contextKey string
-
-const userIDKey contextKey = "userID"
 
 // CreateTestUser creates a test user in the database and returns the user ID
 func CreateTestUser(t *testing.T, db *sql.DB, email, name string) uuid.UUID {
@@ -88,7 +86,7 @@ func CreateTestUserWithPassword(t *testing.T, db *sql.DB, email, name, password 
 
 // CreateAuthenticatedContext creates a context with user authentication
 func CreateAuthenticatedContext(userID uuid.UUID) context.Context {
-	return context.WithValue(context.Background(), userIDKey, userID.String())
+	return context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
 }
 
 // CreateUnauthenticatedContext creates a context without authentication
