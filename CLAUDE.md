@@ -136,4 +136,4 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - Copy `compose-prod.example.yml` to `compose-prod.yml` for production
 - gRPC reflection is enabled in development (TODO: disable in production)
 - JWT_SECRET should be changed from "hogehoge" in production
-- Frontend builds with `pnpm build`, backend builds with standard Go build
+- Frontend builds with `dcoker compose exec frontend pnpm build`, backend builds with `docker compopse exec backend go build`

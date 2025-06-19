@@ -19,7 +19,6 @@
 		"@sveltejs/adapter-auto": "^6.0.1",
 		"@sveltejs/kit": "^2.21.5",
 		"@sveltejs/vite-plugin-svelte": "^5.1.0",
-		"protoc-gen-grpc-web": "^1.5.0",
 		"svelte": "^5.34.3",
 		"svelte-check": "^4.2.1",
 		"typescript": "^5.8.3",
@@ -32,8 +31,7 @@
 		],
 		"ignoredBuiltDependencies": [
 			"@biomejs/biome",
-			"es5-ext",
-			"protoc-gen-grpc-web"
+			"es5-ext"
 		]
 	},
 	"dependencies": {
