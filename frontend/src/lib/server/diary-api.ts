@@ -1,6 +1,6 @@
 import { create } from '@bufbuild/protobuf';
 import { createClient } from '@connectrpc/connect';
-import { createGrpcWebTransport } from '@connectrpc/connect-web';
+import { createGrpcTransport } from '@connectrpc/connect-node';
 import { 
   DiaryService,
   CreateDiaryEntryRequestSchema,
@@ -22,7 +22,7 @@ import {
 } from '$lib/grpc/diary/diary_pb.js';
 
 function createAuthenticatedTransport(accessToken: string) {
-  return createGrpcWebTransport({
+  return createGrpcTransport({
     baseUrl: 'http://backend:8080',
     interceptors: [
       (next) => (req) => {
