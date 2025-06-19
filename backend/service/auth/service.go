@@ -103,6 +103,9 @@ func (s *AuthEntry) RefreshAccessToken(ctx context.Context, req *g.RefreshAccess
 	// tokenから引っ張ってきたUserIDはUUID形式(でないとぶっ壊れて取れないのでMustParseでよい)
 	userDB, err := database.UserByID(ctx, s.DB, uuid.MustParse(userID))
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
 		return nil, fmt.Errorf("failed to get user by ID: %w", err)
 	}
 	if userDB == nil {
