@@ -48,9 +48,13 @@ jobs:
       run: go mod download
 
     - name: Initialize database
-      working-directory: ./backend
       run: |
-        go run cmd/migrate/main.go
+        for file in schema/*.sql; do
+          if [[ "$(basename "$file")" != *"_"* ]]; then
+            echo "Applying schema: $(basename "$file")"
+            psql "$DATABASE_URL" -f "$file"
+          fi
+        done
       env:
         DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
 
