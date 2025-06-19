@@ -50,7 +50,7 @@ jobs:
       - name: Initialize database
         run: |
           for file in schema/*.sql; do
-            if [[ "$(basename "$file")" != *"_"* ]]; then
+            if [[ "$(basename "$file")" != *"_."* ]]; then
               echo "Applying schema: $(basename "$file")"
               psql "$DATABASE_URL" -f "$file"
             fi
