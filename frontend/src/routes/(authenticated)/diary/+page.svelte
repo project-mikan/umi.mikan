@@ -33,12 +33,20 @@ function viewEntry(entry: DiaryEntry) {
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900">日記一覧</h1>
-		<button
-			on:click={createEntry}
-			class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-		>
-			新しい日記を書く
-		</button>
+		<div class="flex gap-3">
+			<a
+				href="/diary/search"
+				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+			>
+				検索
+			</a>
+			<button
+				on:click={createEntry}
+				class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+			>
+				新しい日記を書く
+			</button>
+		</div>
 	</div>
 
 	{#if !data.entries.entries || data.entries.entries.length === 0}

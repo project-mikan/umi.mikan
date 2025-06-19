@@ -8,10 +8,10 @@ import (
 func DiariesByUserIDAndContent(ctx context.Context, db DB, userID string, content string) ([]*Diary, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, content, date ` +
+		`id, user_id, content, date, created_at, updated_at ` +
 		`FROM diaries ` +
-		`WHERE user_id = $1 AND content LIKE $2`
-	rows, err := db.QueryContext(ctx, sqlstr, userID, content)
+		`WHERE user_id = $1 AND content LIKE $2 ORDER BY date DESC`
+	rows, err := db.QueryContext(ctx, sqlstr, userID, "%"+content+"%")
 	if err != nil {
 		return nil, logerror(err)
 	}
@@ -21,7 +21,7 @@ func DiariesByUserIDAndContent(ctx context.Context, db DB, userID string, conten
 	diaries := make([]*Diary, 0)
 	for rows.Next() {
 		var diary Diary
-		if err := rows.Scan(&diary.ID, &diary.UserID, &diary.Content, &diary.Date); err != nil {
+		if err := rows.Scan(&diary.ID, &diary.UserID, &diary.Content, &diary.Date, &diary.CreatedAt, &diary.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		diaries = append(diaries, &diary)
