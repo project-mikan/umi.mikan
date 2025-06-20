@@ -62,7 +62,8 @@ grpc:
 	make grpc-go
 	make grpc-ts
 
-# Backend Testing Commands
+f-test:
+	docker compose exec frontend pnpm test
 b-test:
 	docker compose exec backend go test ./...
 
@@ -85,8 +86,8 @@ b-test-coverage:
 	docker compose exec backend go test -coverprofile=coverage.out ./...
 	docker compose exec backend go tool cover -html=coverage.out -o coverage.html
 
-test-benchmark:
+b-test-benchmark:
 	docker compose exec backend go test -bench=. ./...
 
-test-race:
+b-test-race:
 	docker compose exec backend go test -race ./...
