@@ -24,8 +24,12 @@ export const actions: Actions = {
 			const date = new Date(dateStr);
 			await createDiaryEntry({
 				content,
-				date: createYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
-				accessToken
+				date: createYMD(
+					date.getFullYear(),
+					date.getMonth() + 1,
+					date.getDate(),
+				),
+				accessToken,
 			});
 		} catch (err) {
 			if (err instanceof Response) {

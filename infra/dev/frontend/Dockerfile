@@ -16,4 +16,5 @@ RUN pnpm install --frozen-lockfile
 
 EXPOSE 5173
 
+ENTRYPOINT []
 CMD ["pnpm", "dev", "--host", "0.0.0.0"]

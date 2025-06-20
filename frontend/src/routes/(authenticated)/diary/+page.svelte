@@ -1,7 +1,7 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
-import type { PageData } from "./$types";
 import type { DiaryEntry } from "$lib/grpc";
+import type { PageData } from "./$types";
 
 export let data: PageData;
 
@@ -16,7 +16,7 @@ function createEntry() {
 function editEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
-		const dateStr = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 		goto(`/diary/edit/${dateStr}`);
 	}
 }
@@ -24,7 +24,7 @@ function editEntry(entry: DiaryEntry) {
 function viewEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
-		const dateStr = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 		goto(`/diary/${dateStr}`);
 	}
 }

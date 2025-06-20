@@ -45,7 +45,7 @@ export const actions: Actions = {
 		} catch (error: unknown) {
 			console.error("Register error:", error);
 			let errorMessage = "Registration failed";
-			
+
 			if (error instanceof Error) {
 				if (error.message.includes("already exists")) {
 					errorMessage = "このメールアドレスは既に登録済みです";
@@ -55,7 +55,7 @@ export const actions: Actions = {
 					errorMessage = error.message;
 				}
 			}
-			
+
 			return fail(400, {
 				error: errorMessage,
 			});

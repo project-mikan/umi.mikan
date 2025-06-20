@@ -1,8 +1,8 @@
 import {
+	createYMD,
 	deleteDiaryEntry,
 	getDiaryEntry,
 	updateDiaryEntry,
-	createYMD
 } from "$lib/server/diary-api";
 import { error, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
@@ -23,8 +23,12 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 		const [, year, month, day] = dateMatch;
 		const response = await getDiaryEntry({
-			date: createYMD(Number.parseInt(year, 10), Number.parseInt(month, 10), Number.parseInt(day, 10)),
-			accessToken
+			date: createYMD(
+				Number.parseInt(year, 10),
+				Number.parseInt(month, 10),
+				Number.parseInt(day, 10),
+			),
+			accessToken,
 		});
 
 		if (!response.entry) {
@@ -71,8 +75,12 @@ export const actions: Actions = {
 
 			const [, year, month, day] = dateMatch;
 			const currentResponse = await getDiaryEntry({
-				date: createYMD(Number.parseInt(year, 10), Number.parseInt(month, 10), Number.parseInt(day, 10)),
-				accessToken
+				date: createYMD(
+					Number.parseInt(year, 10),
+					Number.parseInt(month, 10),
+					Number.parseInt(day, 10),
+				),
+				accessToken,
 			});
 
 			if (!currentResponse.entry) {
@@ -84,8 +92,12 @@ export const actions: Actions = {
 				id: currentResponse.entry.id,
 				title,
 				content,
-				date: createYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
-				accessToken
+				date: createYMD(
+					date.getFullYear(),
+					date.getMonth() + 1,
+					date.getDate(),
+				),
+				accessToken,
 			});
 		} catch (err) {
 			if (err instanceof Response) {
@@ -116,8 +128,12 @@ export const actions: Actions = {
 
 			const [, year, month, day] = dateMatch;
 			const currentResponse = await getDiaryEntry({
-				date: createYMD(Number.parseInt(year, 10), Number.parseInt(month, 10), Number.parseInt(day, 10)),
-				accessToken
+				date: createYMD(
+					Number.parseInt(year, 10),
+					Number.parseInt(month, 10),
+					Number.parseInt(day, 10),
+				),
+				accessToken,
 			});
 
 			if (!currentResponse.entry) {
@@ -126,7 +142,7 @@ export const actions: Actions = {
 
 			await deleteDiaryEntry({
 				id: currentResponse.entry.id,
-				accessToken
+				accessToken,
 			});
 		} catch (err) {
 			if (err instanceof Response) {

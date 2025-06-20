@@ -1,13 +1,16 @@
-# Goはairで常時起動なので不要
-pnpm-dev:
-	docker compose exec frontend pnpm dev --host 0.0.0.0
 f-sh:
 	docker compose exec frontend bash
 f-format:
 	docker compose exec frontend pnpm format
 
-b-lint:
+f-lint:
+	make f-format
+	docker compose exec frontend pnpm check
+
+b-format:
 	docker compose exec backend go fmt ./...
+b-lint:
+	make b-format
 	docker compose exec backend go tool golangci-lint run
 
 
@@ -29,11 +32,11 @@ db-init:
 	docker compose up postgres -d
 	# dbのログはすぐに取れないので別コマンドで取得する
 
-log-f:
+f-log:
 	docker compose logs -f frontend
-log-b:
+b-log:
 	docker compose logs -f backend
-log-p:
+p-log:
 	docker compose logs -f postgres
 
 grpc-go:

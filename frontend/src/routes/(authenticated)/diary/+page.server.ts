@@ -1,4 +1,4 @@
-import { getDiaryEntriesByMonth, createYM } from "$lib/server/diary-api";
+import { createYM, getDiaryEntriesByMonth } from "$lib/server/diary-api";
 import { error, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		const now = new Date();
 		const entries = await getDiaryEntriesByMonth({
 			month: createYM(now.getFullYear(), now.getMonth() + 1),
-			accessToken
+			accessToken,
 		});
 
 		return {
