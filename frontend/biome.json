@@ -30,9 +30,32 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"all": true,
+			"complexity": {
+				"useSimplifiedLogicExpression": "off"
+			},
 			"style": {
-				"useConst": "off"
+				"useConst": "off",
+				"noDefaultExport": "off",
+				"noNamespace": "off",
+				"useNamingConvention": "off",
+				"useExplicitLengthCheck": "off"
+			},
+			"performance": {
+				"noBarrelFile": "off",
+				"noReExportAll": "off",
+				"useTopLevelRegex": "off"
+			},
+			"correctness": {
+				"noUnusedVariables": "off",
+				"useImportExtensions": "off",
+				"noUnusedImports": "off",
+				"noUndeclaredVariables": "off"
+			},
+			"suspicious": {
+				"noConsole": "off",
+				"useAwait": "off",
+				"noEvolvingTypes": "off"
 			}
 		}
 	},
