@@ -63,25 +63,25 @@ grpc:
 	make grpc-ts
 
 # Backend Testing Commands
-test:
+b-test:
 	docker compose exec backend go test ./...
 
-test-verbose:
+b-test-verbose:
 	docker compose exec backend go test -v ./...
 
-test-auth:
+b-test-auth:
 	docker compose exec backend go test -v ./service/auth
 
-test-diary:
+b-test-diary:
 	docker compose exec backend go test -v ./service/diary
 
-test-integration:
+b-test-integration:
 	docker compose exec backend go test -v ./test_integration
 
-test-testkit:
+b-test-testkit:
 	docker compose exec backend go test -v ./testkit
 
-test-coverage:
+b-test-coverage:
 	docker compose exec backend go test -coverprofile=coverage.out ./...
 	docker compose exec backend go tool cover -html=coverage.out -o coverage.html
 
