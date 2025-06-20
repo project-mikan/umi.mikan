@@ -1,18 +1,18 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
-import type { PageData } from "./$types";
 import type { DiaryEntry } from "$lib/grpc";
+import type { PageData } from "./$types";
 
 export let data: PageData;
 
 function formatMonth(year: number, month: number): string {
 	const date = new Date(year, month - 1, 1);
-	return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+	return date.toLocaleDateString(undefined, { year: "numeric", month: "long" });
 }
 
 function formatMonthOnly(month: number): string {
 	const date = new Date(2000, month - 1, 1);
-	return date.toLocaleDateString(undefined, { month: 'long' });
+	return date.toLocaleDateString(undefined, { month: "long" });
 }
 
 function getDaysInMonth(year: number, month: number): number {
@@ -24,14 +24,14 @@ function getFirstDayOfWeek(year: number, month: number): number {
 }
 
 function createEntry(day: number) {
-	const dateStr = `${data.year}-${String(data.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+	const dateStr = `${data.year}-${String(data.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 	goto(`/diary/create?date=${dateStr}`);
 }
 
 function viewEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
-		const dateStr = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 		goto(`/diary/${dateStr}`);
 	}
 }
@@ -39,7 +39,7 @@ function viewEntry(entry: DiaryEntry) {
 function editEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
-		const dateStr = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 		goto(`/diary/edit/${dateStr}`);
 	}
 }
@@ -78,9 +78,9 @@ for (let day = 1; day <= daysInMonth; day++) {
 
 // 日記エントリをマップに変換
 const entryMap = new Map<number, DiaryEntry>();
-if (data.entries.entries) {
+if (data.entries && Array.isArray(data.entries.entries)) {
 	for (const entry of data.entries.entries) {
-		if (entry.date) {
+		if (entry?.date) {
 			entryMap.set(entry.date.day, entry);
 		}
 	}
@@ -93,7 +93,7 @@ function getWeekDays(): string[] {
 	for (let i = 0; i < 7; i++) {
 		const dayDate = new Date();
 		dayDate.setDate(dayDate.getDate() - dayDate.getDay() + i);
-		days.push(dayDate.toLocaleDateString(undefined, { weekday: 'short' }));
+		days.push(dayDate.toLocaleDateString(undefined, { weekday: "short" }));
 	}
 	return days;
 }
@@ -128,6 +128,7 @@ const weekDays = getWeekDays();
 		<button
 			on:click={previousMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+			aria-label="前の月へ"
 		>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -139,6 +140,7 @@ const weekDays = getWeekDays();
 		<button
 			on:click={nextMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+			aria-label="次の月へ"
 		>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -183,20 +185,20 @@ const weekDays = getWeekDays();
 								<div class="flex-1 min-h-0">
 									<div class="bg-blue-50 rounded p-2 h-full hover:bg-blue-100 cursor-pointer transition-colors">
 										<div class="text-xs text-blue-800 font-medium mb-1">
-											{entry?.title || '無題'}
+											日記
 										</div>
 										<div class="text-xs text-blue-600 line-clamp-2">
 											{entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : ''}
 										</div>
 										<div class="flex justify-end space-x-1 mt-1">
 											<button
-												on:click={() => viewEntry(entry)}
+												on:click={() => entry && viewEntry(entry)}
 												class="text-xs text-blue-600 hover:text-blue-800"
 											>
 												詳細
 											</button>
 											<button
-												on:click={() => editEntry(entry)}
+												on:click={() => entry && editEntry(entry)}
 												class="text-xs text-green-600 hover:text-green-800"
 											>
 												編集

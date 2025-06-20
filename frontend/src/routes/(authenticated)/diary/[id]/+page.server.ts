@@ -1,4 +1,4 @@
-import { getDiaryEntry, createYMD } from "$lib/server/diary-api";
+import { createYMD, getDiaryEntry } from "$lib/server/diary-api";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
@@ -18,8 +18,12 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 		const [, year, month, day] = dateMatch;
 		const response = await getDiaryEntry({
-			date: createYMD(Number.parseInt(year, 10), Number.parseInt(month, 10), Number.parseInt(day, 10)),
-			accessToken
+			date: createYMD(
+				Number.parseInt(year, 10),
+				Number.parseInt(month, 10),
+				Number.parseInt(day, 10),
+			),
+			accessToken,
 		});
 
 		if (!response.entry) {

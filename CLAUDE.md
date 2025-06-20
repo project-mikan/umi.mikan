@@ -46,6 +46,14 @@ backend/infrastructure/grpc dir is automatically generated. DO NOT EDIT MANUALLY
 
 When installing the library, `docker compose exec frontend pnpm install` instead of writing it in package.json, and give the -D option if necessary.
 
+When you change the frontend, make sure that
+
+- `make f-lint`
+- `make f-test`
+- `make f-log`
+
+are OK.
+
 ### Backend Development
 
 ```bash
@@ -57,6 +65,14 @@ make log-b             # View backend logs
 If you want to use the go command, use `docker compose exec backend go`.
 
 frontend/src/lib/grpc dir is automatically generated. DO NOT EDIT MANUALLY.
+
+When you change the backend, make sure that
+
+- `make b-lint`
+- `make b-test`
+- `make f-log`
+
+are OK.
 
 ### Database Operations
 

@@ -7,7 +7,9 @@ export let data: PageData;
 export let form: ActionData;
 
 let content = data.entry.content;
-let date = data.entry.date ? `${data.entry.date.year}-${String(data.entry.date.month).padStart(2, "0")}-${String(data.entry.date.day).padStart(2, "0")}` : new Date().toISOString().split("T")[0];
+let date = data.entry.date
+	? `${data.entry.date.year}-${String(data.entry.date.month).padStart(2, "0")}-${String(data.entry.date.day).padStart(2, "0")}`
+	: new Date().toISOString().split("T")[0];
 let showDeleteConfirm = false;
 
 function cancel() {

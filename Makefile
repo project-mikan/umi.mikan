@@ -1,14 +1,25 @@
-# Goはairで常時起動なので不要
-pnpm-dev:
-	docker compose exec frontend pnpm dev --host 0.0.0.0
+# フロントエンド
 f-sh:
 	docker compose exec frontend bash
 f-format:
 	docker compose exec frontend pnpm format
 
-b-lint:
+f-lint:
+	make f-format
+	docker compose exec frontend pnpm run check
+	docker compose exec frontend pnpm run biome
+
+# バックエンド
+b-format:
 	docker compose exec backend go fmt ./...
+	docker compose exec backend go tool golangci-lint run --fix
+b-lint:
+	make b-format
 	docker compose exec backend go tool golangci-lint run
+b-sh:
+	docker compose exec backend sh
+tidy:
+	docker compose exec backend go mod tidy
 
 
 xo:
@@ -18,10 +29,6 @@ xo:
 go-mod-tidy:
 	docker compose exec backend go mod tidy
 # airを使うので不要↓
-b-sh:
-	docker compose exec backend sh
-tidy:
-	docker compose exec backend go mod tidy
 db:
 	docker compose exec postgres psql -U postgres -d umi_mikan  
 db-init:
@@ -29,11 +36,11 @@ db-init:
 	docker compose up postgres -d
 	# dbのログはすぐに取れないので別コマンドで取得する
 
-log-f:
+f-log:
 	docker compose logs -f frontend
-log-b:
+b-log:
 	docker compose logs -f backend
-log-p:
+p-log:
 	docker compose logs -f postgres
 
 grpc-go:
@@ -56,25 +63,25 @@ grpc:
 	make grpc-ts
 
 # Backend Testing Commands
-test:
+b-test:
 	docker compose exec backend go test ./...
 
-test-verbose:
+b-test-verbose:
 	docker compose exec backend go test -v ./...
 
-test-auth:
+b-test-auth:
 	docker compose exec backend go test -v ./service/auth
 
-test-diary:
+b-test-diary:
 	docker compose exec backend go test -v ./service/diary
 
-test-integration:
+b-test-integration:
 	docker compose exec backend go test -v ./test_integration
 
-test-testkit:
+b-test-testkit:
 	docker compose exec backend go test -v ./testkit
 
-test-coverage:
+b-test-coverage:
 	docker compose exec backend go test -coverprofile=coverage.out ./...
 	docker compose exec backend go tool cover -html=coverage.out -o coverage.html
 
@@ -83,10 +90,3 @@ test-benchmark:
 
 test-race:
 	docker compose exec backend go test -race ./...
-
-# Backend Linting Commands
-lint:
-	docker compose exec backend go tool golangci-lint run
-
-lint-fix:
-	docker compose exec backend go tool golangci-lint run --fix

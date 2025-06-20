@@ -1,19 +1,23 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
 import { page } from "$app/stores";
-import type { PageData } from "./$types";
 import type { DiaryEntry } from "$lib/grpc";
+import type { PageData } from "./$types";
 
 export let data: PageData;
 
-let searchKeyword = data.keyword || '';
+let searchKeyword = data.keyword || "";
 
 function formatDate(ymd: { year: number; month: number; day: number }): string {
 	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
 }
 
-function formatDateUrl(ymd: { year: number; month: number; day: number }): string {
-	return `${ymd.year}-${String(ymd.month).padStart(2, '0')}-${String(ymd.day).padStart(2, '0')}`;
+function formatDateUrl(ymd: {
+	year: number;
+	month: number;
+	day: number;
+}): string {
+	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 }
 
 function viewEntry(entry: DiaryEntry) {
@@ -31,7 +35,7 @@ function handleSearch() {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-	if (event.key === 'Enter') {
+	if (event.key === "Enter") {
 		handleSearch();
 	}
 }
@@ -133,6 +137,7 @@ function handleKeydown(event: KeyboardEvent) {
 	.line-clamp-3 {
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
+		line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}
