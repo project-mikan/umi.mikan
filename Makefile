@@ -63,7 +63,7 @@ grpc:
 	make grpc-ts
 
 f-test:
-	docker compose exec frontend pnpm test
+	docker compose exec frontend pnpm test:run
 b-test:
 	docker compose exec backend go test ./...
 
