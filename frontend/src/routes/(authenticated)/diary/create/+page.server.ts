@@ -1,6 +1,6 @@
 import { createDiaryEntry, createYMD } from "$lib/server/diary-api";
 import { error, redirect } from "@sveltejs/kit";
-import type { Actions } from "./$types";
+import type { Actions } from "./$types.ts";
 
 export const actions: Actions = {
 	default: async ({ request, cookies }) => {

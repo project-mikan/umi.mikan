@@ -1,6 +1,6 @@
 import { loginByPassword } from "$lib/server/auth-api";
 import { fail, redirect } from "@sveltejs/kit";
-import type { Actions, PageServerLoad } from "./$types";
+import type { Actions, PageServerLoad } from "./$types.ts";
 
 export const load: PageServerLoad = ({ cookies }) => {
 	const accessToken = cookies.get("accessToken");

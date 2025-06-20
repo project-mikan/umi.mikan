@@ -1,6 +1,6 @@
 import { createYM, getDiaryEntriesByMonth } from "$lib/server/diary-api";
 import { error, redirect } from "@sveltejs/kit";
-import type { Actions, PageServerLoad } from "./$types";
+import type { Actions, PageServerLoad } from "./$types.ts";
 
 export const load: PageServerLoad = async ({ cookies }) => {
 	const accessToken = cookies.get("accessToken");
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		return {
 			entries,
 		};
-	} catch (err) {
+	} catch (_err) {
 		// Log error for debugging but don't expose details to client
 		return {
 			entries: [],

@@ -1,13 +1,12 @@
 <script lang="ts">
-import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
-import type { ActionData, PageData } from "./$types";
+import type { ActionData, PageData } from "./$types.ts";
 
 export let data: PageData;
 export let form: ActionData;
 
-let content = data.entry.content;
-let date = data.entry.date
+const content = data.entry.content;
+const date = data.entry.date
 	? `${data.entry.date.year}-${String(data.entry.date.month).padStart(2, "0")}-${String(data.entry.date.day).padStart(2, "0")}`
 	: new Date().toISOString().split("T")[0];
 let showDeleteConfirm = false;

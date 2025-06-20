@@ -37,17 +37,12 @@
 		"rules": {
 			"all": true,
 			"style": {
-				"useConst": "off",
-				"useNamingConvention": "off"
-			},
-			"correctness": {
-				"noUnusedVariables": "off",
-				"useImportExtensions": "off",
-				"noUndeclaredVariables": "off",
-				"noUnusedImports": "off"
-			},
-			"suspicious": {
-				"noConsole": "off"
+				"useNamingConvention": {
+					"level": "warn",
+					"options": {
+						"strictCase": false
+					}
+				}
 			}
 		}
 	},

@@ -1,11 +1,11 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
 import type { DiaryEntry } from "$lib/grpc";
-import type { PageData } from "./$types";
+import type { PageData } from "./$types.ts";
 
 export let data: PageData;
 
-let searchKeyword = data.keyword || "";
+const searchKeyword = data.keyword || "";
 
 function formatDate(ymd: { year: number; month: number; day: number }): string {
 	return `${ymd.year}年${ymd.month}月${ymd.day}日`;

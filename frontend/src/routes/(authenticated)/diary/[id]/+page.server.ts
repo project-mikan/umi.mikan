@@ -1,6 +1,6 @@
 import { createYMD, getDiaryEntry } from "$lib/server/diary-api";
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad } from "./$types";
+import type { PageServerLoad } from "./$types.ts";
 
 const DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 

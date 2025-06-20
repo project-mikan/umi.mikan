@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import type { Actions, PageServerLoad } from "./$types";
+import type { Actions, PageServerLoad } from "./$types.ts";
 
 export const load: PageServerLoad = ({ cookies }) => {
 	const accessToken = cookies.get("accessToken");

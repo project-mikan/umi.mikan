@@ -1,7 +1,7 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
 import type { DiaryEntry } from "$lib/grpc";
-import type { PageData } from "./$types";
+import type { PageData } from "./$types.ts";
 
 export let data: PageData;
 
@@ -88,7 +88,7 @@ if (data.entries && Array.isArray(data.entries.entries)) {
 
 function getWeekDays(): string[] {
 	const days: string[] = [];
-	const date = new Date();
+	const _date = new Date();
 	// 日曜日から始まる週の各曜日を取得
 	for (let i = 0; i < 7; i++) {
 		const dayDate = new Date();
@@ -98,7 +98,7 @@ function getWeekDays(): string[] {
 	return days;
 }
 
-const weekDays = getWeekDays();
+const _weekDays = getWeekDays();
 </script>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

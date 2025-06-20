@@ -1,12 +1,11 @@
 <script lang="ts">
-import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
-import type { ActionData } from "./$types";
+import type { ActionData } from "./$types.ts";
 
 export let form: ActionData;
 
-let content = "";
-let date = new Date().toISOString().split("T")[0];
+const content = "";
+const date = new Date().toISOString().split("T")[0];
 
 function cancel() {
 	goto("/diary");

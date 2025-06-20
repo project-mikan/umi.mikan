@@ -1,12 +1,10 @@
 <script lang="ts">
-import { enhance } from "$app/forms";
-import { _ } from "svelte-i18n";
 import "$lib/i18n";
-import type { ActionData } from "./$types";
+import type { ActionData } from "./$types.ts";
 
 export let form: ActionData;
 
-let loading = false;
+const loading = false;
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">

@@ -5,7 +5,7 @@ import type {
 	CreateDiaryEntryParams,
 	SearchDiaryEntriesParams,
 	UpdateDiaryEntryParams,
-} from "./diary-api";
+} from "./diary-api.ts";
 
 // Simple integration test without deep mocking
 describe("Diary API Types and Validation", () => {

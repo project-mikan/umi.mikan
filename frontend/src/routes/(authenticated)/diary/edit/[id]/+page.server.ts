@@ -5,7 +5,7 @@ import {
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
 import { error, redirect } from "@sveltejs/kit";
-import type { Actions, PageServerLoad } from "./$types";
+import type { Actions, PageServerLoad } from "./$types.ts";
 
 const DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -105,7 +105,6 @@ export const actions: Actions = {
 			if (err instanceof Response) {
 				throw err;
 			}
-			console.error("Failed to update diary entry:", err);
 			return {
 				error: "日記の更新に失敗しました",
 			};
@@ -150,7 +149,6 @@ export const actions: Actions = {
 			if (err instanceof Response) {
 				throw err;
 			}
-			console.error("Failed to delete diary entry:", err);
 			return {
 				error: "日記の削除に失敗しました",
 			};

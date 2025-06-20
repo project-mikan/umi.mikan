@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type {
 	LoginByPasswordParams,
 	RegisterByPasswordParams,
-} from "./auth-api";
+} from "./auth-api.ts";
 
 // Simple integration test without deep mocking
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
