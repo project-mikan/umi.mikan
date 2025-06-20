@@ -12,7 +12,8 @@
 		"format": "biome check --write src",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && biome check",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"biome": "biome check",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {

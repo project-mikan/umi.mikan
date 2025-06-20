@@ -37,4 +37,4 @@ jobs:
 
       - name: Run svelte check
         working-directory: ./frontend
-        run: svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+        run: pnpm run check

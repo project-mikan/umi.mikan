@@ -1,3 +1,4 @@
+# フロントエンド
 f-sh:
 	docker compose exec frontend bash
 f-format:
@@ -5,13 +6,20 @@ f-format:
 
 f-lint:
 	make f-format
-	docker compose exec frontend pnpm check
+	docker compose exec frontend pnpm run check
+	docker compose exec frontend pnpm run biome
 
+# バックエンド
 b-format:
 	docker compose exec backend go fmt ./...
+	docker compose exec backend go tool golangci-lint run --fix
 b-lint:
 	make b-format
 	docker compose exec backend go tool golangci-lint run
+b-sh:
+	docker compose exec backend sh
+tidy:
+	docker compose exec backend go mod tidy
 
 
 xo:
@@ -21,10 +29,6 @@ xo:
 go-mod-tidy:
 	docker compose exec backend go mod tidy
 # airを使うので不要↓
-b-sh:
-	docker compose exec backend sh
-tidy:
-	docker compose exec backend go mod tidy
 db:
 	docker compose exec postgres psql -U postgres -d umi_mikan  
 db-init:
@@ -86,10 +90,3 @@ test-benchmark:
 
 test-race:
 	docker compose exec backend go test -race ./...
-
-# Backend Linting Commands
-lint:
-	docker compose exec backend go tool golangci-lint run
-
-lint-fix:
-	docker compose exec backend go tool golangci-lint run --fix
