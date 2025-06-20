@@ -15,9 +15,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"biome": "biome check",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest",
-		"test:ui": "vitest --ui",
-		"test:run": "vitest run"
+		"test": "vitest run"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
@@ -38,8 +36,14 @@
 		"vitest": "^3.2.4"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": ["esbuild", "@bufbuild/buf"],
-		"ignoredBuiltDependencies": ["@biomejs/biome", "es5-ext"]
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"@bufbuild/buf"
+		],
+		"ignoredBuiltDependencies": [
+			"@biomejs/biome",
+			"es5-ext"
+		]
 	},
 	"dependencies": {
 		"@bufbuild/protobuf": "^2.5.2",

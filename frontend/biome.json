@@ -7,11 +7,22 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": [".svelte-kit/**", ".pnpm-store/**", "node_modules/**"]
+		"ignore": [
+			".svelte-kit/**",
+			".pnpm-store/**",
+			"node_modules/**",
+			"package.json",
+			"biome.json"
+		]
 	},
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab"
+	},
+	"json": {
+		"formatter": {
+			"trailingCommas": "none"
+		}
 	},
 	"organizeImports": {
 		"enabled": true
