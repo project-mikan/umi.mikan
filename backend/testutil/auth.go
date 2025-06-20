@@ -15,15 +15,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 // CreateTestUser creates a test user in the database and returns the user ID
 func CreateTestUser(t *testing.T, db *sql.DB, email, name string) uuid.UUID {
 	userID := uuid.New()
 	currentTime := time.Now().Unix()
-	
+
 	// Make email unique by adding test information
 	uniqueEmail := generateUniqueEmail(t, email)
-	
+
 	// Create test user
 	_, err := db.Exec(
 		"INSERT INTO users (id, email, name, auth_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
@@ -32,7 +31,7 @@ func CreateTestUser(t *testing.T, db *sql.DB, email, name string) uuid.UUID {
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
 	}
-	
+
 	return userID
 }
 
@@ -40,24 +39,24 @@ func CreateTestUser(t *testing.T, db *sql.DB, email, name string) uuid.UUID {
 func CreateTestUserWithPassword(t *testing.T, db *sql.DB, email, name, password string) uuid.UUID {
 	userID := uuid.New()
 	currentTime := time.Now().Unix()
-	
+
 	// Make email unique by adding test information
 	uniqueEmail := generateUniqueEmail(t, email)
-	
+
 	// Hash the password
 	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		t.Fatalf("Failed to hash password: %v", err)
 	}
 	hashedPassword := string(hashedPasswordBytes)
-	
+
 	// Use transaction to ensure data consistency
 	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf("Failed to begin transaction: %v", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	
+
 	// Create test user
 	_, err = tx.Exec(
 		"INSERT INTO users (id, email, name, auth_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
@@ -66,7 +65,7 @@ func CreateTestUserWithPassword(t *testing.T, db *sql.DB, email, name, password 
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
 	}
-	
+
 	// Create password auth record
 	_, err = tx.Exec(
 		"INSERT INTO user_password_authes (user_id, password_hashed, created_at, updated_at) VALUES ($1, $2, $3, $4)",
@@ -75,12 +74,12 @@ func CreateTestUserWithPassword(t *testing.T, db *sql.DB, email, name, password 
 	if err != nil {
 		t.Fatalf("Failed to create password auth: %v", err)
 	}
-	
+
 	// Commit transaction
 	if err = tx.Commit(); err != nil {
 		t.Fatalf("Failed to commit transaction: %v", err)
 	}
-	
+
 	return userID
 }
 
@@ -108,7 +107,7 @@ func generateUniqueEmail(t *testing.T, baseEmail string) string {
 	testID := fmt.Sprintf("%s-%d-%d", t.Name(), os.Getpid(), time.Now().UnixNano())
 	testID = strings.ReplaceAll(testID, "/", "-")
 	testID = strings.ReplaceAll(testID, " ", "-")
-	
+
 	// Split email into local and domain parts
 	parts := strings.Split(baseEmail, "@")
 	if len(parts) == 2 {

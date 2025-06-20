@@ -229,9 +229,9 @@ func TestDiaryEntry_UpdateDiaryEntry(t *testing.T) {
 			shouldSucceed: true,
 		},
 		{
-			name:          "Update with new date",
-			entryID:       createResp.Entry.Id,
-			content:       "Updated content with new date",
+			name:    "Update with new date",
+			entryID: createResp.Entry.Id,
+			content: "Updated content with new date",
 			date: &g.YMD{
 				Year:  2024,
 				Month: 3,

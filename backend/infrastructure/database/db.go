@@ -25,7 +25,7 @@ func RoTransaction(ctx context.Context, db *sql.DB, fn func(tx *sql.Tx) error) e
 	if err != nil {
 		return fmt.Errorf("failed to begin read-only transaction: %w", err)
 	}
-	
+
 	defer func() {
 		if r := recover(); r != nil {
 			_ = tx.Rollback()
@@ -54,7 +54,7 @@ func RwTransaction(ctx context.Context, db *sql.DB, fn func(tx *sql.Tx) error) e
 	if err != nil {
 		return fmt.Errorf("failed to begin read-write transaction: %w", err)
 	}
-	
+
 	defer func() {
 		if r := recover(); r != nil {
 			_ = tx.Rollback()
