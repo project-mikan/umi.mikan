@@ -1,6 +1,5 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
-import { page } from "$app/stores";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
 

@@ -3,9 +3,6 @@ import { create } from "@bufbuild/protobuf";
 import { describe, expect, it } from "vitest";
 import type {
 	CreateDiaryEntryParams,
-	DeleteDiaryEntryParams,
-	GetDiaryEntriesByMonthParams,
-	GetDiaryEntryParams,
 	SearchDiaryEntriesParams,
 	UpdateDiaryEntryParams,
 } from "./diary-api";
@@ -124,7 +121,7 @@ describe("Diary API Types and Validation", () => {
 
 		it("should validate keyword length", () => {
 			const isValidKeyword = (keyword: string): boolean => {
-				return keyword.trim().length >= 1 && keyword.length <= 100;
+				return keyword.trim().length > 0 && keyword.length <= 100;
 			};
 
 			expect(isValidKeyword("test")).toBe(true);

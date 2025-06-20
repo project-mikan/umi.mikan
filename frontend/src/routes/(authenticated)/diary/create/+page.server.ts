@@ -14,7 +14,7 @@ export const actions: Actions = {
 		const content = data.get("content") as string;
 		const dateStr = data.get("date") as string;
 
-		if (!content || !dateStr) {
+		if (!(content && dateStr)) {
 			return {
 				error: "コンテンツと日付は必須です",
 			};
@@ -35,7 +35,7 @@ export const actions: Actions = {
 			if (err instanceof Response) {
 				throw err;
 			}
-			console.error("Failed to create diary entry:", err);
+			// Log error for debugging but don't expose details to client
 			return {
 				error: "日記の作成に失敗しました",
 			};

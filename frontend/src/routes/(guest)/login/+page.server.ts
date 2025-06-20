@@ -2,7 +2,7 @@ import { loginByPassword } from "$lib/server/auth-api";
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ cookies }) => {
+export const load: PageServerLoad = ({ cookies }) => {
 	const accessToken = cookies.get("accessToken");
 	if (accessToken) {
 		throw redirect(302, "/");
@@ -15,7 +15,7 @@ export const actions: Actions = {
 		const email = data.get("email") as string;
 		const password = data.get("password") as string;
 
-		if (!email || !password) {
+		if (!(email && password)) {
 			return fail(400, { error: "Email and password are required" });
 		}
 
@@ -41,7 +41,7 @@ export const actions: Actions = {
 				maxAge: 60 * 60 * 24 * 30, // 30 days
 			});
 		} catch (error: unknown) {
-			console.error("Login error:", error);
+			// Log error for debugging but don't expose details to client
 			return fail(400, {
 				error: error instanceof Error ? error.message : "Login failed",
 			});

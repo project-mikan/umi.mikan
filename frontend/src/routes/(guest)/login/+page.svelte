@@ -27,6 +27,11 @@ let loading = false;
 				};
 			}}
 		>
+			{#if form?.error}
+				<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					{form.error}
+				</div>
+			{/if}
 			<div class="space-y-4">
 				<div>
 					<label for="email" class="sr-only">{$_('auth.login.email')}</label>
@@ -53,12 +58,6 @@ let loading = false;
 					/>
 				</div>
 			</div>
-
-			{#if form?.error}
-				<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-					{form.error}
-				</div>
-			{/if}
 
 			<div>
 				<button

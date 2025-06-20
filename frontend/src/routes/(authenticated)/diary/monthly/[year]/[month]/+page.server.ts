@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 			month,
 		};
 	} catch (err) {
-		console.error("Failed to load diary entries:", err);
+		// Log error for debugging but don't expose details to client
 		return {
 			entries: [],
 			year,

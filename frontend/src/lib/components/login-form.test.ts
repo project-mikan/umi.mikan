@@ -1,8 +1,4 @@
-import { render, screen } from "@testing-library/svelte";
 import { describe, expect, it, vi } from "vitest";
-
-// Since we can't directly test +page.svelte files, we'll create a wrapper component for testing
-import { SvelteComponent } from "svelte";
 
 // Mock svelte-i18n
 vi.mock("svelte-i18n", () => ({
@@ -14,12 +10,13 @@ vi.mock("$app/forms", () => ({
 	enhance: vi.fn().mockImplementation(() => ({})),
 }));
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 describe("Login Form Logic", () => {
 	it("should handle form validation", () => {
 		// Test email validation
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		expect(emailRegex.test("test@example.com")).toBe(true);
-		expect(emailRegex.test("invalid-email")).toBe(false);
+		expect(EMAIL_REGEX.test("test@example.com")).toBe(true);
+		expect(EMAIL_REGEX.test("invalid-email")).toBe(false);
 	});
 
 	it("should handle loading state", () => {

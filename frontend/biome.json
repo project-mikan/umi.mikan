@@ -12,7 +12,12 @@
 			".pnpm-store/**",
 			"node_modules/**",
 			"package.json",
-			"biome.json"
+			"biome.json",
+			"src/app.d.ts",
+			"src/lib/grpc/**",
+			"vite.config.ts",
+			"svelte.config.js",
+			"svelte.config.prod.js"
 		]
 	},
 	"formatter": {
@@ -30,9 +35,19 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"all": true,
 			"style": {
-				"useConst": "off"
+				"useConst": "off",
+				"useNamingConvention": "off"
+			},
+			"correctness": {
+				"noUnusedVariables": "off",
+				"useImportExtensions": "off",
+				"noUndeclaredVariables": "off",
+				"noUnusedImports": "off"
+			},
+			"suspicious": {
+				"noConsole": "off"
 			}
 		}
 	},
