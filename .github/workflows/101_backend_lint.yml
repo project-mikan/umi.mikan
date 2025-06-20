@@ -1,7 +1,10 @@
 name: 【backend】Go Lint
 
 on:
-  - pull_request
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/**"
 
 jobs:
   lint:
