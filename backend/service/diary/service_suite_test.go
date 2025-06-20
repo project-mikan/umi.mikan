@@ -85,14 +85,14 @@ func TestDiarySuite_UserIsolation(t *testing.T) {
 
 		// Add another test user
 		user2ID := testData.AddTestUser("user2-suite@example.com", "User Two", "password123")
-		
+
 		ctx1 := suite.GetAuthenticatedContext()
 		ctx2 := testutil.CreateAuthenticatedContext(user2ID)
 
 		// User 1 creates a diary entry
 		createReq1 := &g.CreateDiaryEntryRequest{
 			Content: "User 1's private diary",
-			Date: &g.YMD{Year: 2025, Month: 2, Day: 1},
+			Date:    &g.YMD{Year: 2025, Month: 2, Day: 1},
 		}
 		createResp1, err := diaryService.CreateDiaryEntry(ctx1, createReq1)
 		if err != nil {
@@ -102,7 +102,7 @@ func TestDiarySuite_UserIsolation(t *testing.T) {
 		// User 2 creates a diary entry
 		createReq2 := &g.CreateDiaryEntryRequest{
 			Content: "User 2's private diary",
-			Date: &g.YMD{Year: 2025, Month: 2, Day: 2},
+			Date:    &g.YMD{Year: 2025, Month: 2, Day: 2},
 		}
 		_, err = diaryService.CreateDiaryEntry(ctx2, createReq2)
 		if err != nil {

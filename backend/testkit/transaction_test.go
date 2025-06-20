@@ -16,7 +16,11 @@ func TestTransactionFunctions(t *testing.T) {
 	if err != nil {
 		t.Skip("Database connection not available, skipping test")
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Failed to close database connection: %v", err)
+		}
+	}()
 
 	// Test connection
 	if err := db.Ping(); err != nil {

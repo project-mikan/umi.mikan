@@ -64,7 +64,7 @@ func TestCompleteUserJourney(t *testing.T) {
 	// Use nanoseconds to get more unique values for each test run
 	nanoTime := time.Now().UnixNano()
 	baseDate := uint32((nanoTime % 25) + 1) // Get a day between 1-25 (leaving room for +2)
-	year := uint32(2025 + (nanoTime%5))     // Use different years too
+	year := uint32(2025 + (nanoTime % 5))   // Use different years too
 	diaryEntries := []struct {
 		content string
 		date    *g.YMD
@@ -225,8 +225,8 @@ func TestUserIsolation(t *testing.T) {
 	// User 1 creates a diary entry
 	nanoTime := time.Now().UnixNano()
 	baseDate := uint32((nanoTime % 25) + 1)
-	year := uint32(2024 + (nanoTime%5))
-	
+	year := uint32(2024 + (nanoTime % 5))
+
 	user1CreateReq := &g.CreateDiaryEntryRequest{
 		Content: "User 1's private diary",
 		Date:    &g.YMD{Year: year, Month: 2, Day: baseDate},
@@ -284,7 +284,11 @@ func getUserFromToken(t *testing.T, db *sql.DB, token string) (*database.User, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			t.Logf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if !rows.Next() {
 		t.Fatal("No user found")

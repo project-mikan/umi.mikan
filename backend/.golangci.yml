@@ -1,0 +1,8 @@
+version: "2"
+linters:
+  exclusions:
+    rules:
+      # xoの自動生成は一部lintだめなので除外
+      - path: '(.+)xo\.go'
+        linters:
+          - errcheck

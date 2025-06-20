@@ -6,6 +6,11 @@ f-sh:
 f-format:
 	docker compose exec frontend pnpm format
 
+b-lint:
+	docker compose exec backend go fmt ./...
+	docker compose exec backend go tool golangci-lint run
+
+
 xo:
 	# db-initも実行したいが立ち上げてすぐは起動できないので別でコマンド
 	rm -rf backend/infrastructure/database/*.xo.go

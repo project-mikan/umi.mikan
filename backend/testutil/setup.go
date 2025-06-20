@@ -25,25 +25,26 @@ type TestSuite struct {
 // SetupTestSuite creates a complete test environment with test data
 func SetupTestSuite(t *testing.T) *TestSuite {
 	db := SetupTestDBForSuite(t)
-	
+
 	// Create a test user for the suite
 	userID := createTestUserForSuite(t, db)
-	
+
 	suite := &TestSuite{
 		DB:     db,
 		UserID: userID,
 		t:      t,
 	}
-	
+
 	// Schedule cleanup when test finishes
 	t.Cleanup(func() {
 		cleanupTestSuiteData(t, db, userID)
-		db.Close()
+		if err := db.Close(); err != nil {
+			t.Logf("Failed to close database connection: %v", err)
+		}
 	})
-	
+
 	return suite
 }
-
 
 // GetAuthenticatedContext returns a context with the test user authenticated
 func (ts *TestSuite) GetAuthenticatedContext() context.Context {
@@ -71,7 +72,7 @@ func (td *TestData) AddTestUser(email, name, password string) uuid.UUID {
 	testRunID = strings.ReplaceAll(testRunID, "/", "-")
 	testRunID = strings.ReplaceAll(testRunID, " ", "-")
 	uniqueEmail := fmt.Sprintf("%s-%s", testRunID, email)
-	
+
 	userID := CreateTestUserWithPassword(td.suite.t, td.suite.DB, uniqueEmail, name, password)
 	td.Users = append(td.Users, userID)
 	return userID
@@ -88,28 +89,28 @@ func (td *TestData) Cleanup() {
 func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 	userID := uuid.New()
 	currentTime := time.Now().Unix()
-	
+
 	// Generate unique email for this test run using test name, process ID, and timestamp
 	testRunID := fmt.Sprintf("%s-%d-%d", t.Name(), os.Getpid(), time.Now().UnixNano())
 	// Replace characters that might cause issues in email addresses
 	testRunID = strings.ReplaceAll(testRunID, "/", "-")
 	testRunID = strings.ReplaceAll(testRunID, " ", "-")
 	email := fmt.Sprintf("test-suite-%s@example.com", testRunID)
-	
+
 	// Hash password first
 	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte("testPassword123"), bcrypt.DefaultCost)
 	if err != nil {
 		t.Fatalf("Failed to hash password for test suite user: %v", err)
 	}
 	hashedPassword := string(hashedPasswordBytes)
-	
+
 	// Use transaction to ensure data consistency
 	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf("Failed to begin transaction: %v", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	
+
 	// Create test user
 	_, err = tx.Exec(
 		"INSERT INTO users (id, email, name, auth_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
@@ -118,7 +119,7 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 	if err != nil {
 		t.Fatalf("Failed to create test suite user: %v", err)
 	}
-	
+
 	// Create password auth
 	_, err = tx.Exec(
 		"INSERT INTO user_password_authes (user_id, password_hashed, created_at, updated_at) VALUES ($1, $2, $3, $4)",
@@ -127,12 +128,12 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 	if err != nil {
 		t.Fatalf("Failed to create password auth for test suite user: %v", err)
 	}
-	
+
 	// Commit transaction
 	if err = tx.Commit(); err != nil {
 		t.Fatalf("Failed to commit transaction: %v", err)
 	}
-	
+
 	return userID
 }
 
@@ -144,19 +145,19 @@ func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
 		return
 	}
 	defer func() { _ = tx.Rollback() }()
-	
+
 	cleanupQueries := []string{
 		"DELETE FROM diaries WHERE user_id = $1",
 		"DELETE FROM user_password_authes WHERE user_id = $1",
 		"DELETE FROM users WHERE id = $1",
 	}
-	
+
 	for _, query := range cleanupQueries {
 		if _, err := tx.Exec(query, userID); err != nil {
 			log.Printf("Warning: cleanup query failed: %v", err)
 		}
 	}
-	
+
 	if err := tx.Commit(); err != nil {
 		log.Printf("Warning: failed to commit cleanup transaction: %v", err)
 	}

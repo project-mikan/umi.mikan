@@ -121,7 +121,7 @@ func ParseAuthTokens(tokenString string) (*TokenDetails, string, error) {
 		return jwtSecret, nil
 	})
 	if err != nil {
-		return nil, "", fmt.Errorf("Failed to parse token: %w", err)
+		return nil, "", fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
@@ -132,7 +132,7 @@ func ParseAuthTokens(tokenString string) (*TokenDetails, string, error) {
 			RefreshToken: "", // リフレッシュトークンはここでは不要
 		}, claims.UserID, nil
 	}
-	return nil, "", fmt.Errorf("Invalid token")
+	return nil, "", fmt.Errorf("invalid token")
 }
 
 func (m *TokenDetails) ConvertAuthResponse() *grpc.AuthResponse {
