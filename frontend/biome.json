@@ -12,7 +12,8 @@
 			".pnpm-store/**",
 			"node_modules/**",
 			"package.json",
-			"biome.json"
+			"biome.json",
+			"src/app.d.ts"
 		]
 	},
 	"formatter": {
@@ -34,7 +35,6 @@
 			"style": {
 				"useConst": "off",
 				"noDefaultExport": "off",
-				"noNamespace": "off",
 				"useNamingConvention": "off"
 			},
 			"performance": {
