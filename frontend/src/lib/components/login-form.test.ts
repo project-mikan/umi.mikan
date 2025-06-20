@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/svelte";
+import { describe, expect, it, vi } from "vitest";
 
 // Since we can't directly test +page.svelte files, we'll create a wrapper component for testing
 import { SvelteComponent } from "svelte";
@@ -24,7 +24,7 @@ describe("Login Form Logic", () => {
 
 	it("should handle loading state", () => {
 		let loading = false;
-		
+
 		// Simulate form submission
 		const handleSubmit = () => {
 			loading = true;
@@ -40,12 +40,12 @@ describe("Login Form Logic", () => {
 	});
 
 	it("should format error messages", () => {
-		const formatError = (error: string) => {
+		const formatError = (error: string | null) => {
 			return error || "An unexpected error occurred";
 		};
 
 		expect(formatError("Invalid credentials")).toBe("Invalid credentials");
 		expect(formatError("")).toBe("An unexpected error occurred");
-		expect(formatError(null as any)).toBe("An unexpected error occurred");
+		expect(formatError(null)).toBe("An unexpected error occurred");
 	});
 });

@@ -1,11 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { YMDSchema } from "$lib/grpc/diary/diary_pb.js";
+import { create } from "@bufbuild/protobuf";
+import { describe, expect, it } from "vitest";
 import type {
 	CreateDiaryEntryParams,
-	GetDiaryEntryParams,
-	GetDiaryEntriesByMonthParams,
-	UpdateDiaryEntryParams,
 	DeleteDiaryEntryParams,
+	GetDiaryEntriesByMonthParams,
+	GetDiaryEntryParams,
 	SearchDiaryEntriesParams,
+	UpdateDiaryEntryParams,
 } from "./diary-api";
 
 // Simple integration test without deep mocking
@@ -14,7 +16,7 @@ describe("Diary API Types and Validation", () => {
 		it("should validate CreateDiaryEntryParams", () => {
 			const validParams: CreateDiaryEntryParams = {
 				content: "Test diary content",
-				date: { year: 2024, month: 1, day: 15 },
+				date: create(YMDSchema, { year: 2024, month: 1, day: 15 }),
 				accessToken: "mock-token",
 			};
 
@@ -28,7 +30,7 @@ describe("Diary API Types and Validation", () => {
 				id: "entry-1",
 				title: "Updated Title",
 				content: "Updated content",
-				date: { year: 2024, month: 1, day: 15 },
+				date: create(YMDSchema, { year: 2024, month: 1, day: 15 }),
 				accessToken: "mock-token",
 			};
 
@@ -40,16 +42,28 @@ describe("Diary API Types and Validation", () => {
 
 	describe("Date utilities", () => {
 		it("should format date strings correctly", () => {
-			const formatDateString = (date: { year: number; month: number; day: number }): string => {
+			const formatDateString = (date: {
+				year: number;
+				month: number;
+				day: number;
+			}): string => {
 				return `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 			};
 
-			expect(formatDateString({ year: 2024, month: 1, day: 5 })).toBe("2024-01-05");
-			expect(formatDateString({ year: 2024, month: 12, day: 25 })).toBe("2024-12-25");
+			expect(formatDateString({ year: 2024, month: 1, day: 5 })).toBe(
+				"2024-01-05",
+			);
+			expect(formatDateString({ year: 2024, month: 12, day: 25 })).toBe(
+				"2024-12-25",
+			);
 		});
 
 		it("should validate date ranges", () => {
-			const isValidDate = (date: { year: number; month: number; day: number }): boolean => {
+			const isValidDate = (date: {
+				year: number;
+				month: number;
+				day: number;
+			}): boolean => {
 				return (
 					date.year >= 1900 &&
 					date.year <= 2100 &&
@@ -69,7 +83,9 @@ describe("Diary API Types and Validation", () => {
 
 	describe("Content validation", () => {
 		it("should validate diary content", () => {
-			const validateContent = (content: string): { isValid: boolean; error?: string } => {
+			const validateContent = (
+				content: string,
+			): { isValid: boolean; error?: string } => {
 				if (!content || content.trim().length === 0) {
 					return { isValid: false, error: "Content is required" };
 				}
@@ -80,11 +96,17 @@ describe("Diary API Types and Validation", () => {
 			};
 
 			expect(validateContent("Valid content")).toEqual({ isValid: true });
-			expect(validateContent("")).toEqual({ isValid: false, error: "Content is required" });
-			expect(validateContent("   ")).toEqual({ isValid: false, error: "Content is required" });
-			expect(validateContent("a".repeat(10001))).toEqual({ 
-				isValid: false, 
-				error: "Content is too long" 
+			expect(validateContent("")).toEqual({
+				isValid: false,
+				error: "Content is required",
+			});
+			expect(validateContent("   ")).toEqual({
+				isValid: false,
+				error: "Content is required",
+			});
+			expect(validateContent("a".repeat(10001))).toEqual({
+				isValid: false,
+				error: "Content is too long",
 			});
 		});
 	});

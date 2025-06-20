@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock browser environment
 vi.mock("$app/environment", () => ({
@@ -25,7 +25,7 @@ vi.mock("../locales/ja.json", () => ({ default: {} }));
 describe("i18n", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Mock navigator.language
 		Object.defineProperty(window.navigator, "language", {
 			writable: true,
@@ -48,7 +48,7 @@ describe("i18n", () => {
 
 		// Clear module cache to re-import with new navigator.language
 		vi.resetModules();
-		
+
 		await import("./i18n");
 
 		expect(mockInit).toHaveBeenCalledWith({
@@ -65,7 +65,7 @@ describe("i18n", () => {
 
 		// Clear module cache to re-import with new navigator.language
 		vi.resetModules();
-		
+
 		await import("./i18n");
 
 		expect(mockInit).toHaveBeenCalledWith({

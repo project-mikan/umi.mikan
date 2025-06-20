@@ -38,14 +38,8 @@
 		"vitest": "^3.2.4"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild",
-			"@bufbuild/buf"
-		],
-		"ignoredBuiltDependencies": [
-			"@biomejs/biome",
-			"es5-ext"
-		]
+		"onlyBuiltDependencies": ["esbuild", "@bufbuild/buf"],
+		"ignoredBuiltDependencies": ["@biomejs/biome", "es5-ext"]
 	},
 	"dependencies": {
 		"@bufbuild/protobuf": "^2.5.2",

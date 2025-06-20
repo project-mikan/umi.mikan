@@ -1,5 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import type { LoginByPasswordParams, RegisterByPasswordParams } from "./auth-api";
+import { describe, expect, it, vi } from "vitest";
+import type {
+	LoginByPasswordParams,
+	RegisterByPasswordParams,
+} from "./auth-api";
 
 // Simple integration test without deep mocking
 describe("Auth API Types and Validation", () => {
@@ -30,7 +33,7 @@ describe("Auth API Types and Validation", () => {
 	describe("Email validation", () => {
 		it("should validate email format", () => {
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			
+
 			expect(emailRegex.test("test@example.com")).toBe(true);
 			expect(emailRegex.test("user.name@domain.co.uk")).toBe(true);
 			expect(emailRegex.test("invalid-email")).toBe(false);
@@ -42,7 +45,11 @@ describe("Auth API Types and Validation", () => {
 	describe("Password validation", () => {
 		it("should validate password strength", () => {
 			const isStrongPassword = (password: string): boolean => {
-				return password.length >= 8 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
+				return (
+					password.length >= 8 &&
+					/[A-Za-z]/.test(password) &&
+					/[0-9]/.test(password)
+				);
 			};
 
 			expect(isStrongPassword("password123")).toBe(true);
