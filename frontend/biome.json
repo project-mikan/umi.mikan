@@ -13,7 +13,11 @@
 			"node_modules/**",
 			"package.json",
 			"biome.json",
-			"src/app.d.ts"
+			"src/app.d.ts",
+			"src/lib/grpc/**",
+			"vite.config.ts",
+			"svelte.config.js",
+			"svelte.config.prod.js"
 		]
 	},
 	"formatter": {
@@ -34,12 +38,7 @@
 			"all": true,
 			"style": {
 				"useConst": "off",
-				"noDefaultExport": "off",
 				"useNamingConvention": "off"
-			},
-			"performance": {
-				"noBarrelFile": "off",
-				"noReExportAll": "off"
 			},
 			"correctness": {
 				"noUnusedVariables": "off",
@@ -48,8 +47,7 @@
 				"noUnusedImports": "off"
 			},
 			"suspicious": {
-				"noConsole": "off",
-				"useAwait": "off"
+				"noConsole": "off"
 			}
 		}
 	},
