@@ -284,7 +284,11 @@ func getUserFromToken(t *testing.T, db *sql.DB, token string) (*database.User, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			t.Logf("Failed to close rows: %v", err)
+		}
+	}()
 
 	if !rows.Next() {
 		t.Fatal("No user found")

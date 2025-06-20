@@ -6,7 +6,7 @@ f-sh:
 f-format:
 	docker compose exec frontend pnpm format
 
-b-format:
+b-lint:
 	docker compose exec backend go fmt ./...
 	docker compose exec backend go tool golangci-lint run
 

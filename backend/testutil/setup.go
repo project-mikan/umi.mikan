@@ -38,7 +38,9 @@ func SetupTestSuite(t *testing.T) *TestSuite {
 	// Schedule cleanup when test finishes
 	t.Cleanup(func() {
 		cleanupTestSuiteData(t, db, userID)
-		db.Close()
+		if err := db.Close(); err != nil {
+			t.Logf("Failed to close database connection: %v", err)
+		}
 	})
 
 	return suite

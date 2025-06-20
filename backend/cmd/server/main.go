@@ -34,7 +34,11 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 	db := database.NewDB(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Failed to close database connection: %v", err)
+		}
+	}()
 
 	// サービス登録
 	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db})
