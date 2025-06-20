@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.0.2/schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -7,11 +7,22 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": [".svelte-kit/**", ".pnpm-store/**", "node_modules/**"]
+		"ignore": [
+			".svelte-kit/**",
+			".pnpm-store/**",
+			"node_modules/**",
+			"package.json",
+			"biome.json"
+		]
 	},
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab"
+	},
+	"json": {
+		"formatter": {
+			"trailingCommas": "none"
+		}
 	},
 	"organizeImports": {
 		"enabled": true
