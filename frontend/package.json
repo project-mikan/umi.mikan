@@ -12,7 +12,7 @@
 		"format": "biome check --write src",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && biome check",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
@@ -29,14 +29,8 @@
 		"vite": "^6.3.5"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild",
-			"@bufbuild/buf"
-		],
-		"ignoredBuiltDependencies": [
-			"@biomejs/biome",
-			"es5-ext"
-		]
+		"onlyBuiltDependencies": ["esbuild", "@bufbuild/buf"],
+		"ignoredBuiltDependencies": ["@biomejs/biome", "es5-ext"]
 	},
 	"dependencies": {
 		"@bufbuild/protobuf": "^2.5.2",

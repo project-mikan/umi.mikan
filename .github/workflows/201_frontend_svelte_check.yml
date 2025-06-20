@@ -1,4 +1,4 @@
-name: 【frontend】Biome Lint & Format
+name: 【frontend】Svelte Check
 
 on:
   pull_request:
@@ -35,6 +35,6 @@ jobs:
         working-directory: ./frontend
         run: pnpm install
 
-      - name: Run Biome ci
+      - name: Run svelte check
         working-directory: ./frontend
-        run: pnpm biome ci
+        run: svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
