@@ -44,6 +44,8 @@ If you want to use pnpm commands, use `docker compose exec frontend pnpm`.
 
 backend/infrastructure/grpc dir is automatically generated. DO NOT EDIT MANUALLY.
 
+When installing the library, `docker compose exec frontend pnpm install` instead of writing it in package.json, and give the -D option if necessary.
+
 ### Backend Development
 
 ```bash

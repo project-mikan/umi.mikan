@@ -1,19 +1,32 @@
-FROM golang:1.24.4-alpine as builder
+FROM golang:1.24.4-alpine AS builder
 
 WORKDIR /build
 
-RUN apk update && apk add git
+# Install ca-certificates for HTTPS requests
+RUN apk add --no-cache ca-certificates git
+
+# Copy go mod files and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy source code
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build cmd/server/main.go -o binary
 
+# Build the binary with optimizations
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags='-w -s -extldflags "-static"' \
+    -a -installsuffix cgo \
+    -o binary cmd/server/main.go
 
-FROM scratch as prod
+# Production stage
+FROM scratch
 
-WORKDIR /backend
-COPY --from=builder /build/binary binary
+# Copy ca-certificates from builder
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# Copy the binary
+COPY --from=builder /build/binary /binary
 
 EXPOSE 8080
-CMD ["/backend/binary"]
+
+CMD ["/binary"]
