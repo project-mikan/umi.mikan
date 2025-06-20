@@ -31,31 +31,25 @@
 		"enabled": true,
 		"rules": {
 			"all": true,
-			"complexity": {
-				"useSimplifiedLogicExpression": "off"
-			},
 			"style": {
 				"useConst": "off",
 				"noDefaultExport": "off",
 				"noNamespace": "off",
-				"useNamingConvention": "off",
-				"useExplicitLengthCheck": "off"
+				"useNamingConvention": "off"
 			},
 			"performance": {
 				"noBarrelFile": "off",
-				"noReExportAll": "off",
-				"useTopLevelRegex": "off"
+				"noReExportAll": "off"
 			},
 			"correctness": {
 				"noUnusedVariables": "off",
 				"useImportExtensions": "off",
-				"noUnusedImports": "off",
-				"noUndeclaredVariables": "off"
+				"noUndeclaredVariables": "off",
+				"noUnusedImports": "off"
 			},
 			"suspicious": {
 				"noConsole": "off",
-				"useAwait": "off",
-				"noEvolvingTypes": "off"
+				"useAwait": "off"
 			}
 		}
 	},

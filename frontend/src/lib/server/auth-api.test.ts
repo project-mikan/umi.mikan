@@ -1,10 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type {
 	LoginByPasswordParams,
 	RegisterByPasswordParams,
 } from "./auth-api";
 
 // Simple integration test without deep mocking
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LETTER_REGEX = /[A-Za-z]/;
+const NUMBER_REGEX = /[0-9]/;
+
 describe("Auth API Types and Validation", () => {
 	describe("Parameter validation", () => {
 		it("should validate LoginByPasswordParams", () => {
@@ -32,13 +36,11 @@ describe("Auth API Types and Validation", () => {
 
 	describe("Email validation", () => {
 		it("should validate email format", () => {
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-			expect(emailRegex.test("test@example.com")).toBe(true);
-			expect(emailRegex.test("user.name@domain.co.uk")).toBe(true);
-			expect(emailRegex.test("invalid-email")).toBe(false);
-			expect(emailRegex.test("@domain.com")).toBe(false);
-			expect(emailRegex.test("user@")).toBe(false);
+			expect(EMAIL_REGEX.test("test@example.com")).toBe(true);
+			expect(EMAIL_REGEX.test("user.name@domain.co.uk")).toBe(true);
+			expect(EMAIL_REGEX.test("invalid-email")).toBe(false);
+			expect(EMAIL_REGEX.test("@domain.com")).toBe(false);
+			expect(EMAIL_REGEX.test("user@")).toBe(false);
 		});
 	});
 
@@ -47,8 +49,8 @@ describe("Auth API Types and Validation", () => {
 			const isStrongPassword = (password: string): boolean => {
 				return (
 					password.length >= 8 &&
-					/[A-Za-z]/.test(password) &&
-					/[0-9]/.test(password)
+					LETTER_REGEX.test(password) &&
+					NUMBER_REGEX.test(password)
 				);
 			};
 

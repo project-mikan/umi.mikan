@@ -2,6 +2,8 @@ import { createYMD, getDiaryEntry } from "$lib/server/diary-api";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
+const DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 export const load: PageServerLoad = async ({ params, cookies }) => {
 	const accessToken = cookies.get("accessToken");
 
@@ -11,7 +13,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 	try {
 		// params.id should be in format YYYY-MM-DD
-		const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+		const dateMatch = params.id.match(DATE_REGEX);
 		if (!dateMatch) {
 			throw error(400, "Invalid date format");
 		}
@@ -37,7 +39,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		if (err instanceof Response) {
 			throw err;
 		}
-		console.error("Failed to load diary entry:", err);
+		// Log error for debugging but don't expose details to client
 		throw error(500, "Failed to load diary entry");
 	}
 };

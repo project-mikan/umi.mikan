@@ -87,7 +87,7 @@ if (data.entries && Array.isArray(data.entries.entries)) {
 }
 
 function getWeekDays(): string[] {
-	const days = [];
+	const days: string[] = [];
 	const date = new Date();
 	// 日曜日から始まる週の各曜日を取得
 	for (let i = 0; i < 7; i++) {

@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 			keyword: keyword,
 		};
 	} catch (err) {
-		console.error("Search error:", err);
+		// Log error for debugging but don't expose details to client
 		return {
 			searchResults: null,
 			keyword: keyword,
@@ -63,7 +63,7 @@ export const actions: Actions = {
 				keyword: keyword,
 			};
 		} catch (err) {
-			console.error("Search error:", err);
+			// Log error for debugging but don't expose details to client
 			return fail(500, { error: "Failed to search diary entries" });
 		}
 	},

@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 			entries,
 		};
 	} catch (err) {
-		console.error("Failed to load diary entries:", err);
+		// Log error for debugging but don't expose details to client
 		return {
 			entries: [],
 		};
@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 };
 
 export const actions: Actions = {
-	logout: async ({ cookies }) => {
+	logout: ({ cookies }) => {
 		cookies.delete("accessToken", { path: "/" });
 		cookies.delete("refreshToken", { path: "/" });
 		throw redirect(302, "/login");
