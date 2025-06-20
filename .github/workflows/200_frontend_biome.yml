@@ -35,6 +35,6 @@ jobs:
         working-directory: ./frontend
         run: pnpm install
 
-      - name: Run Biome ci
+      - name: Run Biome check
         working-directory: ./frontend
-        run: pnpm biome ci
+        run: pnpm run biome
