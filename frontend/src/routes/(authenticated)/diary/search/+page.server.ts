@@ -1,6 +1,6 @@
 import { searchDiaryEntries } from "$lib/server/diary-api.js";
 import { error, fail } from "@sveltejs/kit";
-import type { Actions, PageServerLoad } from "./$types";
+import type { Actions, PageServerLoad } from "./$types.ts";
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const keyword = url.searchParams.get("q") || "";
@@ -27,8 +27,8 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 			searchResults: searchResponse,
 			keyword: keyword,
 		};
-	} catch (err) {
-		console.error("Search error:", err);
+	} catch (_err) {
+		// Log error for debugging but don't expose details to client
 		return {
 			searchResults: null,
 			keyword: keyword,
@@ -62,8 +62,8 @@ export const actions: Actions = {
 				searchResults: searchResponse,
 				keyword: keyword,
 			};
-		} catch (err) {
-			console.error("Search error:", err);
+		} catch (_err) {
+			// Log error for debugging but don't expose details to client
 			return fail(500, { error: "Failed to search diary entries" });
 		}
 	},

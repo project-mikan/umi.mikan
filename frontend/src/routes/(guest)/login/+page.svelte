@@ -1,8 +1,6 @@
 <script lang="ts">
-import { enhance } from "$app/forms";
-import { _ } from "svelte-i18n";
 import "$lib/i18n";
-import type { ActionData } from "./$types";
+import type { ActionData } from "./$types.ts";
 
 export let form: ActionData;
 
@@ -19,14 +17,19 @@ let loading = false;
 		<form 
 			class="mt-8 space-y-6" 
 			method="POST" 
-			use:enhance={({ formElement, formData, action, cancel }) => {
+			use:enhance={(() => {
 				loading = true;
-				return async ({ result, update }) => {
+				return async ({ update }) => {
 					loading = false;
 					await update();
 				};
-			}}
+			}) satisfies SubmitFunction}
 		>
+			{#if form?.error}
+				<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					{form.error}
+				</div>
+			{/if}
 			<div class="space-y-4">
 				<div>
 					<label for="email" class="sr-only">{$_('auth.login.email')}</label>
@@ -53,12 +56,6 @@ let loading = false;
 					/>
 				</div>
 			</div>
-
-			{#if form?.error}
-				<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-					{form.error}
-				</div>
-			{/if}
 
 			<div>
 				<button

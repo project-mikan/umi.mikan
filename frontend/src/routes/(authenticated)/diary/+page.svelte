@@ -1,7 +1,7 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
 import type { DiaryEntry } from "$lib/grpc";
-import type { PageData } from "./$types";
+import type { PageData } from "./$types.ts";
 
 export let data: PageData;
 

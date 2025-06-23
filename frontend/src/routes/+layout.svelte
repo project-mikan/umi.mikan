@@ -1,11 +1,12 @@
 <script lang="ts">
 import "../app.css";
-import { enhance } from "$app/forms";
-import { page } from "$app/stores";
 import "$lib/i18n";
-import type { LayoutData } from "./$types";
+import type { LayoutData } from "./$types.ts";
 
 export let data: LayoutData;
+
+let isAuthenticated: boolean;
+let isAuthPage: boolean;
 
 $: isAuthenticated = data.isAuthenticated;
 $: isAuthPage =

@@ -1,7 +1,6 @@
 <script lang="ts">
-import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
-import type { ActionData, PageData } from "./$types";
+import type { ActionData, PageData } from "./$types.ts";
 
 export let data: PageData;
 export let form: ActionData;
