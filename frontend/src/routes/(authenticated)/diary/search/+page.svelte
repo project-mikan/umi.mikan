@@ -5,7 +5,7 @@ import type { PageData } from "./$types.ts";
 
 export let data: PageData;
 
-const searchKeyword = data.keyword || "";
+let searchKeyword = data.keyword || "";
 
 function formatDate(ymd: { year: number; month: number; day: number }): string {
 	return `${ymd.year}年${ymd.month}月${ymd.day}日`;

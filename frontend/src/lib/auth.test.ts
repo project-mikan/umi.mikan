@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import { beforeEach, describe, expect, it } from "vitest";
-import { type User, isAuthenticated, logout, user } from "./auth.ts";
+import { type User, isAuthenticated, logout, user } from "./auth";
 
 describe("Auth Store", () => {
 	beforeEach(() => {

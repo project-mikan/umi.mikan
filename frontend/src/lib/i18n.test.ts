@@ -34,7 +34,7 @@ describe("i18n", () => {
 	});
 
 	it("should register locales correctly", async () => {
-		await import("./i18n.ts");
+		await import("./i18n");
 
 		expect(mockRegister).toHaveBeenCalledWith("en", expect.any(Function));
 		expect(mockRegister).toHaveBeenCalledWith("ja", expect.any(Function));
@@ -49,7 +49,7 @@ describe("i18n", () => {
 		// Clear module cache to re-import with new navigator.language
 		vi.resetModules();
 
-		await import("./i18n.ts");
+		await import("./i18n");
 
 		expect(mockInit).toHaveBeenCalledWith({
 			fallbackLocale: "en",
@@ -66,7 +66,7 @@ describe("i18n", () => {
 		// Clear module cache to re-import with new navigator.language
 		vi.resetModules();
 
-		await import("./i18n.ts");
+		await import("./i18n");
 
 		expect(mockInit).toHaveBeenCalledWith({
 			fallbackLocale: "en",
@@ -75,7 +75,7 @@ describe("i18n", () => {
 	});
 
 	it("should export locale and waitLocale", async () => {
-		const i18nModule = await import("./i18n.ts");
+		const i18nModule = await import("./i18n");
 
 		expect(i18nModule.locale).toBeDefined();
 		expect(i18nModule.waitLocale).toBeDefined();

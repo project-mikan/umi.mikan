@@ -5,6 +5,9 @@ import type { LayoutData } from "./$types.ts";
 
 export let data: LayoutData;
 
+let isAuthenticated: boolean;
+let isAuthPage: boolean;
+
 $: isAuthenticated = data.isAuthenticated;
 $: isAuthPage =
 	$page.url.pathname === "/login" || $page.url.pathname === "/register";

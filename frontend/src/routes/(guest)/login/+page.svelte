@@ -4,7 +4,7 @@ import type { ActionData } from "./$types.ts";
 
 export let form: ActionData;
 
-const loading = false;
+let loading = false;
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">
@@ -17,13 +17,13 @@ const loading = false;
 		<form 
 			class="mt-8 space-y-6" 
 			method="POST" 
-			use:enhance={({ formElement, formData, action, cancel }) => {
+			use:enhance={(() => {
 				loading = true;
-				return async ({ result, update }) => {
+				return async ({ update }) => {
 					loading = false;
 					await update();
 				};
-			}}
+			}) satisfies SubmitFunction}
 		>
 			{#if form?.error}
 				<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">

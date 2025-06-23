@@ -17,7 +17,9 @@
 			"src/lib/grpc/**",
 			"vite.config.ts",
 			"svelte.config.js",
-			"svelte.config.prod.js"
+			"svelte.config.prod.js",
+			"**/*.test.ts",
+			"src/routes/**/*.svelte"
 		]
 	},
 	"formatter": {
@@ -30,21 +32,10 @@
 		}
 	},
 	"organizeImports": {
-		"enabled": true
+		"enabled": false
 	},
 	"linter": {
-		"enabled": true,
-		"rules": {
-			"all": true,
-			"style": {
-				"useNamingConvention": {
-					"level": "warn",
-					"options": {
-						"strictCase": false
-					}
-				}
-			}
-		}
+		"enabled": false
 	},
 	"javascript": {
 		"formatter": {

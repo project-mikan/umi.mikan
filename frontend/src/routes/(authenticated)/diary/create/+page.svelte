@@ -4,8 +4,8 @@ import type { ActionData } from "./$types.ts";
 
 export let form: ActionData;
 
-const content = "";
-const date = new Date().toISOString().split("T")[0];
+let content = "";
+let date = new Date().toISOString().split("T")[0];
 
 function cancel() {
 	goto("/diary");
