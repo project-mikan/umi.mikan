@@ -14,8 +14,6 @@ services:
       DB_USER: postgres
       DB_PASS: dev-pass
       DB_NAME: umi_mikan
-      HOST: localhost
-      FRONTEND_URL: "http://localhost:5173"
       JWT_SECRET: "hogehoge"
       TEST_DB_HOST: postgres_test
       TEST_DB_PORT: 5432
