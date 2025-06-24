@@ -12,6 +12,11 @@ function formatDate(ymd: YMD): string {
 	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
 }
 
+function getMonthlyUrl(): string {
+	const now = new Date();
+	return `/diary/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
+}
+
 function formatDateStr(ymd: YMD): string {
 	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 }
@@ -28,12 +33,20 @@ function viewEntry(entry: DiaryEntry) {
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900">日記</h1>
-		<a
-			href="/diary/search"
-			class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-		>
-			検索
-		</a>
+		<div class="flex gap-3">
+			<a
+				href={getMonthlyUrl()}
+				class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+			>
+				今月の日記
+			</a>
+			<a
+				href="/diary/search"
+				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+			>
+				検索
+			</a>
+		</div>
 	</div>
 
 	<div class="space-y-6">
