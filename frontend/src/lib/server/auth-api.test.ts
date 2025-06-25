@@ -1,10 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type {
 	LoginByPasswordParams,
 	RegisterByPasswordParams,
 } from "./auth-api";
-
-// Simple integration test without deep mocking
 describe("Auth API Types and Validation", () => {
 	describe("Parameter validation", () => {
 		it("should validate LoginByPasswordParams", () => {
