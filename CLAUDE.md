@@ -37,7 +37,7 @@ dc up -d  # Starts all services (backend, frontend, postgres)
 make pnpm-dev          # Start frontend dev server with hot reload
 make f-format          # Format frontend code with Biome
 make f-sh              # Access frontend container shell
-make log-f             # View frontend logs
+make f-log
 ```
 
 If you want to use pnpm commands, use `docker compose exec frontend pnpm`.
@@ -59,7 +59,7 @@ are OK.
 ```bash
 make b-sh              # Access backend container shell
 make tidy              # Run go mod tidy
-make log-b             # View backend logs
+make b-log             # View backend logs
 ```
 
 If you want to use the go command, use `docker compose exec backend go`.
@@ -70,7 +70,7 @@ When you change the backend, make sure that
 
 - `make b-lint`
 - `make b-test`
-- `make f-log`
+- `make b-log`
 
 are OK.
 
@@ -79,7 +79,7 @@ are OK.
 ```bash
 make db                # Connect to PostgreSQL
 make db-init           # Reset and reinitialize database
-make log-p             # View postgres logs
+make p-log             # View postgres logs
 ```
 
 ### Code Generation

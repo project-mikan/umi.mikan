@@ -2,6 +2,7 @@ import {
 	type AuthResponse,
 	AuthService,
 	LoginByPasswordRequestSchema,
+	RefreshAccessTokenRequestSchema,
 	RegisterByPasswordRequestSchema,
 } from "$lib/grpc/auth/auth_pb.js";
 import { create } from "@bufbuild/protobuf";
@@ -47,5 +48,16 @@ export async function registerByPassword(
 	});
 
 	const response = await authClient.registerByPassword(request);
+	return response;
+}
+
+export async function refreshAccessToken(
+	refreshToken: string,
+): Promise<AuthResponse> {
+	const request = create(RefreshAccessTokenRequestSchema, {
+		refreshToken,
+	});
+
+	const response = await authClient.refreshAccessToken(request);
 	return response;
 }
