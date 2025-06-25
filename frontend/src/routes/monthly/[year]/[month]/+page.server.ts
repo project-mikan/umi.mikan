@@ -1,12 +1,12 @@
 import { createYM, getDiaryEntriesByMonth } from "$lib/server/diary-api";
-import { error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
 	const accessToken = cookies.get("accessToken");
 
 	if (!accessToken) {
-		throw error(401, "Unauthorized");
+		throw redirect(302, "/login");
 	}
 
 	const year = Number.parseInt(params.year);

@@ -12,12 +12,12 @@ function editEntry() {
 	const date = data.entry.date;
 	if (date) {
 		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
-		goto(`/diary/edit/${dateStr}`);
+		goto(`/edit/${dateStr}`);
 	}
 }
 
 function goBack() {
-	goto("/diary");
+	goto("/");
 }
 </script>
 
