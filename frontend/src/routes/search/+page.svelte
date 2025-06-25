@@ -24,13 +24,13 @@ function viewEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
 		const dateStr = formatDateUrl(date);
-		goto(`/diary/${dateStr}`);
+		goto(`/${dateStr}`);
 	}
 }
 
 function handleSearch() {
 	if (searchKeyword.trim()) {
-		goto(`/diary/search?q=${encodeURIComponent(searchKeyword.trim())}`);
+		goto(`/search?q=${encodeURIComponent(searchKeyword.trim())}`);
 	}
 }
 
@@ -125,7 +125,7 @@ function handleKeydown(event: KeyboardEvent) {
 	<!-- ナビゲーション -->
 	<div class="mt-8 flex justify-center">
 		<a 
-			href="/diary" 
+			href="/" 
 			class="text-blue-600 hover:text-blue-800 underline"
 		>
 			日記一覧に戻る

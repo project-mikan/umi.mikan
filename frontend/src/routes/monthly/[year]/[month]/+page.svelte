@@ -25,14 +25,14 @@ function getFirstDayOfWeek(year: number, month: number): number {
 
 function createEntry(day: number) {
 	const dateStr = `${data.year}-${String(data.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-	goto(`/diary/create?date=${dateStr}`);
+	goto(`/create?date=${dateStr}`);
 }
 
 function viewEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
 		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
-		goto(`/diary/${dateStr}`);
+		goto(`/${dateStr}`);
 	}
 }
 
@@ -40,25 +40,25 @@ function editEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
 		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
-		goto(`/diary/edit/${dateStr}`);
+		goto(`/edit/${dateStr}`);
 	}
 }
 
 function previousMonth() {
 	const prevMonth = data.month === 1 ? 12 : data.month - 1;
 	const prevYear = data.month === 1 ? data.year - 1 : data.year;
-	goto(`/diary/monthly/${prevYear}/${prevMonth}`);
+	goto(`/monthly/${prevYear}/${prevMonth}`);
 }
 
 function nextMonth() {
 	const nextMonth = data.month === 12 ? 1 : data.month + 1;
 	const nextYear = data.month === 12 ? data.year + 1 : data.year;
-	goto(`/diary/monthly/${nextYear}/${nextMonth}`);
+	goto(`/monthly/${nextYear}/${nextMonth}`);
 }
 
 function goToToday() {
 	const now = new Date();
-	goto(`/diary/monthly/${now.getFullYear()}/${now.getMonth() + 1}`);
+	goto(`/monthly/${now.getFullYear()}/${now.getMonth() + 1}`);
 }
 
 // カレンダーデータの準備
@@ -115,7 +115,7 @@ const weekDays = getWeekDays();
 				今月
 			</button>
 			<button
-				on:click={() => goto('/diary')}
+				on:click={() => goto('/')}
 				class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
 			>
 				一覧表示

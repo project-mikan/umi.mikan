@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	const accessToken = cookies.get("accessToken");
 
 	if (!accessToken) {
-		throw error(401, "Unauthorized");
+		throw redirect(302, "/login");
 	}
 
 	try {

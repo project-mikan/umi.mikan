@@ -1,6 +1,16 @@
 import { createDiaryEntry, createYMD } from "$lib/server/diary-api";
 import { error, redirect } from "@sveltejs/kit";
-import type { Actions } from "./$types";
+import type { Actions, PageServerLoad } from "./$types";
+
+export const load: PageServerLoad = async ({ cookies }) => {
+	const accessToken = cookies.get("accessToken");
+
+	if (!accessToken) {
+		throw redirect(302, "/login");
+	}
+
+	return {};
+};
 
 export const actions: Actions = {
 	default: async ({ request, cookies }) => {
