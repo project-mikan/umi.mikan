@@ -1,6 +1,8 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
 import { page } from "$app/stores";
+import { _ } from "svelte-i18n";
+import "$lib/i18n";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
 
@@ -42,11 +44,11 @@ function handleKeydown(event: KeyboardEvent) {
 </script>
 
 <svelte:head>
-	<title>日記検索 - umi.mikan</title>
+	<title>{$_('search.title')} - umi.mikan</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto p-6">
-	<h1 class="text-3xl font-bold mb-6">日記検索</h1>
+	<h1 class="text-3xl font-bold mb-6">{$_('search.title')}</h1>
 	
 	<!-- 検索フォーム -->
 	<div class="mb-8">
@@ -55,14 +57,14 @@ function handleKeydown(event: KeyboardEvent) {
 				type="text"
 				bind:value={searchKeyword}
 				on:keydown={handleKeydown}
-				placeholder="検索キーワードを入力..."
+				placeholder={$_('search.placeholder')}
 				class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 			/>
 			<button
 				on:click={handleSearch}
 				class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 			>
-				検索
+				{$_('search.button')}
 			</button>
 		</div>
 	</div>
@@ -77,7 +79,7 @@ function handleKeydown(event: KeyboardEvent) {
 	{#if data.searchResults}
 		<div class="mb-4">
 			<p class="text-gray-600">
-				「{data.searchResults.searchedKeyword}」の検索結果: {data.searchResults.entries.length}件
+				「{data.searchResults.searchedKeyword}」{$_('search.results')}: {data.searchResults.entries.length}{$_('search.resultCount')}
 			</p>
 		</div>
 
@@ -93,7 +95,7 @@ function handleKeydown(event: KeyboardEvent) {
 					>
 						<div class="flex justify-between items-start mb-2">
 							<h3 class="text-lg font-semibold text-blue-600">
-								{entry.date ? formatDate(entry.date) : '日付不明'}
+								{entry.date ? formatDate(entry.date) : $_('diary.dateUnknown')}
 							</h3>
 						</div>
 						<div class="text-gray-700 text-sm">
@@ -108,17 +110,17 @@ function handleKeydown(event: KeyboardEvent) {
 			</div>
 		{:else}
 			<div class="text-center py-8 text-gray-500">
-				<p>検索結果が見つかりませんでした。</p>
-				<p class="text-sm mt-2">別のキーワードで検索してみてください。</p>
+				<p>{$_('search.noResults')}</p>
+				<p class="text-sm mt-2">{$_('search.noResultsHint')}</p>
 			</div>
 		{/if}
 	{:else if data.keyword}
 		<div class="text-center py-8 text-gray-500">
-			<p>検索中...</p>
+			<p>{$_('search.searching')}</p>
 		</div>
 	{:else}
 		<div class="text-center py-8 text-gray-500">
-			<p>検索キーワードを入力して検索してください。</p>
+			<p>{$_('search.enterKeyword')}</p>
 		</div>
 	{/if}
 
@@ -128,7 +130,7 @@ function handleKeydown(event: KeyboardEvent) {
 			href="/" 
 			class="text-blue-600 hover:text-blue-800 underline"
 		>
-			日記一覧に戻る
+			{$_('search.backToList')}
 		</a>
 	</div>
 </div>

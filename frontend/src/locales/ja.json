@@ -20,6 +20,62 @@
 			"hasAccount": "すでにアカウントをお持ちの方はこちら",
 			"required": "氏名、メールアドレス、パスワードは必須です",
 			"failed": "登録に失敗しました"
-		}
+		},
+		"logout": "ログアウト"
+	},
+	"diary": {
+		"title": "日記",
+		"today": "今日",
+		"yesterday": "昨日",
+		"dayBeforeYesterday": "一昨日",
+		"thisMonth": "今月の日記",
+		"search": "検索",
+		"save": "保存",
+		"back": "戻る",
+		"edit": "編集",
+		"delete": "削除",
+		"cancel": "キャンセル",
+		"update": "更新",
+		"detail": "詳細",
+		"viewDetail": "詳細を見る",
+		"placeholder": "今日の出来事を書いてください...",
+		"noEntry": "の日記はありません。",
+		"yesterdayNoEntry": "昨日の日記はありません。",
+		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
+		"dateUnknown": "日付不明"
+	},
+	"create": {
+		"title": "新しい日記を書く",
+		"date": "日付",
+		"content": "内容"
+	},
+	"edit": {
+		"title": "日記を編集",
+		"date": "日付",
+		"content": "内容",
+		"deleteConfirm": "日記を削除",
+		"deleteMessage": "この日記を削除してもよろしいですか？この操作は取り消せません。"
+	},
+	"search": {
+		"title": "日記検索",
+		"placeholder": "検索キーワードを入力...",
+		"button": "検索",
+		"results": "の検索結果",
+		"resultCount": "件",
+		"noResults": "検索結果が見つかりませんでした。",
+		"noResultsHint": "別のキーワードで検索してみてください。",
+		"searching": "検索中...",
+		"enterKeyword": "検索キーワードを入力して検索してください。",
+		"backToList": "日記一覧に戻る"
+	},
+	"monthly": {
+		"thisMonth": "今月",
+		"listView": "一覧表示",
+		"previousMonth": "前の月へ",
+		"nextMonth": "次の月へ",
+		"writeEntry": "日記を書く",
+		"entry": "日記",
+		"detail": "詳細",
+		"edit": "編集"
 	}
 }

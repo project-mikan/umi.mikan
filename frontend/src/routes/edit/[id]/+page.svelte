@@ -1,6 +1,8 @@
 <script lang="ts">
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
+import { _ } from "svelte-i18n";
+import "$lib/i18n";
 import type { ActionData, PageData } from "./$types";
 
 export let data: PageData;
@@ -27,12 +29,12 @@ function cancelDelete() {
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">
-		<h1 class="text-3xl font-bold text-gray-900">日記を編集</h1>
+		<h1 class="text-3xl font-bold text-gray-900">{$_('edit.title')}</h1>
 		<button
 			on:click={cancel}
 			class="text-gray-600 hover:text-gray-800 font-medium"
 		>
-			戻る
+			{$_('diary.back')}
 		</button>
 	</div>
 
@@ -46,7 +48,7 @@ function cancelDelete() {
 
 			<div class="mb-6">
 				<label for="date" class="block text-sm font-medium text-gray-700 mb-2">
-					日付
+					{$_('edit.date')}
 				</label>
 				<input
 					type="date"
@@ -60,7 +62,7 @@ function cancelDelete() {
 
 			<div class="mb-6">
 				<label for="content" class="block text-sm font-medium text-gray-700 mb-2">
-					内容
+					{$_('edit.content')}
 				</label>
 				<textarea
 					id="content"
@@ -78,7 +80,7 @@ function cancelDelete() {
 					on:click={confirmDelete}
 					class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium"
 				>
-					削除
+					{$_('diary.delete')}
 				</button>
 
 				<div class="flex space-x-4">
@@ -87,13 +89,13 @@ function cancelDelete() {
 						on:click={cancel}
 						class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
 					>
-						キャンセル
+						{$_('diary.cancel')}
 					</button>
 					<button
 						type="submit"
 						class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
 					>
-						更新
+						{$_('diary.update')}
 					</button>
 				</div>
 			</div>
@@ -121,11 +123,11 @@ function cancelDelete() {
 						</div>
 						<div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
 							<h3 class="text-lg leading-6 font-medium text-gray-900">
-								日記を削除
+								{$_('edit.deleteConfirm')}
 							</h3>
 							<div class="mt-2">
 								<p class="text-sm text-gray-500">
-									この日記を削除してもよろしいですか？この操作は取り消せません。
+									{$_('edit.deleteMessage')}
 								</p>
 							</div>
 						</div>
@@ -137,7 +139,7 @@ function cancelDelete() {
 							type="submit"
 							class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
 						>
-							削除
+							{$_('diary.delete')}
 						</button>
 					</form>
 					<button
@@ -145,7 +147,7 @@ function cancelDelete() {
 						on:click={cancelDelete}
 						class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
 					>
-						キャンセル
+						{$_('diary.cancel')}
 					</button>
 				</div>
 			</div>
