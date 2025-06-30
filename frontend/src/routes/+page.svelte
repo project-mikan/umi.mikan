@@ -12,6 +12,7 @@ import type { PageData } from "./$types";
 export let data: PageData;
 
 let todayContent = data.today.entry?.content || "";
+let formElement: HTMLFormElement;
 
 function getMonthlyUrl(): string {
 	const now = new Date();
@@ -28,6 +29,10 @@ function viewEntry(entry: DiaryEntry) {
 		const dateStr = formatDateStr(date);
 		goto(`/${dateStr}`);
 	}
+}
+
+function handleSave() {
+	formElement?.requestSubmit();
 }
 </script>
 
@@ -55,7 +60,7 @@ function viewEntry(entry: DiaryEntry) {
 			entry={data.today.entry}
 			showForm={true}
 		>
-			<form method="POST" action="?/saveToday" use:enhance={(() => {
+			<form bind:this={formElement} method="POST" action="?/saveToday" use:enhance={(() => {
 				return async ({ result }) => {
 					if (result.type === 'success') {
 						window.location.reload();
@@ -74,6 +79,7 @@ function viewEntry(entry: DiaryEntry) {
 					placeholder={$_('diary.placeholder')}
 					rows={8}
 					bind:value={todayContent}
+					on:save={handleSave}
 				/>
 				<div class="flex justify-end">
 					<Button type="submit" variant="primary" size="md">
