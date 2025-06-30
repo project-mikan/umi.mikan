@@ -1,0 +1,25 @@
+<script lang="ts">
+export let value = "";
+export let placeholder = "";
+export let required = false;
+export let disabled = false;
+export let id = "";
+export let name = "";
+export let rows = 4;
+
+const baseClasses =
+	"block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none";
+$: classes = `${baseClasses} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`;
+</script>
+
+<textarea
+	{id}
+	{name}
+	{placeholder}
+	{required}
+	{disabled}
+	{rows}
+	bind:value
+	class={classes}
+	{...$$restProps}
+></textarea>
