@@ -19,13 +19,15 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 				maxAge: 60 * 15,
 			});
 
-			cookies.set("refreshToken", response.refreshToken, {
-				path: "/",
-				httpOnly: true,
-				secure: false,
-				sameSite: "strict",
-				maxAge: 60 * 60 * 24 * 30,
-			});
+			if (response.refreshToken) {
+				cookies.set("refreshToken", response.refreshToken, {
+					path: "/",
+					httpOnly: true,
+					secure: false,
+					sameSite: "strict",
+					maxAge: 60 * 60 * 24 * 30,
+				});
+			}
 
 			accessToken = response.accessToken;
 			isAuthenticated = true;
