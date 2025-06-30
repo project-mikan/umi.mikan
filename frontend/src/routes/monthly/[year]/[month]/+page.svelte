@@ -1,5 +1,7 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
+import { _ } from "svelte-i18n";
+import "$lib/i18n";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
 
@@ -112,13 +114,13 @@ const weekDays = getWeekDays();
 				on:click={goToToday}
 				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
 			>
-				今月
+				{$_('monthly.thisMonth')}
 			</button>
 			<button
 				on:click={() => goto('/')}
 				class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
 			>
-				一覧表示
+				{$_('monthly.listView')}
 			</button>
 		</div>
 	</div>
@@ -128,7 +130,7 @@ const weekDays = getWeekDays();
 		<button
 			on:click={previousMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-			aria-label="前の月へ"
+			aria-label={$_('monthly.previousMonth')}
 		>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -140,7 +142,7 @@ const weekDays = getWeekDays();
 		<button
 			on:click={nextMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-			aria-label="次の月へ"
+			aria-label={$_('monthly.nextMonth')}
 		>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -172,7 +174,7 @@ const weekDays = getWeekDays();
 									<button
 										on:click={() => createEntry(day)}
 										class="text-xs text-blue-600 hover:text-blue-800 opacity-50 hover:opacity-100"
-										title="日記を書く"
+										title={$_('monthly.writeEntry')}
 									>
 										+
 									</button>
@@ -185,7 +187,7 @@ const weekDays = getWeekDays();
 								<div class="flex-1 min-h-0">
 									<div class="bg-blue-50 rounded p-2 h-full hover:bg-blue-100 cursor-pointer transition-colors">
 										<div class="text-xs text-blue-800 font-medium mb-1">
-											日記
+											{$_('monthly.entry')}
 										</div>
 										<div class="text-xs text-blue-600 line-clamp-2">
 											{entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : ''}
@@ -195,13 +197,13 @@ const weekDays = getWeekDays();
 												on:click={() => entry && viewEntry(entry)}
 												class="text-xs text-blue-600 hover:text-blue-800"
 											>
-												詳細
+												{$_('monthly.detail')}
 											</button>
 											<button
 												on:click={() => entry && editEntry(entry)}
 												class="text-xs text-green-600 hover:text-green-800"
 											>
-												編集
+												{$_('monthly.edit')}
 											</button>
 										</div>
 									</div>

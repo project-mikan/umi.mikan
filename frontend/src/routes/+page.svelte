@@ -1,6 +1,8 @@
 <script lang="ts">
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
+import { _ } from "svelte-i18n";
+import "$lib/i18n";
 import type { DiaryEntry, YMD } from "$lib/grpc";
 import type { PageData } from "./$types";
 
@@ -32,19 +34,19 @@ function viewEntry(entry: DiaryEntry) {
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">
-		<h1 class="text-3xl font-bold text-gray-900">日記</h1>
+		<h1 class="text-3xl font-bold text-gray-900">{$_('diary.title')}</h1>
 		<div class="flex gap-3">
 			<a
 				href={getMonthlyUrl()}
 				class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
 			>
-				今月の日記
+				{$_('diary.thisMonth')}
 			</a>
 			<a
 				href="/search"
 				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
 			>
-				検索
+				{$_('diary.search')}
 			</a>
 		</div>
 	</div>
@@ -54,7 +56,7 @@ function viewEntry(entry: DiaryEntry) {
 		<div class="bg-white shadow rounded-lg p-6">
 			<div class="flex justify-between items-center mb-4">
 				<h2 class="text-xl font-semibold text-gray-900">
-					今日 ({formatDate(data.today.date)})
+					{$_('diary.today')} ({formatDate(data.today.date)})
 				</h2>
 			</div>
 
@@ -73,7 +75,7 @@ function viewEntry(entry: DiaryEntry) {
 					<textarea
 						name="content"
 						bind:value={todayContent}
-						placeholder="今日の出来事を書いてください..."
+						placeholder={$_('diary.placeholder')}
 						rows="8"
 						class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
 					></textarea>
@@ -83,7 +85,7 @@ function viewEntry(entry: DiaryEntry) {
 						type="submit"
 						class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
 					>
-						保存
+						{$_('diary.save')}
 					</button>
 				</div>
 			</form>
@@ -92,7 +94,7 @@ function viewEntry(entry: DiaryEntry) {
 		<!-- 昨日の日記 -->
 		<div class="bg-white shadow rounded-lg p-6">
 			<h2 class="text-xl font-semibold text-gray-900 mb-4">
-				昨日 ({formatDate(data.yesterday.date)})
+				{$_('diary.yesterday')} ({formatDate(data.yesterday.date)})
 			</h2>
 			{#if data.yesterday.entry}
 				<div class="text-gray-700 whitespace-pre-wrap">
@@ -103,18 +105,18 @@ function viewEntry(entry: DiaryEntry) {
 						on:click={() => data.yesterday.entry && viewEntry(data.yesterday.entry)}
 						class="text-blue-600 hover:text-blue-800 font-medium"
 					>
-						詳細を見る
+						{$_('diary.viewDetail')}
 					</button>
 				</div>
 			{:else}
-				<p class="text-gray-500">昨日の日記はありません。</p>
+				<p class="text-gray-500">{$_('diary.yesterdayNoEntry')}</p>
 			{/if}
 		</div>
 
 		<!-- 一昨日の日記 -->
 		<div class="bg-white shadow rounded-lg p-6">
 			<h2 class="text-xl font-semibold text-gray-900 mb-4">
-				一昨日 ({formatDate(data.dayBeforeYesterday.date)})
+				{$_('diary.dayBeforeYesterday')} ({formatDate(data.dayBeforeYesterday.date)})
 			</h2>
 			{#if data.dayBeforeYesterday.entry}
 				<div class="text-gray-700 whitespace-pre-wrap">
@@ -125,11 +127,11 @@ function viewEntry(entry: DiaryEntry) {
 						on:click={() => data.dayBeforeYesterday.entry && viewEntry(data.dayBeforeYesterday.entry)}
 						class="text-blue-600 hover:text-blue-800 font-medium"
 					>
-						詳細を見る
+						{$_('diary.viewDetail')}
 					</button>
 				</div>
 			{:else}
-				<p class="text-gray-500">一昨日の日記はありません。</p>
+				<p class="text-gray-500">{$_('diary.dayBeforeYesterdayNoEntry')}</p>
 			{/if}
 		</div>
 	</div>

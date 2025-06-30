@@ -20,6 +20,62 @@
 			"hasAccount": "Already have an account? Sign in",
 			"required": "Name, email and password are required",
 			"failed": "Registration failed"
-		}
+		},
+		"logout": "Logout"
+	},
+	"diary": {
+		"title": "Diary",
+		"today": "Today",
+		"yesterday": "Yesterday",
+		"dayBeforeYesterday": "Day before yesterday",
+		"thisMonth": "This month's diary",
+		"search": "Search",
+		"save": "Save",
+		"back": "Back",
+		"edit": "Edit",
+		"delete": "Delete",
+		"cancel": "Cancel",
+		"update": "Update",
+		"detail": "Detail",
+		"viewDetail": "View details",
+		"placeholder": "Write about today's events...",
+		"noEntry": "'s diary is not available.",
+		"yesterdayNoEntry": "Yesterday's diary is not available.",
+		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
+		"dateUnknown": "Date unknown"
+	},
+	"create": {
+		"title": "Write a new diary",
+		"date": "Date",
+		"content": "Content"
+	},
+	"edit": {
+		"title": "Edit diary",
+		"date": "Date",
+		"content": "Content",
+		"deleteConfirm": "Delete diary",
+		"deleteMessage": "Are you sure you want to delete this diary entry? This action cannot be undone."
+	},
+	"search": {
+		"title": "Diary search",
+		"placeholder": "Enter search keywords...",
+		"button": "Search",
+		"results": "search results for",
+		"resultCount": "results",
+		"noResults": "No search results found.",
+		"noResultsHint": "Try searching with different keywords.",
+		"searching": "Searching...",
+		"enterKeyword": "Enter search keywords to search.",
+		"backToList": "Back to diary list"
+	},
+	"monthly": {
+		"thisMonth": "This month",
+		"listView": "List view",
+		"previousMonth": "Previous month",
+		"nextMonth": "Next month",
+		"writeEntry": "Write diary",
+		"entry": "Diary",
+		"detail": "Detail",
+		"edit": "Edit"
 	}
 }
