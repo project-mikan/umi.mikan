@@ -1,4 +1,5 @@
 <script lang="ts">
+import { createEventDispatcher } from "svelte";
 import Input from "../atoms/Input.svelte";
 import Label from "../atoms/Label.svelte";
 import Textarea from "../atoms/Textarea.svelte";
@@ -15,6 +16,8 @@ export let disabled = false;
 export let autocomplete = "";
 export let rows = 4;
 export let srOnlyLabel = false;
+
+const dispatch = createEventDispatcher();
 </script>
 
 <div class="mb-4">
@@ -31,6 +34,7 @@ export let srOnlyLabel = false;
 			{disabled}
 			{rows}
 			bind:value
+			on:save={() => dispatch('save')}
 		/>
 	{:else}
 		<Input

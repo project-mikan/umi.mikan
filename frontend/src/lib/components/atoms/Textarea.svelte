@@ -1,4 +1,6 @@
 <script lang="ts">
+import { createEventDispatcher } from "svelte";
+
 export let value = "";
 export let placeholder = "";
 export let required = false;
@@ -6,6 +8,8 @@ export let disabled = false;
 export let id = "";
 export let name = "";
 export let rows = 4;
+
+const dispatch = createEventDispatcher();
 
 let contentElement: HTMLDivElement;
 
@@ -25,6 +29,13 @@ function handleInput(event: Event) {
 			.replace(/<\/div>/gi, "\n")
 			.replace(/^\n/, "")
 			.replace(/\n$/g, "") || "";
+}
+
+function handleKeydown(event: KeyboardEvent) {
+	if (event.ctrlKey && event.key === "Enter") {
+		event.preventDefault();
+		dispatch("save");
+	}
 }
 
 function saveCursorPosition() {
@@ -83,5 +94,6 @@ $: if (
 	class={classes}
 	style="min-height: {minHeight};"
 	on:input={handleInput}
+	on:keydown={handleKeydown}
 	{...$$restProps}
 ></div>
