@@ -9,15 +9,15 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASS: ${DB_PASSWORD:-prod-pass}
+      DB_PASS: prod-pass
       DB_NAME: umi_mikan
-      JWT_SECRET: prod用のsecret
+      JWT_SECRET: prod-secret
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - internal
 
   frontend:
     build:
@@ -29,9 +29,12 @@ services:
       BODY_SIZE_LIMIT: 0
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # web:5173をtailsccale serveがサポートしてないのでlocalhostに一旦出す
+      - "5173:5173"
     depends_on:
       - backend
+    networks:
+      - internal
 
   postgres:
     image: postgres:17-alpine
@@ -39,10 +42,8 @@ services:
     environment:
       TZ: Asia/Tokyo
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-prod-pass}
+      POSTGRES_PASSWORD: prod-pass
       POSTGRES_DB: umi_mikan
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_prod_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
@@ -52,19 +53,37 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - internal
 
-  # Optional: Cloudflare tunnel for production deployment
-  tunnel:
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    command: tunnel run
+  #
+  tailscale:
+    image: tailscale/tailscale
+    hostname: umi-mikan-vpn
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    volumes:
+      - /dev/net/tun:/dev/net/tun
+      - tailscale-data:/var/lib/tailscale
     environment:
-      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
-    profiles:
-      - tunnel
-    depends_on:
-      - frontend
-      - backend
+      # https://login.tailscale.com/admin/settings/keys
+      TS_AUTHKEY: "${TS_AUTHKEY}"
+    command: >
+      sh -c "
+        tailscaled & 
+        sleep 5 &&
+        tailscale up --auth-key=${TS_AUTHKEY} --hostname=umi-mikan-vpn &&
+        tailscale serve localhost:5173 &
+        tail -f /dev/null
+      "
+    networks:
+      - internal
 
 volumes:
   postgres_prod_volume:
+  tailscale-data:
+
+networks:
+  internal:
+    driver: bridge
