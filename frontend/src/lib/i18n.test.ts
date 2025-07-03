@@ -8,7 +8,7 @@ vi.mock("$app/environment", () => ({
 // Mock svelte-i18n
 const mockInit = vi.fn();
 const mockRegister = vi.fn();
-const mockLocale = { subscribe: vi.fn() };
+const mockLocale = { subscribe: vi.fn(), set: vi.fn() };
 const mockWaitLocale = vi.fn();
 
 vi.mock("svelte-i18n", () => ({

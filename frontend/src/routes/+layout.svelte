@@ -2,8 +2,8 @@
 import "../app.css";
 import { page } from "$app/stores";
 import "$lib/i18n";
-import { _ } from "svelte-i18n";
 import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
+import { _ } from "svelte-i18n";
 import type { LayoutData } from "./$types";
 
 export let data: LayoutData;

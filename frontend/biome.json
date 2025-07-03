@@ -12,7 +12,8 @@
 			".pnpm-store/**",
 			"node_modules/**",
 			"package.json",
-			"biome.json"
+			"biome.json",
+			"build/**"
 		]
 	},
 	"formatter": {
