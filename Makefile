@@ -4,7 +4,7 @@ f-sh:
 f-format:
 	docker compose exec frontend pnpm format
 f-build:
-	docker build -t umi-mikan-frontend-test:0.0.1 infra/prod/frontend/
+	docker build -t umi-mikan-frontend-test:0.0.1 -f ./infra/prod/frontend/Dockerfile ./frontend
 
 f-lint:
 	make f-format
