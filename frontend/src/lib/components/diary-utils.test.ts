@@ -41,9 +41,11 @@ describe("Diary Utilities", () => {
 	});
 
 	describe("Navigation helpers", () => {
-		const createDiaryUrl = (
-			date: { year: number; month: number; day: number },
-		): string => {
+		const createDiaryUrl = (date: {
+			year: number;
+			month: number;
+			day: number;
+		}): string => {
 			const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 			return `/${dateStr}`;
 		};

@@ -30,19 +30,13 @@ function createEntry(day: number) {
 	goto(`/create?date=${dateStr}`);
 }
 
-function viewEntry(entry: DiaryEntry) {
-	const date = entry.date;
-	if (date) {
-		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
+function navigateToEntry(day: number) {
+	const dateStr = `${data.year}-${String(data.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+	const entry = entryMap.get(day);
+	if (entry) {
 		goto(`/${dateStr}`);
-	}
-}
-
-function editEntry(entry: DiaryEntry) {
-	const date = entry.date;
-	if (date) {
-		const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
-		goto(`/edit/${dateStr}`);
+	} else {
+		goto(`/create?date=${dateStr}`);
 	}
 }
 
@@ -164,52 +158,39 @@ const weekDays = getWeekDays();
 		<!-- カレンダーグリッド -->
 		<div class="grid grid-cols-7">
 			{#each calendarDays as day}
-				<div class="h-32 border-r border-b border-gray-200 last:border-r-0 p-2">
+				<div class="h-32 border-r border-b border-gray-200 last:border-r-0">
 					{#if day !== null}
-						<div class="h-full flex flex-col">
-							<!-- 日付 -->
-							<div class="flex justify-between items-start mb-1">
-								<span class="text-sm font-medium text-gray-700">{day}</span>
-								{#if !entryMap.has(day)}
-									<button
-										on:click={() => createEntry(day)}
-										class="text-xs text-blue-600 hover:text-blue-800 opacity-50 hover:opacity-100"
-										title={$_('monthly.writeEntry')}
-									>
-										+
-									</button>
-								{/if}
-							</div>
+						<button
+							on:click={() => navigateToEntry(day)}
+							class="w-full h-full p-2 text-left hover:bg-gray-50 transition-colors cursor-pointer"
+						>
+							<div class="h-full flex flex-col">
+								<!-- 日付 -->
+								<div class="flex justify-between items-start mb-1">
+									<span class="text-sm font-medium text-gray-700">{day}</span>
+									{#if !entryMap.has(day)}
+										<span class="text-xs text-blue-600 opacity-50">
+											+
+										</span>
+									{/if}
+								</div>
 
-							<!-- 日記エントリ -->
-							{#if entryMap.has(day)}
-								{@const entry = entryMap.get(day)}
-								<div class="flex-1 min-h-0">
-									<div class="bg-blue-50 rounded p-2 h-full hover:bg-blue-100 cursor-pointer transition-colors">
-										<div class="text-xs text-blue-800 font-medium mb-1">
-											{$_('monthly.entry')}
-										</div>
-										<div class="text-xs text-blue-600 line-clamp-2">
-											{entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : ''}
-										</div>
-										<div class="flex justify-end space-x-1 mt-1">
-											<button
-												on:click={() => entry && viewEntry(entry)}
-												class="text-xs text-blue-600 hover:text-blue-800"
-											>
-												{$_('monthly.detail')}
-											</button>
-											<button
-												on:click={() => entry && editEntry(entry)}
-												class="text-xs text-green-600 hover:text-green-800"
-											>
-												{$_('monthly.edit')}
-											</button>
+								<!-- 日記エントリ -->
+								{#if entryMap.has(day)}
+									{@const entry = entryMap.get(day)}
+									<div class="flex-1 min-h-0">
+										<div class="bg-blue-50 rounded p-2 h-full">
+											<div class="text-xs text-blue-800 font-medium mb-1">
+												{$_('monthly.entry')}
+											</div>
+											<div class="text-xs text-blue-600 line-clamp-2">
+												{entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : ''}
+											</div>
 										</div>
 									</div>
-								</div>
-							{/if}
-						</div>
+								{/if}
+							</div>
+						</button>
 					{/if}
 				</div>
 			{/each}
