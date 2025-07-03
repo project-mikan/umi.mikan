@@ -16,9 +16,7 @@ init({
 	warnOnMissingMessages: false,
 });
 
-// Set locale immediately for SSR
-if (!browser) {
-	locale.set(initialLocale);
-}
+// Set locale immediately for both SSR and client
+locale.set(initialLocale);
 
 export { locale, waitLocale };
