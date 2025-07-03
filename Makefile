@@ -3,6 +3,8 @@ f-sh:
 	docker compose exec frontend bash
 f-format:
 	docker compose exec frontend pnpm format
+f-build:
+	docker compose exec frontend pnpm build
 
 f-lint:
 	make f-format
