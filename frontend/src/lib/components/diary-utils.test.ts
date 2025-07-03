@@ -41,19 +41,19 @@ describe("Diary Utilities", () => {
 	});
 
 	describe("Navigation helpers", () => {
-		const createDiaryUrl = (
-			date: { year: number; month: number; day: number },
-			action?: string,
-		): string => {
+		const createDiaryUrl = (date: {
+			year: number;
+			month: number;
+			day: number;
+		}): string => {
 			const dateStr = `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
-			return action ? `/diary/${action}/${dateStr}` : `/diary/${dateStr}`;
+			return `/${dateStr}`;
 		};
 
 		it("should create correct diary URLs", () => {
 			const date = { year: 2024, month: 1, day: 15 };
 
-			expect(createDiaryUrl(date)).toBe("/diary/2024-01-15");
-			expect(createDiaryUrl(date, "edit")).toBe("/diary/edit/2024-01-15");
+			expect(createDiaryUrl(date)).toBe("/2024-01-15");
 		});
 	});
 
