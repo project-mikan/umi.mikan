@@ -2,10 +2,43 @@
 import { goto } from "$app/navigation";
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
+import { browser } from "$app/environment";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
 
 export let data: PageData;
+
+let entries = data.entries;
+let currentYear = data.year;
+let currentMonth = data.month;
+let loading = false;
+
+// データの更新
+$: {
+	entries = data.entries;
+	currentYear = data.year;
+	currentMonth = data.month;
+}
+
+// クライアントサイドでデータを再取得する関数
+async function fetchMonthData(year: number, month: number) {
+	if (!browser) return;
+
+	loading = true;
+	try {
+		const response = await fetch(`/api/diary/monthly/${year}/${month}`);
+		if (response.ok) {
+			const newEntries = await response.json();
+			entries = newEntries;
+			currentYear = year;
+			currentMonth = month;
+		}
+	} catch (error) {
+		console.error("Failed to fetch entries:", error);
+	} finally {
+		loading = false;
+	}
+}
 
 function formatMonth(year: number, month: number): string {
 	const date = new Date(year, month - 1, 1);
@@ -26,12 +59,12 @@ function getFirstDayOfWeek(year: number, month: number): number {
 }
 
 function createEntry(day: number) {
-	const dateStr = `${data.year}-${String(data.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+	const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 	goto(`/create?date=${dateStr}`);
 }
 
 function navigateToEntry(day: number) {
-	const dateStr = `${data.year}-${String(data.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+	const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 	const entry = entryMap.get(day);
 	if (entry) {
 		goto(`/${dateStr}`);
@@ -40,47 +73,56 @@ function navigateToEntry(day: number) {
 	}
 }
 
-function previousMonth() {
-	const prevMonth = data.month === 1 ? 12 : data.month - 1;
-	const prevYear = data.month === 1 ? data.year - 1 : data.year;
-	goto(`/monthly/${prevYear}/${prevMonth}`);
+async function previousMonth() {
+	const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+	const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+	await fetchMonthData(prevYear, prevMonth);
+	await goto(`/monthly/${prevYear}/${prevMonth}`, { replaceState: true });
 }
 
-function nextMonth() {
-	const nextMonth = data.month === 12 ? 1 : data.month + 1;
-	const nextYear = data.month === 12 ? data.year + 1 : data.year;
-	goto(`/monthly/${nextYear}/${nextMonth}`);
+async function nextMonth() {
+	const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+	const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+	await fetchMonthData(nextYear, nextMonth);
+	await goto(`/monthly/${nextYear}/${nextMonth}`, { replaceState: true });
 }
 
-function goToToday() {
+async function goToToday() {
 	const now = new Date();
-	goto(`/monthly/${now.getFullYear()}/${now.getMonth() + 1}`);
+	const year = now.getFullYear();
+	const month = now.getMonth() + 1;
+	await fetchMonthData(year, month);
+	await goto(`/monthly/${year}/${month}`, { replaceState: true });
 }
 
-// カレンダーデータの準備
-const daysInMonth = getDaysInMonth(data.year, data.month);
-const firstDayOfWeek = getFirstDayOfWeek(data.year, data.month);
-const calendarDays: (number | null)[] = [];
+// カレンダーデータの準備（リアクティブ）
+$: daysInMonth = getDaysInMonth(currentYear, currentMonth);
+$: firstDayOfWeek = getFirstDayOfWeek(currentYear, currentMonth);
+$: calendarDays = (() => {
+	const days: (number | null)[] = [];
+	// 月の最初の日までの空白
+	for (let i = 0; i < firstDayOfWeek; i++) {
+		days.push(null);
+	}
+	// 月の日付
+	for (let day = 1; day <= daysInMonth; day++) {
+		days.push(day);
+	}
+	return days;
+})();
 
-// 月の最初の日までの空白
-for (let i = 0; i < firstDayOfWeek; i++) {
-	calendarDays.push(null);
-}
-
-// 月の日付
-for (let day = 1; day <= daysInMonth; day++) {
-	calendarDays.push(day);
-}
-
-// 日記エントリをマップに変換
-const entryMap = new Map<number, DiaryEntry>();
-if (data.entries && Array.isArray(data.entries.entries)) {
-	for (const entry of data.entries.entries) {
-		if (entry?.date) {
-			entryMap.set(entry.date.day, entry);
+// 日記エントリをマップに変換（リアクティブ）
+$: entryMap = (() => {
+	const map = new Map<number, DiaryEntry>();
+	if (entries && Array.isArray(entries.entries)) {
+		for (const entry of entries.entries) {
+			if (entry?.date) {
+				map.set(entry.date.day, entry);
+			}
 		}
 	}
-}
+	return map;
+})();
 
 function getWeekDays(): string[] {
 	const days = [];
@@ -101,7 +143,7 @@ const weekDays = getWeekDays();
 	<!-- ヘッダー -->
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900">
-			{formatMonth(data.year, data.month)}
+			{formatMonth(currentYear, currentMonth)}
 		</h1>
 		<div class="flex space-x-4">
 			<button
@@ -131,7 +173,10 @@ const weekDays = getWeekDays();
 			</svg>
 		</button>
 		<h2 class="text-xl font-semibold text-gray-800 min-w-[200px] text-center">
-			{formatMonth(data.year, data.month)}
+			{formatMonth(currentYear, currentMonth)}
+			{#if loading}
+				<span class="ml-2 text-sm text-gray-500">読み込み中...</span>
+			{/if}
 		</h2>
 		<button
 			on:click={nextMonth}
