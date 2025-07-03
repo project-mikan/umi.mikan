@@ -26,9 +26,6 @@ services:
       NODE_ENV: production
       BODY_SIZE_LIMIT: 0
     restart: unless-stopped
-    ports:
-      # web:5173をtailsccale serveがサポートしてないのでlocalhostに一旦出す
-      - "5173:5173"
     depends_on:
       - backend
 
@@ -54,6 +51,8 @@ services:
     restart: always
     image: cloudflare/cloudflared
     command: tunnel run
+    depends_on:
+      - frontend
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN}
 
