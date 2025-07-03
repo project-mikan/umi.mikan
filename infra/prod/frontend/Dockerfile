@@ -38,7 +38,7 @@ RUN chown -R sveltekit:nodejs /frontend
 
 USER sveltekit
 
-EXPOSE 3000
+EXPOSE 5173
 
 ENV NODE_ENV=production
 ENV BODY_SIZE_LIMIT=0
