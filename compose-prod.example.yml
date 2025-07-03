@@ -24,7 +24,7 @@ services:
     environment:
       TZ: Asia/Tokyo
       NODE_ENV: production
-      BODY_SIZE_LIMIT: 0
+      BODY_SIZE_LIMIT: 1M
     restart: unless-stopped
     depends_on:
       - backend
