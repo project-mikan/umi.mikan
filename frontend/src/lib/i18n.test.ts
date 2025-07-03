@@ -54,6 +54,7 @@ describe("i18n", () => {
 		expect(mockInit).toHaveBeenCalledWith({
 			fallbackLocale: "en",
 			initialLocale: "en",
+			warnOnMissingMessages: false,
 		});
 	});
 
@@ -71,6 +72,7 @@ describe("i18n", () => {
 		expect(mockInit).toHaveBeenCalledWith({
 			fallbackLocale: "en",
 			initialLocale: "ja",
+			warnOnMissingMessages: false,
 		});
 	});
 

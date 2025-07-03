@@ -9,8 +9,7 @@ RUN npm install -g pnpm@latest
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies including @sveltejs/adapter-node
-RUN pnpm add -D @sveltejs/adapter-node@^5.0.1
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
@@ -40,8 +39,5 @@ RUN chown -R sveltekit:nodejs /frontend
 USER sveltekit
 
 EXPOSE 3000
-
-ENV NODE_ENV=production
-ENV BODY_SIZE_LIMIT=0
 
 CMD ["node", "build"]
