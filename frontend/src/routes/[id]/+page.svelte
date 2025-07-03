@@ -32,6 +32,12 @@ function goBack() {
 	goto("/");
 }
 
+function goToMonthly() {
+	const year = data.date.year;
+	const month = String(data.date.month).padStart(2, "0");
+	goto(`/monthly/${year}/${month}`);
+}
+
 function handleSave() {
 	formElement?.requestSubmit();
 }
@@ -56,12 +62,20 @@ function handleDelete() {
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900">{$_('diary.title')}</h1>
-		<button
-			on:click={goBack}
-			class="text-gray-600 hover:text-gray-800 font-medium"
-		>
-			{$_('diary.back')}
-		</button>
+		<div class="flex gap-4">
+			<button
+				on:click={goToMonthly}
+				class="text-blue-600 hover:text-blue-800 font-medium"
+			>
+				{formatDate(data.date)}の月を見る
+			</button>
+			<button
+				on:click={goBack}
+				class="text-gray-600 hover:text-gray-800 font-medium"
+			>
+				{$_('diary.back')}
+			</button>
+		</div>
 	</div>
 
 	<div class="space-y-6">

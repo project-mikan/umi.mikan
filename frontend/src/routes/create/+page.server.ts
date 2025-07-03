@@ -2,14 +2,17 @@ import { createDiaryEntry, createYMD } from "$lib/server/diary-api";
 import { error, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ cookies }) => {
+export const load: PageServerLoad = async ({ cookies, url }) => {
 	const accessToken = cookies.get("accessToken");
 
 	if (!accessToken) {
 		throw redirect(302, "/login");
 	}
 
-	return {};
+	const dateParam = url.searchParams.get("date");
+	return {
+		defaultDate: dateParam || new Date().toISOString().split("T")[0],
+	};
 };
 
 export const actions: Actions = {

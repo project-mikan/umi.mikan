@@ -15,20 +15,20 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		throw redirect(302, "/login");
 	}
 
+	// params.id should be in format YYYY-MM-DD
+	const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+	if (!dateMatch) {
+		throw error(400, "Invalid date format");
+	}
+
+	const [, year, month, day] = dateMatch;
+	const date = createYMD(
+		Number.parseInt(year, 10),
+		Number.parseInt(month, 10),
+		Number.parseInt(day, 10),
+	);
+
 	try {
-		// params.id should be in format YYYY-MM-DD
-		const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-		if (!dateMatch) {
-			throw error(400, "Invalid date format");
-		}
-
-		const [, year, month, day] = dateMatch;
-		const date = createYMD(
-			Number.parseInt(year, 10),
-			Number.parseInt(month, 10),
-			Number.parseInt(day, 10),
-		);
-
 		const response = await getDiaryEntry({
 			date,
 			accessToken,
@@ -43,6 +43,15 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		if (err instanceof Response) {
 			throw err;
 		}
+
+		// Handle gRPC NOT_FOUND error (code 2) - this is normal when no diary entry exists
+		if (err && typeof err === "object" && "code" in err && err.code === 2) {
+			return {
+				entry: null,
+				date,
+			};
+		}
+
 		console.error("Failed to load diary entry:", err);
 		throw error(500, "Failed to load diary entry");
 	}
@@ -68,11 +77,18 @@ export const actions: Actions = {
 		}
 
 		try {
-			const date = new Date(dateStr);
+			// Parse date string directly to avoid timezone issues
+			const dateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+			if (!dateMatch) {
+				return {
+					error: "Invalid date format",
+				};
+			}
+			const [, year, month, day] = dateMatch;
 			const ymd = createYMD(
-				date.getFullYear(),
-				date.getMonth() + 1,
-				date.getDate(),
+				Number.parseInt(year, 10),
+				Number.parseInt(month, 10),
+				Number.parseInt(day, 10),
 			);
 
 			if (id) {
@@ -122,14 +138,30 @@ export const actions: Actions = {
 			}
 
 			const [, year, month, day] = dateMatch;
-			const currentResponse = await getDiaryEntry({
-				date: createYMD(
-					Number.parseInt(year, 10),
-					Number.parseInt(month, 10),
-					Number.parseInt(day, 10),
-				),
-				accessToken,
-			});
+			let currentResponse: Awaited<ReturnType<typeof getDiaryEntry>>;
+			try {
+				currentResponse = await getDiaryEntry({
+					date: createYMD(
+						Number.parseInt(year, 10),
+						Number.parseInt(month, 10),
+						Number.parseInt(day, 10),
+					),
+					accessToken,
+				});
+			} catch (getDiaryErr) {
+				// Handle gRPC NOT_FOUND error (code 2) - diary entry doesn't exist
+				if (
+					getDiaryErr &&
+					typeof getDiaryErr === "object" &&
+					"code" in getDiaryErr &&
+					getDiaryErr.code === 2
+				) {
+					return {
+						error: "Diary entry not found",
+					};
+				}
+				throw getDiaryErr;
+			}
 
 			if (!currentResponse.entry) {
 				return {
