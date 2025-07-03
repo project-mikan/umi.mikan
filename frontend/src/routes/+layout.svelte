@@ -1,8 +1,8 @@
 <script lang="ts">
 import "../app.css";
 import { page } from "$app/stores";
-import { _ } from "svelte-i18n";
 import "$lib/i18n";
+import { _ } from "svelte-i18n";
 import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
 import type { LayoutData } from "./$types";
 
