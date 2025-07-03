@@ -16,13 +16,8 @@ function formatDate(ymd: YMD): string {
 	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
 }
 
-function setText(node: HTMLElement, text: string) {
-	node.textContent = text;
-	return {
-		update(newText: string) {
-			node.textContent = newText;
-		},
-	};
+function formatContentWithLineBreaks(content: string): string {
+	return content.replace(/\n/g, "<br>");
 }
 </script>
 
@@ -36,7 +31,7 @@ function setText(node: HTMLElement, text: string) {
 	{#if showForm}
 		<slot name="form" />
 	{:else if entry}
-		<div class="text-gray-700 whitespace-pre-wrap" use:setText={entry.content || ''}></div>
+		<div class="text-gray-700">{@html formatContentWithLineBreaks(entry.content || '')}</div>
 		{#if onView}
 			<div class="mt-4">
 				<Button

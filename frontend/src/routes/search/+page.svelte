@@ -41,6 +41,10 @@ function handleKeydown(event: KeyboardEvent) {
 		handleSearch();
 	}
 }
+
+function formatContentWithLineBreaks(content: string): string {
+	return content.replace(/\n/g, "<br>");
+}
 </script>
 
 <svelte:head>
@@ -100,9 +104,9 @@ function handleKeydown(event: KeyboardEvent) {
 						</div>
 						<div class="text-gray-700 text-sm">
 							<p class="line-clamp-3">
-								{entry.content.length > 150 
+								{@html formatContentWithLineBreaks(entry.content.length > 150 
 									? entry.content.substring(0, 150) + '...' 
-									: entry.content}
+									: entry.content)}
 							</p>
 						</div>
 					</div>

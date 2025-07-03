@@ -132,6 +132,10 @@ function getWeekDays(): string[] {
 }
 
 const weekDays = getWeekDays();
+
+function formatContentWithLineBreaks(content: string): string {
+	return content.replace(/\n/g, "<br>");
+}
 </script>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -224,7 +228,7 @@ const weekDays = getWeekDays();
 												{$_('monthly.entry')}
 											</div>
 											<div class="text-xs text-blue-600 line-clamp-2">
-												{entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : ''}
+												{@html formatContentWithLineBreaks(entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : '')}
 											</div>
 										</div>
 									</div>
