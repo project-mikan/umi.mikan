@@ -29,9 +29,10 @@ WORKDIR /frontend
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S sveltekit -u 1001
 
-# Copy built application and package.json from builder stage
+# Copy built application and node_modules from builder stage
 COPY --from=builder /frontend/build ./build
 COPY --from=builder /frontend/package.json ./package.json
+COPY --from=builder /frontend/node_modules ./node_modules
 
 # Change ownership of the app directory
 RUN chown -R sveltekit:nodejs /frontend
