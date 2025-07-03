@@ -31,9 +31,16 @@ RUN adduser -S sveltekit -u 1001
 # Copy built application and node_modules from builder stage
 COPY --from=builder /frontend/build ./build
 COPY --from=builder /frontend/package.json ./package.json
+
 # Cannot find package '@bufbuild/protobuf'になるので必要↓
 RUN mkdir -p /frontend/node_modules/@bufbuild/protobuf
+RUN mkdir -p /frontend/node_modules/@connectrpc/connect
+RUN mkdir -p /frontend/node_modules/@connectrpc/connect-node
 COPY --from=builder /frontend/node_modules/@bufbuild/protobuf/ ./node_modules/@bufbuild/protobuf/
+COPY --from=builder /frontend/node_modules/@connectrpc/connect/ ./node_modules/@connectrpc/connect/
+COPY --from=builder /frontend/node_modules/@connectrpc/connect-node/ ./node_modules/@connectrpc/connect-node/
+
+
 
 # Change ownership of the app directory
 RUN chown -R sveltekit:nodejs /frontend
