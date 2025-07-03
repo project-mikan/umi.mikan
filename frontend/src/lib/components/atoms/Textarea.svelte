@@ -20,15 +20,48 @@ $: classes = `${baseClasses} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
 // Calculate min height based on rows
 $: minHeight = `${rows * 1.5}rem`;
 
+function htmlToPlainText(html: string): string {
+	// Create a temporary div to process HTML
+	const tempDiv = document.createElement("div");
+	tempDiv.innerHTML = html;
+
+	// Convert common HTML elements to plain text
+	// Replace <br> tags with newlines
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<br\s*\/?>/gi, "\n");
+
+	// Replace <p> tags with newlines (Google Keep uses these)
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/p>/gi, "\n");
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<p[^>]*>/gi, "");
+
+	// Replace <div> tags with newlines
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/div>/gi, "\n");
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<div[^>]*>/gi, "");
+
+	// Replace list items with newlines and bullets
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<li[^>]*>/gi, "• ");
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/li>/gi, "\n");
+
+	// Remove other common HTML tags while preserving content
+	tempDiv.innerHTML = tempDiv.innerHTML.replace(
+		/<\/?(?:ul|ol|strong|b|em|i|u|span|font)[^>]*>/gi,
+		"",
+	);
+
+	// Get the plain text content
+	let plainText = tempDiv.textContent || tempDiv.innerText || "";
+
+	// Clean up extra whitespace and newlines
+	plainText = plainText
+		.replace(/\n\s*\n/g, "\n") // Replace multiple consecutive newlines with single newline
+		.replace(/^\s+|\s+$/g, "") // Trim leading and trailing whitespace
+		.replace(/[ \t]+/g, " "); // Replace multiple spaces/tabs with single space
+
+	return plainText;
+}
+
 function handleInput(event: Event) {
 	const target = event.target as HTMLDivElement;
-	value =
-		target.innerHTML
-			.replace(/<br\s*\/?>/gi, "\n")
-			.replace(/<div[^>]*>/gi, "")
-			.replace(/<\/div>/gi, "\n")
-			.replace(/^\n/, "")
-			.replace(/\n$/g, "") || "";
+	value = htmlToPlainText(target.innerHTML);
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -55,15 +88,7 @@ function restoreCursorPosition(range: Range) {
 }
 
 // Update content when value changes externally
-$: if (
-	contentElement &&
-	contentElement.innerHTML
-		.replace(/<br\s*\/?>/gi, "\n")
-		.replace(/<div[^>]*>/gi, "")
-		.replace(/<\/div>/gi, "\n")
-		.replace(/^\n/, "")
-		.replace(/\n$/g, "") !== value
-) {
+$: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 	const savedRange = saveCursorPosition();
 	contentElement.innerHTML = value.replace(/\n/g, "<br>");
 	if (savedRange) {
