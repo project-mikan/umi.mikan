@@ -38,6 +38,7 @@
 		"update": "Update",
 		"detail": "Detail",
 		"viewDetail": "View details",
+		"viewThisMonth": "This month's diary",
 		"placeholder": "Write about today's events...",
 		"noEntry": "'s diary is not available.",
 		"yesterdayNoEntry": "Yesterday's diary is not available.",

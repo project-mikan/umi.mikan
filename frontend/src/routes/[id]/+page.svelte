@@ -67,7 +67,7 @@ function handleDelete() {
 				on:click={goToMonthly}
 				class="text-blue-600 hover:text-blue-800 font-medium"
 			>
-				{formatDate(data.date)}の月を見る
+				{$_('diary.viewThisMonth')}
 			</button>
 			<button
 				on:click={goBack}
