@@ -34,14 +34,23 @@ export const actions: Actions = {
 		}
 
 		try {
-			const date = new Date(dateStr);
+			// Parse date string directly to avoid timezone issues
+			const dateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+			if (!dateMatch) {
+				return {
+					error: "Invalid date format",
+				};
+			}
+			const [, year, month, day] = dateMatch;
+			const ymd = createYMD(
+				Number.parseInt(year, 10),
+				Number.parseInt(month, 10),
+				Number.parseInt(day, 10),
+			);
+
 			await createDiaryEntry({
 				content,
-				date: createYMD(
-					date.getFullYear(),
-					date.getMonth() + 1,
-					date.getDate(),
-				),
+				date: ymd,
 				accessToken,
 			});
 		} catch (err) {

@@ -60,17 +60,12 @@ function getFirstDayOfWeek(year: number, month: number): number {
 
 function createEntry(day: number) {
 	const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-	goto(`/create?date=${dateStr}`);
+	goto(`/${dateStr}`);
 }
 
 function navigateToEntry(day: number) {
 	const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-	const entry = entryMap.get(day);
-	if (entry) {
-		goto(`/${dateStr}`);
-	} else {
-		goto(`/create?date=${dateStr}`);
-	}
+	goto(`/${dateStr}`);
 }
 
 async function previousMonth() {
