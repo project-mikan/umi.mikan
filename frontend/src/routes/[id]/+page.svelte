@@ -6,6 +6,7 @@ import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
+import Modal from "$lib/components/molecules/Modal.svelte";
 import type { ActionData, PageData } from "./$types";
 
 export let data: PageData;
@@ -13,6 +14,7 @@ export let form: ActionData;
 
 let content = data.entry?.content || "";
 let formElement: HTMLFormElement;
+let showDeleteConfirm = false;
 
 function formatDate(ymd: { year: number; month: number; day: number }): string {
 	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
@@ -32,6 +34,22 @@ function goBack() {
 
 function handleSave() {
 	formElement?.requestSubmit();
+}
+
+function confirmDelete() {
+	showDeleteConfirm = true;
+}
+
+function cancelDelete() {
+	showDeleteConfirm = false;
+}
+
+function handleDelete() {
+	const form = document.createElement("form");
+	form.method = "POST";
+	form.action = "?/delete";
+	document.body.appendChild(form);
+	form.submit();
 }
 </script>
 
@@ -79,7 +97,14 @@ function handleSave() {
 						{form.error}
 					</div>
 				{/if}
-				<div class="flex justify-end">
+				<div class="flex justify-between">
+					<div>
+						{#if data.entry}
+							<Button type="button" variant="danger" size="md" on:click={confirmDelete}>
+								{$_('diary.delete')}
+							</Button>
+						{/if}
+					</div>
 					<Button type="submit" variant="primary" size="md">
 						{$_('diary.save')}
 					</Button>
@@ -88,3 +113,17 @@ function handleSave() {
 		</DiaryCard>
 	</div>
 </div>
+
+<Modal
+	isOpen={showDeleteConfirm}
+	title={$_('edit.deleteConfirm')}
+	confirmText={$_('diary.delete')}
+	cancelText={$_('diary.cancel')}
+	variant="danger"
+	onConfirm={handleDelete}
+	onCancel={cancelDelete}
+>
+	<p class="text-sm text-gray-500">
+		{$_('edit.deleteMessage')}
+	</p>
+</Modal>

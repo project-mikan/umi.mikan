@@ -1,6 +1,7 @@
 import {
 	createDiaryEntry,
 	createYMD,
+	deleteDiaryEntry,
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
@@ -104,5 +105,52 @@ export const actions: Actions = {
 		return {
 			success: true,
 		};
+	},
+
+	delete: async ({ params, cookies }) => {
+		const accessToken = cookies.get("accessToken");
+
+		if (!accessToken) {
+			throw error(401, "Unauthorized");
+		}
+
+		try {
+			// First, get the current entry to get the ID
+			const dateMatch = params.id.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+			if (!dateMatch) {
+				throw error(400, "Invalid date format");
+			}
+
+			const [, year, month, day] = dateMatch;
+			const currentResponse = await getDiaryEntry({
+				date: createYMD(
+					Number.parseInt(year, 10),
+					Number.parseInt(month, 10),
+					Number.parseInt(day, 10),
+				),
+				accessToken,
+			});
+
+			if (!currentResponse.entry) {
+				return {
+					error: "Diary entry not found",
+				};
+			}
+
+			await deleteDiaryEntry({
+				id: currentResponse.entry.id,
+				accessToken,
+			});
+		} catch (err) {
+			if (err instanceof Response) {
+				throw err;
+			}
+			console.error("Failed to delete diary entry:", err);
+			return {
+				error: "Failed to delete diary entry",
+			};
+		}
+
+		throw redirect(303, "/");
 	},
 };
