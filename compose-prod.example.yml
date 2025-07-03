@@ -16,8 +16,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - internal
 
   frontend:
     build:
@@ -33,8 +31,6 @@ services:
       - "5173:5173"
     depends_on:
       - backend
-    networks:
-      - internal
 
   postgres:
     image: postgres:17-alpine
@@ -53,37 +49,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    networks:
-      - internal
 
   #
-  tailscale:
-    image: tailscale/tailscale
-    hostname: umi-mikan-vpn
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    volumes:
-      - /dev/net/tun:/dev/net/tun
-      - tailscale-data:/var/lib/tailscale
+  tunnel:
+    restart: always
+    image: cloudflare/cloudflared
+    command: tunnel run
     environment:
-      # https://login.tailscale.com/admin/settings/keys
-      TS_AUTHKEY: "${TS_AUTHKEY}"
-    command: >
-      sh -c "
-        tailscaled & 
-        sleep 5 &&
-        tailscale up --auth-key=${TS_AUTHKEY} --hostname=umi-mikan-vpn &&
-        tailscale serve localhost:5173 &
-        tail -f /dev/null
-      "
-    networks:
-      - internal
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
 
 volumes:
   postgres_prod_volume:
-  tailscale-data:
-
-networks:
-  internal:
-    driver: bridge
