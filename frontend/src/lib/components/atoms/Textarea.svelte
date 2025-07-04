@@ -122,9 +122,8 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 	data-placeholder={placeholder}
 	contenteditable={!disabled}
 	class={classes}
-	style="min-height: {minHeight}; line-height: 1;"
+	style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;"
 	on:input={handleInput}
 	on:keydown={handleKeydown}
 	{...$$restProps}
 ></div>
-
