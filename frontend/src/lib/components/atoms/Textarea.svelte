@@ -50,11 +50,17 @@ function htmlToPlainText(html: string): string {
 	// Get the plain text content
 	let plainText = tempDiv.textContent || tempDiv.innerText || "";
 
-	// Clean up extra whitespace and newlines
-	plainText = plainText
-		.replace(/\n\s*\n/g, "\n") // Replace multiple consecutive newlines with single newline
-		.replace(/^\s+|\s+$/g, "") // Trim leading and trailing whitespace
-		.replace(/[ \t]+/g, " "); // Replace multiple spaces/tabs with single space
+	// Clean up extra whitespace and newlines only for pasted HTML content
+	// Check if input contains complex HTML (not just br tags)
+	const hasComplexHTML = /<(?!br\s*\/?>)[^>]+>/.test(html);
+
+	if (hasComplexHTML) {
+		// Only clean up pasted HTML content
+		plainText = plainText
+			.replace(/^\s+|\s+$/g, "") // Trim leading and trailing whitespace
+			.replace(/[ \t]+/g, " "); // Replace multiple spaces/tabs with single space
+		// Note: Removed the multiple newline replacement to preserve empty lines
+	}
 
 	return plainText;
 }
