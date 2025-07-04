@@ -1,111 +1,119 @@
 <script lang="ts">
-import { createEventDispatcher } from "svelte";
+	import { createEventDispatcher } from "svelte";
 
-export let value = "";
-export let placeholder = "";
-export let required = false;
-export let disabled = false;
-export let id = "";
-export let name = "";
-export let rows = 4;
+	export let value = "";
+	export let placeholder = "";
+	export let required = false;
+	export let disabled = false;
+	export let id = "";
+	export let name = "";
+	export let rows = 4;
 
-const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher();
 
-let contentElement: HTMLDivElement;
+	let contentElement: HTMLDivElement;
 
-const baseClasses =
-	"block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
-$: classes = `${baseClasses} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`;
+	const baseClasses =
+		"block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
+	$: classes = `${baseClasses} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`;
 
-// Calculate min height based on rows
-$: minHeight = `${rows * 1.5}rem`;
+	// Calculate min height based on rows
+	$: minHeight = `${rows * 1.5}rem`;
 
-function htmlToPlainText(html: string): string {
-	// Create a temporary div to process HTML
-	const tempDiv = document.createElement("div");
-	tempDiv.innerHTML = html;
+	function htmlToPlainText(html: string): string {
+		// Create a temporary div to process HTML
+		const tempDiv = document.createElement("div");
+		tempDiv.innerHTML = html;
 
-	// Convert common HTML elements to plain text
-	// Replace <br> tags with newlines
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<br\s*\/?>/gi, "\n");
+		// Convert common HTML elements to plain text
+		// Replace <br> tags with newlines
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(/<br\s*\/?>/gi, "\n");
 
-	// Replace <p> tags with newlines (Google Keep uses these)
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/p>/gi, "\n");
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<p[^>]*>/gi, "");
+		// Replace <p> tags with newlines (Google Keep uses these)
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/p>/gi, "\n");
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(/<p[^>]*>/gi, "");
 
-	// Replace <div> tags with newlines
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/div>/gi, "\n");
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<div[^>]*>/gi, "");
+		// Replace <div> tags with newlines
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/div>/gi, "\n");
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(/<div[^>]*>/gi, "");
 
-	// Replace list items with newlines and bullets
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<li[^>]*>/gi, "• ");
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/li>/gi, "\n");
+		// Replace list items with newlines and bullets
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(/<li[^>]*>/gi, "• ");
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/li>/gi, "\n");
 
-	// Remove other common HTML tags while preserving content
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(
-		/<\/?(?:ul|ol|strong|b|em|i|u|span|font)[^>]*>/gi,
-		"",
-	);
+		// Remove other common HTML tags while preserving content
+		tempDiv.innerHTML = tempDiv.innerHTML.replace(
+			/<\/?(?:ul|ol|strong|b|em|i|u|span|font)[^>]*>/gi,
+			"",
+		);
 
-	// Get the plain text content
-	let plainText = tempDiv.textContent || tempDiv.innerText || "";
+		// Get the plain text content
+		let plainText = tempDiv.textContent || tempDiv.innerText || "";
 
-	// Clean up extra whitespace and newlines
-	plainText = plainText
-		.replace(/\n\s*\n/g, "\n") // Replace multiple consecutive newlines with single newline
-		.replace(/^\s+|\s+$/g, "") // Trim leading and trailing whitespace
-		.replace(/[ \t]+/g, " "); // Replace multiple spaces/tabs with single space
+		// Clean up extra whitespace and newlines only for pasted HTML content
+		// Check if input contains complex HTML (not just br tags)
+		const hasComplexHTML = /<(?!br\s*\/?>)[^>]+>/.test(html);
 
-	return plainText;
-}
+		if (hasComplexHTML) {
+			// Only clean up pasted HTML content
+			plainText = plainText
+				.replace(/^\s+|\s+$/g, "") // Trim leading and trailing whitespace
+				.replace(/[ \t]+/g, " "); // Replace multiple spaces/tabs with single space
+		}
 
-function handleInput(event: Event) {
-	const target = event.target as HTMLDivElement;
-	value = htmlToPlainText(target.innerHTML);
-}
-
-function handleKeydown(event: KeyboardEvent) {
-	if (event.ctrlKey && event.key === "Enter") {
-		event.preventDefault();
-		dispatch("save");
+		return plainText;
 	}
-}
 
-function saveCursorPosition() {
-	const selection = window.getSelection();
-	if (selection && selection.rangeCount > 0) {
-		return selection.getRangeAt(0);
+	function handleInput(event: Event) {
+		const target = event.target as HTMLDivElement;
+		value = htmlToPlainText(target.innerHTML);
 	}
-	return null;
-}
 
-function restoreCursorPosition(range: Range) {
-	const selection = window.getSelection();
-	if (selection && range) {
-		selection.removeAllRanges();
-		selection.addRange(range);
-	}
-}
-
-// Update content when value changes externally
-$: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
-	const savedRange = saveCursorPosition();
-	contentElement.innerHTML = value.replace(/\n/g, "<br>");
-	if (savedRange) {
-		// Adjust range if it's out of bounds
-		try {
-			restoreCursorPosition(savedRange);
-		} catch {
-			// If range is invalid, place cursor at end
-			const range = document.createRange();
-			const selection = window.getSelection();
-			range.selectNodeContents(contentElement);
-			range.collapse(false);
-			selection?.removeAllRanges();
-			selection?.addRange(range);
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.ctrlKey && event.key === "Enter") {
+			event.preventDefault();
+			dispatch("save");
 		}
 	}
-}
+
+	function saveCursorPosition() {
+		const selection = window.getSelection();
+		if (selection && selection.rangeCount > 0) {
+			return selection.getRangeAt(0);
+		}
+		return null;
+	}
+
+	function restoreCursorPosition(range: Range) {
+		const selection = window.getSelection();
+		if (selection && range) {
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
+	}
+
+	// Update content when value changes externally
+	$: if (
+		contentElement &&
+		htmlToPlainText(contentElement.innerHTML) !== value
+	) {
+		const savedRange = saveCursorPosition();
+		contentElement.innerHTML = value.replace(/\n/g, "<br>");
+		if (savedRange) {
+			// Adjust range if it's out of bounds
+			try {
+				restoreCursorPosition(savedRange);
+			} catch {
+				// If range is invalid, place cursor at end
+				const range = document.createRange();
+				const selection = window.getSelection();
+				range.selectNodeContents(contentElement);
+				range.collapse(false);
+				selection?.removeAllRanges();
+				selection?.addRange(range);
+			}
+		}
+	}
 </script>
 
 <!-- Hidden input for form submission -->
@@ -122,3 +130,4 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 	on:keydown={handleKeydown}
 	{...$$restProps}
 ></div>
+
