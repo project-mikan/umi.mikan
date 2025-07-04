@@ -140,6 +140,90 @@ export const actions: Actions = {
 			return { error: "日記の保存に失敗しました" };
 		}
 	},
+	saveYesterday: async ({ request, cookies }) => {
+		const accessToken = cookies.get("accessToken");
+
+		if (!accessToken) {
+			throw error(401, "Unauthorized");
+		}
+
+		const data = await request.formData();
+		const content = data.get("content")?.toString();
+		const dateStr = data.get("date")?.toString();
+		const id = data.get("id")?.toString();
+
+		if (!content || !dateStr) {
+			return { error: "内容と日付は必須です" };
+		}
+
+		try {
+			const [year, month, day] = dateStr.split("-").map(Number);
+			const date = createYMD(year, month, day);
+
+			if (id) {
+				await updateDiaryEntry({
+					id,
+					title: "",
+					content,
+					date,
+					accessToken,
+				});
+			} else {
+				await createDiaryEntry({
+					content,
+					date,
+					accessToken,
+				});
+			}
+
+			return { success: true };
+		} catch (err) {
+			console.error("Failed to save diary entry:", err);
+			return { error: "日記の保存に失敗しました" };
+		}
+	},
+	saveDayBeforeYesterday: async ({ request, cookies }) => {
+		const accessToken = cookies.get("accessToken");
+
+		if (!accessToken) {
+			throw error(401, "Unauthorized");
+		}
+
+		const data = await request.formData();
+		const content = data.get("content")?.toString();
+		const dateStr = data.get("date")?.toString();
+		const id = data.get("id")?.toString();
+
+		if (!content || !dateStr) {
+			return { error: "内容と日付は必須です" };
+		}
+
+		try {
+			const [year, month, day] = dateStr.split("-").map(Number);
+			const date = createYMD(year, month, day);
+
+			if (id) {
+				await updateDiaryEntry({
+					id,
+					title: "",
+					content,
+					date,
+					accessToken,
+				});
+			} else {
+				await createDiaryEntry({
+					content,
+					date,
+					accessToken,
+				});
+			}
+
+			return { success: true };
+		} catch (err) {
+			console.error("Failed to save diary entry:", err);
+			return { error: "日記の保存に失敗しました" };
+		}
+	},
 	logout: async ({ cookies }) => {
 		cookies.delete("accessToken", { path: "/" });
 		cookies.delete("refreshToken", { path: "/" });

@@ -12,7 +12,11 @@ import type { PageData } from "./$types";
 export let data: PageData;
 
 let todayContent = data.today.entry?.content || "";
+let yesterdayContent = data.yesterday.entry?.content || "";
+let dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
 let formElement: HTMLFormElement;
+let yesterdayFormElement: HTMLFormElement;
+let dayBeforeYesterdayFormElement: HTMLFormElement;
 
 function getMonthlyUrl(): string {
 	const now = new Date();
@@ -33,6 +37,14 @@ function viewEntry(entry: DiaryEntry) {
 
 function handleSave() {
 	formElement?.requestSubmit();
+}
+
+function handleYesterdaySave() {
+	yesterdayFormElement?.requestSubmit();
+}
+
+function handleDayBeforeYesterdaySave() {
+	dayBeforeYesterdayFormElement?.requestSubmit();
 }
 </script>
 
@@ -93,18 +105,70 @@ function handleSave() {
 			title={$_('diary.yesterday')}
 			date={data.yesterday.date}
 			entry={data.yesterday.entry}
-			onView={viewEntry}
+			showForm={true}
 		>
-			<span slot="empty-message">{$_('diary.yesterdayNoEntry')}</span>
+			<form bind:this={yesterdayFormElement} method="POST" action="?/saveYesterday" use:enhance={(() => {
+				return async ({ result }) => {
+					if (result.type === 'success') {
+						window.location.reload();
+					}
+				};
+			})} slot="form">
+				<input type="hidden" name="date" value={formatDateStr(data.yesterday.date)} />
+				{#if data.yesterday.entry}
+					<input type="hidden" name="id" value={data.yesterday.entry.id} />
+				{/if}
+				<FormField
+					type="textarea"
+					label=""
+					id="yesterday-content"
+					name="content"
+					placeholder={$_('diary.placeholder')}
+					rows={8}
+					bind:value={yesterdayContent}
+					on:save={handleYesterdaySave}
+				/>
+				<div class="flex justify-end">
+					<Button type="submit" variant="primary" size="md">
+						{$_('diary.save')}
+					</Button>
+				</div>
+			</form>
 		</DiaryCard>
 
 		<DiaryCard
 			title={$_('diary.dayBeforeYesterday')}
 			date={data.dayBeforeYesterday.date}
 			entry={data.dayBeforeYesterday.entry}
-			onView={viewEntry}
+			showForm={true}
 		>
-			<span slot="empty-message">{$_('diary.dayBeforeYesterdayNoEntry')}</span>
+			<form bind:this={dayBeforeYesterdayFormElement} method="POST" action="?/saveDayBeforeYesterday" use:enhance={(() => {
+				return async ({ result }) => {
+					if (result.type === 'success') {
+						window.location.reload();
+					}
+				};
+			})} slot="form">
+				<input type="hidden" name="date" value={formatDateStr(data.dayBeforeYesterday.date)} />
+				{#if data.dayBeforeYesterday.entry}
+					<input type="hidden" name="id" value={data.dayBeforeYesterday.entry.id} />
+				{/if}
+				<FormField
+					type="textarea"
+					label=""
+					id="day-before-yesterday-content"
+					name="content"
+					placeholder={$_('diary.placeholder')}
+					rows={8}
+					bind:value={dayBeforeYesterdayContent}
+					on:save={handleDayBeforeYesterdaySave}
+				/>
+				<div class="flex justify-end">
+					<Button type="submit" variant="primary" size="md">
+						{$_('diary.save')}
+					</Button>
+				</div>
+			</form>
 		</DiaryCard>
 	</div>
 </div>
