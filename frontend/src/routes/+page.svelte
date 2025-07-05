@@ -68,7 +68,6 @@ function handleDayBeforeYesterdaySave() {
 	<div class="space-y-6">
 		<DiaryCard
 			title={$_('diary.today')}
-			date={data.today.date}
 			entry={data.today.entry}
 			showForm={true}
 		>
@@ -103,7 +102,6 @@ function handleDayBeforeYesterdaySave() {
 
 		<DiaryCard
 			title={$_('diary.yesterday')}
-			date={data.yesterday.date}
 			entry={data.yesterday.entry}
 			showForm={true}
 		>
@@ -138,7 +136,6 @@ function handleDayBeforeYesterdaySave() {
 
 		<DiaryCard
 			title={$_('diary.dayBeforeYesterday')}
-			date={data.dayBeforeYesterday.date}
 			entry={data.dayBeforeYesterday.entry}
 			showForm={true}
 		>

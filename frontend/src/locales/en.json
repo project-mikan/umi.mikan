@@ -43,7 +43,24 @@
 		"noEntry": "'s diary is not available.",
 		"yesterdayNoEntry": "Yesterday's diary is not available.",
 		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
-		"dateUnknown": "Date unknown"
+		"dateUnknown": "Date unknown",
+		"previousDay": "Previous day",
+		"nextDay": "Next day"
+	},
+	"date": {
+		"dayOfWeek": {
+			"sunday": "Sun",
+			"monday": "Mon",
+			"tuesday": "Tue",
+			"wednesday": "Wed",
+			"thursday": "Thu",
+			"friday": "Fri",
+			"saturday": "Sat"
+		},
+		"format": {
+			"yearMonthDay": "{month}/{day}/{year}",
+			"yearMonthDayWithDayOfWeek": "{month}/{day}/{year} ({dayOfWeek})"
+		}
 	},
 	"create": {
 		"title": "Write a new diary",

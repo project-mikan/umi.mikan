@@ -43,7 +43,24 @@
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
 		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
-		"dateUnknown": "日付不明"
+		"dateUnknown": "日付不明",
+		"previousDay": "前日",
+		"nextDay": "翌日"
+	},
+	"date": {
+		"dayOfWeek": {
+			"sunday": "日",
+			"monday": "月",
+			"tuesday": "火",
+			"wednesday": "水",
+			"thursday": "木",
+			"friday": "金",
+			"saturday": "土"
+		},
+		"format": {
+			"yearMonthDay": "{year}年{month}月{day}日",
+			"yearMonthDayWithDayOfWeek": "{year}年{month}月{day}日({dayOfWeek})"
+		}
 	},
 	"create": {
 		"title": "新しい日記を書く",

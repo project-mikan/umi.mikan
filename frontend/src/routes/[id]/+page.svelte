@@ -5,19 +5,30 @@ import { _ } from "svelte-i18n";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
+import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import Modal from "$lib/components/molecules/Modal.svelte";
+import { getDayOfWeekKey } from "$lib/utils/date-utils";
 import type { ActionData, PageData } from "./$types";
 
 export let data: PageData;
 export let form: ActionData;
 
-let content = data.entry?.content || "";
+$: content = data.entry?.content || "";
 let formElement: HTMLFormElement;
 let showDeleteConfirm = false;
 
 function formatDate(ymd: { year: number; month: number; day: number }): string {
-	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
+	const dayOfWeekKey = getDayOfWeekKey(ymd);
+	const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
+	return $_("date.format.yearMonthDayWithDayOfWeek", {
+		values: {
+			year: ymd.year,
+			month: ymd.month,
+			day: ymd.day,
+			dayOfWeek: dayOfWeek,
+		},
+	});
 }
 
 function formatDateStr(ymd: {
@@ -79,9 +90,9 @@ function handleDelete() {
 	</div>
 
 	<div class="space-y-6">
+		<DiaryNavigation currentDate={data.date} />
 		<DiaryCard
 			title={formatDate(data.date)}
-			date={data.date}
 			entry={data.entry}
 			showForm={true}
 		>

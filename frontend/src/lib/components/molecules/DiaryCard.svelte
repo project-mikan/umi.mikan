@@ -5,16 +5,11 @@ import Button from "../atoms/Button.svelte";
 import Card from "../atoms/Card.svelte";
 
 export let title: string;
-export let date: YMD;
 export let entry: DiaryEntry | null = null;
 export let showForm = false;
 export const content = "";
 export const isEditable = false;
 export let onView: ((entry: DiaryEntry) => void) | null = null;
-
-function formatDate(ymd: YMD): string {
-	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
-}
 
 function formatContentWithLineBreaks(content: string): string {
 	return content.replace(/\n/g, "<br>");
@@ -24,7 +19,7 @@ function formatContentWithLineBreaks(content: string): string {
 <Card>
 	<div class="flex justify-between items-center mb-4">
 		<h2 class="text-xl font-semibold text-gray-900">
-			{title} ({formatDate(date)})
+			{title}
 		</h2>
 	</div>
 
