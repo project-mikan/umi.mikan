@@ -83,14 +83,21 @@ function handleKeydown(event: KeyboardEvent) {
 		if (selection && selection.rangeCount > 0) {
 			const range = selection.getRangeAt(0);
 			const br = document.createElement("br");
+
+			// Delete any selected content first
 			range.deleteContents();
+
+			// Insert the br element
 			range.insertNode(br);
 
-			// Move cursor after the <br>
-			range.setStartAfter(br);
-			range.collapse(true);
+			// Create a new range after the br element
+			const newRange = document.createRange();
+			newRange.setStartAfter(br);
+			newRange.collapse(true);
+
+			// Update the selection
 			selection.removeAllRanges();
-			selection.addRange(range);
+			selection.addRange(newRange);
 		}
 
 		// Trigger input event to update the value
