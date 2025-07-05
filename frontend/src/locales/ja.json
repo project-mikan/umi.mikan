@@ -45,7 +45,13 @@
 		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
 		"dateUnknown": "日付不明",
 		"previousDay": "前日",
-		"nextDay": "翌日"
+		"nextDay": "翌日",
+		"pastEntries": "過去の同じ日",
+		"oneWeekAgo": "1週間前",
+		"oneMonthAgo": "1ヶ月前",
+		"oneYearAgo": "1年前",
+		"twoYearsAgo": "2年前",
+		"noPastEntry": "日記がありません"
 	},
 	"date": {
 		"dayOfWeek": {

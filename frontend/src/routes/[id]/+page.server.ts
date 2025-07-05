@@ -5,6 +5,7 @@ import {
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
+import { getPastSameDates } from "$lib/utils/date-utils";
 import { error, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -28,16 +29,80 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		Number.parseInt(day, 10),
 	);
 
+	// 過去の同日の日付を計算
+	const pastDates = getPastSameDates({
+		year: Number.parseInt(year, 10),
+		month: Number.parseInt(month, 10),
+		day: Number.parseInt(day, 10),
+	});
+
 	try {
+		// メインの日記を取得
 		const response = await getDiaryEntry({
 			date,
 			accessToken,
 		});
 
+		// 過去の日記を並行して取得
+		const pastEntriesPromises = [
+			getDiaryEntry({
+				date: createYMD(
+					pastDates.oneWeekAgo.year,
+					pastDates.oneWeekAgo.month,
+					pastDates.oneWeekAgo.day,
+				),
+				accessToken,
+			}).catch(() => ({ entry: null })),
+			getDiaryEntry({
+				date: createYMD(
+					pastDates.oneMonthAgo.year,
+					pastDates.oneMonthAgo.month,
+					pastDates.oneMonthAgo.day,
+				),
+				accessToken,
+			}).catch(() => ({ entry: null })),
+			getDiaryEntry({
+				date: createYMD(
+					pastDates.oneYearAgo.year,
+					pastDates.oneYearAgo.month,
+					pastDates.oneYearAgo.day,
+				),
+				accessToken,
+			}).catch(() => ({ entry: null })),
+			getDiaryEntry({
+				date: createYMD(
+					pastDates.twoYearsAgo.year,
+					pastDates.twoYearsAgo.month,
+					pastDates.twoYearsAgo.day,
+				),
+				accessToken,
+			}).catch(() => ({ entry: null })),
+		];
+
+		const pastEntriesResults = await Promise.all(pastEntriesPromises);
+
 		// Return the entry if it exists, or null if it doesn't (allowing creation)
 		return {
 			entry: response.entry || null,
 			date,
+			pastEntries: {
+				oneWeekAgo: {
+					date: pastDates.oneWeekAgo,
+					entry: pastEntriesResults[0].entry || null,
+				},
+				oneMonthAgo: {
+					date: pastDates.oneMonthAgo,
+					entry: pastEntriesResults[1].entry || null,
+				},
+				oneYearAgo: {
+					date: pastDates.oneYearAgo,
+					entry: pastEntriesResults[2].entry || null,
+				},
+				twoYearsAgo: {
+					date: pastDates.twoYearsAgo,
+					entry: pastEntriesResults[3].entry || null,
+				},
+			},
 		};
 	} catch (err) {
 		if (err instanceof Response) {
@@ -46,9 +111,65 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 		// Handle gRPC NOT_FOUND error (code 2) - this is normal when no diary entry exists
 		if (err && typeof err === "object" && "code" in err && err.code === 2) {
+			// 過去の日記も取得（エラーでもnullを返す）
+			const pastEntriesPromises = [
+				getDiaryEntry({
+					date: createYMD(
+						pastDates.oneWeekAgo.year,
+						pastDates.oneWeekAgo.month,
+						pastDates.oneWeekAgo.day,
+					),
+					accessToken,
+				}).catch(() => ({ entry: null })),
+				getDiaryEntry({
+					date: createYMD(
+						pastDates.oneMonthAgo.year,
+						pastDates.oneMonthAgo.month,
+						pastDates.oneMonthAgo.day,
+					),
+					accessToken,
+				}).catch(() => ({ entry: null })),
+				getDiaryEntry({
+					date: createYMD(
+						pastDates.oneYearAgo.year,
+						pastDates.oneYearAgo.month,
+						pastDates.oneYearAgo.day,
+					),
+					accessToken,
+				}).catch(() => ({ entry: null })),
+				getDiaryEntry({
+					date: createYMD(
+						pastDates.twoYearsAgo.year,
+						pastDates.twoYearsAgo.month,
+						pastDates.twoYearsAgo.day,
+					),
+					accessToken,
+				}).catch(() => ({ entry: null })),
+			];
+
+			const pastEntriesResults = await Promise.all(pastEntriesPromises);
+
 			return {
 				entry: null,
 				date,
+				pastEntries: {
+					oneWeekAgo: {
+						date: pastDates.oneWeekAgo,
+						entry: pastEntriesResults[0].entry || null,
+					},
+					oneMonthAgo: {
+						date: pastDates.oneMonthAgo,
+						entry: pastEntriesResults[1].entry || null,
+					},
+					oneYearAgo: {
+						date: pastDates.oneYearAgo,
+						entry: pastEntriesResults[2].entry || null,
+					},
+					twoYearsAgo: {
+						date: pastDates.twoYearsAgo,
+						entry: pastEntriesResults[3].entry || null,
+					},
+				},
 			};
 		}
 
