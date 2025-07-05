@@ -14,7 +14,7 @@ const dispatch = createEventDispatcher();
 let contentElement: HTMLDivElement;
 
 const baseClasses =
-	"block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
+	"block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
 $: classes = `${baseClasses} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`;
 
 // Calculate min height based on rows
@@ -73,6 +73,36 @@ function handleKeydown(event: KeyboardEvent) {
 	if (event.ctrlKey && event.key === "Enter") {
 		event.preventDefault();
 		dispatch("save");
+	} else if (event.key === "Enter") {
+		// Prevent default behavior and manually insert <br>
+		// This handles both Enter and Shift+Enter
+		event.preventDefault();
+
+		// Insert a <br> tag at the cursor position
+		const selection = window.getSelection();
+		if (selection && selection.rangeCount > 0) {
+			const range = selection.getRangeAt(0);
+			const br = document.createElement("br");
+
+			// Delete any selected content first
+			range.deleteContents();
+
+			// Insert the br element
+			range.insertNode(br);
+
+			// Create a new range after the br element
+			const newRange = document.createRange();
+			newRange.setStartAfter(br);
+			newRange.collapse(true);
+
+			// Update the selection
+			selection.removeAllRanges();
+			selection.addRange(newRange);
+		}
+
+		// Trigger input event to update the value
+		const inputEvent = new Event("input", { bubbles: true });
+		contentElement.dispatchEvent(inputEvent);
 	}
 }
 
@@ -122,7 +152,7 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 	data-placeholder={placeholder}
 	contenteditable={!disabled}
 	class={classes}
-	style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;"
+	style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
 	on:input={handleInput}
 	on:keydown={handleKeydown}
 	{...$$restProps}
