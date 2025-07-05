@@ -73,6 +73,29 @@ function handleKeydown(event: KeyboardEvent) {
 	if (event.ctrlKey && event.key === "Enter") {
 		event.preventDefault();
 		dispatch("save");
+	} else if (event.key === "Enter") {
+		// Prevent default behavior and manually insert <br>
+		// This handles both Enter and Shift+Enter
+		event.preventDefault();
+
+		// Insert a <br> tag at the cursor position
+		const selection = window.getSelection();
+		if (selection && selection.rangeCount > 0) {
+			const range = selection.getRangeAt(0);
+			const br = document.createElement("br");
+			range.deleteContents();
+			range.insertNode(br);
+
+			// Move cursor after the <br>
+			range.setStartAfter(br);
+			range.collapse(true);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
+
+		// Trigger input event to update the value
+		const inputEvent = new Event("input", { bubbles: true });
+		contentElement.dispatchEvent(inputEvent);
 	}
 }
 
