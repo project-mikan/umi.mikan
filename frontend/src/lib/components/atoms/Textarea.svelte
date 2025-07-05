@@ -14,7 +14,7 @@ const dispatch = createEventDispatcher();
 let contentElement: HTMLDivElement;
 
 const baseClasses =
-	"block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
+	"block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
 $: classes = `${baseClasses} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`;
 
 // Calculate min height based on rows
@@ -145,7 +145,7 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 	data-placeholder={placeholder}
 	contenteditable={!disabled}
 	class={classes}
-	style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;"
+	style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
 	on:input={handleInput}
 	on:keydown={handleKeydown}
 	{...$$restProps}
