@@ -45,7 +45,13 @@
 		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
 		"dateUnknown": "Date unknown",
 		"previousDay": "Previous day",
-		"nextDay": "Next day"
+		"nextDay": "Next day",
+		"pastEntries": "Past entries on this day",
+		"oneWeekAgo": "1 week ago",
+		"oneMonthAgo": "1 month ago",
+		"oneYearAgo": "1 year ago",
+		"twoYearsAgo": "2 years ago",
+		"noPastEntry": "No entry"
 	},
 	"date": {
 		"dayOfWeek": {

@@ -8,6 +8,7 @@ import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import Modal from "$lib/components/molecules/Modal.svelte";
+import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
 import { getDayOfWeekKey } from "$lib/utils/date-utils";
 import type { ActionData, PageData } from "./$types";
 
@@ -136,6 +137,8 @@ function handleDelete() {
 				</div>
 			</form>
 		</DiaryCard>
+		
+		<PastEntriesLinks pastEntries={data.pastEntries} />
 	</div>
 </div>
 
