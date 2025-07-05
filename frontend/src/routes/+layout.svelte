@@ -3,6 +3,7 @@ import "../app.css";
 import { page } from "$app/stores";
 import "$lib/i18n";
 import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
+import Head from "$lib/components/atoms/Head.svelte";
 import { _ } from "svelte-i18n";
 import type { LayoutData } from "./$types";
 
@@ -12,6 +13,8 @@ $: isAuthenticated = data.isAuthenticated;
 $: isAuthPage =
 	$page.url.pathname === "/login" || $page.url.pathname === "/register";
 </script>
+
+<Head />
 
 <div class="min-h-screen bg-gray-50">
 	<NavigationBar {isAuthenticated} {isAuthPage} />
