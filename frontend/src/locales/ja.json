@@ -43,7 +43,9 @@
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
 		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
-		"dateUnknown": "日付不明"
+		"dateUnknown": "日付不明",
+		"previousDay": "前日",
+		"nextDay": "翌日"
 	},
 	"create": {
 		"title": "新しい日記を書く",

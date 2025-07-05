@@ -43,7 +43,9 @@
 		"noEntry": "'s diary is not available.",
 		"yesterdayNoEntry": "Yesterday's diary is not available.",
 		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
-		"dateUnknown": "Date unknown"
+		"dateUnknown": "Date unknown",
+		"previousDay": "Previous day",
+		"nextDay": "Next day"
 	},
 	"create": {
 		"title": "Write a new diary",

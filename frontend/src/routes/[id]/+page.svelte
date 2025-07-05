@@ -5,6 +5,7 @@ import { _ } from "svelte-i18n";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
+import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import Modal from "$lib/components/molecules/Modal.svelte";
 import type { ActionData, PageData } from "./$types";
@@ -12,7 +13,7 @@ import type { ActionData, PageData } from "./$types";
 export let data: PageData;
 export let form: ActionData;
 
-let content = data.entry?.content || "";
+$: content = data.entry?.content || "";
 let formElement: HTMLFormElement;
 let showDeleteConfirm = false;
 
@@ -79,6 +80,7 @@ function handleDelete() {
 	</div>
 
 	<div class="space-y-6">
+		<DiaryNavigation currentDate={data.date} />
 		<DiaryCard
 			title={formatDate(data.date)}
 			date={data.date}
