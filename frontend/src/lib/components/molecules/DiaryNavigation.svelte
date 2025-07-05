@@ -4,6 +4,7 @@ import { invalidateAll } from "$app/navigation";
 import Button from "$lib/components/atoms/Button.svelte";
 import {
 	formatDateToId,
+	getDayOfWeekKey,
 	getNextDate,
 	getPreviousDate,
 } from "$lib/utils/date-utils";
@@ -42,7 +43,14 @@ async function goToNextDay() {
 	
 	<div class="text-center">
 		<span class="text-lg font-semibold text-gray-700">
-			{currentDate.year}年{currentDate.month}月{currentDate.day}日
+			{$_('date.format.yearMonthDayWithDayOfWeek', {
+				values: {
+					year: currentDate.year,
+					month: currentDate.month,
+					day: currentDate.day,
+					dayOfWeek: $_(`date.dayOfWeek.${getDayOfWeekKey(currentDate)}`)
+				}
+			})}
 		</span>
 	</div>
 	

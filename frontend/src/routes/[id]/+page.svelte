@@ -8,6 +8,7 @@ import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import Modal from "$lib/components/molecules/Modal.svelte";
+import { getDayOfWeekKey } from "$lib/utils/date-utils";
 import type { ActionData, PageData } from "./$types";
 
 export let data: PageData;
@@ -18,7 +19,16 @@ let formElement: HTMLFormElement;
 let showDeleteConfirm = false;
 
 function formatDate(ymd: { year: number; month: number; day: number }): string {
-	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
+	const dayOfWeekKey = getDayOfWeekKey(ymd);
+	const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
+	return $_("date.format.yearMonthDayWithDayOfWeek", {
+		values: {
+			year: ymd.year,
+			month: ymd.month,
+			day: ymd.day,
+			dayOfWeek: dayOfWeek,
+		},
+	});
 }
 
 function formatDateStr(ymd: {
@@ -83,7 +93,6 @@ function handleDelete() {
 		<DiaryNavigation currentDate={data.date} />
 		<DiaryCard
 			title={formatDate(data.date)}
-			date={data.date}
 			entry={data.entry}
 			showForm={true}
 		>

@@ -29,3 +29,17 @@ export function getNextDate(date: DateInfo): DateInfo {
 export function formatDateToId(date: DateInfo): string {
 	return `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 }
+
+export function getDayOfWeekKey(date: DateInfo): string {
+	const jsDate = new Date(date.year, date.month - 1, date.day);
+	const dayKeys = [
+		"sunday",
+		"monday",
+		"tuesday",
+		"wednesday",
+		"thursday",
+		"friday",
+		"saturday",
+	];
+	return dayKeys[jsDate.getDay()];
+}

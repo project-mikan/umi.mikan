@@ -47,6 +47,21 @@
 		"previousDay": "前日",
 		"nextDay": "翌日"
 	},
+	"date": {
+		"dayOfWeek": {
+			"sunday": "日",
+			"monday": "月",
+			"tuesday": "火",
+			"wednesday": "水",
+			"thursday": "木",
+			"friday": "金",
+			"saturday": "土"
+		},
+		"format": {
+			"yearMonthDay": "{year}年{month}月{day}日",
+			"yearMonthDayWithDayOfWeek": "{year}年{month}月{day}日({dayOfWeek})"
+		}
+	},
 	"create": {
 		"title": "新しい日記を書く",
 		"date": "日付",
