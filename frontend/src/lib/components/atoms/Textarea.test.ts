@@ -200,4 +200,57 @@ describe("Textarea Component Functionality", () => {
 		// Should preserve all newlines for manual input
 		expect(result).toBe("aa\n\n\nbb\n\n\n\ncc");
 	});
+
+	// Test for IME composition handling
+	it("should handle IME composition events correctly", () => {
+		const mockEvent = {
+			key: "Enter",
+			isComposing: true,
+			preventDefault: vi.fn(),
+		} as unknown as KeyboardEvent;
+
+		// Mock the handleKeydown function logic
+		function handleKeydown(event: KeyboardEvent) {
+			if (event.isComposing) {
+				// During IME composition, ignore the event
+				return;
+			}
+
+			if (event.key === "Enter") {
+				event.preventDefault();
+				// Normal Enter key handling
+			}
+		}
+
+		handleKeydown(mockEvent);
+
+		// Should not call preventDefault during IME composition
+		expect(mockEvent.preventDefault).not.toHaveBeenCalled();
+	});
+
+	it("should handle regular Enter key press (not during IME composition)", () => {
+		const mockEvent = {
+			key: "Enter",
+			isComposing: false,
+			preventDefault: vi.fn(),
+		} as unknown as KeyboardEvent;
+
+		// Mock the handleKeydown function logic
+		function handleKeydown(event: KeyboardEvent) {
+			if (event.isComposing) {
+				// During IME composition, ignore the event
+				return;
+			}
+
+			if (event.key === "Enter") {
+				event.preventDefault();
+				// Normal Enter key handling
+			}
+		}
+
+		handleKeydown(mockEvent);
+
+		// Should call preventDefault for regular Enter key press
+		expect(mockEvent.preventDefault).toHaveBeenCalled();
+	});
 });

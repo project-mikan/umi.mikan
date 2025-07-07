@@ -74,6 +74,11 @@ function handleKeydown(event: KeyboardEvent) {
 		event.preventDefault();
 		dispatch("save");
 	} else if (event.key === "Enter") {
+		// Ignore Enter key during IME composition (Japanese input)
+		if (event.isComposing) {
+			return;
+		}
+
 		// Prevent default behavior and manually insert <br>
 		// This handles both Enter and Shift+Enter
 		event.preventDefault();
