@@ -1,10 +1,10 @@
 <script lang="ts">
-	interface Props {
-		title?: string;
-		description?: string;
-	}
+interface Props {
+	title?: string;
+	description?: string;
+}
 
-	const { title = "umi.mikan", description = "diary app" }: Props = $props();
+const { title = "umi.mikan", description = "diary app" }: Props = $props();
 </script>
 
 <svelte:head>
