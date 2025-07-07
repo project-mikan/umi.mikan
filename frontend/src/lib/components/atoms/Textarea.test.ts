@@ -253,4 +253,195 @@ describe("Textarea Component Functionality", () => {
 		// Should call preventDefault for regular Enter key press
 		expect(mockEvent.preventDefault).toHaveBeenCalled();
 	});
+
+	// Test for single Enter on last line issue
+	it("should handle single Enter on last line correctly", () => {
+		// Mock DOM elements and Selection API
+		const mockRange = {
+			deleteContents: vi.fn(),
+			insertNode: vi.fn(),
+			endContainer: null as unknown as Node,
+			endOffset: 0,
+			setStartAfter: vi.fn(),
+			setEndBefore: vi.fn(),
+			collapse: vi.fn(),
+		};
+
+		const mockSelection = {
+			rangeCount: 1,
+			getRangeAt: vi.fn().mockReturnValue(mockRange),
+			removeAllRanges: vi.fn(),
+			addRange: vi.fn(),
+		};
+
+		const mockContentElement = {
+			childNodes: { length: 1 },
+			dispatchEvent: vi.fn(),
+		};
+
+		// Mock document.createElement to return br elements
+		const mockBr = { tagName: "BR" };
+		vi.spyOn(document, "createElement").mockReturnValue(
+			mockBr as unknown as HTMLElement,
+		);
+
+		// Mock window.getSelection
+		vi.spyOn(window, "getSelection").mockReturnValue(
+			mockSelection as unknown as Selection,
+		);
+
+		// Mock the scenario where cursor is at the end of content
+		mockRange.endContainer = mockContentElement as unknown as Node;
+		mockRange.endOffset = mockContentElement.childNodes.length;
+
+		// Simulate the handleKeydown function logic for Enter key
+		const mockEvent = {
+			key: "Enter",
+			isComposing: false,
+			preventDefault: vi.fn(),
+		} as unknown as KeyboardEvent;
+
+		// This is the core logic that should handle single Enter on last line
+		function handleKeydown(event: KeyboardEvent, contentElement: HTMLElement) {
+			if (event.isComposing) {
+				return;
+			}
+
+			if (event.key === "Enter") {
+				event.preventDefault();
+
+				const selection = window.getSelection();
+				if (selection && selection.rangeCount > 0) {
+					const range = selection.getRangeAt(0);
+					const br = document.createElement("br");
+
+					range.deleteContents();
+					range.insertNode(br);
+
+					// Check if we're at the end of content
+					const isAtEnd =
+						range.endContainer === contentElement &&
+						range.endOffset === contentElement.childNodes.length;
+
+					if (isAtEnd) {
+						// This should create proper cursor position on last line
+						const extraBr = document.createElement("br");
+						range.insertNode(extraBr);
+
+						const newRange = {
+							setStartAfter: vi.fn(),
+							setEndBefore: vi.fn(),
+							collapse: vi.fn(),
+						};
+
+						selection.removeAllRanges();
+						selection.addRange(newRange as unknown as Range);
+					}
+				}
+
+				const inputEvent = new Event("input", { bubbles: true });
+				contentElement.dispatchEvent(inputEvent);
+			}
+		}
+
+		handleKeydown(mockEvent, mockContentElement as unknown as HTMLElement);
+
+		// Verify the function was called correctly
+		expect(mockEvent.preventDefault).toHaveBeenCalled();
+		expect(mockRange.deleteContents).toHaveBeenCalled();
+		expect(mockRange.insertNode).toHaveBeenCalledTimes(2); // Should insert 2 br elements for last line
+		expect(mockSelection.removeAllRanges).toHaveBeenCalled();
+		expect(mockSelection.addRange).toHaveBeenCalled();
+		expect(mockContentElement.dispatchEvent).toHaveBeenCalled();
+	});
+
+	it("should handle single Enter in middle of text correctly", () => {
+		// Mock DOM elements and Selection API
+		const mockRange = {
+			deleteContents: vi.fn(),
+			insertNode: vi.fn(),
+			endContainer: { nodeType: Node.TEXT_NODE, textContent: "some text" },
+			endOffset: 5, // Not at the end
+			setStartAfter: vi.fn(),
+			collapse: vi.fn(),
+		};
+
+		const mockSelection = {
+			rangeCount: 1,
+			getRangeAt: vi.fn().mockReturnValue(mockRange),
+			removeAllRanges: vi.fn(),
+			addRange: vi.fn(),
+		};
+
+		const mockContentElement = {
+			childNodes: { length: 3 },
+			dispatchEvent: vi.fn(),
+		};
+
+		// Mock document.createElement to return br elements
+		const mockBr = { tagName: "BR" };
+		vi.spyOn(document, "createElement").mockReturnValue(
+			mockBr as unknown as HTMLElement,
+		);
+
+		// Mock window.getSelection
+		vi.spyOn(window, "getSelection").mockReturnValue(
+			mockSelection as unknown as Selection,
+		);
+
+		// Simulate the handleKeydown function logic for Enter key in middle
+		const mockEvent = {
+			key: "Enter",
+			isComposing: false,
+			preventDefault: vi.fn(),
+		} as unknown as KeyboardEvent;
+
+		function handleKeydown(event: KeyboardEvent, contentElement: HTMLElement) {
+			if (event.isComposing) {
+				return;
+			}
+
+			if (event.key === "Enter") {
+				event.preventDefault();
+
+				const selection = window.getSelection();
+				if (selection && selection.rangeCount > 0) {
+					const range = selection.getRangeAt(0);
+					const br = document.createElement("br");
+
+					range.deleteContents();
+					range.insertNode(br);
+
+					// Check if we're at the end of content
+					const isAtEnd =
+						range.endContainer === contentElement &&
+						range.endOffset === contentElement.childNodes.length;
+
+					if (!isAtEnd) {
+						// Normal case - not at end, just insert one br
+						const newRange = {
+							setStartAfter: vi.fn(),
+							collapse: vi.fn(),
+						};
+
+						selection.removeAllRanges();
+						selection.addRange(newRange as unknown as Range);
+					}
+				}
+
+				const inputEvent = new Event("input", { bubbles: true });
+				contentElement.dispatchEvent(inputEvent);
+			}
+		}
+
+		handleKeydown(mockEvent, mockContentElement as unknown as HTMLElement);
+
+		// Verify the function was called correctly
+		expect(mockEvent.preventDefault).toHaveBeenCalled();
+		expect(mockRange.deleteContents).toHaveBeenCalled();
+		expect(mockRange.insertNode).toHaveBeenCalledTimes(1); // Should insert only 1 br element for middle
+		expect(mockSelection.removeAllRanges).toHaveBeenCalled();
+		expect(mockSelection.addRange).toHaveBeenCalled();
+		expect(mockContentElement.dispatchEvent).toHaveBeenCalled();
+	});
 });

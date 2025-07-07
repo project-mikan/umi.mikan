@@ -95,14 +95,40 @@ function handleKeydown(event: KeyboardEvent) {
 			// Insert the br element
 			range.insertNode(br);
 
-			// Create a new range after the br element
-			const newRange = document.createRange();
-			newRange.setStartAfter(br);
-			newRange.collapse(true);
+			// Check if we're at the end of the content
+			const isAtEnd =
+				range.endContainer === contentElement &&
+				range.endOffset === contentElement.childNodes.length;
 
-			// Update the selection
-			selection.removeAllRanges();
-			selection.addRange(newRange);
+			// Check if we're at the end of content or at the end of a text node
+			const isAtEndOfContent =
+				isAtEnd ||
+				(range.endContainer.nodeType === Node.TEXT_NODE &&
+					range.endOffset === range.endContainer.textContent?.length);
+
+			if (isAtEndOfContent) {
+				// For the last line, we need to insert a text node to position the cursor properly
+				const textNode = document.createTextNode("");
+				range.insertNode(textNode);
+
+				// Position cursor after the br and before the text node
+				const newRange = document.createRange();
+				newRange.setStartAfter(br);
+				newRange.setEndBefore(textNode);
+				newRange.collapse(false);
+
+				selection.removeAllRanges();
+				selection.addRange(newRange);
+			} else {
+				// Create a new range after the br element
+				const newRange = document.createRange();
+				newRange.setStartAfter(br);
+				newRange.collapse(true);
+
+				// Update the selection
+				selection.removeAllRanges();
+				selection.addRange(newRange);
+			}
 		}
 
 		// Trigger input event to update the value
