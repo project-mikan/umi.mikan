@@ -1,6 +1,6 @@
 <script lang="ts">
-import { goto } from "$app/navigation";
 import { _ } from "svelte-i18n";
+import { goto } from "$app/navigation";
 import "$lib/i18n";
 import { browser } from "$app/environment";
 import type { DiaryEntry } from "$lib/grpc";
@@ -11,7 +11,7 @@ export let data: PageData;
 let entries = data.entries;
 let currentYear = data.year;
 let currentMonth = data.month;
-let loading = false;
+let _loading = false;
 
 // データの更新
 $: {
@@ -24,7 +24,7 @@ $: {
 async function fetchMonthData(year: number, month: number) {
 	if (!browser) return;
 
-	loading = true;
+	_loading = true;
 	try {
 		const response = await fetch(`/api/diary/monthly/${year}/${month}`);
 		if (response.ok) {
@@ -36,16 +36,16 @@ async function fetchMonthData(year: number, month: number) {
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
 	} finally {
-		loading = false;
+		_loading = false;
 	}
 }
 
-function formatMonth(year: number, month: number): string {
+function _formatMonth(year: number, month: number): string {
 	const date = new Date(year, month - 1, 1);
 	return date.toLocaleDateString(undefined, { year: "numeric", month: "long" });
 }
 
-function formatMonthOnly(month: number): string {
+function _formatMonthOnly(month: number): string {
 	const date = new Date(2000, month - 1, 1);
 	return date.toLocaleDateString(undefined, { month: "long" });
 }
@@ -58,31 +58,31 @@ function getFirstDayOfWeek(year: number, month: number): number {
 	return new Date(year, month - 1, 1).getDay();
 }
 
-function createEntry(day: number) {
+function _createEntry(day: number) {
 	const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 	goto(`/${dateStr}`);
 }
 
-function navigateToEntry(day: number) {
+function _navigateToEntry(day: number) {
 	const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 	goto(`/${dateStr}`);
 }
 
-async function previousMonth() {
+async function _previousMonth() {
 	const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
 	const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
 	await fetchMonthData(prevYear, prevMonth);
 	await goto(`/monthly/${prevYear}/${prevMonth}`, { replaceState: true });
 }
 
-async function nextMonth() {
+async function _nextMonth() {
 	const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 	const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
 	await fetchMonthData(nextYear, nextMonth);
 	await goto(`/monthly/${nextYear}/${nextMonth}`, { replaceState: true });
 }
 
-async function goToToday() {
+async function _goToToday() {
 	const now = new Date();
 	const year = now.getFullYear();
 	const month = now.getMonth() + 1;
@@ -121,7 +121,7 @@ $: entryMap = (() => {
 
 function getWeekDays(): string[] {
 	const days = [];
-	const date = new Date();
+	const _date = new Date();
 	// 日曜日から始まる週の各曜日を取得
 	for (let i = 0; i < 7; i++) {
 		const dayDate = new Date();
@@ -131,9 +131,9 @@ function getWeekDays(): string[] {
 	return days;
 }
 
-const weekDays = getWeekDays();
+const _weekDays = getWeekDays();
 
-function formatContentWithLineBreaks(content: string): string {
+function _formatContentWithLineBreaks(content: string): string {
 	return content.replace(/\n/g, "<br>");
 }
 </script>
@@ -142,11 +142,11 @@ function formatContentWithLineBreaks(content: string): string {
 	<!-- ヘッダー -->
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900">
-			{formatMonth(currentYear, currentMonth)}
+			{_formatMonth(currentYear, currentMonth)}
 		</h1>
 		<div class="flex space-x-4">
 			<button
-				on:click={goToToday}
+				on:click={_goToToday}
 				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
 			>
 				{$_('monthly.thisMonth')}
@@ -163,7 +163,7 @@ function formatContentWithLineBreaks(content: string): string {
 	<!-- 月ナビゲーション -->
 	<div class="flex justify-center items-center mb-8 space-x-4">
 		<button
-			on:click={previousMonth}
+			on:click={_previousMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
 			aria-label={$_('monthly.previousMonth')}
 		>
@@ -172,13 +172,13 @@ function formatContentWithLineBreaks(content: string): string {
 			</svg>
 		</button>
 		<h2 class="text-xl font-semibold text-gray-800 min-w-[200px] text-center">
-			{formatMonth(currentYear, currentMonth)}
-			{#if loading}
+			{_formatMonth(currentYear, currentMonth)}
+			{#if _loading}
 				<span class="ml-2 text-sm text-gray-500">読み込み中...</span>
 			{/if}
 		</h2>
 		<button
-			on:click={nextMonth}
+			on:click={_nextMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
 			aria-label={$_('monthly.nextMonth')}
 		>
@@ -192,7 +192,7 @@ function formatContentWithLineBreaks(content: string): string {
 	<div class="bg-white shadow rounded-lg overflow-hidden">
 		<!-- 曜日ヘッダー -->
 		<div class="grid grid-cols-7 bg-gray-50">
-			{#each weekDays as weekDay}
+			{#each _weekDays as weekDay}
 				<div class="p-4 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0">
 					{weekDay}
 				</div>
@@ -205,7 +205,7 @@ function formatContentWithLineBreaks(content: string): string {
 				<div class="h-32 border-r border-b border-gray-200 last:border-r-0">
 					{#if day !== null}
 						<button
-							on:click={() => navigateToEntry(day)}
+							on:click={() => _navigateToEntry(day)}
 							class="w-full h-full p-2 text-left hover:bg-gray-50 transition-colors cursor-pointer"
 						>
 							<div class="h-full flex flex-col">
@@ -228,7 +228,7 @@ function formatContentWithLineBreaks(content: string): string {
 												{$_('monthly.entry')}
 											</div>
 											<div class="text-xs text-blue-600 line-clamp-2">
-												{@html formatContentWithLineBreaks(entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : '')}
+												{@html _formatContentWithLineBreaks(entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : '')}
 											</div>
 										</div>
 									</div>

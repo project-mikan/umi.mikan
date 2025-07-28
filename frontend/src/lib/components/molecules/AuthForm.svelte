@@ -1,6 +1,6 @@
 <script lang="ts">
-import { enhance } from "$app/forms";
 import { _ } from "svelte-i18n";
+import { enhance } from "$app/forms";
 import Alert from "../atoms/Alert.svelte";
 import Button from "../atoms/Button.svelte";
 import Link from "../atoms/Link.svelte";

@@ -1,7 +1,7 @@
 <script lang="ts">
+import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
-import { _ } from "svelte-i18n";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
@@ -17,9 +17,13 @@ export let form: ActionData;
 
 $: content = data.entry?.content || "";
 let formElement: HTMLFormElement;
-let showDeleteConfirm = false;
+let _showDeleteConfirm = false;
 
-function formatDate(ymd: { year: number; month: number; day: number }): string {
+function _formatDate(ymd: {
+	year: number;
+	month: number;
+	day: number;
+}): string {
 	const dayOfWeekKey = getDayOfWeekKey(ymd);
 	const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
 	return $_("date.format.yearMonthDayWithDayOfWeek", {
@@ -32,7 +36,7 @@ function formatDate(ymd: { year: number; month: number; day: number }): string {
 	});
 }
 
-function formatDateStr(ymd: {
+function _formatDateStr(ymd: {
 	year: number;
 	month: number;
 	day: number;
@@ -40,29 +44,29 @@ function formatDateStr(ymd: {
 	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 }
 
-function goBack() {
+function _goBack() {
 	goto("/");
 }
 
-function goToMonthly() {
+function _goToMonthly() {
 	const year = data.date.year;
 	const month = String(data.date.month).padStart(2, "0");
 	goto(`/monthly/${year}/${month}`);
 }
 
-function handleSave() {
+function _handleSave() {
 	formElement?.requestSubmit();
 }
 
-function confirmDelete() {
-	showDeleteConfirm = true;
+function _confirmDelete() {
+	_showDeleteConfirm = true;
 }
 
-function cancelDelete() {
-	showDeleteConfirm = false;
+function _cancelDelete() {
+	_showDeleteConfirm = false;
 }
 
-function handleDelete() {
+function _handleDelete() {
 	const form = document.createElement("form");
 	form.method = "POST";
 	form.action = "?/delete";
@@ -76,13 +80,13 @@ function handleDelete() {
 		<h1 class="text-3xl font-bold text-gray-900">{$_('diary.title')}</h1>
 		<div class="flex gap-4">
 			<button
-				on:click={goToMonthly}
+				on:click={_goToMonthly}
 				class="text-blue-600 hover:text-blue-800 font-medium"
 			>
 				{$_('diary.viewThisMonth')}
 			</button>
 			<button
-				on:click={goBack}
+				on:click={_goBack}
 				class="text-gray-600 hover:text-gray-800 font-medium"
 			>
 				{$_('diary.back')}
@@ -93,7 +97,7 @@ function handleDelete() {
 	<div class="space-y-6">
 		<DiaryNavigation currentDate={data.date} />
 		<DiaryCard
-			title={formatDate(data.date)}
+			title={_formatDate(data.date)}
 			entry={data.entry}
 			showForm={true}
 		>
@@ -104,7 +108,7 @@ function handleDelete() {
 					}
 				};
 			})} slot="form">
-				<input type="hidden" name="date" value={formatDateStr(data.date)} />
+				<input type="hidden" name="date" value={_formatDateStr(data.date)} />
 				{#if data.entry}
 					<input type="hidden" name="id" value={data.entry.id} />
 				{/if}
@@ -116,7 +120,7 @@ function handleDelete() {
 					placeholder={$_('diary.placeholder')}
 					rows={8}
 					bind:value={content}
-					on:save={handleSave}
+					on:save={_handleSave}
 				/>
 				{#if form?.error}
 					<div class="mt-2 text-sm text-red-600">
@@ -126,7 +130,7 @@ function handleDelete() {
 				<div class="flex justify-between">
 					<div>
 						{#if data.entry}
-							<Button type="button" variant="danger" size="md" on:click={confirmDelete}>
+							<Button type="button" variant="danger" size="md" on:click={_confirmDelete}>
 								{$_('diary.delete')}
 							</Button>
 						{/if}
@@ -143,13 +147,13 @@ function handleDelete() {
 </div>
 
 <Modal
-	isOpen={showDeleteConfirm}
+	isOpen={_showDeleteConfirm}
 	title={$_('edit.deleteConfirm')}
 	confirmText={$_('diary.delete')}
 	cancelText={$_('diary.cancel')}
 	variant="danger"
-	onConfirm={handleDelete}
-	onCancel={cancelDelete}
+	onConfirm={_handleDelete}
+	onCancel={_cancelDelete}
 >
 	<p class="text-sm text-gray-500">
 		{$_('edit.deleteMessage')}

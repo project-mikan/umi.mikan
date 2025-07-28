@@ -1,3 +1,4 @@
+import { error, redirect } from "@sveltejs/kit";
 import {
 	createDiaryEntry,
 	createYMD,
@@ -6,7 +7,6 @@ import {
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
 import { getPastSameDates } from "$lib/utils/date-utils";
-import { error, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, cookies }) => {

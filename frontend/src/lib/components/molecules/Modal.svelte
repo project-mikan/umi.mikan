@@ -9,29 +9,29 @@ export let variant: "danger" | "primary" = "primary";
 export let onConfirm: (() => void) | null = null;
 export let onCancel: (() => void) | null = null;
 
-const iconPaths = {
+const _iconPaths = {
 	danger:
 		"M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z",
 	primary: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
 };
 
-const iconColors = {
+const _iconColors = {
 	danger: "text-red-600",
 	primary: "text-blue-600",
 };
 
-const iconBackgrounds = {
+const _iconBackgrounds = {
 	danger: "bg-red-100",
 	primary: "bg-blue-100",
 };
 
-function handleConfirm() {
+function _handleConfirm() {
 	if (onConfirm) {
 		onConfirm();
 	}
 }
 
-function handleCancel() {
+function _handleCancel() {
 	if (onCancel) {
 		onCancel();
 	}
@@ -50,9 +50,9 @@ function handleCancel() {
 			<div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
 				<div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
 					<div class="sm:flex sm:items-start">
-						<div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full {iconBackgrounds[variant]} sm:mx-0 sm:h-10 sm:w-10">
-							<svg class="h-6 w-6 {iconColors[variant]}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={iconPaths[variant]} />
+						<div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full {_iconBackgrounds[variant]} sm:mx-0 sm:h-10 sm:w-10">
+							<svg class="h-6 w-6 {_iconColors[variant]}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={_iconPaths[variant]} />
 							</svg>
 						</div>
 						<div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
@@ -69,7 +69,7 @@ function handleCancel() {
 					<Button
 						variant={variant}
 						size="sm"
-						on:click={handleConfirm}
+						on:click={_handleConfirm}
 						class="w-full sm:ml-3 sm:w-auto"
 					>
 						{confirmText}
@@ -77,7 +77,7 @@ function handleCancel() {
 					<Button
 						variant="secondary"
 						size="sm"
-						on:click={handleCancel}
+						on:click={_handleCancel}
 						class="mt-3 w-full sm:mt-0 sm:ml-3 sm:w-auto"
 					>
 						{cancelText}

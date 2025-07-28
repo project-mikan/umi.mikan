@@ -1,26 +1,25 @@
 <script lang="ts">
-import { goto } from "$app/navigation";
-import { invalidateAll } from "$app/navigation";
-import Button from "$lib/components/atoms/Button.svelte";
+import { _ } from "svelte-i18n";
+import { goto, invalidateAll } from "$app/navigation";
+import type { DateInfo } from "$lib/utils/date-utils";
 import {
 	formatDateToId,
 	getDayOfWeekKey,
 	getNextDate,
 	getPreviousDate,
 } from "$lib/utils/date-utils";
-import type { DateInfo } from "$lib/utils/date-utils";
-import { _ } from "svelte-i18n";
+import Button from "../atoms/Button.svelte";
 
 export let currentDate: DateInfo;
 
-async function goToPreviousDay() {
+async function _goToPreviousDay() {
 	const previousDate = getPreviousDate(currentDate);
 	const id = formatDateToId(previousDate);
 	await goto(`/${id}`);
 	await invalidateAll();
 }
 
-async function goToNextDay() {
+async function _goToNextDay() {
 	const nextDate = getNextDate(currentDate);
 	const id = formatDateToId(nextDate);
 	await goto(`/${id}`);
@@ -32,7 +31,7 @@ async function goToNextDay() {
 	<Button
 		variant="secondary"
 		size="sm"
-		on:click={goToPreviousDay}
+		on:click={_goToPreviousDay}
 		class="flex items-center gap-2"
 	>
 		<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +56,7 @@ async function goToNextDay() {
 	<Button
 		variant="secondary"
 		size="sm"
-		on:click={goToNextDay}
+		on:click={_goToNextDay}
 		class="flex items-center gap-2"
 	>
 		{$_('diary.nextDay')}

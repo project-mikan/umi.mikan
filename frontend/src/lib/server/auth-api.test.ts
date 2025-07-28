@@ -3,6 +3,7 @@ import type {
 	LoginByPasswordParams,
 	RegisterByPasswordParams,
 } from "./auth-api";
+
 describe("Auth API Types and Validation", () => {
 	describe("Parameter validation", () => {
 		it("should validate LoginByPasswordParams", () => {

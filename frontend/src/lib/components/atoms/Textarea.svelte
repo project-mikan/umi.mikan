@@ -64,12 +64,12 @@ function htmlToPlainText(html: string): string {
 	return plainText;
 }
 
-function handleInput(event: Event) {
+function _handleInput(event: Event) {
 	const target = event.target as HTMLDivElement;
 	value = htmlToPlainText(target.innerHTML);
 }
 
-function handleKeydown(event: KeyboardEvent) {
+function _handleKeydown(event: KeyboardEvent) {
 	if (event.ctrlKey && event.key === "Enter") {
 		event.preventDefault();
 		dispatch("save");
@@ -184,7 +184,7 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 	contenteditable={!disabled}
 	class={classes}
 	style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
-	on:input={handleInput}
-	on:keydown={handleKeydown}
+	on:input={_handleInput}
+	on:keydown={_handleKeydown}
 	{...$$restProps}
 ></div>

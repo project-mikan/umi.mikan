@@ -1,3 +1,6 @@
+import { create } from "@bufbuild/protobuf";
+import { createClient } from "@connectrpc/connect";
+import { createGrpcTransport } from "@connectrpc/connect-node";
 import {
 	type AuthResponse,
 	AuthService,
@@ -5,9 +8,6 @@ import {
 	RefreshAccessTokenRequestSchema,
 	RegisterByPasswordRequestSchema,
 } from "$lib/grpc/auth/auth_pb.js";
-import { create } from "@bufbuild/protobuf";
-import { createClient } from "@connectrpc/connect";
-import { createGrpcTransport } from "@connectrpc/connect-node";
 
 const transport = createGrpcTransport({
 	baseUrl: "http://backend:8080",

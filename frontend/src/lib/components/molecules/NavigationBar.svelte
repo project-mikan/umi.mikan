@@ -1,6 +1,6 @@
 <script lang="ts">
-import { enhance } from "$app/forms";
 import { _ } from "svelte-i18n";
+import { enhance } from "$app/forms";
 import Button from "../atoms/Button.svelte";
 
 export let isAuthenticated = false;
