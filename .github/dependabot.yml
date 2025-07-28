@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      timezone: "Asia/Tokyo"
+
+  - package-ecosystem: "docker"
+    directory: "/infra"
+    schedule:
+      interval: "weekly"
+      timezone: "Asia/Tokyo"
+
+  - package-ecosystem: "gomod"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      timezone: "Asia/Tokyo"
