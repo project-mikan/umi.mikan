@@ -1,5 +1,5 @@
-import { loginByPassword } from "$lib/server/auth-api";
 import { fail, redirect } from "@sveltejs/kit";
+import { loginByPassword } from "$lib/server/auth-api";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies }) => {

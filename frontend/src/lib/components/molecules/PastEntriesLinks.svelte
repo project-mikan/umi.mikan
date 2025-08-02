@@ -1,9 +1,9 @@
 <script lang="ts">
-import Link from "$lib/components/atoms/Link.svelte";
-import type { DiaryEntry } from "$lib/grpc";
-import { formatDateToId } from "$lib/utils/date-utils";
-import type { DateInfo } from "$lib/utils/date-utils";
 import { _ } from "svelte-i18n";
+import type { DiaryEntry } from "$lib/grpc";
+import type { DateInfo } from "$lib/utils/date-utils";
+import { formatDateToId } from "$lib/utils/date-utils";
+import Link from "../atoms/Link.svelte";
 
 export let pastEntries: {
 	oneWeekAgo: { date: DateInfo; entry: DiaryEntry | null };
@@ -41,7 +41,7 @@ $: pastEntriesList = [
 	},
 ];
 
-function getEntryTitle(entry: DiaryEntry | null): string {
+function _getEntryTitle(entry: DiaryEntry | null): string {
 	if (!entry || !entry.content) return $_("diary.noPastEntry");
 
 	// 最初の30文字を取得してタイトルとする
@@ -71,7 +71,7 @@ function getEntryTitle(entry: DiaryEntry | null): string {
 					<div class="text-sm text-gray-800">
 						{#if pastEntry.entry}
 							<Link href="/{formatDateToId(pastEntry.date)}" class="text-blue-600 hover:text-blue-800">
-								{getEntryTitle(pastEntry.entry)}
+								{_getEntryTitle(pastEntry.entry)}
 							</Link>
 						{:else}
 							<span class="text-gray-400">{$_('diary.noPastEntry')}</span>

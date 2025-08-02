@@ -1,7 +1,6 @@
 <script lang="ts">
-import { goto } from "$app/navigation";
-import { page } from "$app/stores";
 import { _ } from "svelte-i18n";
+import { goto } from "$app/navigation";
 import "$lib/i18n";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
@@ -10,7 +9,11 @@ export let data: PageData;
 
 let searchKeyword = data.keyword || "";
 
-function formatDate(ymd: { year: number; month: number; day: number }): string {
+function _formatDate(ymd: {
+	year: number;
+	month: number;
+	day: number;
+}): string {
 	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
 }
 
@@ -22,7 +25,7 @@ function formatDateUrl(ymd: {
 	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 }
 
-function viewEntry(entry: DiaryEntry) {
+function _viewEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
 		const dateStr = formatDateUrl(date);
@@ -30,19 +33,19 @@ function viewEntry(entry: DiaryEntry) {
 	}
 }
 
-function handleSearch() {
+function _handleSearch() {
 	if (searchKeyword.trim()) {
 		goto(`/search?q=${encodeURIComponent(searchKeyword.trim())}`);
 	}
 }
 
-function handleKeydown(event: KeyboardEvent) {
+function _handleKeydown(event: KeyboardEvent) {
 	if (event.key === "Enter") {
-		handleSearch();
+		_handleSearch();
 	}
 }
 
-function formatContentWithLineBreaks(content: string): string {
+function _formatContentWithLineBreaks(content: string): string {
 	return content.replace(/\n/g, "<br>");
 }
 </script>
@@ -60,12 +63,12 @@ function formatContentWithLineBreaks(content: string): string {
 			<input
 				type="text"
 				bind:value={searchKeyword}
-				on:keydown={handleKeydown}
+				on:keydown={_handleKeydown}
 				placeholder={$_('search.placeholder')}
 				class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 			/>
 			<button
-				on:click={handleSearch}
+				on:click={_handleSearch}
 				class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 			>
 				{$_('search.button')}
@@ -92,19 +95,19 @@ function formatContentWithLineBreaks(content: string): string {
 				{#each data.searchResults.entries as entry}
 					<div 
 						class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-						on:click={() => viewEntry(entry)}
-						on:keydown={(e) => e.key === 'Enter' && viewEntry(entry)}
+						on:click={() => _viewEntry(entry)}
+						on:keydown={(e) => e.key === 'Enter' && _viewEntry(entry)}
 						role="button"
 						tabindex="0"
 					>
 						<div class="flex justify-between items-start mb-2">
 							<h3 class="text-lg font-semibold text-blue-600">
-								{entry.date ? formatDate(entry.date) : $_('diary.dateUnknown')}
+								{entry.date ? _formatDate(entry.date) : $_('diary.dateUnknown')}
 							</h3>
 						</div>
 						<div class="text-gray-700 text-sm">
 							<p class="line-clamp-3">
-								{@html formatContentWithLineBreaks(entry.content.length > 150 
+								{@html _formatContentWithLineBreaks(entry.content.length > 150 
 									? entry.content.substring(0, 150) + '...' 
 									: entry.content)}
 							</p>

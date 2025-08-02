@@ -1,7 +1,7 @@
 <script lang="ts">
+import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
-import { _ } from "svelte-i18n";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
@@ -11,14 +11,14 @@ import type { PageData } from "./$types";
 
 export let data: PageData;
 
-let todayContent = data.today.entry?.content || "";
-let yesterdayContent = data.yesterday.entry?.content || "";
-let dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
+let _todayContent = data.today.entry?.content || "";
+let _yesterdayContent = data.yesterday.entry?.content || "";
+let _dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
 let formElement: HTMLFormElement;
 let yesterdayFormElement: HTMLFormElement;
 let dayBeforeYesterdayFormElement: HTMLFormElement;
 
-function getMonthlyUrl(): string {
+function _getMonthlyUrl(): string {
 	const now = new Date();
 	return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
 }
@@ -27,7 +27,7 @@ function formatDateStr(ymd: YMD): string {
 	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 }
 
-function viewEntry(entry: DiaryEntry) {
+function _viewEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
 		const dateStr = formatDateStr(date);
@@ -35,15 +35,15 @@ function viewEntry(entry: DiaryEntry) {
 	}
 }
 
-function handleSave() {
+function _handleSave() {
 	formElement?.requestSubmit();
 }
 
-function handleYesterdaySave() {
+function _handleYesterdaySave() {
 	yesterdayFormElement?.requestSubmit();
 }
 
-function handleDayBeforeYesterdaySave() {
+function _handleDayBeforeYesterdaySave() {
 	dayBeforeYesterdayFormElement?.requestSubmit();
 }
 </script>
@@ -53,7 +53,7 @@ function handleDayBeforeYesterdaySave() {
 		<h1 class="text-3xl font-bold text-gray-900">{$_('diary.title')}</h1>
 		<div class="flex gap-3">
 			<Button variant="success" size="md">
-				<a href={getMonthlyUrl()} class="text-white">
+				<a href={_getMonthlyUrl()} class="text-white">
 					{$_('diary.thisMonth')}
 				</a>
 			</Button>
@@ -89,8 +89,8 @@ function handleDayBeforeYesterdaySave() {
 					name="content"
 					placeholder={$_('diary.placeholder')}
 					rows={8}
-					bind:value={todayContent}
-					on:save={handleSave}
+					bind:value={_todayContent}
+					on:save={_handleSave}
 				/>
 				<div class="flex justify-end">
 					<Button type="submit" variant="primary" size="md">
@@ -123,8 +123,8 @@ function handleDayBeforeYesterdaySave() {
 					name="content"
 					placeholder={$_('diary.placeholder')}
 					rows={8}
-					bind:value={yesterdayContent}
-					on:save={handleYesterdaySave}
+					bind:value={_yesterdayContent}
+					on:save={_handleYesterdaySave}
 				/>
 				<div class="flex justify-end">
 					<Button type="submit" variant="primary" size="md">
@@ -157,8 +157,8 @@ function handleDayBeforeYesterdaySave() {
 					name="content"
 					placeholder={$_('diary.placeholder')}
 					rows={8}
-					bind:value={dayBeforeYesterdayContent}
-					on:save={handleDayBeforeYesterdaySave}
+					bind:value={_dayBeforeYesterdayContent}
+					on:save={_handleDayBeforeYesterdaySave}
 				/>
 				<div class="flex justify-end">
 					<Button type="submit" variant="primary" size="md">

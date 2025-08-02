@@ -1,8 +1,4 @@
-import { render, screen } from "@testing-library/svelte";
 import { describe, expect, it, vi } from "vitest";
-
-// Since we can't directly test +page.svelte files, we'll create a wrapper component for testing
-import { SvelteComponent } from "svelte";
 
 // Mock svelte-i18n
 vi.mock("svelte-i18n", () => ({

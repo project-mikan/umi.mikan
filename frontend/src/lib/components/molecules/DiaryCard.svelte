@@ -1,6 +1,6 @@
 <script lang="ts">
-import type { DiaryEntry, YMD } from "$lib/grpc";
 import { _ } from "svelte-i18n";
+import type { DiaryEntry } from "$lib/grpc";
 import Button from "../atoms/Button.svelte";
 import Card from "../atoms/Card.svelte";
 

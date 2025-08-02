@@ -1,7 +1,7 @@
 <script lang="ts">
+import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
-import { _ } from "svelte-i18n";
 import Alert from "../atoms/Alert.svelte";
 import Button from "../atoms/Button.svelte";
 import FormField from "./FormField.svelte";
@@ -14,7 +14,7 @@ export let showDeleteButton = false;
 export let onCancel: (() => void) | null = null;
 export let onDelete: (() => void) | null = null;
 
-function handleCancel() {
+function _handleCancel() {
 	if (onCancel) {
 		onCancel();
 	} else {
@@ -29,7 +29,7 @@ function handleCancel() {
 		<Button
 			variant="secondary"
 			size="md"
-			on:click={handleCancel}
+			on:click={_handleCancel}
 		>
 			{$_('diary.back')}
 		</Button>
@@ -81,7 +81,7 @@ function handleCancel() {
 						type="button"
 						variant="secondary"
 						size="md"
-						on:click={handleCancel}
+						on:click={_handleCancel}
 					>
 						{$_('diary.cancel')}
 					</Button>

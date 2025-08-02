@@ -1,3 +1,6 @@
+import { create } from "@bufbuild/protobuf";
+import { createClient } from "@connectrpc/connect";
+import { createGrpcTransport } from "@connectrpc/connect-node";
 import {
 	CreateDiaryEntryRequestSchema,
 	type CreateDiaryEntryResponse,
@@ -17,9 +20,6 @@ import {
 	YMDSchema,
 	YMSchema,
 } from "$lib/grpc/diary/diary_pb.js";
-import { create } from "@bufbuild/protobuf";
-import { createClient } from "@connectrpc/connect";
-import { createGrpcTransport } from "@connectrpc/connect-node";
 
 function createAuthenticatedTransport(accessToken: string) {
 	return createGrpcTransport({
