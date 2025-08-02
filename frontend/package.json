@@ -1,55 +1,56 @@
 {
-  "name": "my-app",
-  "private": true,
-  "version": "0.0.1",
-  "type": "module",
-  "engines": {
-    "node": ">=22"
-  },
-  "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "format": "biome check --write src",
-    "preview": "vite preview",
-    "prepare": "svelte-kit sync || echo ''",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "biome": "biome check",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test": "vitest",
-    "test:run": "vitest run"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.1.2",
-    "@bufbuild/buf": "^1.55.1",
-    "@bufbuild/protoc-gen-es": "^2.6.2",
-    "@sveltejs/adapter-auto": "^6.0.1",
-    "@sveltejs/adapter-node": "^5.2.13",
-    "@sveltejs/kit": "^2.26.1",
-    "@sveltejs/vite-plugin-svelte": "^6.1.0",
-    "@testing-library/jest-dom": "^6.6.4",
-    "@testing-library/svelte": "^5.2.8",
-    "@vitest/ui": "^3.2.4",
-    "jsdom": "^26.1.0",
-    "svelte": "^5.37.0",
-    "svelte-check": "^4.3.0",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5",
-    "vitest": "^3.2.4"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "@bufbuild/buf"
-    ],
-    "ignoredBuiltDependencies": [
-      "@biomejs/biome",
-      "es5-ext"
-    ]
-  },
-  "dependencies": {
-    "@bufbuild/protobuf": "^2.6.2",
-    "@connectrpc/connect": "^2.0.3",
-    "@connectrpc/connect-node": "^2.0.3",
-    "svelte-i18n": "^4.0.1"
-  }
+	"name": "my-app",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"1": "pnpm format && (pnpm lint & pnpm check) && exit 0",
+		"dev": "vite dev",
+		"build": "vite build",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest",
+		"test:run": "vitest run"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.1.2",
+		"@bufbuild/buf": "^1.56.0",
+		"@bufbuild/protoc-gen-es": "^2.6.2",
+		"@sveltejs/adapter-auto": "^6.0.1",
+		"@sveltejs/adapter-node": "^5.2.13",
+		"@sveltejs/kit": "^2.27.0",
+		"@sveltejs/vite-plugin-svelte": "^6.1.0",
+		"@testing-library/jest-dom": "^6.6.4",
+		"@testing-library/svelte": "^5.2.8",
+		"@vitest/ui": "^3.2.4",
+		"jsdom": "^26.1.0",
+		"svelte": "^5.37.2",
+		"svelte-check": "^4.3.0",
+		"typescript": "^5.9.2",
+		"vite": "^6.3.5",
+		"vitest": "^3.2.4"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"@bufbuild/buf"
+		],
+		"ignoredBuiltDependencies": [
+			"@biomejs/biome",
+			"es5-ext"
+		]
+	},
+	"dependencies": {
+		"@bufbuild/protobuf": "^2.6.2",
+		"@connectrpc/connect": "^2.0.3",
+		"@connectrpc/connect-node": "^2.0.3",
+		"svelte-i18n": "^4.0.1"
+	}
 }

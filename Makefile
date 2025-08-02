@@ -10,8 +10,7 @@ f-build-no-cache:
 
 f-lint:
 	make f-format
-	docker compose exec frontend pnpm run check
-	docker compose exec frontend pnpm run biome
+	docker compose exec frontend pnpm 1
 
 # バックエンド
 b-format:

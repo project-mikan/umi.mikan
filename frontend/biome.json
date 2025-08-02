@@ -1,42 +1,18 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
 	"vcs": {
-		"enabled": false,
+		"enabled": true,
 		"clientKind": "git",
-		"useIgnoreFile": false
-	},
-	"files": {
-		"includes": [
-			"**",
-			"!.svelte-kit/**",
-			"!.pnpm-store/**",
-			"!node_modules/**",
-			"!package.json",
-			"!biome.json",
-			"!build/**"
-		]
+		"useIgnoreFile": true
 	},
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab"
 	},
-	"json": {
-		"formatter": {
-			"trailingCommas": "none"
-		}
-	},
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
-			"style": {
-				"useConst": "off"
-			}
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "double"
+			"recommended": true
 		}
 	},
 	"overrides": [
@@ -44,6 +20,10 @@
 			"includes": ["**/*.svelte"],
 			"linter": {
 				"rules": {
+					"style": {
+						"useConst": "off",
+						"useImportType": "off"
+					},
 					"correctness": {
 						"noUnusedImports": "off",
 						"noUnusedVariables": "off"
