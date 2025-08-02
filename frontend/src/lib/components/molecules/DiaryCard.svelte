@@ -7,8 +7,8 @@ import Card from "../atoms/Card.svelte";
 export let title: string;
 export let entry: DiaryEntry | null = null;
 export let showForm = false;
-export const content = "";
-export const isEditable = false;
+export let content = "";
+export let isEditable = false;
 export let onView: ((entry: DiaryEntry) => void) | null = null;
 
 function formatContentWithLineBreaks(content: string): string {

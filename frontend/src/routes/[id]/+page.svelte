@@ -15,7 +15,7 @@ import type { ActionData, PageData } from "./$types";
 export let data: PageData;
 export let form: ActionData;
 
-$: content = data.entry?.content || "";
+let content = data.entry?.content || "";
 let formElement: HTMLFormElement;
 let _showDeleteConfirm = false;
 
