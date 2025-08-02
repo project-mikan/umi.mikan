@@ -11,14 +11,14 @@ import type { PageData } from "./$types";
 
 export let data: PageData;
 
-let _todayContent = data.today.entry?.content || "";
-let _yesterdayContent = data.yesterday.entry?.content || "";
-let _dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
+let todayContent = data.today.entry?.content || "";
+let yesterdayContent = data.yesterday.entry?.content || "";
+let dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
 let formElement: HTMLFormElement;
 let yesterdayFormElement: HTMLFormElement;
 let dayBeforeYesterdayFormElement: HTMLFormElement;
 
-function _getMonthlyUrl(): string {
+function getMonthlyUrl(): string {
 	const now = new Date();
 	return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
 }
@@ -27,7 +27,7 @@ function formatDateStr(ymd: YMD): string {
 	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 }
 
-function _viewEntry(entry: DiaryEntry) {
+function viewEntry(entry: DiaryEntry) {
 	const date = entry.date;
 	if (date) {
 		const dateStr = formatDateStr(date);
@@ -35,15 +35,15 @@ function _viewEntry(entry: DiaryEntry) {
 	}
 }
 
-function _handleSave() {
+function handleSave() {
 	formElement?.requestSubmit();
 }
 
-function _handleYesterdaySave() {
+function handleYesterdaySave() {
 	yesterdayFormElement?.requestSubmit();
 }
 
-function _handleDayBeforeYesterdaySave() {
+function handleDayBeforeYesterdaySave() {
 	dayBeforeYesterdayFormElement?.requestSubmit();
 }
 </script>
@@ -53,7 +53,7 @@ function _handleDayBeforeYesterdaySave() {
 		<h1 class="text-3xl font-bold text-gray-900">{$_('diary.title')}</h1>
 		<div class="flex gap-3">
 			<Button variant="success" size="md">
-				<a href={_getMonthlyUrl()} class="text-white">
+				<a href={getMonthlyUrl()} class="text-white">
 					{$_('diary.thisMonth')}
 				</a>
 			</Button>
@@ -89,8 +89,8 @@ function _handleDayBeforeYesterdaySave() {
 					name="content"
 					placeholder={$_('diary.placeholder')}
 					rows={8}
-					bind:value={_todayContent}
-					on:save={_handleSave}
+					bind:value={todayContent}
+					on:save={handleSave}
 				/>
 				<div class="flex justify-end">
 					<Button type="submit" variant="primary" size="md">
@@ -123,8 +123,8 @@ function _handleDayBeforeYesterdaySave() {
 					name="content"
 					placeholder={$_('diary.placeholder')}
 					rows={8}
-					bind:value={_yesterdayContent}
-					on:save={_handleYesterdaySave}
+					bind:value={yesterdayContent}
+					on:save={handleYesterdaySave}
 				/>
 				<div class="flex justify-end">
 					<Button type="submit" variant="primary" size="md">
@@ -157,8 +157,8 @@ function _handleDayBeforeYesterdaySave() {
 					name="content"
 					placeholder={$_('diary.placeholder')}
 					rows={8}
-					bind:value={_dayBeforeYesterdayContent}
-					on:save={_handleDayBeforeYesterdaySave}
+					bind:value={dayBeforeYesterdayContent}
+					on:save={handleDayBeforeYesterdaySave}
 				/>
 				<div class="flex justify-end">
 					<Button type="submit" variant="primary" size="md">
