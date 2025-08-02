@@ -1,9 +1,6 @@
 <script lang="ts">
 import "../app.css";
 import "$lib/i18n";
-import { page } from "$app/stores";
-import Head from "$lib/components/atoms/Head.svelte";
-import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
 import type { LayoutData } from "./$types";
 
 export let data: LayoutData;

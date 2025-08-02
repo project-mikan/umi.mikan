@@ -1,14 +1,11 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
 import { goto, invalidateAll } from "$app/navigation";
 import type { DateInfo } from "$lib/utils/date-utils";
 import {
 	formatDateToId,
-	getDayOfWeekKey,
 	getNextDate,
 	getPreviousDate,
 } from "$lib/utils/date-utils";
-import Button from "../atoms/Button.svelte";
 
 export let currentDate: DateInfo;
 

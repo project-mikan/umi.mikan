@@ -1,11 +1,6 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
-import Button from "$lib/components/atoms/Button.svelte";
-import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
-import FormField from "$lib/components/molecules/FormField.svelte";
 import type { DiaryEntry, YMD } from "$lib/grpc";
 import type { PageData } from "./$types";
 

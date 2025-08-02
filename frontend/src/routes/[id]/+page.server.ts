@@ -179,7 +179,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 };
 
 export const actions: Actions = {
-	save: async ({ request, params, cookies }) => {
+	save: async ({ request, cookies }) => {
 		const accessToken = cookies.get("accessToken");
 
 		if (!accessToken) {

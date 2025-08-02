@@ -1,10 +1,5 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
-import Alert from "../atoms/Alert.svelte";
-import Button from "../atoms/Button.svelte";
-import FormField from "./FormField.svelte";
 
 export let title: string;
 export let content = "";

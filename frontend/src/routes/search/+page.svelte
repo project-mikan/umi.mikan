@@ -1,5 +1,4 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import type { DiaryEntry } from "$lib/grpc";

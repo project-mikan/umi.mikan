@@ -1,14 +1,6 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
-import Button from "$lib/components/atoms/Button.svelte";
-import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
-import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
-import FormField from "$lib/components/molecules/FormField.svelte";
-import Modal from "$lib/components/molecules/Modal.svelte";
-import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
 import { getDayOfWeekKey } from "$lib/utils/date-utils";
 import type { ActionData, PageData } from "./$types";
 
