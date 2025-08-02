@@ -1,4 +1,6 @@
 <script lang="ts">
+import Button from "../atoms/Button.svelte";
+
 export let isOpen = false;
 export let title: string;
 export let confirmText: string;

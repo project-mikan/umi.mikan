@@ -1,5 +1,7 @@
 <script lang="ts">
+import { _ } from "svelte-i18n";
 import "$lib/i18n";
+import AuthForm from "$lib/components/molecules/AuthForm.svelte";
 import type { ActionData } from "./$types";
 
 export let form: ActionData;
