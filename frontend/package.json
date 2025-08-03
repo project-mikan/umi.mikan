@@ -32,7 +32,7 @@
 		"@vitest/ui": "^3.2.4",
 		"jsdom": "^26.1.0",
 		"svelte": "^5.37.2",
-		"svelte-check": "^4.3.0",
+		"svelte-check": "^4.3.1",
 		"typescript": "^5.9.2",
 		"vite": "^6.3.5",
 		"vitest": "^3.2.4"
