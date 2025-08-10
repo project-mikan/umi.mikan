@@ -13,7 +13,7 @@ describe("LanguageSelector Component Logic", () => {
 		localStorageItems = {};
 
 		// Mock localStorage
-		Object.defineProperty(global, "localStorage", {
+		Object.defineProperty(globalThis, "localStorage", {
 			value: {
 				getItem: vi.fn((key: string) => localStorageItems[key] || null),
 				setItem: vi.fn((key: string, value: string) => {
@@ -29,11 +29,11 @@ describe("LanguageSelector Component Logic", () => {
 		// Mock document event listeners
 		mockAddEventListener = vi.fn();
 		mockRemoveEventListener = vi.fn();
-		Object.defineProperty(global.document, "addEventListener", {
+		Object.defineProperty(globalThis.document, "addEventListener", {
 			value: mockAddEventListener,
 			writable: true,
 		});
-		Object.defineProperty(global.document, "removeEventListener", {
+		Object.defineProperty(globalThis.document, "removeEventListener", {
 			value: mockRemoveEventListener,
 			writable: true,
 		});

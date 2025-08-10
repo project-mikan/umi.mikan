@@ -14,7 +14,7 @@ describe("DarkModeToggle Component Logic", () => {
 		documentClassList.clear();
 
 		// Mock localStorage
-		Object.defineProperty(global, "localStorage", {
+		Object.defineProperty(globalThis, "localStorage", {
 			value: {
 				getItem: vi.fn((key: string) => localStorageItems[key] || null),
 				setItem: vi.fn((key: string, value: string) => {
@@ -25,7 +25,7 @@ describe("DarkModeToggle Component Logic", () => {
 		});
 
 		// Mock document.documentElement.classList
-		Object.defineProperty(global.document, "documentElement", {
+		Object.defineProperty(globalThis.document, "documentElement", {
 			value: {
 				classList: {
 					add: vi.fn((className: string) => {
@@ -45,7 +45,7 @@ describe("DarkModeToggle Component Logic", () => {
 		// Mock window.matchMedia
 		mockMatchMedia = vi.fn();
 		mockAddEventListener = vi.fn();
-		Object.defineProperty(global.window, "matchMedia", {
+		Object.defineProperty(globalThis.window, "matchMedia", {
 			value: mockMatchMedia,
 			writable: true,
 		});
