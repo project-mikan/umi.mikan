@@ -42,7 +42,10 @@ async function fetchMonthData(year: number, month: number) {
 
 function _formatMonth(year: number, month: number): string {
 	const date = new Date(year, month - 1, 1);
-	return date.toLocaleDateString(undefined, { year: "numeric", month: "long" });
+	return date.toLocaleDateString(undefined, {
+		year: "numeric",
+		month: "long",
+	});
 }
 
 function _formatMonthOnly(month: number): string {
@@ -149,13 +152,13 @@ function _formatContentWithLineBreaks(content: string): string {
 				on:click={_goToToday}
 				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
 			>
-				{$_('monthly.thisMonth')}
+				{$_("monthly.thisMonth")}
 			</button>
 			<button
-				on:click={() => goto('/')}
+				on:click={() => goto("/")}
 				class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
 			>
-				{$_('monthly.listView')}
+				{$_("home.name")}
 			</button>
 		</div>
 	</div>
@@ -165,10 +168,20 @@ function _formatContentWithLineBreaks(content: string): string {
 		<button
 			on:click={_previousMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-			aria-label={$_('monthly.previousMonth')}
+			aria-label={$_("monthly.previousMonth")}
 		>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+			<svg
+				class="w-6 h-6"
+				fill="none"
+				stroke="currentColor"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M15 19l-7-7 7-7"
+				></path>
 			</svg>
 		</button>
 		<h2 class="text-xl font-semibold text-gray-800 min-w-[200px] text-center">
@@ -180,10 +193,20 @@ function _formatContentWithLineBreaks(content: string): string {
 		<button
 			on:click={_nextMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-			aria-label={$_('monthly.nextMonth')}
+			aria-label={$_("monthly.nextMonth")}
 		>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+			<svg
+				class="w-6 h-6"
+				fill="none"
+				stroke="currentColor"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M9 5l7 7-7 7"
+				></path>
 			</svg>
 		</button>
 	</div>
@@ -193,7 +216,9 @@ function _formatContentWithLineBreaks(content: string): string {
 		<!-- 曜日ヘッダー -->
 		<div class="grid grid-cols-7 bg-gray-50">
 			{#each _weekDays as weekDay}
-				<div class="p-4 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0">
+				<div
+					class="p-4 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
+				>
 					{weekDay}
 				</div>
 			{/each}
@@ -213,9 +238,7 @@ function _formatContentWithLineBreaks(content: string): string {
 								<div class="flex justify-between items-start mb-1">
 									<span class="text-sm font-medium text-gray-700">{day}</span>
 									{#if !entryMap.has(day)}
-										<span class="text-xs text-blue-600 opacity-50">
-											+
-										</span>
+										<span class="text-xs text-blue-600 opacity-50"> + </span>
 									{/if}
 								</div>
 
@@ -225,10 +248,15 @@ function _formatContentWithLineBreaks(content: string): string {
 									<div class="flex-1 min-h-0">
 										<div class="bg-blue-50 rounded p-2 h-full">
 											<div class="text-xs text-blue-800 font-medium mb-1">
-												{$_('monthly.entry')}
+												{$_("monthly.entry")}
 											</div>
 											<div class="text-xs text-blue-600 line-clamp-2">
-												{@html _formatContentWithLineBreaks(entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : '')}
+												{@html _formatContentWithLineBreaks(
+													entry?.content
+														? entry.content.substring(0, 40) +
+																(entry.content.length > 40 ? "..." : "")
+														: "",
+												)}
 											</div>
 										</div>
 									</div>
@@ -251,3 +279,4 @@ function _formatContentWithLineBreaks(content: string): string {
 		overflow: hidden;
 	}
 </style>
+

@@ -13,7 +13,9 @@ export let isAuthPage = false;
 			<div class="flex h-16 justify-between">
 				<div class="flex">
 					<div class="flex flex-shrink-0 items-center">
-						<h1 class="text-xl font-bold text-gray-900">umi.mikan</h1>
+						<h1 class="text-xl font-bold text-gray-900">
+							<a href="/" class="hover:text-blue-600"> umi.mikan </a>
+						</h1>
 					</div>
 				</div>
 				<div class="flex items-center">
@@ -24,7 +26,7 @@ export let isAuthPage = false;
 							size="sm"
 							class="text-gray-500 hover:text-gray-700 px-3 py-2"
 						>
-							{$_('auth.logout')}
+							{$_("auth.logout")}
 						</Button>
 					</form>
 				</div>
@@ -32,3 +34,4 @@ export let isAuthPage = false;
 		</div>
 	</nav>
 {/if}
+
