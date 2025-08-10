@@ -7,15 +7,15 @@ export let disabled = false;
 export let loading = false;
 
 const baseClasses =
-	"text-black bg-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors";
+	"font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors";
 
 const variantClasses = {
-	primary: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
+	primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
 	secondary:
-		"border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 focus:ring-indigo-500",
-	danger: "bg-red-600 hover:bg-red-700 focus:ring-red-500",
-	success: "bg-green-600 hover:bg-green-700 focus:ring-green-500",
-	gray: "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500",
+		"border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 focus:ring-indigo-500",
+	danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
+	success: "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500",
+	gray: "bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400 text-white focus:ring-gray-500",
 };
 
 const sizeClasses = {

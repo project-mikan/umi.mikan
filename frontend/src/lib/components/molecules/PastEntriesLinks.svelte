@@ -50,16 +50,16 @@ function _getEntryTitle(entry: DiaryEntry | null): string {
 }
 </script>
 
-<div class="mt-8 pt-6 border-t border-gray-200">
-	<h3 class="text-lg font-semibold text-gray-900 mb-4">
+<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+	<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
 		{$_('diary.pastEntries')}
 	</h3>
 	
 	<div class="space-y-3">
 		{#each pastEntriesList as pastEntry}
-			<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+			<div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
 				<div class="flex-1">
-					<div class="text-sm text-gray-600 mb-1">
+					<div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
 						{$_(pastEntry.labelKey)} ({$_('date.format.yearMonthDay', {
 							values: {
 								year: pastEntry.date.year,
@@ -68,13 +68,13 @@ function _getEntryTitle(entry: DiaryEntry | null): string {
 							}
 						})})
 					</div>
-					<div class="text-sm text-gray-800">
+					<div class="text-sm text-gray-800 dark:text-gray-200">
 						{#if pastEntry.entry}
 							<Link href="/{formatDateToId(pastEntry.date)}" class="text-blue-600 hover:text-blue-800">
 								{_getEntryTitle(pastEntry.entry)}
 							</Link>
 						{:else}
-							<span class="text-gray-400">{$_('diary.noPastEntry')}</span>
+							<span class="text-gray-400 dark:text-gray-500">{$_('diary.noPastEntry')}</span>
 						{/if}
 					</div>
 				</div>

@@ -41,7 +41,7 @@ async function _goToNextDay() {
 	</Button>
 	
 	<div class="text-center">
-		<span class="text-lg font-semibold text-gray-700">
+		<span class="text-lg font-semibold text-gray-700 dark:text-gray-300">
 			{$_('date.format.yearMonthDayWithDayOfWeek', {
 				values: {
 					year: currentDate.year,

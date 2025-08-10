@@ -5,9 +5,8 @@ register("en", () => import("../locales/en.json"));
 register("ja", () => import("../locales/ja.json"));
 
 const initialLocale = browser
-	? navigator.language.startsWith("ja")
-		? "ja"
-		: "en"
+	? localStorage.getItem("locale") ||
+		(navigator.language.startsWith("ja") ? "ja" : "en")
 	: "en";
 
 init({

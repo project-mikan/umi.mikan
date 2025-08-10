@@ -1,3 +1,5 @@
 @import "tailwindcss";
 
+@variant dark (.dark &);
+
 @source "./src/**/*.{html,js,svelte,ts}";
