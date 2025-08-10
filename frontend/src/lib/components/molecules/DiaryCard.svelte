@@ -16,7 +16,7 @@ function formatContentWithLineBreaks(content: string): string {
 
 <Card>
 	<div class="flex justify-between items-center mb-4">
-		<h2 class="text-xl font-semibold text-gray-900">
+		<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
 			{title}
 		</h2>
 	</div>
@@ -24,7 +24,7 @@ function formatContentWithLineBreaks(content: string): string {
 	{#if showForm}
 		<slot name="form" />
 	{:else if entry}
-		<div class="text-gray-700">{@html formatContentWithLineBreaks(entry.content || '')}</div>
+		<div class="text-gray-700 dark:text-gray-300">{@html formatContentWithLineBreaks(entry.content || '')}</div>
 		{#if onView}
 			<div class="mt-4">
 				<Button
@@ -37,7 +37,7 @@ function formatContentWithLineBreaks(content: string): string {
 			</div>
 		{/if}
 	{:else}
-		<p class="text-gray-500">
+		<p class="text-gray-500 dark:text-gray-400">
 			<slot name="empty-message" />
 		</p>
 	{/if}

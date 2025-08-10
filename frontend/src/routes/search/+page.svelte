@@ -55,7 +55,7 @@ function _formatContentWithLineBreaks(content: string): string {
 </svelte:head>
 
 <div class="max-w-4xl mx-auto p-6">
-	<h1 class="text-3xl font-bold mb-6">{$_('search.title')}</h1>
+	<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">{$_('search.title')}</h1>
 	
 	<!-- 検索フォーム -->
 	<div class="mb-8">
@@ -65,11 +65,11 @@ function _formatContentWithLineBreaks(content: string): string {
 				bind:value={searchKeyword}
 				on:keydown={_handleKeydown}
 				placeholder={$_('search.placeholder')}
-				class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 			/>
 			<button
 				on:click={_handleSearch}
-				class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				class="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 			>
 				{$_('search.button')}
 			</button>
@@ -78,14 +78,14 @@ function _formatContentWithLineBreaks(content: string): string {
 
 	<!-- 検索結果 -->
 	{#if data.error}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+		<div class="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-4">
 			{data.error}
 		</div>
 	{/if}
 
 	{#if data.searchResults}
 		<div class="mb-4">
-			<p class="text-gray-600">
+			<p class="text-gray-600 dark:text-gray-400">
 				「{data.searchResults.searchedKeyword}」{$_('search.results')}: {data.searchResults.entries.length}{$_('search.resultCount')}
 			</p>
 		</div>
@@ -94,18 +94,18 @@ function _formatContentWithLineBreaks(content: string): string {
 			<div class="grid gap-4">
 				{#each data.searchResults.entries as entry}
 					<div 
-						class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+						class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm dark:shadow-gray-900/20 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow cursor-pointer"
 						on:click={() => _viewEntry(entry)}
 						on:keydown={(e) => e.key === 'Enter' && _viewEntry(entry)}
 						role="button"
 						tabindex="0"
 					>
 						<div class="flex justify-between items-start mb-2">
-							<h3 class="text-lg font-semibold text-blue-600">
+							<h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400">
 								{entry.date ? _formatDate(entry.date) : $_('diary.dateUnknown')}
 							</h3>
 						</div>
-						<div class="text-gray-700 text-sm">
+						<div class="text-gray-700 dark:text-gray-300 text-sm">
 							<p class="line-clamp-3">
 								{@html _formatContentWithLineBreaks(entry.content.length > 150 
 									? entry.content.substring(0, 150) + '...' 
@@ -116,17 +116,17 @@ function _formatContentWithLineBreaks(content: string): string {
 				{/each}
 			</div>
 		{:else}
-			<div class="text-center py-8 text-gray-500">
+			<div class="text-center py-8 text-gray-500 dark:text-gray-400">
 				<p>{$_('search.noResults')}</p>
-				<p class="text-sm mt-2">{$_('search.noResultsHint')}</p>
+				<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">{$_('search.noResultsHint')}</p>
 			</div>
 		{/if}
 	{:else if data.keyword}
-		<div class="text-center py-8 text-gray-500">
+		<div class="text-center py-8 text-gray-500 dark:text-gray-400">
 			<p>{$_('search.searching')}</p>
 		</div>
 	{:else}
-		<div class="text-center py-8 text-gray-500">
+		<div class="text-center py-8 text-gray-500 dark:text-gray-400">
 			<p>{$_('search.enterKeyword')}</p>
 		</div>
 	{/if}
@@ -135,7 +135,7 @@ function _formatContentWithLineBreaks(content: string): string {
 	<div class="mt-8 flex justify-center">
 		<a 
 			href="/" 
-			class="text-blue-600 hover:text-blue-800 underline"
+			class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
 		>
 			{$_('search.backToList')}
 		</a>

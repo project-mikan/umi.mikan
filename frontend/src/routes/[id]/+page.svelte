@@ -77,17 +77,17 @@ function _handleDelete() {
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">
-		<h1 class="text-3xl font-bold text-gray-900">{$_("diary.title")}</h1>
+		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
 		<div class="flex gap-4">
 			<button
 				on:click={_goToMonthly}
-				class="text-blue-600 hover:text-blue-800 font-medium"
+				class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
 			>
 				{$_("diary.viewThisMonth")}
 			</button>
 			<button
 				on:click={_goBack}
-				class="text-gray-600 hover:text-gray-800 font-medium"
+				class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
 			>
 				{$_("diary.back")}
 			</button>
@@ -129,7 +129,7 @@ function _handleDelete() {
 					on:save={_handleSave}
 				/>
 				{#if form?.error}
-					<div class="mt-2 text-sm text-red-600">
+					<div class="mt-2 text-sm text-red-600 dark:text-red-400">
 						{form.error}
 					</div>
 				{/if}
@@ -166,7 +166,7 @@ function _handleDelete() {
 	onConfirm={_handleDelete}
 	onCancel={_cancelDelete}
 >
-	<p class="text-sm text-gray-500">
+	<p class="text-sm text-gray-500 dark:text-gray-400">
 		{$_("edit.deleteMessage")}
 	</p>
 </Modal>

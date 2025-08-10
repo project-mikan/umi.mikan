@@ -46,7 +46,7 @@ $: currentLanguage =
 <div class="language-selector relative">
 	<button
 		type="button"
-		class="flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md transition-colors"
+		class="flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-md transition-colors"
 		on:click={toggleDropdown}
 		aria-expanded={isOpen}
 		aria-haspopup="true"
@@ -61,12 +61,12 @@ $: currentLanguage =
 	</button>
 
 	{#if isOpen}
-		<div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+		<div class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 z-50">
 			<div class="py-1">
 				{#each languages as language}
 					<button
 						type="button"
-						class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 {language.code === $locale ? 'bg-blue-50 text-blue-700' : ''}"
+						class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 {language.code === $locale ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''}"
 						on:click={() => selectLanguage(language.code)}
 					>
 						{language.label}

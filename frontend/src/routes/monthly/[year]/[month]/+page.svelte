@@ -142,19 +142,19 @@ const _weekDays = getWeekDays();
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<!-- ヘッダー -->
 	<div class="flex justify-between items-center mb-8">
-		<h1 class="text-3xl font-bold text-gray-900">
+		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
 			{_formatMonth(currentYear, currentMonth)}
 		</h1>
 		<div class="flex space-x-4">
 			<button
 				on:click={_goToToday}
-				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+				class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
 			>
 				{$_("monthly.thisMonth")}
 			</button>
 			<button
 				on:click={() => goto("/")}
-				class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+				class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
 			>
 				{$_("home.name")}
 			</button>
@@ -165,7 +165,7 @@ const _weekDays = getWeekDays();
 	<div class="flex justify-center items-center mb-8 space-x-4">
 		<button
 			on:click={_previousMonth}
-			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+			class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
 			aria-label={$_("monthly.previousMonth")}
 		>
 			<svg
@@ -182,15 +182,15 @@ const _weekDays = getWeekDays();
 				></path>
 			</svg>
 		</button>
-		<h2 class="text-xl font-semibold text-gray-800 min-w-[200px] text-center">
+		<h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 min-w-[200px] text-center">
 			{_formatMonth(currentYear, currentMonth)}
 			{#if _loading}
-				<span class="ml-2 text-sm text-gray-500">読み込み中...</span>
+				<span class="ml-2 text-sm text-gray-500 dark:text-gray-400">読み込み中...</span>
 			{/if}
 		</h2>
 		<button
 			on:click={_nextMonth}
-			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+			class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
 			aria-label={$_("monthly.nextMonth")}
 		>
 			<svg
