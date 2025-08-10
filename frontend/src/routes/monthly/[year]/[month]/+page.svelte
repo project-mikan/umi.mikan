@@ -5,6 +5,8 @@ import "$lib/i18n";
 import { browser } from "$app/environment";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
+import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
+import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
 
 export let data: PageData;
 
@@ -42,7 +44,10 @@ async function fetchMonthData(year: number, month: number) {
 
 function _formatMonth(year: number, month: number): string {
 	const date = new Date(year, month - 1, 1);
-	return date.toLocaleDateString(undefined, { year: "numeric", month: "long" });
+	return date.toLocaleDateString(undefined, {
+		year: "numeric",
+		month: "long",
+	});
 }
 
 function _formatMonthOnly(month: number): string {
@@ -132,10 +137,6 @@ function getWeekDays(): string[] {
 }
 
 const _weekDays = getWeekDays();
-
-function _formatContentWithLineBreaks(content: string): string {
-	return content.replace(/\n/g, "<br>");
-}
 </script>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -149,13 +150,13 @@ function _formatContentWithLineBreaks(content: string): string {
 				on:click={_goToToday}
 				class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
 			>
-				{$_('monthly.thisMonth')}
+				{$_("monthly.thisMonth")}
 			</button>
 			<button
-				on:click={() => goto('/')}
+				on:click={() => goto("/")}
 				class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
 			>
-				{$_('monthly.listView')}
+				{$_("home.name")}
 			</button>
 		</div>
 	</div>
@@ -165,10 +166,20 @@ function _formatContentWithLineBreaks(content: string): string {
 		<button
 			on:click={_previousMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-			aria-label={$_('monthly.previousMonth')}
+			aria-label={$_("monthly.previousMonth")}
 		>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+			<svg
+				class="w-6 h-6"
+				fill="none"
+				stroke="currentColor"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M15 19l-7-7 7-7"
+				></path>
 			</svg>
 		</button>
 		<h2 class="text-xl font-semibold text-gray-800 min-w-[200px] text-center">
@@ -180,74 +191,43 @@ function _formatContentWithLineBreaks(content: string): string {
 		<button
 			on:click={_nextMonth}
 			class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-			aria-label={$_('monthly.nextMonth')}
+			aria-label={$_("monthly.nextMonth")}
 		>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+			<svg
+				class="w-6 h-6"
+				fill="none"
+				stroke="currentColor"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M9 5l7 7-7 7"
+				></path>
 			</svg>
 		</button>
 	</div>
 
-	<!-- カレンダー -->
-	<div class="bg-white shadow rounded-lg overflow-hidden">
-		<!-- 曜日ヘッダー -->
-		<div class="grid grid-cols-7 bg-gray-50">
-			{#each _weekDays as weekDay}
-				<div class="p-4 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0">
-					{weekDay}
-				</div>
-			{/each}
-		</div>
+	<!-- デスクトップ・タブレット: カレンダー表示 -->
+	<div class="hidden md:block">
+		<MonthlyCalendar
+			{calendarDays}
+			{entryMap}
+			weekDays={_weekDays}
+			onNavigateToEntry={_navigateToEntry}
+		/>
+	</div>
 
-		<!-- カレンダーグリッド -->
-		<div class="grid grid-cols-7">
-			{#each calendarDays as day}
-				<div class="h-32 border-r border-b border-gray-200 last:border-r-0">
-					{#if day !== null}
-						<button
-							on:click={() => _navigateToEntry(day)}
-							class="w-full h-full p-2 text-left hover:bg-gray-50 transition-colors cursor-pointer"
-						>
-							<div class="h-full flex flex-col">
-								<!-- 日付 -->
-								<div class="flex justify-between items-start mb-1">
-									<span class="text-sm font-medium text-gray-700">{day}</span>
-									{#if !entryMap.has(day)}
-										<span class="text-xs text-blue-600 opacity-50">
-											+
-										</span>
-									{/if}
-								</div>
-
-								<!-- 日記エントリ -->
-								{#if entryMap.has(day)}
-									{@const entry = entryMap.get(day)}
-									<div class="flex-1 min-h-0">
-										<div class="bg-blue-50 rounded p-2 h-full">
-											<div class="text-xs text-blue-800 font-medium mb-1">
-												{$_('monthly.entry')}
-											</div>
-											<div class="text-xs text-blue-600 line-clamp-2">
-												{@html _formatContentWithLineBreaks(entry?.content ? entry.content.substring(0, 40) + (entry.content.length > 40 ? '...' : '') : '')}
-											</div>
-										</div>
-									</div>
-								{/if}
-							</div>
-						</button>
-					{/if}
-				</div>
-			{/each}
-		</div>
+	<!-- モバイル: リスト表示 -->
+	<div class="block md:hidden">
+		<MonthlyList
+			{daysInMonth}
+			{currentYear}
+			{currentMonth}
+			{entryMap}
+			onNavigateToEntry={_navigateToEntry}
+		/>
 	</div>
 </div>
 
-<style>
-	.line-clamp-2 {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-</style>

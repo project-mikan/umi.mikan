@@ -68,6 +68,9 @@
 			"yearMonthDayWithDayOfWeek": "{year}年{month}月{day}日({dayOfWeek})"
 		}
 	},
+	"home": {
+		"name": "ホーム"
+	},
 	"create": {
 		"title": "新しい日記を書く",
 		"date": "日付",

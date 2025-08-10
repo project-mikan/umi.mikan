@@ -68,6 +68,9 @@
 			"yearMonthDayWithDayOfWeek": "{month}/{day}/{year} ({dayOfWeek})"
 		}
 	},
+	"home": {
+		"name": "home"
+	},
 	"create": {
 		"title": "Write a new diary",
 		"date": "Date",
