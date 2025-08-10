@@ -20,7 +20,7 @@
 		"test:run": "vitest run"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.1.2",
+		"@biomejs/biome": "2.1.4",
 		"@bufbuild/buf": "^1.56.0",
 		"@bufbuild/protoc-gen-es": "^2.6.3",
 		"@sveltejs/adapter-auto": "^6.0.2",
