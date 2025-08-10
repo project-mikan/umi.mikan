@@ -5,6 +5,8 @@ import "$lib/i18n";
 import { browser } from "$app/environment";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
+import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
+import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
 
 export let data: PageData;
 
@@ -135,10 +137,6 @@ function getWeekDays(): string[] {
 }
 
 const _weekDays = getWeekDays();
-
-function _formatContentWithLineBreaks(content: string): string {
-	return content.replace(/\n/g, "<br>");
-}
 </script>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -211,72 +209,25 @@ function _formatContentWithLineBreaks(content: string): string {
 		</button>
 	</div>
 
-	<!-- カレンダー -->
-	<div class="bg-white shadow rounded-lg overflow-hidden">
-		<!-- 曜日ヘッダー -->
-		<div class="grid grid-cols-7 bg-gray-50">
-			{#each _weekDays as weekDay}
-				<div
-					class="p-4 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
-				>
-					{weekDay}
-				</div>
-			{/each}
-		</div>
+	<!-- デスクトップ・タブレット: カレンダー表示 -->
+	<div class="hidden md:block">
+		<MonthlyCalendar
+			{calendarDays}
+			{entryMap}
+			weekDays={_weekDays}
+			onNavigateToEntry={_navigateToEntry}
+		/>
+	</div>
 
-		<!-- カレンダーグリッド -->
-		<div class="grid grid-cols-7">
-			{#each calendarDays as day}
-				<div class="h-32 border-r border-b border-gray-200 last:border-r-0">
-					{#if day !== null}
-						<button
-							on:click={() => _navigateToEntry(day)}
-							class="w-full h-full p-2 text-left hover:bg-gray-50 transition-colors cursor-pointer"
-						>
-							<div class="h-full flex flex-col">
-								<!-- 日付 -->
-								<div class="flex justify-between items-start mb-1">
-									<span class="text-sm font-medium text-gray-700">{day}</span>
-									{#if !entryMap.has(day)}
-										<span class="text-xs text-blue-600 opacity-50"> + </span>
-									{/if}
-								</div>
-
-								<!-- 日記エントリ -->
-								{#if entryMap.has(day)}
-									{@const entry = entryMap.get(day)}
-									<div class="flex-1 min-h-0">
-										<div class="bg-blue-50 rounded p-2 h-full">
-											<div class="text-xs text-blue-800 font-medium mb-1">
-												{$_("monthly.entry")}
-											</div>
-											<div class="text-xs text-blue-600 line-clamp-2">
-												{@html _formatContentWithLineBreaks(
-													entry?.content
-														? entry.content.substring(0, 40) +
-																(entry.content.length > 40 ? "..." : "")
-														: "",
-												)}
-											</div>
-										</div>
-									</div>
-								{/if}
-							</div>
-						</button>
-					{/if}
-				</div>
-			{/each}
-		</div>
+	<!-- モバイル: リスト表示 -->
+	<div class="block md:hidden">
+		<MonthlyList
+			{daysInMonth}
+			{currentYear}
+			{currentMonth}
+			{entryMap}
+			onNavigateToEntry={_navigateToEntry}
+		/>
 	</div>
 </div>
-
-<style>
-	.line-clamp-2 {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-</style>
 
