@@ -6,6 +6,7 @@ import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
+import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
 import type { DiaryEntry, YMD } from "$lib/grpc";
 import type { PageData } from "./$types";
 
@@ -63,6 +64,10 @@ function handleDayBeforeYesterdaySave() {
 				</a>
 			</Button>
 		</div>
+	</div>
+
+	<div class="mb-8">
+		<TimeProgressBar />
 	</div>
 
 	<div class="space-y-6">
