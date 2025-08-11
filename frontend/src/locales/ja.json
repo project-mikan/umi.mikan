@@ -104,5 +104,10 @@
 		"entry": "日記",
 		"detail": "詳細",
 		"edit": "編集"
+	},
+	"timeProgress": {
+		"yearProgress": "今年",
+		"monthProgress": "今月",
+		"dayProgress": "今日"
 	}
 }

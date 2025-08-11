@@ -104,5 +104,10 @@
 		"entry": "Diary",
 		"detail": "Detail",
 		"edit": "Edit"
+	},
+	"timeProgress": {
+		"yearProgress": "Year progress",
+		"monthProgress": "Month progress",
+		"dayProgress": "Day progress"
 	}
 }
