@@ -2,6 +2,7 @@ import { error, redirect } from "@sveltejs/kit";
 import {
 	createDiaryEntry,
 	createYMD,
+	getDiaryCount,
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
@@ -38,13 +39,18 @@ export const load: PageServerLoad = async ({ cookies }) => {
 			dayBeforeYesterday.getDate(),
 		);
 
-		// 3日分の日記を並行して取得
-		const [todayResult, yesterdayResult, dayBeforeYesterdayResult] =
-			await Promise.allSettled([
-				getDiaryEntry({ date: today, accessToken }),
-				getDiaryEntry({ date: yesterdayYMD, accessToken }),
-				getDiaryEntry({ date: dayBeforeYesterdayYMD, accessToken }),
-			]);
+		// 3日分の日記と総数を並行して取得
+		const [
+			todayResult,
+			yesterdayResult,
+			dayBeforeYesterdayResult,
+			countResult,
+		] = await Promise.allSettled([
+			getDiaryEntry({ date: today, accessToken }),
+			getDiaryEntry({ date: yesterdayYMD, accessToken }),
+			getDiaryEntry({ date: dayBeforeYesterdayYMD, accessToken }),
+			getDiaryCount({ accessToken }),
+		]);
 
 		return {
 			today: {
@@ -66,6 +72,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
 						? dayBeforeYesterdayResult.value.entry
 						: null,
 			},
+			diaryCount:
+				countResult.status === "fulfilled" ? countResult.value.count : 0,
 		};
 	} catch (err) {
 		console.error("Failed to load diary entries:", err);
@@ -91,6 +99,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 				),
 				entry: null,
 			},
+			diaryCount: 0,
 		};
 	}
 };

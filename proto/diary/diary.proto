@@ -23,6 +23,9 @@ service DiaryService {
 
   // 検索
   rpc SearchDiaryEntries(SearchDiaryEntriesRequest) returns (SearchDiaryEntriesResponse);
+
+  // 日記総数取得
+  rpc GetDiaryCount(GetDiaryCountRequest) returns (GetDiaryCountResponse);
 }
 
 message YMD {
@@ -111,4 +114,14 @@ message DeleteDiaryEntryRequest {
 // 削除操作の結果を返すレスポンス
 message DeleteDiaryEntryResponse {
   bool success = 1;
+}
+
+// 日記総数取得のリクエスト
+message GetDiaryCountRequest {
+  // ユーザー認証情報はヘッダーから取得するため、リクエストボディは空
+}
+
+// 日記総数を返すレスポンス
+message GetDiaryCountResponse {
+  uint32 count = 1; // 日記の総数
 }

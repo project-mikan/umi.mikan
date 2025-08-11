@@ -25,6 +25,7 @@
 	},
 	"diary": {
 		"title": "日記",
+		"totalCount": "これまでに{count}日分の日記を書きました",
 		"today": "今日",
 		"yesterday": "昨日",
 		"dayBeforeYesterday": "一昨日",

@@ -33,3 +33,13 @@ func DiariesByUserIDAndContent(ctx context.Context, db DB, userID string, conten
 
 	return diaries, nil
 }
+
+func CountDiariesByUserID(ctx context.Context, db DB, userID string) (int, error) {
+	const sqlstr = `SELECT COUNT(*) FROM diaries WHERE user_id = $1`
+	var count int
+	err := db.QueryRowContext(ctx, sqlstr, userID).Scan(&count)
+	if err != nil {
+		return 0, logerror(err)
+	}
+	return count, nil
+}
