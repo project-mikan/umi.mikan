@@ -116,6 +116,7 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - **Route Protection**: Separated (authenticated) and (guest) route groups
 - **State Management**: Svelte stores for user state and UI state
 - **Type Safety**: Full TypeScript with generated gRPC types
+- **Internationalization**: svelte-i18n with Japanese and English support
 
 ### Database Schema
 
@@ -148,6 +149,22 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - `schema/`: Database migration files
 - `backend/cmd/server/main.go`: Backend entry point
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
+- `frontend/src/locales/`: Internationalization files (ja.json, en.json)
+
+## Development Guidelines
+
+### Internationalization (i18n)
+
+- **Always use i18n for user-facing text**: Use `$_("key")` for all UI text
+- **Translation files**: Update both `frontend/src/locales/ja.json` and `frontend/src/locales/en.json`
+- **Import requirements**: Include `import { _ } from "svelte-i18n";` and `import "$lib/i18n";`
+- **Key structure**: Use nested objects (e.g., `timeProgress.yearProgress`)
+
+### Component Creation
+
+- **New components must support i18n**: All user-facing text should be translatable
+- **Follow atomic design**: Place components in appropriate atoms/molecules/organisms directories
+- **Consistent imports**: Always include necessary i18n imports
 
 ## Production Notes
 
