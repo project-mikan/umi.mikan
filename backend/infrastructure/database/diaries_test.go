@@ -46,7 +46,9 @@ func setupTestDB(t *testing.T) *sql.DB {
 	}
 
 	t.Cleanup(func() {
-		db.Close()
+		if err := db.Close(); err != nil {
+			t.Errorf("Failed to close database: %v", err)
+		}
 	})
 
 	return db
@@ -199,7 +201,9 @@ func TestCountDiariesByUserID_DatabaseError(t *testing.T) {
 	userID := createTestUser(t, db)
 
 	// Close the database connection to simulate an error
-	db.Close()
+	if err := db.Close(); err != nil {
+		t.Fatalf("Failed to close database: %v", err)
+	}
 
 	_, err := CountDiariesByUserID(ctx, db, userID.String())
 	if err == nil {

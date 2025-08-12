@@ -25,13 +25,13 @@ func (m *mockRedisClient) GetDiaryCount(ctx context.Context, userID string) (uin
 	if !exists {
 		return 0, fmt.Errorf("cache miss")
 	}
-	
+
 	var count uint32
 	_, err := fmt.Sscanf(val, "%d", &count)
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse cached count: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -53,7 +53,11 @@ func setupMockRedis() *mockRedisClient {
 
 func TestRedisClient_SetAndGetDiaryCount(t *testing.T) {
 	client := setupMockRedis()
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	userID := uuid.New().String()
@@ -78,7 +82,11 @@ func TestRedisClient_SetAndGetDiaryCount(t *testing.T) {
 
 func TestRedisClient_GetDiaryCount_CacheMiss(t *testing.T) {
 	client := setupMockRedis()
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	userID := uuid.New().String()
@@ -95,7 +103,11 @@ func TestRedisClient_GetDiaryCount_CacheMiss(t *testing.T) {
 
 func TestRedisClient_DeleteDiaryCount(t *testing.T) {
 	client := setupMockRedis()
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	userID := uuid.New().String()
@@ -134,7 +146,11 @@ func TestRedisClient_DeleteDiaryCount(t *testing.T) {
 
 func TestRedisClient_MultipleUsers(t *testing.T) {
 	client := setupMockRedis()
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	userID1 := uuid.New().String()
@@ -194,7 +210,11 @@ func TestRedisClient_MultipleUsers(t *testing.T) {
 
 func TestRedisClient_CacheExpiration(t *testing.T) {
 	client := setupMockRedis()
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	userID := uuid.New().String()

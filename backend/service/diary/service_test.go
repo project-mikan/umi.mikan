@@ -31,13 +31,13 @@ func (m *mockRedisClient) GetDiaryCount(ctx context.Context, userID string) (uin
 	if !exists {
 		return 0, fmt.Errorf("cache miss")
 	}
-	
+
 	var count uint32
 	_, err := fmt.Sscanf(val, "%d", &count)
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse cached count: %w", err)
 	}
-	
+
 	return count, nil
 }
 

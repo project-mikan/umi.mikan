@@ -7,7 +7,6 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
 
-
 func TestDiarySuite_CRUD(t *testing.T) {
 	runner := testutil.NewTestRunner(t)
 	runner.Run(func(suite *testutil.TestSuite) {
