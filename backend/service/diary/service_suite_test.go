@@ -7,10 +7,12 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
 
+
 func TestDiarySuite_CRUD(t *testing.T) {
 	runner := testutil.NewTestRunner(t)
 	runner.Run(func(suite *testutil.TestSuite) {
-		diaryService := &DiaryEntry{DB: suite.DB}
+		mockRedis := createMockRedisClient()
+		diaryService := &DiaryEntry{DB: suite.DB, Redis: mockRedis}
 		ctx := suite.GetAuthenticatedContext()
 
 		// Create a diary entry
@@ -81,7 +83,8 @@ func TestDiarySuite_CRUD(t *testing.T) {
 func TestDiarySuite_UserIsolation(t *testing.T) {
 	runner := testutil.NewTestRunner(t)
 	runner.RunWithData(func(suite *testutil.TestSuite, testData *testutil.TestData) {
-		diaryService := &DiaryEntry{DB: suite.DB}
+		mockRedis := createMockRedisClient()
+		diaryService := &DiaryEntry{DB: suite.DB, Redis: mockRedis}
 
 		// Add another test user
 		user2ID := testData.AddTestUser("user2-suite@example.com", "User Two", "password123")

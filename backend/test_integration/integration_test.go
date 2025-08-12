@@ -14,12 +14,56 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
 
+// Mock Redis client for integration tests - using the one from diary package
+func createMockRedisClient() *mockRedisForIntegration {
+	return &mockRedisForIntegration{
+		data: make(map[string]string),
+	}
+}
+
+type mockRedisForIntegration struct {
+	data map[string]string
+}
+
+func (m *mockRedisForIntegration) SetDiaryCount(ctx context.Context, userID string, count uint32) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	m.data[key] = fmt.Sprintf("%d", count)
+	return nil
+}
+
+func (m *mockRedisForIntegration) GetDiaryCount(ctx context.Context, userID string) (uint32, error) {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	val, exists := m.data[key]
+	if !exists {
+		return 0, fmt.Errorf("cache miss")
+	}
+	
+	var count uint32
+	_, err := fmt.Sscanf(val, "%d", &count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse cached count: %w", err)
+	}
+	
+	return count, nil
+}
+
+func (m *mockRedisForIntegration) DeleteDiaryCount(ctx context.Context, userID string) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	delete(m.data, key)
+	return nil
+}
+
+func (m *mockRedisForIntegration) Close() error {
+	return nil
+}
+
 func TestCompleteUserJourney(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 
 	// Initialize services
 	authService := &auth.AuthEntry{DB: db}
-	diaryService := &diary.DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &diary.DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := context.Background()
 
 	// Generate unique test identifier
@@ -182,7 +226,8 @@ func TestUserIsolation(t *testing.T) {
 
 	// Initialize services
 	authService := &auth.AuthEntry{DB: db}
-	diaryService := &diary.DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &diary.DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := context.Background()
 
 	// Generate unique test identifier

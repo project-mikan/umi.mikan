@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/project-mikan/umi.mikan/backend/infrastructure/cache"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
@@ -15,10 +15,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// RedisInterface defines the methods needed for caching diary counts
+type RedisInterface interface {
+	SetDiaryCount(ctx context.Context, userID string, count uint32) error
+	GetDiaryCount(ctx context.Context, userID string) (uint32, error)
+	DeleteDiaryCount(ctx context.Context, userID string) error
+	Close() error
+}
+
 type DiaryEntry struct {
 	g.UnimplementedDiaryServiceServer
 	DB    database.DB
-	Redis *cache.RedisClient
+	Redis RedisInterface
 }
 
 func (s *DiaryEntry) CreateDiaryEntry(
@@ -52,11 +60,8 @@ func (s *DiaryEntry) CreateDiaryEntry(
 	}
 
 	// 日記が作成されたのでキャッシュを無効化
-	if s.Redis != nil {
-		if err := s.Redis.DeleteDiaryCount(ctx, userID.String()); err != nil {
-			// キャッシュ削除に失敗してもエラーにしない（ログが必要な場合は後で実装）
-			_ = err
-		}
+	if err := s.Redis.DeleteDiaryCount(ctx, userID.String()); err != nil {
+		return nil, fmt.Errorf("failed to invalidate diary count cache after creation: %w", err)
 	}
 
 	return &g.CreateDiaryEntryResponse{
@@ -260,11 +265,8 @@ func (s *DiaryEntry) DeleteDiaryEntry(
 	}
 
 	// 日記が削除されたのでキャッシュを無効化
-	if s.Redis != nil {
-		if err := s.Redis.DeleteDiaryCount(ctx, userID.String()); err != nil {
-			// キャッシュ削除に失敗してもエラーにしない（ログが必要な場合は後で実装）
-			_ = err
-		}
+	if err := s.Redis.DeleteDiaryCount(ctx, userID.String()); err != nil {
+		return nil, fmt.Errorf("failed to invalidate diary count cache after deletion: %w", err)
 	}
 
 	return &g.DeleteDiaryEntryResponse{
@@ -318,10 +320,8 @@ func (s *DiaryEntry) GetDiaryCount(
 	}
 
 	// まずキャッシュから取得を試行
-	if s.Redis != nil {
-		if count, err := s.Redis.GetDiaryCount(ctx, userID.String()); err == nil {
-			return &g.GetDiaryCountResponse{Count: count}, nil
-		}
+	if count, err := s.Redis.GetDiaryCount(ctx, userID.String()); err == nil {
+		return &g.GetDiaryCountResponse{Count: count}, nil
 	}
 
 	// キャッシュにない場合はDBから取得
@@ -331,11 +331,8 @@ func (s *DiaryEntry) GetDiaryCount(
 	}
 
 	// 結果をキャッシュに保存
-	if s.Redis != nil {
-		if err := s.Redis.SetDiaryCount(ctx, userID.String(), uint32(count)); err != nil {
-			// キャッシュ保存に失敗してもエラーにしない（ログが必要な場合は後で実装）
-			_ = err
-		}
+	if err := s.Redis.SetDiaryCount(ctx, userID.String(), uint32(count)); err != nil {
+		log.Printf("Warning: failed to cache diary count for user %s: %v", userID.String(), err)
 	}
 
 	return &g.GetDiaryCountResponse{Count: uint32(count)}, nil

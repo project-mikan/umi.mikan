@@ -41,18 +41,16 @@ func main() {
 		}
 	}()
 
-	// Redis接続 (オプショナル)
-	var redisClient *cache.RedisClient
-	if redisClient, err = cache.NewRedisClient(); err != nil {
-		log.Printf("Failed to connect to Redis, continuing without cache: %v", err)
-		redisClient = nil
-	} else {
-		defer func() {
-			if err := redisClient.Close(); err != nil {
-				log.Printf("Failed to close Redis connection: %v", err)
-			}
-		}()
+	// Redis接続 (必須)
+	redisClient, err := cache.NewRedisClient()
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Failed to close Redis connection: %v", err)
+		}
+	}()
 
 	// サービス登録
 	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db, Redis: redisClient})
