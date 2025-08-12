@@ -8,19 +8,19 @@ import (
 	"github.com/google/uuid"
 )
 
-// Mock Redis client for testing when testcontainers is not available
-type mockRedisClient struct {
+// Mock Redis client for testing diary cache operations
+type mockRedisClientForDiaries struct {
 	data map[string]string
 }
 
-func (m *mockRedisClient) SetDiaryCount(ctx context.Context, userID string, count uint32) error {
-	key := fmt.Sprintf("diary_count:%s", userID)
+func (m *mockRedisClientForDiaries) SetDiaryCount(ctx context.Context, userID string, count uint32) error {
+	key := fmt.Sprintf(DiaryCountCacheKey, userID)
 	m.data[key] = fmt.Sprintf("%d", count)
 	return nil
 }
 
-func (m *mockRedisClient) GetDiaryCount(ctx context.Context, userID string) (uint32, error) {
-	key := fmt.Sprintf("diary_count:%s", userID)
+func (m *mockRedisClientForDiaries) GetDiaryCount(ctx context.Context, userID string) (uint32, error) {
+	key := fmt.Sprintf(DiaryCountCacheKey, userID)
 	val, exists := m.data[key]
 	if !exists {
 		return 0, fmt.Errorf("cache miss")
@@ -35,24 +35,24 @@ func (m *mockRedisClient) GetDiaryCount(ctx context.Context, userID string) (uin
 	return count, nil
 }
 
-func (m *mockRedisClient) DeleteDiaryCount(ctx context.Context, userID string) error {
-	key := fmt.Sprintf("diary_count:%s", userID)
+func (m *mockRedisClientForDiaries) DeleteDiaryCount(ctx context.Context, userID string) error {
+	key := fmt.Sprintf(DiaryCountCacheKey, userID)
 	delete(m.data, key)
 	return nil
 }
 
-func (m *mockRedisClient) Close() error {
+func (m *mockRedisClientForDiaries) Close() error {
 	return nil
 }
 
-func setupMockRedis() *mockRedisClient {
-	return &mockRedisClient{
+func setupMockRedisForDiaries() *mockRedisClientForDiaries {
+	return &mockRedisClientForDiaries{
 		data: make(map[string]string),
 	}
 }
 
-func TestRedisClient_SetAndGetDiaryCount(t *testing.T) {
-	client := setupMockRedis()
+func TestRedisClient_DiaryCount_SetAndGet(t *testing.T) {
+	client := setupMockRedisForDiaries()
 	defer func() {
 		if err := client.Close(); err != nil {
 			t.Errorf("Failed to close client: %v", err)
@@ -80,8 +80,8 @@ func TestRedisClient_SetAndGetDiaryCount(t *testing.T) {
 	}
 }
 
-func TestRedisClient_GetDiaryCount_CacheMiss(t *testing.T) {
-	client := setupMockRedis()
+func TestRedisClient_DiaryCount_CacheMiss(t *testing.T) {
+	client := setupMockRedisForDiaries()
 	defer func() {
 		if err := client.Close(); err != nil {
 			t.Errorf("Failed to close client: %v", err)
@@ -101,8 +101,8 @@ func TestRedisClient_GetDiaryCount_CacheMiss(t *testing.T) {
 	}
 }
 
-func TestRedisClient_DeleteDiaryCount(t *testing.T) {
-	client := setupMockRedis()
+func TestRedisClient_DiaryCount_Delete(t *testing.T) {
+	client := setupMockRedisForDiaries()
 	defer func() {
 		if err := client.Close(); err != nil {
 			t.Errorf("Failed to close client: %v", err)
@@ -144,8 +144,8 @@ func TestRedisClient_DeleteDiaryCount(t *testing.T) {
 	}
 }
 
-func TestRedisClient_MultipleUsers(t *testing.T) {
-	client := setupMockRedis()
+func TestRedisClient_DiaryCount_MultipleUsers(t *testing.T) {
+	client := setupMockRedisForDiaries()
 	defer func() {
 		if err := client.Close(); err != nil {
 			t.Errorf("Failed to close client: %v", err)
@@ -208,42 +208,12 @@ func TestRedisClient_MultipleUsers(t *testing.T) {
 	}
 }
 
-func TestRedisClient_CacheExpiration(t *testing.T) {
-	client := setupMockRedis()
-	defer func() {
-		if err := client.Close(); err != nil {
-			t.Errorf("Failed to close client: %v", err)
-		}
-	}()
+func TestDiaryCountCacheKey_Format(t *testing.T) {
+	userID := "test-user-123"
+	expectedKey := "diary_count:test-user-123"
+	actualKey := fmt.Sprintf(DiaryCountCacheKey, userID)
 
-	ctx := context.Background()
-	userID := uuid.New().String()
-	count := uint32(15)
-
-	// This test would require modifying the cache expiration time to be very short
-	// For now, we just verify the operation works
-	err := client.SetDiaryCount(ctx, userID, count)
-	if err != nil {
-		t.Fatalf("Failed to set diary count: %v", err)
+	if actualKey != expectedKey {
+		t.Errorf("Expected key '%s' but got '%s'", expectedKey, actualKey)
 	}
-
-	retrievedCount, err := client.GetDiaryCount(ctx, userID)
-	if err != nil {
-		t.Fatalf("Failed to get diary count: %v", err)
-	}
-	if retrievedCount != count {
-		t.Errorf("Expected count %d but got %d", count, retrievedCount)
-	}
-}
-
-func TestRedisClient_Close(t *testing.T) {
-	client := setupMockRedis()
-
-	// Close should work without error
-	err := client.Close()
-	if err != nil {
-		t.Errorf("Expected Close() to succeed but got error: %v", err)
-	}
-
-	// Mock doesn't simulate connection errors after close, so we just test that Close() works
 }
