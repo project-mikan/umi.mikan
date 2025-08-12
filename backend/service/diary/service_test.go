@@ -492,6 +492,139 @@ func TestDiaryEntry_UnauthorizedAccess(t *testing.T) {
 	}
 }
 
+func TestDiaryEntry_GetDiaryCount(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// Test with empty diary count
+	getCountReq := &g.GetDiaryCountRequest{}
+	response, err := diaryService.GetDiaryCount(ctx, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success but got error: %v", err)
+	}
+	if response == nil {
+		t.Fatal("Expected response but got nil")
+	}
+	if response.Count != 0 {
+		t.Errorf("Expected count to be 0 but got %d", response.Count)
+	}
+
+	// Create some diary entries
+	dates := []*g.YMD{
+		{Year: 2024, Month: 9, Day: 1},
+		{Year: 2024, Month: 9, Day: 2},
+		{Year: 2024, Month: 9, Day: 3},
+	}
+
+	for i, date := range dates {
+		createReq := &g.CreateDiaryEntryRequest{
+			Content: fmt.Sprintf("Test diary entry %d", i+1),
+			Date:    date,
+		}
+		_, err := diaryService.CreateDiaryEntry(ctx, createReq)
+		if err != nil {
+			t.Fatalf("Failed to create diary entry %d: %v", i+1, err)
+		}
+	}
+
+	// Test diary count after creating entries
+	response, err = diaryService.GetDiaryCount(ctx, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success but got error: %v", err)
+	}
+	if response == nil {
+		t.Fatal("Expected response but got nil")
+	}
+	if response.Count != uint32(len(dates)) {
+		t.Errorf("Expected count to be %d but got %d", len(dates), response.Count)
+	}
+
+	// Delete one entry and check count decreases
+	// First, get one of the created entries
+	getReq := &g.GetDiaryEntryRequest{Date: dates[0]}
+	getResp, err := diaryService.GetDiaryEntry(ctx, getReq)
+	if err != nil {
+		t.Fatalf("Failed to get diary entry for deletion test: %v", err)
+	}
+
+	deleteReq := &g.DeleteDiaryEntryRequest{Id: getResp.Entry.Id}
+	_, err = diaryService.DeleteDiaryEntry(ctx, deleteReq)
+	if err != nil {
+		t.Fatalf("Failed to delete diary entry: %v", err)
+	}
+
+	// Test diary count after deletion
+	response, err = diaryService.GetDiaryCount(ctx, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success but got error: %v", err)
+	}
+	if response == nil {
+		t.Fatal("Expected response but got nil")
+	}
+	expectedCount := uint32(len(dates) - 1)
+	if response.Count != expectedCount {
+		t.Errorf("Expected count to be %d but got %d", expectedCount, response.Count)
+	}
+}
+
+func TestDiaryEntry_GetDiaryCount_MultipleUsers(t *testing.T) {
+	db := setupTestDB(t)
+
+	// Create two users
+	userID1 := createTestUser(t, db)
+	userID2 := testutil.CreateTestUser(t, db, "diary-count-test2@example.com", "Test User 2")
+
+	diaryService := &DiaryEntry{DB: db}
+	ctx1 := createAuthenticatedContext(userID1)
+	ctx2 := createAuthenticatedContext(userID2)
+
+	// User 1 creates diary entries
+	for i := 1; i <= 3; i++ {
+		createReq := &g.CreateDiaryEntryRequest{
+			Content: fmt.Sprintf("User 1 diary entry %d", i),
+			Date:    &g.YMD{Year: 2024, Month: 10, Day: uint32(i)},
+		}
+		_, err := diaryService.CreateDiaryEntry(ctx1, createReq)
+		if err != nil {
+			t.Fatalf("Failed to create diary entry for user 1: %v", err)
+		}
+	}
+
+	// User 2 creates diary entries
+	for i := 1; i <= 2; i++ {
+		createReq := &g.CreateDiaryEntryRequest{
+			Content: fmt.Sprintf("User 2 diary entry %d", i),
+			Date:    &g.YMD{Year: 2024, Month: 10, Day: uint32(i + 10)},
+		}
+		_, err := diaryService.CreateDiaryEntry(ctx2, createReq)
+		if err != nil {
+			t.Fatalf("Failed to create diary entry for user 2: %v", err)
+		}
+	}
+
+	// Check count for user 1
+	getCountReq := &g.GetDiaryCountRequest{}
+	response1, err := diaryService.GetDiaryCount(ctx1, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success for user 1 but got error: %v", err)
+	}
+	if response1.Count != 3 {
+		t.Errorf("Expected user 1 count to be 3 but got %d", response1.Count)
+	}
+
+	// Check count for user 2
+	response2, err := diaryService.GetDiaryCount(ctx2, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success for user 2 but got error: %v", err)
+	}
+	if response2.Count != 2 {
+		t.Errorf("Expected user 2 count to be 2 but got %d", response2.Count)
+	}
+}
+
 func TestDiaryEntry_UnauthenticatedAccess(t *testing.T) {
 	db := setupTestDB(t)
 
@@ -504,6 +637,13 @@ func TestDiaryEntry_UnauthenticatedAccess(t *testing.T) {
 		Date:    &g.YMD{Year: 2024, Month: 8, Day: 15},
 	}
 	_, err := diaryService.CreateDiaryEntry(ctx, createReq)
+	if err == nil {
+		t.Error("Expected authentication error but got nil")
+	}
+
+	// Try to get diary count without authentication
+	getCountReq := &g.GetDiaryCountRequest{}
+	_, err = diaryService.GetDiaryCount(ctx, getCountReq)
 	if err == nil {
 		t.Error("Expected authentication error but got nil")
 	}

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { YMDSchema } from "$lib/grpc/diary/diary_pb.js";
 import type {
 	CreateDiaryEntryParams,
+	GetDiaryCountParams,
 	SearchDiaryEntriesParams,
 	UpdateDiaryEntryParams,
 } from "./diary-api";
@@ -34,6 +35,15 @@ describe("Diary API Types and Validation", () => {
 			expect(validParams.id).toBe("entry-1");
 			expect(validParams.title).toBe("Updated Title");
 			expect(validParams.content).toBe("Updated content");
+		});
+
+		it("should validate GetDiaryCountParams", () => {
+			const validParams: GetDiaryCountParams = {
+				accessToken: "mock-token",
+			};
+
+			expect(validParams.accessToken).toBe("mock-token");
+			expect(typeof validParams.accessToken).toBe("string");
 		});
 	});
 

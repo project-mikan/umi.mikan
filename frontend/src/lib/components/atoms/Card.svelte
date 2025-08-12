@@ -13,3 +13,4 @@ $: classes = `bg-white dark:bg-gray-800 shadow dark:shadow-gray-900/20 rounded-l
 <div class={classes}>
 	<slot />
 </div>
+
