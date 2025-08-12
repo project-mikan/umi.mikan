@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -16,7 +15,7 @@ const (
 
 // Cache expiration times
 const (
-	DiaryCountCacheExpiration = 24 * time.Hour // 24時間キャッシュ
+	DiaryCountCacheExpiration = 0 // 無期限キャッシュ
 )
 
 // SetDiaryCount sets the diary count for a user in cache
@@ -46,6 +45,33 @@ func (r *RedisClient) GetDiaryCount(ctx context.Context, userID string) (uint32,
 	}
 
 	return uint32(count), nil
+}
+
+// UpdateDiaryCount updates (increments or decrements) the diary count for a user in cache
+func (r *RedisClient) UpdateDiaryCount(ctx context.Context, userID string, delta int) error {
+	key := fmt.Sprintf(DiaryCountCacheKey, userID)
+
+	// Use INCRBY to atomically increment/decrement the count
+	_, err := r.client.IncrBy(ctx, key, int64(delta)).Result()
+	if err != nil {
+		return fmt.Errorf("failed to update diary count cache: %w", err)
+	}
+
+	// Set expiration to 0 (no expiration) if the key doesn't have one
+	exists, err := r.client.Exists(ctx, key).Result()
+	if err != nil {
+		return fmt.Errorf("failed to check cache key existence: %w", err)
+	}
+
+	if exists > 0 {
+		// Set expiration to 0 (no expiration)
+		err := r.client.Persist(ctx, key).Err()
+		if err != nil {
+			return fmt.Errorf("failed to set cache key persistence: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // DeleteDiaryCount deletes the diary count cache for a user

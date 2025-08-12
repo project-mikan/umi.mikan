@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/google/uuid"
@@ -33,6 +34,27 @@ func (m *mockRedisClientForDiaries) GetDiaryCount(ctx context.Context, userID st
 	}
 
 	return count, nil
+}
+
+func (m *mockRedisClientForDiaries) UpdateDiaryCount(ctx context.Context, userID string, delta int) error {
+	key := fmt.Sprintf(DiaryCountCacheKey, userID)
+
+	// Get current value or start with 0
+	var currentCount int64 = 0
+	if val, exists := m.data[key]; exists {
+		if parsed, err := strconv.ParseInt(val, 10, 64); err == nil {
+			currentCount = parsed
+		}
+	}
+
+	// Update the count
+	newCount := currentCount + int64(delta)
+	if newCount < 0 {
+		newCount = 0 // Ensure count doesn't go negative
+	}
+
+	m.data[key] = strconv.FormatInt(newCount, 10)
+	return nil
 }
 
 func (m *mockRedisClientForDiaries) DeleteDiaryCount(ctx context.Context, userID string) error {
@@ -205,6 +227,145 @@ func TestRedisClient_DiaryCount_MultipleUsers(t *testing.T) {
 	}
 	if retrievedCount2 != count2 {
 		t.Errorf("Expected count %d for user 2 but got %d", count2, retrievedCount2)
+	}
+}
+
+func TestRedisClient_DiaryCount_Update(t *testing.T) {
+	client := setupMockRedisForDiaries()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
+
+	ctx := context.Background()
+	userID := uuid.New().String()
+
+	// Test updating from 0 (non-existent key)
+	err := client.UpdateDiaryCount(ctx, userID, 5)
+	if err != nil {
+		t.Fatalf("Failed to update diary count from 0: %v", err)
+	}
+
+	count, err := client.GetDiaryCount(ctx, userID)
+	if err != nil {
+		t.Fatalf("Failed to get diary count after update: %v", err)
+	}
+	if count != 5 {
+		t.Errorf("Expected count 5 after update but got %d", count)
+	}
+
+	// Test incrementing
+	err = client.UpdateDiaryCount(ctx, userID, 3)
+	if err != nil {
+		t.Fatalf("Failed to increment diary count: %v", err)
+	}
+
+	count, err = client.GetDiaryCount(ctx, userID)
+	if err != nil {
+		t.Fatalf("Failed to get diary count after increment: %v", err)
+	}
+	if count != 8 {
+		t.Errorf("Expected count 8 after increment but got %d", count)
+	}
+
+	// Test decrementing
+	err = client.UpdateDiaryCount(ctx, userID, -3)
+	if err != nil {
+		t.Fatalf("Failed to decrement diary count: %v", err)
+	}
+
+	count, err = client.GetDiaryCount(ctx, userID)
+	if err != nil {
+		t.Fatalf("Failed to get diary count after decrement: %v", err)
+	}
+	if count != 5 {
+		t.Errorf("Expected count 5 after decrement but got %d", count)
+	}
+}
+
+func TestRedisClient_DiaryCount_UpdateToNegative(t *testing.T) {
+	client := setupMockRedisForDiaries()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
+
+	ctx := context.Background()
+	userID := uuid.New().String()
+
+	// Set initial count
+	err := client.SetDiaryCount(ctx, userID, 3)
+	if err != nil {
+		t.Fatalf("Failed to set initial diary count: %v", err)
+	}
+
+	// Try to decrement below 0
+	err = client.UpdateDiaryCount(ctx, userID, -5)
+	if err != nil {
+		t.Fatalf("Failed to update diary count to negative: %v", err)
+	}
+
+	count, err := client.GetDiaryCount(ctx, userID)
+	if err != nil {
+		t.Fatalf("Failed to get diary count after negative update: %v", err)
+	}
+	if count != 0 {
+		t.Errorf("Expected count 0 after negative update but got %d", count)
+	}
+}
+
+func TestRedisClient_DiaryCount_UpdateMultipleUsers(t *testing.T) {
+	client := setupMockRedisForDiaries()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Errorf("Failed to close client: %v", err)
+		}
+	}()
+
+	ctx := context.Background()
+	userID1 := uuid.New().String()
+	userID2 := uuid.New().String()
+
+	// Set initial counts
+	err := client.SetDiaryCount(ctx, userID1, 5)
+	if err != nil {
+		t.Fatalf("Failed to set diary count for user 1: %v", err)
+	}
+
+	err = client.SetDiaryCount(ctx, userID2, 10)
+	if err != nil {
+		t.Fatalf("Failed to set diary count for user 2: %v", err)
+	}
+
+	// Update user 1 count
+	err = client.UpdateDiaryCount(ctx, userID1, 2)
+	if err != nil {
+		t.Fatalf("Failed to update diary count for user 1: %v", err)
+	}
+
+	// Update user 2 count
+	err = client.UpdateDiaryCount(ctx, userID2, -3)
+	if err != nil {
+		t.Fatalf("Failed to update diary count for user 2: %v", err)
+	}
+
+	// Verify both users have correct updated counts
+	count1, err := client.GetDiaryCount(ctx, userID1)
+	if err != nil {
+		t.Fatalf("Failed to get diary count for user 1: %v", err)
+	}
+	if count1 != 7 {
+		t.Errorf("Expected count 7 for user 1 but got %d", count1)
+	}
+
+	count2, err := client.GetDiaryCount(ctx, userID2)
+	if err != nil {
+		t.Fatalf("Failed to get diary count for user 2: %v", err)
+	}
+	if count2 != 7 {
+		t.Errorf("Expected count 7 for user 2 but got %d", count2)
 	}
 }
 

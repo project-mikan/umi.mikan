@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -45,6 +46,27 @@ func (m *mockRedisForIntegration) GetDiaryCount(ctx context.Context, userID stri
 	}
 
 	return count, nil
+}
+
+func (m *mockRedisForIntegration) UpdateDiaryCount(ctx context.Context, userID string, delta int) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+
+	// Get current value or start with 0
+	var currentCount int64 = 0
+	if val, exists := m.data[key]; exists {
+		if parsed, err := strconv.ParseInt(val, 10, 64); err == nil {
+			currentCount = parsed
+		}
+	}
+
+	// Update the count
+	newCount := currentCount + int64(delta)
+	if newCount < 0 {
+		newCount = 0 // Ensure count doesn't go negative
+	}
+
+	m.data[key] = strconv.FormatInt(newCount, 10)
+	return nil
 }
 
 func (m *mockRedisForIntegration) DeleteDiaryCount(ctx context.Context, userID string) error {
