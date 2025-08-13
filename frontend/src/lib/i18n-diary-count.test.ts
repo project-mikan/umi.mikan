@@ -6,7 +6,9 @@ describe("Diary Count Internationalization", () => {
 	describe("Japanese locale", () => {
 		it("should have totalCount translation key", () => {
 			expect(ja.diary.totalCount).toBeDefined();
-			expect(ja.diary.totalCount).toBe("これまでに{count}日分の日記を書きました");
+			expect(ja.diary.totalCount).toBe(
+				"これまでに{count}日分の日記を書きました",
+			);
 		});
 
 		it("should contain count placeholder", () => {
@@ -24,7 +26,9 @@ describe("Diary Count Internationalization", () => {
 	describe("English locale", () => {
 		it("should have totalCount translation key", () => {
 			expect(en.diary.totalCount).toBeDefined();
-			expect(en.diary.totalCount).toBe("You have written {count} diary entries so far");
+			expect(en.diary.totalCount).toBe(
+				"You have written {count} diary entries so far",
+			);
 		});
 
 		it("should contain count placeholder", () => {
@@ -88,7 +92,7 @@ describe("Diary Count Internationalization", () => {
 	describe("Locale completeness for diary feature", () => {
 		it("should have all required diary keys in both locales", () => {
 			const requiredKeys = ["title", "totalCount", "today", "yesterday"];
-			
+
 			for (const key of requiredKeys) {
 				expect(ja.diary[key as keyof typeof ja.diary]).toBeDefined();
 				expect(en.diary[key as keyof typeof en.diary]).toBeDefined();

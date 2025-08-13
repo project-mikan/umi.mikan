@@ -65,9 +65,7 @@ describe("+page.server load function", () => {
 		const mockYMD = { year: 2024, month: 1, day: 15 };
 
 		vi.mocked(diaryApi.createYMD).mockReturnValue(mockYMD);
-		vi.mocked(diaryApi.getDiaryEntry).mockRejectedValue(
-			new Error("API Error"),
-		);
+		vi.mocked(diaryApi.getDiaryEntry).mockRejectedValue(new Error("API Error"));
 		vi.mocked(diaryApi.getDiaryCount).mockRejectedValue(
 			new Error("Count API Error"),
 		);
@@ -100,7 +98,7 @@ describe("+page.server load function", () => {
 		};
 
 		vi.mocked(diaryApi.createYMD).mockReturnValue(mockYMD);
-		
+
 		// Mock partial failures: getDiaryEntry succeeds, getDiaryCount fails
 		vi.mocked(diaryApi.getDiaryEntry).mockResolvedValue({
 			entry: mockEntry,
@@ -142,7 +140,7 @@ describe("Date creation utilities", () => {
 	it("should create correct dates for load function", () => {
 		// Test the date logic used in the load function
 		const testDate = new Date("2024-03-15T12:00:00Z");
-		
+
 		const today = {
 			year: testDate.getFullYear(),
 			month: testDate.getMonth() + 1,
