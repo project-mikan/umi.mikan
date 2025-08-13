@@ -3,7 +3,7 @@ import { _ } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import { browser } from "$app/environment";
-import type { DiaryEntry } from "$lib/grpc";
+import type { DiaryEntry } from "$lib/grpc/diary/diary_pb.ts";
 import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";

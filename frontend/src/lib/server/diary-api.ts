@@ -7,6 +7,8 @@ import {
 	DeleteDiaryEntryRequestSchema,
 	type DeleteDiaryEntryResponse,
 	DiaryService,
+	GetDiaryCountRequestSchema,
+	type GetDiaryCountResponse,
 	GetDiaryEntriesByMonthRequestSchema,
 	type GetDiaryEntriesByMonthResponse,
 	GetDiaryEntryRequestSchema,
@@ -64,6 +66,10 @@ export interface DeleteDiaryEntryParams {
 
 export interface SearchDiaryEntriesParams {
 	keyword: string;
+	accessToken: string;
+}
+
+export interface GetDiaryCountParams {
 	accessToken: string;
 }
 
@@ -155,4 +161,15 @@ export async function searchDiaryEntries(
 	});
 
 	return await client.searchDiaryEntries(request);
+}
+
+export async function getDiaryCount(
+	params: GetDiaryCountParams,
+): Promise<GetDiaryCountResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(GetDiaryCountRequestSchema, {});
+
+	return await client.getDiaryCount(request);
 }

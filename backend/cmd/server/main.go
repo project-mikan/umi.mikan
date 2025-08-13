@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/project-mikan/umi.mikan/backend/constants"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/cache"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
@@ -40,8 +41,19 @@ func main() {
 		}
 	}()
 
+	// Redis接続 (必須)
+	redisClient, err := cache.NewRedisClient()
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Failed to close Redis connection: %v", err)
+		}
+	}()
+
 	// サービス登録
-	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db})
+	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db, Redis: redisClient})
 	g.RegisterAuthServiceServer(grpcServer, &auth.AuthEntry{DB: db})
 
 	// localでcliからデバッグできるようにする

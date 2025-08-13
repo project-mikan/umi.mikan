@@ -1,5 +1,8 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+	"files": {
+		"ignoreUnknown": false
+	},
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -29,6 +32,15 @@
 						"noUnusedVariables": "off"
 					}
 				}
+			}
+		},
+		{
+			"includes": ["src/lib/grpc/**/*"],
+			"formatter": {
+				"enabled": false
+			},
+			"linter": {
+				"enabled": false
 			}
 		}
 	]

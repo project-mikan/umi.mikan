@@ -3,6 +3,8 @@ package diary
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,9 +15,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// RedisInterface defines the methods needed for caching diary counts
+type RedisInterface interface {
+	SetDiaryCount(ctx context.Context, userID string, count uint32) error
+	GetDiaryCount(ctx context.Context, userID string) (uint32, error)
+	UpdateDiaryCount(ctx context.Context, userID string, delta int) error
+	DeleteDiaryCount(ctx context.Context, userID string) error
+	Close() error
+}
+
 type DiaryEntry struct {
 	g.UnimplementedDiaryServiceServer
-	DB database.DB
+	DB    database.DB
+	Redis RedisInterface
 }
 
 func (s *DiaryEntry) CreateDiaryEntry(
@@ -47,6 +59,15 @@ func (s *DiaryEntry) CreateDiaryEntry(
 	if err := diary.Insert(ctx, s.DB); err != nil {
 		return nil, err
 	}
+
+	// 日記が作成されたのでキャッシュの値を非同期で+1する
+	go func(userIDStr string) {
+		// 新しいcontextを使用（元のcontextがキャンセルされても実行継続）
+		bgCtx := context.Background()
+		if err := s.safeUpdateDiaryCount(bgCtx, userIDStr, 1); err != nil {
+			log.Printf("Warning: failed to update diary count cache after creation for user %s: %v", userIDStr, err)
+		}
+	}(userID.String())
 
 	return &g.CreateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -248,6 +269,15 @@ func (s *DiaryEntry) DeleteDiaryEntry(
 		return nil, err
 	}
 
+	// 日記が削除されたのでキャッシュの値を非同期で-1する
+	go func(userIDStr string) {
+		// 新しいcontextを使用（元のcontextがキャンセルされても実行継続）
+		bgCtx := context.Background()
+		if err := s.safeUpdateDiaryCount(bgCtx, userIDStr, -1); err != nil {
+			log.Printf("Warning: failed to update diary count cache after deletion for user %s: %v", userIDStr, err)
+		}
+	}(userID.String())
+
 	return &g.DeleteDiaryEntryResponse{
 		Success: true,
 	}, nil
@@ -283,4 +313,59 @@ func (s *DiaryEntry) SearchDiaryEntries(
 		SearchedKeyword: message.Keyword,
 		Entries:         entries,
 	}, nil
+}
+
+func (s *DiaryEntry) GetDiaryCount(
+	ctx context.Context,
+	message *g.GetDiaryCountRequest,
+) (*g.GetDiaryCountResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// まずキャッシュから取得を試行
+	if count, err := s.Redis.GetDiaryCount(ctx, userID.String()); err == nil {
+		return &g.GetDiaryCountResponse{Count: count}, nil
+	}
+
+	// キャッシュにない場合はDBから取得
+	count, err := database.CountDiariesByUserID(ctx, s.DB, userID.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get diary count: %w", err)
+	}
+
+	// 結果をキャッシュに保存
+	if err := s.Redis.SetDiaryCount(ctx, userID.String(), uint32(count)); err != nil {
+		log.Printf("Warning: failed to cache diary count for user %s: %v", userID.String(), err)
+	}
+
+	return &g.GetDiaryCountResponse{Count: uint32(count)}, nil
+}
+
+// safeUpdateDiaryCount safely updates the diary count cache, initializing from DB if cache doesn't exist
+func (s *DiaryEntry) safeUpdateDiaryCount(ctx context.Context, userID string, delta int) error {
+	// Check if cache key exists first
+	_, err := s.Redis.GetDiaryCount(ctx, userID)
+	if err != nil {
+		// Cache miss - initialize from database with the current count (after DB change)
+		count, err := database.CountDiariesByUserID(ctx, s.DB, userID)
+		if err != nil {
+			return fmt.Errorf("failed to get diary count from DB for cache initialization: %w", err)
+		}
+
+		// Set the cache to current DB value (which already reflects the change)
+		// No need to add delta since DB already has the updated count
+		if err := s.Redis.SetDiaryCount(ctx, userID, uint32(count)); err != nil {
+			return fmt.Errorf("failed to initialize diary count cache: %w", err)
+		}
+		return nil // Cache is already set to correct value
+	}
+
+	// Cache exists - just update it
+	return s.Redis.UpdateDiaryCount(ctx, userID, delta)
 }

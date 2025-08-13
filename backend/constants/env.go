@@ -14,6 +14,11 @@ type DBConfig struct {
 	DBName   string
 }
 
+type RedisConfig struct {
+	Host string
+	Port int
+}
+
 func LoadEnv(name string) (string, error) {
 	value, ok := os.LookupEnv(name)
 	if !ok {
@@ -71,5 +76,24 @@ func LoadDBConfig() (*DBConfig, error) {
 		User:     user,
 		Password: password,
 		DBName:   dbname,
+	}, nil
+}
+
+func LoadRedisConfig() (*RedisConfig, error) {
+	host, err := LoadEnv("REDIS_HOST")
+	if err != nil {
+		return nil, err
+	}
+	portString, err := LoadEnv("REDIS_PORT")
+	if err != nil {
+		return nil, err
+	}
+	port, err := strconv.Atoi(portString)
+	if err != nil {
+		return nil, err
+	}
+	return &RedisConfig{
+		Host: host,
+		Port: port,
 	}, nil
 }

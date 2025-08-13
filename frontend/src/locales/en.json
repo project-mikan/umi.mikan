@@ -25,6 +25,7 @@
 	},
 	"diary": {
 		"title": "Diary",
+		"totalCount": "You have written {count} diary entries so far",
 		"today": "Today",
 		"yesterday": "Yesterday",
 		"dayBeforeYesterday": "Day before yesterday",

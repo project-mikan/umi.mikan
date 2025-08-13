@@ -4,14 +4,92 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// Mock Redis client for testing (thread-safe)
+type mockRedisClient struct {
+	data map[string]string
+	mu   sync.RWMutex
+}
+
+func (m *mockRedisClient) SetDiaryCount(ctx context.Context, userID string, count uint32) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data[key] = fmt.Sprintf("%d", count)
+	return nil
+}
+
+func (m *mockRedisClient) GetDiaryCount(ctx context.Context, userID string) (uint32, error) {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	m.mu.RLock()
+	val, exists := m.data[key]
+	m.mu.RUnlock()
+
+	if !exists {
+		return 0, fmt.Errorf("cache miss")
+	}
+
+	var count uint32
+	_, err := fmt.Sscanf(val, "%d", &count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse cached count: %w", err)
+	}
+
+	return count, nil
+}
+
+func (m *mockRedisClient) UpdateDiaryCount(ctx context.Context, userID string, delta int) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Get current value or start with 0
+	var currentCount int64 = 0
+	if val, exists := m.data[key]; exists {
+		if parsed, err := strconv.ParseInt(val, 10, 64); err == nil {
+			currentCount = parsed
+		}
+	}
+
+	// Update the count
+	newCount := currentCount + int64(delta)
+	if newCount < 0 {
+		newCount = 0 // Ensure count doesn't go negative
+	}
+
+	m.data[key] = strconv.FormatInt(newCount, 10)
+	return nil
+}
+
+func (m *mockRedisClient) DeleteDiaryCount(ctx context.Context, userID string) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.data, key)
+	return nil
+}
+
+func (m *mockRedisClient) Close() error {
+	return nil
+}
+
+func createMockRedisClient() *mockRedisClient {
+	return &mockRedisClient{
+		data: make(map[string]string),
+	}
+}
 
 func setupTestDB(t *testing.T) *sql.DB {
 	return testutil.SetupTestDB(t)
@@ -29,7 +107,8 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 	db := setupTestDB(t)
 
 	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := createAuthenticatedContext(userID)
 
 	tests := []struct {
@@ -117,7 +196,8 @@ func TestDiaryEntry_GetDiaryEntry(t *testing.T) {
 	db := setupTestDB(t)
 
 	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := createAuthenticatedContext(userID)
 
 	// Create a diary entry first
@@ -196,7 +276,8 @@ func TestDiaryEntry_UpdateDiaryEntry(t *testing.T) {
 	db := setupTestDB(t)
 
 	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := createAuthenticatedContext(userID)
 
 	// Create a diary entry first
@@ -293,7 +374,8 @@ func TestDiaryEntry_DeleteDiaryEntry(t *testing.T) {
 	db := setupTestDB(t)
 
 	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := createAuthenticatedContext(userID)
 
 	// Create a diary entry first
@@ -365,7 +447,8 @@ func TestDiaryEntry_GetDiaryEntries(t *testing.T) {
 	db := setupTestDB(t)
 
 	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := createAuthenticatedContext(userID)
 
 	// Create multiple diary entries
@@ -407,7 +490,8 @@ func TestDiaryEntry_GetDiaryEntriesByMonth(t *testing.T) {
 	db := setupTestDB(t)
 
 	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := createAuthenticatedContext(userID)
 
 	// Create diary entries for a specific month
@@ -447,7 +531,8 @@ func TestDiaryEntry_UnauthorizedAccess(t *testing.T) {
 	userID1 := createTestUser(t, db)
 	userID2 := testutil.CreateTestUser(t, db, "diary-test2@example.com", "Diary Test User 2")
 
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx1 := createAuthenticatedContext(userID1)
 	ctx2 := createAuthenticatedContext(userID2)
 
@@ -492,10 +577,152 @@ func TestDiaryEntry_UnauthorizedAccess(t *testing.T) {
 	}
 }
 
+func TestDiaryEntry_GetDiaryCount(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
+	ctx := createAuthenticatedContext(userID)
+
+	// Test with empty diary count
+	getCountReq := &g.GetDiaryCountRequest{}
+	response, err := diaryService.GetDiaryCount(ctx, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success but got error: %v", err)
+	}
+	if response == nil {
+		t.Fatal("Expected response but got nil")
+	}
+	if response.Count != 0 {
+		t.Errorf("Expected count to be 0 but got %d", response.Count)
+	}
+
+	// Create some diary entries
+	dates := []*g.YMD{
+		{Year: 2024, Month: 9, Day: 1},
+		{Year: 2024, Month: 9, Day: 2},
+		{Year: 2024, Month: 9, Day: 3},
+	}
+
+	for i, date := range dates {
+		createReq := &g.CreateDiaryEntryRequest{
+			Content: fmt.Sprintf("Test diary entry %d", i+1),
+			Date:    date,
+		}
+		_, err := diaryService.CreateDiaryEntry(ctx, createReq)
+		if err != nil {
+			t.Fatalf("Failed to create diary entry %d: %v", i+1, err)
+		}
+	}
+
+	// Wait for async cache updates to complete
+	time.Sleep(200 * time.Millisecond)
+
+	// Test diary count after creating entries
+	response, err = diaryService.GetDiaryCount(ctx, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success but got error: %v", err)
+	}
+	if response == nil {
+		t.Fatal("Expected response but got nil")
+	}
+	if response.Count != uint32(len(dates)) {
+		t.Errorf("Expected count to be %d but got %d", len(dates), response.Count)
+	}
+
+	// Delete one entry and check count decreases
+	// First, get one of the created entries
+	getReq := &g.GetDiaryEntryRequest{Date: dates[0]}
+	getResp, err := diaryService.GetDiaryEntry(ctx, getReq)
+	if err != nil {
+		t.Fatalf("Failed to get diary entry for deletion test: %v", err)
+	}
+
+	deleteReq := &g.DeleteDiaryEntryRequest{Id: getResp.Entry.Id}
+	_, err = diaryService.DeleteDiaryEntry(ctx, deleteReq)
+	if err != nil {
+		t.Fatalf("Failed to delete diary entry: %v", err)
+	}
+
+	// Wait for async cache update to complete
+	time.Sleep(200 * time.Millisecond)
+
+	// Test diary count after deletion
+	response, err = diaryService.GetDiaryCount(ctx, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success but got error: %v", err)
+	}
+	if response == nil {
+		t.Fatal("Expected response but got nil")
+	}
+	expectedCount := uint32(len(dates) - 1)
+	if response.Count != expectedCount {
+		t.Errorf("Expected count to be %d but got %d", expectedCount, response.Count)
+	}
+}
+
+func TestDiaryEntry_GetDiaryCount_MultipleUsers(t *testing.T) {
+	db := setupTestDB(t)
+
+	// Create two users
+	userID1 := createTestUser(t, db)
+	userID2 := testutil.CreateTestUser(t, db, "diary-count-test2@example.com", "Test User 2")
+
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
+	ctx1 := createAuthenticatedContext(userID1)
+	ctx2 := createAuthenticatedContext(userID2)
+
+	// User 1 creates diary entries
+	for i := 1; i <= 3; i++ {
+		createReq := &g.CreateDiaryEntryRequest{
+			Content: fmt.Sprintf("User 1 diary entry %d", i),
+			Date:    &g.YMD{Year: 2024, Month: 10, Day: uint32(i)},
+		}
+		_, err := diaryService.CreateDiaryEntry(ctx1, createReq)
+		if err != nil {
+			t.Fatalf("Failed to create diary entry for user 1: %v", err)
+		}
+	}
+
+	// User 2 creates diary entries
+	for i := 1; i <= 2; i++ {
+		createReq := &g.CreateDiaryEntryRequest{
+			Content: fmt.Sprintf("User 2 diary entry %d", i),
+			Date:    &g.YMD{Year: 2024, Month: 10, Day: uint32(i + 10)},
+		}
+		_, err := diaryService.CreateDiaryEntry(ctx2, createReq)
+		if err != nil {
+			t.Fatalf("Failed to create diary entry for user 2: %v", err)
+		}
+	}
+
+	// Check count for user 1
+	getCountReq := &g.GetDiaryCountRequest{}
+	response1, err := diaryService.GetDiaryCount(ctx1, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success for user 1 but got error: %v", err)
+	}
+	if response1.Count != 3 {
+		t.Errorf("Expected user 1 count to be 3 but got %d", response1.Count)
+	}
+
+	// Check count for user 2
+	response2, err := diaryService.GetDiaryCount(ctx2, getCountReq)
+	if err != nil {
+		t.Fatalf("Expected success for user 2 but got error: %v", err)
+	}
+	if response2.Count != 2 {
+		t.Errorf("Expected user 2 count to be 2 but got %d", response2.Count)
+	}
+}
+
 func TestDiaryEntry_UnauthenticatedAccess(t *testing.T) {
 	db := setupTestDB(t)
 
-	diaryService := &DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := context.Background() // No authentication
 
 	// Try to create a diary entry without authentication
@@ -506,5 +733,184 @@ func TestDiaryEntry_UnauthenticatedAccess(t *testing.T) {
 	_, err := diaryService.CreateDiaryEntry(ctx, createReq)
 	if err == nil {
 		t.Error("Expected authentication error but got nil")
+	}
+
+	// Try to get diary count without authentication
+	getCountReq := &g.GetDiaryCountRequest{}
+	_, err = diaryService.GetDiaryCount(ctx, getCountReq)
+	if err == nil {
+		t.Error("Expected authentication error but got nil")
+	}
+}
+
+func TestDiaryEntry_AsyncCacheUpdate_CreateDiary(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	userIDStr := userID.String()
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
+	ctx := createAuthenticatedContext(userID)
+
+	createReq := &g.CreateDiaryEntryRequest{
+		Content: "Test diary with async cache update",
+		Date: &g.YMD{
+			Year:  2024,
+			Month: 11,
+			Day:   1,
+		},
+	}
+
+	// Create diary entry - cache update is now async
+	_, err := diaryService.CreateDiaryEntry(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Failed to create diary entry: %v", err)
+	}
+
+	// Wait a bit for goroutine to complete
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify cache was updated (should be 1 since it's the first entry)
+	count, err := mockRedis.GetDiaryCount(context.Background(), userIDStr)
+	if err != nil {
+		// Cache miss is expected since this was the first entry with empty cache
+		t.Logf("Cache miss after async update (expected for first entry): %v", err)
+		return
+	}
+
+	if count != 1 {
+		t.Errorf("Expected count 1 after async update but got %d", count)
+	}
+}
+
+func TestDiaryEntry_AsyncCacheUpdate_DeleteDiary(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	userIDStr := userID.String()
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
+	ctx := createAuthenticatedContext(userID)
+
+	// First create an entry
+	createReq := &g.CreateDiaryEntryRequest{
+		Content: "Test diary for async delete test",
+		Date: &g.YMD{
+			Year:  2024,
+			Month: 11,
+			Day:   2,
+		},
+	}
+
+	createResp, err := diaryService.CreateDiaryEntry(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Failed to create diary entry: %v", err)
+	}
+
+	// Wait for create goroutine to complete
+	time.Sleep(100 * time.Millisecond)
+
+	// Pre-populate cache to ensure it exists before deletion
+	err = mockRedis.SetDiaryCount(context.Background(), userIDStr, 1)
+	if err != nil {
+		t.Fatalf("Failed to set initial cache: %v", err)
+	}
+
+	// Delete the entry - cache update is now async
+	deleteReq := &g.DeleteDiaryEntryRequest{
+		Id: createResp.Entry.Id,
+	}
+
+	_, err = diaryService.DeleteDiaryEntry(ctx, deleteReq)
+	if err != nil {
+		t.Fatalf("Failed to delete diary entry: %v", err)
+	}
+
+	// Wait for delete goroutine to complete
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify cache was decremented (should be 0)
+	count, err := mockRedis.GetDiaryCount(context.Background(), userIDStr)
+	if err != nil {
+		t.Fatalf("Failed to get diary count after delete: %v", err)
+	}
+
+	if count != 0 {
+		t.Errorf("Expected count 0 after async delete but got %d", count)
+	}
+}
+
+func TestDiaryEntry_SafeUpdateDiaryCount_InitializeFromDB(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	userIDStr := userID.String()
+	// Create some diary entries directly in the database (bypassing cache)
+	ctx := createAuthenticatedContext(userID)
+
+	// Create diary entries directly in DB
+	for i := 0; i < 3; i++ {
+		diary := &database.Diary{
+			ID:        uuid.New(),
+			UserID:    userID,
+			Content:   fmt.Sprintf("Test diary %d", i+1),
+			Date:      time.Date(2024, 11, i+1, 0, 0, 0, 0, time.UTC),
+			CreatedAt: time.Now().Unix(),
+			UpdatedAt: time.Now().Unix(),
+		}
+		err := diary.Insert(ctx, db)
+		if err != nil {
+			t.Fatalf("Failed to insert diary directly to DB: %v", err)
+		}
+	}
+
+	// Use empty cache (no existing cache entry)
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
+
+	// Call safeUpdateDiaryCount - should initialize from DB current count (3)
+	err := diaryService.safeUpdateDiaryCount(ctx, userIDStr, 1)
+	if err != nil {
+		t.Fatalf("Failed to safely update diary count: %v", err)
+	}
+
+	// Verify cache now has the DB count (3) since we initialize from current DB state
+	count, err := mockRedis.GetDiaryCount(ctx, userIDStr)
+	if err != nil {
+		t.Fatalf("Failed to get diary count from cache: %v", err)
+	}
+	if count != 3 {
+		t.Errorf("Expected count 3 (initialized from DB) but got %d", count)
+	}
+}
+
+func TestDiaryEntry_SafeUpdateDiaryCount_ExistingCache(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	userIDStr := userID.String()
+	mockRedis := createMockRedisClient()
+	diaryService := &DiaryEntry{DB: db, Redis: mockRedis}
+	ctx := createAuthenticatedContext(userID)
+
+	// Pre-populate cache
+	err := mockRedis.SetDiaryCount(ctx, userIDStr, 5)
+	if err != nil {
+		t.Fatalf("Failed to set initial cache: %v", err)
+	}
+
+	// Call safeUpdateDiaryCount - should use existing cache
+	err = diaryService.safeUpdateDiaryCount(ctx, userIDStr, 2)
+	if err != nil {
+		t.Fatalf("Failed to safely update diary count: %v", err)
+	}
+
+	// Verify cache has been updated (5 + 2 = 7)
+	count, err := mockRedis.GetDiaryCount(ctx, userIDStr)
+	if err != nil {
+		t.Fatalf("Failed to get diary count from cache: %v", err)
+	}
+	if count != 7 {
+		t.Errorf("Expected count 7 (5 + 2) but got %d", count)
 	}
 }

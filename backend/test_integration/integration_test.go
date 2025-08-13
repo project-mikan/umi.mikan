@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -14,12 +15,77 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
 
+// Mock Redis client for integration tests - using the one from diary package
+func createMockRedisClient() *mockRedisForIntegration {
+	return &mockRedisForIntegration{
+		data: make(map[string]string),
+	}
+}
+
+type mockRedisForIntegration struct {
+	data map[string]string
+}
+
+func (m *mockRedisForIntegration) SetDiaryCount(ctx context.Context, userID string, count uint32) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	m.data[key] = fmt.Sprintf("%d", count)
+	return nil
+}
+
+func (m *mockRedisForIntegration) GetDiaryCount(ctx context.Context, userID string) (uint32, error) {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	val, exists := m.data[key]
+	if !exists {
+		return 0, fmt.Errorf("cache miss")
+	}
+
+	var count uint32
+	_, err := fmt.Sscanf(val, "%d", &count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse cached count: %w", err)
+	}
+
+	return count, nil
+}
+
+func (m *mockRedisForIntegration) UpdateDiaryCount(ctx context.Context, userID string, delta int) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+
+	// Get current value or start with 0
+	var currentCount int64 = 0
+	if val, exists := m.data[key]; exists {
+		if parsed, err := strconv.ParseInt(val, 10, 64); err == nil {
+			currentCount = parsed
+		}
+	}
+
+	// Update the count
+	newCount := currentCount + int64(delta)
+	if newCount < 0 {
+		newCount = 0 // Ensure count doesn't go negative
+	}
+
+	m.data[key] = strconv.FormatInt(newCount, 10)
+	return nil
+}
+
+func (m *mockRedisForIntegration) DeleteDiaryCount(ctx context.Context, userID string) error {
+	key := fmt.Sprintf("diary_count:%s", userID)
+	delete(m.data, key)
+	return nil
+}
+
+func (m *mockRedisForIntegration) Close() error {
+	return nil
+}
+
 func TestCompleteUserJourney(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 
 	// Initialize services
 	authService := &auth.AuthEntry{DB: db}
-	diaryService := &diary.DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &diary.DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := context.Background()
 
 	// Generate unique test identifier
@@ -182,7 +248,8 @@ func TestUserIsolation(t *testing.T) {
 
 	// Initialize services
 	authService := &auth.AuthEntry{DB: db}
-	diaryService := &diary.DiaryEntry{DB: db}
+	mockRedis := createMockRedisClient()
+	diaryService := &diary.DiaryEntry{DB: db, Redis: mockRedis}
 	ctx := context.Background()
 
 	// Generate unique test identifier
