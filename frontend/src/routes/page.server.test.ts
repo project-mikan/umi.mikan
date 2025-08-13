@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import type { RequestEvent } from "@sveltejs/kit";
 import { load } from "./+page.server";
 import * as diaryApi from "$lib/server/diary-api";
+import type { PageServerLoad } from "./$types";
+import { create } from "@bufbuild/protobuf";
+import {
+	YMDSchema,
+	DiaryEntrySchema,
+	GetDiaryCountResponseSchema,
+	GetDiaryEntryResponseSchema,
+} from "$lib/grpc/diary/diary_pb";
 
 // Mock the diary API module
 vi.mock("$lib/server/diary-api", () => ({
@@ -19,20 +26,20 @@ describe("+page.server load function", () => {
 		vi.setSystemTime(mockDate);
 
 		// Setup mocks
-		const mockYMD = { year: 2024, month: 1, day: 15 };
-		const mockEntry = {
+		const mockYMD = create(YMDSchema, { year: 2024, month: 1, day: 15 });
+		const mockEntry = create(DiaryEntrySchema, {
 			id: "test-entry-1",
 			content: "Test diary entry",
 			date: mockYMD,
-		};
+		});
 
 		vi.mocked(diaryApi.createYMD).mockReturnValue(mockYMD);
-		vi.mocked(diaryApi.getDiaryEntry).mockResolvedValue({
-			entry: mockEntry,
-		});
-		vi.mocked(diaryApi.getDiaryCount).mockResolvedValue({
-			count: 42,
-		});
+		vi.mocked(diaryApi.getDiaryEntry).mockResolvedValue(
+			create(GetDiaryEntryResponseSchema, { entry: mockEntry }),
+		);
+		vi.mocked(diaryApi.getDiaryCount).mockResolvedValue(
+			create(GetDiaryCountResponseSchema, { count: 42 }),
+		);
 
 		// Mock cookies
 		const mockCookies = new Map([["accessToken", "test-token"]]);
@@ -40,16 +47,16 @@ describe("+page.server load function", () => {
 			cookies: {
 				get: (name: string) => mockCookies.get(name),
 			},
-		} as unknown as RequestEvent;
+		} as Parameters<PageServerLoad>[0];
 
 		// Call the load function
 		const result = await load(mockRequestEvent);
 
 		// Verify the result includes diary count
-		expect(result.diaryCount).toBe(42);
-		expect(result.today).toBeDefined();
-		expect(result.yesterday).toBeDefined();
-		expect(result.dayBeforeYesterday).toBeDefined();
+		expect(result?.diaryCount).toBe(42);
+		expect(result?.today).toBeDefined();
+		expect(result?.yesterday).toBeDefined();
+		expect(result?.dayBeforeYesterday).toBeDefined();
 
 		// Verify API calls were made
 		expect(diaryApi.getDiaryCount).toHaveBeenCalledWith({
@@ -62,7 +69,7 @@ describe("+page.server load function", () => {
 		const mockDate = new Date("2024-01-15T12:00:00Z");
 		vi.setSystemTime(mockDate);
 
-		const mockYMD = { year: 2024, month: 1, day: 15 };
+		const mockYMD = create(YMDSchema, { year: 2024, month: 1, day: 15 });
 
 		vi.mocked(diaryApi.createYMD).mockReturnValue(mockYMD);
 		vi.mocked(diaryApi.getDiaryEntry).mockRejectedValue(new Error("API Error"));
@@ -75,34 +82,34 @@ describe("+page.server load function", () => {
 			cookies: {
 				get: (name: string) => mockCookies.get(name),
 			},
-		} as unknown as RequestEvent;
+		} as Parameters<PageServerLoad>[0];
 
 		const result = await load(mockRequestEvent);
 
 		// Should return 0 count when API fails
-		expect(result.diaryCount).toBe(0);
-		expect(result.today.entry).toBeNull();
-		expect(result.yesterday.entry).toBeNull();
-		expect(result.dayBeforeYesterday.entry).toBeNull();
+		expect(result?.diaryCount).toBe(0);
+		expect(result?.today.entry).toBeNull();
+		expect(result?.yesterday.entry).toBeNull();
+		expect(result?.dayBeforeYesterday.entry).toBeNull();
 	});
 
 	it("should handle partial API failures gracefully", async () => {
 		const mockDate = new Date("2024-01-15T12:00:00Z");
 		vi.setSystemTime(mockDate);
 
-		const mockYMD = { year: 2024, month: 1, day: 15 };
-		const mockEntry = {
+		const mockYMD = create(YMDSchema, { year: 2024, month: 1, day: 15 });
+		const mockEntry = create(DiaryEntrySchema, {
 			id: "test-entry-1",
 			content: "Test diary entry",
 			date: mockYMD,
-		};
+		});
 
 		vi.mocked(diaryApi.createYMD).mockReturnValue(mockYMD);
 
 		// Mock partial failures: getDiaryEntry succeeds, getDiaryCount fails
-		vi.mocked(diaryApi.getDiaryEntry).mockResolvedValue({
-			entry: mockEntry,
-		});
+		vi.mocked(diaryApi.getDiaryEntry).mockResolvedValue(
+			create(GetDiaryEntryResponseSchema, { entry: mockEntry }),
+		);
 		vi.mocked(diaryApi.getDiaryCount).mockRejectedValue(
 			new Error("Count API Error"),
 		);
@@ -112,15 +119,15 @@ describe("+page.server load function", () => {
 			cookies: {
 				get: (name: string) => mockCookies.get(name),
 			},
-		} as unknown as RequestEvent;
+		} as Parameters<PageServerLoad>[0];
 
 		const result = await load(mockRequestEvent);
 
 		// Should handle mixed success/failure
-		expect(result.diaryCount).toBe(0); // Failed API call
-		expect(result.today.entry).toEqual(mockEntry); // Successful API call
-		expect(result.yesterday.entry).toEqual(mockEntry);
-		expect(result.dayBeforeYesterday.entry).toEqual(mockEntry);
+		expect(result?.diaryCount).toBe(0); // Failed API call
+		expect(result?.today.entry).toEqual(mockEntry); // Successful API call
+		expect(result?.yesterday.entry).toEqual(mockEntry);
+		expect(result?.dayBeforeYesterday.entry).toEqual(mockEntry);
 	});
 
 	it("should redirect when no access token", async () => {
@@ -129,7 +136,7 @@ describe("+page.server load function", () => {
 			cookies: {
 				get: (name: string) => mockCookies.get(name),
 			},
-		} as unknown as RequestEvent;
+		} as Parameters<PageServerLoad>[0];
 
 		// Should throw redirect error
 		await expect(load(mockRequestEvent)).rejects.toThrow();
