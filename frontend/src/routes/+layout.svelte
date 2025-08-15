@@ -6,6 +6,7 @@ import { onMount } from "svelte";
 import Head from "$lib/components/atoms/Head.svelte";
 import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
 import QuickNavigation from "$lib/components/molecules/QuickNavigation.svelte";
+import Footer from "$lib/components/organisms/Footer.svelte";
 import type { LayoutData } from "./$types";
 
 export let data: LayoutData;
@@ -31,4 +32,6 @@ onMount(() => {
 	<main class="{isAuthenticated && !isAuthPage ? 'container mx-auto py-8' : ''} text-gray-900 dark:text-gray-100">
 		<slot />
 	</main>
+
+	<Footer {isAuthenticated} />
 </div>
