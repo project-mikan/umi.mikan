@@ -1,4 +1,6 @@
 <script lang="ts">
+import { onMount } from "svelte";
+
 export let isOpen = false;
 export let onBackdropClick: (() => void) | null = null;
 export let maxWidth = "max-w-lg";
@@ -14,6 +16,20 @@ function _handleKeydown(event: KeyboardEvent) {
 		onBackdropClick();
 	}
 }
+
+onMount(() => {
+	const handleGlobalKeydown = (event: KeyboardEvent) => {
+		if (isOpen && event.key === "Escape" && onBackdropClick) {
+			onBackdropClick();
+		}
+	};
+
+	document.addEventListener("keydown", handleGlobalKeydown);
+
+	return () => {
+		document.removeEventListener("keydown", handleGlobalKeydown);
+	};
+});
 </script>
 
 {#if isOpen}
