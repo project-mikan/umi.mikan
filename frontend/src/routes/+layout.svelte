@@ -22,14 +22,14 @@ onMount(() => {
 
 <Head />
 
-<div class="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors flex flex-col">
 	<NavigationBar {isAuthenticated} {isAuthPage} />
 
 	{#if isAuthenticated && !isAuthPage}
 		<QuickNavigation />
 	{/if}
 
-	<main class="{isAuthenticated && !isAuthPage ? 'container mx-auto py-8' : ''} text-gray-900 dark:text-gray-100">
+	<main class="{isAuthenticated && !isAuthPage ? 'container mx-auto py-8' : ''} text-gray-900 dark:text-gray-100 flex-1">
 		<slot />
 	</main>
 

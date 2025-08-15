@@ -7,17 +7,51 @@ import DarkModeToggle from "../atoms/DarkModeToggle.svelte";
 
 export let isAuthenticated = false;
 export let isAuthPage = false;
+
+const currentDate = new Date();
+const currentYear = currentDate.getFullYear();
+const currentMonth = currentDate.getMonth() + 1;
 </script>
 
 {#if isAuthenticated && !isAuthPage}
-	<nav class="bg-white dark:bg-gray-900 shadow">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	<header class="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow">
+		<nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 justify-between">
-				<div class="flex">
+				<div class="flex items-center">
 					<div class="flex flex-shrink-0 items-center">
 						<h1 class="text-xl font-bold text-gray-900 dark:text-white">
 							<a href="/" class="hover:text-blue-600 dark:hover:text-blue-400"> umi.mikan </a>
 						</h1>
+					</div>
+					<!-- Desktop Navigation -->
+					<div class="hidden md:flex md:ml-8 md:space-x-4">
+						<a 
+							href="/"
+							class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400 transition-colors"
+						>
+							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+							</svg>
+							{$_("navigation.home")}
+						</a>
+						<a 
+							href="/monthly/{currentYear}/{currentMonth}"
+							class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-green-600 dark:text-gray-200 dark:hover:text-green-400 transition-colors"
+						>
+							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+							</svg>
+							{$_("navigation.monthly")}
+						</a>
+						<a 
+							href="/search"
+							class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-purple-600 dark:text-gray-200 dark:hover:text-purple-400 transition-colors"
+						>
+							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+							</svg>
+							{$_("navigation.search")}
+						</a>
 					</div>
 				</div>
 				<div class="flex items-center space-x-4">
@@ -25,11 +59,11 @@ export let isAuthPage = false;
 					<LanguageSelector />
 				</div>
 			</div>
-		</div>
-	</nav>
+		</nav>
+	</header>
 {:else if isAuthPage}
-	<nav class="bg-white dark:bg-gray-900 shadow">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	<header class="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow">
+		<nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 justify-between">
 				<div class="flex">
 					<div class="flex flex-shrink-0 items-center">
@@ -43,7 +77,7 @@ export let isAuthPage = false;
 					<LanguageSelector />
 				</div>
 			</div>
-		</div>
-	</nav>
+		</nav>
+	</header>
 {/if}
 
