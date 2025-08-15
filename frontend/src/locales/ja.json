@@ -109,5 +109,12 @@
 		"yearProgress": "今年",
 		"monthProgress": "今月",
 		"dayProgress": "今日"
+	},
+	"monthSelector": {
+		"title": "月を選択",
+		"year": "年",
+		"month": "月",
+		"confirm": "決定",
+		"cancel": "キャンセル"
 	}
 }
