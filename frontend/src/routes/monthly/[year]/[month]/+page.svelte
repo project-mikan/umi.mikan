@@ -7,6 +7,7 @@ import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
+import MonthYearSelector from "$lib/components/molecules/MonthYearSelector.svelte";
 
 export let data: PageData;
 
@@ -14,6 +15,7 @@ let entries = data.entries;
 let currentYear = data.year;
 let currentMonth = data.month;
 let _loading = false;
+let showMonthSelector = false;
 
 // データの更新
 $: {
@@ -94,6 +96,20 @@ async function _goToToday() {
 	const month = now.getMonth() + 1;
 	await fetchMonthData(year, month);
 	await goto(`/monthly/${year}/${month}`, { replaceState: true });
+}
+
+function _showMonthSelector() {
+	showMonthSelector = true;
+}
+
+async function _handleMonthSelect(year: number, month: number) {
+	showMonthSelector = false;
+	await fetchMonthData(year, month);
+	await goto(`/monthly/${year}/${month}`, { replaceState: true });
+}
+
+function _handleMonthSelectorCancel() {
+	showMonthSelector = false;
 }
 
 // カレンダーデータの準備（リアクティブ）
@@ -184,12 +200,15 @@ $: _weekDays = (() => {
 				></path>
 			</svg>
 		</button>
-		<h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 min-w-[200px] text-center">
+		<button 
+			on:click={_showMonthSelector}
+			class="text-xl font-semibold text-gray-800 dark:text-gray-200 min-w-[200px] text-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md px-4 py-2 transition-colors cursor-pointer"
+		>
 			{_formatMonth(currentYear, currentMonth)}
 			{#if _loading}
 				<span class="ml-2 text-sm text-gray-500 dark:text-gray-400">読み込み中...</span>
 			{/if}
-		</h2>
+		</button>
 		<button
 			on:click={_nextMonth}
 			class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
@@ -232,4 +251,13 @@ $: _weekDays = (() => {
 		/>
 	</div>
 </div>
+
+<!-- Month/Year Selector Modal -->
+<MonthYearSelector
+	isOpen={showMonthSelector}
+	{currentYear}
+	{currentMonth}
+	onSelect={_handleMonthSelect}
+	onCancel={_handleMonthSelectorCancel}
+/>
 

@@ -109,5 +109,12 @@
 		"yearProgress": "Year progress",
 		"monthProgress": "Month progress",
 		"dayProgress": "Day progress"
+	},
+	"monthSelector": {
+		"title": "Select Month",
+		"year": "Year",
+		"month": "Month",
+		"confirm": "Confirm",
+		"cancel": "Cancel"
 	}
 }
