@@ -20,15 +20,12 @@ function _handleKeydown(event: KeyboardEvent) {
 	<div class="fixed inset-0 z-[9999] overflow-y-auto">
 		<div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
 			<!-- Backdrop -->
-			<div class="fixed inset-0 z-[9998] transition-opacity" aria-hidden="true">
-				<div 
-					class="absolute inset-0 bg-gray-500 dark:bg-gray-700 opacity-75" 
-					on:click={_handleBackdropClick} 
-					on:keydown={_handleKeydown} 
-					role="button" 
-					tabindex="-1"
-				></div>
-			</div>
+			<button 
+				class="fixed inset-0 z-[9998] transition-opacity bg-gray-500 dark:bg-gray-700 opacity-75" 
+				on:click={_handleBackdropClick} 
+				on:keydown={_handleKeydown}
+				aria-label="Close modal"
+			></button>
 
 			<span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
