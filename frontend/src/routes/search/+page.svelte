@@ -131,15 +131,6 @@ function _formatContentWithLineBreaks(content: string): string {
 		</div>
 	{/if}
 
-	<!-- ナビゲーション -->
-	<div class="mt-8 flex justify-center">
-		<a 
-			href="/" 
-			class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-		>
-			{$_('search.backToList')}
-		</a>
-	</div>
 </div>
 
 <style>
