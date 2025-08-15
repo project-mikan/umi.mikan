@@ -8,7 +8,7 @@ export let isAuthenticated = false;
 </script>
 
 {#if isAuthenticated}
-	<footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+	<footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 pb-16 sm:pb-6">
 		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 			<div class="flex flex-col items-center space-y-4">
 				<div>
