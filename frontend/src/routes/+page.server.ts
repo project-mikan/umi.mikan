@@ -5,12 +5,13 @@ import {
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
+import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies }) => {
-	const accessToken = cookies.get("accessToken");
+	const authResult = await ensureValidAccessToken(cookies);
 
-	if (!accessToken) {
+	if (!authResult.isAuthenticated || !authResult.accessToken) {
 		throw redirect(302, "/login");
 	}
 
@@ -41,9 +42,15 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		// 3日分の日記を並行して取得
 		const [todayResult, yesterdayResult, dayBeforeYesterdayResult] =
 			await Promise.allSettled([
-				getDiaryEntry({ date: today, accessToken }),
-				getDiaryEntry({ date: yesterdayYMD, accessToken }),
-				getDiaryEntry({ date: dayBeforeYesterdayYMD, accessToken }),
+				getDiaryEntry({ date: today, accessToken: authResult.accessToken }),
+				getDiaryEntry({
+					date: yesterdayYMD,
+					accessToken: authResult.accessToken,
+				}),
+				getDiaryEntry({
+					date: dayBeforeYesterdayYMD,
+					accessToken: authResult.accessToken,
+				}),
 			]);
 
 		return {
@@ -97,9 +104,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 
 export const actions: Actions = {
 	saveToday: async ({ request, cookies }) => {
-		const accessToken = cookies.get("accessToken");
+		const authResult = await ensureValidAccessToken(cookies);
 
-		if (!accessToken) {
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
 			throw error(401, "Unauthorized");
 		}
 
@@ -123,14 +130,14 @@ export const actions: Actions = {
 					title: "",
 					content,
 					date,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			} else {
 				// 新規作成
 				await createDiaryEntry({
 					content,
 					date,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			}
 
@@ -141,9 +148,9 @@ export const actions: Actions = {
 		}
 	},
 	saveYesterday: async ({ request, cookies }) => {
-		const accessToken = cookies.get("accessToken");
+		const authResult = await ensureValidAccessToken(cookies);
 
-		if (!accessToken) {
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
 			throw error(401, "Unauthorized");
 		}
 
@@ -166,13 +173,13 @@ export const actions: Actions = {
 					title: "",
 					content,
 					date,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			} else {
 				await createDiaryEntry({
 					content,
 					date,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			}
 
@@ -183,9 +190,9 @@ export const actions: Actions = {
 		}
 	},
 	saveDayBeforeYesterday: async ({ request, cookies }) => {
-		const accessToken = cookies.get("accessToken");
+		const authResult = await ensureValidAccessToken(cookies);
 
-		if (!accessToken) {
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
 			throw error(401, "Unauthorized");
 		}
 
@@ -208,13 +215,13 @@ export const actions: Actions = {
 					title: "",
 					content,
 					date,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			} else {
 				await createDiaryEntry({
 					content,
 					date,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			}
 

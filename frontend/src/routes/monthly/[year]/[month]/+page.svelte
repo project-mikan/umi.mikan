@@ -3,6 +3,7 @@ import { _, locale } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import { browser } from "$app/environment";
+import { authenticatedFetch } from "$lib/auth-client";
 import type { DiaryEntry } from "$lib/grpc";
 import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
@@ -30,15 +31,29 @@ async function fetchMonthData(year: number, month: number) {
 
 	_loading = true;
 	try {
-		const response = await fetch(`/api/diary/monthly/${year}/${month}`);
+		const response = await authenticatedFetch(
+			`/api/diary/monthly/${year}/${month}`,
+		);
 		if (response.ok) {
 			const newEntries = await response.json();
 			entries = newEntries;
 			currentYear = year;
 			currentMonth = month;
+		} else if (response.status === 401) {
+			// Authentication failed completely, redirect to login
+			console.warn("Authentication failed, redirecting to login");
+			await goto("/login");
+		} else {
+			console.error(
+				"Failed to fetch entries:",
+				response.status,
+				response.statusText,
+			);
 		}
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
+		// If fetch fails completely, it might be a network issue or authentication problem
+		// Don't redirect automatically in this case, just log the error
 	} finally {
 		_loading = false;
 	}

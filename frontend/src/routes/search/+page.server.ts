@@ -1,12 +1,13 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { searchDiaryEntries } from "$lib/server/diary-api.js";
+import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const keyword = url.searchParams.get("q") || "";
-	const accessToken = cookies.get("accessToken");
+	const authResult = await ensureValidAccessToken(cookies);
 
-	if (!accessToken) {
+	if (!authResult.isAuthenticated || !authResult.accessToken) {
 		throw redirect(302, "/login");
 	}
 
@@ -20,7 +21,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 	try {
 		const searchResponse = await searchDiaryEntries({
 			keyword: keyword,
-			accessToken: accessToken,
+			accessToken: authResult.accessToken,
 		});
 
 		return {
@@ -39,8 +40,8 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 
 export const actions: Actions = {
 	search: async ({ request, cookies }) => {
-		const accessToken = cookies.get("accessToken");
-		if (!accessToken) {
+		const authResult = await ensureValidAccessToken(cookies);
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
 			return fail(401, { error: "Unauthorized" });
 		}
 
@@ -54,7 +55,7 @@ export const actions: Actions = {
 		try {
 			const searchResponse = await searchDiaryEntries({
 				keyword: keyword,
-				accessToken: accessToken,
+				accessToken: authResult.accessToken,
 			});
 
 			return {

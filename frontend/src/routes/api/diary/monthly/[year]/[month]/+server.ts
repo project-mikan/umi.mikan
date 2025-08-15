@@ -1,11 +1,12 @@
 import { error, json } from "@sveltejs/kit";
 import { createYM, getDiaryEntriesByMonth } from "$lib/server/diary-api";
+import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
-	const accessToken = cookies.get("accessToken");
+	const authResult = await ensureValidAccessToken(cookies);
 
-	if (!accessToken) {
+	if (!authResult.isAuthenticated || !authResult.accessToken) {
 		throw error(401, "Unauthorized");
 	}
 
@@ -19,7 +20,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 	try {
 		const entries = await getDiaryEntriesByMonth({
 			month: createYM(year, month),
-			accessToken,
+			accessToken: authResult.accessToken,
 		});
 
 		return json(entries);
