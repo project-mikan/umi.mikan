@@ -20,11 +20,6 @@ const config = {
 			hooks: {
 				server: "src/lib/hooks/hooks.server.ts",
 			},
-		},
-		typescript: {
-			config: (config) => {
-				return config;
-			}
 		}
 	},
 };

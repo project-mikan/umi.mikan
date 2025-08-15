@@ -17,6 +17,7 @@ COPY . .
 
 # Use production config and build
 RUN cp svelte.config.prod.js svelte.config.js
+RUN pnpm exec svelte-kit sync
 RUN pnpm build
 
 # Production stage
