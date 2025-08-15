@@ -116,5 +116,10 @@
 		"month": "Month",
 		"confirm": "Confirm",
 		"cancel": "Cancel"
+	},
+	"navigation": {
+		"home": "Home",
+		"monthly": "Monthly",
+		"search": "Search"
 	}
 }

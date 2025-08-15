@@ -116,5 +116,10 @@
 		"month": "月",
 		"confirm": "決定",
 		"cancel": "キャンセル"
+	},
+	"navigation": {
+		"home": "トップ",
+		"monthly": "月ページ",
+		"search": "検索"
 	}
 }
