@@ -6,13 +6,14 @@ import {
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
+import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
-	const accessToken = cookies.get("accessToken");
+	const authResult = await ensureValidAccessToken(cookies);
 
-	if (!accessToken) {
+	if (!authResult.isAuthenticated || !authResult.accessToken) {
 		throw redirect(302, "/login");
 	}
 
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		// メインの日記を取得
 		const response = await getDiaryEntry({
 			date,
-			accessToken,
+			accessToken: authResult.accessToken,
 		});
 
 		// 過去の日記を並行して取得
@@ -51,7 +52,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 					pastDates.oneWeekAgo.month,
 					pastDates.oneWeekAgo.day,
 				),
-				accessToken,
+				accessToken: authResult.accessToken,
 			}).catch(() => ({ entry: null })),
 			getDiaryEntry({
 				date: createYMD(
@@ -59,7 +60,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 					pastDates.oneMonthAgo.month,
 					pastDates.oneMonthAgo.day,
 				),
-				accessToken,
+				accessToken: authResult.accessToken,
 			}).catch(() => ({ entry: null })),
 			getDiaryEntry({
 				date: createYMD(
@@ -67,7 +68,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 					pastDates.oneYearAgo.month,
 					pastDates.oneYearAgo.day,
 				),
-				accessToken,
+				accessToken: authResult.accessToken,
 			}).catch(() => ({ entry: null })),
 			getDiaryEntry({
 				date: createYMD(
@@ -75,7 +76,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 					pastDates.twoYearsAgo.month,
 					pastDates.twoYearsAgo.day,
 				),
-				accessToken,
+				accessToken: authResult.accessToken,
 			}).catch(() => ({ entry: null })),
 		];
 
@@ -119,7 +120,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 						pastDates.oneWeekAgo.month,
 						pastDates.oneWeekAgo.day,
 					),
-					accessToken,
+					accessToken: authResult.accessToken,
 				}).catch(() => ({ entry: null })),
 				getDiaryEntry({
 					date: createYMD(
@@ -127,7 +128,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 						pastDates.oneMonthAgo.month,
 						pastDates.oneMonthAgo.day,
 					),
-					accessToken,
+					accessToken: authResult.accessToken,
 				}).catch(() => ({ entry: null })),
 				getDiaryEntry({
 					date: createYMD(
@@ -135,7 +136,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 						pastDates.oneYearAgo.month,
 						pastDates.oneYearAgo.day,
 					),
-					accessToken,
+					accessToken: authResult.accessToken,
 				}).catch(() => ({ entry: null })),
 				getDiaryEntry({
 					date: createYMD(
@@ -143,7 +144,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 						pastDates.twoYearsAgo.month,
 						pastDates.twoYearsAgo.day,
 					),
-					accessToken,
+					accessToken: authResult.accessToken,
 				}).catch(() => ({ entry: null })),
 			];
 
@@ -180,9 +181,9 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 export const actions: Actions = {
 	save: async ({ request, cookies }) => {
-		const accessToken = cookies.get("accessToken");
+		const authResult = await ensureValidAccessToken(cookies);
 
-		if (!accessToken) {
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
 			throw error(401, "Unauthorized");
 		}
 
@@ -219,14 +220,14 @@ export const actions: Actions = {
 					title: "",
 					content,
 					date: ymd,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			} else {
 				// Create new entry
 				await createDiaryEntry({
 					content,
 					date: ymd,
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			}
 		} catch (err) {
@@ -245,9 +246,9 @@ export const actions: Actions = {
 	},
 
 	delete: async ({ params, cookies }) => {
-		const accessToken = cookies.get("accessToken");
+		const authResult = await ensureValidAccessToken(cookies);
 
-		if (!accessToken) {
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
 			throw error(401, "Unauthorized");
 		}
 
@@ -267,7 +268,7 @@ export const actions: Actions = {
 						Number.parseInt(month, 10),
 						Number.parseInt(day, 10),
 					),
-					accessToken,
+					accessToken: authResult.accessToken,
 				});
 			} catch (getDiaryErr) {
 				// Handle gRPC NOT_FOUND error (code 2) - diary entry doesn't exist
@@ -292,7 +293,7 @@ export const actions: Actions = {
 
 			await deleteDiaryEntry({
 				id: currentResponse.entry.id,
-				accessToken,
+				accessToken: authResult.accessToken,
 			});
 		} catch (err) {
 			if (err instanceof Response) {
