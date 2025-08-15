@@ -34,7 +34,7 @@ $: months = Array.from({ length: 12 }, (_, i) => {
 	const date = new Date(2000, i, 1);
 	return {
 		value: i + 1,
-		label: date.toLocaleDateString($locale || "en", { month: "long" })
+		label: date.toLocaleDateString($locale || "en", { month: "long" }),
 	};
 });
 </script>
@@ -44,7 +44,7 @@ $: months = Array.from({ length: 12 }, (_, i) => {
 		<div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
 			<!-- Backdrop -->
 			<div class="fixed inset-0 transition-opacity" aria-hidden="true">
-				<div class="absolute inset-0 bg-gray-500 dark:bg-gray-700 opacity-75" on:click={handleCancel}></div>
+				<div class="absolute inset-0 bg-gray-500 dark:bg-gray-700 opacity-75" on:click={handleCancel} on:keydown={(e) => e.key === 'Escape' && handleCancel()} role="button" tabindex="-1"></div>
 			</div>
 
 			<span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -60,10 +60,11 @@ $: months = Array.from({ length: 12 }, (_, i) => {
 						<div class="space-y-4">
 							<!-- Year selector -->
 							<div>
-								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="year-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 									{$_("monthSelector.year")}
 								</label>
 								<select 
+									id="year-select"
 									bind:value={selectedYear}
 									class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 								>
@@ -75,10 +76,11 @@ $: months = Array.from({ length: 12 }, (_, i) => {
 
 							<!-- Month selector -->
 							<div>
-								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+								<label for="month-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 									{$_("monthSelector.month")}
 								</label>
 								<select 
+									id="month-select"
 									bind:value={selectedMonth}
 									class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 								>
