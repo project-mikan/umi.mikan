@@ -1,5 +1,5 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
+import { _, locale } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
@@ -19,11 +19,12 @@ $: content = data.entry?.content || "";
 let formElement: HTMLFormElement;
 let _showDeleteConfirm = false;
 
-function _formatDate(ymd: {
+// Reactive date formatting function
+$: _formatDate = (ymd: {
 	year: number;
 	month: number;
 	day: number;
-}): string {
+}): string => {
 	const dayOfWeekKey = getDayOfWeekKey(ymd);
 	const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
 	return $_("date.format.yearMonthDayWithDayOfWeek", {
@@ -34,7 +35,7 @@ function _formatDate(ymd: {
 			dayOfWeek: dayOfWeek,
 		},
 	});
-}
+};
 
 function _formatDateStr(ymd: {
 	year: number;
