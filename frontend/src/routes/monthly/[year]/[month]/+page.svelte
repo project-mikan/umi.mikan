@@ -202,11 +202,11 @@ $: _weekDays = (() => {
 		</button>
 		<button 
 			on:click={_showMonthSelector}
-			class="text-xl font-semibold text-gray-800 dark:text-gray-200 min-w-[200px] text-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md px-4 py-2 transition-colors cursor-pointer"
+			class="text-xl font-semibold text-white bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 min-w-[200px] text-center rounded-md px-4 py-2 transition-colors cursor-pointer shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
 		>
 			{_formatMonth(currentYear, currentMonth)}
 			{#if _loading}
-				<span class="ml-2 text-sm text-gray-500 dark:text-gray-400">読み込み中...</span>
+				<span class="ml-2 text-sm text-green-200 dark:text-green-300">読み込み中...</span>
 			{/if}
 		</button>
 		<button
