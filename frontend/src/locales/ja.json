@@ -121,5 +121,8 @@
 		"home": "トップ",
 		"monthly": "月ページ",
 		"search": "検索"
+	},
+	"footer": {
+		"github": "GitHub"
 	}
 }

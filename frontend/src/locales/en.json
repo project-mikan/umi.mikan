@@ -121,5 +121,8 @@
 		"home": "Home",
 		"monthly": "Monthly",
 		"search": "Search"
+	},
+	"footer": {
+		"github": "GitHub"
 	}
 }
