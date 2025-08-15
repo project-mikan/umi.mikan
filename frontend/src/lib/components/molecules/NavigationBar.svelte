@@ -10,8 +10,8 @@ export let isAuthPage = false;
 </script>
 
 {#if isAuthenticated && !isAuthPage}
-	<nav class="bg-white dark:bg-gray-900 shadow">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	<header class="bg-white dark:bg-gray-900 shadow">
+		<nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 justify-between">
 				<div class="flex">
 					<div class="flex flex-shrink-0 items-center">
@@ -25,11 +25,11 @@ export let isAuthPage = false;
 					<LanguageSelector />
 				</div>
 			</div>
-		</div>
-	</nav>
+		</nav>
+	</header>
 {:else if isAuthPage}
-	<nav class="bg-white dark:bg-gray-900 shadow">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	<header class="bg-white dark:bg-gray-900 shadow">
+		<nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 justify-between">
 				<div class="flex">
 					<div class="flex flex-shrink-0 items-center">
@@ -43,7 +43,7 @@ export let isAuthPage = false;
 					<LanguageSelector />
 				</div>
 			</div>
-		</div>
-	</nav>
+		</nav>
+	</header>
 {/if}
 
