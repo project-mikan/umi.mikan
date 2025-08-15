@@ -1,5 +1,5 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
+import { _, locale } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import { browser } from "$app/environment";
@@ -42,18 +42,19 @@ async function fetchMonthData(year: number, month: number) {
 	}
 }
 
-function _formatMonth(year: number, month: number): string {
+// Reactive date formatting functions
+$: _formatMonth = (year: number, month: number): string => {
 	const date = new Date(year, month - 1, 1);
-	return date.toLocaleDateString(undefined, {
+	return date.toLocaleDateString($locale || "en", {
 		year: "numeric",
 		month: "long",
 	});
-}
+};
 
-function _formatMonthOnly(month: number): string {
+$: _formatMonthOnly = (month: number): string => {
 	const date = new Date(2000, month - 1, 1);
-	return date.toLocaleDateString(undefined, { month: "long" });
-}
+	return date.toLocaleDateString($locale || "en", { month: "long" });
+};
 
 function getDaysInMonth(year: number, month: number): number {
 	return new Date(year, month, 0).getDate();
@@ -124,19 +125,20 @@ $: entryMap = (() => {
 	return map;
 })();
 
-function getWeekDays(): string[] {
+// Reactive weekdays
+$: _weekDays = (() => {
 	const days = [];
 	const _date = new Date();
 	// 日曜日から始まる週の各曜日を取得
 	for (let i = 0; i < 7; i++) {
 		const dayDate = new Date();
 		dayDate.setDate(dayDate.getDate() - dayDate.getDay() + i);
-		days.push(dayDate.toLocaleDateString(undefined, { weekday: "short" }));
+		days.push(
+			dayDate.toLocaleDateString($locale || "en", { weekday: "short" }),
+		);
 	}
 	return days;
-}
-
-const _weekDays = getWeekDays();
+})();
 </script>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
+import { _, locale } from "svelte-i18n";
 import type { DiaryEntry } from "$lib/grpc";
 
 export let daysInMonth: number;
@@ -25,7 +25,7 @@ function formatContentWithLineBreaks(content: string): string {
 					<div class="flex items-center space-x-3">
 						<span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{day}</span>
 						<span class="text-sm text-gray-500 dark:text-gray-400">
-							{new Date(currentYear, currentMonth - 1, day).toLocaleDateString(undefined, { weekday: 'short' })}
+							{new Date(currentYear, currentMonth - 1, day).toLocaleDateString($locale || "en", { weekday: 'short' })}
 						</span>
 					</div>
 					{#if !entry}
