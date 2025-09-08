@@ -31,6 +31,8 @@
 		"thisMonth": "今月の日記",
 		"search": "検索",
 		"save": "保存",
+		"saving": "保存中...",
+		"saved": "保存しました",
 		"back": "戻る",
 		"edit": "編集",
 		"delete": "削除",
