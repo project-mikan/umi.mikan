@@ -4,9 +4,11 @@ import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
+import SaveButton from "$lib/components/atoms/SaveButton.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
+import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { DiaryEntry, YMD } from "$lib/grpc";
 import type { PageData } from "./$types";
 
@@ -18,6 +20,8 @@ let dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
 let formElement: HTMLFormElement;
 let yesterdayFormElement: HTMLFormElement;
 let dayBeforeYesterdayFormElement: HTMLFormElement;
+let [todayLoading, yesterdayLoading, dayBeforeLoading] = [false, false, false];
+let [todaySaved, yesterdaySaved, dayBeforeSaved] = [false, false, false];
 
 function getMonthlyUrl(): string {
 	const now = new Date();
@@ -68,13 +72,7 @@ function handleDayBeforeYesterdaySave() {
 				bind:this={formElement}
 				method="POST"
 				action="?/saveToday"
-				use:enhance={() => {
-					return async ({ result }) => {
-						if (result.type === "success") {
-							window.location.reload();
-						}
-					};
-				}}
+use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) => todaySaved = saved)}
 				slot="form"
 			>
 				<input
@@ -96,9 +94,7 @@ function handleDayBeforeYesterdaySave() {
 					on:save={handleSave}
 				/>
 				<div class="flex justify-end">
-					<Button type="submit" variant="primary" size="md">
-						{$_("diary.save")}
-					</Button>
+					<SaveButton loading={todayLoading} saved={todaySaved} />
 				</div>
 			</form>
 		</DiaryCard>
@@ -112,13 +108,7 @@ function handleDayBeforeYesterdaySave() {
 				bind:this={yesterdayFormElement}
 				method="POST"
 				action="?/saveYesterday"
-				use:enhance={() => {
-					return async ({ result }) => {
-						if (result.type === "success") {
-							window.location.reload();
-						}
-					};
-				}}
+use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved) => yesterdaySaved = saved)}
 				slot="form"
 			>
 				<input
@@ -140,9 +130,7 @@ function handleDayBeforeYesterdaySave() {
 					on:save={handleYesterdaySave}
 				/>
 				<div class="flex justify-end">
-					<Button type="submit" variant="primary" size="md">
-						{$_("diary.save")}
-					</Button>
+					<SaveButton loading={yesterdayLoading} saved={yesterdaySaved} />
 				</div>
 			</form>
 		</DiaryCard>
@@ -156,13 +144,7 @@ function handleDayBeforeYesterdaySave() {
 				bind:this={dayBeforeYesterdayFormElement}
 				method="POST"
 				action="?/saveDayBeforeYesterday"
-				use:enhance={() => {
-					return async ({ result }) => {
-						if (result.type === "success") {
-							window.location.reload();
-						}
-					};
-				}}
+use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved) => dayBeforeSaved = saved)}
 				slot="form"
 			>
 				<input
@@ -188,9 +170,7 @@ function handleDayBeforeYesterdaySave() {
 					on:save={handleDayBeforeYesterdaySave}
 				/>
 				<div class="flex justify-end">
-					<Button type="submit" variant="primary" size="md">
-						{$_("diary.save")}
-					</Button>
+					<SaveButton loading={dayBeforeLoading} saved={dayBeforeSaved} />
 				</div>
 			</form>
 		</DiaryCard>

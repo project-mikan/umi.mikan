@@ -4,12 +4,14 @@ import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
+import SaveButton from "$lib/components/atoms/SaveButton.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import Modal from "$lib/components/molecules/Modal.svelte";
 import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
 import { getDayOfWeekKey } from "$lib/utils/date-utils";
+import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { ActionData, PageData } from "./$types";
 
 export let data: PageData;
@@ -18,6 +20,8 @@ export let form: ActionData;
 $: content = data.entry?.content || "";
 let formElement: HTMLFormElement;
 let _showDeleteConfirm = false;
+let loading = false;
+let saved = false;
 
 // Reactive date formatting function
 $: _formatDate = (ymd: {
@@ -98,13 +102,7 @@ function _handleDelete() {
 				bind:this={formElement}
 				method="POST"
 				action="?/save"
-				use:enhance={() => {
-					return async ({ result }) => {
-						if (result.type === "success") {
-							window.location.reload();
-						}
-					};
-				}}
+use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 				slot="form"
 			>
 				<input type="hidden" name="date" value={_formatDateStr(data.date)} />
@@ -139,9 +137,7 @@ function _handleDelete() {
 							</Button>
 						{/if}
 					</div>
-					<Button type="submit" variant="primary" size="md">
-						{$_("diary.save")}
-					</Button>
+					<SaveButton {loading} {saved} />
 				</div>
 			</form>
 		</DiaryCard>

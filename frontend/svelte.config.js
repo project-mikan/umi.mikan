@@ -20,7 +20,7 @@ const config = {
 			hooks: {
 				server: "src/lib/hooks/hooks.server.ts",
 			},
-		}
+		},
 	},
 };
 
