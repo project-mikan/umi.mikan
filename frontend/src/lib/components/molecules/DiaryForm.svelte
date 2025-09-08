@@ -38,16 +38,11 @@ function _handleCancel() {
 	</div>
 
 	<div class="bg-white dark:bg-gray-800 shadow dark:shadow-gray-900/20 rounded-lg p-6">
-		<form method="POST" use:enhance={{
-			onSubmit: () => {
-				isSubmitting = true;
-			},
-			onResult: ({ result }) => {
+		<form method="POST" use:enhance={() => {
+			isSubmitting = true;
+			return async ({ result }) => {
 				isSubmitting = false;
-			},
-			onError: () => {
-				isSubmitting = false;
-			}
+			};
 		}}>
 			{#if error}
 				<Alert type="error">

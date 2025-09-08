@@ -1,12 +1,13 @@
 import { invalidateAll } from "$app/navigation";
+import type { ActionResult } from "@sveltejs/kit";
 
 export function createSubmitHandler(
 	setLoading: (loading: boolean) => void,
-	setSaved?: (saved: boolean) => void
+	setSaved?: (saved: boolean) => void,
 ) {
 	return () => {
 		setLoading(true);
-		return async ({ result }: any) => {
+		return async ({ result }: { result: ActionResult }) => {
 			setLoading(false);
 			if (result.type === "success") {
 				await invalidateAll();

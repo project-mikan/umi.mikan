@@ -4,7 +4,7 @@ import Button from "./Button.svelte";
 
 export let loading = false;
 export let saved = false;
-export let size = "md";
+export let size: "sm" | "md" | "lg" = "md";
 </script>
 
 <Button type="submit" variant={saved ? "success" : "primary"} {size} disabled={loading || saved}>
