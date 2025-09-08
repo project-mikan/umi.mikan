@@ -26,7 +26,7 @@ tidy:
 
 
 xo:
-	# db-initも実行したいが立ち上げてすぐは起動できないので別でコマンド
+	# db-initを別で実行することでDBを更新できる
 	rm -rf backend/infrastructure/database/*.xo.go
 	docker compose exec backend go tool xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
 go-mod-tidy:
