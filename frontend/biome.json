@@ -17,9 +17,7 @@
 	},
 	"overrides": [
 		{
-			"includes": [
-				"**/*.svelte"
-			],
+			"includes": ["**/*.svelte"],
 			"linter": {
 				"rules": {
 					"style": {
@@ -29,6 +27,16 @@
 					"correctness": {
 						"noUnusedImports": "off",
 						"noUnusedVariables": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.css"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noUnknownAtRules": "off"
 					}
 				}
 			}

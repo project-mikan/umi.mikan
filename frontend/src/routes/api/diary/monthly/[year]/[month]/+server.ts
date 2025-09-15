@@ -10,8 +10,8 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 		throw error(401, "Unauthorized");
 	}
 
-	const year = Number.parseInt(params.year);
-	const month = Number.parseInt(params.month);
+	const year = Number.parseInt(params.year, 10);
+	const month = Number.parseInt(params.month, 10);
 
 	if (Number.isNaN(year) || Number.isNaN(month) || month < 1 || month > 12) {
 		throw error(400, "Invalid year or month");
