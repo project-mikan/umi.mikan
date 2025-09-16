@@ -8,8 +8,18 @@ import Link from "../atoms/Link.svelte";
 export let pastEntries: {
 	oneWeekAgo: { date: DateInfo; entry: DiaryEntry | null };
 	oneMonthAgo: { date: DateInfo; entry: DiaryEntry | null };
+	twoMonthsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	sixMonthsAgo: { date: DateInfo; entry: DiaryEntry | null };
 	oneYearAgo: { date: DateInfo; entry: DiaryEntry | null };
 	twoYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	threeYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	fourYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	fiveYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	sixYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	sevenYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	eightYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	nineYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
+	tenYearsAgo: { date: DateInfo; entry: DiaryEntry | null };
 };
 
 interface PastEntry {
@@ -30,6 +40,16 @@ $: pastEntriesList = [
 		entry: pastEntries.oneMonthAgo.entry,
 	},
 	{
+		date: pastEntries.twoMonthsAgo.date,
+		labelKey: "diary.twoMonthsAgo",
+		entry: pastEntries.twoMonthsAgo.entry,
+	},
+	{
+		date: pastEntries.sixMonthsAgo.date,
+		labelKey: "diary.sixMonthsAgo",
+		entry: pastEntries.sixMonthsAgo.entry,
+	},
+	{
 		date: pastEntries.oneYearAgo.date,
 		labelKey: "diary.oneYearAgo",
 		entry: pastEntries.oneYearAgo.entry,
@@ -38,6 +58,46 @@ $: pastEntriesList = [
 		date: pastEntries.twoYearsAgo.date,
 		labelKey: "diary.twoYearsAgo",
 		entry: pastEntries.twoYearsAgo.entry,
+	},
+	{
+		date: pastEntries.threeYearsAgo.date,
+		labelKey: "diary.threeYearsAgo",
+		entry: pastEntries.threeYearsAgo.entry,
+	},
+	{
+		date: pastEntries.fourYearsAgo.date,
+		labelKey: "diary.fourYearsAgo",
+		entry: pastEntries.fourYearsAgo.entry,
+	},
+	{
+		date: pastEntries.fiveYearsAgo.date,
+		labelKey: "diary.fiveYearsAgo",
+		entry: pastEntries.fiveYearsAgo.entry,
+	},
+	{
+		date: pastEntries.sixYearsAgo.date,
+		labelKey: "diary.sixYearsAgo",
+		entry: pastEntries.sixYearsAgo.entry,
+	},
+	{
+		date: pastEntries.sevenYearsAgo.date,
+		labelKey: "diary.sevenYearsAgo",
+		entry: pastEntries.sevenYearsAgo.entry,
+	},
+	{
+		date: pastEntries.eightYearsAgo.date,
+		labelKey: "diary.eightYearsAgo",
+		entry: pastEntries.eightYearsAgo.entry,
+	},
+	{
+		date: pastEntries.nineYearsAgo.date,
+		labelKey: "diary.nineYearsAgo",
+		entry: pastEntries.nineYearsAgo.entry,
+	},
+	{
+		date: pastEntries.tenYearsAgo.date,
+		labelKey: "diary.tenYearsAgo",
+		entry: pastEntries.tenYearsAgo.entry,
 	},
 ];
 

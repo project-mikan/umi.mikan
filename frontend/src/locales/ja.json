@@ -51,8 +51,18 @@
 		"pastEntries": "過去の同じ日",
 		"oneWeekAgo": "1週間前",
 		"oneMonthAgo": "1ヶ月前",
+		"twoMonthsAgo": "2ヶ月前",
+		"sixMonthsAgo": "半年前",
 		"oneYearAgo": "1年前",
 		"twoYearsAgo": "2年前",
+		"threeYearsAgo": "3年前",
+		"fourYearsAgo": "4年前",
+		"fiveYearsAgo": "5年前",
+		"sixYearsAgo": "6年前",
+		"sevenYearsAgo": "7年前",
+		"eightYearsAgo": "8年前",
+		"nineYearsAgo": "9年前",
+		"tenYearsAgo": "10年前",
 		"noPastEntry": "日記がありません"
 	},
 	"date": {
