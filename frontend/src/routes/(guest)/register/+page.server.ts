@@ -2,10 +2,10 @@ import { fail, redirect } from "@sveltejs/kit";
 import { registerByPassword } from "$lib/server/auth-api";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ cookies }) => {
-	const accessToken = cookies.get("accessToken");
-	if (accessToken) {
-		throw redirect(302, "/diary");
+export const load: PageServerLoad = async ({ parent }) => {
+	const { isAuthenticated } = await parent();
+	if (isAuthenticated) {
+		throw redirect(302, "/");
 	}
 };
 
