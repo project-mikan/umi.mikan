@@ -51,9 +51,20 @@
 		"pastEntries": "Past entries on this day",
 		"oneWeekAgo": "1 week ago",
 		"oneMonthAgo": "1 month ago",
+		"twoMonthsAgo": "2 months ago",
+		"sixMonthsAgo": "6 months ago",
 		"oneYearAgo": "1 year ago",
 		"twoYearsAgo": "2 years ago",
-		"noPastEntry": "No entry"
+		"threeYearsAgo": "3 years ago",
+		"fourYearsAgo": "4 years ago",
+		"fiveYearsAgo": "5 years ago",
+		"sixYearsAgo": "6 years ago",
+		"sevenYearsAgo": "7 years ago",
+		"eightYearsAgo": "8 years ago",
+		"nineYearsAgo": "9 years ago",
+		"tenYearsAgo": "10 years ago",
+		"noPastEntry": "No entry",
+		"noPastEntries": "No past entries on this day"
 	},
 	"date": {
 		"dayOfWeek": {

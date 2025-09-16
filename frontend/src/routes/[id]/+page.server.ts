@@ -8,6 +8,7 @@ import {
 } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
+import type { DiaryEntry } from "$lib/grpc";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
@@ -45,65 +46,68 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		});
 
 		// 過去の日記を並行して取得
-		const pastEntriesPromises = [
-			getDiaryEntry({
-				date: createYMD(
-					pastDates.oneWeekAgo.year,
-					pastDates.oneWeekAgo.month,
-					pastDates.oneWeekAgo.day,
-				),
-				accessToken: authResult.accessToken,
-			}).catch(() => ({ entry: null })),
-			getDiaryEntry({
-				date: createYMD(
-					pastDates.oneMonthAgo.year,
-					pastDates.oneMonthAgo.month,
-					pastDates.oneMonthAgo.day,
-				),
-				accessToken: authResult.accessToken,
-			}).catch(() => ({ entry: null })),
-			getDiaryEntry({
-				date: createYMD(
-					pastDates.oneYearAgo.year,
-					pastDates.oneYearAgo.month,
-					pastDates.oneYearAgo.day,
-				),
-				accessToken: authResult.accessToken,
-			}).catch(() => ({ entry: null })),
-			getDiaryEntry({
-				date: createYMD(
-					pastDates.twoYearsAgo.year,
-					pastDates.twoYearsAgo.month,
-					pastDates.twoYearsAgo.day,
-				),
-				accessToken: authResult.accessToken,
-			}).catch(() => ({ entry: null })),
+		const pastDatesArray = [
+			pastDates.oneWeekAgo,
+			pastDates.oneMonthAgo,
+			pastDates.twoMonthsAgo,
+			pastDates.sixMonthsAgo,
+			pastDates.oneYearAgo,
+			pastDates.twoYearsAgo,
+			pastDates.threeYearsAgo,
+			pastDates.fourYearsAgo,
+			pastDates.fiveYearsAgo,
+			pastDates.sixYearsAgo,
+			pastDates.sevenYearsAgo,
+			pastDates.eightYearsAgo,
+			pastDates.nineYearsAgo,
+			pastDates.tenYearsAgo,
 		];
+
+		const pastEntriesPromises = pastDatesArray.map((pastDate) =>
+			getDiaryEntry({
+				date: createYMD(pastDate.year, pastDate.month, pastDate.day),
+				accessToken: authResult.accessToken!,
+			}).catch(() => ({ entry: null })),
+		);
 
 		const pastEntriesResults = await Promise.all(pastEntriesPromises);
 
 		// Return the entry if it exists, or null if it doesn't (allowing creation)
+		const pastEntriesKeys = [
+			"oneWeekAgo",
+			"oneMonthAgo",
+			"twoMonthsAgo",
+			"sixMonthsAgo",
+			"oneYearAgo",
+			"twoYearsAgo",
+			"threeYearsAgo",
+			"fourYearsAgo",
+			"fiveYearsAgo",
+			"sixYearsAgo",
+			"sevenYearsAgo",
+			"eightYearsAgo",
+			"nineYearsAgo",
+			"tenYearsAgo",
+		] as const;
+
+		const pastEntriesObject = pastEntriesKeys.reduce(
+			(acc, key, index) => {
+				acc[key] = {
+					date: pastDatesArray[index],
+					entry: pastEntriesResults[index].entry || null,
+				};
+				return acc;
+			},
+			{} as Record<
+				(typeof pastEntriesKeys)[number],
+				{ date: (typeof pastDatesArray)[number]; entry: DiaryEntry | null }
+			>,
+		);
+
 		return {
 			entry: response.entry || null,
 			date,
-			pastEntries: {
-				oneWeekAgo: {
-					date: pastDates.oneWeekAgo,
-					entry: pastEntriesResults[0].entry || null,
-				},
-				oneMonthAgo: {
-					date: pastDates.oneMonthAgo,
-					entry: pastEntriesResults[1].entry || null,
-				},
-				oneYearAgo: {
-					date: pastDates.oneYearAgo,
-					entry: pastEntriesResults[2].entry || null,
-				},
-				twoYearsAgo: {
-					date: pastDates.twoYearsAgo,
-					entry: pastEntriesResults[3].entry || null,
-				},
-			},
+			pastEntries: pastEntriesObject,
 		};
 	} catch (err) {
 		if (err instanceof Response) {
@@ -113,64 +117,67 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		// Handle gRPC NOT_FOUND error (code 2) - this is normal when no diary entry exists
 		if (err && typeof err === "object" && "code" in err && err.code === 2) {
 			// 過去の日記も取得（エラーでもnullを返す）
-			const pastEntriesPromises = [
-				getDiaryEntry({
-					date: createYMD(
-						pastDates.oneWeekAgo.year,
-						pastDates.oneWeekAgo.month,
-						pastDates.oneWeekAgo.day,
-					),
-					accessToken: authResult.accessToken,
-				}).catch(() => ({ entry: null })),
-				getDiaryEntry({
-					date: createYMD(
-						pastDates.oneMonthAgo.year,
-						pastDates.oneMonthAgo.month,
-						pastDates.oneMonthAgo.day,
-					),
-					accessToken: authResult.accessToken,
-				}).catch(() => ({ entry: null })),
-				getDiaryEntry({
-					date: createYMD(
-						pastDates.oneYearAgo.year,
-						pastDates.oneYearAgo.month,
-						pastDates.oneYearAgo.day,
-					),
-					accessToken: authResult.accessToken,
-				}).catch(() => ({ entry: null })),
-				getDiaryEntry({
-					date: createYMD(
-						pastDates.twoYearsAgo.year,
-						pastDates.twoYearsAgo.month,
-						pastDates.twoYearsAgo.day,
-					),
-					accessToken: authResult.accessToken,
-				}).catch(() => ({ entry: null })),
+			const pastDatesArray = [
+				pastDates.oneWeekAgo,
+				pastDates.oneMonthAgo,
+				pastDates.twoMonthsAgo,
+				pastDates.sixMonthsAgo,
+				pastDates.oneYearAgo,
+				pastDates.twoYearsAgo,
+				pastDates.threeYearsAgo,
+				pastDates.fourYearsAgo,
+				pastDates.fiveYearsAgo,
+				pastDates.sixYearsAgo,
+				pastDates.sevenYearsAgo,
+				pastDates.eightYearsAgo,
+				pastDates.nineYearsAgo,
+				pastDates.tenYearsAgo,
 			];
 
+			const pastEntriesPromises = pastDatesArray.map((pastDate) =>
+				getDiaryEntry({
+					date: createYMD(pastDate.year, pastDate.month, pastDate.day),
+					accessToken: authResult.accessToken!,
+				}).catch(() => ({ entry: null })),
+			);
+
 			const pastEntriesResults = await Promise.all(pastEntriesPromises);
+
+			const pastEntriesKeys = [
+				"oneWeekAgo",
+				"oneMonthAgo",
+				"twoMonthsAgo",
+				"sixMonthsAgo",
+				"oneYearAgo",
+				"twoYearsAgo",
+				"threeYearsAgo",
+				"fourYearsAgo",
+				"fiveYearsAgo",
+				"sixYearsAgo",
+				"sevenYearsAgo",
+				"eightYearsAgo",
+				"nineYearsAgo",
+				"tenYearsAgo",
+			] as const;
+
+			const pastEntriesObject = pastEntriesKeys.reduce(
+				(acc, key, index) => {
+					acc[key] = {
+						date: pastDatesArray[index],
+						entry: pastEntriesResults[index].entry || null,
+					};
+					return acc;
+				},
+				{} as Record<
+					(typeof pastEntriesKeys)[number],
+					{ date: (typeof pastDatesArray)[number]; entry: DiaryEntry | null }
+				>,
+			);
 
 			return {
 				entry: null,
 				date,
-				pastEntries: {
-					oneWeekAgo: {
-						date: pastDates.oneWeekAgo,
-						entry: pastEntriesResults[0].entry || null,
-					},
-					oneMonthAgo: {
-						date: pastDates.oneMonthAgo,
-						entry: pastEntriesResults[1].entry || null,
-					},
-					oneYearAgo: {
-						date: pastDates.oneYearAgo,
-						entry: pastEntriesResults[2].entry || null,
-					},
-					twoYearsAgo: {
-						date: pastDates.twoYearsAgo,
-						entry: pastEntriesResults[3].entry || null,
-					},
-				},
+				pastEntries: pastEntriesObject,
 			};
 		}
 
