@@ -4,7 +4,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,14 +11,13 @@ import (
 
 // DiaryTrend represents a row from 'public.diary_trends'.
 type DiaryTrend struct {
-	ID            uuid.UUID    `json:"id"`             // id
-	UserID        uuid.UUID    `json:"user_id"`        // user_id
-	TrendType     string       `json:"trend_type"`     // trend_type
-	ReferenceDate time.Time    `json:"reference_date"` // reference_date
-	Analysis      string       `json:"analysis"`       // analysis
-	Deprecated    sql.NullBool `json:"deprecated"`     // deprecated
-	CreatedAt     int64        `json:"created_at"`     // created_at
-	UpdatedAt     int64        `json:"updated_at"`     // updated_at
+	ID            uuid.UUID `json:"id"`             // id
+	UserID        uuid.UUID `json:"user_id"`        // user_id
+	TrendType     string    `json:"trend_type"`     // trend_type
+	ReferenceDate time.Time `json:"reference_date"` // reference_date
+	Analysis      string    `json:"analysis"`       // analysis
+	CreatedAt     int64     `json:"created_at"`     // created_at
+	UpdatedAt     int64     `json:"updated_at"`     // updated_at
 	// xo fields
 	_exists, _deleted bool
 }
@@ -45,13 +43,13 @@ func (dt *DiaryTrend) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.diary_trends (` +
-		`id, user_id, trend_type, reference_date, analysis, deprecated, created_at, updated_at` +
+		`id, user_id, trend_type, reference_date, analysis, created_at, updated_at` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`)`
 	// run
-	logf(sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.Deprecated, dt.CreatedAt, dt.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.Deprecated, dt.CreatedAt, dt.UpdatedAt); err != nil {
+	logf(sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.CreatedAt, dt.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.CreatedAt, dt.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -69,11 +67,11 @@ func (dt *DiaryTrend) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.diary_trends SET ` +
-		`user_id = $1, trend_type = $2, reference_date = $3, analysis = $4, deprecated = $5, created_at = $6, updated_at = $7 ` +
-		`WHERE id = $8`
+		`user_id = $1, trend_type = $2, reference_date = $3, analysis = $4, created_at = $5, updated_at = $6 ` +
+		`WHERE id = $7`
 	// run
-	logf(sqlstr, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.Deprecated, dt.CreatedAt, dt.UpdatedAt, dt.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.Deprecated, dt.CreatedAt, dt.UpdatedAt, dt.ID); err != nil {
+	logf(sqlstr, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.CreatedAt, dt.UpdatedAt, dt.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.CreatedAt, dt.UpdatedAt, dt.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -95,16 +93,16 @@ func (dt *DiaryTrend) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.diary_trends (` +
-		`id, user_id, trend_type, reference_date, analysis, deprecated, created_at, updated_at` +
+		`id, user_id, trend_type, reference_date, analysis, created_at, updated_at` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`user_id = EXCLUDED.user_id, trend_type = EXCLUDED.trend_type, reference_date = EXCLUDED.reference_date, analysis = EXCLUDED.analysis, deprecated = EXCLUDED.deprecated, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`user_id = EXCLUDED.user_id, trend_type = EXCLUDED.trend_type, reference_date = EXCLUDED.reference_date, analysis = EXCLUDED.analysis, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
 	// run
-	logf(sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.Deprecated, dt.CreatedAt, dt.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.Deprecated, dt.CreatedAt, dt.UpdatedAt); err != nil {
+	logf(sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.CreatedAt, dt.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, dt.ID, dt.UserID, dt.TrendType, dt.ReferenceDate, dt.Analysis, dt.CreatedAt, dt.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -139,7 +137,7 @@ func (dt *DiaryTrend) Delete(ctx context.Context, db DB) error {
 func DiaryTrendByID(ctx context.Context, db DB, id uuid.UUID) (*DiaryTrend, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, trend_type, reference_date, analysis, deprecated, created_at, updated_at ` +
+		`id, user_id, trend_type, reference_date, analysis, created_at, updated_at ` +
 		`FROM public.diary_trends ` +
 		`WHERE id = $1`
 	// run
@@ -147,44 +145,10 @@ func DiaryTrendByID(ctx context.Context, db DB, id uuid.UUID) (*DiaryTrend, erro
 	dt := DiaryTrend{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&dt.ID, &dt.UserID, &dt.TrendType, &dt.ReferenceDate, &dt.Analysis, &dt.Deprecated, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&dt.ID, &dt.UserID, &dt.TrendType, &dt.ReferenceDate, &dt.Analysis, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &dt, nil
-}
-
-// DiaryTrendsByDeprecated retrieves a row from 'public.diary_trends' as a [DiaryTrend].
-//
-// Generated from index 'index_diary_trends_deprecated'.
-func DiaryTrendsByDeprecated(ctx context.Context, db DB, deprecated sql.NullBool) ([]*DiaryTrend, error) {
-	// query
-	const sqlstr = `SELECT ` +
-		`id, user_id, trend_type, reference_date, analysis, deprecated, created_at, updated_at ` +
-		`FROM public.diary_trends ` +
-		`WHERE deprecated = $1`
-	// run
-	logf(sqlstr, deprecated)
-	rows, err := db.QueryContext(ctx, sqlstr, deprecated)
-	if err != nil {
-		return nil, logerror(err)
-	}
-	defer rows.Close()
-	// process
-	var res []*DiaryTrend
-	for rows.Next() {
-		dt := DiaryTrend{
-			_exists: true,
-		}
-		// scan
-		if err := rows.Scan(&dt.ID, &dt.UserID, &dt.TrendType, &dt.ReferenceDate, &dt.Analysis, &dt.Deprecated, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
-			return nil, logerror(err)
-		}
-		res = append(res, &dt)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, logerror(err)
-	}
-	return res, nil
 }
 
 // DiaryTrendsByUserIDTrendTypeReferenceDate retrieves a row from 'public.diary_trends' as a [DiaryTrend].
@@ -193,7 +157,7 @@ func DiaryTrendsByDeprecated(ctx context.Context, db DB, deprecated sql.NullBool
 func DiaryTrendsByUserIDTrendTypeReferenceDate(ctx context.Context, db DB, userID uuid.UUID, trendType string, referenceDate time.Time) ([]*DiaryTrend, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, trend_type, reference_date, analysis, deprecated, created_at, updated_at ` +
+		`id, user_id, trend_type, reference_date, analysis, created_at, updated_at ` +
 		`FROM public.diary_trends ` +
 		`WHERE user_id = $1 AND trend_type = $2 AND reference_date = $3`
 	// run
@@ -210,7 +174,7 @@ func DiaryTrendsByUserIDTrendTypeReferenceDate(ctx context.Context, db DB, userI
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&dt.ID, &dt.UserID, &dt.TrendType, &dt.ReferenceDate, &dt.Analysis, &dt.Deprecated, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
+		if err := rows.Scan(&dt.ID, &dt.UserID, &dt.TrendType, &dt.ReferenceDate, &dt.Analysis, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &dt)
@@ -227,7 +191,7 @@ func DiaryTrendsByUserIDTrendTypeReferenceDate(ctx context.Context, db DB, userI
 func DiaryTrendByUserIDTrendTypeReferenceDate(ctx context.Context, db DB, userID uuid.UUID, trendType string, referenceDate time.Time) (*DiaryTrend, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, trend_type, reference_date, analysis, deprecated, created_at, updated_at ` +
+		`id, user_id, trend_type, reference_date, analysis, created_at, updated_at ` +
 		`FROM public.diary_trends ` +
 		`WHERE user_id = $1 AND trend_type = $2 AND reference_date = $3`
 	// run
@@ -235,7 +199,7 @@ func DiaryTrendByUserIDTrendTypeReferenceDate(ctx context.Context, db DB, userID
 	dt := DiaryTrend{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID, trendType, referenceDate).Scan(&dt.ID, &dt.UserID, &dt.TrendType, &dt.ReferenceDate, &dt.Analysis, &dt.Deprecated, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID, trendType, referenceDate).Scan(&dt.ID, &dt.UserID, &dt.TrendType, &dt.ReferenceDate, &dt.Analysis, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &dt, nil

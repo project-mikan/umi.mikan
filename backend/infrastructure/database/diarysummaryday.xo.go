@@ -4,7 +4,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,14 +11,12 @@ import (
 
 // DiarySummaryDay represents a row from 'public.diary_summary_days'.
 type DiarySummaryDay struct {
-	ID         uuid.UUID    `json:"id"`         // id
-	UserID     uuid.UUID    `json:"user_id"`    // user_id
-	DiaryID    uuid.UUID    `json:"diary_id"`   // diary_id
-	Summary    string       `json:"summary"`    // summary
-	Date       time.Time    `json:"date"`       // date
-	Deprecated sql.NullBool `json:"deprecated"` // deprecated
-	CreatedAt  int64        `json:"created_at"` // created_at
-	UpdatedAt  int64        `json:"updated_at"` // updated_at
+	ID        uuid.UUID `json:"id"`         // id
+	UserID    uuid.UUID `json:"user_id"`    // user_id
+	Date      time.Time `json:"date"`       // date
+	Summary   string    `json:"summary"`    // summary
+	CreatedAt int64     `json:"created_at"` // created_at
+	UpdatedAt int64     `json:"updated_at"` // updated_at
 	// xo fields
 	_exists, _deleted bool
 }
@@ -45,13 +42,13 @@ func (dsd *DiarySummaryDay) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.diary_summary_days (` +
-		`id, user_id, diary_id, summary, date, deprecated, created_at, updated_at` +
+		`id, user_id, date, summary, created_at, updated_at` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6` +
 		`)`
 	// run
-	logf(sqlstr, dsd.ID, dsd.UserID, dsd.DiaryID, dsd.Summary, dsd.Date, dsd.Deprecated, dsd.CreatedAt, dsd.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, dsd.ID, dsd.UserID, dsd.DiaryID, dsd.Summary, dsd.Date, dsd.Deprecated, dsd.CreatedAt, dsd.UpdatedAt); err != nil {
+	logf(sqlstr, dsd.ID, dsd.UserID, dsd.Date, dsd.Summary, dsd.CreatedAt, dsd.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, dsd.ID, dsd.UserID, dsd.Date, dsd.Summary, dsd.CreatedAt, dsd.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -69,11 +66,11 @@ func (dsd *DiarySummaryDay) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.diary_summary_days SET ` +
-		`user_id = $1, diary_id = $2, summary = $3, date = $4, deprecated = $5, created_at = $6, updated_at = $7 ` +
-		`WHERE id = $8`
+		`user_id = $1, date = $2, summary = $3, created_at = $4, updated_at = $5 ` +
+		`WHERE id = $6`
 	// run
-	logf(sqlstr, dsd.UserID, dsd.DiaryID, dsd.Summary, dsd.Date, dsd.Deprecated, dsd.CreatedAt, dsd.UpdatedAt, dsd.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, dsd.UserID, dsd.DiaryID, dsd.Summary, dsd.Date, dsd.Deprecated, dsd.CreatedAt, dsd.UpdatedAt, dsd.ID); err != nil {
+	logf(sqlstr, dsd.UserID, dsd.Date, dsd.Summary, dsd.CreatedAt, dsd.UpdatedAt, dsd.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, dsd.UserID, dsd.Date, dsd.Summary, dsd.CreatedAt, dsd.UpdatedAt, dsd.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -95,16 +92,16 @@ func (dsd *DiarySummaryDay) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.diary_summary_days (` +
-		`id, user_id, diary_id, summary, date, deprecated, created_at, updated_at` +
+		`id, user_id, date, summary, created_at, updated_at` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`user_id = EXCLUDED.user_id, diary_id = EXCLUDED.diary_id, summary = EXCLUDED.summary, date = EXCLUDED.date, deprecated = EXCLUDED.deprecated, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`user_id = EXCLUDED.user_id, date = EXCLUDED.date, summary = EXCLUDED.summary, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
 	// run
-	logf(sqlstr, dsd.ID, dsd.UserID, dsd.DiaryID, dsd.Summary, dsd.Date, dsd.Deprecated, dsd.CreatedAt, dsd.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, dsd.ID, dsd.UserID, dsd.DiaryID, dsd.Summary, dsd.Date, dsd.Deprecated, dsd.CreatedAt, dsd.UpdatedAt); err != nil {
+	logf(sqlstr, dsd.ID, dsd.UserID, dsd.Date, dsd.Summary, dsd.CreatedAt, dsd.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, dsd.ID, dsd.UserID, dsd.Date, dsd.Summary, dsd.CreatedAt, dsd.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -139,7 +136,7 @@ func (dsd *DiarySummaryDay) Delete(ctx context.Context, db DB) error {
 func DiarySummaryDayByID(ctx context.Context, db DB, id uuid.UUID) (*DiarySummaryDay, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, diary_id, summary, date, deprecated, created_at, updated_at ` +
+		`id, user_id, date, summary, created_at, updated_at ` +
 		`FROM public.diary_summary_days ` +
 		`WHERE id = $1`
 	// run
@@ -147,44 +144,10 @@ func DiarySummaryDayByID(ctx context.Context, db DB, id uuid.UUID) (*DiarySummar
 	dsd := DiarySummaryDay{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&dsd.ID, &dsd.UserID, &dsd.DiaryID, &dsd.Summary, &dsd.Date, &dsd.Deprecated, &dsd.CreatedAt, &dsd.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&dsd.ID, &dsd.UserID, &dsd.Date, &dsd.Summary, &dsd.CreatedAt, &dsd.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &dsd, nil
-}
-
-// DiarySummaryDaysByDeprecated retrieves a row from 'public.diary_summary_days' as a [DiarySummaryDay].
-//
-// Generated from index 'index_diary_summary_days_deprecated'.
-func DiarySummaryDaysByDeprecated(ctx context.Context, db DB, deprecated sql.NullBool) ([]*DiarySummaryDay, error) {
-	// query
-	const sqlstr = `SELECT ` +
-		`id, user_id, diary_id, summary, date, deprecated, created_at, updated_at ` +
-		`FROM public.diary_summary_days ` +
-		`WHERE deprecated = $1`
-	// run
-	logf(sqlstr, deprecated)
-	rows, err := db.QueryContext(ctx, sqlstr, deprecated)
-	if err != nil {
-		return nil, logerror(err)
-	}
-	defer rows.Close()
-	// process
-	var res []*DiarySummaryDay
-	for rows.Next() {
-		dsd := DiarySummaryDay{
-			_exists: true,
-		}
-		// scan
-		if err := rows.Scan(&dsd.ID, &dsd.UserID, &dsd.DiaryID, &dsd.Summary, &dsd.Date, &dsd.Deprecated, &dsd.CreatedAt, &dsd.UpdatedAt); err != nil {
-			return nil, logerror(err)
-		}
-		res = append(res, &dsd)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, logerror(err)
-	}
-	return res, nil
 }
 
 // DiarySummaryDaysByUserIDDate retrieves a row from 'public.diary_summary_days' as a [DiarySummaryDay].
@@ -193,7 +156,7 @@ func DiarySummaryDaysByDeprecated(ctx context.Context, db DB, deprecated sql.Nul
 func DiarySummaryDaysByUserIDDate(ctx context.Context, db DB, userID uuid.UUID, date time.Time) ([]*DiarySummaryDay, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, diary_id, summary, date, deprecated, created_at, updated_at ` +
+		`id, user_id, date, summary, created_at, updated_at ` +
 		`FROM public.diary_summary_days ` +
 		`WHERE user_id = $1 AND date = $2`
 	// run
@@ -210,7 +173,7 @@ func DiarySummaryDaysByUserIDDate(ctx context.Context, db DB, userID uuid.UUID, 
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&dsd.ID, &dsd.UserID, &dsd.DiaryID, &dsd.Summary, &dsd.Date, &dsd.Deprecated, &dsd.CreatedAt, &dsd.UpdatedAt); err != nil {
+		if err := rows.Scan(&dsd.ID, &dsd.UserID, &dsd.Date, &dsd.Summary, &dsd.CreatedAt, &dsd.UpdatedAt); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &dsd)
@@ -227,7 +190,7 @@ func DiarySummaryDaysByUserIDDate(ctx context.Context, db DB, userID uuid.UUID, 
 func DiarySummaryDayByUserIDDate(ctx context.Context, db DB, userID uuid.UUID, date time.Time) (*DiarySummaryDay, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, diary_id, summary, date, deprecated, created_at, updated_at ` +
+		`id, user_id, date, summary, created_at, updated_at ` +
 		`FROM public.diary_summary_days ` +
 		`WHERE user_id = $1 AND date = $2`
 	// run
@@ -235,17 +198,10 @@ func DiarySummaryDayByUserIDDate(ctx context.Context, db DB, userID uuid.UUID, d
 	dsd := DiarySummaryDay{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID, date).Scan(&dsd.ID, &dsd.UserID, &dsd.DiaryID, &dsd.Summary, &dsd.Date, &dsd.Deprecated, &dsd.CreatedAt, &dsd.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID, date).Scan(&dsd.ID, &dsd.UserID, &dsd.Date, &dsd.Summary, &dsd.CreatedAt, &dsd.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &dsd, nil
-}
-
-// Diary returns the Diary associated with the [DiarySummaryDay]'s (DiaryID).
-//
-// Generated from foreign key 'diary_summary_days_diary_id_fkey'.
-func (dsd *DiarySummaryDay) Diary(ctx context.Context, db DB) (*Diary, error) {
-	return DiaryByID(ctx, db, dsd.DiaryID)
 }
 
 // User returns the User associated with the [DiarySummaryDay]'s (UserID).
