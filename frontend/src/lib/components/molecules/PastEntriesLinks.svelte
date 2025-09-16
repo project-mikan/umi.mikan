@@ -99,7 +99,7 @@ $: pastEntriesList = [
 		labelKey: "diary.tenYearsAgo",
 		entry: pastEntries.tenYearsAgo.entry,
 	},
-];
+].filter((pastEntry) => pastEntry.entry !== null);
 
 function _getEntryTitle(entry: DiaryEntry | null): string {
 	if (!entry || !entry.content) return $_("diary.noPastEntry");
@@ -115,30 +115,32 @@ function _getEntryTitle(entry: DiaryEntry | null): string {
 		{$_('diary.pastEntries')}
 	</h3>
 	
-	<div class="space-y-3">
-		{#each pastEntriesList as pastEntry}
-			<div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-				<div class="flex-1">
-					<div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-						{$_(pastEntry.labelKey)} ({$_('date.format.yearMonthDay', {
-							values: {
-								year: pastEntry.date.year,
-								month: pastEntry.date.month,
-								day: pastEntry.date.day
-							}
-						})})
-					</div>
-					<div class="text-sm text-gray-800 dark:text-gray-200">
-						{#if pastEntry.entry}
+	{#if pastEntriesList.length > 0}
+		<div class="space-y-3">
+			{#each pastEntriesList as pastEntry}
+				<div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+					<div class="flex-1">
+						<div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+							{$_(pastEntry.labelKey)} ({$_('date.format.yearMonthDay', {
+								values: {
+									year: pastEntry.date.year,
+									month: pastEntry.date.month,
+									day: pastEntry.date.day
+								}
+							})})
+						</div>
+						<div class="text-sm text-gray-800 dark:text-gray-200">
 							<Link href="/{formatDateToId(pastEntry.date)}" class="text-blue-600 hover:text-blue-800">
 								{_getEntryTitle(pastEntry.entry)}
 							</Link>
-						{:else}
-							<span class="text-gray-400 dark:text-gray-500">{$_('diary.noPastEntry')}</span>
-						{/if}
+						</div>
 					</div>
 				</div>
-			</div>
-		{/each}
-	</div>
+			{/each}
+		</div>
+	{:else}
+		<p class="text-sm text-gray-500 dark:text-gray-400 italic">
+			{$_('diary.noPastEntries')}
+		</p>
+	{/if}
 </div>

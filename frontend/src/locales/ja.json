@@ -63,7 +63,8 @@
 		"eightYearsAgo": "8年前",
 		"nineYearsAgo": "9年前",
 		"tenYearsAgo": "10年前",
-		"noPastEntry": "日記がありません"
+		"noPastEntry": "日記がありません",
+		"noPastEntries": "過去の同じ日の日記はありません"
 	},
 	"date": {
 		"dayOfWeek": {

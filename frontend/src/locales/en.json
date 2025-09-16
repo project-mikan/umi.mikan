@@ -63,7 +63,8 @@
 		"eightYearsAgo": "8 years ago",
 		"nineYearsAgo": "9 years ago",
 		"tenYearsAgo": "10 years ago",
-		"noPastEntry": "No entry"
+		"noPastEntry": "No entry",
+		"noPastEntries": "No past entries on this day"
 	},
 	"date": {
 		"dayOfWeek": {
