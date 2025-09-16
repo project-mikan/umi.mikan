@@ -12,7 +12,7 @@ vi.mock("$app/navigation", () => ({
 
 // Mock global fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe("auth-client", () => {
 	beforeEach(() => {
