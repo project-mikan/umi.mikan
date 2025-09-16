@@ -6,6 +6,7 @@ services:
     volumes:
       - ./backend:/backend
       - ./proto:/proto # 内部で解決できるようにマウント
+      - ./schema:/schema # pg-schema-diff用
     environment:
       TZ: Asia/Tokyo
       PORT: 8080
