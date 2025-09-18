@@ -1,4 +1,73 @@
 {
+	"common": {
+		"loading": "Loading...",
+		"save": "Save",
+		"cancel": "Cancel",
+		"error": "Error",
+		"success": "Success"
+	},
+	"settings": {
+		"title": "Settings",
+		"username": {
+			"title": "Change Username",
+			"label": "New username",
+			"placeholder": "Enter new username",
+			"save": "Update username"
+		},
+		"password": {
+			"title": "Change Password",
+			"currentLabel": "Current password",
+			"currentPlaceholder": "Enter current password",
+			"newLabel": "New password",
+			"newPlaceholder": "Enter new password (8+ characters)",
+			"confirmLabel": "Confirm new password",
+			"confirmPlaceholder": "Re-enter new password",
+			"save": "Change password"
+		},
+		"llmToken": {
+			"title": "LLM Token Settings",
+			"providerLabel": "LLM Provider",
+			"provider": {
+				"gemini": "Gemini"
+			},
+			"tokenLabel": "API Token",
+			"tokenPlaceholder": "Enter API token",
+			"save": "Save token"
+		},
+		"deleteToken": {
+			"button": "Delete Token",
+			"confirm": "Delete LLM Token",
+			"confirmMessage": "Are you sure you want to delete this LLM token? This action cannot be undone."
+		},
+		"deleteAccount": {
+			"title": "Delete Account",
+			"button": "Delete Account",
+			"confirm": "Delete Account",
+			"confirmMessage": "Are you sure you want to delete your account? This action cannot be undone and will delete all your data including diaries.",
+			"warning": "This action is irreversible. All your data will be permanently deleted."
+		},
+		"messages": {
+			"usernameUpdateSuccess": "Username updated successfully",
+			"passwordChangeSuccess": "Password changed successfully",
+			"llmTokenUpdateSuccess": "LLM token updated successfully",
+			"llmTokenDeleteSuccess": "LLM token deleted successfully",
+			"accountDeleteSuccess": "Account deleted successfully",
+			"unauthorized": "Authentication required",
+			"userNotFound": "User not found",
+			"invalidUserId": "Invalid user ID",
+			"nameRequired": "Name is required",
+			"nameTooLong": "Name must be 20 characters or less",
+			"passwordsRequired": "Current password and new password are required",
+			"passwordsDoNotMatch": "New passwords do not match",
+			"passwordTooShort": "New password must be at least 8 characters long",
+			"currentPasswordIncorrect": "Current password is incorrect",
+			"tokenRequired": "Token is required",
+			"tokenTooLong": "Token must be 100 characters or less",
+			"tokenNotFound": "Token not found",
+			"invalidProvider": "Invalid LLM provider",
+			"updateFailed": "Update failed"
+		}
+	},
 	"auth": {
 		"login": {
 			"title": "Sign in to your account",
@@ -133,7 +202,8 @@
 	"navigation": {
 		"home": "Home",
 		"monthly": "Calendar",
-		"search": "Search"
+		"search": "Search",
+		"settings": "Settings"
 	},
 	"footer": {
 		"github": "GitHub"

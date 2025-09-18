@@ -1,4 +1,73 @@
 {
+	"common": {
+		"loading": "読み込み中...",
+		"save": "保存",
+		"cancel": "キャンセル",
+		"error": "エラー",
+		"success": "成功"
+	},
+	"settings": {
+		"title": "設定",
+		"username": {
+			"title": "お名前変更",
+			"label": "新しいお名前",
+			"placeholder": "新しいお名前を入力してください",
+			"save": "お名前を更新"
+		},
+		"password": {
+			"title": "パスワード変更",
+			"currentLabel": "現在のパスワード",
+			"currentPlaceholder": "現在のパスワードを入力してください",
+			"newLabel": "新しいパスワード",
+			"newPlaceholder": "新しいパスワードを入力してください（8文字以上）",
+			"confirmLabel": "新しいパスワード（確認）",
+			"confirmPlaceholder": "新しいパスワードを再入力してください",
+			"save": "パスワードを変更"
+		},
+		"llmToken": {
+			"title": "LLMトークン設定",
+			"providerLabel": "LLMプロバイダー",
+			"provider": {
+				"gemini": "Gemini"
+			},
+			"tokenLabel": "APIトークン",
+			"tokenPlaceholder": "APIトークンを入力してください",
+			"save": "トークンを保存"
+		},
+		"deleteToken": {
+			"button": "トークンを削除",
+			"confirm": "LLMトークンを削除",
+			"confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
+		},
+		"deleteAccount": {
+			"title": "アカウント削除",
+			"button": "アカウントを削除",
+			"confirm": "アカウントを削除",
+			"confirmMessage": "アカウントを削除してもよろしいですか？この操作は取り消せません。日記データを含むすべてのデータが削除されます。",
+			"warning": "この操作は元に戻すことができません。すべてのデータが完全に削除されます。"
+		},
+		"messages": {
+			"usernameUpdateSuccess": "お名前を更新しました",
+			"passwordChangeSuccess": "パスワードを変更しました",
+			"llmTokenUpdateSuccess": "LLMトークンを保存しました",
+			"llmTokenDeleteSuccess": "LLMトークンを削除しました",
+			"accountDeleteSuccess": "アカウントを削除しました",
+			"unauthorized": "認証が必要です",
+			"userNotFound": "ユーザーが見つかりません",
+			"invalidUserId": "無効なユーザーIDです",
+			"nameRequired": "お名前は必須です",
+			"nameTooLong": "お名前は20文字以内で入力してください",
+			"passwordsRequired": "現在のパスワードと新しいパスワードは必須です",
+			"passwordsDoNotMatch": "新しいパスワードが一致しません",
+			"passwordTooShort": "新しいパスワードは8文字以上で入力してください",
+			"currentPasswordIncorrect": "現在のパスワードが正しくありません",
+			"tokenRequired": "トークンは必須です",
+			"tokenTooLong": "トークンは100文字以内で入力してください",
+			"tokenNotFound": "トークンが見つかりません",
+			"invalidProvider": "無効なLLMプロバイダーです",
+			"updateFailed": "更新に失敗しました"
+		}
+	},
 	"auth": {
 		"login": {
 			"title": "アカウントにサインイン",
@@ -133,7 +202,8 @@
 	"navigation": {
 		"home": "トップ",
 		"monthly": "カレンダー",
-		"search": "検索"
+		"search": "検索",
+		"settings": "設定"
 	},
 	"footer": {
 		"github": "GitHub"
