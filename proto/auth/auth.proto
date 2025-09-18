@@ -13,6 +13,24 @@ service AuthService {
 
   // AccessTokenの更新
   rpc RefreshAccessToken(RefreshAccessTokenRequest) returns (AuthResponse);
+
+  // ユーザー名変更
+  rpc UpdateUserName(UpdateUserNameRequest) returns (UpdateUserNameResponse);
+
+  // パスワード変更
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  // LLMトークン更新
+  rpc UpdateLLMToken(UpdateLLMTokenRequest) returns (UpdateLLMTokenResponse);
+
+  // ユーザー情報取得
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+
+  // LLMトークン削除
+  rpc DeleteLLMToken(DeleteLLMTokenRequest) returns (DeleteLLMTokenResponse);
+
+  // アカウント削除
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
 }
 
 // アクセストークン更新用のリクエスト
@@ -39,4 +57,80 @@ message AuthResponse {
   string token_type = 2;
   int32 expires_in = 3; // 秒単位
   string refresh_token = 4;
+}
+
+// ユーザー名更新用のリクエスト
+message UpdateUserNameRequest {
+  string new_name = 1;
+}
+
+// ユーザー名更新用のレスポンス
+message UpdateUserNameResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// パスワード変更用のリクエスト
+message ChangePasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+}
+
+// パスワード変更用のレスポンス
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// LLMトークン更新用のリクエスト
+message UpdateLLMTokenRequest {
+  int32 llm_provider = 1; // 0:Gemini
+  string token = 2;
+}
+
+// LLMトークン更新用のレスポンス
+message UpdateLLMTokenResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ユーザー情報取得用のリクエスト
+message GetUserInfoRequest {
+  // 空のリクエスト（認証はヘッダーから）
+}
+
+// ユーザー情報取得用のレスポンス
+message GetUserInfoResponse {
+  string name = 1;
+  string email = 2;
+  // LLMトークン情報（存在する場合）
+  repeated LLMTokenInfo llm_tokens = 3;
+}
+
+// LLMトークン情報
+message LLMTokenInfo {
+  int32 llm_provider = 1; // 0:Gemini
+  string token = 2;
+}
+
+// LLMトークン削除用のリクエスト
+message DeleteLLMTokenRequest {
+  int32 llm_provider = 1; // 0:Gemini
+}
+
+// LLMトークン削除用のレスポンス
+message DeleteLLMTokenResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// アカウント削除用のリクエスト
+message DeleteAccountRequest {
+  // 空のリクエスト（認証はヘッダーから）
+}
+
+// アカウント削除用のレスポンス
+message DeleteAccountResponse {
+  bool success = 1;
+  string message = 2;
 }
