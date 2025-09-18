@@ -19,7 +19,7 @@ import {
 	type YMD,
 	YMDSchema,
 	YMSchema,
-} from "$lib/grpc/diary/diary_pb.js";
+} from "$lib/grpc/diary/diary_pb.ts";
 
 function createAuthenticatedTransport(accessToken: string) {
 	return createGrpcTransport({

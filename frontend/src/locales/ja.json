@@ -30,8 +30,8 @@
 			"provider": {
 				"gemini": "Gemini"
 			},
-			"tokenLabel": "APIトークン",
-			"tokenPlaceholder": "APIトークンを入力してください",
+			"tokenLabel": "APIキー",
+			"tokenPlaceholder": "APIキーを入力してください",
 			"save": "トークンを保存"
 		},
 		"deleteToken": {

@@ -7,19 +7,22 @@ import {
 	LoginByPasswordRequestSchema,
 	RefreshAccessTokenRequestSchema,
 	RegisterByPasswordRequestSchema,
+} from "$lib/grpc/auth/auth_pb.ts";
+import {
+	UserService,
 	UpdateUserNameRequestSchema,
 	ChangePasswordRequestSchema,
-	UpdateLLMTokenRequestSchema,
+	UpdateLLMKeyRequestSchema,
 	GetUserInfoRequestSchema,
-	DeleteLLMTokenRequestSchema,
+	DeleteLLMKeyRequestSchema,
 	DeleteAccountRequestSchema,
 	type UpdateUserNameResponse,
 	type ChangePasswordResponse,
-	type UpdateLLMTokenResponse,
+	type UpdateLLMKeyResponse,
 	type GetUserInfoResponse,
-	type DeleteLLMTokenResponse,
+	type DeleteLLMKeyResponse,
 	type DeleteAccountResponse,
-} from "$lib/grpc/auth/auth_pb.js";
+} from "$lib/grpc/user/user_pb.ts";
 
 const transport = createGrpcTransport({
 	baseUrl: "http://backend:8080",
@@ -92,12 +95,12 @@ export async function updateUserName(
 		],
 	});
 
-	const authClient = createClient(AuthService, transport);
+	const userClient = createClient(UserService, transport);
 	const request = create(UpdateUserNameRequestSchema, {
 		newName: params.newName,
 	});
 
-	const response = await authClient.updateUserName(request);
+	const response = await userClient.updateUserName(request);
 	return response;
 }
 
@@ -120,25 +123,25 @@ export async function changePassword(
 		],
 	});
 
-	const authClient = createClient(AuthService, transport);
+	const userClient = createClient(UserService, transport);
 	const request = create(ChangePasswordRequestSchema, {
 		currentPassword: params.currentPassword,
 		newPassword: params.newPassword,
 	});
 
-	const response = await authClient.changePassword(request);
+	const response = await userClient.changePassword(request);
 	return response;
 }
 
-export interface UpdateLLMTokenParams {
+export interface UpdateLLMKeyParams {
 	llmProvider: number;
-	token: string;
+	key: string;
 	accessToken: string;
 }
 
-export async function updateLLMToken(
-	params: UpdateLLMTokenParams,
-): Promise<UpdateLLMTokenResponse> {
+export async function updateLLMKey(
+	params: UpdateLLMKeyParams,
+): Promise<UpdateLLMKeyResponse> {
 	const transport = createGrpcTransport({
 		baseUrl: "http://backend:8080",
 		interceptors: [
@@ -149,13 +152,13 @@ export async function updateLLMToken(
 		],
 	});
 
-	const authClient = createClient(AuthService, transport);
-	const request = create(UpdateLLMTokenRequestSchema, {
+	const userClient = createClient(UserService, transport);
+	const request = create(UpdateLLMKeyRequestSchema, {
 		llmProvider: params.llmProvider,
-		token: params.token,
+		key: params.key,
 	});
 
-	const response = await authClient.updateLLMToken(request);
+	const response = await userClient.updateLLMKey(request);
 	return response;
 }
 
@@ -176,21 +179,21 @@ export async function getUserInfo(
 		],
 	});
 
-	const authClient = createClient(AuthService, transport);
+	const userClient = createClient(UserService, transport);
 	const request = create(GetUserInfoRequestSchema, {});
 
-	const response = await authClient.getUserInfo(request);
+	const response = await userClient.getUserInfo(request);
 	return response;
 }
 
-export interface DeleteLLMTokenParams {
+export interface DeleteLLMKeyParams {
 	llmProvider: number;
 	accessToken: string;
 }
 
-export async function deleteLLMToken(
-	params: DeleteLLMTokenParams,
-): Promise<DeleteLLMTokenResponse> {
+export async function deleteLLMKey(
+	params: DeleteLLMKeyParams,
+): Promise<DeleteLLMKeyResponse> {
 	const transport = createGrpcTransport({
 		baseUrl: "http://backend:8080",
 		interceptors: [
@@ -201,12 +204,12 @@ export async function deleteLLMToken(
 		],
 	});
 
-	const authClient = createClient(AuthService, transport);
-	const request = create(DeleteLLMTokenRequestSchema, {
+	const userClient = createClient(UserService, transport);
+	const request = create(DeleteLLMKeyRequestSchema, {
 		llmProvider: params.llmProvider,
 	});
 
-	const response = await authClient.deleteLLMToken(request);
+	const response = await userClient.deleteLLMKey(request);
 	return response;
 }
 
@@ -227,9 +230,9 @@ export async function deleteAccount(
 		],
 	});
 
-	const authClient = createClient(AuthService, transport);
+	const userClient = createClient(UserService, transport);
 	const request = create(DeleteAccountRequestSchema, {});
 
-	const response = await authClient.deleteAccount(request);
+	const response = await userClient.deleteAccount(request);
 	return response;
 }

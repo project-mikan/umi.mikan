@@ -2,9 +2,9 @@ import { redirect, fail } from "@sveltejs/kit";
 import {
 	updateUserName,
 	changePassword,
-	updateLLMToken,
+	updateLLMKey,
 	getUserInfo,
-	deleteLLMToken,
+	deleteLLMKey,
 	deleteAccount,
 } from "$lib/server/auth-api";
 import type { Actions, PageServerLoad } from "./$types";
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 			user: {
 				name: userInfo.name,
 				email: userInfo.email,
-				llmTokens: userInfo.llmTokens || [],
+				llmKeys: userInfo.llmKeys || [],
 			},
 		};
 	} catch (error) {
@@ -107,7 +107,7 @@ export const actions: Actions = {
 		}
 	},
 
-	updateLLMToken: async ({ request, cookies }) => {
+	updateLLMKey: async ({ request, cookies }) => {
 		const accessToken = cookies.get("accessToken");
 		if (!accessToken) {
 			return fail(401, { error: "unauthorized" });
@@ -115,24 +115,24 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const llmProvider = parseInt(data.get("llmProvider") as string, 10);
-		const token = data.get("llmToken") as string;
+		const key = data.get("llmKey") as string;
 
 		if (Number.isNaN(llmProvider) || llmProvider < 0) {
 			return fail(400, { error: "invalidProvider" });
 		}
 
-		if (!token || token.trim() === "") {
+		if (!key || key.trim() === "") {
 			return fail(400, { error: "tokenRequired" });
 		}
 
-		if (token.length > 100) {
+		if (key.length > 100) {
 			return fail(400, { error: "tokenTooLong" });
 		}
 
 		try {
-			const response = await updateLLMToken({
+			const response = await updateLLMKey({
 				llmProvider,
-				token: token.trim(),
+				key: key.trim(),
 				accessToken,
 			});
 
@@ -147,7 +147,7 @@ export const actions: Actions = {
 		}
 	},
 
-	deleteLLMToken: async ({ request, cookies }) => {
+	deleteLLMKey: async ({ request, cookies }) => {
 		const accessToken = cookies.get("accessToken");
 		if (!accessToken) {
 			return fail(401, { error: "unauthorized" });
@@ -161,7 +161,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const response = await deleteLLMToken({
+			const response = await deleteLLMKey({
 				llmProvider,
 				accessToken,
 			});

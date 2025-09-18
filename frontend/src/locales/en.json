@@ -30,8 +30,8 @@
 			"provider": {
 				"gemini": "Gemini"
 			},
-			"tokenLabel": "API Token",
-			"tokenPlaceholder": "Enter API token",
+			"tokenLabel": "API Key",
+			"tokenPlaceholder": "Enter API key",
 			"save": "Save token"
 		},
 		"deleteToken": {

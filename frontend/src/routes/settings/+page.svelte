@@ -11,7 +11,7 @@ export let data: PageData;
 let usernameLoading = false;
 let passwordLoading = false;
 let llmTokenLoading = false;
-let deleteLLMTokenLoading = false;
+let deleteLLMKeyLoading = false;
 let deleteAccountLoading = false;
 
 // Modal states
@@ -23,9 +23,9 @@ let showCurrentPassword = false;
 let showNewPassword = false;
 let showConfirmPassword = false;
 
-// Get existing LLM token for Gemini (provider 0)
+// Get existing LLM key for Gemini (provider 0)
 $: existingLLMToken =
-	data.user?.llmTokens?.find((token) => token.llmProvider === 0)?.token || "";
+	data.user?.llmKeys?.find((key) => key.llmProvider === 0)?.key || "";
 
 // Modal helper functions
 function confirmDeleteLLMToken() {
@@ -41,7 +41,7 @@ function handleDeleteLLMToken() {
 	// Submit the delete form
 	const form = document.createElement("form");
 	form.method = "POST";
-	form.action = "?/deleteLLMToken";
+	form.action = "?/deleteLLMKey";
 
 	const input = document.createElement("input");
 	input.type = "hidden";
@@ -50,7 +50,7 @@ function handleDeleteLLMToken() {
 	form.appendChild(input);
 
 	document.body.appendChild(form);
-	deleteLLMTokenLoading = true;
+	deleteLLMKeyLoading = true;
 	form.submit();
 }
 
@@ -267,7 +267,7 @@ function handleDeleteAccount() {
 			<h2 class="text-xl font-semibold mb-4">{$_("settings.llmToken.title")}</h2>
 			<form
 				method="POST"
-				action="?/updateLLMToken"
+				action="?/updateLLMKey"
 				class="space-y-4"
 				use:enhance={() => {
 					llmTokenLoading = true;
@@ -297,7 +297,7 @@ function handleDeleteAccount() {
 					<input
 						type="text"
 						id="llmToken"
-						name="llmToken"
+						name="llmKey"
 						required
 						maxlength="100"
 						disabled={llmTokenLoading}
@@ -320,11 +320,11 @@ function handleDeleteAccount() {
 				<div class="mt-4">
 					<button
 						type="button"
-						disabled={deleteLLMTokenLoading}
+						disabled={deleteLLMKeyLoading}
 						on:click={confirmDeleteLLMToken}
 						class="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
 					>
-						{deleteLLMTokenLoading ? $_("common.loading") : $_("settings.deleteToken.button")}
+						{deleteLLMKeyLoading ? $_("common.loading") : $_("settings.deleteToken.button")}
 					</button>
 				</div>
 			{/if}
