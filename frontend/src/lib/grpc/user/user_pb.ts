@@ -110,7 +110,7 @@ export const ChangePasswordResponseSchema: GenMessage<ChangePasswordResponse> = 
  */
 export type UpdateLLMKeyRequest = Message<"user.UpdateLLMKeyRequest"> & {
   /**
-   * 0:Gemini
+   * 1:Gemini
    *
    * @generated from field: int32 llm_provider = 1;
    */
@@ -208,7 +208,7 @@ export const GetUserInfoResponseSchema: GenMessage<GetUserInfoResponse> = /*@__P
  */
 export type LLMKeyInfo = Message<"user.LLMKeyInfo"> & {
   /**
-   * 0:Gemini
+   * 1:Gemini
    *
    * @generated from field: int32 llm_provider = 1;
    */
@@ -234,7 +234,7 @@ export const LLMKeyInfoSchema: GenMessage<LLMKeyInfo> = /*@__PURE__*/
  */
 export type DeleteLLMKeyRequest = Message<"user.DeleteLLMKeyRequest"> & {
   /**
-   * 0:Gemini
+   * 1:Gemini
    *
    * @generated from field: int32 llm_provider = 1;
    */

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS user_llms (
     user_id UUID REFERENCES users(id) PRIMARY KEY,
-    llm_provider  smallint NOT NULL, -- 0:Gemini
+    llm_provider  smallint NOT NULL, -- 1:Gemini
     key  VARCHAR(100) NOT NULL,
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,

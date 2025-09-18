@@ -23,9 +23,9 @@ let showCurrentPassword = false;
 let showNewPassword = false;
 let showConfirmPassword = false;
 
-// Get existing LLM key for Gemini (provider 0)
+// Get existing LLM key for Gemini (provider 1)
 $: existingLLMToken =
-	data.user?.llmKeys?.find((key) => key.llmProvider === 0)?.key || "";
+	data.user?.llmKeys?.find((key) => key.llmProvider === 1)?.key || "";
 
 // Modal helper functions
 function confirmDeleteLLMToken() {
@@ -46,7 +46,7 @@ function handleDeleteLLMToken() {
 	const input = document.createElement("input");
 	input.type = "hidden";
 	input.name = "llmProvider";
-	input.value = "0";
+	input.value = "1";
 	form.appendChild(input);
 
 	document.body.appendChild(form);
@@ -287,7 +287,7 @@ function handleDeleteAccount() {
 						disabled={llmTokenLoading}
 						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
 					>
-						<option value="0">{$_("settings.llmToken.provider.gemini")}</option>
+						<option value="1">{$_("settings.llmToken.provider.gemini")}</option>
 					</select>
 				</div>
 				<div>

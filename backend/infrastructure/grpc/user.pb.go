@@ -227,7 +227,7 @@ func (x *ChangePasswordResponse) GetMessage() string {
 // LLMキー更新用のリクエスト
 type UpdateLLMKeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 0:Gemini
+	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
 	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -432,7 +432,7 @@ func (x *GetUserInfoResponse) GetLlmKeys() []*LLMKeyInfo {
 // LLMキー情報
 type LLMKeyInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 0:Gemini
+	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
 	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -485,7 +485,7 @@ func (x *LLMKeyInfo) GetKey() string {
 // LLMキー削除用のリクエスト
 type DeleteLLMKeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 0:Gemini
+	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

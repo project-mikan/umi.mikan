@@ -267,8 +267,8 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 	// LLMキーを取得（存在する場合）
 	var llmKeys []*g.LLMKeyInfo
 
-	// 現在はGemini（provider 0）のみサポート
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, 0)
+	// 現在はGemini（provider 1）のみサポート
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, 1)
 	if err == nil && userLLM != nil {
 		llmKeys = append(llmKeys, &g.LLMKeyInfo{
 			LlmProvider: int32(userLLM.LlmProvider),
