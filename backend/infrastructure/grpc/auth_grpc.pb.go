@@ -22,12 +22,6 @@ const (
 	AuthService_RegisterByPassword_FullMethodName = "/auth.AuthService/RegisterByPassword"
 	AuthService_LoginByPassword_FullMethodName    = "/auth.AuthService/LoginByPassword"
 	AuthService_RefreshAccessToken_FullMethodName = "/auth.AuthService/RefreshAccessToken"
-	AuthService_UpdateUserName_FullMethodName     = "/auth.AuthService/UpdateUserName"
-	AuthService_ChangePassword_FullMethodName     = "/auth.AuthService/ChangePassword"
-	AuthService_UpdateLLMToken_FullMethodName     = "/auth.AuthService/UpdateLLMToken"
-	AuthService_GetUserInfo_FullMethodName        = "/auth.AuthService/GetUserInfo"
-	AuthService_DeleteLLMToken_FullMethodName     = "/auth.AuthService/DeleteLLMToken"
-	AuthService_DeleteAccount_FullMethodName      = "/auth.AuthService/DeleteAccount"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -40,18 +34,6 @@ type AuthServiceClient interface {
 	LoginByPassword(ctx context.Context, in *LoginByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error)
 	// AccessTokenの更新
 	RefreshAccessToken(ctx context.Context, in *RefreshAccessTokenRequest, opts ...grpc.CallOption) (*AuthResponse, error)
-	// ユーザー名変更
-	UpdateUserName(ctx context.Context, in *UpdateUserNameRequest, opts ...grpc.CallOption) (*UpdateUserNameResponse, error)
-	// パスワード変更
-	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
-	// LLMトークン更新
-	UpdateLLMToken(ctx context.Context, in *UpdateLLMTokenRequest, opts ...grpc.CallOption) (*UpdateLLMTokenResponse, error)
-	// ユーザー情報取得
-	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
-	// LLMトークン削除
-	DeleteLLMToken(ctx context.Context, in *DeleteLLMTokenRequest, opts ...grpc.CallOption) (*DeleteLLMTokenResponse, error)
-	// アカウント削除
-	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
 }
 
 type authServiceClient struct {
@@ -92,66 +74,6 @@ func (c *authServiceClient) RefreshAccessToken(ctx context.Context, in *RefreshA
 	return out, nil
 }
 
-func (c *authServiceClient) UpdateUserName(ctx context.Context, in *UpdateUserNameRequest, opts ...grpc.CallOption) (*UpdateUserNameResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateUserNameResponse)
-	err := c.cc.Invoke(ctx, AuthService_UpdateUserName_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ChangePasswordResponse)
-	err := c.cc.Invoke(ctx, AuthService_ChangePassword_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) UpdateLLMToken(ctx context.Context, in *UpdateLLMTokenRequest, opts ...grpc.CallOption) (*UpdateLLMTokenResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateLLMTokenResponse)
-	err := c.cc.Invoke(ctx, AuthService_UpdateLLMToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserInfoResponse)
-	err := c.cc.Invoke(ctx, AuthService_GetUserInfo_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) DeleteLLMToken(ctx context.Context, in *DeleteLLMTokenRequest, opts ...grpc.CallOption) (*DeleteLLMTokenResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteLLMTokenResponse)
-	err := c.cc.Invoke(ctx, AuthService_DeleteLLMToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteAccountResponse)
-	err := c.cc.Invoke(ctx, AuthService_DeleteAccount_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -162,18 +84,6 @@ type AuthServiceServer interface {
 	LoginByPassword(context.Context, *LoginByPasswordRequest) (*AuthResponse, error)
 	// AccessTokenの更新
 	RefreshAccessToken(context.Context, *RefreshAccessTokenRequest) (*AuthResponse, error)
-	// ユーザー名変更
-	UpdateUserName(context.Context, *UpdateUserNameRequest) (*UpdateUserNameResponse, error)
-	// パスワード変更
-	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
-	// LLMトークン更新
-	UpdateLLMToken(context.Context, *UpdateLLMTokenRequest) (*UpdateLLMTokenResponse, error)
-	// ユーザー情報取得
-	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
-	// LLMトークン削除
-	DeleteLLMToken(context.Context, *DeleteLLMTokenRequest) (*DeleteLLMTokenResponse, error)
-	// アカウント削除
-	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -192,24 +102,6 @@ func (UnimplementedAuthServiceServer) LoginByPassword(context.Context, *LoginByP
 }
 func (UnimplementedAuthServiceServer) RefreshAccessToken(context.Context, *RefreshAccessTokenRequest) (*AuthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshAccessToken not implemented")
-}
-func (UnimplementedAuthServiceServer) UpdateUserName(context.Context, *UpdateUserNameRequest) (*UpdateUserNameResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserName not implemented")
-}
-func (UnimplementedAuthServiceServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
-}
-func (UnimplementedAuthServiceServer) UpdateLLMToken(context.Context, *UpdateLLMTokenRequest) (*UpdateLLMTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateLLMToken not implemented")
-}
-func (UnimplementedAuthServiceServer) GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
-}
-func (UnimplementedAuthServiceServer) DeleteLLMToken(context.Context, *DeleteLLMTokenRequest) (*DeleteLLMTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteLLMToken not implemented")
-}
-func (UnimplementedAuthServiceServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteAccount not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -286,114 +178,6 @@ func _AuthService_RefreshAccessToken_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_UpdateUserName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateUserNameRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).UpdateUserName(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_UpdateUserName_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).UpdateUserName(ctx, req.(*UpdateUserNameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangePasswordRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).ChangePassword(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_ChangePassword_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).ChangePassword(ctx, req.(*ChangePasswordRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_UpdateLLMToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateLLMTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).UpdateLLMToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_UpdateLLMToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).UpdateLLMToken(ctx, req.(*UpdateLLMTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserInfoRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).GetUserInfo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_GetUserInfo_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).GetUserInfo(ctx, req.(*GetUserInfoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_DeleteLLMToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteLLMTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).DeleteLLMToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_DeleteLLMToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).DeleteLLMToken(ctx, req.(*DeleteLLMTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_DeleteAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteAccountRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).DeleteAccount(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_DeleteAccount_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).DeleteAccount(ctx, req.(*DeleteAccountRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -412,30 +196,6 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshAccessToken",
 			Handler:    _AuthService_RefreshAccessToken_Handler,
-		},
-		{
-			MethodName: "UpdateUserName",
-			Handler:    _AuthService_UpdateUserName_Handler,
-		},
-		{
-			MethodName: "ChangePassword",
-			Handler:    _AuthService_ChangePassword_Handler,
-		},
-		{
-			MethodName: "UpdateLLMToken",
-			Handler:    _AuthService_UpdateLLMToken_Handler,
-		},
-		{
-			MethodName: "GetUserInfo",
-			Handler:    _AuthService_GetUserInfo_Handler,
-		},
-		{
-			MethodName: "DeleteLLMToken",
-			Handler:    _AuthService_DeleteLLMToken_Handler,
-		},
-		{
-			MethodName: "DeleteAccount",
-			Handler:    _AuthService_DeleteAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

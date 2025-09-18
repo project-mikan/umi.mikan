@@ -12,7 +12,7 @@ import (
 type UserLlm struct {
 	UserID      uuid.UUID `json:"user_id"`      // user_id
 	LlmProvider int16     `json:"llm_provider"` // llm_provider
-	Token       string    `json:"token"`        // token
+	Key         string    `json:"key"`          // key
 	CreatedAt   int64     `json:"created_at"`   // created_at
 	UpdatedAt   int64     `json:"updated_at"`   // updated_at
 	// xo fields
@@ -40,13 +40,13 @@ func (ul *UserLlm) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.user_llms (` +
-		`user_id, llm_provider, token, created_at, updated_at` +
+		`user_id, llm_provider, key, created_at, updated_at` +
 		`) VALUES (` +
 		`$1, $2, $3, $4, $5` +
 		`)`
 	// run
-	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.Token, ul.CreatedAt, ul.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.Token, ul.CreatedAt, ul.UpdatedAt); err != nil {
+	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.CreatedAt, ul.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.CreatedAt, ul.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -64,11 +64,11 @@ func (ul *UserLlm) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.user_llms SET ` +
-		`llm_provider = $1, token = $2, created_at = $3, updated_at = $4 ` +
+		`llm_provider = $1, key = $2, created_at = $3, updated_at = $4 ` +
 		`WHERE user_id = $5`
 	// run
-	logf(sqlstr, ul.LlmProvider, ul.Token, ul.CreatedAt, ul.UpdatedAt, ul.UserID)
-	if _, err := db.ExecContext(ctx, sqlstr, ul.LlmProvider, ul.Token, ul.CreatedAt, ul.UpdatedAt, ul.UserID); err != nil {
+	logf(sqlstr, ul.LlmProvider, ul.Key, ul.CreatedAt, ul.UpdatedAt, ul.UserID)
+	if _, err := db.ExecContext(ctx, sqlstr, ul.LlmProvider, ul.Key, ul.CreatedAt, ul.UpdatedAt, ul.UserID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -90,16 +90,16 @@ func (ul *UserLlm) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.user_llms (` +
-		`user_id, llm_provider, token, created_at, updated_at` +
+		`user_id, llm_provider, key, created_at, updated_at` +
 		`) VALUES (` +
 		`$1, $2, $3, $4, $5` +
 		`)` +
 		` ON CONFLICT (user_id) DO ` +
 		`UPDATE SET ` +
-		`llm_provider = EXCLUDED.llm_provider, token = EXCLUDED.token, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`llm_provider = EXCLUDED.llm_provider, key = EXCLUDED.key, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
 	// run
-	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.Token, ul.CreatedAt, ul.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.Token, ul.CreatedAt, ul.UpdatedAt); err != nil {
+	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.CreatedAt, ul.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.CreatedAt, ul.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -134,7 +134,7 @@ func (ul *UserLlm) Delete(ctx context.Context, db DB) error {
 func UserLlmByUserIDLlmProvider(ctx context.Context, db DB, userID uuid.UUID, llmProvider int16) (*UserLlm, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`user_id, llm_provider, token, created_at, updated_at ` +
+		`user_id, llm_provider, key, created_at, updated_at ` +
 		`FROM public.user_llms ` +
 		`WHERE user_id = $1 AND llm_provider = $2`
 	// run
@@ -142,7 +142,7 @@ func UserLlmByUserIDLlmProvider(ctx context.Context, db DB, userID uuid.UUID, ll
 	ul := UserLlm{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID, llmProvider).Scan(&ul.UserID, &ul.LlmProvider, &ul.Token, &ul.CreatedAt, &ul.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID, llmProvider).Scan(&ul.UserID, &ul.LlmProvider, &ul.Key, &ul.CreatedAt, &ul.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &ul, nil
@@ -154,7 +154,7 @@ func UserLlmByUserIDLlmProvider(ctx context.Context, db DB, userID uuid.UUID, ll
 func UserLlmByUserID(ctx context.Context, db DB, userID uuid.UUID) (*UserLlm, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`user_id, llm_provider, token, created_at, updated_at ` +
+		`user_id, llm_provider, key, created_at, updated_at ` +
 		`FROM public.user_llms ` +
 		`WHERE user_id = $1`
 	// run
@@ -162,7 +162,7 @@ func UserLlmByUserID(ctx context.Context, db DB, userID uuid.UUID) (*UserLlm, er
 	ul := UserLlm{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID).Scan(&ul.UserID, &ul.LlmProvider, &ul.Token, &ul.CreatedAt, &ul.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID).Scan(&ul.UserID, &ul.LlmProvider, &ul.Key, &ul.CreatedAt, &ul.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &ul, nil
