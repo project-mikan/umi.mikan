@@ -66,7 +66,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		const pastEntriesPromises = pastDatesArray.map((pastDate) =>
 			getDiaryEntry({
 				date: createYMD(pastDate.year, pastDate.month, pastDate.day),
-				accessToken: authResult.accessToken!,
+				accessToken: authResult.accessToken as string,
 			}).catch(() => ({ entry: null })),
 		);
 
@@ -137,7 +137,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			const pastEntriesPromises = pastDatesArray.map((pastDate) =>
 				getDiaryEntry({
 					date: createYMD(pastDate.year, pastDate.month, pastDate.day),
-					accessToken: authResult.accessToken!,
+					accessToken: authResult.accessToken as string,
 				}).catch(() => ({ entry: null })),
 			);
 

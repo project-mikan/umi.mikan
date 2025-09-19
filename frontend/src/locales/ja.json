@@ -4,7 +4,10 @@
 		"save": "保存",
 		"cancel": "キャンセル",
 		"error": "エラー",
-		"success": "成功"
+		"success": "成功",
+		"createdAt": "作成日",
+		"updatedAt": "更新日",
+		"close": "閉じる"
 	},
 	"settings": {
 		"title": "設定",
@@ -32,6 +35,7 @@
 			},
 			"tokenLabel": "APIキー",
 			"tokenPlaceholder": "APIキーを入力してください",
+			"tokenHelp": "API Tokenはこちら:",
 			"save": "トークンを保存"
 		},
 		"deleteToken": {
@@ -185,7 +189,19 @@
 		"writeEntry": "日記を書く",
 		"entry": "日記",
 		"detail": "詳細",
-		"edit": "編集"
+		"edit": "編集",
+		"summary": {
+			"title": "月間サマリー",
+			"generate": "サマリーを生成",
+			"generating": "サマリー生成中...",
+			"view": "サマリーを表示",
+			"hide": "サマリーを非表示",
+			"regenerate": "サマリーを再生成",
+			"error": "サマリーの生成に失敗しました",
+			"noEntries": "この月の日記が見つかりません",
+			"noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
+			"updateAvailable": "このサマリー生成後に新しい日記が追加されています。サマリーを再生成することをお勧めします。"
+		}
 	},
 	"timeProgress": {
 		"yearProgress": "今年",

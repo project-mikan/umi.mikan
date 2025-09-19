@@ -26,6 +26,8 @@ const (
 	DiaryService_GetDiaryEntries_FullMethodName        = "/diary.DiaryService/GetDiaryEntries"
 	DiaryService_GetDiaryEntriesByMonth_FullMethodName = "/diary.DiaryService/GetDiaryEntriesByMonth"
 	DiaryService_SearchDiaryEntries_FullMethodName     = "/diary.DiaryService/SearchDiaryEntries"
+	DiaryService_GenerateMonthlySummary_FullMethodName = "/diary.DiaryService/GenerateMonthlySummary"
+	DiaryService_GetMonthlySummary_FullMethodName      = "/diary.DiaryService/GetMonthlySummary"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -46,6 +48,10 @@ type DiaryServiceClient interface {
 	GetDiaryEntriesByMonth(ctx context.Context, in *GetDiaryEntriesByMonthRequest, opts ...grpc.CallOption) (*GetDiaryEntriesByMonthResponse, error)
 	// 検索
 	SearchDiaryEntries(ctx context.Context, in *SearchDiaryEntriesRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesResponse, error)
+	// 月ごとのサマリー生成
+	GenerateMonthlySummary(ctx context.Context, in *GenerateMonthlySummaryRequest, opts ...grpc.CallOption) (*GenerateMonthlySummaryResponse, error)
+	// 月ごとのサマリー取得
+	GetMonthlySummary(ctx context.Context, in *GetMonthlySummaryRequest, opts ...grpc.CallOption) (*GetMonthlySummaryResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -126,6 +132,26 @@ func (c *diaryServiceClient) SearchDiaryEntries(ctx context.Context, in *SearchD
 	return out, nil
 }
 
+func (c *diaryServiceClient) GenerateMonthlySummary(ctx context.Context, in *GenerateMonthlySummaryRequest, opts ...grpc.CallOption) (*GenerateMonthlySummaryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GenerateMonthlySummaryResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GenerateMonthlySummary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) GetMonthlySummary(ctx context.Context, in *GetMonthlySummaryRequest, opts ...grpc.CallOption) (*GetMonthlySummaryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMonthlySummaryResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetMonthlySummary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DiaryServiceServer is the server API for DiaryService service.
 // All implementations must embed UnimplementedDiaryServiceServer
 // for forward compatibility.
@@ -144,6 +170,10 @@ type DiaryServiceServer interface {
 	GetDiaryEntriesByMonth(context.Context, *GetDiaryEntriesByMonthRequest) (*GetDiaryEntriesByMonthResponse, error)
 	// 検索
 	SearchDiaryEntries(context.Context, *SearchDiaryEntriesRequest) (*SearchDiaryEntriesResponse, error)
+	// 月ごとのサマリー生成
+	GenerateMonthlySummary(context.Context, *GenerateMonthlySummaryRequest) (*GenerateMonthlySummaryResponse, error)
+	// 月ごとのサマリー取得
+	GetMonthlySummary(context.Context, *GetMonthlySummaryRequest) (*GetMonthlySummaryResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -174,6 +204,12 @@ func (UnimplementedDiaryServiceServer) GetDiaryEntriesByMonth(context.Context, *
 }
 func (UnimplementedDiaryServiceServer) SearchDiaryEntries(context.Context, *SearchDiaryEntriesRequest) (*SearchDiaryEntriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchDiaryEntries not implemented")
+}
+func (UnimplementedDiaryServiceServer) GenerateMonthlySummary(context.Context, *GenerateMonthlySummaryRequest) (*GenerateMonthlySummaryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateMonthlySummary not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetMonthlySummary(context.Context, *GetMonthlySummaryRequest) (*GetMonthlySummaryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMonthlySummary not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -322,6 +358,42 @@ func _DiaryService_SearchDiaryEntries_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_GenerateMonthlySummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateMonthlySummaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GenerateMonthlySummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GenerateMonthlySummary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GenerateMonthlySummary(ctx, req.(*GenerateMonthlySummaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_GetMonthlySummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMonthlySummaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetMonthlySummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetMonthlySummary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetMonthlySummary(ctx, req.(*GetMonthlySummaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiaryService_ServiceDesc is the grpc.ServiceDesc for DiaryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -356,6 +428,14 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchDiaryEntries",
 			Handler:    _DiaryService_SearchDiaryEntries_Handler,
+		},
+		{
+			MethodName: "GenerateMonthlySummary",
+			Handler:    _DiaryService_GenerateMonthlySummary_Handler,
+		},
+		{
+			MethodName: "GetMonthlySummary",
+			Handler:    _DiaryService_GetMonthlySummary_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

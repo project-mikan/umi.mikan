@@ -7,7 +7,7 @@ import {
 	LoginByPasswordRequestSchema,
 	RefreshAccessTokenRequestSchema,
 	RegisterByPasswordRequestSchema,
-} from "$lib/grpc/auth/auth_pb.ts";
+} from "$lib/grpc/auth/auth_pb";
 import {
 	UserService,
 	UpdateUserNameRequestSchema,
@@ -22,7 +22,7 @@ import {
 	type GetUserInfoResponse,
 	type DeleteLLMKeyResponse,
 	type DeleteAccountResponse,
-} from "$lib/grpc/user/user_pb.ts";
+} from "$lib/grpc/user/user_pb";
 
 const transport = createGrpcTransport({
 	baseUrl: "http://backend:8080",

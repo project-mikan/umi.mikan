@@ -4,7 +4,10 @@
 		"save": "Save",
 		"cancel": "Cancel",
 		"error": "Error",
-		"success": "Success"
+		"success": "Success",
+		"createdAt": "Created",
+		"updatedAt": "Updated",
+		"close": "Close"
 	},
 	"settings": {
 		"title": "Settings",
@@ -32,6 +35,7 @@
 			},
 			"tokenLabel": "API Key",
 			"tokenPlaceholder": "Enter API key",
+			"tokenHelp": "Get API Token here:",
 			"save": "Save token"
 		},
 		"deleteToken": {
@@ -185,7 +189,19 @@
 		"writeEntry": "Write diary",
 		"entry": "Diary",
 		"detail": "Detail",
-		"edit": "Edit"
+		"edit": "Edit",
+		"summary": {
+			"title": "Monthly Summary",
+			"generate": "Generate Summary",
+			"generating": "Generating summary...",
+			"view": "View Summary",
+			"hide": "Hide Summary",
+			"regenerate": "Regenerate Summary",
+			"error": "Failed to generate summary",
+			"noEntries": "No diary entries found for this month",
+			"noApiKey": "Gemini API key is not configured. Please set it up in settings.",
+			"updateAvailable": "New diary entries have been added since this summary was generated. We recommend regenerating the summary."
+		}
 	},
 	"timeProgress": {
 		"yearProgress": "Year progress",

@@ -294,6 +294,9 @@ function handleDeleteAccount() {
 					<label for="llmToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 						{$_("settings.llmToken.tokenLabel")}
 					</label>
+					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+						{$_("settings.llmToken.tokenHelp")} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">https://aistudio.google.com/apikey</a>
+					</p>
 					<input
 						type="text"
 						id="llmToken"

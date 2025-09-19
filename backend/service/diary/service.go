@@ -3,11 +3,14 @@ package diary
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -282,5 +285,147 @@ func (s *DiaryEntry) SearchDiaryEntries(
 	return &g.SearchDiaryEntriesResponse{
 		SearchedKeyword: message.Keyword,
 		Entries:         entries,
+	}, nil
+}
+
+func (s *DiaryEntry) GenerateMonthlySummary(
+	ctx context.Context,
+	message *g.GenerateMonthlySummaryRequest,
+) (*g.GenerateMonthlySummaryResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get user's Gemini API key (LLM provider 1 = Gemini)
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Gemini API key not found for user")
+	}
+
+	// Get all diary entries for the specified month
+	entries := make([]*database.Diary, 0)
+	daysInMonth := time.Date(int(message.Month.Year), time.Month(message.Month.Month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
+
+	for day := 1; day <= daysInMonth; day++ {
+		date := time.Date(int(message.Month.Year), time.Month(message.Month.Month), day, 0, 0, 0, 0, time.UTC)
+		diary, err := database.DiaryByUserIDDate(ctx, s.DB, userID, date)
+		if err != nil {
+			continue // Skip entries that don't exist
+		}
+		entries = append(entries, diary)
+	}
+
+	if len(entries) == 0 {
+		return nil, status.Errorf(codes.NotFound, "no diary entries found for the specified month")
+	}
+
+	// Combine all diary contents
+	var contentBuilder strings.Builder
+	for _, entry := range entries {
+		contentBuilder.WriteString(fmt.Sprintf("【%d日】\n%s\n\n", entry.Date.Day(), entry.Content))
+	}
+	combinedContent := contentBuilder.String()
+
+	// Generate summary using Gemini
+	geminiClient, err := llm.NewGeminiClient(ctx, userLLM.Key)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create Gemini client: %v", err)
+	}
+	defer func() {
+		if closeErr := geminiClient.Close(); closeErr != nil {
+			// Log the close error but don't affect the main function result
+			fmt.Printf("Warning: failed to close Gemini client: %v\n", closeErr)
+		}
+	}()
+
+	summary, err := geminiClient.GenerateSummary(ctx, combinedContent)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate summary: %v", err)
+	}
+
+	// Save or update the summary in database
+	currentTime := time.Now().Unix()
+
+	// Check if summary already exists for this month
+	existingSummary, err := database.DiarySummaryMonthByUserIDYearMonth(ctx, s.DB, userID, int(message.Month.Year), int(message.Month.Month))
+	if err != nil {
+		// Create new summary
+		summaryID := uuid.New()
+		newSummary := &database.DiarySummaryMonth{
+			ID:        summaryID,
+			UserID:    userID,
+			Year:      int(message.Month.Year),
+			Month:     int(message.Month.Month),
+			Summary:   summary,
+			CreatedAt: currentTime,
+			UpdatedAt: currentTime,
+		}
+
+		if err := newSummary.Insert(ctx, s.DB); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to save summary: %v", err)
+		}
+
+		return &g.GenerateMonthlySummaryResponse{
+			Summary: &g.MonthlySummary{
+				Id:        newSummary.ID.String(),
+				Month:     message.Month,
+				Summary:   newSummary.Summary,
+				CreatedAt: newSummary.CreatedAt,
+				UpdatedAt: newSummary.UpdatedAt,
+			},
+		}, nil
+	} else {
+		// Update existing summary
+		existingSummary.Summary = summary
+		existingSummary.UpdatedAt = currentTime
+
+		if err := existingSummary.Update(ctx, s.DB); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to update summary: %v", err)
+		}
+
+		return &g.GenerateMonthlySummaryResponse{
+			Summary: &g.MonthlySummary{
+				Id:        existingSummary.ID.String(),
+				Month:     message.Month,
+				Summary:   existingSummary.Summary,
+				CreatedAt: existingSummary.CreatedAt,
+				UpdatedAt: existingSummary.UpdatedAt,
+			},
+		}, nil
+	}
+}
+
+func (s *DiaryEntry) GetMonthlySummary(
+	ctx context.Context,
+	message *g.GetMonthlySummaryRequest,
+) (*g.GetMonthlySummaryResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the summary for the specified month
+	summary, err := database.DiarySummaryMonthByUserIDYearMonth(ctx, s.DB, userID, int(message.Month.Year), int(message.Month.Month))
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "summary not found for the specified month")
+	}
+
+	return &g.GetMonthlySummaryResponse{
+		Summary: &g.MonthlySummary{
+			Id:        summary.ID.String(),
+			Month:     message.Month,
+			Summary:   summary.Summary,
+			CreatedAt: summary.CreatedAt,
+			UpdatedAt: summary.UpdatedAt,
+		},
 	}, nil
 }
