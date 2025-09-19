@@ -200,7 +200,7 @@
 			"error": "Failed to generate summary",
 			"noEntries": "No diary entries found for this month",
 			"noApiKey": "Gemini API key is not configured. Please set it up in settings.",
-			"updateAvailable": "New diary entries have been added since this summary was generated. We recommend regenerating the summary."
+			"updateAvailable": "Diary entries have been updated since this summary was generated. We recommend regenerating the summary."
 		}
 	},
 	"timeProgress": {

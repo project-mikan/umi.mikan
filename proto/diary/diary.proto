@@ -46,6 +46,8 @@ message DiaryEntry {
   string id = 1; // 日記ID
   YMD date = 2; // 日付
   string content = 3; // 内容
+  int64 created_at = 4; // 作成日時（Unix timestamp）
+  int64 updated_at = 5; // 更新日時（Unix timestamp）
 }
 
 // 新しい日記エントリを作成するためのリクエスト

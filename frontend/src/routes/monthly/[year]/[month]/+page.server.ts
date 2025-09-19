@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 	} catch (err) {
 		console.error("Failed to load diary entries:", err);
 		return {
-			entries: [],
+			entries: { entries: [] }, // Empty GetDiaryEntriesByMonthResponse structure
 			year,
 			month,
 		};

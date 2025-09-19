@@ -5,7 +5,7 @@ import "$lib/i18n";
 import { browser } from "$app/environment";
 import { onMount } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
-import type { DiaryEntry } from "$lib/grpc";
+import type { DiaryEntry, GetDiaryEntriesByMonthResponse } from "$lib/grpc";
 import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
@@ -21,7 +21,7 @@ interface MonthlySummary {
 
 export let data: PageData;
 
-let entries = data.entries;
+let entries: any = data.entries;
 let currentYear = data.year;
 let currentMonth = data.month;
 let _loading = false;
@@ -50,7 +50,7 @@ async function fetchMonthData(year: number, month: number) {
 			`/api/diary/monthly/${year}/${month}`,
 		);
 		if (response.ok) {
-			const newEntries = await response.json();
+			const newEntries: any = await response.json();
 			entries = newEntries;
 			currentYear = year;
 			currentMonth = month;
@@ -219,16 +219,25 @@ function showError(message: string) {
 
 // 日記の最新更新日を取得
 function getLatestEntryUpdate(): number {
-	if (!entries?.entries || entries.entries.length === 0) return 0;
+	if (!entries || !entries.entries || entries.entries.length === 0) return 0;
 
-	// 各日記の更新日時は取得できないため、現在時刻を返す
-	// 実際のプロダクションでは日記エントリに更新日時を含める必要がある
-	return Date.now() / 1000;
+	// 各日記エントリのupdatedAtフィールドから最も新しい更新日時を取得
+	let latestUpdate = 0;
+	for (const entry of entries.entries) {
+		if (entry.updatedAt) {
+			const updatedAtNumber = Number(entry.updatedAt);
+			if (updatedAtNumber > latestUpdate) {
+				latestUpdate = updatedAtNumber;
+			}
+		}
+	}
+
+	return latestUpdate;
 }
 
 // サマリーが古いかどうかをチェック
 function checkForNewerEntries() {
-	if (!summary || !entries?.entries) {
+	if (!summary || !entries || !entries.entries) {
 		hasNewerEntries = false;
 		return;
 	}
@@ -236,7 +245,7 @@ function checkForNewerEntries() {
 	const latestEntryTime = getLatestEntryUpdate();
 	const summaryTime = summary.updatedAt;
 
-	// サマリー生成後にエントリが追加/更新されているかチェック
+	// サマリー更新後にエントリが追加/更新されているかチェック
 	hasNewerEntries = latestEntryTime > summaryTime;
 }
 

@@ -53,9 +53,11 @@ func (s *DiaryEntry) CreateDiaryEntry(
 
 	return &g.CreateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
-			Id:      diary.ID.String(),
-			Date:    message.Date,
-			Content: diary.Content,
+			Id:        diary.ID.String(),
+			Date:      message.Date,
+			Content:   diary.Content,
+			CreatedAt: diary.CreatedAt,
+			UpdatedAt: diary.UpdatedAt,
 		},
 	}, nil
 }
@@ -82,9 +84,11 @@ func (s *DiaryEntry) GetDiaryEntry(
 
 	return &g.GetDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
-			Id:      diary.ID.String(),
-			Date:    message.Date,
-			Content: diary.Content,
+			Id:        diary.ID.String(),
+			Date:      message.Date,
+			Content:   diary.Content,
+			CreatedAt: diary.CreatedAt,
+			UpdatedAt: diary.UpdatedAt,
 		},
 	}, nil
 }
@@ -112,9 +116,11 @@ func (s *DiaryEntry) GetDiaryEntries(
 		}
 
 		entries = append(entries, &g.DiaryEntry{
-			Id:      diary.ID.String(),
-			Date:    dateMsg,
-			Content: diary.Content,
+			Id:        diary.ID.String(),
+			Date:      dateMsg,
+			Content:   diary.Content,
+			CreatedAt: diary.CreatedAt,
+			UpdatedAt: diary.UpdatedAt,
 		})
 	}
 
@@ -150,9 +156,11 @@ func (s *DiaryEntry) GetDiaryEntriesByMonth(
 		}
 
 		entries = append(entries, &g.DiaryEntry{
-			Id:      diary.ID.String(),
-			Date:    &g.YMD{Year: uint32(diary.Date.Year()), Month: uint32(diary.Date.Month()), Day: uint32(diary.Date.Day())},
-			Content: diary.Content,
+			Id:        diary.ID.String(),
+			Date:      &g.YMD{Year: uint32(diary.Date.Year()), Month: uint32(diary.Date.Month()), Day: uint32(diary.Date.Day())},
+			Content:   diary.Content,
+			CreatedAt: diary.CreatedAt,
+			UpdatedAt: diary.UpdatedAt,
 		})
 	}
 
@@ -208,9 +216,11 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 
 	return &g.UpdateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
-			Id:      diary.ID.String(),
-			Date:    &g.YMD{Year: uint32(diary.Date.Year()), Month: uint32(diary.Date.Month()), Day: uint32(diary.Date.Day())},
-			Content: diary.Content,
+			Id:        diary.ID.String(),
+			Date:      &g.YMD{Year: uint32(diary.Date.Year()), Month: uint32(diary.Date.Month()), Day: uint32(diary.Date.Day())},
+			Content:   diary.Content,
+			CreatedAt: diary.CreatedAt,
+			UpdatedAt: diary.UpdatedAt,
 		},
 	}, nil
 }
@@ -277,9 +287,11 @@ func (s *DiaryEntry) SearchDiaryEntries(
 	entries := make([]*g.DiaryEntry, 0, len(ds))
 	for _, d := range ds {
 		entries = append(entries, &g.DiaryEntry{
-			Id:      d.ID.String(),
-			Content: d.Content,
-			Date:    &g.YMD{Year: uint32(d.Date.Year()), Month: uint32(d.Date.Month()), Day: uint32(d.Date.Day())},
+			Id:        d.ID.String(),
+			Content:   d.Content,
+			Date:      &g.YMD{Year: uint32(d.Date.Year()), Month: uint32(d.Date.Month()), Day: uint32(d.Date.Day())},
+			CreatedAt: d.CreatedAt,
+			UpdatedAt: d.UpdatedAt,
 		})
 	}
 	return &g.SearchDiaryEntriesResponse{
