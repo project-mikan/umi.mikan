@@ -133,6 +133,7 @@
 		"summaryGenerationFailed": "Summary generation failed",
 		"summary": {
 			"title": "Diary Summary",
+			"label": "Summary",
 			"view": "View Summary",
 			"hide": "Hide Summary",
 			"outdatedWarning": "The diary has been updated since this summary was created, so the summary may be outdated."

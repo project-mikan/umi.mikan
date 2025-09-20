@@ -227,7 +227,7 @@ function _clearSummary() {
 			<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
 				<div class="p-6">
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-						{$_("diary.summary.title")} - {_formatDate(data.date)}
+						{$_("diary.summary.label")}
 					</h2>
 					{#if isSummaryOutdated}
 						<div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">

@@ -133,6 +133,7 @@
 		"summaryGenerationFailed": "要約の生成に失敗しました",
 		"summary": {
 			"title": "日記の要約",
+			"label": "まとめ",
 			"view": "要約を表示",
 			"hide": "要約を非表示",
 			"outdatedWarning": "日記が更新されているため、要約が古くなっている可能性があります。"

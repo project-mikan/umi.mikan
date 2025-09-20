@@ -616,15 +616,16 @@ func (s *DiaryEntry) GenerateDailySummary(
 		return nil, status.Error(codes.Internal, "Failed to generate summary")
 	}
 
-	// 既存の要約があるかチェック
-	existingSummary, err := database.DailySummaryByDiaryID(ctx, s.DB, diaryID)
-	currentTime := time.Now()
+	// 既存の要約があるかチェック（DiarySummaryDayテーブルを使用）
+	existingSummary, err := database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, diary.Date)
+	currentTime := time.Now().Unix()
 
 	if err != nil {
 		// 既存の要約がない場合は新規作成
-		newSummary := &database.DailySummary{
+		newSummary := &database.DiarySummaryDay{
 			ID:        uuid.New(),
-			DiaryID:   diaryID,
+			UserID:    userID,
+			Date:      diary.Date,
 			Summary:   summaryText,
 			CreatedAt: currentTime,
 			UpdatedAt: currentTime,
@@ -637,15 +638,15 @@ func (s *DiaryEntry) GenerateDailySummary(
 		return &g.GenerateDailySummaryResponse{
 			Summary: &g.DailySummary{
 				Id:      newSummary.ID.String(),
-				DiaryId: newSummary.DiaryID.String(),
+				DiaryId: diaryID.String(),
 				Date: &g.YMD{
 					Year:  uint32(diary.Date.Year()),
 					Month: uint32(diary.Date.Month()),
 					Day:   uint32(diary.Date.Day()),
 				},
 				Summary:   newSummary.Summary,
-				CreatedAt: newSummary.CreatedAt.Unix(),
-				UpdatedAt: newSummary.UpdatedAt.Unix(),
+				CreatedAt: newSummary.CreatedAt,
+				UpdatedAt: newSummary.UpdatedAt,
 			},
 		}, nil
 	} else {
@@ -660,15 +661,15 @@ func (s *DiaryEntry) GenerateDailySummary(
 		return &g.GenerateDailySummaryResponse{
 			Summary: &g.DailySummary{
 				Id:      existingSummary.ID.String(),
-				DiaryId: existingSummary.DiaryID.String(),
+				DiaryId: diaryID.String(),
 				Date: &g.YMD{
 					Year:  uint32(diary.Date.Year()),
 					Month: uint32(diary.Date.Month()),
 					Day:   uint32(diary.Date.Day()),
 				},
 				Summary:   existingSummary.Summary,
-				CreatedAt: existingSummary.CreatedAt.Unix(),
-				UpdatedAt: existingSummary.UpdatedAt.Unix(),
+				CreatedAt: existingSummary.CreatedAt,
+				UpdatedAt: existingSummary.UpdatedAt,
 			},
 		}, nil
 	}
@@ -687,27 +688,21 @@ func (s *DiaryEntry) GetDailySummary(
 		return nil, err
 	}
 
-	// 日付から日記を取得
+	// 日付から要約を直接取得
 	date := time.Date(int(req.Date.Year), time.Month(req.Date.Month), int(req.Date.Day), 0, 0, 0, 0, time.UTC)
-	diary, err := database.DiaryByUserIDDate(ctx, s.DB, userID, date)
-	if err != nil {
-		return nil, err
-	}
-
-	// 日記の要約を取得
-	summary, err := database.DailySummaryByDiaryID(ctx, s.DB, diary.ID)
+	summary, err := database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, date)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "Daily summary not found")
 	}
 
 	return &g.GetDailySummaryResponse{
 		Summary: &g.DailySummary{
-			Id:        summary.ID.String(),
-			DiaryId:   summary.DiaryID.String(),
-			Date:      req.Date,
-			Summary:   summary.Summary,
-			CreatedAt: summary.CreatedAt.Unix(),
-			UpdatedAt: summary.UpdatedAt.Unix(),
+			Id:      summary.ID.String(),
+			DiaryId: "", // DiarySummaryDayにはdiaryIdがないので空文字
+			Date:    req.Date,
+			Summary: summary.Summary,
+			CreatedAt: summary.CreatedAt,
+			UpdatedAt: summary.UpdatedAt,
 		},
 	}, nil
 }
