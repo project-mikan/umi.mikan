@@ -36,6 +36,7 @@
 			"tokenLabel": "API Key",
 			"tokenPlaceholder": "Enter API key",
 			"tokenHelp": "Get API Token here:",
+			"freeWarning": "Google AI Studio Free Tier is used for learning purposes, so please do not enter personal information. For private diaries, please use paid APIs.",
 			"save": "Save token"
 		},
 		"autoSummary": {
