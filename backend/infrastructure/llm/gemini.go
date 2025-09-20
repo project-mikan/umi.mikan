@@ -37,9 +37,9 @@ func (g *GeminiClient) GenerateSummary(ctx context.Context, diaryContent string)
 - 次にその月全体の傾向を300文字以内で簡潔にまとめる
 
 形式は以下の通りにしてください：
-- 箇条書き1
-- 箇条書き2
-- 箇条書き3
+- n日：箇条書き1
+- n日：箇条書き2
+- n日：箇条書き3
 
 <300文字以内の月全体の傾向>
 
@@ -72,7 +72,7 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 	prompt := fmt.Sprintf(`以下の1日の日記の内容を読んで、日次サマリーを生成してください。
 サマリーは以下の要件を満たしてください：
 - Markdownは非対応
-- 最大3つまで要点を列挙(箇条書きは「- 」で始める)
+- 最大3つまで簡潔に要点を列挙(箇条書きは「- 」で始める)
 - 出てきた人物を文脈から重要な順に最大3人列挙(箇条書きは「- 」で始める)
 
 形式は以下の通りにしてください：
