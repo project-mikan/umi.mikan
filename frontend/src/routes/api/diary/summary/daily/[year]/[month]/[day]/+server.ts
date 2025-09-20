@@ -1,5 +1,6 @@
-import { error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { getDailySummary } from "$lib/server/diary-api";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
@@ -29,13 +30,16 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 	}
 
 	try {
-		// TODO: Call backend gRPC service to get daily summary
-		// For now, return mock data indicating no summary exists
+		const response = await getDailySummary({
+			date: {
+				year: yearNum,
+				month: monthNum,
+				day: dayNum,
+			},
+			accessToken: authResult.accessToken,
+		});
 
-		// Check if summary exists in storage (mock implementation)
-		// In the future, this should query the backend for daily summaries
-
-		throw error(404, "Daily summary not found");
+		return json(response);
 	} catch (err) {
 		if (err instanceof Response) {
 			throw err;
