@@ -1,39 +1,28 @@
 <script lang="ts">
 import { onMount, onDestroy } from "svelte";
+import { browser } from "$app/environment";
 import { _, locale, isLoading } from "svelte-i18n";
 import "$lib/i18n";
-import {
-	Chart,
-	CategoryScale,
-	LinearScale,
-	PointElement,
-	LineElement,
-	LineController,
-	Title,
-	Tooltip,
-	Legend,
-	Filler,
-} from "chart.js";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 
-Chart.register(
-	CategoryScale,
-	LinearScale,
-	PointElement,
-	LineElement,
-	LineController,
-	Title,
-	Tooltip,
-	Legend,
-	Filler,
-);
+// Chart.js の型定義
+let Chart: typeof import("chart.js").Chart;
+let CategoryScale: typeof import("chart.js").CategoryScale;
+let LinearScale: typeof import("chart.js").LinearScale;
+let PointElement: typeof import("chart.js").PointElement;
+let LineElement: typeof import("chart.js").LineElement;
+let LineController: typeof import("chart.js").LineController;
+let Title: typeof import("chart.js").Title;
+let Tooltip: typeof import("chart.js").Tooltip;
+let Legend: typeof import("chart.js").Legend;
+let Filler: typeof import("chart.js").Filler;
 
 export let entryMap: Map<number, DiaryEntry>;
 export let year: number;
 export let month: number;
 
 let chartCanvas: HTMLCanvasElement;
-let chart: Chart | null = null;
+let chart: InstanceType<typeof Chart> | null = null;
 
 // 指定された月の日数を取得
 function getDaysInMonth(year: number, month: number): number {
@@ -58,7 +47,7 @@ $: chartData = (() => {
 
 // チャートを更新
 function updateChart() {
-	if (!chart) return;
+	if (!browser || !chart || !Chart) return;
 
 	chart.data.labels = chartData.labels;
 	chart.data.datasets[0].data = chartData.data;
@@ -96,9 +85,42 @@ $: if (chart && $locale) {
 	updateChart();
 }
 
+// Chart.jsを動的にインポートする関数
+async function loadChartJS() {
+	if (!browser) return;
+
+	try {
+		const chartModule = await import("chart.js");
+		Chart = chartModule.Chart;
+		CategoryScale = chartModule.CategoryScale;
+		LinearScale = chartModule.LinearScale;
+		PointElement = chartModule.PointElement;
+		LineElement = chartModule.LineElement;
+		LineController = chartModule.LineController;
+		Title = chartModule.Title;
+		Tooltip = chartModule.Tooltip;
+		Legend = chartModule.Legend;
+		Filler = chartModule.Filler;
+
+		Chart.register(
+			CategoryScale,
+			LinearScale,
+			PointElement,
+			LineElement,
+			LineController,
+			Title,
+			Tooltip,
+			Legend,
+			Filler,
+		);
+	} catch (error) {
+		console.error("Failed to load Chart.js:", error);
+	}
+}
+
 // チャートを作成する関数
-function createChart() {
-	if (!chartCanvas) return;
+async function createChart() {
+	if (!browser || !chartCanvas || !Chart) return;
 
 	const ctx = chartCanvas.getContext("2d");
 	if (!ctx) return;
@@ -144,7 +166,7 @@ function createChart() {
 				},
 				tooltip: {
 					callbacks: {
-						label: (context) => {
+						label: (context: import("chart.js").TooltipItem<"line">) => {
 							const value = context.parsed.y;
 							return `${$_("chart.characterCount")}: ${value}${$_("chart.charactersUnit")}`;
 						},
@@ -182,14 +204,19 @@ function createChart() {
 	});
 }
 
-// 翻訳が読み込まれたら初回チャートを作成
-$: if (!$isLoading && chartData && !chart) {
+// Chart.jsが読み込まれて翻訳が完了したらチャートを作成
+$: if (browser && !$isLoading && chartData && !chart && Chart) {
 	createChart();
 }
 
-onMount(() => {
-	// onMountでは何もしない（リアクティブ文で処理）
-	// ここで作ると翻訳データが使えずchart.dayみたいな値になるので
+onMount(async () => {
+	// Chart.jsを動的にロード
+	await loadChartJS();
+
+	// ホームからの遷移などではこっちが必要。翻訳は読み込み済みなので問題なし
+	if (chartData && !chart && Chart) {
+		createChart();
+	}
 });
 
 onDestroy(() => {
@@ -207,4 +234,3 @@ onDestroy(() => {
 		<canvas bind:this={chartCanvas}></canvas>
 	</div>
 </div>
-
