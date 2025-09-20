@@ -1,4 +1,4 @@
-FROM golang:1.24.5
+FROM golang:1.25.1
 WORKDIR /backend
 RUN go install tool
 CMD ["go", "tool", "air"]
