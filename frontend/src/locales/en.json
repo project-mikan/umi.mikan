@@ -223,5 +223,11 @@
 	},
 	"footer": {
 		"github": "GitHub"
+	},
+	"chart": {
+		"characterCount": "Character Count",
+		"charactersUnit": " characters",
+		"day": "Day",
+		"dailyCharacterCount": "Daily Character Count Progress"
 	}
 }

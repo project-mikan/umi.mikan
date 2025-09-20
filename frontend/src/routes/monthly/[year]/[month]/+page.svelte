@@ -13,6 +13,7 @@ import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
 import MonthYearSelector from "$lib/components/molecules/MonthYearSelector.svelte";
+import CharacterCountChart from "$lib/components/molecules/CharacterCountChart.svelte";
 
 interface MonthlySummary {
 	id: string;
@@ -503,6 +504,15 @@ $: _weekDays = (() => {
 			{currentMonth}
 			{entryMap}
 			onNavigateToEntry={_navigateToEntry}
+		/>
+	</div>
+
+	<!-- 日毎文字数グラフ -->
+	<div class="mt-8">
+		<CharacterCountChart
+			{entryMap}
+			year={currentYear}
+			month={currentMonth}
 		/>
 	</div>
 </div>

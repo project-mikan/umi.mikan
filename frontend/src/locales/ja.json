@@ -223,5 +223,11 @@
 	},
 	"footer": {
 		"github": "GitHub"
+	},
+	"chart": {
+		"characterCount": "文字数",
+		"charactersUnit": "文字",
+		"day": "日",
+		"dailyCharacterCount": "日毎の文字数推移"
 	}
 }
