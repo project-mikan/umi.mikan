@@ -160,8 +160,10 @@ async function fetchMonthlySummary() {
 		if (response.ok) {
 			const summaryData = await response.json();
 			summary = summaryData;
+			showSummary = true;
 		} else if (response.status === 404) {
 			summary = null;
+			showSummary = false;
 		} else if (response.status === 401) {
 			await goto("/login");
 		} else {
@@ -262,30 +264,20 @@ $: if (entries || summary) {
 	checkForNewerEntries();
 }
 
-// ローカルストレージのキーを生成
-function getSummaryStorageKey(): string {
-	return `summary-show-${currentYear}-${currentMonth}`;
-}
-
 // ページロード時の初期化処理
 onMount(async () => {
 	// 既存のサマリーがあるかチェック
 	await fetchMonthlySummary();
-
-	// サマリーが存在する場合のみ、前回の表示状態を復元
-	if (summary) {
-		const storageKey = getSummaryStorageKey();
-		const storedShowState = localStorage.getItem(storageKey);
-		if (storedShowState === "true") {
-			showSummary = true;
-		}
-	}
 });
 
-// showSummaryの状態をローカルストレージに保存
-$: if (browser && typeof window !== "undefined" && summary) {
-	const storageKey = getSummaryStorageKey();
-	localStorage.setItem(storageKey, showSummary.toString());
+// 月が変わったときの処理
+async function handleMonthChange() {
+	// 状態をリセット
+	summary = null;
+	hasNewerEntries = false;
+
+	// 新しい月のサマリーを取得
+	await fetchMonthlySummary();
 }
 
 // 月が変わったときにサマリーをリセット
@@ -293,27 +285,17 @@ let previousYear = currentYear;
 let previousMonth = currentMonth;
 
 $: if (currentYear !== previousYear || currentMonth !== previousMonth) {
+	// 以前の値を保存
+	const oldYear = previousYear;
+	const oldMonth = previousMonth;
+
 	// 以前の値を更新
 	previousYear = currentYear;
 	previousMonth = currentMonth;
 
-	// 状態をリセット
-	summary = null;
-	showSummary = false;
-	hasNewerEntries = false;
-
-	// 新しい月のサマリーを取得（onMountで既に呼ばれている場合を除く）
-	if (browser && (previousYear !== data.year || previousMonth !== data.month)) {
-		fetchMonthlySummary().then(() => {
-			// サマリーが存在する場合、前回の表示状態を復元
-			if (summary) {
-				const storageKey = getSummaryStorageKey();
-				const storedShowState = localStorage.getItem(storageKey);
-				if (storedShowState === "true") {
-					showSummary = true;
-				}
-			}
-		});
+	// 新しい月のサマリーを取得（初回ロード以外）
+	if (browser && (oldYear !== currentYear || oldMonth !== currentMonth)) {
+		handleMonthChange();
 	}
 }
 
