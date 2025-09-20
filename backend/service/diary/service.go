@@ -697,10 +697,10 @@ func (s *DiaryEntry) GetDailySummary(
 
 	return &g.GetDailySummaryResponse{
 		Summary: &g.DailySummary{
-			Id:      summary.ID.String(),
-			DiaryId: "", // DiarySummaryDayにはdiaryIdがないので空文字
-			Date:    req.Date,
-			Summary: summary.Summary,
+			Id:        summary.ID.String(),
+			DiaryId:   "", // DiarySummaryDayにはdiaryIdがないので空文字
+			Date:      req.Date,
+			Summary:   summary.Summary,
 			CreatedAt: summary.CreatedAt,
 			UpdatedAt: summary.UpdatedAt,
 		},
