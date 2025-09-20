@@ -6,6 +6,7 @@ import {
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
+import { getUserInfo } from "$lib/server/auth-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
@@ -39,11 +40,14 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	});
 
 	try {
-		// メインの日記を取得
-		const response = await getDiaryEntry({
-			date,
-			accessToken: authResult.accessToken,
-		});
+		// メインの日記を取得とユーザー情報を並行して取得
+		const [response, userInfo] = await Promise.all([
+			getDiaryEntry({
+				date,
+				accessToken: authResult.accessToken,
+			}),
+			getUserInfo({ accessToken: authResult.accessToken }),
+		]);
 
 		// 過去の日記を並行して取得
 		const pastDatesArray = [
@@ -108,6 +112,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			entry: response.entry || null,
 			date,
 			pastEntries: pastEntriesObject,
+			user: {
+				name: userInfo.name,
+				email: userInfo.email,
+				llmKeys: userInfo.llmKeys || [],
+			},
 		};
 	} catch (err) {
 		if (err instanceof Response) {
@@ -116,6 +125,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 		// Handle gRPC NOT_FOUND error (code 2) - this is normal when no diary entry exists
 		if (err && typeof err === "object" && "code" in err && err.code === 2) {
+			// ユーザー情報を取得
+			const userInfo = await getUserInfo({
+				accessToken: authResult.accessToken,
+			});
+
 			// 過去の日記も取得（エラーでもnullを返す）
 			const pastDatesArray = [
 				pastDates.oneWeekAgo,
@@ -178,6 +192,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 				entry: null,
 				date,
 				pastEntries: pastEntriesObject,
+				user: {
+					name: userInfo.name,
+					email: userInfo.email,
+					llmKeys: userInfo.llmKeys || [],
+				},
 			};
 		}
 

@@ -125,6 +125,13 @@
 		"placeholder": "Write about today's events...",
 		"characterCount": "{count} characters",
 		"autoSummaryEligible": "Auto-summary eligible",
+		"generateSummary": "Generate Summary",
+		"generatingSummary": "Generating Summary...",
+		"summary": {
+			"title": "Diary Summary",
+			"view": "View Summary",
+			"hide": "Hide Summary"
+		},
 		"noEntry": "'s diary is not available.",
 		"yesterdayNoEntry": "Yesterday's diary is not available.",
 		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",

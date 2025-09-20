@@ -125,6 +125,13 @@
 		"placeholder": "今日の出来事を書いてください...",
 		"characterCount": "{count}文字",
 		"autoSummaryEligible": "自動要約対象",
+		"generateSummary": "要約を生成",
+		"generatingSummary": "要約生成中...",
+		"summary": {
+			"title": "日記の要約",
+			"view": "要約を表示",
+			"hide": "要約を非表示"
+		},
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
 		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
