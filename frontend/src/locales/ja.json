@@ -1,257 +1,257 @@
 {
-	"common": {
-		"loading": "読み込み中...",
-		"save": "保存",
-		"cancel": "キャンセル",
-		"error": "エラー",
-		"success": "成功",
-		"createdAt": "作成日",
-		"updatedAt": "更新日",
-		"close": "閉じる"
-	},
-	"settings": {
-		"title": "設定",
-		"username": {
-			"title": "お名前変更",
-			"label": "新しいお名前",
-			"placeholder": "新しいお名前を入力してください",
-			"save": "お名前を更新"
-		},
-		"password": {
-			"title": "パスワード変更",
-			"currentLabel": "現在のパスワード",
-			"currentPlaceholder": "現在のパスワードを入力してください",
-			"newLabel": "新しいパスワード",
-			"newPlaceholder": "新しいパスワードを入力してください（8文字以上）",
-			"confirmLabel": "新しいパスワード（確認）",
-			"confirmPlaceholder": "新しいパスワードを再入力してください",
-			"save": "パスワードを変更"
-		},
-		"llmToken": {
-			"title": "LLMトークン設定",
-			"providerLabel": "LLMプロバイダー",
-			"provider": {
-				"gemini": "Gemini"
-			},
-			"tokenLabel": "APIキー",
-			"tokenPlaceholder": "APIキーを入力してください",
-			"tokenHelp": "API Tokenはこちら:",
-			"freeWarning": "Google AI StudioのFree Tierは学習に利用されるため個人情報を入れないでください。プライベートな日記を使用する場合は有料APIを利用してください。",
-			"save": "トークンを保存"
-		},
-		"autoSummary": {
-			"title": "自動要約設定",
-			"description": "1000文字以上の日記に対して自動で要約を生成する設定です。",
-			"dailyLabel": "日毎の自動要約を有効にする",
-			"monthlyLabel": "月毎の自動要約を有効にする",
-			"save": "設定を保存"
-		},
-		"deleteToken": {
-			"button": "トークンを削除",
-			"confirm": "LLMトークンを削除",
-			"confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
-		},
-		"deleteAccount": {
-			"title": "アカウント削除",
-			"button": "アカウントを削除",
-			"confirm": "アカウントを削除",
-			"confirmMessage": "アカウントを削除してもよろしいですか？この操作は取り消せません。日記データを含むすべてのデータが削除されます。",
-			"warning": "この操作は元に戻すことができません。すべてのデータが完全に削除されます。"
-		},
-		"messages": {
-			"usernameUpdateSuccess": "お名前を更新しました",
-			"passwordChangeSuccess": "パスワードを変更しました",
-			"llmTokenUpdateSuccess": "LLMトークンを保存しました",
-			"llmTokenDeleteSuccess": "LLMトークンを削除しました",
-			"autoSummarySettingsUpdateSuccess": "自動要約設定を更新しました",
-			"accountDeleteSuccess": "アカウントを削除しました",
-			"unauthorized": "認証が必要です",
-			"userNotFound": "ユーザーが見つかりません",
-			"invalidUserId": "無効なユーザーIDです",
-			"nameRequired": "お名前は必須です",
-			"nameTooLong": "お名前は20文字以内で入力してください",
-			"passwordsRequired": "現在のパスワードと新しいパスワードは必須です",
-			"passwordsDoNotMatch": "新しいパスワードが一致しません",
-			"passwordTooShort": "新しいパスワードは8文字以上で入力してください",
-			"currentPasswordIncorrect": "現在のパスワードが正しくありません",
-			"tokenRequired": "トークンは必須です",
-			"tokenTooLong": "トークンは100文字以内で入力してください",
-			"tokenNotFound": "トークンが見つかりません",
-			"invalidProvider": "無効なLLMプロバイダーです",
-			"updateFailed": "更新に失敗しました"
-		}
-	},
-	"auth": {
-		"login": {
-			"title": "アカウントにサインイン",
-			"email": "メールアドレス",
-			"password": "パスワード",
-			"submit": "サインイン",
-			"submitting": "サインイン中...",
-			"noAccount": "アカウントをお持ちでない方はこちら",
-			"required": "メールアドレスとパスワードは必須です",
-			"failed": "ログインに失敗しました"
-		},
-		"register": {
-			"title": "アカウントを作成",
-			"name": "氏名",
-			"email": "メールアドレス",
-			"password": "パスワード",
-			"submit": "サインアップ",
-			"submitting": "サインアップ中...",
-			"hasAccount": "すでにアカウントをお持ちの方はこちら",
-			"required": "氏名、メールアドレス、パスワードは必須です",
-			"failed": "登録に失敗しました"
-		},
-		"logout": "ログアウト"
-	},
-	"diary": {
-		"title": "日記",
-		"today": "今日",
-		"yesterday": "昨日",
-		"dayBeforeYesterday": "一昨日",
-		"thisMonth": "今月の日記",
-		"search": "検索",
-		"save": "保存",
-		"saving": "保存中...",
-		"saved": "保存しました",
-		"back": "戻る",
-		"edit": "編集",
-		"delete": "削除",
-		"cancel": "キャンセル",
-		"update": "更新",
-		"detail": "詳細",
-		"viewDetail": "詳細を見る",
-		"viewThisMonth": "この月の日記",
-		"placeholder": "今日の出来事を書いてください...",
-		"characterCount": "{count}文字",
-		"autoSummaryEligible": "自動要約対象",
-		"generateSummary": "要約を生成",
-		"generatingSummary": "要約生成中...",
-		"summaryRequires1000Chars": "1000文字以上で要約が利用できます",
-		"summaryNotAvailableToday": "要約は当日は利用できません",
-		"summaryAutoEnabled": "自動要約が有効です",
-		"summaryGenerationFailed": "要約の生成に失敗しました",
-		"summary": {
-			"title": "日記の要約",
-			"label": "まとめ",
-			"view": "要約を表示",
-			"hide": "要約を非表示",
-			"outdatedWarning": "日記が更新されているため、要約が古くなっている可能性があります。"
-		},
-		"noEntry": "の日記はありません。",
-		"yesterdayNoEntry": "昨日の日記はありません。",
-		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
-		"dateUnknown": "日付不明",
-		"previousDay": "前日",
-		"nextDay": "翌日",
-		"pastEntries": "過去の同じ日",
-		"oneWeekAgo": "1週間前",
-		"oneMonthAgo": "1ヶ月前",
-		"twoMonthsAgo": "2ヶ月前",
-		"sixMonthsAgo": "半年前",
-		"oneYearAgo": "1年前",
-		"twoYearsAgo": "2年前",
-		"threeYearsAgo": "3年前",
-		"fourYearsAgo": "4年前",
-		"fiveYearsAgo": "5年前",
-		"sixYearsAgo": "6年前",
-		"sevenYearsAgo": "7年前",
-		"eightYearsAgo": "8年前",
-		"nineYearsAgo": "9年前",
-		"tenYearsAgo": "10年前",
-		"noPastEntry": "日記がありません",
-		"noPastEntries": "過去の同じ日の日記はありません"
-	},
-	"date": {
-		"dayOfWeek": {
-			"sunday": "日",
-			"monday": "月",
-			"tuesday": "火",
-			"wednesday": "水",
-			"thursday": "木",
-			"friday": "金",
-			"saturday": "土"
-		},
-		"format": {
-			"yearMonthDay": "{year}年{month}月{day}日",
-			"yearMonthDayWithDayOfWeek": "{year}年{month}月{day}日({dayOfWeek})"
-		}
-	},
-	"home": {
-		"name": "ホーム"
-	},
-	"create": {
-		"title": "新しい日記を書く",
-		"date": "日付",
-		"content": "内容"
-	},
-	"edit": {
-		"title": "日記を編集",
-		"date": "日付",
-		"content": "内容",
-		"deleteConfirm": "日記を削除",
-		"deleteMessage": "この日記を削除してもよろしいですか？この操作は取り消せません。"
-	},
-	"search": {
-		"title": "日記検索",
-		"placeholder": "検索キーワードを入力...",
-		"button": "検索",
-		"results": "の検索結果",
-		"resultCount": "件",
-		"noResults": "検索結果が見つかりませんでした。",
-		"noResultsHint": "別のキーワードで検索してみてください。",
-		"searching": "検索中...",
-		"enterKeyword": "検索キーワードを入力して検索してください。",
-		"backToList": "日記一覧に戻る"
-	},
-	"monthly": {
-		"thisMonth": "今月",
-		"listView": "一覧表示",
-		"previousMonth": "前の月へ",
-		"nextMonth": "次の月へ",
-		"writeEntry": "日記を書く",
-		"entry": "日記",
-		"detail": "詳細",
-		"edit": "編集",
-		"summary": {
-			"title": "月間サマリー",
-			"generate": "サマリーを生成",
-			"generating": "サマリー生成中...",
-			"view": "サマリーを表示",
-			"hide": "サマリーを非表示",
-			"regenerate": "サマリーを再生成",
-			"error": "サマリーの生成に失敗しました",
-			"noEntries": "この月の日記が見つかりません",
-			"noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
-			"updateAvailable": "このサマリー生成後に日記が更新されています。サマリーを再生成することをお勧めします。"
-		}
-	},
-	"timeProgress": {
-		"yearProgress": "今年",
-		"monthProgress": "今月",
-		"dayProgress": "今日"
-	},
-	"monthSelector": {
-		"title": "月を選択",
-		"year": "年",
-		"month": "月",
-		"confirm": "決定",
-		"cancel": "キャンセル"
-	},
-	"navigation": {
-		"home": "トップ",
-		"monthly": "カレンダー",
-		"search": "検索",
-		"settings": "設定"
-	},
-	"footer": {
-		"github": "GitHub"
-	},
-	"chart": {
-		"characterCount": "文字数",
-		"charactersUnit": "文字",
-		"day": "日",
-		"dailyCharacterCount": "日毎の文字数推移"
-	}
+  "common": {
+    "loading": "読み込み中...",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "error": "エラー",
+    "success": "成功",
+    "createdAt": "作成日",
+    "updatedAt": "更新日",
+    "close": "閉じる"
+  },
+  "settings": {
+    "title": "設定",
+    "username": {
+      "title": "お名前変更",
+      "label": "新しいお名前",
+      "placeholder": "新しいお名前を入力してください",
+      "save": "お名前を更新"
+    },
+    "password": {
+      "title": "パスワード変更",
+      "currentLabel": "現在のパスワード",
+      "currentPlaceholder": "現在のパスワードを入力してください",
+      "newLabel": "新しいパスワード",
+      "newPlaceholder": "新しいパスワードを入力してください（8文字以上）",
+      "confirmLabel": "新しいパスワード（確認）",
+      "confirmPlaceholder": "新しいパスワードを再入力してください",
+      "save": "パスワードを変更"
+    },
+    "llmToken": {
+      "title": "LLMトークン設定",
+      "providerLabel": "LLMプロバイダー",
+      "provider": {
+        "gemini": "Gemini"
+      },
+      "tokenLabel": "APIキー",
+      "tokenPlaceholder": "APIキーを入力してください",
+      "tokenHelp": "API Tokenはこちら:",
+      "freeWarning": "Google AI StudioのFree Tierは学習に利用されるため個人情報を入れないでください。プライベートな日記を使用する場合は有料APIを利用してください。",
+      "save": "トークンを保存"
+    },
+    "autoSummary": {
+      "title": "自動要約設定",
+      "description": "1000文字以上の日記に対して自動で要約を生成する設定です。",
+      "dailyLabel": "日毎の自動要約を有効にする",
+      "monthlyLabel": "月毎の自動要約を有効にする",
+      "save": "設定を保存"
+    },
+    "deleteToken": {
+      "button": "トークンを削除",
+      "confirm": "LLMトークンを削除",
+      "confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
+    },
+    "deleteAccount": {
+      "title": "アカウント削除",
+      "button": "アカウントを削除",
+      "confirm": "アカウントを削除",
+      "confirmMessage": "アカウントを削除してもよろしいですか？この操作は取り消せません。日記データを含むすべてのデータが削除されます。",
+      "warning": "この操作は元に戻すことができません。すべてのデータが完全に削除されます。"
+    },
+    "messages": {
+      "usernameUpdateSuccess": "お名前を更新しました",
+      "passwordChangeSuccess": "パスワードを変更しました",
+      "llmTokenUpdateSuccess": "LLMトークンを保存しました",
+      "llmTokenDeleteSuccess": "LLMトークンを削除しました",
+      "autoSummarySettingsUpdateSuccess": "自動要約設定を更新しました",
+      "accountDeleteSuccess": "アカウントを削除しました",
+      "unauthorized": "認証が必要です",
+      "userNotFound": "ユーザーが見つかりません",
+      "invalidUserId": "無効なユーザーIDです",
+      "nameRequired": "お名前は必須です",
+      "nameTooLong": "お名前は20文字以内で入力してください",
+      "passwordsRequired": "現在のパスワードと新しいパスワードは必須です",
+      "passwordsDoNotMatch": "新しいパスワードが一致しません",
+      "passwordTooShort": "新しいパスワードは8文字以上で入力してください",
+      "currentPasswordIncorrect": "現在のパスワードが正しくありません",
+      "tokenRequired": "トークンは必須です",
+      "tokenTooLong": "トークンは100文字以内で入力してください",
+      "tokenNotFound": "トークンが見つかりません",
+      "invalidProvider": "無効なLLMプロバイダーです",
+      "updateFailed": "更新に失敗しました"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "アカウントにサインイン",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "submit": "サインイン",
+      "submitting": "サインイン中...",
+      "noAccount": "アカウントをお持ちでない方はこちら",
+      "required": "メールアドレスとパスワードは必須です",
+      "failed": "ログインに失敗しました"
+    },
+    "register": {
+      "title": "アカウントを作成",
+      "name": "氏名",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "submit": "サインアップ",
+      "submitting": "サインアップ中...",
+      "hasAccount": "すでにアカウントをお持ちの方はこちら",
+      "required": "氏名、メールアドレス、パスワードは必須です",
+      "failed": "登録に失敗しました"
+    },
+    "logout": "ログアウト"
+  },
+  "diary": {
+    "title": "日記",
+    "today": "今日",
+    "yesterday": "昨日",
+    "dayBeforeYesterday": "一昨日",
+    "thisMonth": "今月の日記",
+    "search": "検索",
+    "save": "保存",
+    "saving": "保存中...",
+    "saved": "保存しました",
+    "back": "戻る",
+    "edit": "編集",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "update": "更新",
+    "detail": "詳細",
+    "viewDetail": "詳細を見る",
+    "viewThisMonth": "この月の日記",
+    "placeholder": "今日の出来事を書いてください...",
+    "characterCount": "{count}文字",
+    "autoSummaryEligible": "自動要約対象",
+    "generateSummary": "要約を生成",
+    "generatingSummary": "要約生成中...",
+    "summaryRequires1000Chars": "1000文字以上で要約が利用できます",
+    "summaryNotAvailableToday": "要約は当日は利用できません",
+    "summaryAutoEnabled": "自動要約が有効です",
+    "summaryGenerationFailed": "要約の生成に失敗しました",
+    "summary": {
+      "title": "日記の要約",
+      "label": "まとめ",
+      "view": "要約を表示",
+      "hide": "要約を非表示",
+      "outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。"
+    },
+    "noEntry": "の日記はありません。",
+    "yesterdayNoEntry": "昨日の日記はありません。",
+    "dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
+    "dateUnknown": "日付不明",
+    "previousDay": "前日",
+    "nextDay": "翌日",
+    "pastEntries": "過去の同じ日",
+    "oneWeekAgo": "1週間前",
+    "oneMonthAgo": "1ヶ月前",
+    "twoMonthsAgo": "2ヶ月前",
+    "sixMonthsAgo": "半年前",
+    "oneYearAgo": "1年前",
+    "twoYearsAgo": "2年前",
+    "threeYearsAgo": "3年前",
+    "fourYearsAgo": "4年前",
+    "fiveYearsAgo": "5年前",
+    "sixYearsAgo": "6年前",
+    "sevenYearsAgo": "7年前",
+    "eightYearsAgo": "8年前",
+    "nineYearsAgo": "9年前",
+    "tenYearsAgo": "10年前",
+    "noPastEntry": "日記がありません",
+    "noPastEntries": "過去の同じ日の日記はありません"
+  },
+  "date": {
+    "dayOfWeek": {
+      "sunday": "日",
+      "monday": "月",
+      "tuesday": "火",
+      "wednesday": "水",
+      "thursday": "木",
+      "friday": "金",
+      "saturday": "土"
+    },
+    "format": {
+      "yearMonthDay": "{year}年{month}月{day}日",
+      "yearMonthDayWithDayOfWeek": "{year}年{month}月{day}日({dayOfWeek})"
+    }
+  },
+  "home": {
+    "name": "ホーム"
+  },
+  "create": {
+    "title": "新しい日記を書く",
+    "date": "日付",
+    "content": "内容"
+  },
+  "edit": {
+    "title": "日記を編集",
+    "date": "日付",
+    "content": "内容",
+    "deleteConfirm": "日記を削除",
+    "deleteMessage": "この日記を削除してもよろしいですか？この操作は取り消せません。"
+  },
+  "search": {
+    "title": "日記検索",
+    "placeholder": "検索キーワードを入力...",
+    "button": "検索",
+    "results": "の検索結果",
+    "resultCount": "件",
+    "noResults": "検索結果が見つかりませんでした。",
+    "noResultsHint": "別のキーワードで検索してみてください。",
+    "searching": "検索中...",
+    "enterKeyword": "検索キーワードを入力して検索してください。",
+    "backToList": "日記一覧に戻る"
+  },
+  "monthly": {
+    "thisMonth": "今月",
+    "listView": "一覧表示",
+    "previousMonth": "前の月へ",
+    "nextMonth": "次の月へ",
+    "writeEntry": "日記を書く",
+    "entry": "日記",
+    "detail": "詳細",
+    "edit": "編集",
+    "summary": {
+      "title": "月間サマリー",
+      "generate": "サマリーを生成",
+      "generating": "サマリー生成中...",
+      "view": "サマリーを表示",
+      "hide": "サマリーを非表示",
+      "regenerate": "サマリーを再生成",
+      "error": "サマリーの生成に失敗しました",
+      "noEntries": "この月の日記が見つかりません",
+      "noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
+      "updateAvailable": "このサマリー生成後に日記が更新されています。最新のサマリーを得るには再生成してください。"
+    }
+  },
+  "timeProgress": {
+    "yearProgress": "今年",
+    "monthProgress": "今月",
+    "dayProgress": "今日"
+  },
+  "monthSelector": {
+    "title": "月を選択",
+    "year": "年",
+    "month": "月",
+    "confirm": "決定",
+    "cancel": "キャンセル"
+  },
+  "navigation": {
+    "home": "トップ",
+    "monthly": "カレンダー",
+    "search": "検索",
+    "settings": "設定"
+  },
+  "footer": {
+    "github": "GitHub"
+  },
+  "chart": {
+    "characterCount": "文字数",
+    "charactersUnit": "文字",
+    "day": "日",
+    "dailyCharacterCount": "日毎の文字数推移"
+  }
 }

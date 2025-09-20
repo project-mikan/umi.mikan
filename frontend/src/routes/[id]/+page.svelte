@@ -57,8 +57,9 @@ $: isNotToday = (() => {
 $: isSummaryOutdated = (() => {
 	if (!summary || !data.entry) return false;
 
-	const diaryUpdatedAt = Number(data.entry.updatedAt);
-	const summaryUpdatedAt = summary.updatedAt;
+	// 日記エントリは秒単位、サマリーはミリ秒単位なので統一
+	const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
+	const summaryUpdatedAt = Number(summary.updatedAt); // 既にミリ秒
 
 	return diaryUpdatedAt > summaryUpdatedAt;
 })();
