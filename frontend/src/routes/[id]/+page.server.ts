@@ -3,6 +3,7 @@ import {
 	createDiaryEntry,
 	createYMD,
 	deleteDiaryEntry,
+	getDailySummary,
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	});
 
 	try {
-		// メインの日記を取得とユーザー情報を並行して取得
+		// メインの日記を取得、ユーザー情報を並行して取得
 		const [response, userInfo] = await Promise.all([
 			getDiaryEntry({
 				date,
@@ -48,6 +49,32 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			}),
 			getUserInfo({ accessToken: authResult.accessToken }),
 		]);
+
+		// 要約を取得を試行（存在しない場合はnull）
+		let dailySummary = null;
+		try {
+			const summaryResponse = await getDailySummary({
+				date,
+				accessToken: authResult.accessToken,
+			});
+
+			if (summaryResponse.summary) {
+				dailySummary = {
+					id: summaryResponse.summary.id,
+					diaryId: summaryResponse.summary.diaryId,
+					date: {
+						year: summaryResponse.summary.date?.year || 0,
+						month: summaryResponse.summary.date?.month || 0,
+						day: summaryResponse.summary.date?.day || 0,
+					},
+					summary: summaryResponse.summary.summary,
+					createdAt: Number(summaryResponse.summary.createdAt),
+				};
+			}
+		} catch (_summaryErr) {
+			// 要約が見つからない場合は無視
+			dailySummary = null;
+		}
 
 		// 過去の日記を並行して取得
 		const pastDatesArray = [
@@ -108,6 +135,13 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			>,
 		);
 
+		const today = new Date();
+		const todayYMD = {
+			year: today.getFullYear(),
+			month: today.getMonth() + 1,
+			day: today.getDate(),
+		};
+
 		return {
 			entry: response.entry || null,
 			date,
@@ -117,6 +151,8 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 				email: userInfo.email,
 				llmKeys: userInfo.llmKeys || [],
 			},
+			dailySummary,
+			today: todayYMD,
 		};
 	} catch (err) {
 		if (err instanceof Response) {
@@ -188,6 +224,13 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 				>,
 			);
 
+			const today = new Date();
+			const todayYMD = {
+				year: today.getFullYear(),
+				month: today.getMonth() + 1,
+				day: today.getDate(),
+			};
+
 			return {
 				entry: null,
 				date,
@@ -197,6 +240,8 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 					email: userInfo.email,
 					llmKeys: userInfo.llmKeys || [],
 				},
+				dailySummary: null,
+				today: todayYMD,
 			};
 		}
 

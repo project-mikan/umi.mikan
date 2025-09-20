@@ -127,6 +127,10 @@
 		"autoSummaryEligible": "Auto-summary eligible",
 		"generateSummary": "Generate Summary",
 		"generatingSummary": "Generating Summary...",
+		"summaryRequires1000Chars": "Summary available for 1000+ characters",
+		"summaryNotAvailableToday": "Summary not available for today's entries",
+		"summaryAutoEnabled": "Auto-summary is enabled",
+		"summaryGenerationFailed": "Summary generation failed",
 		"summary": {
 			"title": "Diary Summary",
 			"view": "View Summary",

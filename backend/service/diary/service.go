@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -541,4 +542,165 @@ func (s *DiaryEntry) regenerateDailySummary(ctx context.Context, userID uuid.UUI
 
 	// 更新に失敗してもエラーを無視（非同期処理のため）
 	_ = existingSummary.Update(ctx, s.DB)
+}
+
+func (s *DiaryEntry) GenerateDailySummary(
+	ctx context.Context,
+	req *g.GenerateDailySummaryRequest,
+) (*g.GenerateDailySummaryResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// 日記IDから日記を取得
+	diaryID, err := uuid.Parse(req.DiaryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid diary ID")
+	}
+
+	diary, err := database.DiaryByID(ctx, s.DB, diaryID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 日記の所有者確認
+	if diary.UserID != userID {
+		return nil, status.Error(codes.PermissionDenied, "Access denied")
+	}
+
+	// 日記が当日のものでないことを確認
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	diaryDate := diary.Date.UTC().Truncate(24 * time.Hour)
+	if !diaryDate.Before(today) {
+		return nil, status.Error(codes.FailedPrecondition, "Summary generation is only allowed for past diary entries")
+	}
+
+	// 文字数チェック
+	if len([]rune(diary.Content)) < 1000 {
+		return nil, status.Error(codes.FailedPrecondition, "Content too short for summary generation (minimum 1000 characters)")
+	}
+
+	// ユーザーのLLMキーを取得
+	llmKey, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	if err != nil {
+		return nil, status.Error(codes.FailedPrecondition, "Gemini API key not configured")
+	}
+
+	// Geminiクライアントを作成
+	geminiClient, err := llm.NewGeminiClient(ctx, llmKey.Key)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to create LLM client")
+	}
+	defer func() {
+		if closeErr := geminiClient.Close(); closeErr != nil {
+			// ログに記録するが、エラーは返さない
+			log.Printf("Failed to close Gemini client: %v", closeErr)
+		}
+	}()
+
+	// 要約を生成
+	summaryText, err := geminiClient.GenerateDailySummary(ctx, diary.Content)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to generate summary")
+	}
+
+	// 既存の要約があるかチェック
+	existingSummary, err := database.DailySummaryByDiaryID(ctx, s.DB, diaryID)
+	currentTime := time.Now()
+
+	if err != nil {
+		// 既存の要約がない場合は新規作成
+		newSummary := &database.DailySummary{
+			ID:        uuid.New(),
+			DiaryID:   diaryID,
+			Summary:   summaryText,
+			CreatedAt: currentTime,
+			UpdatedAt: currentTime,
+		}
+
+		if err := newSummary.Insert(ctx, s.DB); err != nil {
+			return nil, status.Error(codes.Internal, "Failed to save summary")
+		}
+
+		return &g.GenerateDailySummaryResponse{
+			Summary: &g.DailySummary{
+				Id:      newSummary.ID.String(),
+				DiaryId: newSummary.DiaryID.String(),
+				Date: &g.YMD{
+					Year:  uint32(diary.Date.Year()),
+					Month: uint32(diary.Date.Month()),
+					Day:   uint32(diary.Date.Day()),
+				},
+				Summary:   newSummary.Summary,
+				CreatedAt: newSummary.CreatedAt.Unix(),
+				UpdatedAt: newSummary.UpdatedAt.Unix(),
+			},
+		}, nil
+	} else {
+		// 既存の要約がある場合は更新
+		existingSummary.Summary = summaryText
+		existingSummary.UpdatedAt = currentTime
+
+		if err := existingSummary.Update(ctx, s.DB); err != nil {
+			return nil, status.Error(codes.Internal, "Failed to update summary")
+		}
+
+		return &g.GenerateDailySummaryResponse{
+			Summary: &g.DailySummary{
+				Id:      existingSummary.ID.String(),
+				DiaryId: existingSummary.DiaryID.String(),
+				Date: &g.YMD{
+					Year:  uint32(diary.Date.Year()),
+					Month: uint32(diary.Date.Month()),
+					Day:   uint32(diary.Date.Day()),
+				},
+				Summary:   existingSummary.Summary,
+				CreatedAt: existingSummary.CreatedAt.Unix(),
+				UpdatedAt: existingSummary.UpdatedAt.Unix(),
+			},
+		}, nil
+	}
+}
+
+func (s *DiaryEntry) GetDailySummary(
+	ctx context.Context,
+	req *g.GetDailySummaryRequest,
+) (*g.GetDailySummaryResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// 日付から日記を取得
+	date := time.Date(int(req.Date.Year), time.Month(req.Date.Month), int(req.Date.Day), 0, 0, 0, 0, time.UTC)
+	diary, err := database.DiaryByUserIDDate(ctx, s.DB, userID, date)
+	if err != nil {
+		return nil, err
+	}
+
+	// 日記の要約を取得
+	summary, err := database.DailySummaryByDiaryID(ctx, s.DB, diary.ID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Daily summary not found")
+	}
+
+	return &g.GetDailySummaryResponse{
+		Summary: &g.DailySummary{
+			Id:        summary.ID.String(),
+			DiaryId:   summary.DiaryID.String(),
+			Date:      req.Date,
+			Summary:   summary.Summary,
+			CreatedAt: summary.CreatedAt.Unix(),
+			UpdatedAt: summary.UpdatedAt.Unix(),
+		},
+	}, nil
 }

@@ -127,6 +127,10 @@
 		"autoSummaryEligible": "自動要約対象",
 		"generateSummary": "要約を生成",
 		"generatingSummary": "要約生成中...",
+		"summaryRequires1000Chars": "1000文字以上で要約が利用できます",
+		"summaryNotAvailableToday": "要約は当日は利用できません",
+		"summaryAutoEnabled": "自動要約が有効です",
+		"summaryGenerationFailed": "要約の生成に失敗しました",
 		"summary": {
 			"title": "日記の要約",
 			"view": "要約を表示",

@@ -8,6 +8,11 @@ import type { ActionData, PageData } from "./$types";
 export let form: ActionData;
 export let data: PageData;
 
+// Helper function to check if message belongs to specific action
+function isMessageForAction(actionName: string): boolean {
+	return form?.action === actionName;
+}
+
 let usernameLoading = false;
 let passwordLoading = false;
 let llmTokenLoading = false;
@@ -96,17 +101,6 @@ function handleDeleteAccount() {
 	<h1 class="text-3xl font-bold mb-8">{$_("settings.title")}</h1>
 
 	<div class="max-w-2xl mx-auto space-y-8">
-		<!-- エラー/成功メッセージ -->
-		{#if form?.error}
-			<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-				{$_(`settings.messages.${form.error}`) || form.error}
-			</div>
-		{/if}
-		{#if form?.success}
-			<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-				{$_(`settings.messages.${form.message}`) || form.message}
-			</div>
-		{/if}
 
 		<!-- ユーザー名変更セクション -->
 		<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -146,6 +140,17 @@ function handleDeleteAccount() {
 				>
 					{usernameLoading ? $_("common.loading") : $_("settings.username.save")}
 				</button>
+				<!-- ユーザー名変更メッセージ -->
+				{#if form?.error && isMessageForAction("updateUsername")}
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.error}`) || form.error}
+					</div>
+				{/if}
+				{#if form?.success && isMessageForAction("updateUsername")}
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.message}`) || form.message}
+					</div>
+				{/if}
 			</form>
 		</section>
 
@@ -272,6 +277,17 @@ function handleDeleteAccount() {
 				>
 					{passwordLoading ? $_("common.loading") : $_("settings.password.save")}
 				</button>
+				<!-- パスワード変更メッセージ -->
+				{#if form?.error && isMessageForAction("changePassword")}
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.error}`) || form.error}
+					</div>
+				{/if}
+				{#if form?.success && isMessageForAction("changePassword")}
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.message}`) || form.message}
+					</div>
+				{/if}
 			</form>
 		</section>
 
@@ -329,6 +345,17 @@ function handleDeleteAccount() {
 				>
 					{llmTokenLoading ? $_("common.loading") : $_("settings.llmToken.save")}
 				</button>
+				<!-- LLMトークン変更メッセージ -->
+				{#if form?.error && isMessageForAction("updateLLMKey")}
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.error}`) || form.error}
+					</div>
+				{/if}
+				{#if form?.success && isMessageForAction("updateLLMKey")}
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.message}`) || form.message}
+					</div>
+				{/if}
 			</form>
 
 			<!-- LLM Token Delete Section -->
@@ -342,6 +369,17 @@ function handleDeleteAccount() {
 					>
 						{deleteLLMKeyLoading ? $_("common.loading") : $_("settings.deleteToken.button")}
 					</button>
+					<!-- LLMトークン削除メッセージ -->
+					{#if form?.error && isMessageForAction("deleteLLMKey")}
+						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.error}`) || form.error}
+						</div>
+					{/if}
+					{#if form?.success && isMessageForAction("deleteLLMKey")}
+						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.message}`) || form.message}
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</section>
@@ -406,6 +444,17 @@ function handleDeleteAccount() {
 					>
 						{autoSummaryLoading ? $_("common.loading") : $_("settings.autoSummary.save")}
 					</button>
+					<!-- 自動要約設定メッセージ -->
+					{#if form?.error && isMessageForAction("updateAutoSummarySettings")}
+						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.error}`) || form.error}
+						</div>
+					{/if}
+					{#if form?.success && isMessageForAction("updateAutoSummarySettings")}
+						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.message}`) || form.message}
+						</div>
+					{/if}
 				</form>
 			</section>
 		{/if}
@@ -430,6 +479,17 @@ function handleDeleteAccount() {
 			>
 				{deleteAccountLoading ? $_("common.loading") : $_("settings.deleteAccount.button")}
 			</button>
+			<!-- アカウント削除メッセージ -->
+			{#if form?.error && isMessageForAction("deleteAccount")}
+				<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					{$_(`settings.messages.${form.error}`) || form.error}
+				</div>
+			{/if}
+			{#if form?.success && isMessageForAction("deleteAccount")}
+				<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+					{$_(`settings.messages.${form.message}`) || form.message}
+				</div>
+			{/if}
 		</section>
 	</div>
 </main>

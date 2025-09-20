@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_diary_diary: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJaChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5Ij0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIm8KDk1vbnRobHlTdW1tYXJ5EgoKAmlkGAEgASgJEhgKBW1vbnRoGAIgASgLMgkuZGlhcnkuWU0SDwoHc3VtbWFyeRgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5MqwGCgxEaWFyeVNlcnZpY2USUwoQQ3JlYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LkNyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEFVwZGF0ZURpYXJ5RW50cnkSHi5kaWFyeS5VcGRhdGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXNwb25zZRJTChBEZWxldGVEaWFyeUVudHJ5Eh4uZGlhcnkuRGVsZXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVzcG9uc2USSgoNR2V0RGlhcnlFbnRyeRIbLmRpYXJ5LkdldERpYXJ5RW50cnlSZXF1ZXN0GhwuZGlhcnkuR2V0RGlhcnlFbnRyeVJlc3BvbnNlElAKD0dldERpYXJ5RW50cmllcxIdLmRpYXJ5LkdldERpYXJ5RW50cmllc1JlcXVlc3QaHi5kaWFyeS5HZXREaWFyeUVudHJpZXNSZXNwb25zZRJlChZHZXREaWFyeUVudHJpZXNCeU1vbnRoEiQuZGlhcnkuR2V0RGlhcnlFbnRyaWVzQnlNb250aFJlcXVlc3QaJS5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVzcG9uc2USWQoSU2VhcmNoRGlhcnlFbnRyaWVzEiAuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVxdWVzdBohLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdlbmVyYXRlTW9udGhseVN1bW1hcnkSJC5kaWFyeS5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVxdWVzdBolLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXNwb25zZRJWChFHZXRNb250aGx5U3VtbWFyeRIfLmRpYXJ5LkdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBogLmRpYXJ5LkdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
+		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJaChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5Ij0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIm8KDk1vbnRobHlTdW1tYXJ5EgoKAmlkGAEgASgJEhgKBW1vbnRoGAIgASgLMgkuZGlhcnkuWU0SDwoHc3VtbWFyeRgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5In8KDERhaWx5U3VtbWFyeRIKCgJpZBgBIAEoCRIQCghkaWFyeV9pZBgCIAEoCRIYCgRkYXRlGAMgASgLMgouZGlhcnkuWU1EEg8KB3N1bW1hcnkYBCABKAkSEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnky3wcKDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM",
 	);
 
 /**
@@ -565,6 +565,134 @@ export const GetMonthlySummaryResponseSchema: GenMessage<GetMonthlySummaryRespon
 	messageDesc(file_diary_diary, 21);
 
 /**
+ * 日サマリー
+ *
+ * @generated from message diary.DailySummary
+ */
+export type DailySummary = Message<"diary.DailySummary"> & {
+	/**
+	 * @generated from field: string id = 1;
+	 */
+	id: string;
+
+	/**
+	 * @generated from field: string diary_id = 2;
+	 */
+	diaryId: string;
+
+	/**
+	 * @generated from field: diary.YMD date = 3;
+	 */
+	date?: YMD;
+
+	/**
+	 * @generated from field: string summary = 4;
+	 */
+	summary: string;
+
+	/**
+	 * @generated from field: int64 created_at = 5;
+	 */
+	createdAt: bigint;
+
+	/**
+	 * @generated from field: int64 updated_at = 6;
+	 */
+	updatedAt: bigint;
+};
+
+/**
+ * Describes the message diary.DailySummary.
+ * Use `create(DailySummarySchema)` to create a new message.
+ */
+export const DailySummarySchema: GenMessage<DailySummary> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 22);
+
+/**
+ * 日ごとのサマリー生成リクエスト
+ *
+ * @generated from message diary.GenerateDailySummaryRequest
+ */
+export type GenerateDailySummaryRequest =
+	Message<"diary.GenerateDailySummaryRequest"> & {
+		/**
+		 * @generated from field: string diary_id = 1;
+		 */
+		diaryId: string;
+	};
+
+/**
+ * Describes the message diary.GenerateDailySummaryRequest.
+ * Use `create(GenerateDailySummaryRequestSchema)` to create a new message.
+ */
+export const GenerateDailySummaryRequestSchema: GenMessage<GenerateDailySummaryRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 23);
+
+/**
+ * 日ごとのサマリー生成レスポンス
+ *
+ * @generated from message diary.GenerateDailySummaryResponse
+ */
+export type GenerateDailySummaryResponse =
+	Message<"diary.GenerateDailySummaryResponse"> & {
+		/**
+		 * @generated from field: diary.DailySummary summary = 1;
+		 */
+		summary?: DailySummary;
+	};
+
+/**
+ * Describes the message diary.GenerateDailySummaryResponse.
+ * Use `create(GenerateDailySummaryResponseSchema)` to create a new message.
+ */
+export const GenerateDailySummaryResponseSchema: GenMessage<GenerateDailySummaryResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 24);
+
+/**
+ * 日ごとのサマリー取得リクエスト
+ *
+ * @generated from message diary.GetDailySummaryRequest
+ */
+export type GetDailySummaryRequest = Message<"diary.GetDailySummaryRequest"> & {
+	/**
+	 * @generated from field: diary.YMD date = 1;
+	 */
+	date?: YMD;
+};
+
+/**
+ * Describes the message diary.GetDailySummaryRequest.
+ * Use `create(GetDailySummaryRequestSchema)` to create a new message.
+ */
+export const GetDailySummaryRequestSchema: GenMessage<GetDailySummaryRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 25);
+
+/**
+ * 日ごとのサマリー取得レスポンス
+ *
+ * @generated from message diary.GetDailySummaryResponse
+ */
+export type GetDailySummaryResponse =
+	Message<"diary.GetDailySummaryResponse"> & {
+		/**
+		 * @generated from field: diary.DailySummary summary = 1;
+		 */
+		summary?: DailySummary;
+	};
+
+/**
+ * Describes the message diary.GetDailySummaryResponse.
+ * Use `create(GetDailySummaryResponseSchema)` to create a new message.
+ */
+export const GetDailySummaryResponseSchema: GenMessage<GetDailySummaryResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 26);
+
+/**
  * @generated from service diary.DiaryService
  */
 export const DiaryService: GenService<{
@@ -657,5 +785,25 @@ export const DiaryService: GenService<{
 		methodKind: "unary";
 		input: typeof GetMonthlySummaryRequestSchema;
 		output: typeof GetMonthlySummaryResponseSchema;
+	};
+	/**
+	 * 日ごとのサマリー生成
+	 *
+	 * @generated from rpc diary.DiaryService.GenerateDailySummary
+	 */
+	generateDailySummary: {
+		methodKind: "unary";
+		input: typeof GenerateDailySummaryRequestSchema;
+		output: typeof GenerateDailySummaryResponseSchema;
+	};
+	/**
+	 * 日ごとのサマリー取得
+	 *
+	 * @generated from rpc diary.DiaryService.GetDailySummary
+	 */
+	getDailySummary: {
+		methodKind: "unary";
+		input: typeof GetDailySummaryRequestSchema;
+		output: typeof GetDailySummaryResponseSchema;
 	};
 }> = /*@__PURE__*/ serviceDesc(file_diary_diary, 0);

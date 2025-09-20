@@ -1,5 +1,6 @@
 import { error, json } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { generateDailySummary } from "$lib/server/diary-api";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
@@ -44,32 +45,55 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 	}
 
 	try {
-		// TODO: Call backend gRPC service for daily summary generation
-		// For now, return a mock response indicating backend integration is needed
+		// Call backend gRPC service for daily summary generation
+		const response = await generateDailySummary({
+			diaryId,
+			accessToken: authResult.accessToken,
+		});
 
-		// Simulate processing time
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-
-		// Temporary mock response - should be replaced with actual gRPC call
-		const summary = `${date.year}年${date.month}月${date.day}日の日記要約
-
-主な出来事:
-- ${content.substring(0, 50)}...
-
-登場人物:
-- （要約生成機能は開発中です）`;
+		if (!response.summary) {
+			throw error(500, "Failed to generate summary");
+		}
 
 		return json({
-			id: `summary-${diaryId}-${Date.now()}`,
-			diaryId,
-			date,
-			summary,
-			createdAt: Date.now(),
+			id: response.summary.id,
+			diaryId: response.summary.diaryId,
+			date: {
+				year: response.summary.date?.year || 0,
+				month: response.summary.date?.month || 0,
+				day: response.summary.date?.day || 0,
+			},
+			summary: response.summary.summary,
+			createdAt: Number(response.summary.createdAt),
 		});
 	} catch (err) {
+		if (err instanceof Response) {
+			throw err;
+		}
+
 		console.error("Failed to generate daily summary:", err);
 
-		if ((err as Error)?.message?.includes("API key")) {
+		// Handle specific gRPC errors
+		if (err && typeof err === "object" && "code" in err) {
+			if (err.code === 7) {
+				// PERMISSION_DENIED
+				throw error(403, "Permission denied");
+			}
+			if (err.code === 5) {
+				// NOT_FOUND
+				throw error(404, "Diary entry not found");
+			}
+			if (err.code === 3) {
+				// INVALID_ARGUMENT
+				throw error(400, "Invalid request parameters");
+			}
+		}
+
+		// Check for LLM API key related errors
+		if (
+			(err as Error)?.message?.includes("API key") ||
+			(err as Error)?.message?.includes("Gemini")
+		) {
 			throw error(400, { message: "Gemini API key not configured" });
 		}
 

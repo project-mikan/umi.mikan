@@ -7,8 +7,12 @@ import {
 	DeleteDiaryEntryRequestSchema,
 	type DeleteDiaryEntryResponse,
 	DiaryService,
+	GenerateDailySummaryRequestSchema,
+	type GenerateDailySummaryResponse,
 	GenerateMonthlySummaryRequestSchema,
 	type GenerateMonthlySummaryResponse,
+	GetDailySummaryRequestSchema,
+	type GetDailySummaryResponse,
 	GetDiaryEntriesByMonthRequestSchema,
 	type GetDiaryEntriesByMonthResponse,
 	GetDiaryEntryRequestSchema,
@@ -195,4 +199,40 @@ export async function getMonthlySummary(
 	});
 
 	return await client.getMonthlySummary(request);
+}
+
+export interface GenerateDailySummaryParams {
+	diaryId: string;
+	accessToken: string;
+}
+
+export interface GetDailySummaryParams {
+	date: YMD;
+	accessToken: string;
+}
+
+export async function generateDailySummary(
+	params: GenerateDailySummaryParams,
+): Promise<GenerateDailySummaryResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(GenerateDailySummaryRequestSchema, {
+		diaryId: params.diaryId,
+	});
+
+	return await client.generateDailySummary(request);
+}
+
+export async function getDailySummary(
+	params: GetDailySummaryParams,
+): Promise<GetDailySummaryResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(GetDailySummaryRequestSchema, {
+		date: params.date,
+	});
+
+	return await client.getDailySummary(request);
 }

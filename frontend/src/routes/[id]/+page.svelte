@@ -23,14 +23,15 @@ let _showDeleteConfirm = false;
 let loading = false;
 let saved = false;
 let summaryGenerating = false;
+let summaryError: string | null = null;
 let summary: {
 	id: string;
 	diaryId: string;
 	date: { year: number; month: number; day: number };
 	summary: string;
 	createdAt: number;
-} | null = null;
-let showSummary = false;
+} | null = data.dailySummary;
+let showSummary = !!data.dailySummary;
 
 // Check if user has LLM key configured
 $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
@@ -39,17 +40,26 @@ $: autoSummaryDisabled = !existingLLMKey?.autoSummaryDaily;
 
 // Check if the diary date is not today (only allow summary generation for past entries)
 $: isNotToday = (() => {
-	const today = new Date();
-	const diaryDate = new Date(
-		data.date.year,
-		data.date.month - 1,
-		data.date.day,
+	if (!data.today) return false;
+
+	return (
+		data.date.year < data.today.year ||
+		(data.date.year === data.today.year &&
+			data.date.month < data.today.month) ||
+		(data.date.year === data.today.year &&
+			data.date.month === data.today.month &&
+			data.date.day < data.today.day)
 	);
-	return diaryDate < today;
 })();
 
 // Character count calculation
 $: characterCount = content ? content.length : 0;
+
+// データが変更された時に要約状態を更新
+$: {
+	summary = data.dailySummary;
+	showSummary = !!data.dailySummary;
+}
 
 // Reactive date formatting function
 $: _formatDate = (ymd: {
@@ -111,6 +121,7 @@ async function _generateSummary() {
 	if (!data.entry?.content || summaryGenerating) return;
 
 	summaryGenerating = true;
+	summaryError = null; // エラー状態をクリア
 	try {
 		const response = await fetch("/api/diary/summary/generate-daily", {
 			method: "POST",
@@ -130,14 +141,26 @@ async function _generateSummary() {
 		}
 
 		const result = await response.json();
-		summary = result;
-		showSummary = true;
+		// 要約生成後にページを再読み込みして最新のデータを取得
+		window.location.reload();
 	} catch (error) {
 		console.error("Summary generation failed:", error);
-		alert(error instanceof Error ? error.message : "要約の生成に失敗しました");
+		summaryError =
+			error instanceof Error
+				? error.message
+				: $_("diary.summaryGenerationFailed");
+		// エラーメッセージを3秒後に自動クリア
+		setTimeout(() => {
+			summaryError = null;
+		}, 3000);
 	} finally {
 		summaryGenerating = false;
 	}
+}
+
+function _clearSummary() {
+	summary = null;
+	showSummary = false;
 }
 </script>
 
@@ -153,14 +176,28 @@ async function _generateSummary() {
 					{showSummary ? $_("diary.summary.hide") : $_("diary.summary.view")}
 				</button>
 			{/if}
-			{#if data.entry && hasLLMKey && autoSummaryDisabled && characterCount >= 1000 && isNotToday}
-				<button
-					on:click={_generateSummary}
-					disabled={summaryGenerating}
-					class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-				>
-					{summaryGenerating ? $_("diary.generatingSummary") : $_("diary.generateSummary")}
-				</button>
+			{#if data.entry && hasLLMKey}
+				{@const isDisabled = summaryGenerating || characterCount < 1000 || !isNotToday || !autoSummaryDisabled}
+				{@const tooltipMessage =
+					summaryError ? summaryError :
+					!isNotToday ? $_("diary.summaryNotAvailableToday") :
+					(characterCount < 1000 ? $_("diary.summaryRequires1000Chars") :
+					(!autoSummaryDisabled ? $_("diary.summaryAutoEnabled") : ""))}
+				<div class="relative group">
+					<button
+						on:click={_generateSummary}
+						disabled={isDisabled}
+						class="px-4 py-2 {summaryError ? 'bg-red-500 hover:bg-red-600' : (!isDisabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed')} disabled:bg-gray-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+					>
+						{summaryGenerating ? $_("diary.generatingSummary") : $_("diary.generateSummary")}
+					</button>
+					{#if (isDisabled && tooltipMessage) || summaryError}
+						<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+							{tooltipMessage}
+							<div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+						</div>
+					{/if}
+				</div>
 			{/if}
 			<button
 				on:click={_goToMonthly}
