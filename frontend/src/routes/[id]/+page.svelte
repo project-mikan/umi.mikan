@@ -23,6 +23,9 @@ let _showDeleteConfirm = false;
 let loading = false;
 let saved = false;
 
+// Character count calculation
+$: characterCount = content ? content.length : 0;
+
 // Reactive date formatting function
 $: _formatDate = (ymd: {
 	year: number;
@@ -124,6 +127,17 @@ use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 						{form.error}
 					</div>
 				{/if}
+
+				<!-- Character count display -->
+				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{$_("diary.characterCount", { values: { count: characterCount } })}
+					{#if characterCount >= 1000}
+						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+				</div>
+
 				<div class="flex justify-between">
 					<div>
 						{#if data.entry}

@@ -23,6 +23,13 @@ let dayBeforeYesterdayFormElement: HTMLFormElement;
 let [todayLoading, yesterdayLoading, dayBeforeLoading] = [false, false, false];
 let [todaySaved, yesterdaySaved, dayBeforeSaved] = [false, false, false];
 
+// Character count calculations
+$: todayCharacterCount = todayContent ? todayContent.length : 0;
+$: yesterdayCharacterCount = yesterdayContent ? yesterdayContent.length : 0;
+$: dayBeforeYesterdayCharacterCount = dayBeforeYesterdayContent
+	? dayBeforeYesterdayContent.length
+	: 0;
+
 function getMonthlyUrl(): string {
 	const now = new Date();
 	return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
@@ -51,6 +58,21 @@ function handleYesterdaySave() {
 function handleDayBeforeYesterdaySave() {
 	dayBeforeYesterdayFormElement?.requestSubmit();
 }
+
+function goToTodayEntry() {
+	const dateStr = formatDateStr(data.today.date);
+	goto(`/${dateStr}`);
+}
+
+function goToYesterdayEntry() {
+	const dateStr = formatDateStr(data.yesterday.date);
+	goto(`/${dateStr}`);
+}
+
+function goToDayBeforeYesterdayEntry() {
+	const dateStr = formatDateStr(data.dayBeforeYesterday.date);
+	goto(`/${dateStr}`);
+}
 </script>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -67,6 +89,7 @@ function handleDayBeforeYesterdaySave() {
 			title={$_("diary.today")}
 			entry={data.today.entry}
 			showForm={true}
+			onTitleClick={goToTodayEntry}
 		>
 			<form
 				bind:this={formElement}
@@ -93,6 +116,17 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 					bind:value={todayContent}
 					on:save={handleSave}
 				/>
+
+				<!-- Character count display -->
+				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{$_("diary.characterCount", { values: { count: todayCharacterCount } })}
+					{#if todayCharacterCount >= 1000}
+						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+				</div>
+
 				<div class="flex justify-end">
 					<SaveButton loading={todayLoading} saved={todaySaved} />
 				</div>
@@ -103,6 +137,7 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 			title={$_("diary.yesterday")}
 			entry={data.yesterday.entry}
 			showForm={true}
+			onTitleClick={goToYesterdayEntry}
 		>
 			<form
 				bind:this={yesterdayFormElement}
@@ -129,6 +164,17 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 					bind:value={yesterdayContent}
 					on:save={handleYesterdaySave}
 				/>
+
+				<!-- Character count display -->
+				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{$_("diary.characterCount", { values: { count: yesterdayCharacterCount } })}
+					{#if yesterdayCharacterCount >= 1000}
+						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+				</div>
+
 				<div class="flex justify-end">
 					<SaveButton loading={yesterdayLoading} saved={yesterdaySaved} />
 				</div>
@@ -139,6 +185,7 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 			title={$_("diary.dayBeforeYesterday")}
 			entry={data.dayBeforeYesterday.entry}
 			showForm={true}
+			onTitleClick={goToDayBeforeYesterdayEntry}
 		>
 			<form
 				bind:this={dayBeforeYesterdayFormElement}
@@ -169,6 +216,17 @@ use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved
 					bind:value={dayBeforeYesterdayContent}
 					on:save={handleDayBeforeYesterdaySave}
 				/>
+
+				<!-- Character count display -->
+				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{$_("diary.characterCount", { values: { count: dayBeforeYesterdayCharacterCount } })}
+					{#if dayBeforeYesterdayCharacterCount >= 1000}
+						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+				</div>
+
 				<div class="flex justify-end">
 					<SaveButton loading={dayBeforeLoading} saved={dayBeforeSaved} />
 				</div>
