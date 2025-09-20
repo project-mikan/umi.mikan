@@ -160,8 +160,10 @@ async function fetchMonthlySummary() {
 		if (response.ok) {
 			const summaryData = await response.json();
 			summary = summaryData;
+			showSummary = true;
 		} else if (response.status === 404) {
 			summary = null;
+			showSummary = false;
 		} else if (response.status === 401) {
 			await goto("/login");
 		} else {
@@ -262,11 +264,6 @@ $: if (entries || summary) {
 	checkForNewerEntries();
 }
 
-// サマリーが存在する場合は自動的に表示状態にする
-$: if (summary) {
-	showSummary = true;
-}
-
 // ページロード時の初期化処理
 onMount(async () => {
 	// 既存のサマリーがあるかチェック
@@ -277,7 +274,6 @@ onMount(async () => {
 async function handleMonthChange() {
 	// 状態をリセット
 	summary = null;
-	showSummary = false;
 	hasNewerEntries = false;
 
 	// 新しい月のサマリーを取得
@@ -289,12 +285,16 @@ let previousYear = currentYear;
 let previousMonth = currentMonth;
 
 $: if (currentYear !== previousYear || currentMonth !== previousMonth) {
+	// 以前の値を保存
+	const oldYear = previousYear;
+	const oldMonth = previousMonth;
+
 	// 以前の値を更新
 	previousYear = currentYear;
 	previousMonth = currentMonth;
 
-	// 新しい月のサマリーを取得（onMountで既に呼ばれている場合を除く）
-	if (browser && (previousYear !== data.year || previousMonth !== data.month)) {
+	// 新しい月のサマリーを取得（初回ロード以外）
+	if (browser && (oldYear !== currentYear || oldMonth !== currentMonth)) {
 		handleMonthChange();
 	}
 }
