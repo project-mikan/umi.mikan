@@ -32,8 +32,17 @@ func (g *GeminiClient) Close() error {
 func (g *GeminiClient) GenerateSummary(ctx context.Context, diaryContent string) (string, error) {
 	prompt := fmt.Sprintf(`以下の日記の内容を読んで、月間サマリーを生成してください。
 サマリーは以下の要件を満たしてください：
-- 冒頭に箇条書きで特筆すべき日付と内容を最大3つ挙げる(Markdown非対応のため箇条書きは「- 」で始める)
+- Markdownは非対応
+- 冒頭に箇条書きで特筆すべき日付と内容を最大3つ挙げる(箇条書きは「- 」で始める)
 - 次にその月全体の傾向を300文字以内で簡潔にまとめる
+
+形式は以下の通りにしてください：
+- 箇条書き1
+- 箇条書き2
+- 箇条書き3
+
+<300文字以内の月全体の傾向>
+
 
 日記の内容:
 %s
@@ -62,8 +71,19 @@ func (g *GeminiClient) GenerateSummary(ctx context.Context, diaryContent string)
 func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent string) (string, error) {
 	prompt := fmt.Sprintf(`以下の1日の日記の内容を読んで、日次サマリーを生成してください。
 サマリーは以下の要件を満たしてください：
-- 最大3つまで要点を列挙(Markdown非対応のため箇条書きは「- 」で始める)
-- 出てきた人物を列挙(Markdown非対応のため箇条書きは「- 」で始める)
+- Markdownは非対応
+- 最大3つまで要点を列挙(箇条書きは「- 」で始める)
+- 出てきた人物を文脈から重要な順に最大3人列挙(箇条書きは「- 」で始める)
+
+形式は以下の通りにしてください：
+- 箇条書き1
+- 箇条書き2
+- 箇条書き3
+
+重要そうな人
+- 人物1
+- 人物2
+- 人物3
 
 日記の内容:
 %s
