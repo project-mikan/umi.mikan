@@ -33,7 +33,7 @@ let _loading = false;
 let showMonthSelector = false;
 let summary: MonthlySummary | null = null;
 let summaryLoading = false;
-let showSummary = true;
+let showSummary = false;
 let errorMessage = "";
 let showErrorModal = false;
 let hasNewerEntries = false;
@@ -262,11 +262,27 @@ $: if (entries || summary) {
 	checkForNewerEntries();
 }
 
+// サマリーが存在する場合は自動的に表示状態にする
+$: if (summary) {
+	showSummary = true;
+}
+
 // ページロード時の初期化処理
 onMount(async () => {
 	// 既存のサマリーがあるかチェック
 	await fetchMonthlySummary();
 });
+
+// 月が変わったときの処理
+async function handleMonthChange() {
+	// 状態をリセット
+	summary = null;
+	showSummary = false;
+	hasNewerEntries = false;
+
+	// 新しい月のサマリーを取得
+	await fetchMonthlySummary();
+}
 
 // 月が変わったときにサマリーをリセット
 let previousYear = currentYear;
@@ -277,14 +293,9 @@ $: if (currentYear !== previousYear || currentMonth !== previousMonth) {
 	previousYear = currentYear;
 	previousMonth = currentMonth;
 
-	// 状態をリセット
-	summary = null;
-	showSummary = true;
-	hasNewerEntries = false;
-
 	// 新しい月のサマリーを取得（onMountで既に呼ばれている場合を除く）
 	if (browser && (previousYear !== data.year || previousMonth !== data.month)) {
-		fetchMonthlySummary();
+		handleMonthChange();
 	}
 }
 
