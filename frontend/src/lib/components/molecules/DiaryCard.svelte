@@ -8,7 +8,7 @@ export let title: string;
 export let entry: DiaryEntry | null = null;
 export let showForm = false;
 export let onView: ((entry: DiaryEntry) => void) | null = null;
-export let onTitleClick: (() => void) | null = null;
+export let href: string | null = null;
 
 function formatContentWithLineBreaks(content: string): string {
 	return content.replace(/\n/g, "<br>");
@@ -17,21 +17,18 @@ function formatContentWithLineBreaks(content: string): string {
 
 <Card>
 	<div class="flex justify-between items-center mb-4">
-		{#if onTitleClick}
-			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-				<button
-					type="button"
-					on:click={onTitleClick}
-					class="text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 underline decoration-transparent hover:decoration-current"
+		<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+			{#if href}
+				<a
+					{href}
+					class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 underline decoration-transparent hover:decoration-current"
 				>
 					{title}
-				</button>
-			</h2>
-		{:else}
-			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+				</a>
+			{:else}
 				{title}
-			</h2>
-		{/if}
+			{/if}
+		</h2>
 	</div>
 
 	{#if showForm}

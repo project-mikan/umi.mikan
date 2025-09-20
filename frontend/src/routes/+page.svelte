@@ -59,20 +59,6 @@ function handleDayBeforeYesterdaySave() {
 	dayBeforeYesterdayFormElement?.requestSubmit();
 }
 
-function goToTodayEntry() {
-	const dateStr = formatDateStr(data.today.date);
-	goto(`/${dateStr}`);
-}
-
-function goToYesterdayEntry() {
-	const dateStr = formatDateStr(data.yesterday.date);
-	goto(`/${dateStr}`);
-}
-
-function goToDayBeforeYesterdayEntry() {
-	const dateStr = formatDateStr(data.dayBeforeYesterday.date);
-	goto(`/${dateStr}`);
-}
 </script>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -89,7 +75,7 @@ function goToDayBeforeYesterdayEntry() {
 			title={$_("diary.today")}
 			entry={data.today.entry}
 			showForm={true}
-			onTitleClick={goToTodayEntry}
+			href={`/${formatDateStr(data.today.date)}`}
 		>
 			<form
 				bind:this={formElement}
@@ -137,7 +123,7 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 			title={$_("diary.yesterday")}
 			entry={data.yesterday.entry}
 			showForm={true}
-			onTitleClick={goToYesterdayEntry}
+			href={`/${formatDateStr(data.yesterday.date)}`}
 		>
 			<form
 				bind:this={yesterdayFormElement}
@@ -185,7 +171,7 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 			title={$_("diary.dayBeforeYesterday")}
 			entry={data.dayBeforeYesterday.entry}
 			showForm={true}
-			onTitleClick={goToDayBeforeYesterdayEntry}
+			href={`/${formatDateStr(data.dayBeforeYesterday.date)}`}
 		>
 			<form
 				bind:this={dayBeforeYesterdayFormElement}
