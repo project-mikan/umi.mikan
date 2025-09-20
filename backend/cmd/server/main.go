@@ -11,6 +11,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/project-mikan/umi.mikan/backend/service/auth"
 	"github.com/project-mikan/umi.mikan/backend/service/diary"
+	"github.com/project-mikan/umi.mikan/backend/service/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -43,6 +44,7 @@ func main() {
 	// サービス登録
 	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db})
 	g.RegisterAuthServiceServer(grpcServer, &auth.AuthEntry{DB: db})
+	g.RegisterUserServiceServer(grpcServer, &user.UserEntry{DB: db})
 
 	// localでcliからデバッグできるようにする
 	// TODO: 環境変数で本番では有効にならないようにする

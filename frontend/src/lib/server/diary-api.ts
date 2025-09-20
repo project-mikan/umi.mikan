@@ -7,10 +7,14 @@ import {
 	DeleteDiaryEntryRequestSchema,
 	type DeleteDiaryEntryResponse,
 	DiaryService,
+	GenerateMonthlySummaryRequestSchema,
+	type GenerateMonthlySummaryResponse,
 	GetDiaryEntriesByMonthRequestSchema,
 	type GetDiaryEntriesByMonthResponse,
 	GetDiaryEntryRequestSchema,
 	type GetDiaryEntryResponse,
+	GetMonthlySummaryRequestSchema,
+	type GetMonthlySummaryResponse,
 	SearchDiaryEntriesRequestSchema,
 	type SearchDiaryEntriesResponse,
 	UpdateDiaryEntryRequestSchema,
@@ -19,7 +23,7 @@ import {
 	type YMD,
 	YMDSchema,
 	YMSchema,
-} from "$lib/grpc/diary/diary_pb.js";
+} from "$lib/grpc/diary/diary_pb";
 
 function createAuthenticatedTransport(accessToken: string) {
 	return createGrpcTransport({
@@ -64,6 +68,16 @@ export interface DeleteDiaryEntryParams {
 
 export interface SearchDiaryEntriesParams {
 	keyword: string;
+	accessToken: string;
+}
+
+export interface GenerateMonthlySummaryParams {
+	month: YM;
+	accessToken: string;
+}
+
+export interface GetMonthlySummaryParams {
+	month: YM;
 	accessToken: string;
 }
 
@@ -155,4 +169,30 @@ export async function searchDiaryEntries(
 	});
 
 	return await client.searchDiaryEntries(request);
+}
+
+export async function generateMonthlySummary(
+	params: GenerateMonthlySummaryParams,
+): Promise<GenerateMonthlySummaryResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(GenerateMonthlySummaryRequestSchema, {
+		month: params.month,
+	});
+
+	return await client.generateMonthlySummary(request);
+}
+
+export async function getMonthlySummary(
+	params: GetMonthlySummaryParams,
+): Promise<GetMonthlySummaryResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(GetMonthlySummaryRequestSchema, {
+		month: params.month,
+	});
+
+	return await client.getMonthlySummary(request);
 }

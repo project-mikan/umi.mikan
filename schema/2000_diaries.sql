@@ -9,3 +9,4 @@ CREATE TABLE IF NOT EXISTS diaries (
 );
 
 CREATE INDEX index_diaries_user_id_and_date ON diaries (user_id, date);
+

@@ -26,18 +26,33 @@ tidy:
 
 
 xo:
-	# db-initも実行したいが立ち上げてすぐは起動できないので別でコマンド
+	# db-initを別で実行することでDBを更新できる
 	rm -rf backend/infrastructure/database/*.xo.go
 	docker compose exec backend go tool xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
 go-mod-tidy:
 	docker compose exec backend go mod tidy
 # airを使うので不要↓
 db:
-	docker compose exec postgres psql -U postgres -d umi_mikan  
-db-init:
-	docker compose down postgres -v
-	docker compose up postgres -d
+	docker compose exec postgres psql -U postgres -d umi_mikan
+# db-init:
+# 	docker compose down postgres -v
+# 	docker compose up postgres -d
 	# dbのログはすぐに取れないので別コマンドで取得する
+
+db-diff:
+	# pg-schema-diff dry run - show what changes would be made
+	docker compose exec backend go tool pg-schema-diff plan \
+		--from-dsn "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" \
+		--to-dir /schema \
+		--disable-plan-validation
+
+db-apply:
+	# Apply schema changes to database
+	docker compose exec backend go tool pg-schema-diff apply \
+		--from-dsn "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" \
+		--to-dir /schema \
+		--disable-plan-validation \
+		--allow-hazards DELETES_DATA
 
 f-log:
 	docker compose logs -f frontend

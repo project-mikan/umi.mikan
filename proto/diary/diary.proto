@@ -23,6 +23,12 @@ service DiaryService {
 
   // 検索
   rpc SearchDiaryEntries(SearchDiaryEntriesRequest) returns (SearchDiaryEntriesResponse);
+
+  // 月ごとのサマリー生成
+  rpc GenerateMonthlySummary(GenerateMonthlySummaryRequest) returns (GenerateMonthlySummaryResponse);
+
+  // 月ごとのサマリー取得
+  rpc GetMonthlySummary(GetMonthlySummaryRequest) returns (GetMonthlySummaryResponse);
 }
 
 message YMD {
@@ -40,6 +46,8 @@ message DiaryEntry {
   string id = 1; // 日記ID
   YMD date = 2; // 日付
   string content = 3; // 内容
+  int64 created_at = 4; // 作成日時（Unix timestamp）
+  int64 updated_at = 5; // 更新日時（Unix timestamp）
 }
 
 // 新しい日記エントリを作成するためのリクエスト
@@ -111,4 +119,33 @@ message DeleteDiaryEntryRequest {
 // 削除操作の結果を返すレスポンス
 message DeleteDiaryEntryResponse {
   bool success = 1;
+}
+
+// 月サマリー
+message MonthlySummary {
+  string id = 1;
+  YM month = 2;
+  string summary = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
+}
+
+// 月ごとのサマリー生成リクエスト
+message GenerateMonthlySummaryRequest {
+  YM month = 1;
+}
+
+// 月ごとのサマリー生成レスポンス
+message GenerateMonthlySummaryResponse {
+  MonthlySummary summary = 1;
+}
+
+// 月ごとのサマリー取得リクエスト
+message GetMonthlySummaryRequest {
+  YM month = 1;
+}
+
+// 月ごとのサマリー取得レスポンス
+message GetMonthlySummaryResponse {
+  MonthlySummary summary = 1;
 }

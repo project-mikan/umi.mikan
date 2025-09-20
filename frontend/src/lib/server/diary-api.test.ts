@@ -1,6 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { describe, expect, it } from "vitest";
-import { YMDSchema } from "$lib/grpc/diary/diary_pb.js";
+import { YMDSchema } from "$lib/grpc/diary/diary_pb";
 import type {
 	CreateDiaryEntryParams,
 	SearchDiaryEntriesParams,

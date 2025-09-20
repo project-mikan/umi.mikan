@@ -3,20 +3,39 @@ import { _, locale } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import { browser } from "$app/environment";
+import { onMount } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
-import type { DiaryEntry } from "$lib/grpc";
+import type {
+	DiaryEntry,
+	GetDiaryEntriesByMonthResponse,
+} from "$lib/grpc/diary/diary_pb";
 import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
 import MonthYearSelector from "$lib/components/molecules/MonthYearSelector.svelte";
 
+interface MonthlySummary {
+	id: string;
+	month: { year: number; month: number };
+	summary: string;
+	createdAt: number;
+	updatedAt: number;
+}
+
 export let data: PageData;
 
-let entries = data.entries;
+let entries: GetDiaryEntriesByMonthResponse | { entries: DiaryEntry[] } =
+	data.entries;
 let currentYear = data.year;
 let currentMonth = data.month;
 let _loading = false;
 let showMonthSelector = false;
+let summary: MonthlySummary | null = null;
+let summaryLoading = false;
+let showSummary = false;
+let errorMessage = "";
+let showErrorModal = false;
+let hasNewerEntries = false;
 
 // データの更新
 $: {
@@ -35,7 +54,9 @@ async function fetchMonthData(year: number, month: number) {
 			`/api/diary/monthly/${year}/${month}`,
 		);
 		if (response.ok) {
-			const newEntries = await response.json();
+			const newEntries:
+				| GetDiaryEntriesByMonthResponse
+				| { entries: DiaryEntry[] } = await response.json();
 			entries = newEntries;
 			currentYear = year;
 			currentMonth = month;
@@ -127,6 +148,173 @@ function _handleMonthSelectorCancel() {
 	showMonthSelector = false;
 }
 
+// サマリー関連の関数
+async function fetchMonthlySummary() {
+	if (!browser) return;
+
+	try {
+		const response = await authenticatedFetch(
+			`/api/diary/summary/${currentYear}/${currentMonth}`,
+		);
+		if (response.ok) {
+			const summaryData = await response.json();
+			summary = summaryData;
+		} else if (response.status === 404) {
+			summary = null;
+		} else if (response.status === 401) {
+			await goto("/login");
+		} else {
+			console.error(
+				"Failed to fetch summary:",
+				response.status,
+				response.statusText,
+			);
+		}
+	} catch (error) {
+		console.error("Failed to fetch summary:", error);
+	}
+}
+
+async function generateMonthlySummary() {
+	if (!browser) return;
+
+	summaryLoading = true;
+	try {
+		const response = await authenticatedFetch(`/api/diary/summary/generate`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				year: currentYear,
+				month: currentMonth,
+			}),
+		});
+
+		if (response.ok) {
+			const summaryData = await response.json();
+			summary = summaryData;
+			showSummary = true;
+		} else if (response.status === 401) {
+			await goto("/login");
+		} else if (response.status === 404) {
+			showError($_("monthly.summary.noEntries"));
+		} else if (response.status === 400) {
+			const errorData = await response.json();
+			if (errorData.message?.includes("API key")) {
+				showError($_("monthly.summary.noApiKey"));
+			} else {
+				showError($_("monthly.summary.error"));
+			}
+		} else {
+			showError($_("monthly.summary.error"));
+		}
+	} catch (error) {
+		console.error("Failed to generate summary:", error);
+		showError($_("monthly.summary.error"));
+	} finally {
+		summaryLoading = false;
+	}
+}
+
+// エラー表示用ヘルパー関数
+function showError(message: string) {
+	errorMessage = message;
+	showErrorModal = true;
+}
+
+// 日記の最新更新日を取得
+function getLatestEntryUpdate(): number {
+	if (!entries || !entries.entries || entries.entries.length === 0) return 0;
+
+	// 各日記エントリのupdatedAtフィールドから最も新しい更新日時を取得
+	let latestUpdate = 0;
+	for (const entry of entries.entries) {
+		if (entry.updatedAt) {
+			const updatedAtNumber = Number(entry.updatedAt);
+			if (updatedAtNumber > latestUpdate) {
+				latestUpdate = updatedAtNumber;
+			}
+		}
+	}
+
+	return latestUpdate;
+}
+
+// サマリーが古いかどうかをチェック
+function checkForNewerEntries() {
+	if (!summary || !entries || !entries.entries) {
+		hasNewerEntries = false;
+		return;
+	}
+
+	const latestEntryTime = getLatestEntryUpdate();
+	const summaryTime = summary.updatedAt;
+
+	// サマリー更新後にエントリが追加/更新されているかチェック
+	hasNewerEntries = latestEntryTime > summaryTime;
+}
+
+// エントリまたはサマリーが変わったときに更新検知を実行
+$: if (entries || summary) {
+	checkForNewerEntries();
+}
+
+// ローカルストレージのキーを生成
+function getSummaryStorageKey(): string {
+	return `summary-show-${currentYear}-${currentMonth}`;
+}
+
+// ページロード時の初期化処理
+onMount(async () => {
+	// 既存のサマリーがあるかチェック
+	await fetchMonthlySummary();
+
+	// サマリーが存在する場合のみ、前回の表示状態を復元
+	if (summary) {
+		const storageKey = getSummaryStorageKey();
+		const storedShowState = localStorage.getItem(storageKey);
+		if (storedShowState === "true") {
+			showSummary = true;
+		}
+	}
+});
+
+// showSummaryの状態をローカルストレージに保存
+$: if (browser && typeof window !== "undefined" && summary) {
+	const storageKey = getSummaryStorageKey();
+	localStorage.setItem(storageKey, showSummary.toString());
+}
+
+// 月が変わったときにサマリーをリセット
+let previousYear = currentYear;
+let previousMonth = currentMonth;
+
+$: if (currentYear !== previousYear || currentMonth !== previousMonth) {
+	// 以前の値を更新
+	previousYear = currentYear;
+	previousMonth = currentMonth;
+
+	// 状態をリセット
+	summary = null;
+	showSummary = false;
+	hasNewerEntries = false;
+
+	// 新しい月のサマリーを取得（onMountで既に呼ばれている場合を除く）
+	if (browser && (previousYear !== data.year || previousMonth !== data.month)) {
+		fetchMonthlySummary().then(() => {
+			// サマリーが存在する場合、前回の表示状態を復元
+			if (summary) {
+				const storageKey = getSummaryStorageKey();
+				const storedShowState = localStorage.getItem(storageKey);
+				if (storedShowState === "true") {
+					showSummary = true;
+				}
+			}
+		});
+	}
+}
+
 // カレンダーデータの準備（リアクティブ）
 $: daysInMonth = getDaysInMonth(currentYear, currentMonth);
 $: firstDayOfWeek = getFirstDayOfWeek(currentYear, currentMonth);
@@ -178,6 +366,39 @@ $: _weekDays = (() => {
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
 			{_formatMonth(currentYear, currentMonth)}
 		</h1>
+		<div class="flex gap-2">
+			{#if summary}
+				<button
+					on:click={() => showSummary = !showSummary}
+					class="px-4 py-2 {showSummary ? 'bg-gray-600 hover:bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				>
+					{showSummary ? $_("monthly.summary.hide") : $_("monthly.summary.view")}
+				</button>
+				<button
+					on:click={generateMonthlySummary}
+					disabled={summaryLoading}
+					class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+				>
+					{#if summaryLoading}
+						{$_("monthly.summary.generating")}
+					{:else}
+						{$_("monthly.summary.regenerate")}
+					{/if}
+				</button>
+			{:else}
+				<button
+					on:click={generateMonthlySummary}
+					disabled={summaryLoading}
+					class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+				>
+					{#if summaryLoading}
+						{$_("monthly.summary.generating")}
+					{:else}
+						{$_("monthly.summary.generate")}
+					{/if}
+				</button>
+			{/if}
+		</div>
 	</div>
 
 	<!-- 月ナビゲーション -->
@@ -231,6 +452,39 @@ $: _weekDays = (() => {
 		</button>
 	</div>
 
+	<!-- サマリー表示エリア -->
+	{#if showSummary && summary}
+		<div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+			<div class="p-6">
+				<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+					{$_("monthly.summary.title")} - {_formatMonth(currentYear, currentMonth)}
+				</h2>
+				<div class="prose dark:prose-invert max-w-none">
+					<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+						{summary.summary}
+					</p>
+				</div>
+				{#if hasNewerEntries}
+					<div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+						<p class="text-sm text-yellow-800 dark:text-yellow-200">
+							💡 {$_("monthly.summary.updateAvailable")}
+						</p>
+					</div>
+				{/if}
+				<div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+					<span>
+						{$_("common.createdAt")}: {new Date(summary.createdAt * 1000).toLocaleDateString()}
+					</span>
+					{#if summary.updatedAt !== summary.createdAt}
+						<span>
+							{$_("common.updatedAt")}: {new Date(summary.updatedAt * 1000).toLocaleDateString()}
+						</span>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- デスクトップ・タブレット: カレンダー表示 -->
 	<div class="hidden md:block">
 		<MonthlyCalendar
@@ -261,4 +515,37 @@ $: _weekDays = (() => {
 	onSelect={_handleMonthSelect}
 	onCancel={_handleMonthSelectorCancel}
 />
+
+<!-- Error Modal -->
+{#if showErrorModal}
+	<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+		<div class="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
+			<div class="p-6">
+				<div class="flex items-center mb-4">
+					<div class="flex-shrink-0">
+						<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+						</svg>
+					</div>
+					<h3 class="ml-3 text-lg font-medium text-gray-900 dark:text-gray-100">
+						{$_("common.error")}
+					</h3>
+				</div>
+				<div class="mb-6">
+					<p class="text-gray-700 dark:text-gray-300">
+						{errorMessage}
+					</p>
+				</div>
+				<div class="flex justify-end">
+					<button
+						on:click={() => showErrorModal = false}
+						class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+					>
+						{$_("common.close")}
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
 

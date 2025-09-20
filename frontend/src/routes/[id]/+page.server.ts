@@ -8,7 +8,7 @@ import {
 } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
-import type { DiaryEntry } from "$lib/grpc";
+import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
@@ -66,7 +66,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		const pastEntriesPromises = pastDatesArray.map((pastDate) =>
 			getDiaryEntry({
 				date: createYMD(pastDate.year, pastDate.month, pastDate.day),
-				accessToken: authResult.accessToken!,
+				accessToken: authResult.accessToken as string,
 			}).catch(() => ({ entry: null })),
 		);
 
@@ -137,7 +137,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			const pastEntriesPromises = pastDatesArray.map((pastDate) =>
 				getDiaryEntry({
 					date: createYMD(pastDate.year, pastDate.month, pastDate.day),
-					accessToken: authResult.accessToken!,
+					accessToken: authResult.accessToken as string,
 				}).catch(() => ({ entry: null })),
 			);
 

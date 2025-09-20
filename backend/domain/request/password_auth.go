@@ -51,7 +51,7 @@ func ValidateRegisterByPasswordRequest(req *g.RegisterByPasswordRequest) (*Passw
 		return nil, fmt.Errorf("password must be at least 8 characters long")
 	}
 
-	hashedPassword, err := encryptPassword(req.GetPassword())
+	hashedPassword, err := EncryptPassword(req.GetPassword())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
@@ -92,7 +92,7 @@ func ValidateRefreshTokenRequest(req *g.RefreshAccessTokenRequest) (string, erro
 	return userID, nil
 }
 
-func encryptPassword(password string) (string, error) {
+func EncryptPassword(password string) (string, error) {
 	// パスワードの文字列をハッシュ化する
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

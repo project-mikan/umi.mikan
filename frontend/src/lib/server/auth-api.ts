@@ -7,7 +7,22 @@ import {
 	LoginByPasswordRequestSchema,
 	RefreshAccessTokenRequestSchema,
 	RegisterByPasswordRequestSchema,
-} from "$lib/grpc/auth/auth_pb.js";
+} from "$lib/grpc/auth/auth_pb";
+import {
+	UserService,
+	UpdateUserNameRequestSchema,
+	ChangePasswordRequestSchema,
+	UpdateLLMKeyRequestSchema,
+	GetUserInfoRequestSchema,
+	DeleteLLMKeyRequestSchema,
+	DeleteAccountRequestSchema,
+	type UpdateUserNameResponse,
+	type ChangePasswordResponse,
+	type UpdateLLMKeyResponse,
+	type GetUserInfoResponse,
+	type DeleteLLMKeyResponse,
+	type DeleteAccountResponse,
+} from "$lib/grpc/user/user_pb";
 
 const transport = createGrpcTransport({
 	baseUrl: "http://backend:8080",
@@ -59,5 +74,165 @@ export async function refreshAccessToken(
 	});
 
 	const response = await authClient.refreshAccessToken(request);
+	return response;
+}
+
+export interface UpdateUserNameParams {
+	newName: string;
+	accessToken: string;
+}
+
+export async function updateUserName(
+	params: UpdateUserNameParams,
+): Promise<UpdateUserNameResponse> {
+	const transport = createGrpcTransport({
+		baseUrl: "http://backend:8080",
+		interceptors: [
+			(next) => (req) => {
+				req.header.set("authorization", `Bearer ${params.accessToken}`);
+				return next(req);
+			},
+		],
+	});
+
+	const userClient = createClient(UserService, transport);
+	const request = create(UpdateUserNameRequestSchema, {
+		newName: params.newName,
+	});
+
+	const response = await userClient.updateUserName(request);
+	return response;
+}
+
+export interface ChangePasswordParams {
+	currentPassword: string;
+	newPassword: string;
+	accessToken: string;
+}
+
+export async function changePassword(
+	params: ChangePasswordParams,
+): Promise<ChangePasswordResponse> {
+	const transport = createGrpcTransport({
+		baseUrl: "http://backend:8080",
+		interceptors: [
+			(next) => (req) => {
+				req.header.set("authorization", `Bearer ${params.accessToken}`);
+				return next(req);
+			},
+		],
+	});
+
+	const userClient = createClient(UserService, transport);
+	const request = create(ChangePasswordRequestSchema, {
+		currentPassword: params.currentPassword,
+		newPassword: params.newPassword,
+	});
+
+	const response = await userClient.changePassword(request);
+	return response;
+}
+
+export interface UpdateLLMKeyParams {
+	llmProvider: number;
+	key: string;
+	accessToken: string;
+}
+
+export async function updateLLMKey(
+	params: UpdateLLMKeyParams,
+): Promise<UpdateLLMKeyResponse> {
+	const transport = createGrpcTransport({
+		baseUrl: "http://backend:8080",
+		interceptors: [
+			(next) => (req) => {
+				req.header.set("authorization", `Bearer ${params.accessToken}`);
+				return next(req);
+			},
+		],
+	});
+
+	const userClient = createClient(UserService, transport);
+	const request = create(UpdateLLMKeyRequestSchema, {
+		llmProvider: params.llmProvider,
+		key: params.key,
+	});
+
+	const response = await userClient.updateLLMKey(request);
+	return response;
+}
+
+export interface GetUserInfoParams {
+	accessToken: string;
+}
+
+export async function getUserInfo(
+	params: GetUserInfoParams,
+): Promise<GetUserInfoResponse> {
+	const transport = createGrpcTransport({
+		baseUrl: "http://backend:8080",
+		interceptors: [
+			(next) => (req) => {
+				req.header.set("authorization", `Bearer ${params.accessToken}`);
+				return next(req);
+			},
+		],
+	});
+
+	const userClient = createClient(UserService, transport);
+	const request = create(GetUserInfoRequestSchema, {});
+
+	const response = await userClient.getUserInfo(request);
+	return response;
+}
+
+export interface DeleteLLMKeyParams {
+	llmProvider: number;
+	accessToken: string;
+}
+
+export async function deleteLLMKey(
+	params: DeleteLLMKeyParams,
+): Promise<DeleteLLMKeyResponse> {
+	const transport = createGrpcTransport({
+		baseUrl: "http://backend:8080",
+		interceptors: [
+			(next) => (req) => {
+				req.header.set("authorization", `Bearer ${params.accessToken}`);
+				return next(req);
+			},
+		],
+	});
+
+	const userClient = createClient(UserService, transport);
+	const request = create(DeleteLLMKeyRequestSchema, {
+		llmProvider: params.llmProvider,
+	});
+
+	const response = await userClient.deleteLLMKey(request);
+	return response;
+}
+
+export interface DeleteAccountParams {
+	accessToken: string;
+}
+
+export async function deleteAccount(
+	params: DeleteAccountParams,
+): Promise<DeleteAccountResponse> {
+	const transport = createGrpcTransport({
+		baseUrl: "http://backend:8080",
+		interceptors: [
+			(next) => (req) => {
+				req.header.set("authorization", `Bearer ${params.accessToken}`);
+				return next(req);
+			},
+		],
+	});
+
+	const userClient = createClient(UserService, transport);
+	const request = create(DeleteAccountRequestSchema, {});
+
+	const response = await userClient.deleteAccount(request);
 	return response;
 }

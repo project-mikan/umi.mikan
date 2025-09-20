@@ -40,3 +40,4 @@ message AuthResponse {
   int32 expires_in = 3; // 秒単位
   string refresh_token = 4;
 }
+
