@@ -1,6 +1,7 @@
 import { error, json } from "@sveltejs/kit";
 import { createYM, getMonthlySummary } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { unixToMilliseconds } from "$lib/utils/token-utils";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
@@ -34,9 +35,8 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 				month: summaryResponse.summary.month?.month,
 			},
 			summary: summaryResponse.summary.summary,
-			// Convert Unix timestamp (seconds) to JavaScript timestamp (milliseconds)
-			createdAt: Number(summaryResponse.summary.createdAt) * 1000,
-			updatedAt: Number(summaryResponse.summary.updatedAt) * 1000,
+			createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
+			updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
 		});
 	} catch (err) {
 		console.error("Failed to load monthly summary:", err);

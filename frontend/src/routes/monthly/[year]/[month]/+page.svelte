@@ -474,11 +474,11 @@ $: _weekDays = (() => {
 				{/if}
 				<div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
 					<span>
-						{$_("common.createdAt")}: {new Date(summary.createdAt * 1000).toLocaleDateString()}
+						{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleDateString()}
 					</span>
 					{#if summary.updatedAt !== summary.createdAt}
 						<span>
-							{$_("common.updatedAt")}: {new Date(summary.updatedAt * 1000).toLocaleDateString()}
+							{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleDateString()}
 						</span>
 					{/if}
 				</div>

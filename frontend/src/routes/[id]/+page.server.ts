@@ -7,6 +7,7 @@ import {
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
+import { unixToMilliseconds } from "$lib/utils/token-utils";
 import { getUserInfo } from "$lib/server/auth-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
@@ -68,9 +69,8 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 						day: summaryResponse.summary.date?.day || 0,
 					},
 					summary: summaryResponse.summary.summary,
-					// Convert Unix timestamp (seconds) to JavaScript timestamp (milliseconds)
-					createdAt: Number(summaryResponse.summary.createdAt) * 1000,
-					updatedAt: Number(summaryResponse.summary.updatedAt) * 1000,
+					createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
+					updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
 				};
 			}
 		} catch (_summaryErr) {

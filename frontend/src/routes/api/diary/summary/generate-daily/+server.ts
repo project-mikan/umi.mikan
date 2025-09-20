@@ -1,6 +1,7 @@
 import { error, json } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { generateDailySummary } from "$lib/server/diary-api";
+import { unixToMilliseconds } from "$lib/utils/token-utils";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
@@ -64,9 +65,8 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 				day: response.summary.date?.day || 0,
 			},
 			summary: response.summary.summary,
-			// Convert Unix timestamp (seconds) to JavaScript timestamp (milliseconds)
-			createdAt: Number(response.summary.createdAt) * 1000,
-			updatedAt: Number(response.summary.updatedAt) * 1000,
+			createdAt: unixToMilliseconds(response.summary.createdAt),
+			updatedAt: unixToMilliseconds(response.summary.updatedAt),
 		});
 	} catch (err) {
 		if (err instanceof Response) {
