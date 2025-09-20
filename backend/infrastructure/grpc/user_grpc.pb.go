@@ -19,12 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_UpdateUserName_FullMethodName = "/user.UserService/UpdateUserName"
-	UserService_ChangePassword_FullMethodName = "/user.UserService/ChangePassword"
-	UserService_UpdateLLMKey_FullMethodName   = "/user.UserService/UpdateLLMKey"
-	UserService_GetUserInfo_FullMethodName    = "/user.UserService/GetUserInfo"
-	UserService_DeleteLLMKey_FullMethodName   = "/user.UserService/DeleteLLMKey"
-	UserService_DeleteAccount_FullMethodName  = "/user.UserService/DeleteAccount"
+	UserService_UpdateUserName_FullMethodName            = "/user.UserService/UpdateUserName"
+	UserService_ChangePassword_FullMethodName            = "/user.UserService/ChangePassword"
+	UserService_UpdateLLMKey_FullMethodName              = "/user.UserService/UpdateLLMKey"
+	UserService_GetUserInfo_FullMethodName               = "/user.UserService/GetUserInfo"
+	UserService_DeleteLLMKey_FullMethodName              = "/user.UserService/DeleteLLMKey"
+	UserService_DeleteAccount_FullMethodName             = "/user.UserService/DeleteAccount"
+	UserService_UpdateAutoSummarySettings_FullMethodName = "/user.UserService/UpdateAutoSummarySettings"
+	UserService_GetAutoSummarySettings_FullMethodName    = "/user.UserService/GetAutoSummarySettings"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -43,6 +45,10 @@ type UserServiceClient interface {
 	DeleteLLMKey(ctx context.Context, in *DeleteLLMKeyRequest, opts ...grpc.CallOption) (*DeleteLLMKeyResponse, error)
 	// アカウント削除
 	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
+	// 自動要約設定更新
+	UpdateAutoSummarySettings(ctx context.Context, in *UpdateAutoSummarySettingsRequest, opts ...grpc.CallOption) (*UpdateAutoSummarySettingsResponse, error)
+	// 自動要約設定取得
+	GetAutoSummarySettings(ctx context.Context, in *GetAutoSummarySettingsRequest, opts ...grpc.CallOption) (*GetAutoSummarySettingsResponse, error)
 }
 
 type userServiceClient struct {
@@ -113,6 +119,26 @@ func (c *userServiceClient) DeleteAccount(ctx context.Context, in *DeleteAccount
 	return out, nil
 }
 
+func (c *userServiceClient) UpdateAutoSummarySettings(ctx context.Context, in *UpdateAutoSummarySettingsRequest, opts ...grpc.CallOption) (*UpdateAutoSummarySettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateAutoSummarySettingsResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateAutoSummarySettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetAutoSummarySettings(ctx context.Context, in *GetAutoSummarySettingsRequest, opts ...grpc.CallOption) (*GetAutoSummarySettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAutoSummarySettingsResponse)
+	err := c.cc.Invoke(ctx, UserService_GetAutoSummarySettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -129,6 +155,10 @@ type UserServiceServer interface {
 	DeleteLLMKey(context.Context, *DeleteLLMKeyRequest) (*DeleteLLMKeyResponse, error)
 	// アカウント削除
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
+	// 自動要約設定更新
+	UpdateAutoSummarySettings(context.Context, *UpdateAutoSummarySettingsRequest) (*UpdateAutoSummarySettingsResponse, error)
+	// 自動要約設定取得
+	GetAutoSummarySettings(context.Context, *GetAutoSummarySettingsRequest) (*GetAutoSummarySettingsResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -156,6 +186,12 @@ func (UnimplementedUserServiceServer) DeleteLLMKey(context.Context, *DeleteLLMKe
 }
 func (UnimplementedUserServiceServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAccount not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateAutoSummarySettings(context.Context, *UpdateAutoSummarySettingsRequest) (*UpdateAutoSummarySettingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutoSummarySettings not implemented")
+}
+func (UnimplementedUserServiceServer) GetAutoSummarySettings(context.Context, *GetAutoSummarySettingsRequest) (*GetAutoSummarySettingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAutoSummarySettings not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -286,6 +322,42 @@ func _UserService_DeleteAccount_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_UpdateAutoSummarySettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAutoSummarySettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateAutoSummarySettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateAutoSummarySettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateAutoSummarySettings(ctx, req.(*UpdateAutoSummarySettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetAutoSummarySettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAutoSummarySettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetAutoSummarySettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetAutoSummarySettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetAutoSummarySettings(ctx, req.(*GetAutoSummarySettingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -316,6 +388,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAccount",
 			Handler:    _UserService_DeleteAccount_Handler,
+		},
+		{
+			MethodName: "UpdateAutoSummarySettings",
+			Handler:    _UserService_UpdateAutoSummarySettings_Handler,
+		},
+		{
+			MethodName: "GetAutoSummarySettings",
+			Handler:    _UserService_GetAutoSummarySettings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

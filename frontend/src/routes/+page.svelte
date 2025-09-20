@@ -23,6 +23,13 @@ let dayBeforeYesterdayFormElement: HTMLFormElement;
 let [todayLoading, yesterdayLoading, dayBeforeLoading] = [false, false, false];
 let [todaySaved, yesterdaySaved, dayBeforeSaved] = [false, false, false];
 
+// Character count calculations
+$: todayCharacterCount = todayContent ? todayContent.length : 0;
+$: yesterdayCharacterCount = yesterdayContent ? yesterdayContent.length : 0;
+$: dayBeforeYesterdayCharacterCount = dayBeforeYesterdayContent
+	? dayBeforeYesterdayContent.length
+	: 0;
+
 function getMonthlyUrl(): string {
 	const now = new Date();
 	return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
@@ -67,6 +74,7 @@ function handleDayBeforeYesterdaySave() {
 			title={$_("diary.today")}
 			entry={data.today.entry}
 			showForm={true}
+			href={`/${formatDateStr(data.today.date)}`}
 		>
 			<form
 				bind:this={formElement}
@@ -93,6 +101,17 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 					bind:value={todayContent}
 					on:save={handleSave}
 				/>
+
+				<!-- Character count display -->
+				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{$_("diary.characterCount", { values: { count: todayCharacterCount } })}
+					{#if todayCharacterCount >= 1000}
+						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+				</div>
+
 				<div class="flex justify-end">
 					<SaveButton loading={todayLoading} saved={todaySaved} />
 				</div>
@@ -103,6 +122,7 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 			title={$_("diary.yesterday")}
 			entry={data.yesterday.entry}
 			showForm={true}
+			href={`/${formatDateStr(data.yesterday.date)}`}
 		>
 			<form
 				bind:this={yesterdayFormElement}
@@ -129,6 +149,17 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 					bind:value={yesterdayContent}
 					on:save={handleYesterdaySave}
 				/>
+
+				<!-- Character count display -->
+				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{$_("diary.characterCount", { values: { count: yesterdayCharacterCount } })}
+					{#if yesterdayCharacterCount >= 1000}
+						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+				</div>
+
 				<div class="flex justify-end">
 					<SaveButton loading={yesterdayLoading} saved={yesterdaySaved} />
 				</div>
@@ -139,6 +170,7 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 			title={$_("diary.dayBeforeYesterday")}
 			entry={data.dayBeforeYesterday.entry}
 			showForm={true}
+			href={`/${formatDateStr(data.dayBeforeYesterday.date)}`}
 		>
 			<form
 				bind:this={dayBeforeYesterdayFormElement}
@@ -169,6 +201,17 @@ use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved
 					bind:value={dayBeforeYesterdayContent}
 					on:save={handleDayBeforeYesterdaySave}
 				/>
+
+				<!-- Character count display -->
+				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{$_("diary.characterCount", { values: { count: dayBeforeYesterdayCharacterCount } })}
+					{#if dayBeforeYesterdayCharacterCount >= 1000}
+						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+				</div>
+
 				<div class="flex justify-end">
 					<SaveButton loading={dayBeforeLoading} saved={dayBeforeSaved} />
 				</div>

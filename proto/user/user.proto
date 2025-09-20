@@ -22,6 +22,12 @@ service UserService {
 
   // アカウント削除
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+
+  // 自動要約設定更新
+  rpc UpdateAutoSummarySettings(UpdateAutoSummarySettingsRequest) returns (UpdateAutoSummarySettingsResponse);
+
+  // 自動要約設定取得
+  rpc GetAutoSummarySettings(GetAutoSummarySettingsRequest) returns (GetAutoSummarySettingsResponse);
 }
 
 // ユーザー名更新用のリクエスト
@@ -76,6 +82,8 @@ message GetUserInfoResponse {
 message LLMKeyInfo {
   int32 llm_provider = 1; // 1:Gemini
   string key = 2;
+  bool auto_summary_daily = 3; // 日毎の自動要約生成
+  bool auto_summary_monthly = 4; // 月毎の自動要約生成
 }
 
 // LLMキー削除用のリクエスト
@@ -98,4 +106,28 @@ message DeleteAccountRequest {
 message DeleteAccountResponse {
   bool success = 1;
   string message = 2;
+}
+
+// 自動要約設定更新用のリクエスト
+message UpdateAutoSummarySettingsRequest {
+  int32 llm_provider = 1; // 1:Gemini
+  bool auto_summary_daily = 2; // 日毎の自動要約生成
+  bool auto_summary_monthly = 3; // 月毎の自動要約生成
+}
+
+// 自動要約設定更新用のレスポンス
+message UpdateAutoSummarySettingsResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 自動要約設定取得用のリクエスト
+message GetAutoSummarySettingsRequest {
+  int32 llm_provider = 1; // 1:Gemini
+}
+
+// 自動要約設定取得用のレスポンス
+message GetAutoSummarySettingsResponse {
+  bool auto_summary_daily = 1; // 日毎の自動要約生成
+  bool auto_summary_monthly = 2; // 月毎の自動要約生成
 }

@@ -8,9 +8,15 @@ import type { ActionData, PageData } from "./$types";
 export let form: ActionData;
 export let data: PageData;
 
+// Helper function to check if message belongs to specific action
+function isMessageForAction(actionName: string): boolean {
+	return form?.action === actionName;
+}
+
 let usernameLoading = false;
 let passwordLoading = false;
 let llmTokenLoading = false;
+let autoSummaryLoading = false;
 let deleteLLMKeyLoading = false;
 let deleteAccountLoading = false;
 
@@ -24,8 +30,20 @@ let showNewPassword = false;
 let showConfirmPassword = false;
 
 // Get existing LLM key for Gemini (provider 1)
-$: existingLLMToken =
-	data.user?.llmKeys?.find((key) => key.llmProvider === 1)?.key || "";
+$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
+$: existingLLMToken = existingLLMKey?.key || "";
+
+// Local state for checkbox values
+let autoSummaryDaily = false;
+let autoSummaryMonthly = false;
+
+// Update local state when data changes
+$: {
+	if (existingLLMKey) {
+		autoSummaryDaily = existingLLMKey.autoSummaryDaily || false;
+		autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
+	}
+}
 
 // Modal helper functions
 function confirmDeleteLLMToken() {
@@ -83,17 +101,6 @@ function handleDeleteAccount() {
 	<h1 class="text-3xl font-bold mb-8">{$_("settings.title")}</h1>
 
 	<div class="max-w-2xl mx-auto space-y-8">
-		<!-- エラー/成功メッセージ -->
-		{#if form?.error}
-			<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-				{$_(`settings.messages.${form.error}`) || form.error}
-			</div>
-		{/if}
-		{#if form?.success}
-			<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-				{$_(`settings.messages.${form.message}`) || form.message}
-			</div>
-		{/if}
 
 		<!-- ユーザー名変更セクション -->
 		<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -133,6 +140,17 @@ function handleDeleteAccount() {
 				>
 					{usernameLoading ? $_("common.loading") : $_("settings.username.save")}
 				</button>
+				<!-- ユーザー名変更メッセージ -->
+				{#if form?.error && isMessageForAction("updateUsername")}
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.error}`) || form.error}
+					</div>
+				{/if}
+				{#if form?.success && isMessageForAction("updateUsername")}
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.message}`) || form.message}
+					</div>
+				{/if}
 			</form>
 		</section>
 
@@ -259,6 +277,17 @@ function handleDeleteAccount() {
 				>
 					{passwordLoading ? $_("common.loading") : $_("settings.password.save")}
 				</button>
+				<!-- パスワード変更メッセージ -->
+				{#if form?.error && isMessageForAction("changePassword")}
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.error}`) || form.error}
+					</div>
+				{/if}
+				{#if form?.success && isMessageForAction("changePassword")}
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.message}`) || form.message}
+					</div>
+				{/if}
 			</form>
 		</section>
 
@@ -297,6 +326,9 @@ function handleDeleteAccount() {
 					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
 						{$_("settings.llmToken.tokenHelp")} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">https://aistudio.google.com/apikey</a>
 					</p>
+					<p class="text-xs text-orange-600 dark:text-orange-400 mb-2 bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-200 dark:border-orange-800">
+						{$_("settings.llmToken.freeWarning")}
+					</p>
 					<input
 						type="text"
 						id="llmToken"
@@ -316,6 +348,17 @@ function handleDeleteAccount() {
 				>
 					{llmTokenLoading ? $_("common.loading") : $_("settings.llmToken.save")}
 				</button>
+				<!-- LLMトークン変更メッセージ -->
+				{#if form?.error && isMessageForAction("updateLLMKey")}
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.error}`) || form.error}
+					</div>
+				{/if}
+				{#if form?.success && isMessageForAction("updateLLMKey")}
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						{$_(`settings.messages.${form.message}`) || form.message}
+					</div>
+				{/if}
 			</form>
 
 			<!-- LLM Token Delete Section -->
@@ -329,9 +372,95 @@ function handleDeleteAccount() {
 					>
 						{deleteLLMKeyLoading ? $_("common.loading") : $_("settings.deleteToken.button")}
 					</button>
+					<!-- LLMトークン削除メッセージ -->
+					{#if form?.error && isMessageForAction("deleteLLMKey")}
+						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.error}`) || form.error}
+						</div>
+					{/if}
+					{#if form?.success && isMessageForAction("deleteLLMKey")}
+						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.message}`) || form.message}
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</section>
+
+		<!-- 自動要約設定セクション -->
+		{#if existingLLMToken}
+			<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+				<h2 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h2>
+				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+					{$_("settings.autoSummary.description")}
+				</p>
+				<form
+					method="POST"
+					action="?/updateAutoSummarySettings"
+					class="space-y-4"
+					use:enhance={() => {
+						autoSummaryLoading = true;
+						return async ({ result, update }) => {
+							autoSummaryLoading = false;
+							// If the action returned updated user data, use it
+							if (result.type === 'success' && result.data?.user) {
+								data = { ...data, user: result.data.user as typeof data.user };
+							}
+							await update({ reset: false });
+						};
+					}}
+				>
+					<input type="hidden" name="llmProvider" value="1" />
+
+					<div class="space-y-3">
+						<label class="flex items-center">
+							<input
+								type="checkbox"
+								name="autoSummaryDaily"
+								bind:checked={autoSummaryDaily}
+								disabled={autoSummaryLoading}
+								class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:bg-gray-100"
+							/>
+							<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+								{$_("settings.autoSummary.dailyLabel")}
+							</span>
+						</label>
+
+						<label class="flex items-center">
+							<input
+								type="checkbox"
+								name="autoSummaryMonthly"
+								bind:checked={autoSummaryMonthly}
+								disabled={autoSummaryLoading}
+								class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:bg-gray-100"
+							/>
+							<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+								{$_("settings.autoSummary.monthlyLabel")}
+							</span>
+						</label>
+					</div>
+
+					<button
+						type="submit"
+						disabled={autoSummaryLoading}
+						class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+					>
+						{autoSummaryLoading ? $_("common.loading") : $_("settings.autoSummary.save")}
+					</button>
+					<!-- 自動要約設定メッセージ -->
+					{#if form?.error && isMessageForAction("updateAutoSummarySettings")}
+						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.error}`) || form.error}
+						</div>
+					{/if}
+					{#if form?.success && isMessageForAction("updateAutoSummarySettings")}
+						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+							{$_(`settings.messages.${form.message}`) || form.message}
+						</div>
+					{/if}
+				</form>
+			</section>
+		{/if}
 
 		<!-- Account Deletion Section -->
 		<hr class="my-8 border-gray-300 dark:border-gray-600" />
@@ -353,6 +482,17 @@ function handleDeleteAccount() {
 			>
 				{deleteAccountLoading ? $_("common.loading") : $_("settings.deleteAccount.button")}
 			</button>
+			<!-- アカウント削除メッセージ -->
+			{#if form?.error && isMessageForAction("deleteAccount")}
+				<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					{$_(`settings.messages.${form.error}`) || form.error}
+				</div>
+			{/if}
+			{#if form?.success && isMessageForAction("deleteAccount")}
+				<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+					{$_(`settings.messages.${form.message}`) || form.message}
+				</div>
+			{/if}
 		</section>
 	</div>
 </main>

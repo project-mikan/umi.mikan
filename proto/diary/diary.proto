@@ -29,6 +29,12 @@ service DiaryService {
 
   // 月ごとのサマリー取得
   rpc GetMonthlySummary(GetMonthlySummaryRequest) returns (GetMonthlySummaryResponse);
+
+  // 日ごとのサマリー生成
+  rpc GenerateDailySummary(GenerateDailySummaryRequest) returns (GenerateDailySummaryResponse);
+
+  // 日ごとのサマリー取得
+  rpc GetDailySummary(GetDailySummaryRequest) returns (GetDailySummaryResponse);
 }
 
 message YMD {
@@ -148,4 +154,34 @@ message GetMonthlySummaryRequest {
 // 月ごとのサマリー取得レスポンス
 message GetMonthlySummaryResponse {
   MonthlySummary summary = 1;
+}
+
+// 日サマリー
+message DailySummary {
+  string id = 1;
+  string diary_id = 2;
+  YMD date = 3;
+  string summary = 4;
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}
+
+// 日ごとのサマリー生成リクエスト
+message GenerateDailySummaryRequest {
+  string diary_id = 1;
+}
+
+// 日ごとのサマリー生成レスポンス
+message GenerateDailySummaryResponse {
+  DailySummary summary = 1;
+}
+
+// 日ごとのサマリー取得リクエスト
+message GetDailySummaryRequest {
+  YMD date = 1;
+}
+
+// 日ごとのサマリー取得レスポンス
+message GetDailySummaryResponse {
+  DailySummary summary = 1;
 }

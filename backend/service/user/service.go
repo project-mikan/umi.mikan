@@ -211,11 +211,13 @@ func (s *UserEntry) UpdateLLMKey(ctx context.Context, req *g.UpdateLLMKeyRequest
 	if err == sql.ErrNoRows {
 		// 新規作成
 		newUserLLM := &database.UserLlm{
-			UserID:      parsedUserID,
-			LlmProvider: int16(req.GetLlmProvider()),
-			Key:         req.GetKey(),
-			CreatedAt:   currentTime,
-			UpdatedAt:   currentTime,
+			UserID:             parsedUserID,
+			LlmProvider:        int16(req.GetLlmProvider()),
+			Key:                req.GetKey(),
+			AutoSummaryDaily:   false, // デフォルトは無効
+			AutoSummaryMonthly: false, // デフォルトは無効
+			CreatedAt:          currentTime,
+			UpdatedAt:          currentTime,
 		}
 
 		if err := newUserLLM.Insert(ctx, s.DB); err != nil {
@@ -271,8 +273,10 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, 1)
 	if err == nil && userLLM != nil {
 		llmKeys = append(llmKeys, &g.LLMKeyInfo{
-			LlmProvider: int32(userLLM.LlmProvider),
-			Key:         userLLM.Key,
+			LlmProvider:        int32(userLLM.LlmProvider),
+			Key:                userLLM.Key,
+			AutoSummaryDaily:   userLLM.AutoSummaryDaily,
+			AutoSummaryMonthly: userLLM.AutoSummaryMonthly,
 		})
 	}
 
@@ -408,5 +412,106 @@ func (s *UserEntry) DeleteAccount(ctx context.Context, req *g.DeleteAccountReque
 	return &g.DeleteAccountResponse{
 		Success: true,
 		Message: "accountDeleteSuccess",
+	}, nil
+}
+
+func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.UpdateAutoSummarySettingsRequest) (*g.UpdateAutoSummarySettingsResponse, error) {
+	// プロバイダーの検証
+	if req.GetLlmProvider() < 0 {
+		return &g.UpdateAutoSummarySettingsResponse{
+			Success: false,
+			Message: "invalidProvider",
+		}, nil
+	}
+
+	// コンテキストからユーザーIDを取得
+	userID, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return &g.UpdateAutoSummarySettingsResponse{
+			Success: false,
+			Message: "unauthorized",
+		}, nil
+	}
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return &g.UpdateAutoSummarySettingsResponse{
+			Success: false,
+			Message: "invalidUserId",
+		}, nil
+	}
+
+	// 既存のLLM設定を取得
+	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &g.UpdateAutoSummarySettingsResponse{
+				Success: false,
+				Message: "llmKeyNotFound",
+			}, nil
+		}
+		return &g.UpdateAutoSummarySettingsResponse{
+			Success: false,
+			Message: "updateFailed",
+		}, nil
+	}
+
+	// 自動要約設定を更新
+	userLLMDB.AutoSummaryDaily = req.GetAutoSummaryDaily()
+	userLLMDB.AutoSummaryMonthly = req.GetAutoSummaryMonthly()
+	userLLMDB.UpdatedAt = time.Now().Unix()
+
+	if err := userLLMDB.Update(ctx, s.DB); err != nil {
+		return &g.UpdateAutoSummarySettingsResponse{
+			Success: false,
+			Message: "updateFailed",
+		}, nil
+	}
+
+	return &g.UpdateAutoSummarySettingsResponse{
+		Success: true,
+		Message: "autoSummarySettingsUpdateSuccess",
+	}, nil
+}
+
+func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSummarySettingsRequest) (*g.GetAutoSummarySettingsResponse, error) {
+	// プロバイダーの検証
+	if req.GetLlmProvider() < 0 {
+		return &g.GetAutoSummarySettingsResponse{
+			AutoSummaryDaily:   false,
+			AutoSummaryMonthly: false,
+		}, nil
+	}
+
+	// コンテキストからユーザーIDを取得
+	userID, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return &g.GetAutoSummarySettingsResponse{
+			AutoSummaryDaily:   false,
+			AutoSummaryMonthly: false,
+		}, nil
+	}
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return &g.GetAutoSummarySettingsResponse{
+			AutoSummaryDaily:   false,
+			AutoSummaryMonthly: false,
+		}, nil
+	}
+
+	// LLM設定を取得
+	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
+	if err != nil {
+		// 設定が存在しない場合はデフォルト値を返す
+		return &g.GetAutoSummarySettingsResponse{
+			AutoSummaryDaily:   false,
+			AutoSummaryMonthly: false,
+		}, nil
+	}
+
+	return &g.GetAutoSummarySettingsResponse{
+		AutoSummaryDaily:   userLLMDB.AutoSummaryDaily,
+		AutoSummaryMonthly: userLLMDB.AutoSummaryMonthly,
 	}, nil
 }

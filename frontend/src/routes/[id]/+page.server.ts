@@ -3,9 +3,12 @@ import {
 	createDiaryEntry,
 	createYMD,
 	deleteDiaryEntry,
+	getDailySummary,
 	getDiaryEntry,
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
+import { unixToMilliseconds } from "$lib/utils/token-utils";
+import { getUserInfo } from "$lib/server/auth-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
@@ -39,11 +42,41 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	});
 
 	try {
-		// メインの日記を取得
-		const response = await getDiaryEntry({
-			date,
-			accessToken: authResult.accessToken,
-		});
+		// メインの日記を取得、ユーザー情報を並行して取得
+		const [response, userInfo] = await Promise.all([
+			getDiaryEntry({
+				date,
+				accessToken: authResult.accessToken,
+			}),
+			getUserInfo({ accessToken: authResult.accessToken }),
+		]);
+
+		// 要約を取得を試行（存在しない場合はnull）
+		let dailySummary = null;
+		try {
+			const summaryResponse = await getDailySummary({
+				date,
+				accessToken: authResult.accessToken,
+			});
+
+			if (summaryResponse.summary) {
+				dailySummary = {
+					id: summaryResponse.summary.id,
+					diaryId: summaryResponse.summary.diaryId,
+					date: {
+						year: summaryResponse.summary.date?.year || 0,
+						month: summaryResponse.summary.date?.month || 0,
+						day: summaryResponse.summary.date?.day || 0,
+					},
+					summary: summaryResponse.summary.summary,
+					createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
+					updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
+				};
+			}
+		} catch (_summaryErr) {
+			// 要約が見つからない場合は無視
+			dailySummary = null;
+		}
 
 		// 過去の日記を並行して取得
 		const pastDatesArray = [
@@ -104,10 +137,24 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			>,
 		);
 
+		const today = new Date();
+		const todayYMD = {
+			year: today.getFullYear(),
+			month: today.getMonth() + 1,
+			day: today.getDate(),
+		};
+
 		return {
 			entry: response.entry || null,
 			date,
 			pastEntries: pastEntriesObject,
+			user: {
+				name: userInfo.name,
+				email: userInfo.email,
+				llmKeys: userInfo.llmKeys || [],
+			},
+			dailySummary,
+			today: todayYMD,
 		};
 	} catch (err) {
 		if (err instanceof Response) {
@@ -116,6 +163,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 		// Handle gRPC NOT_FOUND error (code 2) - this is normal when no diary entry exists
 		if (err && typeof err === "object" && "code" in err && err.code === 2) {
+			// ユーザー情報を取得
+			const userInfo = await getUserInfo({
+				accessToken: authResult.accessToken,
+			});
+
 			// 過去の日記も取得（エラーでもnullを返す）
 			const pastDatesArray = [
 				pastDates.oneWeekAgo,
@@ -174,10 +226,24 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 				>,
 			);
 
+			const today = new Date();
+			const todayYMD = {
+				year: today.getFullYear(),
+				month: today.getMonth() + 1,
+				day: today.getDate(),
+			};
+
 			return {
 				entry: null,
 				date,
 				pastEntries: pastEntriesObject,
+				user: {
+					name: userInfo.name,
+					email: userInfo.email,
+					llmKeys: userInfo.llmKeys || [],
+				},
+				dailySummary: null,
+				today: todayYMD,
 			};
 		}
 

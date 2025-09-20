@@ -232,9 +232,10 @@ function getLatestEntryUpdate(): number {
 	let latestUpdate = 0;
 	for (const entry of entries.entries) {
 		if (entry.updatedAt) {
-			const updatedAtNumber = Number(entry.updatedAt);
-			if (updatedAtNumber > latestUpdate) {
-				latestUpdate = updatedAtNumber;
+			// 日記エントリは秒単位なのでミリ秒に変換
+			const updatedAtMs = Number(entry.updatedAt) * 1000;
+			if (updatedAtMs > latestUpdate) {
+				latestUpdate = updatedAtMs;
 			}
 		}
 	}
@@ -249,8 +250,8 @@ function checkForNewerEntries() {
 		return;
 	}
 
-	const latestEntryTime = getLatestEntryUpdate();
-	const summaryTime = summary.updatedAt;
+	const latestEntryTime = getLatestEntryUpdate(); // 既にミリ秒変換済み
+	const summaryTime = Number(summary.updatedAt); // 既にミリ秒
 
 	// サマリー更新後にエントリが追加/更新されているかチェック
 	hasNewerEntries = latestEntryTime > summaryTime;
@@ -458,7 +459,7 @@ $: _weekDays = (() => {
 		<div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
 			<div class="p-6">
 				<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-					{$_("monthly.summary.title")} - {_formatMonth(currentYear, currentMonth)}
+					{$_("diary.summary.label")}
 				</h2>
 				<div class="prose dark:prose-invert max-w-none">
 					<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
@@ -474,11 +475,11 @@ $: _weekDays = (() => {
 				{/if}
 				<div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
 					<span>
-						{$_("common.createdAt")}: {new Date(summary.createdAt * 1000).toLocaleDateString()}
+						{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleDateString()}
 					</span>
 					{#if summary.updatedAt !== summary.createdAt}
 						<span>
-							{$_("common.updatedAt")}: {new Date(summary.updatedAt * 1000).toLocaleDateString()}
+							{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleDateString()}
 						</span>
 					{/if}
 				</div>

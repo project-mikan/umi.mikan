@@ -6,6 +6,7 @@ import {
 	getUserInfo,
 	deleteLLMKey,
 	deleteAccount,
+	updateAutoSummarySettings,
 } from "$lib/server/auth-api";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -42,11 +43,11 @@ export const actions: Actions = {
 		const newName = data.get("username") as string;
 
 		if (!newName || newName.trim() === "") {
-			return fail(400, { error: "nameRequired" });
+			return fail(400, { error: "nameRequired", action: "updateUsername" });
 		}
 
 		if (newName.length > 20) {
-			return fail(400, { error: "nameTooLong" });
+			return fail(400, { error: "nameTooLong", action: "updateUsername" });
 		}
 
 		try {
@@ -56,20 +57,24 @@ export const actions: Actions = {
 			});
 
 			if (!response.success) {
-				return fail(400, { error: response.message });
+				return fail(400, { error: response.message, action: "updateUsername" });
 			}
 
-			return { success: true, message: response.message };
+			return {
+				success: true,
+				message: response.message,
+				action: "updateUsername",
+			};
 		} catch (error) {
 			console.error("Update username error:", error);
-			return fail(500, { error: "updateFailed" });
+			return fail(500, { error: "updateFailed", action: "updateUsername" });
 		}
 	},
 
 	changePassword: async ({ request, cookies }) => {
 		const accessToken = cookies.get("accessToken");
 		if (!accessToken) {
-			return fail(401, { error: "unauthorized" });
+			return fail(401, { error: "unauthorized", action: "changePassword" });
 		}
 
 		const data = await request.formData();
@@ -78,15 +83,21 @@ export const actions: Actions = {
 		const confirmPassword = data.get("confirmPassword") as string;
 
 		if (!currentPassword || !newPassword || !confirmPassword) {
-			return fail(400, { error: "passwordsRequired" });
+			return fail(400, {
+				error: "passwordsRequired",
+				action: "changePassword",
+			});
 		}
 
 		if (newPassword !== confirmPassword) {
-			return fail(400, { error: "passwordsDoNotMatch" });
+			return fail(400, {
+				error: "passwordsDoNotMatch",
+				action: "changePassword",
+			});
 		}
 
 		if (newPassword.length < 8) {
-			return fail(400, { error: "passwordTooShort" });
+			return fail(400, { error: "passwordTooShort", action: "changePassword" });
 		}
 
 		try {
@@ -97,20 +108,24 @@ export const actions: Actions = {
 			});
 
 			if (!response.success) {
-				return fail(400, { error: response.message });
+				return fail(400, { error: response.message, action: "changePassword" });
 			}
 
-			return { success: true, message: response.message };
+			return {
+				success: true,
+				message: response.message,
+				action: "changePassword",
+			};
 		} catch (error) {
 			console.error("Change password error:", error);
-			return fail(500, { error: "updateFailed" });
+			return fail(500, { error: "updateFailed", action: "changePassword" });
 		}
 	},
 
 	updateLLMKey: async ({ request, cookies }) => {
 		const accessToken = cookies.get("accessToken");
 		if (!accessToken) {
-			return fail(401, { error: "unauthorized" });
+			return fail(401, { error: "unauthorized", action: "updateLLMKey" });
 		}
 
 		const data = await request.formData();
@@ -118,15 +133,15 @@ export const actions: Actions = {
 		const key = data.get("llmKey") as string;
 
 		if (Number.isNaN(llmProvider) || llmProvider < 0) {
-			return fail(400, { error: "invalidProvider" });
+			return fail(400, { error: "invalidProvider", action: "updateLLMKey" });
 		}
 
 		if (!key || key.trim() === "") {
-			return fail(400, { error: "tokenRequired" });
+			return fail(400, { error: "tokenRequired", action: "updateLLMKey" });
 		}
 
 		if (key.length > 100) {
-			return fail(400, { error: "tokenTooLong" });
+			return fail(400, { error: "tokenTooLong", action: "updateLLMKey" });
 		}
 
 		try {
@@ -137,27 +152,31 @@ export const actions: Actions = {
 			});
 
 			if (!response.success) {
-				return fail(400, { error: response.message });
+				return fail(400, { error: response.message, action: "updateLLMKey" });
 			}
 
-			return { success: true, message: response.message };
+			return {
+				success: true,
+				message: response.message,
+				action: "updateLLMKey",
+			};
 		} catch (error) {
 			console.error("Update LLM token error:", error);
-			return fail(500, { error: "updateFailed" });
+			return fail(500, { error: "updateFailed", action: "updateLLMKey" });
 		}
 	},
 
 	deleteLLMKey: async ({ request, cookies }) => {
 		const accessToken = cookies.get("accessToken");
 		if (!accessToken) {
-			return fail(401, { error: "unauthorized" });
+			return fail(401, { error: "unauthorized", action: "deleteLLMKey" });
 		}
 
 		const data = await request.formData();
 		const llmProvider = parseInt(data.get("llmProvider") as string, 10);
 
 		if (Number.isNaN(llmProvider) || llmProvider < 0) {
-			return fail(400, { error: "invalidProvider" });
+			return fail(400, { error: "invalidProvider", action: "deleteLLMKey" });
 		}
 
 		try {
@@ -167,20 +186,24 @@ export const actions: Actions = {
 			});
 
 			if (!response.success) {
-				return fail(400, { error: response.message });
+				return fail(400, { error: response.message, action: "deleteLLMKey" });
 			}
 
-			return { success: true, message: response.message };
+			return {
+				success: true,
+				message: response.message,
+				action: "deleteLLMKey",
+			};
 		} catch (error) {
 			console.error("Delete LLM token error:", error);
-			return fail(500, { error: "updateFailed" });
+			return fail(500, { error: "updateFailed", action: "deleteLLMKey" });
 		}
 	},
 
 	deleteAccount: async ({ cookies }) => {
 		const accessToken = cookies.get("accessToken");
 		if (!accessToken) {
-			return fail(401, { error: "unauthorized" });
+			return fail(401, { error: "unauthorized", action: "deleteAccount" });
 		}
 
 		try {
@@ -189,7 +212,7 @@ export const actions: Actions = {
 			});
 
 			if (!response.success) {
-				return fail(400, { error: response.message });
+				return fail(400, { error: response.message, action: "deleteAccount" });
 			}
 
 			// Clear cookies after successful account deletion
@@ -222,7 +245,65 @@ export const actions: Actions = {
 				throw error;
 			}
 			console.error("Delete account error:", error);
-			return fail(500, { error: "updateFailed" });
+			return fail(500, { error: "updateFailed", action: "deleteAccount" });
+		}
+	},
+
+	updateAutoSummarySettings: async ({ request, cookies }) => {
+		const accessToken = cookies.get("accessToken");
+		if (!accessToken) {
+			return fail(401, {
+				error: "unauthorized",
+				action: "updateAutoSummarySettings",
+			});
+		}
+
+		const data = await request.formData();
+		const llmProvider = parseInt(data.get("llmProvider") as string, 10);
+		const autoSummaryDaily = data.get("autoSummaryDaily") === "on";
+		const autoSummaryMonthly = data.get("autoSummaryMonthly") === "on";
+
+		if (Number.isNaN(llmProvider) || llmProvider < 0) {
+			return fail(400, {
+				error: "invalidProvider",
+				action: "updateAutoSummarySettings",
+			});
+		}
+
+		try {
+			const response = await updateAutoSummarySettings({
+				llmProvider,
+				autoSummaryDaily,
+				autoSummaryMonthly,
+				accessToken,
+			});
+
+			if (!response.success) {
+				return fail(400, {
+					error: response.message,
+					action: "updateAutoSummarySettings",
+				});
+			}
+
+			// Get updated user info to refresh the form state
+			const userInfo = await getUserInfo({ accessToken });
+
+			return {
+				success: true,
+				message: response.message,
+				action: "updateAutoSummarySettings",
+				user: {
+					name: userInfo.name,
+					email: userInfo.email,
+					llmKeys: userInfo.llmKeys || [],
+				},
+			};
+		} catch (error) {
+			console.error("Update auto summary settings error:", error);
+			return fail(500, {
+				error: "updateFailed",
+				action: "updateAutoSummarySettings",
+			});
 		}
 	},
 };

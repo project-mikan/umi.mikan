@@ -36,7 +36,15 @@
 			"tokenLabel": "APIキー",
 			"tokenPlaceholder": "APIキーを入力してください",
 			"tokenHelp": "API Tokenはこちら:",
+			"freeWarning": "Google AI StudioのFree Tierは学習に利用されるため個人情報を入れないでください。プライベートな日記を使用する場合は有料APIを利用してください。",
 			"save": "トークンを保存"
+		},
+		"autoSummary": {
+			"title": "自動要約設定",
+			"description": "1000文字以上の日記に対して自動で要約を生成する設定です。",
+			"dailyLabel": "日毎の自動要約を有効にする",
+			"monthlyLabel": "月毎の自動要約を有効にする",
+			"save": "設定を保存"
 		},
 		"deleteToken": {
 			"button": "トークンを削除",
@@ -55,6 +63,7 @@
 			"passwordChangeSuccess": "パスワードを変更しました",
 			"llmTokenUpdateSuccess": "LLMトークンを保存しました",
 			"llmTokenDeleteSuccess": "LLMトークンを削除しました",
+			"autoSummarySettingsUpdateSuccess": "自動要約設定を更新しました",
 			"accountDeleteSuccess": "アカウントを削除しました",
 			"unauthorized": "認証が必要です",
 			"userNotFound": "ユーザーが見つかりません",
@@ -115,6 +124,23 @@
 		"viewDetail": "詳細を見る",
 		"viewThisMonth": "この月の日記",
 		"placeholder": "今日の出来事を書いてください...",
+		"characterCount": "{count}文字",
+		"autoSummaryEligible": "自動要約対象",
+		"generateSummary": "要約を生成",
+		"regenerateSummary": "要約を再生成",
+		"generatingSummary": "要約生成中...",
+		"regeneratingSummary": "要約再生成中...",
+		"summaryRequires1000Chars": "1000文字以上で要約が利用できます",
+		"summaryNotAvailableToday": "要約は当日は利用できません",
+		"summaryAutoEnabled": "自動要約が有効です",
+		"summaryGenerationFailed": "要約の生成に失敗しました",
+		"summary": {
+			"title": "日記の要約",
+			"label": "まとめ",
+			"view": "要約を表示",
+			"hide": "要約を非表示",
+			"outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。"
+		},
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
 		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
@@ -200,7 +226,7 @@
 			"error": "サマリーの生成に失敗しました",
 			"noEntries": "この月の日記が見つかりません",
 			"noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
-			"updateAvailable": "このサマリー生成後に日記が更新されています。サマリーを再生成することをお勧めします。"
+			"updateAvailable": "このサマリー生成後に日記が更新されています。最新のサマリーを得るには再生成してください。"
 		}
 	},
 	"timeProgress": {

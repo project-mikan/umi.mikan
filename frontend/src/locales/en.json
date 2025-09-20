@@ -36,7 +36,15 @@
 			"tokenLabel": "API Key",
 			"tokenPlaceholder": "Enter API key",
 			"tokenHelp": "Get API Token here:",
+			"freeWarning": "Google AI Studio Free Tier is used for learning purposes, so please do not enter personal information. For private diaries, please use paid APIs.",
 			"save": "Save token"
+		},
+		"autoSummary": {
+			"title": "Auto Summary Settings",
+			"description": "Automatically generate summaries for diary entries over 1000 characters.",
+			"dailyLabel": "Enable daily auto summary",
+			"monthlyLabel": "Enable monthly auto summary",
+			"save": "Save settings"
 		},
 		"deleteToken": {
 			"button": "Delete Token",
@@ -55,6 +63,7 @@
 			"passwordChangeSuccess": "Password changed successfully",
 			"llmTokenUpdateSuccess": "LLM token updated successfully",
 			"llmTokenDeleteSuccess": "LLM token deleted successfully",
+			"autoSummarySettingsUpdateSuccess": "Auto summary settings updated successfully",
 			"accountDeleteSuccess": "Account deleted successfully",
 			"unauthorized": "Authentication required",
 			"userNotFound": "User not found",
@@ -115,6 +124,23 @@
 		"viewDetail": "View details",
 		"viewThisMonth": "This month's diary",
 		"placeholder": "Write about today's events...",
+		"characterCount": "{count} characters",
+		"autoSummaryEligible": "Auto-summary eligible",
+		"generateSummary": "Generate Summary",
+		"regenerateSummary": "Regenerate Summary",
+		"generatingSummary": "Generating Summary...",
+		"regeneratingSummary": "Regenerating Summary...",
+		"summaryRequires1000Chars": "Summary available for 1000+ characters",
+		"summaryNotAvailableToday": "Summary not available for today's entries",
+		"summaryAutoEnabled": "Auto-summary is enabled",
+		"summaryGenerationFailed": "Summary generation failed",
+		"summary": {
+			"title": "Diary Summary",
+			"label": "Summary",
+			"view": "View Summary",
+			"hide": "Hide Summary",
+			"outdatedWarning": "The diary has been updated since this summary was created, so the summary may be outdated."
+		},
 		"noEntry": "'s diary is not available.",
 		"yesterdayNoEntry": "Yesterday's diary is not available.",
 		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",

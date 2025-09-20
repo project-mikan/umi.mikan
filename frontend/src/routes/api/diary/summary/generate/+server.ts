@@ -1,6 +1,7 @@
 import { error, json } from "@sveltejs/kit";
 import { createYM, generateMonthlySummary } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { unixToMilliseconds } from "$lib/utils/token-utils";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
@@ -45,8 +46,8 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 				month: summaryResponse.summary.month?.month,
 			},
 			summary: summaryResponse.summary.summary,
-			createdAt: Number(summaryResponse.summary.createdAt),
-			updatedAt: Number(summaryResponse.summary.updatedAt),
+			createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
+			updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
 		});
 	} catch (err) {
 		console.error("Failed to generate monthly summary:", err);
