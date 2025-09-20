@@ -189,6 +189,7 @@ $: if (!$isLoading && chartData && !chart) {
 
 onMount(() => {
 	// onMountでは何もしない（リアクティブ文で処理）
+	// ここで作ると翻訳データが使えずchart.dayみたいな値になるので
 });
 
 onDestroy(() => {
@@ -199,8 +200,11 @@ onDestroy(() => {
 });
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+<div
+	class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+>
 	<div class="h-64 md:h-80">
 		<canvas bind:this={chartCanvas}></canvas>
 	</div>
 </div>
+
