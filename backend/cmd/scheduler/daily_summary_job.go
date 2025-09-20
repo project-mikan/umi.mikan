@@ -38,7 +38,11 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	if err != nil {
 		return fmt.Errorf("failed to query users with auto summary enabled: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	var userIDs []string
 	for rows.Next() {
@@ -82,7 +86,11 @@ func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler
 	if err != nil {
 		return fmt.Errorf("failed to query missing summaries for user %s: %w", userID, err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	var missingDates []time.Time
 	for rows.Next() {

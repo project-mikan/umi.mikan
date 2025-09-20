@@ -39,7 +39,11 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	if err != nil {
 		return fmt.Errorf("failed to query users with auto monthly summary enabled: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	var userIDs []string
 	for rows.Next() {
@@ -90,7 +94,11 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 	if err != nil {
 		return fmt.Errorf("failed to query missing monthly summaries for user %s: %w", userID, err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	type YearMonth struct {
 		Year  int

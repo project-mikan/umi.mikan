@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -86,7 +87,7 @@ func main() {
 	log.Print("Subscriber ended")
 }
 
-func processMessage(ctx context.Context, db *database.DB, payload string) error {
+func processMessage(ctx context.Context, db *sql.DB, payload string) error {
 	// まずメッセージタイプを確認
 	var baseMessage struct {
 		Type string `json:"type"`
@@ -114,7 +115,7 @@ func processMessage(ctx context.Context, db *database.DB, payload string) error 
 	}
 }
 
-func generateDailySummary(ctx context.Context, db *database.DB, userID, dateStr string) error {
+func generateDailySummary(ctx context.Context, db *sql.DB, userID, dateStr string) error {
 	log.Printf("Generating daily summary for user %s, date %s", userID, dateStr)
 
 	// 1. 指定された日の日記内容を取得
@@ -149,7 +150,7 @@ func generateDailySummary(ctx context.Context, db *database.DB, userID, dateStr 
 	return nil
 }
 
-func generateMonthlySummary(ctx context.Context, db *database.DB, userID string, year, month int) error {
+func generateMonthlySummary(ctx context.Context, db *sql.DB, userID string, year, month int) error {
 	log.Printf("Generating monthly summary for user %s, year %d, month %d", userID, year, month)
 
 	// 1. 指定された年月の日次要約を全て取得
@@ -164,7 +165,11 @@ func generateMonthlySummary(ctx context.Context, db *database.DB, userID string,
 	if err != nil {
 		return fmt.Errorf("failed to get daily summaries: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 
 	var dailySummaries []string
 	for rows.Next() {

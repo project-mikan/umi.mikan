@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -12,7 +13,7 @@ import (
 )
 
 type Scheduler struct {
-	db     *database.DB
+	db     *sql.DB
 	redis  rueidis.Client
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -24,7 +25,7 @@ type ScheduledJob interface {
 	Execute(ctx context.Context, s *Scheduler) error
 }
 
-func NewScheduler(db *database.DB, redis rueidis.Client) *Scheduler {
+func NewScheduler(db *sql.DB, redis rueidis.Client) *Scheduler {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Scheduler{
 		db:     db,

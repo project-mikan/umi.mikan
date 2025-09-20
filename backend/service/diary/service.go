@@ -52,7 +52,6 @@ func (s *DiaryEntry) CreateDiaryEntry(
 		return nil, err
 	}
 
-
 	return &g.CreateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
 			Id:        diary.ID.String(),
@@ -215,7 +214,6 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 	if err != nil {
 		return nil, err
 	}
-
 
 	return &g.UpdateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -444,8 +442,6 @@ func (s *DiaryEntry) GetMonthlySummary(
 		},
 	}, nil
 }
-
-
 
 func (s *DiaryEntry) GenerateDailySummary(
 	ctx context.Context,
