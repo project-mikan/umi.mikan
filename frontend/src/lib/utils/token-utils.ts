@@ -1,7 +1,9 @@
 /**
  * Convert Unix timestamp (seconds) to JavaScript timestamp (milliseconds)
  */
-export function unixToMilliseconds(unixTimestamp: number | string): number {
+export function unixToMilliseconds(
+	unixTimestamp: number | string | bigint,
+): number {
 	return Number(unixTimestamp) * 1000;
 }
 

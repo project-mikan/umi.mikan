@@ -1,6 +1,6 @@
 import { error, json } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { getDailySummary } from "$lib/server/diary-api";
+import { getDailySummary, createYMD } from "$lib/server/diary-api";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
@@ -31,11 +31,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 
 	try {
 		const response = await getDailySummary({
-			date: {
-				year: yearNum,
-				month: monthNum,
-				day: dayNum,
-			},
+			date: createYMD(yearNum, monthNum, dayNum),
 			accessToken: authResult.accessToken,
 		});
 
