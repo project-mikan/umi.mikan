@@ -6,7 +6,7 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	ssr: {
 		noExternal: [],
-		external: ["chart.js"]
+		external: ["chart.js"],
 	},
 	test: {
 		include: ["src/**/*.{test,spec}.{js,ts}"],
