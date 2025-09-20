@@ -81,6 +81,28 @@ services:
     networks:
       - internal
 
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: ../infra/prod/scheduler/Dockerfile
+    environment:
+      TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: prod-pass
+      DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - internal
+
   # Development tools service for running database migrations and other dev tasks
   dev-tools:
     build:

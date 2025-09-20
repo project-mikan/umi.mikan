@@ -93,6 +93,26 @@ services:
     depends_on:
       - redis
 
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: ../infra/dev/scheduler/Dockerfile
+    volumes:
+      - ./backend:/backend
+    environment:
+      TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: dev-pass
+      DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    tty: true
+    depends_on:
+      - postgres
+      - redis
+
 volumes:
   postgres_volume:
   postgres_test_volume:
