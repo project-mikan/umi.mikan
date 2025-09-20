@@ -262,31 +262,11 @@ $: if (entries || summary) {
 	checkForNewerEntries();
 }
 
-// ローカルストレージのキーを生成
-function getSummaryStorageKey(): string {
-	return `summary-show-${currentYear}-${currentMonth}`;
-}
-
 // ページロード時の初期化処理
 onMount(async () => {
 	// 既存のサマリーがあるかチェック
 	await fetchMonthlySummary();
-
-	// サマリーが存在する場合のみ、前回の表示状態を復元
-	if (summary) {
-		const storageKey = getSummaryStorageKey();
-		const storedShowState = localStorage.getItem(storageKey);
-		if (storedShowState === "true") {
-			showSummary = true;
-		}
-	}
 });
-
-// showSummaryの状態をローカルストレージに保存
-$: if (browser && typeof window !== "undefined" && summary) {
-	const storageKey = getSummaryStorageKey();
-	localStorage.setItem(storageKey, showSummary.toString());
-}
 
 // 月が変わったときにサマリーをリセット
 let previousYear = currentYear;
@@ -304,16 +284,7 @@ $: if (currentYear !== previousYear || currentMonth !== previousMonth) {
 
 	// 新しい月のサマリーを取得（onMountで既に呼ばれている場合を除く）
 	if (browser && (previousYear !== data.year || previousMonth !== data.month)) {
-		fetchMonthlySummary().then(() => {
-			// サマリーが存在する場合、前回の表示状態を復元
-			if (summary) {
-				const storageKey = getSummaryStorageKey();
-				const storedShowState = localStorage.getItem(storageKey);
-				if (storedShowState === "true") {
-					showSummary = true;
-				}
-			}
-		});
+		fetchMonthlySummary();
 	}
 }
 
