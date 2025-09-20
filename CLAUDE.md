@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS.
+**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS. The system includes automated AI summary generation via Redis Pub/Sub and scheduled background processing.
 
 ## Development Setup
 
@@ -20,7 +20,7 @@ npm install -g @grpc/proto-loader
 ### Starting Development Environment
 
 ```bash
-dc up -d  # Starts all services (backend, frontend, postgres)
+dc up -d  # Starts all services (backend, frontend, postgres, redis, scheduler, subscriber)
 ```
 
 **Service URLs:**
@@ -28,6 +28,7 @@ dc up -d  # Starts all services (backend, frontend, postgres)
 - Backend gRPC: http://localhost:8080
 - Frontend: http://localhost:5173
 - PostgreSQL: localhost:5432
+- Redis: localhost:6379
 
 ## Common Development Commands
 
@@ -74,6 +75,22 @@ When you change the backend, make sure that
 
 are OK.
 
+### Async Processing Services
+
+```bash
+# Scheduler service (periodic task execution)
+docker compose logs scheduler        # View scheduler logs
+docker compose exec scheduler sh     # Access scheduler container
+
+# Subscriber service (async message processing)
+docker compose logs subscriber       # View subscriber logs
+docker compose exec subscriber sh    # Access subscriber container
+
+# Redis (message queue)
+docker compose logs redis            # View Redis logs
+docker compose exec redis redis-cli  # Access Redis CLI
+```
+
 ### Database Operations
 
 ```bash
@@ -109,6 +126,7 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - **JWT Authentication**: 15-minute access tokens, 30-day refresh tokens
 - **Database**: PostgreSQL with xo-generated models
 - **Hot Reload**: Air tool for automatic backend reloading
+- **Async Processing**: Scheduler and Subscriber services with Redis Pub/Sub
 
 ### Frontend Structure
 
@@ -123,7 +141,31 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - **users**: UUID primary keys, email-based authentication
 - **diaries**: One diary per user per date (unique constraint)
 - **user_password_authes**: Separate password authentication table
+- **user_llms**: LLM provider settings and auto-summary preferences
+- **diary_summary_days**: AI-generated daily summaries
+- **diary_summary_months**: AI-generated monthly summaries
 - **Migrations**: Numbered SQL files in /schema directory
+
+### Async Processing Architecture
+
+```
+Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Database
+```
+
+- **Scheduler**: `backend/cmd/scheduler` - Periodic task execution
+  - Identifies users with auto-summary enabled
+  - Queues summary generation tasks (excluding today/current month)
+  - Uses generic `ScheduledJob` interface for extensibility
+
+- **Redis Pub/Sub**: Message queue with `diary_events` channel
+  - JSON message format with type-based routing
+  - Message types: `daily_summary`, `monthly_summary`
+  - Uses rueidis client for high performance
+
+- **Subscriber**: `backend/cmd/subscriber` - Async message processor
+  - Consumes messages from Redis queue
+  - Generates summaries via LLM APIs
+  - Saves results to database with conflict resolution
 
 ## Authentication Flow
 
@@ -148,8 +190,13 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - `proto/`: gRPC service definitions
 - `schema/`: Database migration files
 - `backend/cmd/server/main.go`: Backend entry point
+- `backend/cmd/scheduler/main.go`: Scheduler service entry point
+- `backend/cmd/subscriber/main.go`: Subscriber service entry point
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
 - `frontend/src/locales/`: Internationalization files (ja.json, en.json)
+- `adr/`: Architecture Decision Records
+  - `0004-pubsub.md`: Redis Pub/Sub implementation details
+  - `0005-scheduler.md`: Scheduler system architecture
 
 ## Development Guidelines
 
