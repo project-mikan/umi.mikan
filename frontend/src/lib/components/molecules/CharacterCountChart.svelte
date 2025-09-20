@@ -64,9 +64,23 @@ function updateChart() {
 	chart.data.datasets[0].data = chartData.data;
 
 	// ラベルとタイトルを更新
-	chart.options.plugins!.title!.text = $_("chart.dailyCharacterCount");
-	chart.options.scales!.x!.title!.text = $_("chart.day");
-	chart.options.scales!.y!.title!.text = $_("chart.characterCount");
+	if (chart.options.plugins?.title) {
+		chart.options.plugins.title.text = $_("chart.dailyCharacterCount");
+	}
+	if (
+		chart.options.scales?.x &&
+		"title" in chart.options.scales.x &&
+		chart.options.scales.x.title
+	) {
+		chart.options.scales.x.title.text = $_("chart.day");
+	}
+	if (
+		chart.options.scales?.y &&
+		"title" in chart.options.scales.y &&
+		chart.options.scales.y.title
+	) {
+		chart.options.scales.y.title.text = $_("chart.characterCount");
+	}
 	chart.data.datasets[0].label = $_("chart.characterCount");
 
 	chart.update();
