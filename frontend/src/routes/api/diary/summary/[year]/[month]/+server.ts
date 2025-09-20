@@ -34,8 +34,8 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 				month: summaryResponse.summary.month?.month,
 			},
 			summary: summaryResponse.summary.summary,
-			createdAt: Number(summaryResponse.summary.createdAt),
-			updatedAt: Number(summaryResponse.summary.updatedAt),
+			createdAt: Number(summaryResponse.summary.createdAt) * 1000,
+			updatedAt: Number(summaryResponse.summary.updatedAt) * 1000,
 		});
 	} catch (err) {
 		console.error("Failed to load monthly summary:", err);

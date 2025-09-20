@@ -134,7 +134,8 @@
 		"summary": {
 			"title": "日記の要約",
 			"view": "要約を表示",
-			"hide": "要約を非表示"
+			"hide": "要約を非表示",
+			"outdatedWarning": "日記が更新されているため、要約が古くなっている可能性があります。"
 		},
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",

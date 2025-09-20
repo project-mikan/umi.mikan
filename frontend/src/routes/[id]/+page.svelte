@@ -30,6 +30,7 @@ let summary: {
 	date: { year: number; month: number; day: number };
 	summary: string;
 	createdAt: number;
+	updatedAt: number;
 } | null = data.dailySummary;
 let showSummary = !!data.dailySummary;
 
@@ -50,6 +51,16 @@ $: isNotToday = (() => {
 			data.date.month === data.today.month &&
 			data.date.day < data.today.day)
 	);
+})();
+
+// Check if summary is outdated (diary updatedAt > summary updatedAt)
+$: isSummaryOutdated = (() => {
+	if (!summary || !data.entry) return false;
+
+	const diaryUpdatedAt = Number(data.entry.updatedAt);
+	const summaryUpdatedAt = summary.updatedAt;
+
+	return diaryUpdatedAt > summaryUpdatedAt;
 })();
 
 // Character count calculation
@@ -218,6 +229,22 @@ function _clearSummary() {
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 						{$_("diary.summary.title")} - {_formatDate(data.date)}
 					</h2>
+					{#if isSummaryOutdated}
+						<div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+							<div class="flex">
+								<div class="flex-shrink-0">
+									<svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+									</svg>
+								</div>
+								<div class="ml-3">
+									<p class="text-sm text-yellow-800 dark:text-yellow-200">
+										{$_("diary.summary.outdatedWarning")}
+									</p>
+								</div>
+							</div>
+						</div>
+					{/if}
 					<div class="prose dark:prose-invert max-w-none">
 						<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
 							{summary.summary}
@@ -226,6 +253,9 @@ function _clearSummary() {
 					<div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
 						<span>
 							{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleString()}
+						</span>
+						<span>
+							{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleString()}
 						</span>
 					</div>
 				</div>

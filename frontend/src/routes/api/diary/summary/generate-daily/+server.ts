@@ -64,7 +64,8 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 				day: response.summary.date?.day || 0,
 			},
 			summary: response.summary.summary,
-			createdAt: Number(response.summary.createdAt),
+			createdAt: Number(response.summary.createdAt) * 1000,
+			updatedAt: Number(response.summary.updatedAt) * 1000,
 		});
 	} catch (err) {
 		if (err instanceof Response) {

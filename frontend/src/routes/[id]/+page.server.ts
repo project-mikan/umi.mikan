@@ -68,7 +68,8 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 						day: summaryResponse.summary.date?.day || 0,
 					},
 					summary: summaryResponse.summary.summary,
-					createdAt: Number(summaryResponse.summary.createdAt),
+					createdAt: Number(summaryResponse.summary.createdAt) * 1000,
+					updatedAt: Number(summaryResponse.summary.updatedAt) * 1000,
 				};
 			}
 		} catch (_summaryErr) {

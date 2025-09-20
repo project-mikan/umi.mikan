@@ -456,6 +456,13 @@ func (s *DiaryEntry) tryGenerateAutoSummary(ctx context.Context, userID uuid.UUI
 		return
 	}
 
+	// 日記が当日のものでないことを確認（過去の日記のみ要約生成）
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	diaryDate := date.UTC().Truncate(24 * time.Hour)
+	if !diaryDate.Before(today) {
+		return
+	}
+
 	// ユーザーの自動要約設定を取得（Gemini API使用）
 	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
 	if err != nil {
