@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_user_user: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		"Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8iLwoKTExNS2V5SW5mbxIUCgxsbG1fcHJvdmlkZXIYASABKAUSCwoDa2V5GAIgASgJIisKE0RlbGV0ZUxMTUtleVJlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIjgKFERlbGV0ZUxMTUtleVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIWChREZWxldGVBY2NvdW50UmVxdWVzdCI5ChVEZWxldGVBY2NvdW50UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJMsMDCgtVc2VyU2VydmljZRJLCg5VcGRhdGVVc2VyTmFtZRIbLnVzZXIuVXBkYXRlVXNlck5hbWVSZXF1ZXN0GhwudXNlci5VcGRhdGVVc2VyTmFtZVJlc3BvbnNlEksKDkNoYW5nZVBhc3N3b3JkEhsudXNlci5DaGFuZ2VQYXNzd29yZFJlcXVlc3QaHC51c2VyLkNoYW5nZVBhc3N3b3JkUmVzcG9uc2USRQoMVXBkYXRlTExNS2V5EhkudXNlci5VcGRhdGVMTE1LZXlSZXF1ZXN0GhoudXNlci5VcGRhdGVMTE1LZXlSZXNwb25zZRJCCgtHZXRVc2VySW5mbxIYLnVzZXIuR2V0VXNlckluZm9SZXF1ZXN0GhkudXNlci5HZXRVc2VySW5mb1Jlc3BvbnNlEkUKDERlbGV0ZUxMTUtleRIZLnVzZXIuRGVsZXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuRGVsZXRlTExNS2V5UmVzcG9uc2USSAoNRGVsZXRlQWNjb3VudBIaLnVzZXIuRGVsZXRlQWNjb3VudFJlcXVlc3QaGy51c2VyLkRlbGV0ZUFjY291bnRSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
+		"Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8iaQoKTExNS2V5SW5mbxIUCgxsbG1fcHJvdmlkZXIYASABKAUSCwoDa2V5GAIgASgJEhoKEmF1dG9fc3VtbWFyeV9kYWlseRgDIAEoCBIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgEIAEoCCIrChNEZWxldGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSI4ChREZWxldGVMTE1LZXlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiFgoURGVsZXRlQWNjb3VudFJlcXVlc3QiOQoVRGVsZXRlQWNjb3VudFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSJyCiBVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUSGgoSYXV0b19zdW1tYXJ5X2RhaWx5GAIgASgIEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAMgASgIIkUKIVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiNQodR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIloKHkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIaChJhdXRvX3N1bW1hcnlfZGFpbHkYASABKAgSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAiABKAgylgUKC1VzZXJTZXJ2aWNlEksKDlVwZGF0ZVVzZXJOYW1lEhsudXNlci5VcGRhdGVVc2VyTmFtZVJlcXVlc3QaHC51c2VyLlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USSwoOQ2hhbmdlUGFzc3dvcmQSGy51c2VyLkNoYW5nZVBhc3N3b3JkUmVxdWVzdBocLnVzZXIuQ2hhbmdlUGFzc3dvcmRSZXNwb25zZRJFCgxVcGRhdGVMTE1LZXkSGS51c2VyLlVwZGF0ZUxMTUtleVJlcXVlc3QaGi51c2VyLlVwZGF0ZUxMTUtleVJlc3BvbnNlEkIKC0dldFVzZXJJbmZvEhgudXNlci5HZXRVc2VySW5mb1JlcXVlc3QaGS51c2VyLkdldFVzZXJJbmZvUmVzcG9uc2USRQoMRGVsZXRlTExNS2V5EhkudXNlci5EZWxldGVMTE1LZXlSZXF1ZXN0GhoudXNlci5EZWxldGVMTE1LZXlSZXNwb25zZRJICg1EZWxldGVBY2NvdW50EhoudXNlci5EZWxldGVBY2NvdW50UmVxdWVzdBobLnVzZXIuRGVsZXRlQWNjb3VudFJlc3BvbnNlEmwKGVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3MSJi51c2VyLlVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GicudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USYwoWR2V0QXV0b1N1bW1hcnlTZXR0aW5ncxIjLnVzZXIuR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QaJC51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
 	);
 
 /**
@@ -236,6 +236,20 @@ export type LLMKeyInfo = Message<"user.LLMKeyInfo"> & {
 	 * @generated from field: string key = 2;
 	 */
 	key: string;
+
+	/**
+	 * 日毎の自動要約生成
+	 *
+	 * @generated from field: bool auto_summary_daily = 3;
+	 */
+	autoSummaryDaily: boolean;
+
+	/**
+	 * 月毎の自動要約生成
+	 *
+	 * @generated from field: bool auto_summary_monthly = 4;
+	 */
+	autoSummaryMonthly: boolean;
 };
 
 /**
@@ -336,6 +350,122 @@ export const DeleteAccountResponseSchema: GenMessage<DeleteAccountResponse> =
 	messageDesc(file_user_user, 12);
 
 /**
+ * 自動要約設定更新用のリクエスト
+ *
+ * @generated from message user.UpdateAutoSummarySettingsRequest
+ */
+export type UpdateAutoSummarySettingsRequest =
+	Message<"user.UpdateAutoSummarySettingsRequest"> & {
+		/**
+		 * 1:Gemini
+		 *
+		 * @generated from field: int32 llm_provider = 1;
+		 */
+		llmProvider: number;
+
+		/**
+		 * 日毎の自動要約生成
+		 *
+		 * @generated from field: bool auto_summary_daily = 2;
+		 */
+		autoSummaryDaily: boolean;
+
+		/**
+		 * 月毎の自動要約生成
+		 *
+		 * @generated from field: bool auto_summary_monthly = 3;
+		 */
+		autoSummaryMonthly: boolean;
+	};
+
+/**
+ * Describes the message user.UpdateAutoSummarySettingsRequest.
+ * Use `create(UpdateAutoSummarySettingsRequestSchema)` to create a new message.
+ */
+export const UpdateAutoSummarySettingsRequestSchema: GenMessage<UpdateAutoSummarySettingsRequest> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 13);
+
+/**
+ * 自動要約設定更新用のレスポンス
+ *
+ * @generated from message user.UpdateAutoSummarySettingsResponse
+ */
+export type UpdateAutoSummarySettingsResponse =
+	Message<"user.UpdateAutoSummarySettingsResponse"> & {
+		/**
+		 * @generated from field: bool success = 1;
+		 */
+		success: boolean;
+
+		/**
+		 * @generated from field: string message = 2;
+		 */
+		message: string;
+	};
+
+/**
+ * Describes the message user.UpdateAutoSummarySettingsResponse.
+ * Use `create(UpdateAutoSummarySettingsResponseSchema)` to create a new message.
+ */
+export const UpdateAutoSummarySettingsResponseSchema: GenMessage<UpdateAutoSummarySettingsResponse> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 14);
+
+/**
+ * 自動要約設定取得用のリクエスト
+ *
+ * @generated from message user.GetAutoSummarySettingsRequest
+ */
+export type GetAutoSummarySettingsRequest =
+	Message<"user.GetAutoSummarySettingsRequest"> & {
+		/**
+		 * 1:Gemini
+		 *
+		 * @generated from field: int32 llm_provider = 1;
+		 */
+		llmProvider: number;
+	};
+
+/**
+ * Describes the message user.GetAutoSummarySettingsRequest.
+ * Use `create(GetAutoSummarySettingsRequestSchema)` to create a new message.
+ */
+export const GetAutoSummarySettingsRequestSchema: GenMessage<GetAutoSummarySettingsRequest> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 15);
+
+/**
+ * 自動要約設定取得用のレスポンス
+ *
+ * @generated from message user.GetAutoSummarySettingsResponse
+ */
+export type GetAutoSummarySettingsResponse =
+	Message<"user.GetAutoSummarySettingsResponse"> & {
+		/**
+		 * 日毎の自動要約生成
+		 *
+		 * @generated from field: bool auto_summary_daily = 1;
+		 */
+		autoSummaryDaily: boolean;
+
+		/**
+		 * 月毎の自動要約生成
+		 *
+		 * @generated from field: bool auto_summary_monthly = 2;
+		 */
+		autoSummaryMonthly: boolean;
+	};
+
+/**
+ * Describes the message user.GetAutoSummarySettingsResponse.
+ * Use `create(GetAutoSummarySettingsResponseSchema)` to create a new message.
+ */
+export const GetAutoSummarySettingsResponseSchema: GenMessage<GetAutoSummarySettingsResponse> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 16);
+
+/**
  * @generated from service user.UserService
  */
 export const UserService: GenService<{
@@ -398,5 +528,25 @@ export const UserService: GenService<{
 		methodKind: "unary";
 		input: typeof DeleteAccountRequestSchema;
 		output: typeof DeleteAccountResponseSchema;
+	};
+	/**
+	 * 自動要約設定更新
+	 *
+	 * @generated from rpc user.UserService.UpdateAutoSummarySettings
+	 */
+	updateAutoSummarySettings: {
+		methodKind: "unary";
+		input: typeof UpdateAutoSummarySettingsRequestSchema;
+		output: typeof UpdateAutoSummarySettingsResponseSchema;
+	};
+	/**
+	 * 自動要約設定取得
+	 *
+	 * @generated from rpc user.UserService.GetAutoSummarySettings
+	 */
+	getAutoSummarySettings: {
+		methodKind: "unary";
+		input: typeof GetAutoSummarySettingsRequestSchema;
+		output: typeof GetAutoSummarySettingsResponseSchema;
 	};
 }> = /*@__PURE__*/ serviceDesc(file_user_user, 0);

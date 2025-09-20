@@ -6,6 +6,7 @@ import {
 	getUserInfo,
 	deleteLLMKey,
 	deleteAccount,
+	updateAutoSummarySettings,
 } from "$lib/server/auth-api";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -222,6 +223,51 @@ export const actions: Actions = {
 				throw error;
 			}
 			console.error("Delete account error:", error);
+			return fail(500, { error: "updateFailed" });
+		}
+	},
+
+	updateAutoSummarySettings: async ({ request, cookies }) => {
+		const accessToken = cookies.get("accessToken");
+		if (!accessToken) {
+			return fail(401, { error: "unauthorized" });
+		}
+
+		const data = await request.formData();
+		const llmProvider = parseInt(data.get("llmProvider") as string, 10);
+		const autoSummaryDaily = data.get("autoSummaryDaily") === "on";
+		const autoSummaryMonthly = data.get("autoSummaryMonthly") === "on";
+
+		if (Number.isNaN(llmProvider) || llmProvider < 0) {
+			return fail(400, { error: "invalidProvider" });
+		}
+
+		try {
+			const response = await updateAutoSummarySettings({
+				llmProvider,
+				autoSummaryDaily,
+				autoSummaryMonthly,
+				accessToken,
+			});
+
+			if (!response.success) {
+				return fail(400, { error: response.message });
+			}
+
+			// Get updated user info to refresh the form state
+			const userInfo = await getUserInfo({ accessToken });
+
+			return {
+				success: true,
+				message: response.message,
+				user: {
+					name: userInfo.name,
+					email: userInfo.email,
+					llmKeys: userInfo.llmKeys || [],
+				},
+			};
+		} catch (error) {
+			console.error("Update auto summary settings error:", error);
 			return fail(500, { error: "updateFailed" });
 		}
 	},

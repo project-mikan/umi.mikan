@@ -11,6 +11,7 @@ export let data: PageData;
 let usernameLoading = false;
 let passwordLoading = false;
 let llmTokenLoading = false;
+let autoSummaryLoading = false;
 let deleteLLMKeyLoading = false;
 let deleteAccountLoading = false;
 
@@ -24,8 +25,20 @@ let showNewPassword = false;
 let showConfirmPassword = false;
 
 // Get existing LLM key for Gemini (provider 1)
-$: existingLLMToken =
-	data.user?.llmKeys?.find((key) => key.llmProvider === 1)?.key || "";
+$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
+$: existingLLMToken = existingLLMKey?.key || "";
+
+// Local state for checkbox values
+let autoSummaryDaily = false;
+let autoSummaryMonthly = false;
+
+// Update local state when data changes
+$: {
+	if (existingLLMKey) {
+		autoSummaryDaily = existingLLMKey.autoSummaryDaily || false;
+		autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
+	}
+}
 
 // Modal helper functions
 function confirmDeleteLLMToken() {
@@ -332,6 +345,70 @@ function handleDeleteAccount() {
 				</div>
 			{/if}
 		</section>
+
+		<!-- 自動要約設定セクション -->
+		{#if existingLLMToken}
+			<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+				<h2 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h2>
+				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+					{$_("settings.autoSummary.description")}
+				</p>
+				<form
+					method="POST"
+					action="?/updateAutoSummarySettings"
+					class="space-y-4"
+					use:enhance={() => {
+						autoSummaryLoading = true;
+						return async ({ result, update }) => {
+							autoSummaryLoading = false;
+							// If the action returned updated user data, use it
+							if (result.type === 'success' && result.data?.user) {
+								data = { ...data, user: result.data.user as typeof data.user };
+							}
+							await update({ reset: false });
+						};
+					}}
+				>
+					<input type="hidden" name="llmProvider" value="1" />
+
+					<div class="space-y-3">
+						<label class="flex items-center">
+							<input
+								type="checkbox"
+								name="autoSummaryDaily"
+								bind:checked={autoSummaryDaily}
+								disabled={autoSummaryLoading}
+								class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:bg-gray-100"
+							/>
+							<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+								{$_("settings.autoSummary.dailyLabel")}
+							</span>
+						</label>
+
+						<label class="flex items-center">
+							<input
+								type="checkbox"
+								name="autoSummaryMonthly"
+								bind:checked={autoSummaryMonthly}
+								disabled={autoSummaryLoading}
+								class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:bg-gray-100"
+							/>
+							<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+								{$_("settings.autoSummary.monthlyLabel")}
+							</span>
+						</label>
+					</div>
+
+					<button
+						type="submit"
+						disabled={autoSummaryLoading}
+						class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+					>
+						{autoSummaryLoading ? $_("common.loading") : $_("settings.autoSummary.save")}
+					</button>
+				</form>
+			</section>
+		{/if}
 
 		<!-- Account Deletion Section -->
 		<hr class="my-8 border-gray-300 dark:border-gray-600" />

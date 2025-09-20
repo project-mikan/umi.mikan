@@ -38,6 +38,13 @@
 			"tokenHelp": "Get API Token here:",
 			"save": "Save token"
 		},
+		"autoSummary": {
+			"title": "Auto Summary Settings",
+			"description": "Automatically generate summaries for diary entries over 1000 characters.",
+			"dailyLabel": "Enable daily auto summary",
+			"monthlyLabel": "Enable monthly auto summary",
+			"save": "Save settings"
+		},
 		"deleteToken": {
 			"button": "Delete Token",
 			"confirm": "Delete LLM Token",
@@ -55,6 +62,7 @@
 			"passwordChangeSuccess": "Password changed successfully",
 			"llmTokenUpdateSuccess": "LLM token updated successfully",
 			"llmTokenDeleteSuccess": "LLM token deleted successfully",
+			"autoSummarySettingsUpdateSuccess": "Auto summary settings updated successfully",
 			"accountDeleteSuccess": "Account deleted successfully",
 			"unauthorized": "Authentication required",
 			"userNotFound": "User not found",

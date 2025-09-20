@@ -51,6 +51,9 @@ func (s *DiaryEntry) CreateDiaryEntry(
 		return nil, err
 	}
 
+	// 自動要約生成のチェック（非同期で実行）
+	go s.tryGenerateAutoSummary(context.Background(), userID, date, message.Content)
+
 	return &g.CreateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
 			Id:        diary.ID.String(),
@@ -213,6 +216,9 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 	if err != nil {
 		return nil, err
 	}
+
+	// 自動要約生成のチェック（非同期で実行）
+	go s.tryGenerateAutoSummary(context.Background(), userID, diary.Date, message.Content)
 
 	return &g.UpdateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -440,4 +446,99 @@ func (s *DiaryEntry) GetMonthlySummary(
 			UpdatedAt: summary.UpdatedAt,
 		},
 	}, nil
+}
+
+// tryGenerateAutoSummary は1000文字以上の日記に対して自動要約を生成する
+func (s *DiaryEntry) tryGenerateAutoSummary(ctx context.Context, userID uuid.UUID, date time.Time, content string) {
+	// 1000文字未満の場合は要約を生成しない
+	if len([]rune(content)) < 1000 {
+		return
+	}
+
+	// ユーザーの自動要約設定を取得（Gemini API使用）
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
+	if err != nil {
+		// LLMキーが設定されていない場合は何もしない
+		return
+	}
+
+	// 日毎の自動要約が無効の場合は何もしない
+	if !userLLM.AutoSummaryDaily {
+		return
+	}
+
+	// 既に要約が存在するかチェック
+	_, err = database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, date)
+	if err == nil {
+		// 既に要約が存在する場合は再生成
+		s.regenerateDailySummary(ctx, userID, date, content, userLLM.Key)
+		return
+	}
+
+	// 新規要約を生成
+	s.generateDailySummary(ctx, userID, date, content, userLLM.Key)
+}
+
+// generateDailySummary は新規の日記要約を生成する
+func (s *DiaryEntry) generateDailySummary(ctx context.Context, userID uuid.UUID, date time.Time, content string, apiKey string) {
+	// Geminiクライアントを作成
+	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
+	if err != nil {
+		return // エラーの場合は何もしない（ログ出力は省略）
+	}
+	defer func() {
+		_ = geminiClient.Close()
+	}()
+
+	// 要約を生成
+	summary, err := geminiClient.GenerateSummary(ctx, content)
+	if err != nil {
+		return // エラーの場合は何もしない
+	}
+
+	// データベースに保存
+	currentTime := time.Now().Unix()
+	summaryID := uuid.New()
+
+	newSummary := &database.DiarySummaryDay{
+		ID:        summaryID,
+		UserID:    userID,
+		Date:      date,
+		Summary:   summary,
+		CreatedAt: currentTime,
+		UpdatedAt: currentTime,
+	}
+
+	// 保存に失敗してもエラーを無視（非同期処理のため）
+	_ = newSummary.Insert(ctx, s.DB)
+}
+
+// regenerateDailySummary は既存の日記要約を更新する
+func (s *DiaryEntry) regenerateDailySummary(ctx context.Context, userID uuid.UUID, date time.Time, content string, apiKey string) {
+	// Geminiクライアントを作成
+	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
+	if err != nil {
+		return // エラーの場合は何もしない
+	}
+	defer func() {
+		_ = geminiClient.Close()
+	}()
+
+	// 要約を生成
+	summary, err := geminiClient.GenerateSummary(ctx, content)
+	if err != nil {
+		return // エラーの場合は何もしない
+	}
+
+	// 既存の要約を取得して更新
+	existingSummary, err := database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, date)
+	if err != nil {
+		return // 取得に失敗した場合は何もしない
+	}
+
+	existingSummary.Summary = summary
+	existingSummary.UpdatedAt = time.Now().Unix()
+
+	// 更新に失敗してもエラーを無視（非同期処理のため）
+	_ = existingSummary.Update(ctx, s.DB)
 }

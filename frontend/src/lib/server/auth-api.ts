@@ -16,12 +16,14 @@ import {
 	GetUserInfoRequestSchema,
 	DeleteLLMKeyRequestSchema,
 	DeleteAccountRequestSchema,
+	UpdateAutoSummarySettingsRequestSchema,
 	type UpdateUserNameResponse,
 	type ChangePasswordResponse,
 	type UpdateLLMKeyResponse,
 	type GetUserInfoResponse,
 	type DeleteLLMKeyResponse,
 	type DeleteAccountResponse,
+	type UpdateAutoSummarySettingsResponse,
 } from "$lib/grpc/user/user_pb";
 
 const transport = createGrpcTransport({
@@ -234,5 +236,36 @@ export async function deleteAccount(
 	const request = create(DeleteAccountRequestSchema, {});
 
 	const response = await userClient.deleteAccount(request);
+	return response;
+}
+
+export interface UpdateAutoSummarySettingsParams {
+	llmProvider: number;
+	autoSummaryDaily: boolean;
+	autoSummaryMonthly: boolean;
+	accessToken: string;
+}
+
+export async function updateAutoSummarySettings(
+	params: UpdateAutoSummarySettingsParams,
+): Promise<UpdateAutoSummarySettingsResponse> {
+	const transport = createGrpcTransport({
+		baseUrl: "http://backend:8080",
+		interceptors: [
+			(next) => (req) => {
+				req.header.set("authorization", `Bearer ${params.accessToken}`);
+				return next(req);
+			},
+		],
+	});
+
+	const userClient = createClient(UserService, transport);
+	const request = create(UpdateAutoSummarySettingsRequestSchema, {
+		llmProvider: params.llmProvider,
+		autoSummaryDaily: params.autoSummaryDaily,
+		autoSummaryMonthly: params.autoSummaryMonthly,
+	});
+
+	const response = await userClient.updateAutoSummarySettings(request);
 	return response;
 }
