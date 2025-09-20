@@ -1,6 +1,6 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
-import type { DiaryEntry } from "$lib/grpc";
+import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 
 export let calendarDays: (number | null)[];
 export let entryMap: Map<number, DiaryEntry>;

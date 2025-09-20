@@ -1,6 +1,6 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
-import type { DiaryEntry } from "$lib/grpc";
+import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 import type { DateInfo } from "$lib/utils/date-utils";
 import { formatDateToId } from "$lib/utils/date-utils";
 import Link from "../atoms/Link.svelte";

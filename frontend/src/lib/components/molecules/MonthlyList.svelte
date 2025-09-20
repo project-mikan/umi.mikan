@@ -1,6 +1,6 @@
 <script lang="ts">
 import { _, locale } from "svelte-i18n";
-import type { DiaryEntry } from "$lib/grpc";
+import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 
 export let daysInMonth: number;
 export let currentYear: number;

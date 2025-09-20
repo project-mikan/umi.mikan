@@ -9,7 +9,7 @@ import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
 import { createSubmitHandler } from "$lib/utils/form-utils";
-import type { DiaryEntry, YMD } from "$lib/grpc";
+import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
 import type { PageData } from "./$types";
 
 export let data: PageData;

@@ -5,7 +5,10 @@ import "$lib/i18n";
 import { browser } from "$app/environment";
 import { onMount } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
-import type { DiaryEntry, GetDiaryEntriesByMonthResponse } from "$lib/grpc";
+import type {
+	DiaryEntry,
+	GetDiaryEntriesByMonthResponse,
+} from "$lib/grpc/diary/diary_pb";
 import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
@@ -21,7 +24,8 @@ interface MonthlySummary {
 
 export let data: PageData;
 
-let entries: any = data.entries;
+let entries: GetDiaryEntriesByMonthResponse | { entries: DiaryEntry[] } =
+	data.entries;
 let currentYear = data.year;
 let currentMonth = data.month;
 let _loading = false;
@@ -50,7 +54,9 @@ async function fetchMonthData(year: number, month: number) {
 			`/api/diary/monthly/${year}/${month}`,
 		);
 		if (response.ok) {
-			const newEntries: any = await response.json();
+			const newEntries:
+				| GetDiaryEntriesByMonthResponse
+				| { entries: DiaryEntry[] } = await response.json();
 			entries = newEntries;
 			currentYear = year;
 			currentMonth = month;
