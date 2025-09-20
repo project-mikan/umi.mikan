@@ -29,6 +29,7 @@ function calculateProgress() {
 	// 今日の経過時間（時：分）
 	const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 	const dayElapsed = now.getTime() - startOfDay.getTime();
+	// Total milliseconds in a day (24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
 	const dayTotal = 24 * 60 * 60 * 1000;
 	dayProgress = (dayElapsed / dayTotal) * 100;
 }

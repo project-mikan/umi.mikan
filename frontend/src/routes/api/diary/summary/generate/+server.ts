@@ -45,6 +45,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 				month: summaryResponse.summary.month?.month,
 			},
 			summary: summaryResponse.summary.summary,
+			// Convert Unix timestamp (seconds) to JavaScript timestamp (milliseconds)
 			createdAt: Number(summaryResponse.summary.createdAt) * 1000,
 			updatedAt: Number(summaryResponse.summary.updatedAt) * 1000,
 		});
