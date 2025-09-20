@@ -70,13 +70,10 @@ services:
       DB_USER: postgres
       DB_PASS: prod-pass
       DB_NAME: umi_mikan
-      JWT_SECRET: prod-secret
     tty: true
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - internal
     profiles:
       - dev-tools
 
