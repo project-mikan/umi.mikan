@@ -14,10 +14,14 @@ services:
       DB_PASS: prod-pass
       DB_NAME: umi_mikan
       JWT_SECRET: prod-secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   frontend:
     build:
@@ -53,6 +57,30 @@ services:
     networks:
       - internal
 
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_prod_volume:/data
+    networks:
+      - internal
+
+  subscriber:
+    build:
+      context: ./backend
+      dockerfile: ../infra/prod/subscriber/Dockerfile
+    environment:
+      TZ: Asia/Tokyo
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_started
+    networks:
+      - internal
+
   # Development tools service for running database migrations and other dev tasks
   dev-tools:
     build:
@@ -70,6 +98,8 @@ services:
       DB_USER: postgres
       DB_PASS: prod-pass
       DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     tty: true
     depends_on:
       postgres:
@@ -90,6 +120,7 @@ services:
 
 volumes:
   postgres_prod_volume:
+  redis_prod_volume:
 
 networks:
   internal:

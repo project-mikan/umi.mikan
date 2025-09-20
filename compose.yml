@@ -21,6 +21,8 @@ services:
       TEST_DB_USER: postgres
       TEST_DB_PASSWORD: test-pass
       TEST_DB_NAME: umi_mikan_test
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     tty: true
     ports:
       - 8080:8080
@@ -68,6 +70,30 @@ services:
       - postgres_test_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
 
+  redis:
+    image: redis:8-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_volume:/data
+
+  subscriber:
+    build:
+      context: ./backend
+      dockerfile: ../infra/dev/subscriber/Dockerfile
+    volumes:
+      - ./backend:/backend
+    environment:
+      TZ: Asia/Tokyo
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    tty: true
+    depends_on:
+      - redis
+
 volumes:
   postgres_volume:
   postgres_test_volume:
+  redis_volume:
