@@ -33,7 +33,7 @@ let _loading = false;
 let showMonthSelector = false;
 let summary: MonthlySummary | null = null;
 let summaryLoading = false;
-let showSummary = false;
+let showSummary = true;
 let errorMessage = "";
 let showErrorModal = false;
 let hasNewerEntries = false;
@@ -279,7 +279,7 @@ $: if (currentYear !== previousYear || currentMonth !== previousMonth) {
 
 	// 状態をリセット
 	summary = null;
-	showSummary = false;
+	showSummary = true;
 	hasNewerEntries = false;
 
 	// 新しい月のサマリーを取得（onMountで既に呼ばれている場合を除く）
