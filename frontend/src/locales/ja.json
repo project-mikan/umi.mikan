@@ -13,6 +13,12 @@
 	},
 	"settings": {
 		"title": "設定",
+		"nav": {
+			"title": "目次",
+			"userSettings": "ユーザー設定",
+			"llmSettings": "LLM設定",
+			"dangerZone": "その他"
+		},
 		"username": {
 			"title": "お名前変更",
 			"label": "新しいお名前",

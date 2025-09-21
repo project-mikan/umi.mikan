@@ -13,6 +13,12 @@
 	},
 	"settings": {
 		"title": "Settings",
+		"nav": {
+			"title": "Table of Contents",
+			"userSettings": "User Settings",
+			"llmSettings": "LLM Settings",
+			"dangerZone": "Danger Zone"
+		},
 		"username": {
 			"title": "Change Username",
 			"label": "New username",
