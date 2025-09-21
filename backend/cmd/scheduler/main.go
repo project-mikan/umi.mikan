@@ -378,19 +378,39 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 
 func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *Scheduler, userID string) error {
 	// diary_summary_daysから該当ユーザーの要約がある年月を取得し、
-	// diary_summary_monthsに月次要約がない月を見つける（今月を除く）
+	// diary_summary_monthsに月次要約がない月、またはその月の日記の最新updated_atより月次要約のupdated_atが古い月を見つける（今月を除く）
 	query := `
-		SELECT EXTRACT(YEAR FROM dsd.date) as year, EXTRACT(MONTH FROM dsd.date) as month
-		FROM diary_summary_days dsd
-		LEFT JOIN diary_summary_months dsm ON dsd.user_id = dsm.user_id
-			AND EXTRACT(YEAR FROM dsd.date) = dsm.year
-			AND EXTRACT(MONTH FROM dsd.date) = dsm.month
-		WHERE dsd.user_id = $1
-			AND dsm.id IS NULL
-			AND (EXTRACT(YEAR FROM dsd.date) < EXTRACT(YEAR FROM CURRENT_DATE)
-				OR (EXTRACT(YEAR FROM dsd.date) = EXTRACT(YEAR FROM CURRENT_DATE)
-					AND EXTRACT(MONTH FROM dsd.date) < EXTRACT(MONTH FROM CURRENT_DATE)))
-		GROUP BY EXTRACT(YEAR FROM dsd.date), EXTRACT(MONTH FROM dsd.date)
+		WITH monthly_diary_stats AS (
+			SELECT
+				EXTRACT(YEAR FROM d.date) as year,
+				EXTRACT(MONTH FROM d.date) as month,
+				MAX(d.updated_at) as latest_diary_updated_at
+			FROM diaries d
+			WHERE d.user_id = $1
+			GROUP BY EXTRACT(YEAR FROM d.date), EXTRACT(MONTH FROM d.date)
+		),
+		monthly_summary_exists AS (
+			SELECT
+				mds.year,
+				mds.month,
+				mds.latest_diary_updated_at,
+				dsm.updated_at as summary_updated_at
+			FROM monthly_diary_stats mds
+			LEFT JOIN diary_summary_months dsm ON dsm.user_id = $1
+				AND dsm.year = mds.year
+				AND dsm.month = mds.month
+			WHERE EXISTS (
+				SELECT 1 FROM diary_summary_days dsd
+				WHERE dsd.user_id = $1
+				AND EXTRACT(YEAR FROM dsd.date) = mds.year
+				AND EXTRACT(MONTH FROM dsd.date) = mds.month
+			)
+		)
+		SELECT year, month
+		FROM monthly_summary_exists
+		WHERE (year < EXTRACT(YEAR FROM CURRENT_DATE)
+			OR (year = EXTRACT(YEAR FROM CURRENT_DATE) AND month < EXTRACT(MONTH FROM CURRENT_DATE)))
+		AND (summary_updated_at IS NULL OR summary_updated_at < latest_diary_updated_at)
 		ORDER BY year, month
 	`
 
