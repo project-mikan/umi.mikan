@@ -6,13 +6,48 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/redis/rueidis"
 )
+
+var (
+	// Prometheus metrics
+	messagesProcessedCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "subscriber_messages_processed_total",
+			Help: "Total number of messages processed",
+		},
+		[]string{"message_type", "status"},
+	)
+	processingDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "subscriber_processing_duration_seconds",
+			Help:    "Duration of message processing",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"message_type"},
+	)
+	summariesGeneratedCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "subscriber_summaries_generated_total",
+			Help: "Total number of summaries generated",
+		},
+		[]string{"summary_type"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(messagesProcessedCounter)
+	prometheus.MustRegister(processingDuration)
+	prometheus.MustRegister(summariesGeneratedCounter)
+}
 
 type SummaryGenerationMessage struct {
 	Type   string `json:"type"`
@@ -68,13 +103,28 @@ func main() {
 	}
 	log.Print("Connected to Redis successfully")
 
+	// メトリクスサーバー開始
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		log.Print("Metrics server starting on :8082")
+		if err := http.ListenAndServe(":8082", nil); err != nil {
+			log.Printf("Metrics server error: %v", err)
+		}
+	}()
+
 	log.Print("Subscriber is listening for messages...")
 
 	// SUBSCRIBE コマンドでチャンネル購読
 	err = client.Receive(ctx, client.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
 		log.Printf("Received message: %s from channel: %s", msg.Message, msg.Channel)
 
+		start := time.Now()
 		err := processMessage(ctx, db, msg.Message)
+		duration := time.Since(start)
+
+		// メトリクス更新は processMessage 内で行う
+		_ = duration // 使用しない場合の警告回避
+
 		if err != nil {
 			log.Printf("Failed to process message: %v", err)
 		}
@@ -88,29 +138,50 @@ func main() {
 }
 
 func processMessage(ctx context.Context, db *sql.DB, payload string) error {
+	start := time.Now()
+
 	// まずメッセージタイプを確認
 	var baseMessage struct {
 		Type string `json:"type"`
 	}
 	if err := json.Unmarshal([]byte(payload), &baseMessage); err != nil {
+		messagesProcessedCounter.WithLabelValues("unknown", "error").Inc()
 		return fmt.Errorf("failed to unmarshal base message: %w", err)
 	}
 
+	var err error
 	switch baseMessage.Type {
 	case "daily_summary":
+		processingDuration.WithLabelValues("daily_summary").Observe(time.Since(start).Seconds())
 		var message SummaryGenerationMessage
-		if err := json.Unmarshal([]byte(payload), &message); err != nil {
-			return fmt.Errorf("failed to unmarshal daily summary message: %w", err)
+		if unmarshalErr := json.Unmarshal([]byte(payload), &message); unmarshalErr != nil {
+			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
+			return fmt.Errorf("failed to unmarshal daily summary message: %w", unmarshalErr)
 		}
-		return generateDailySummary(ctx, db, message.UserID, message.Date)
+		err = generateDailySummary(ctx, db, message.UserID, message.Date)
+		if err != nil {
+			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
+		} else {
+			messagesProcessedCounter.WithLabelValues("daily_summary", "success").Inc()
+		}
+		return err
 	case "monthly_summary":
+		processingDuration.WithLabelValues("monthly_summary").Observe(time.Since(start).Seconds())
 		var message MonthlySummaryGenerationMessage
-		if err := json.Unmarshal([]byte(payload), &message); err != nil {
-			return fmt.Errorf("failed to unmarshal monthly summary message: %w", err)
+		if unmarshalErr := json.Unmarshal([]byte(payload), &message); unmarshalErr != nil {
+			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
+			return fmt.Errorf("failed to unmarshal monthly summary message: %w", unmarshalErr)
 		}
-		return generateMonthlySummary(ctx, db, message.UserID, message.Year, message.Month)
+		err = generateMonthlySummary(ctx, db, message.UserID, message.Year, message.Month)
+		if err != nil {
+			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
+		} else {
+			messagesProcessedCounter.WithLabelValues("monthly_summary", "success").Inc()
+		}
+		return err
 	default:
 		log.Printf("Unknown message type: %s", baseMessage.Type)
+		messagesProcessedCounter.WithLabelValues("unknown", "ignored").Inc()
 		return nil
 	}
 }
@@ -146,6 +217,7 @@ func generateDailySummary(ctx context.Context, db *sql.DB, userID, dateStr strin
 		return fmt.Errorf("failed to save summary: %w", err)
 	}
 
+	summariesGeneratedCounter.WithLabelValues("daily").Inc()
 	log.Printf("Successfully generated and saved summary for user %s, date %s", userID, dateStr)
 	return nil
 }
@@ -206,6 +278,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, userID string, year
 		return fmt.Errorf("failed to save monthly summary: %w", err)
 	}
 
+	summariesGeneratedCounter.WithLabelValues("monthly").Inc()
 	log.Printf("Successfully generated and saved monthly summary for user %s, year %d, month %d", userID, year, month)
 	return nil
 }

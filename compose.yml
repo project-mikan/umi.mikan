@@ -87,10 +87,18 @@ services:
       - ./backend:/backend
     environment:
       TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: dev-pass
+      DB_NAME: umi_mikan
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    ports:
+      - "8082:8082"  # metrics endpoint
     tty: true
     depends_on:
+      - postgres
       - redis
 
   scheduler:
@@ -108,12 +116,49 @@ services:
       DB_NAME: umi_mikan
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    ports:
+      - "8081:8081"  # metrics endpoint
     tty: true
     depends_on:
       - postgres
       - redis
 
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_volume:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - scheduler
+      - subscriber
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_volume:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_volume:
   postgres_test_volume:
   redis_volume:
+  prometheus_volume:
+  grafana_volume:
