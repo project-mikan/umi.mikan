@@ -5,14 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
-	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/redis/rueidis"
 	"google.golang.org/grpc/codes"
@@ -372,7 +369,7 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		AND EXTRACT(YEAR FROM date) = $2
 		AND EXTRACT(MONTH FROM date) = $3
 	`
-	err = s.DB.QueryRow(checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
+	err = s.DB.(*sql.DB).QueryRow(checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to check daily summaries")
 	}
@@ -433,7 +430,7 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 	if err := s.Redis.Do(ctx, publishCmd).Error(); err != nil {
 		// タスクステータスをクリア
-		s.deleteTaskStatus(ctx, taskKey)
+		_ = s.deleteTaskStatus(ctx, taskKey)
 		return nil, status.Errorf(codes.Internal, "Failed to queue monthly summary generation")
 	}
 
@@ -603,7 +600,7 @@ func (s *DiaryEntry) GenerateDailySummary(
 	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 	if err := s.Redis.Do(ctx, publishCmd).Error(); err != nil {
 		// タスクステータスをクリア
-		s.deleteTaskStatus(ctx, taskKey)
+		_ = s.deleteTaskStatus(ctx, taskKey)
 		return nil, status.Error(codes.Internal, "Failed to queue summary generation")
 	}
 

@@ -297,7 +297,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 
 	// タスクステータスを「処理中」に更新
 	taskKey := fmt.Sprintf("task:monthly_summary:%s:%d-%d", userID, year, month)
-	setCmd := redisClient.B().Set().Key(taskKey).Value("processing").Ex(600*time.Second).Build()
+	setCmd := redisClient.B().Set().Key(taskKey).Value("processing").Ex(600 * time.Second).Build()
 	redisClient.Do(ctx, setCmd)
 
 	// Ensure lock is released when function exits

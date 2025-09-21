@@ -7,7 +7,9 @@
 		"success": "Success",
 		"createdAt": "Created",
 		"updatedAt": "Updated",
-		"close": "Close"
+		"close": "Close",
+		"enabled": "Enabled",
+		"disabled": "Disabled"
 	},
 	"settings": {
 		"title": "Settings",
@@ -50,6 +52,11 @@
 			"button": "Delete Token",
 			"confirm": "Delete LLM Token",
 			"confirmMessage": "Are you sure you want to delete this LLM token? This action cannot be undone."
+		},
+		"llmStatus": {
+			"title": "LLM Processing Status",
+			"description": "View AI summary processing status and performance metrics.",
+			"viewButton": "View Processing Status"
 		},
 		"deleteAccount": {
 			"title": "Delete Account",
@@ -255,5 +262,34 @@
 		"charactersUnit": " characters",
 		"day": "Day",
 		"dailyCharacterCount": "Daily Character Count Progress"
+	},
+	"llm": {
+		"title": "LLM Processing Status",
+		"description": "Display AI summary processing status and statistics",
+		"metrics": {
+			"totalDailySummaries": "Total Daily Summaries",
+			"totalMonthlySummaries": "Total Monthly Summaries",
+			"pendingDailySummaries": "Pending Daily Summaries",
+			"pendingMonthlySummaries": "Pending Monthly Summaries",
+			"autoSummarySettings": "Auto Summary Settings",
+			"dailyAutoSummary": "Daily Auto Summary",
+			"monthlyAutoSummary": "Monthly Auto Summary",
+			"processingTasks": "Processing Tasks",
+			"processing": "Processing",
+			"last24Hours": "Processing Activity in Last 24 Hours",
+			"processingActivity": "Processing Activity",
+			"time": "Time",
+			"processedCount": "Processed Count",
+			"dailySummaries": "Daily Summaries",
+			"monthlySummaries": "Monthly Summaries",
+			"dailySummary": "Daily Summary",
+			"monthlySummary": "Monthly Summary",
+			"startedAt": "Started at",
+			"aboutTitle": "About LLM Processing",
+			"aboutDescription": "This page shows the status of automated summary processing by AI (Gemini).",
+			"dailySummaryExplanation": "Daily Summary: Automatically generated summaries for diary entries over 1000 characters",
+			"monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from daily summaries",
+			"processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
+		}
 	}
 }

@@ -59,7 +59,7 @@ func main() {
 	// サービス登録
 	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db, Redis: redisClient})
 	g.RegisterAuthServiceServer(grpcServer, &auth.AuthEntry{DB: db})
-	g.RegisterUserServiceServer(grpcServer, &user.UserEntry{DB: db})
+	g.RegisterUserServiceServer(grpcServer, &user.UserEntry{DB: db, RedisClient: redisClient})
 
 	// localでcliからデバッグできるようにする
 	// TODO: 環境変数で本番では有効にならないようにする

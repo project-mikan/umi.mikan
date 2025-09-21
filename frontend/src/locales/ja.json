@@ -7,7 +7,9 @@
 		"success": "成功",
 		"createdAt": "作成日",
 		"updatedAt": "更新日",
-		"close": "閉じる"
+		"close": "閉じる",
+		"enabled": "有効",
+		"disabled": "無効"
 	},
 	"settings": {
 		"title": "設定",
@@ -50,6 +52,11 @@
 			"button": "トークンを削除",
 			"confirm": "LLMトークンを削除",
 			"confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
+		},
+		"llmStatus": {
+			"title": "LLM処理状況",
+			"description": "AI要約の処理状況とパフォーマンスメトリクスを確認できます。",
+			"viewButton": "処理状況を表示"
 		},
 		"deleteAccount": {
 			"title": "アカウント削除",
@@ -255,5 +262,34 @@
 		"charactersUnit": "文字",
 		"day": "日",
 		"dailyCharacterCount": "日毎の文字数推移"
+	},
+	"llm": {
+		"title": "LLM処理状況",
+		"description": "AI要約の処理状況と統計情報を表示します",
+		"metrics": {
+			"totalDailySummaries": "日次要約総数",
+			"totalMonthlySummaries": "月次要約総数",
+			"pendingDailySummaries": "未処理日次要約",
+			"pendingMonthlySummaries": "未処理月次要約",
+			"autoSummarySettings": "自動要約設定",
+			"dailyAutoSummary": "日次自動要約",
+			"monthlyAutoSummary": "月次自動要約",
+			"processingTasks": "処理中のタスク",
+			"processing": "処理中",
+			"last24Hours": "過去24時間の処理状況",
+			"processingActivity": "処理活動",
+			"time": "時刻",
+			"processedCount": "処理件数",
+			"dailySummaries": "日次要約",
+			"monthlySummaries": "月次要約",
+			"dailySummary": "日次要約",
+			"monthlySummary": "月次要約",
+			"startedAt": "開始時刻",
+			"aboutTitle": "LLM処理について",
+			"aboutDescription": "このページでは、AI（Gemini）による自動要約処理の状況を確認できます。",
+			"dailySummaryExplanation": "日次要約: 1000文字以上の日記に対して毎日自動で生成される要約",
+			"monthlySummaryExplanation": "月次要約: 日次要約から生成される月間の総合要約",
+			"processingExplanation": "処理中タスク: 現在バックグラウンドで実行中の要約生成作業"
+		}
 	}
 }

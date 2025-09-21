@@ -462,6 +462,38 @@ function handleDeleteAccount() {
 			</section>
 		{/if}
 
+		<!-- LLM処理状況セクション -->
+		{#if existingLLMKey}
+			<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+				<h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+					{$_("settings.llmStatus.title")}
+				</h2>
+				<p class="text-gray-700 dark:text-gray-300 mb-4">
+					{$_("settings.llmStatus.description")}
+				</p>
+				<a
+					href="/llm"
+					class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				>
+					<svg
+						class="w-5 h-5 mr-2"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+						xmlns="http://www.w3.org/2000/svg"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+						></path>
+					</svg>
+					{$_("settings.llmStatus.viewButton")}
+				</a>
+			</section>
+		{/if}
+
 		<!-- Account Deletion Section -->
 		<hr class="my-8 border-gray-300 dark:border-gray-600" />
 
