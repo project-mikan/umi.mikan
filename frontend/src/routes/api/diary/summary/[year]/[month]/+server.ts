@@ -29,14 +29,16 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 		}
 
 		return json({
-			id: summaryResponse.summary.id,
-			month: {
-				year: summaryResponse.summary.month?.year,
-				month: summaryResponse.summary.month?.month,
+			summary: {
+				id: summaryResponse.summary.id,
+				month: {
+					year: summaryResponse.summary.month?.year,
+					month: summaryResponse.summary.month?.month,
+				},
+				summary: summaryResponse.summary.summary,
+				createdAt: unixToMilliseconds(summaryResponse.summary.createdAt || 0),
+				updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt || 0),
 			},
-			summary: summaryResponse.summary.summary,
-			createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
-			updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
 		});
 	} catch (err) {
 		console.error("Failed to load monthly summary:", err);

@@ -40,20 +40,35 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 		}
 
 		return json({
-			id: summaryResponse.summary.id,
-			month: {
-				year: summaryResponse.summary.month?.year,
-				month: summaryResponse.summary.month?.month,
+			summary: {
+				id: summaryResponse.summary.id,
+				month: {
+					year: summaryResponse.summary.month?.year,
+					month: summaryResponse.summary.month?.month,
+				},
+				summary: summaryResponse.summary.summary,
+				createdAt: unixToMilliseconds(summaryResponse.summary.createdAt || 0),
+				updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt || 0),
 			},
-			summary: summaryResponse.summary.summary,
-			createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
-			updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
 		});
 	} catch (err) {
 		console.error("Failed to generate monthly summary:", err);
+		console.error("Error details:", {
+			message: (err as Error)?.message,
+			code: (err as { code?: string })?.code,
+			stack: (err as Error)?.stack,
+		});
 
 		if ((err as Error)?.message?.includes("API key")) {
 			throw error(400, { message: "Gemini API key not configured" });
+		}
+		if (
+			(err as Error)?.message?.includes("only allowed for past months") ||
+			(err as { code?: number })?.code === 9 // gRPC FAILED_PRECONDITION
+		) {
+			throw error(400, {
+				message: "Monthly summary generation is only allowed for past months",
+			});
 		}
 		if (
 			(err as { code?: string })?.code === "NOT_FOUND" ||

@@ -23,9 +23,24 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 			accessToken: authResult.accessToken,
 		});
 
-		return json(entries);
+		// Convert BigInt to Number for JSON serialization
+		const serializedEntries = {
+			...entries,
+			entries: entries.entries.map((entry) => ({
+				...entry,
+				createdAt: Number(entry.createdAt),
+				updatedAt: Number(entry.updatedAt),
+			})),
+		};
+
+		return json(serializedEntries);
 	} catch (err) {
 		console.error("Failed to load diary entries:", err);
+		console.error("Error details:", {
+			message: (err as Error)?.message,
+			code: (err as { code?: string })?.code,
+			stack: (err as Error)?.stack,
+		});
 		throw error(500, "Failed to load diary entries");
 	}
 };

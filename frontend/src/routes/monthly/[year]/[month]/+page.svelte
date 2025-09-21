@@ -25,10 +25,21 @@ interface MonthlySummary {
 	updatedAt: number;
 }
 
+interface SerializedDiaryEntry {
+	id: string;
+	date?: { year: number; month: number; day: number };
+	content: string;
+	createdAt: number;
+	updatedAt: number;
+}
+
+interface SerializedGetDiaryEntriesByMonthResponse {
+	entries: SerializedDiaryEntry[];
+}
+
 export let data: PageData;
 
-let entries: GetDiaryEntriesByMonthResponse | { entries: DiaryEntry[] } =
-	data.entries;
+let entries: SerializedGetDiaryEntriesByMonthResponse = data.entries;
 let currentYear = data.year;
 let currentMonth = data.month;
 let _loading = false;
@@ -39,6 +50,19 @@ let showSummary = false;
 let errorMessage = "";
 let showErrorModal = false;
 let hasNewerEntries = false;
+let summaryStatus: "none" | "queued" | "processing" | "completed" | "error" =
+	"none";
+let summaryGenerating = false;
+let pollingInterval: ReturnType<typeof setInterval> | null = null;
+let summaryJustUpdated = false;
+let isCurrentMonth = false;
+
+// 現在の月かどうかの判定（リアクティブ）
+$: {
+	const now = new Date();
+	isCurrentMonth =
+		currentYear === now.getFullYear() && currentMonth === now.getMonth() + 1;
+}
 
 // データの更新
 $: {
@@ -57,9 +81,8 @@ async function fetchMonthData(year: number, month: number) {
 			`/api/diary/monthly/${year}/${month}`,
 		);
 		if (response.ok) {
-			const newEntries:
-				| GetDiaryEntriesByMonthResponse
-				| { entries: DiaryEntry[] } = await response.json();
+			const newEntries: SerializedGetDiaryEntriesByMonthResponse =
+				await response.json();
 			entries = newEntries;
 			currentYear = year;
 			currentMonth = month;
@@ -160,10 +183,12 @@ async function fetchMonthlySummary() {
 			`/api/diary/summary/${currentYear}/${currentMonth}`,
 		);
 		if (response.ok) {
-			const summaryData = await response.json();
-			summary = summaryData;
+			const result = await response.json();
+			summary = result.summary;
+			summaryStatus = "completed";
 		} else if (response.status === 404) {
 			summary = null;
+			summaryStatus = "none";
 		} else if (response.status === 401) {
 			await goto("/login");
 		} else {
@@ -172,16 +197,29 @@ async function fetchMonthlySummary() {
 				response.status,
 				response.statusText,
 			);
+			summaryStatus = "error";
 		}
 	} catch (error) {
 		console.error("Failed to fetch summary:", error);
+		summaryStatus = "error";
 	}
 }
 
 async function generateMonthlySummary() {
 	if (!browser) return;
 
-	summaryLoading = true;
+	if (isCurrentMonth) {
+		showError($_("monthly.summary.currentMonthError"));
+		return;
+	}
+
+	summaryGenerating = true;
+	const isUpdate = summary !== null;
+
+	// 最小表示時間を設定（ユーザーエクスペリエンス向上のため）
+	const minDisplayTime = 1000; // 1秒
+	const startTime = Date.now();
+
 	try {
 		const response = await authenticatedFetch(`/api/diary/summary/generate`, {
 			method: "POST",
@@ -195,13 +233,45 @@ async function generateMonthlySummary() {
 		});
 
 		if (response.ok) {
-			const summaryData = await response.json();
-			summary = summaryData;
-			showSummary = true;
+			const result = await response.json();
+
+			// レスポンス構造のチェックとステータス判定
+			if (result.summary?.summary) {
+				const summaryText = result.summary.summary;
+
+				// ステータスメッセージのチェック
+				if (
+					summaryText.includes("queued") ||
+					summaryText.includes("Please check back later")
+				) {
+					summaryStatus = "queued";
+					startPolling(isUpdate);
+					return;
+				} else if (
+					summaryText.includes("processing") ||
+					summaryText.includes("Updating")
+				) {
+					summaryStatus = "processing";
+					startPolling(isUpdate);
+					return;
+				} else {
+					// 通常の要約完了
+					summary = result.summary;
+					summaryStatus = "completed";
+					showSummary = true;
+					if (isUpdate) {
+						triggerSummaryUpdateAnimation();
+					}
+				}
+			} else {
+				summaryStatus = "error";
+				showError($_("monthly.summary.error"));
+			}
 		} else if (response.status === 401) {
 			await goto("/login");
 		} else if (response.status === 404) {
 			showError($_("monthly.summary.noEntries"));
+			summaryStatus = "error";
 		} else if (response.status === 400) {
 			const errorData = await response.json();
 			if (errorData.message?.includes("API key")) {
@@ -209,14 +279,23 @@ async function generateMonthlySummary() {
 			} else {
 				showError($_("monthly.summary.error"));
 			}
+			summaryStatus = "error";
 		} else {
 			showError($_("monthly.summary.error"));
+			summaryStatus = "error";
 		}
 	} catch (error) {
 		console.error("Failed to generate summary:", error);
 		showError($_("monthly.summary.error"));
+		summaryStatus = "error";
 	} finally {
-		summaryLoading = false;
+		// 最小表示時間を確保
+		const elapsedTime = Date.now() - startTime;
+		const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+
+		setTimeout(() => {
+			summaryGenerating = false;
+		}, remainingTime);
 	}
 }
 
@@ -224,6 +303,67 @@ async function generateMonthlySummary() {
 function showError(message: string) {
 	errorMessage = message;
 	showErrorModal = true;
+}
+
+// ポーリング機能
+function startPolling(isUpdate: boolean) {
+	clearPolling();
+
+	// 最大ポーリング時間: 5分
+	const maxPollingTime = 5 * 60 * 1000;
+	const startTime = Date.now();
+
+	pollingInterval = setInterval(async () => {
+		if (Date.now() - startTime > maxPollingTime) {
+			clearPolling();
+			summaryStatus = "error";
+			showError($_("summaryTimeout"));
+			return;
+		}
+
+		await pollSummaryStatus(isUpdate);
+	}, 3000); // 3秒間隔でポーリング
+}
+
+function clearPolling() {
+	if (pollingInterval) {
+		clearInterval(pollingInterval);
+		pollingInterval = null;
+	}
+}
+
+async function pollSummaryStatus(isUpdate: boolean) {
+	if (!browser) return;
+
+	try {
+		const response = await authenticatedFetch(
+			`/api/diary/summary/${currentYear}/${currentMonth}`,
+		);
+		if (response.ok) {
+			const result = await response.json();
+			if (
+				result.summary &&
+				(!summary || result.summary.updatedAt > summary.updatedAt)
+			) {
+				summary = result.summary;
+				summaryStatus = "completed";
+				showSummary = true;
+				clearPolling();
+				if (isUpdate) {
+					triggerSummaryUpdateAnimation();
+				}
+			}
+		}
+	} catch (error) {
+		console.error("Failed to poll summary status:", error);
+	}
+}
+
+function triggerSummaryUpdateAnimation() {
+	summaryJustUpdated = true;
+	setTimeout(() => {
+		summaryJustUpdated = false;
+	}, 2000); // 2秒後にアニメーションを終了
 }
 
 // 日記の最新更新日を取得
@@ -303,6 +443,9 @@ $: if (currentYear !== previousYear || currentMonth !== previousMonth) {
 	summary = null;
 	showSummary = false;
 	hasNewerEntries = false;
+	summaryStatus = "none";
+	summaryGenerating = false;
+	clearPolling();
 
 	// 新しい月のサマリーを取得（onMountで既に呼ばれている場合を除く）
 	if (browser && (previousYear !== data.year || previousMonth !== data.month)) {
@@ -337,7 +480,7 @@ $: calendarDays = (() => {
 
 // 日記エントリをマップに変換（リアクティブ）
 $: entryMap = (() => {
-	const map = new Map<number, DiaryEntry>();
+	const map = new Map<number, any>();
 	if (entries && Array.isArray(entries.entries)) {
 		for (const entry of entries.entries) {
 			if (entry?.date) {
@@ -375,7 +518,11 @@ $: _weekDays = (() => {
 			{_formatMonth(currentYear, currentMonth)}
 		</h1>
 		<div class="flex gap-2">
-			{#if summary}
+			{#if isCurrentMonth}
+				<div class="px-4 py-2 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 rounded-md font-medium text-sm">
+					{$_("monthly.summary.currentMonthNote")}
+				</div>
+			{:else if summary}
 				<button
 					on:click={() => showSummary = !showSummary}
 					class="px-4 py-2 {showSummary ? 'bg-gray-600 hover:bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -384,10 +531,10 @@ $: _weekDays = (() => {
 				</button>
 				<button
 					on:click={generateMonthlySummary}
-					disabled={summaryLoading}
+					disabled={summaryGenerating || isCurrentMonth}
 					class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
 				>
-					{#if summaryLoading}
+					{#if summaryGenerating}
 						{$_("monthly.summary.generating")}
 					{:else}
 						{$_("monthly.summary.regenerate")}
@@ -396,10 +543,10 @@ $: _weekDays = (() => {
 			{:else}
 				<button
 					on:click={generateMonthlySummary}
-					disabled={summaryLoading}
+					disabled={summaryGenerating || isCurrentMonth}
 					class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
 				>
-					{#if summaryLoading}
+					{#if summaryGenerating}
 						{$_("monthly.summary.generating")}
 					{:else}
 						{$_("monthly.summary.generate")}
@@ -461,29 +608,42 @@ $: _weekDays = (() => {
 	</div>
 
 	<!-- サマリー表示エリア -->
-	{#if showSummary && summary}
+	{#if (showSummary && summary) || summaryStatus === 'queued' || summaryStatus === 'processing'}
 		<div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
 			<div class="p-6">
 				<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 					{$_("diary.summary.label")}
 				</h2>
-				<div class="prose dark:prose-invert max-w-none">
-					<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-						{summary.summary}
-					</p>
-				</div>
-				{#if hasNewerEntries}
-					<div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-						<p class="text-sm text-yellow-800 dark:text-yellow-200">
-							💡 {$_("monthly.summary.updateAvailable")}
+
+				{#if summaryStatus === 'queued'}
+					<div class="flex items-center text-blue-600 dark:text-blue-400">
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
+						<span>{$_("summary.statusQueued")}</span>
+					</div>
+				{:else if summaryStatus === 'processing'}
+					<div class="flex items-center text-blue-600 dark:text-blue-400">
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
+						<span>{$_("summary.statusProcessing")}</span>
+					</div>
+				{:else if summary}
+					<div class="prose dark:prose-invert max-w-none">
+						<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed {summaryJustUpdated ? 'summary-highlight' : ''}">
+							{summary.summary}
 						</p>
 					</div>
+					{#if hasNewerEntries}
+						<div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+							<p class="text-sm text-yellow-800 dark:text-yellow-200">
+								💡 {$_("monthly.summary.updateAvailable")}
+							</p>
+						</div>
+					{/if}
+					<div class="mt-6 flex justify-end items-center text-sm text-gray-500 dark:text-gray-400">
+						<span>
+							{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleString()}
+						</span>
+					</div>
 				{/if}
-				<div class="mt-6 flex justify-end items-center text-sm text-gray-500 dark:text-gray-400">
-					<span>
-						{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleString()}
-					</span>
-				</div>
 			</div>
 		</div>
 	{/if}
@@ -560,4 +720,23 @@ $: _weekDays = (() => {
 		</div>
 	</div>
 {/if}
+
+<style>
+	.summary-highlight {
+		padding: 1rem;
+		animation: highlightPulse 2s ease-in-out;
+	}
+
+	@keyframes highlightPulse {
+		0% {
+			box-shadow: inset 0 0 0 2px #fbbf24;
+		}
+		50% {
+			box-shadow: inset 0 0 0 2px #f59e0b;
+		}
+		100% {
+			box-shadow: inset 0 0 0 2px transparent;
+		}
+	}
+</style>
 

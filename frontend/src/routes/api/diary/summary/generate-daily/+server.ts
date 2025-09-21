@@ -57,16 +57,18 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 		}
 
 		return json({
-			id: response.summary.id,
-			diaryId: response.summary.diaryId,
-			date: {
-				year: response.summary.date?.year || 0,
-				month: response.summary.date?.month || 0,
-				day: response.summary.date?.day || 0,
+			summary: {
+				id: response.summary.id,
+				diaryId: response.summary.diaryId,
+				date: {
+					year: response.summary.date?.year || 0,
+					month: response.summary.date?.month || 0,
+					day: response.summary.date?.day || 0,
+				},
+				summary: response.summary.summary,
+				createdAt: unixToMilliseconds(response.summary.createdAt),
+				updatedAt: unixToMilliseconds(response.summary.updatedAt),
 			},
-			summary: response.summary.summary,
-			createdAt: unixToMilliseconds(response.summary.createdAt),
-			updatedAt: unixToMilliseconds(response.summary.updatedAt),
 		});
 	} catch (err) {
 		if (err instanceof Response) {

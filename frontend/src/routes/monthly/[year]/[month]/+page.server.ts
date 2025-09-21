@@ -22,8 +22,18 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 			accessToken,
 		});
 
+		// Convert BigInt to Number for JSON serialization
+		const serializedEntries = {
+			...entries,
+			entries: entries.entries.map((entry) => ({
+				...entry,
+				createdAt: Number(entry.createdAt),
+				updatedAt: Number(entry.updatedAt),
+			})),
+		};
+
 		return {
-			entries,
+			entries: serializedEntries,
 			year,
 			month,
 		};

@@ -147,12 +147,15 @@
 		"summaryNotAvailableToday": "要約は当日は利用できません",
 		"summaryAutoEnabled": "自動要約が有効です",
 		"summaryGenerationFailed": "要約の生成に失敗しました",
+		"summaryTimeout": "要約の生成がタイムアウトしました。再度お試しください。",
 		"summary": {
 			"title": "日記の要約",
 			"label": "まとめ",
 			"view": "要約を表示",
 			"hide": "要約を非表示",
-			"outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。"
+			"outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。",
+			"statusQueued": "要約の生成をキューに追加しました。しばらくお待ちください。",
+			"statusProcessing": "要約を生成中です。しばらくお待ちください。"
 		},
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
@@ -239,7 +242,9 @@
 			"error": "サマリーの生成に失敗しました",
 			"noEntries": "この月の日記が見つかりません",
 			"noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
-			"updateAvailable": "このサマリー生成後に日記が更新されています。最新のサマリーを得るには再生成してください。"
+			"updateAvailable": "このサマリー生成後に日記が更新されています。最新のサマリーを得るには再生成してください。",
+			"currentMonthError": "月次要約は過去の月のみ生成できます。現在の月は生成できません。",
+			"currentMonthNote": "現在の月のため要約は生成できません"
 		}
 	},
 	"timeProgress": {
