@@ -15,6 +15,8 @@ import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
 import MonthYearSelector from "$lib/components/molecules/MonthYearSelector.svelte";
 import CharacterCountChart from "$lib/components/molecules/CharacterCountChart.svelte";
 
+$: title = $_("page.title.calendar");
+
 interface MonthlySummary {
 	id: string;
 	month: { year: number; month: number };
@@ -362,6 +364,10 @@ $: _weekDays = (() => {
 })();
 </script>
 
+<svelte:head>
+	<title>{title}</title>
+</svelte:head>
+
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<!-- ヘッダー -->
 	<div class="flex justify-between items-center mb-8">
@@ -473,15 +479,10 @@ $: _weekDays = (() => {
 						</p>
 					</div>
 				{/if}
-				<div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+				<div class="mt-6 flex justify-end items-center text-sm text-gray-500 dark:text-gray-400">
 					<span>
-						{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleDateString()}
+						{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleString()}
 					</span>
-					{#if summary.updatedAt !== summary.createdAt}
-						<span>
-							{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleDateString()}
-						</span>
-					{/if}
 				</div>
 			</div>
 		</div>

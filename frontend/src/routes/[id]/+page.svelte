@@ -14,6 +14,12 @@ import { getDayOfWeekKey } from "$lib/utils/date-utils";
 import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { ActionData, PageData } from "./$types";
 
+$: title = $_("page.title.individual", {
+	values: {
+		date: _formatDate(data.date)
+	}
+});
+
 export let data: PageData;
 export let form: ActionData;
 
@@ -176,6 +182,10 @@ function _clearSummary() {
 }
 </script>
 
+<svelte:head>
+	<title>{title}</title>
+</svelte:head>
+
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
@@ -267,7 +277,7 @@ function _clearSummary() {
 		{/if}
 
 		<DiaryCard
-			title={_formatDate(data.date)}
+			title=""
 			entry={data.entry}
 			showForm={true}
 		>
@@ -304,6 +314,11 @@ use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 					{#if characterCount >= 1000}
 						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
 							({$_("diary.autoSummaryEligible")})
+						</span>
+					{/if}
+					{#if data.entry?.updatedAt}
+						<span class="ml-4">
+							{$_("common.updatedAt")}: {new Date(Number(data.entry.updatedAt) * 1000).toLocaleString()}
 						</span>
 					{/if}
 				</div>

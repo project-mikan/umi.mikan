@@ -254,6 +254,13 @@
 		"search": "Search",
 		"settings": "Settings"
 	},
+	"page": {
+		"title": {
+			"home": "Home - umi.mikan",
+			"calendar": "Calendar - umi.mikan",
+			"individual": "{date} - umi.mikan"
+		}
+	},
 	"footer": {
 		"github": "GitHub"
 	},

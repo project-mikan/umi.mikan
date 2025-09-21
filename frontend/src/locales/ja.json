@@ -254,6 +254,13 @@
 		"search": "検索",
 		"settings": "設定"
 	},
+	"page": {
+		"title": {
+			"home": "トップ - umi.mikan",
+			"calendar": "カレンダー - umi.mikan",
+			"individual": "{date} - umi.mikan"
+		}
+	},
 	"footer": {
 		"github": "GitHub"
 	},
