@@ -14,14 +14,32 @@ import { getDayOfWeekKey } from "$lib/utils/date-utils";
 import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { ActionData, PageData } from "./$types";
 
-$: title = $_("page.title.individual", {
-	values: {
-		date: _formatDate(data.date)
-	}
-});
-
 export let data: PageData;
 export let form: ActionData;
+
+// Reactive date formatting function
+$: _formatDate = (ymd: {
+	year: number;
+	month: number;
+	day: number;
+}): string => {
+	const dayOfWeekKey = getDayOfWeekKey(ymd);
+	const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
+	return $_("date.format.yearMonthDayWithDayOfWeek", {
+		values: {
+			year: ymd.year,
+			month: ymd.month,
+			day: ymd.day,
+			dayOfWeek: dayOfWeek,
+		},
+	});
+};
+
+$: title = $_("page.title.individual", {
+	values: {
+		date: _formatDate(data.date),
+	},
+});
 
 $: content = data.entry?.content || "";
 let formElement: HTMLFormElement;
@@ -78,24 +96,6 @@ $: {
 	summary = data.dailySummary;
 	showSummary = !!data.dailySummary;
 }
-
-// Reactive date formatting function
-$: _formatDate = (ymd: {
-	year: number;
-	month: number;
-	day: number;
-}): string => {
-	const dayOfWeekKey = getDayOfWeekKey(ymd);
-	const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
-	return $_("date.format.yearMonthDayWithDayOfWeek", {
-		values: {
-			year: ymd.year,
-			month: ymd.month,
-			day: ymd.day,
-			dayOfWeek: dayOfWeek,
-		},
-	});
-};
 
 function _formatDateStr(ymd: {
 	year: number;
