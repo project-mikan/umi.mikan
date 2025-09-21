@@ -12,6 +12,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/service/auth"
 	"github.com/project-mikan/umi.mikan/backend/service/diary"
 	"github.com/project-mikan/umi.mikan/backend/service/user"
+	"github.com/redis/rueidis"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -41,8 +42,22 @@ func main() {
 		}
 	}()
 
+	// Redis接続
+	redisConfig, err := constants.LoadRedisConfig()
+	if err != nil {
+		log.Fatalf("Failed to load Redis config: %v", err)
+	}
+
+	redisClient, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port)},
+	})
+	if err != nil {
+		log.Fatalf("Failed to create Redis client: %v", err)
+	}
+	defer redisClient.Close()
+
 	// サービス登録
-	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db})
+	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db, Redis: redisClient})
 	g.RegisterAuthServiceServer(grpcServer, &auth.AuthEntry{DB: db})
 	g.RegisterUserServiceServer(grpcServer, &user.UserEntry{DB: db})
 

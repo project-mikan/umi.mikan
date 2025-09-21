@@ -3,6 +3,7 @@ package diary
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -13,13 +14,28 @@ import (
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
+	"github.com/redis/rueidis"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type DiaryEntry struct {
 	g.UnimplementedDiaryServiceServer
-	DB database.DB
+	DB    database.DB
+	Redis rueidis.Client
+}
+
+type SummaryGenerationMessage struct {
+	Type   string `json:"type"`
+	UserID string `json:"user_id"`
+	Date   string `json:"date"` // YYYY-MM-DD format
+}
+
+type MonthlySummaryGenerationMessage struct {
+	Type   string `json:"type"`
+	UserID string `json:"user_id"`
+	Year   int    `json:"year"`
+	Month  int    `json:"month"`
 }
 
 func (s *DiaryEntry) CreateDiaryEntry(
@@ -314,98 +330,75 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		return nil, err
 	}
 
-	// Get user's Gemini API key (LLM provider 1 = Gemini)
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
+	// ユーザーのLLMキーが設定されているかチェック
+	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Gemini API key not found for user")
 	}
 
-	// Get all diary entries for the specified month
-	entries := make([]*database.Diary, 0)
-	daysInMonth := time.Date(int(message.Month.Year), time.Month(message.Month.Month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
-
-	for day := 1; day <= daysInMonth; day++ {
-		date := time.Date(int(message.Month.Year), time.Month(message.Month.Month), day, 0, 0, 0, 0, time.UTC)
-		diary, err := database.DiaryByUserIDDate(ctx, s.DB, userID, date)
-		if err != nil {
-			continue // Skip entries that don't exist
-		}
-		entries = append(entries, diary)
+	// 指定された月が今月より前であることを確認
+	now := time.Now()
+	requestedMonth := time.Date(int(message.Month.Year), time.Month(message.Month.Month), 1, 0, 0, 0, 0, time.UTC)
+	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	if !requestedMonth.Before(currentMonth) {
+		return nil, status.Errorf(codes.FailedPrecondition, "Monthly summary generation is only allowed for past months")
 	}
 
-	if len(entries) == 0 {
-		return nil, status.Errorf(codes.NotFound, "no diary entries found for the specified month")
-	}
-
-	// Combine all diary contents
-	var contentBuilder strings.Builder
-	for _, entry := range entries {
-		contentBuilder.WriteString(fmt.Sprintf("【%d日】\n%s\n\n", entry.Date.Day(), entry.Content))
-	}
-	combinedContent := contentBuilder.String()
-
-	// Generate summary using Gemini
-	geminiClient, err := llm.NewGeminiClient(ctx, userLLM.Key)
+	// その月に日次要約が存在するかチェック
+	var count int
+	checkQuery := `
+		SELECT COUNT(*) FROM diary_summary_days
+		WHERE user_id = $1
+		AND EXTRACT(YEAR FROM date) = $2
+		AND EXTRACT(MONTH FROM date) = $3
+	`
+	err = s.DB.QueryRow(checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create Gemini client: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to check daily summaries")
 	}
-	defer func() {
-		if closeErr := geminiClient.Close(); closeErr != nil {
-			// Log the close error but don't affect the main function result
-			fmt.Printf("Warning: failed to close Gemini client: %v\n", closeErr)
-		}
-	}()
+	if count == 0 {
+		return nil, status.Errorf(codes.NotFound, "no daily summaries found for the specified month")
+	}
 
-	summary, err := geminiClient.GenerateSummary(ctx, combinedContent)
+	// Redis Pub/Sub経由で月次要約生成を依頼
+	monthlyMessage := MonthlySummaryGenerationMessage{
+		Type:   "monthly_summary",
+		UserID: userID.String(),
+		Year:   int(message.Month.Year),
+		Month:  int(message.Month.Month),
+	}
+
+	messageBytes, err := json.Marshal(monthlyMessage)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to generate summary: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to create monthly summary generation request")
 	}
 
-	// Save or update the summary in database
-	currentTime := time.Now().Unix()
+	// Redisにメッセージを送信
+	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
+	if err := s.Redis.Do(ctx, publishCmd).Error(); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to queue monthly summary generation")
+	}
 
-	// Check if summary already exists for this month
+	// 既存の要約があるかチェック（レスポンス用）
 	existingSummary, err := database.DiarySummaryMonthByUserIDYearMonth(ctx, s.DB, userID, int(message.Month.Year), int(message.Month.Month))
 	if err != nil {
-		// Create new summary
-		summaryID := uuid.New()
-		newSummary := &database.DiarySummaryMonth{
-			ID:        summaryID,
-			UserID:    userID,
-			Year:      int(message.Month.Year),
-			Month:     int(message.Month.Month),
-			Summary:   summary,
-			CreatedAt: currentTime,
-			UpdatedAt: currentTime,
-		}
-
-		if err := newSummary.Insert(ctx, s.DB); err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to save summary: %v", err)
-		}
-
+		// 既存の要約がない場合は、現在処理中であることを示すレスポンスを返す
 		return &g.GenerateMonthlySummaryResponse{
 			Summary: &g.MonthlySummary{
-				Id:        newSummary.ID.String(),
+				Id:        "",
 				Month:     message.Month,
-				Summary:   newSummary.Summary,
-				CreatedAt: newSummary.CreatedAt,
-				UpdatedAt: newSummary.UpdatedAt,
+				Summary:   "Monthly summary generation is in progress. Please check back later.",
+				CreatedAt: 0,
+				UpdatedAt: 0,
 			},
 		}, nil
 	} else {
-		// Update existing summary
-		existingSummary.Summary = summary
-		existingSummary.UpdatedAt = currentTime
-
-		if err := existingSummary.Update(ctx, s.DB); err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to update summary: %v", err)
-		}
-
+		// 既存の要約がある場合は、現在のものを返す（間もなく更新される予定）
 		return &g.GenerateMonthlySummaryResponse{
 			Summary: &g.MonthlySummary{
 				Id:        existingSummary.ID.String(),
 				Month:     message.Month,
-				Summary:   existingSummary.Summary,
+				Summary:   existingSummary.Summary + " (Updating...)",
 				CreatedAt: existingSummary.CreatedAt,
 				UpdatedAt: existingSummary.UpdatedAt,
 			},
@@ -484,72 +477,50 @@ func (s *DiaryEntry) GenerateDailySummary(
 		return nil, status.Error(codes.FailedPrecondition, "Content too short for summary generation (minimum 1000 characters)")
 	}
 
-	// ユーザーのLLMキーを取得
-	llmKey, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	// ユーザーのLLMキーが設定されているかチェック
+	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
 	if err != nil {
 		return nil, status.Error(codes.FailedPrecondition, "Gemini API key not configured")
 	}
 
-	// Geminiクライアントを作成
-	geminiClient, err := llm.NewGeminiClient(ctx, llmKey.Key)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Failed to create LLM client")
-	}
-	defer func() {
-		if closeErr := geminiClient.Close(); closeErr != nil {
-			// ログに記録するが、エラーは返さない
-			log.Printf("Failed to close Gemini client: %v", closeErr)
-		}
-	}()
-
-	// 要約を生成
-	summaryText, err := geminiClient.GenerateDailySummary(ctx, diary.Content)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Failed to generate summary")
+	// Redis Pub/Sub経由で要約生成を依頼
+	message := SummaryGenerationMessage{
+		Type:   "daily_summary",
+		UserID: userID.String(),
+		Date:   diary.Date.Format("2006-01-02"),
 	}
 
-	// 既存の要約があるかチェック（DiarySummaryDayテーブルを使用）
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to create summary generation request")
+	}
+
+	// Redisにメッセージを送信
+	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
+	if err := s.Redis.Do(ctx, publishCmd).Error(); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to queue summary generation")
+	}
+
+	// 既存の要約があるかチェック（レスポンス用）
 	existingSummary, err := database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, diary.Date)
-	currentTime := time.Now().Unix()
-
 	if err != nil {
-		// 既存の要約がない場合は新規作成
-		newSummary := &database.DiarySummaryDay{
-			ID:        uuid.New(),
-			UserID:    userID,
-			Date:      diary.Date,
-			Summary:   summaryText,
-			CreatedAt: currentTime,
-			UpdatedAt: currentTime,
-		}
-
-		if err := newSummary.Insert(ctx, s.DB); err != nil {
-			return nil, status.Error(codes.Internal, "Failed to save summary")
-		}
-
+		// 既存の要約がない場合は、現在処理中であることを示すレスポンスを返す
 		return &g.GenerateDailySummaryResponse{
 			Summary: &g.DailySummary{
-				Id:      newSummary.ID.String(),
+				Id:      "",
 				DiaryId: diaryID.String(),
 				Date: &g.YMD{
 					Year:  uint32(diary.Date.Year()),
 					Month: uint32(diary.Date.Month()),
 					Day:   uint32(diary.Date.Day()),
 				},
-				Summary:   newSummary.Summary,
-				CreatedAt: newSummary.CreatedAt,
-				UpdatedAt: newSummary.UpdatedAt,
+				Summary:   "Summary generation is in progress. Please check back later.",
+				CreatedAt: 0,
+				UpdatedAt: 0,
 			},
 		}, nil
 	} else {
-		// 既存の要約がある場合は更新
-		existingSummary.Summary = summaryText
-		existingSummary.UpdatedAt = currentTime
-
-		if err := existingSummary.Update(ctx, s.DB); err != nil {
-			return nil, status.Error(codes.Internal, "Failed to update summary")
-		}
-
+		// 既存の要約がある場合は、現在のものを返す（間もなく更新される予定）
 		return &g.GenerateDailySummaryResponse{
 			Summary: &g.DailySummary{
 				Id:      existingSummary.ID.String(),
@@ -559,7 +530,7 @@ func (s *DiaryEntry) GenerateDailySummary(
 					Month: uint32(diary.Date.Month()),
 					Day:   uint32(diary.Date.Day()),
 				},
-				Summary:   existingSummary.Summary,
+				Summary:   existingSummary.Summary + " (Updating...)",
 				CreatedAt: existingSummary.CreatedAt,
 				UpdatedAt: existingSummary.UpdatedAt,
 			},
