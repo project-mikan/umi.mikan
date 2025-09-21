@@ -38,6 +38,26 @@ type MonthlySummaryGenerationMessage struct {
 	Month  int    `json:"month"`
 }
 
+// タスクの状態を管理するヘルパー関数
+func (s *DiaryEntry) setTaskStatus(ctx context.Context, taskKey, status string, expireSeconds int) error {
+	setCmd := s.Redis.B().Set().Key(taskKey).Value(status).Ex(time.Duration(expireSeconds) * time.Second).Build()
+	return s.Redis.Do(ctx, setCmd).Error()
+}
+
+func (s *DiaryEntry) getTaskStatus(ctx context.Context, taskKey string) (string, error) {
+	getCmd := s.Redis.B().Get().Key(taskKey).Build()
+	result := s.Redis.Do(ctx, getCmd)
+	if result.Error() != nil {
+		return "", result.Error()
+	}
+	return result.ToString()
+}
+
+func (s *DiaryEntry) deleteTaskStatus(ctx context.Context, taskKey string) error {
+	delCmd := s.Redis.B().Del().Key(taskKey).Build()
+	return s.Redis.Do(ctx, delCmd).Error()
+}
+
 func (s *DiaryEntry) CreateDiaryEntry(
 	ctx context.Context,
 	message *g.CreateDiaryEntryRequest,
@@ -360,6 +380,42 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		return nil, status.Errorf(codes.NotFound, "no daily summaries found for the specified month")
 	}
 
+	// タスクキーを生成
+	taskKey := fmt.Sprintf("task:monthly_summary:%s:%d-%d", userID.String(), message.Month.Year, message.Month.Month)
+
+	// 既にタスクが実行中かチェック
+	taskStatus, err := s.getTaskStatus(ctx, taskKey)
+	if err == nil && (taskStatus == "queued" || taskStatus == "processing") {
+		// 既存の要約があるかチェック（レスポンス用）
+		existingSummary, err := database.DiarySummaryMonthByUserIDYearMonth(ctx, s.DB, userID, int(message.Month.Year), int(message.Month.Month))
+		if err != nil {
+			return &g.GenerateMonthlySummaryResponse{
+				Summary: &g.MonthlySummary{
+					Id:        "",
+					Month:     message.Month,
+					Summary:   fmt.Sprintf("Monthly summary generation is %s. Please check back later.", taskStatus),
+					CreatedAt: 0,
+					UpdatedAt: 0,
+				},
+			}, nil
+		} else {
+			return &g.GenerateMonthlySummaryResponse{
+				Summary: &g.MonthlySummary{
+					Id:        existingSummary.ID.String(),
+					Month:     message.Month,
+					Summary:   fmt.Sprintf("%s (%s)", existingSummary.Summary, taskStatus),
+					CreatedAt: existingSummary.CreatedAt,
+					UpdatedAt: existingSummary.UpdatedAt,
+				},
+			}, nil
+		}
+	}
+
+	// タスクを「キューに追加済み」としてマーク（10分の有効期限）
+	if err := s.setTaskStatus(ctx, taskKey, "queued", 600); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to set task status")
+	}
+
 	// Redis Pub/Sub経由で月次要約生成を依頼
 	monthlyMessage := MonthlySummaryGenerationMessage{
 		Type:   "monthly_summary",
@@ -376,6 +432,8 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 	// Redisにメッセージを送信
 	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 	if err := s.Redis.Do(ctx, publishCmd).Error(); err != nil {
+		// タスクステータスをクリア
+		s.deleteTaskStatus(ctx, taskKey)
 		return nil, status.Errorf(codes.Internal, "Failed to queue monthly summary generation")
 	}
 
@@ -387,7 +445,7 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 			Summary: &g.MonthlySummary{
 				Id:        "",
 				Month:     message.Month,
-				Summary:   "Monthly summary generation is in progress. Please check back later.",
+				Summary:   "Monthly summary generation is queued. Please check back later.",
 				CreatedAt: 0,
 				UpdatedAt: 0,
 			},
@@ -483,6 +541,52 @@ func (s *DiaryEntry) GenerateDailySummary(
 		return nil, status.Error(codes.FailedPrecondition, "Gemini API key not configured")
 	}
 
+	// タスクキーを生成
+	taskKey := fmt.Sprintf("task:daily_summary:%s:%s", userID.String(), diary.Date.Format("2006-01-02"))
+
+	// 既にタスクが実行中かチェック
+	taskStatus, err := s.getTaskStatus(ctx, taskKey)
+	if err == nil && (taskStatus == "queued" || taskStatus == "processing") {
+		// 既存の要約があるかチェック（レスポンス用）
+		existingSummary, err := database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, diary.Date)
+		if err != nil {
+			return &g.GenerateDailySummaryResponse{
+				Summary: &g.DailySummary{
+					Id:      "",
+					DiaryId: diaryID.String(),
+					Date: &g.YMD{
+						Year:  uint32(diary.Date.Year()),
+						Month: uint32(diary.Date.Month()),
+						Day:   uint32(diary.Date.Day()),
+					},
+					Summary:   fmt.Sprintf("Summary generation is %s. Please check back later.", taskStatus),
+					CreatedAt: 0,
+					UpdatedAt: 0,
+				},
+			}, nil
+		} else {
+			return &g.GenerateDailySummaryResponse{
+				Summary: &g.DailySummary{
+					Id:      existingSummary.ID.String(),
+					DiaryId: diaryID.String(),
+					Date: &g.YMD{
+						Year:  uint32(diary.Date.Year()),
+						Month: uint32(diary.Date.Month()),
+						Day:   uint32(diary.Date.Day()),
+					},
+					Summary:   fmt.Sprintf("%s (%s)", existingSummary.Summary, taskStatus),
+					CreatedAt: existingSummary.CreatedAt,
+					UpdatedAt: existingSummary.UpdatedAt,
+				},
+			}, nil
+		}
+	}
+
+	// タスクを「キューに追加済み」としてマーク（10分の有効期限）
+	if err := s.setTaskStatus(ctx, taskKey, "queued", 600); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to set task status")
+	}
+
 	// Redis Pub/Sub経由で要約生成を依頼
 	message := SummaryGenerationMessage{
 		Type:   "daily_summary",
@@ -498,6 +602,8 @@ func (s *DiaryEntry) GenerateDailySummary(
 	// Redisにメッセージを送信
 	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 	if err := s.Redis.Do(ctx, publishCmd).Error(); err != nil {
+		// タスクステータスをクリア
+		s.deleteTaskStatus(ctx, taskKey)
 		return nil, status.Error(codes.Internal, "Failed to queue summary generation")
 	}
 
@@ -514,7 +620,7 @@ func (s *DiaryEntry) GenerateDailySummary(
 					Month: uint32(diary.Date.Month()),
 					Day:   uint32(diary.Date.Day()),
 				},
-				Summary:   "Summary generation is in progress. Please check back later.",
+				Summary:   "Summary generation is queued. Please check back later.",
 				CreatedAt: 0,
 				UpdatedAt: 0,
 			},

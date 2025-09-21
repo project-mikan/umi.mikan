@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/lock"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
 )
 
@@ -43,12 +43,20 @@ var (
 		},
 		[]string{"summary_type"},
 	)
+	lockOperationsCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "subscriber_lock_operations_total",
+			Help: "Total number of lock operations",
+		},
+		[]string{"operation", "status", "lock_type"},
+	)
 )
 
 func init() {
 	prometheus.MustRegister(messagesProcessedCounter)
 	prometheus.MustRegister(processingDuration)
 	prometheus.MustRegister(summariesGeneratedCounter)
+	prometheus.MustRegister(lockOperationsCounter)
 }
 
 type SummaryGenerationMessage struct {
@@ -121,7 +129,7 @@ func main() {
 		log.Printf("Received message: %s from channel: %s", msg.Message, msg.Channel)
 
 		start := time.Now()
-		err := processMessage(ctx, db, msg.Message)
+		err := processMessage(ctx, db, client, msg.Message)
 		duration := time.Since(start)
 
 		// メトリクス更新は processMessage 内で行う
@@ -139,7 +147,7 @@ func main() {
 	log.Print("Subscriber ended")
 }
 
-func processMessage(ctx context.Context, db *sql.DB, payload string) error {
+func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, payload string) error {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -160,7 +168,7 @@ func processMessage(ctx context.Context, db *sql.DB, payload string) error {
 			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
 			return fmt.Errorf("failed to unmarshal daily summary message: %w", unmarshalErr)
 		}
-		err = generateDailySummary(ctx, db, message.UserID, message.Date)
+		err = generateDailySummary(ctx, db, redisClient, message.UserID, message.Date)
 		if err != nil {
 			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
 		} else {
@@ -174,7 +182,7 @@ func processMessage(ctx context.Context, db *sql.DB, payload string) error {
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
 			return fmt.Errorf("failed to unmarshal monthly summary message: %w", unmarshalErr)
 		}
-		err = generateMonthlySummary(ctx, db, message.UserID, message.Year, message.Month)
+		err = generateMonthlySummary(ctx, db, redisClient, message.UserID, message.Year, message.Month)
 		if err != nil {
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
 		} else {
@@ -188,13 +196,53 @@ func processMessage(ctx context.Context, db *sql.DB, payload string) error {
 	}
 }
 
-func generateDailySummary(ctx context.Context, db *sql.DB, userID, dateStr string) error {
+func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID, dateStr string) error {
 	log.Printf("Generating daily summary for user %s, date %s", userID, dateStr)
 
-	// 1. 指定された日の日記内容を取得
+	// 1. 分散ロックを取得
+	lockKey := lock.DailySummaryLockKey(userID, dateStr)
+	distributedLock := lock.NewDistributedLock(redisClient, lockKey, 5*time.Minute)
+
+	locked, err := distributedLock.TryLock(ctx)
+	if err != nil {
+		lockOperationsCounter.WithLabelValues("acquire", "error", "daily").Inc()
+		return fmt.Errorf("failed to acquire lock: %w", err)
+	}
+
+	if !locked {
+		// Lock already held by another process, skip processing
+		lockOperationsCounter.WithLabelValues("acquire", "failed", "daily").Inc()
+		log.Printf("Daily summary for user %s, date %s is already being processed by another instance", userID, dateStr)
+		return nil
+	}
+
+	lockOperationsCounter.WithLabelValues("acquire", "success", "daily").Inc()
+	log.Printf("Acquired lock for daily summary generation: user %s, date %s", userID, dateStr)
+
+	// タスクステータスを「処理中」に更新
+	taskKey := fmt.Sprintf("task:daily_summary:%s:%s", userID, dateStr)
+	setCmd := redisClient.B().Set().Key(taskKey).Value("processing").Ex(600 * time.Second).Build()
+	redisClient.Do(ctx, setCmd)
+
+	// Ensure lock is released when function exits
+	defer func() {
+		// タスクステータスを削除
+		delCmd := redisClient.B().Del().Key(taskKey).Build()
+		redisClient.Do(ctx, delCmd)
+
+		if unlockErr := distributedLock.Unlock(ctx); unlockErr != nil {
+			lockOperationsCounter.WithLabelValues("release", "error", "daily").Inc()
+			log.Printf("Failed to release lock for user %s, date %s: %v", userID, dateStr, unlockErr)
+		} else {
+			lockOperationsCounter.WithLabelValues("release", "success", "daily").Inc()
+			log.Printf("Released lock for daily summary generation: user %s, date %s", userID, dateStr)
+		}
+	}()
+
+	// 2. 指定された日の日記内容を取得
 	var diaryContent string
 	query := `SELECT content FROM diaries WHERE user_id = $1 AND date = $2`
-	err := db.QueryRow(query, userID, dateStr).Scan(&diaryContent)
+	err = db.QueryRow(query, userID, dateStr).Scan(&diaryContent)
 	if err != nil {
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
@@ -224,10 +272,50 @@ func generateDailySummary(ctx context.Context, db *sql.DB, userID, dateStr strin
 	return nil
 }
 
-func generateMonthlySummary(ctx context.Context, db *sql.DB, userID string, year, month int) error {
+func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID string, year, month int) error {
 	log.Printf("Generating monthly summary for user %s, year %d, month %d", userID, year, month)
 
-	// 1. 指定された年月の日次要約を全て取得
+	// 1. 分散ロックを取得
+	lockKey := lock.MonthlySummaryLockKey(userID, year, month)
+	distributedLock := lock.NewDistributedLock(redisClient, lockKey, 5*time.Minute)
+
+	locked, err := distributedLock.TryLock(ctx)
+	if err != nil {
+		lockOperationsCounter.WithLabelValues("acquire", "error", "monthly").Inc()
+		return fmt.Errorf("failed to acquire lock: %w", err)
+	}
+
+	if !locked {
+		// Lock already held by another process, skip processing
+		lockOperationsCounter.WithLabelValues("acquire", "failed", "monthly").Inc()
+		log.Printf("Monthly summary for user %s, year %d, month %d is already being processed by another instance", userID, year, month)
+		return nil
+	}
+
+	lockOperationsCounter.WithLabelValues("acquire", "success", "monthly").Inc()
+	log.Printf("Acquired lock for monthly summary generation: user %s, year %d, month %d", userID, year, month)
+
+	// タスクステータスを「処理中」に更新
+	taskKey := fmt.Sprintf("task:monthly_summary:%s:%d-%d", userID, year, month)
+	setCmd := redisClient.B().Set().Key(taskKey).Value("processing").Ex(600*time.Second).Build()
+	redisClient.Do(ctx, setCmd)
+
+	// Ensure lock is released when function exits
+	defer func() {
+		// タスクステータスを削除
+		delCmd := redisClient.B().Del().Key(taskKey).Build()
+		redisClient.Do(ctx, delCmd)
+
+		if unlockErr := distributedLock.Unlock(ctx); unlockErr != nil {
+			lockOperationsCounter.WithLabelValues("release", "error", "monthly").Inc()
+			log.Printf("Failed to release lock for user %s, year %d, month %d: %v", userID, year, month, unlockErr)
+		} else {
+			lockOperationsCounter.WithLabelValues("release", "success", "monthly").Inc()
+			log.Printf("Released lock for monthly summary generation: user %s, year %d, month %d", userID, year, month)
+		}
+	}()
+
+	// 2. 指定された年月の日次要約を全て取得
 	query := `
 		SELECT summary
 		FROM diary_summary_days
@@ -303,7 +391,11 @@ func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content str
 		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
 			len(content), time.Now().Format("2006-01-02 15:04:05"))
 	}
-	defer geminiClient.Close()
+	defer func() {
+		if closeErr := geminiClient.Close(); closeErr != nil {
+			log.Printf("Failed to close Gemini client: %v", closeErr)
+		}
+	}()
 
 	// 日次要約生成
 	summary, err := geminiClient.GenerateDailySummary(ctx, content)
@@ -335,7 +427,11 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, comb
 		return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
 			len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
 	}
-	defer geminiClient.Close()
+	defer func() {
+		if closeErr := geminiClient.Close(); closeErr != nil {
+			log.Printf("Failed to close Gemini client: %v", closeErr)
+		}
+	}()
 
 	// 月次要約生成
 	summary, err := geminiClient.GenerateSummary(ctx, combinedSummaries)
