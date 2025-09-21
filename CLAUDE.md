@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS. The system includes automated AI summary generation via Redis Pub/Sub and scheduled background processing.
+**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS. The system includes automated AI summary generation via Redis Pub/Sub, scheduled background processing, distributed locking, and comprehensive monitoring with Prometheus and Grafana.
 
 ## Development Setup
 
@@ -20,15 +20,20 @@ npm install -g @grpc/proto-loader
 ### Starting Development Environment
 
 ```bash
-dc up -d  # Starts all services (backend, frontend, postgres, redis, scheduler, subscriber)
+dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, redis, scheduler, subscriber, prometheus, grafana)
 ```
 
 **Service URLs:**
 
-- Backend gRPC: http://localhost:8080
-- Frontend: http://localhost:5173
-- PostgreSQL: localhost:5432
-- Redis: localhost:6379
+- Backend gRPC: http://localhost:2001
+- Frontend: http://localhost:2000
+- PostgreSQL: localhost:2002
+- PostgreSQL Test: localhost:2003
+- Redis: localhost:2004
+- Subscriber Metrics: http://localhost:2005/metrics
+- Scheduler Metrics: http://localhost:2006/metrics
+- Prometheus: http://localhost:2007
+- Grafana: http://localhost:2008 (admin/admin)
 
 ## Common Development Commands
 
@@ -91,6 +96,22 @@ docker compose logs redis            # View Redis logs
 docker compose exec redis redis-cli  # Access Redis CLI
 ```
 
+### Monitoring Services
+
+```bash
+# Prometheus (metrics collection)
+docker compose logs prometheus       # View Prometheus logs
+docker compose exec prometheus sh    # Access Prometheus container
+
+# Grafana (monitoring dashboard)
+docker compose logs grafana          # View Grafana logs
+docker compose exec grafana sh       # Access Grafana container
+
+# Access monitoring endpoints
+curl http://localhost:2005/metrics   # Subscriber metrics
+curl http://localhost:2006/metrics   # Scheduler metrics
+```
+
 ### Database Operations
 
 ```bash
@@ -111,10 +132,11 @@ make xo                # Generate database models from schema
 ### gRPC Debugging
 
 ```bash
-grpc_cli ls localhost:8080                                           # List services
-grpc_cli ls localhost:8080 diary.DiaryService -l                     # Service details
-grpc_cli type localhost:8080 diary.CreateDiaryEntryRequest           # Show message type
-grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'  # Test call
+grpc_cli ls localhost:2001                                           # List services
+grpc_cli ls localhost:2001 diary.DiaryService -l                     # Service details
+grpc_cli type localhost:2001 diary.CreateDiaryEntryRequest           # Show message type
+grpc_cli call localhost:2001 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'  # Test call
+grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'  # Search entries
 ```
 
 ## Architecture
@@ -124,9 +146,11 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - **Clean Architecture**: Domain models, services, and infrastructure layers
 - **gRPC Services**: AuthService and DiaryService
 - **JWT Authentication**: 15-minute access tokens, 30-day refresh tokens
-- **Database**: PostgreSQL with xo-generated models
+- **Database**: PostgreSQL with xo-generated models (separate test DB)
 - **Hot Reload**: Air tool for automatic backend reloading
 - **Async Processing**: Scheduler and Subscriber services with Redis Pub/Sub
+- **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
+- **Monitoring**: Prometheus metrics collection with Grafana dashboards
 
 ### Frontend Structure
 
@@ -150,12 +174,17 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 
 ```
 Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Database
+                          ↓
+                    Distributed Locks
+                          ↓
+                    Prometheus Metrics
 ```
 
 - **Scheduler**: `backend/cmd/scheduler` - Periodic task execution
   - Identifies users with auto-summary enabled
   - Queues summary generation tasks (excluding today/current month)
   - Uses generic `ScheduledJob` interface for extensibility
+  - Exposes metrics on port 2006 for monitoring
 
 - **Redis Pub/Sub**: Message queue with `diary_events` channel
   - JSON message format with type-based routing
@@ -166,6 +195,17 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - Consumes messages from Redis queue
   - Generates summaries via LLM APIs
   - Saves results to database with conflict resolution
+  - Exposes metrics on port 2005 for monitoring
+
+- **Distributed Locking**: `backend/infrastructure/lock` - Redis-based coordination
+  - Prevents duplicate task execution across multiple instances
+  - Uses Lua scripts for atomic lock operations
+  - Separate locks for daily and monthly summary generation
+
+- **Monitoring Stack**: Prometheus + Grafana
+  - Collects metrics from scheduler and subscriber services
+  - Custom dashboard for pub/sub monitoring
+  - Tracks job execution rates, duration, and success rates
 
 ## Authentication Flow
 
@@ -197,6 +237,11 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `adr/`: Architecture Decision Records
   - `0004-pubsub.md`: Redis Pub/Sub implementation details
   - `0005-scheduler.md`: Scheduler system architecture
+- `monitoring/`: Monitoring configuration
+  - `prometheus.yml`: Metrics collection configuration
+  - `grafana/`: Dashboard and data source provisioning
+- `backend/infrastructure/lock/`: Distributed locking system
+  - `distributed_lock.go`: Redis-based lock implementation
 
 ## Development Guidelines
 

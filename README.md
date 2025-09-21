@@ -42,7 +42,10 @@ graph TB
 | **Scheduler** | Go + Cron | Periodic task execution, summary scheduling |
 | **Subscriber** | Go + Redis | Async processing, LLM integration |
 | **Database** | PostgreSQL 17 | Data persistence, user accounts, diary entries |
+| **Test Database** | PostgreSQL 17 | Isolated testing environment |
 | **Message Queue** | Redis Pub/Sub | Async job queuing, inter-service communication |
+| **Distributed Lock** | Redis + Lua Scripts | Prevents duplicate task execution across instances |
+| **Monitoring** | Prometheus + Grafana | Metrics collection and visualization |
 
 ### Data Flow
 
@@ -62,9 +65,12 @@ The application follows a microservices architecture with async processing capab
 - **Subscriber**: Async worker processing LLM tasks
 
 #### Infrastructure
-- **Database**: PostgreSQL for persistent data storage
+- **Database**: PostgreSQL for persistent data storage (separate test DB)
 - **Message Queue**: Redis Pub/Sub for async communication
+- **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Authentication**: JWT-based with refresh token mechanism
+- **Monitoring**: Prometheus metrics with Grafana dashboards
+- **Hot Reload**: Air for backend, Vite for frontend development
 
 #### Async Processing Flow
 1. Scheduler identifies users with auto-summary enabled (every 5 minutes)
@@ -95,9 +101,11 @@ The application follows a microservices architecture with async processing capab
 
 ### Infrastructure
 - **Containerization**: Docker + Docker Compose
-- **Database**: PostgreSQL 17
-- **Cache/Queue**: Redis 8 Alpine
+- **Database**: PostgreSQL 17 (main + test instances)
+- **Cache/Queue**: Redis 8 Alpine with persistence
+- **Monitoring Stack**: Prometheus + Grafana with custom dashboards
 - **Deployment**: Multi-stage Docker builds for production
+- **Development Tools**: Hot reload (Air/Vite), code generation (protoc/XO)
 
 ## Getting Started
 
@@ -143,36 +151,49 @@ dc up -d
 - **API**: http://localhost:2001 (Backend gRPC)
 - **Monitoring**: http://localhost:2008 (Grafana Dashboard)
 
-### debug
+### Development Commands
 
-サービス一覧
-
+#### Frontend Development
 ```bash
-grpc_cli ls localhost:2001
+make f-format      # Format code with Biome
+make f-lint        # Lint and format check
+make f-test        # Run frontend tests
+make f-log         # View frontend logs
+make f-sh          # Access frontend container
 ```
 
-詳細
-
+#### Backend Development
 ```bash
-grpc_cli ls localhost:2001 diary.DiaryService -l
+make b-format      # Format Go code with gofmt and golangci-lint
+make b-lint        # Run linting
+make b-test        # Run backend tests
+make b-log         # View backend logs
+make b-sh          # Access backend container
+make tidy          # Run go mod tidy
 ```
 
-type表示
-
+#### Database Operations
 ```bash
-grpc_cli type localhost:2001 diary.CreateDiaryEntryRequest
+make db            # Connect to PostgreSQL
+make xo            # Generate database models
+make db-diff       # Show schema differences
+make db-apply      # Apply schema changes
 ```
 
-remote call
-
+#### gRPC Development
 ```bash
-grpc_cli call localhost:2001 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'
+make grpc          # Generate both Go and TypeScript gRPC code
+make grpc-go       # Generate Go gRPC code only
+make grpc-ts       # Generate TypeScript gRPC code only
 ```
 
-日記検索
-
+#### gRPC Debugging
 ```bash
-grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'
+grpc_cli ls localhost:2001                                           # List services
+grpc_cli ls localhost:2001 diary.DiaryService -l                     # Service details
+grpc_cli type localhost:2001 diary.CreateDiaryEntryRequest           # Show message type
+grpc_cli call localhost:2001 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'  # Test call
+grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'  # Search entries
 ```
 
 ### Monitoring & Observability
