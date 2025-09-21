@@ -240,7 +240,7 @@
 			"hide": "Hide Summary",
 			"regenerate": "Regenerate Summary",
 			"error": "Failed to generate summary",
-			"noEntries": "No diary entries found for this month",
+			"noEntries": "No diary entries found for this month. To generate a monthly summary, please write diary entries first.",
 			"noApiKey": "Gemini API key is not configured. Please set it up in settings.",
 			"updateAvailable": "Diary entries have been updated since this summary was generated. We recommend regenerating the summary.",
 			"currentMonthError": "Monthly summary can only be generated for past months. Current month cannot be processed.",

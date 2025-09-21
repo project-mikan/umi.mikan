@@ -618,12 +618,12 @@ $: _weekDays = (() => {
 				{#if summaryStatus === 'queued'}
 					<div class="flex items-center text-blue-600 dark:text-blue-400">
 						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
-						<span>{$_("summary.statusQueued")}</span>
+						<span>{$_("diary.summary.statusQueued")}</span>
 					</div>
 				{:else if summaryStatus === 'processing'}
 					<div class="flex items-center text-blue-600 dark:text-blue-400">
 						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
-						<span>{$_("summary.statusProcessing")}</span>
+						<span>{$_("diary.summary.statusProcessing")}</span>
 					</div>
 				{:else if summary}
 					<div class="prose dark:prose-invert max-w-none">

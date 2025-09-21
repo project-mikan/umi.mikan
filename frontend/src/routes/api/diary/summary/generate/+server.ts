@@ -72,7 +72,9 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 		}
 		if (
 			(err as { code?: string })?.code === "NOT_FOUND" ||
-			(err as Error)?.message?.includes("no diary entries")
+			(err as { code?: number })?.code === 5 || // gRPC NOT_FOUND code
+			(err as Error)?.message?.includes("no diary entries") ||
+			(err as Error)?.message?.includes("no daily summaries")
 		) {
 			throw error(404, "No diary entries found for the specified month");
 		}
