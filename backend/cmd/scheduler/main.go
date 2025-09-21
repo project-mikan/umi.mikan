@@ -271,12 +271,14 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler, userID string) error {
 	// diariesテーブルから該当ユーザーの日記がある日を取得し、
 	// diary_summary_daysにsummaryがない日、または要約のupdated_atが日記のupdated_atより古い日を見つける（今日を除く）
+	// 文字数が1000以上の日記のみ対象とする
 	query := `
 		SELECT d.date
 		FROM diaries d
 		LEFT JOIN diary_summary_days dsd ON d.user_id = dsd.user_id AND d.date = dsd.date
 		WHERE d.user_id = $1
 		  AND d.date < CURRENT_DATE
+		  AND LENGTH(d.content) >= 1000
 		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
 		ORDER BY d.date
 	`
@@ -404,15 +406,18 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *Scheduler, userID string) error {
 	// diary_summary_daysから該当ユーザーの要約がある年月を取得し、
 	// diary_summary_monthsに月次要約がない月、またはその月の日記の最新updated_atより月次要約のupdated_atが古い月を見つける（今月を除く）
+	// 日記数が1以上の月のみ対象とする
 	query := `
 		WITH monthly_diary_stats AS (
 			SELECT
 				EXTRACT(YEAR FROM d.date) as year,
 				EXTRACT(MONTH FROM d.date) as month,
-				MAX(d.updated_at) as latest_diary_updated_at
+				MAX(d.updated_at) as latest_diary_updated_at,
+				COUNT(*) as diary_count
 			FROM diaries d
 			WHERE d.user_id = $1
 			GROUP BY EXTRACT(YEAR FROM d.date), EXTRACT(MONTH FROM d.date)
+			HAVING COUNT(*) >= 1
 		),
 		monthly_summary_exists AS (
 			SELECT

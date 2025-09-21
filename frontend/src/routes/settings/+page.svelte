@@ -52,15 +52,34 @@ let activeSection = "";
 
 // Intersection Observer for tracking active section
 onMount(() => {
+	let isUserScrolling = false;
+	let scrollTimeout: number;
+
+	// Listen for scroll events to detect user scrolling
+	const handleScroll = () => {
+		isUserScrolling = true;
+		if (scrollTimeout) {
+			clearTimeout(scrollTimeout);
+		}
+		scrollTimeout = setTimeout(() => {
+			isUserScrolling = false;
+		}, 150);
+	};
+
+	window.addEventListener("scroll", handleScroll);
+
 	const observer = new IntersectionObserver(
 		(entries) => {
-			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
-					activeSection = entry.target.id;
-				}
-			});
+			// Only update if not currently scrolling programmatically
+			if (!isUserScrolling) {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						activeSection = entry.target.id;
+					}
+				});
+			}
 		},
-		{ threshold: 0.5, rootMargin: "-20% 0px -50% 0px" },
+		{ threshold: 0.3, rootMargin: "-20% 0px -60% 0px" },
 	);
 
 	const sections = document.querySelectorAll("section[id]");
@@ -69,8 +88,12 @@ onMount(() => {
 	}
 
 	return () => {
+		window.removeEventListener("scroll", handleScroll);
 		for (const section of sections) {
 			observer.unobserve(section);
+		}
+		if (scrollTimeout) {
+			clearTimeout(scrollTimeout);
 		}
 	};
 });
