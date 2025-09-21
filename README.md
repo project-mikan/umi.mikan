@@ -45,7 +45,7 @@ graph TB
 | **Test Database** | PostgreSQL 17 | Isolated testing environment |
 | **Message Queue** | Redis Pub/Sub | Async job queuing, inter-service communication |
 | **Distributed Lock** | Redis + Lua Scripts | Prevents duplicate task execution across instances |
-| **Monitoring** | Prometheus + Grafana | Metrics collection and visualization |
+| **Monitoring** | Prometheus + Grafana + Loki + Promtail + cAdvisor | Comprehensive metrics, logs, and container monitoring |
 
 ### Data Flow
 
@@ -69,7 +69,7 @@ The application follows a microservices architecture with async processing capab
 - **Message Queue**: Redis Pub/Sub for async communication
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Authentication**: JWT-based with refresh token mechanism
-- **Monitoring**: Prometheus metrics with Grafana dashboards
+- **Monitoring**: Comprehensive stack with Prometheus (metrics), Grafana (dashboards), Loki (logs), Promtail (log collection), and cAdvisor (container monitoring)
 - **Hot Reload**: Air for backend, Vite for frontend development
 
 #### Async Processing Flow
@@ -103,7 +103,7 @@ The application follows a microservices architecture with async processing capab
 - **Containerization**: Docker + Docker Compose
 - **Database**: PostgreSQL 17 (main + test instances)
 - **Cache/Queue**: Redis 8 Alpine with persistence
-- **Monitoring Stack**: Prometheus + Grafana with custom dashboards
+- **Monitoring Stack**: Prometheus + Grafana + Loki + Promtail + cAdvisor with custom dashboards
 - **Deployment**: Multi-stage Docker builds for production
 - **Development Tools**: Hot reload (Air/Vite), code generation (protoc/XO)
 
@@ -145,6 +145,9 @@ dc up -d
 | **Scheduler Metrics** | 2006 | http://localhost:2006/metrics | Prometheus metrics |
 | **Prometheus** | 2007 | http://localhost:2007 | Metrics collection dashboard |
 | **Grafana** | 2008 | http://localhost:2008 | Monitoring dashboard (admin/admin) |
+| **cAdvisor** | 2009 | http://localhost:2009 | Container metrics collection |
+| **Loki** | 2010 | http://localhost:2010 | Log aggregation system |
+| **Promtail** | 2011 | http://localhost:2011 | Log collection agent |
 
 #### Key Access Points
 - **Application**: http://localhost:2000 (Frontend)
@@ -198,19 +201,33 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 
 ### Monitoring & Observability
 
-The application includes comprehensive monitoring through Prometheus and Grafana:
+The application includes comprehensive monitoring stack with Prometheus, Grafana, Loki, Promtail, and cAdvisor:
 
-#### Metrics Available
-- **Scheduler**: Job execution rates, duration, queued messages, auto-summary user counts
-- **Subscriber**: Message processing rates, duration, summary generation counts
-- **Success Rates**: Job execution and message processing success percentages
+#### Available Monitoring Data
+- **Application Metrics** (Prometheus):
+  - Scheduler: Job execution rates, duration, queued messages, auto-summary user counts
+  - Subscriber: Message processing rates, duration, summary generation counts
+  - Success Rates: Job execution and message processing success percentages
+- **Container Metrics** (cAdvisor): CPU, memory, network, disk I/O usage by container
+- **Logs** (Loki + Promtail): Centralized log aggregation with filtering and search capabilities
+
+#### Grafana Dashboards
+1. **umi.mikan Pub/Sub Monitoring**: Application-specific metrics and job processing
+2. **Container Resource Monitoring**: Container CPU, memory, network, and disk usage
+3. **Container Logs**: Centralized log viewing with error/warning filtering
 
 #### Accessing Monitoring
 1. **Grafana Dashboard**: http://localhost:2008
    - Login: admin/admin
-   - Dashboard: "umi.mikan Pub/Sub Monitoring"
+   - Multiple dashboards available for different monitoring aspects
 2. **Prometheus**: http://localhost:2007
    - Raw metrics and query interface
-3. **Individual Metrics**:
+3. **Loki**: http://localhost:2010
+   - Log aggregation system (API access)
+4. **cAdvisor**: http://localhost:2009
+   - Container monitoring interface
+5. **Individual Metrics**:
    - Scheduler: http://localhost:2006/metrics
    - Subscriber: http://localhost:2005/metrics
+   - cAdvisor: http://localhost:2009/metrics
+   - Promtail: http://localhost:2011/metrics

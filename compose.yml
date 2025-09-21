@@ -172,9 +172,35 @@ services:
     devices:
       - /dev/kmsg
 
+  loki:
+    image: grafana/loki:latest
+    restart: always
+    ports:
+      - "2010:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_volume:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    user: "0"
+
+  promtail:
+    image: grafana/promtail:latest
+    restart: always
+    ports:
+      - "2011:9080"
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
 volumes:
   postgres_volume:
   postgres_test_volume:
   redis_volume:
   prometheus_volume:
   grafana_volume:
+  loki_volume:

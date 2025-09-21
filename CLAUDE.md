@@ -20,7 +20,7 @@ npm install -g @grpc/proto-loader
 ### Starting Development Environment
 
 ```bash
-dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, redis, scheduler, subscriber, prometheus, grafana)
+dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, redis, scheduler, subscriber, prometheus, grafana, loki, promtail, cadvisor)
 ```
 
 **Service URLs:**
@@ -34,6 +34,9 @@ dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, red
 - Scheduler Metrics: http://localhost:2006/metrics
 - Prometheus: http://localhost:2007
 - Grafana: http://localhost:2008 (admin/admin)
+- cAdvisor: http://localhost:2009
+- Loki: http://localhost:2010
+- Promtail: http://localhost:2011
 
 ## Common Development Commands
 
@@ -107,9 +110,23 @@ docker compose exec prometheus sh    # Access Prometheus container
 docker compose logs grafana          # View Grafana logs
 docker compose exec grafana sh       # Access Grafana container
 
+# Loki (log aggregation)
+docker compose logs loki             # View Loki logs
+docker compose exec loki sh          # Access Loki container
+
+# Promtail (log collection)
+docker compose logs promtail         # View Promtail logs
+docker compose exec promtail sh      # Access Promtail container
+
+# cAdvisor (container metrics)
+docker compose logs cadvisor         # View cAdvisor logs
+
 # Access monitoring endpoints
 curl http://localhost:2005/metrics   # Subscriber metrics
 curl http://localhost:2006/metrics   # Scheduler metrics
+curl http://localhost:2009/metrics   # cAdvisor metrics
+curl http://localhost:2010/ready     # Loki health check
+curl http://localhost:2011/metrics   # Promtail metrics
 ```
 
 ### Database Operations
@@ -150,7 +167,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Hot Reload**: Air tool for automatic backend reloading
 - **Async Processing**: Scheduler and Subscriber services with Redis Pub/Sub
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
-- **Monitoring**: Prometheus metrics collection with Grafana dashboards
+- **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Promtail, and cAdvisor
 
 ### Frontend Structure
 
@@ -202,10 +219,13 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - Uses Lua scripts for atomic lock operations
   - Separate locks for daily and monthly summary generation
 
-- **Monitoring Stack**: Prometheus + Grafana
-  - Collects metrics from scheduler and subscriber services
-  - Custom dashboard for pub/sub monitoring
-  - Tracks job execution rates, duration, and success rates
+- **Comprehensive Monitoring Stack**: Prometheus + Grafana + Loki + Promtail + cAdvisor
+  - **Prometheus**: Collects metrics from scheduler and subscriber services
+  - **Grafana**: Custom dashboards for pub/sub monitoring and container resource monitoring
+  - **Loki**: Log aggregation system for centralized log management
+  - **Promtail**: Log collection agent that ships logs to Loki
+  - **cAdvisor**: Container resource usage and performance metrics
+  - Tracks job execution rates, duration, success rates, container resources, and logs
 
 ## Authentication Flow
 
@@ -239,7 +259,13 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `0005-scheduler.md`: Scheduler system architecture
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
+  - `loki/loki-config.yml`: Loki log aggregation configuration
+  - `promtail/promtail-config.yml`: Promtail log collection configuration
   - `grafana/`: Dashboard and data source provisioning
+    - `dashboards/umi-mikan-pubsub.json`: Pub/Sub monitoring dashboard
+    - `dashboards/container-monitoring.json`: Container resource monitoring dashboard
+    - `dashboards/container-logs.json`: Container logs monitoring dashboard
+    - `provisioning/datasources/`: Prometheus and Loki data source configurations
 - `backend/infrastructure/lock/`: Distributed locking system
   - `distributed_lock.go`: Redis-based lock implementation
 
@@ -249,7 +275,20 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 - **Always use 2000 series ports**: All services must use ports in the 2000-2099 range
 - **Port allocation**: Follow the existing port scheme documented in Service URLs
-- **Custom services**: New services should use available ports in the 2000 range (e.g., 2009, 2010, etc.)
+- **Current port allocation**:
+  - 2000: Frontend
+  - 2001: Backend gRPC
+  - 2002: PostgreSQL
+  - 2003: PostgreSQL Test
+  - 2004: Redis
+  - 2005: Subscriber Metrics
+  - 2006: Scheduler Metrics
+  - 2007: Prometheus
+  - 2008: Grafana
+  - 2009: cAdvisor
+  - 2010: Loki
+  - 2011: Promtail
+- **Custom services**: New services should use available ports in the 2000 range (e.g., 2012+)
 
 ### Internationalization (i18n)
 
