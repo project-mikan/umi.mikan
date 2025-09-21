@@ -245,12 +245,14 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 
 func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler, userID string) error {
 	// diariesテーブルから該当ユーザーの日記がある日を取得し、
-	// diary_summary_daysにsummaryがない日を見つける（今日を除く）
+	// diary_summary_daysにsummaryがない日、または要約のupdated_atが日記のupdated_atより古い日を見つける（今日を除く）
 	query := `
 		SELECT d.date
 		FROM diaries d
 		LEFT JOIN diary_summary_days dsd ON d.user_id = dsd.user_id AND d.date = dsd.date
-		WHERE d.user_id = $1 AND dsd.id IS NULL AND d.date < CURRENT_DATE
+		WHERE d.user_id = $1
+		  AND d.date < CURRENT_DATE
+		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
 		ORDER BY d.date
 	`
 
