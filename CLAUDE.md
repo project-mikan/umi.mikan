@@ -245,6 +245,12 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 ## Development Guidelines
 
+### Port Usage
+
+- **Always use 2000 series ports**: All services must use ports in the 2000-2099 range
+- **Port allocation**: Follow the existing port scheme documented in Service URLs
+- **Custom services**: New services should use available ports in the 2000 range (e.g., 2009, 2010, etc.)
+
 ### Internationalization (i18n)
 
 - **Always use i18n for user-facing text**: Use `$_("key")` for all UI text
