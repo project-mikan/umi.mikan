@@ -1,3 +1,4 @@
 FROM golang:1.25.1
 WORKDIR /backend
-CMD ["go", "run", "cmd/scheduler/main.go"]
+RUN go install github.com/air-verse/air@latest
+CMD ["air", "-c", ".air-scheduler.toml"]

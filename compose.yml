@@ -25,7 +25,7 @@ services:
       REDIS_PORT: 6379
     tty: true
     ports:
-      - 8080:8080
+      - 2001:8080
 
   frontend:
     build:
@@ -34,7 +34,7 @@ services:
     tty: true
     stdin_open: true
     ports:
-      - "5173:5173"
+      - "2000:5173"
       # - "2802:2802" # playwright report
       # - "24678:24678" # hot relaod
     user: "1000:1000"
@@ -51,7 +51,7 @@ services:
       POSTGRES_PASSWORD: "dev-pass"
       POSTGRES_DB: "umi_mikan"
     ports:
-      - "5432:5432"
+      - "2002:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
@@ -65,7 +65,7 @@ services:
       POSTGRES_PASSWORD: "test-pass"
       POSTGRES_DB: "umi_mikan_test"
     ports:
-      - "5433:5432"
+      - "2003:5432"
     volumes:
       - postgres_test_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
@@ -74,7 +74,7 @@ services:
     image: redis:8-alpine
     restart: always
     ports:
-      - "6379:6379"
+      - "2004:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_volume:/data
@@ -95,7 +95,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      - "8082:8082"  # metrics endpoint
+      - "2005:8082"  # metrics endpoint
     tty: true
     depends_on:
       - postgres
@@ -117,7 +117,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      - "8081:8081"  # metrics endpoint
+      - "2006:8081"  # metrics endpoint
     tty: true
     depends_on:
       - postgres
@@ -127,7 +127,7 @@ services:
     image: prom/prometheus:latest
     restart: always
     ports:
-      - "9090:9090"
+      - "2007:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_volume:/prometheus
@@ -146,7 +146,7 @@ services:
     image: grafana/grafana:latest
     restart: always
     ports:
-      - "3000:3000"
+      - "2008:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:

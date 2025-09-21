@@ -6,25 +6,17 @@
 
 ```mermaid
 graph TB
-    %% User Interface
-    User[👤 User] --> Frontend[🌐 Frontend<br/>SvelteKit + TypeScript]
+    User[User] --> Frontend[Frontend<br/>SvelteKit + TypeScript]
+    Frontend --> Backend[Backend<br/>gRPC Server]
+    Backend --> DB[(PostgreSQL<br/>Database)]
 
-    %% Core Services
-    Frontend --> Backend[🚀 Backend<br/>gRPC Server]
-    Backend --> DB[(🗄️ PostgreSQL<br/>Database)]
+    Scheduler[Scheduler<br/>Periodic Tasks] --> Redis[Redis Pub/Sub<br/>Message Queue]
+    Redis --> Subscriber[Subscriber<br/>Async Processor]
+    Subscriber --> LLM[LLM APIs<br/>Gemini, etc.]
 
-    %% Async Processing System
-    Scheduler[⏰ Scheduler<br/>Periodic Tasks] --> Redis[📨 Redis Pub/Sub<br/>Message Queue]
-    Redis --> Subscriber[🔄 Subscriber<br/>Async Processor]
-
-    %% External Services
-    Subscriber --> LLM[🤖 LLM APIs<br/>Gemini, etc.]
-
-    %% Data Flow
     Backend -.-> Scheduler
     Subscriber --> DB
 
-    %% Service Details
     subgraph "Backend Services"
         Backend
         Scheduler
@@ -39,17 +31,6 @@ graph TB
     subgraph "External"
         LLM
     end
-
-    %% Styling
-    classDef frontend fill:#e1f5fe
-    classDef backend fill:#f3e5f5
-    classDef data fill:#fff3e0
-    classDef external fill:#e8f5e8
-
-    class Frontend frontend
-    class Backend,Scheduler,Subscriber backend
-    class DB,Redis data
-    class LLM external
 ```
 
 ### System Components
@@ -143,37 +124,72 @@ npm install -g @grpc/proto-loader
 dc up -d
 ```
 
-- Backend：http://localhost:8080
-- Frontend：http://localhost:5173
+#### Service URLs
+
+| Service | Port | URL | Description |
+|---------|------|-----|-------------|
+| **Frontend** | 2000 | http://localhost:2000 | SvelteKit development server |
+| **Backend** | 2001 | http://localhost:2001 | gRPC API server |
+| **PostgreSQL** | 2002 | localhost:2002 | Main database |
+| **PostgreSQL Test** | 2003 | localhost:2003 | Test database |
+| **Redis** | 2004 | localhost:2004 | Pub/Sub message queue |
+| **Subscriber Metrics** | 2005 | http://localhost:2005/metrics | Prometheus metrics |
+| **Scheduler Metrics** | 2006 | http://localhost:2006/metrics | Prometheus metrics |
+| **Prometheus** | 2007 | http://localhost:2007 | Metrics collection dashboard |
+| **Grafana** | 2008 | http://localhost:2008 | Monitoring dashboard (admin/admin) |
+
+#### Key Access Points
+- **Application**: http://localhost:2000 (Frontend)
+- **API**: http://localhost:2001 (Backend gRPC)
+- **Monitoring**: http://localhost:2008 (Grafana Dashboard)
 
 ### debug
 
 サービス一覧
 
 ```bash
-grpc_cli ls localhost:8080
+grpc_cli ls localhost:2001
 ```
 
 詳細
 
-```basrh
-grpc_cli ls localhost:8080 diary.DiaryService -l
+```bash
+grpc_cli ls localhost:2001 diary.DiaryService -l
 ```
 
 type表示
 
 ```bash
-grpc_cli type localhost:8080 diary.CreateDiaryEntryRequest
+grpc_cli type localhost:2001 diary.CreateDiaryEntryRequest
 ```
 
 remote call
 
 ```bash
-grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'
+grpc_cli call localhost:2001 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'
 ```
 
 日記検索
 
 ```bash
-grpc_cli call localhost:8080 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'
+grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'
 ```
+
+### Monitoring & Observability
+
+The application includes comprehensive monitoring through Prometheus and Grafana:
+
+#### Metrics Available
+- **Scheduler**: Job execution rates, duration, queued messages, auto-summary user counts
+- **Subscriber**: Message processing rates, duration, summary generation counts
+- **Success Rates**: Job execution and message processing success percentages
+
+#### Accessing Monitoring
+1. **Grafana Dashboard**: http://localhost:2008
+   - Login: admin/admin
+   - Dashboard: "umi.mikan Pub/Sub Monitoring"
+2. **Prometheus**: http://localhost:2007
+   - Raw metrics and query interface
+3. **Individual Metrics**:
+   - Scheduler: http://localhost:2006/metrics
+   - Subscriber: http://localhost:2005/metrics

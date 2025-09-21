@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/redis/rueidis"
 )
 
@@ -197,8 +199,8 @@ func generateDailySummary(ctx context.Context, db *sql.DB, userID, dateStr strin
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
 
-	// 2. LLMで要約生成 (TODO: 実際のLLM API呼び出しを実装)
-	summary := generateSummaryWithLLM(diaryContent)
+	// 2. LLMで要約生成
+	summary := generateSummaryWithLLM(ctx, db, userID, diaryContent)
 
 	// 3. diary_summary_daysに保存
 	insertQuery := `
@@ -259,7 +261,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, userID string, year
 	// 2. LLMで月次要約生成
 	combinedDailySummaries := fmt.Sprintf("Daily summaries for %d/%d:\n%s", year, month,
 		fmt.Sprintf("- %s", fmt.Sprintf("%s\n", dailySummaries)))
-	monthlySummary := generateMonthlySummaryWithLLM(combinedDailySummaries)
+	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, userID, combinedDailySummaries)
 
 	// 3. diary_summary_monthsに保存
 	insertQuery := `
@@ -283,18 +285,66 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, userID string, year
 	return nil
 }
 
-func generateSummaryWithLLM(content string) string {
-	// TODO: 実際のLLM API（Gemini等）を呼び出してsummaryを生成
-	// 現在はモックとして簡単な処理を返す
-	log.Printf("Generating daily summary for content (length: %d)", len(content))
-	return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
-		len(content), time.Now().Format("2006-01-02 15:04:05"))
+func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content string) string {
+	// ユーザーのGemini API keyをuser_llmsテーブルから取得
+	var apiKey string
+	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	err := db.QueryRow(query, userID).Scan(&apiKey)
+	if err != nil {
+		log.Printf("Failed to get user's Gemini API key for user %s: %v", userID, err)
+		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
+			len(content), time.Now().Format("2006-01-02 15:04:05"))
+	}
+
+	// Gemini クライアント作成
+	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
+	if err != nil {
+		log.Printf("Failed to create Gemini client: %v", err)
+		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
+			len(content), time.Now().Format("2006-01-02 15:04:05"))
+	}
+	defer geminiClient.Close()
+
+	// 日次要約生成
+	summary, err := geminiClient.GenerateDailySummary(ctx, content)
+	if err != nil {
+		log.Printf("Failed to generate daily summary: %v", err)
+		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
+			len(content), time.Now().Format("2006-01-02 15:04:05"))
+	}
+
+	log.Printf("Successfully generated daily summary using Gemini API")
+	return summary
 }
 
-func generateMonthlySummaryWithLLM(combinedSummaries string) string {
-	// TODO: 実際のLLM API（Gemini等）を呼び出して月次要約を生成
-	// 現在はモックとして簡単な処理を返す
-	log.Printf("Generating monthly summary for combined summaries (length: %d)", len(combinedSummaries))
-	return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
-		len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
+func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, combinedSummaries string) string {
+	// ユーザーのGemini API keyをuser_llmsテーブルから取得
+	var apiKey string
+	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	err := db.QueryRow(query, userID).Scan(&apiKey)
+	if err != nil {
+		log.Printf("Failed to get user's Gemini API key for user %s: %v", userID, err)
+		return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
+			len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
+	}
+
+	// Gemini クライアント作成
+	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
+	if err != nil {
+		log.Printf("Failed to create Gemini client: %v", err)
+		return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
+			len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
+	}
+	defer geminiClient.Close()
+
+	// 月次要約生成
+	summary, err := geminiClient.GenerateSummary(ctx, combinedSummaries)
+	if err != nil {
+		log.Printf("Failed to generate monthly summary: %v", err)
+		return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
+			len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
+	}
+
+	log.Printf("Successfully generated monthly summary using Gemini API")
+	return summary
 }
