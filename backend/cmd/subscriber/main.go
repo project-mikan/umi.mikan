@@ -7,6 +7,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -104,9 +108,8 @@ func main() {
 	}
 	defer client.Close()
 
-	ctx := context.Background()
-
 	// Redis接続確認
+	ctx := context.Background()
 	pingCmd := client.B().Ping().Build()
 	if err := client.Do(ctx, pingCmd).Error(); err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
@@ -114,34 +117,101 @@ func main() {
 	log.Print("Connected to Redis successfully")
 
 	// メトリクスサーバー開始
+	metricsServer := &http.Server{Addr: ":2005"}
+	http.Handle("/metrics", promhttp.Handler())
+
 	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		log.Print("Metrics server starting on :8082")
-		if err := http.ListenAndServe(":8082", nil); err != nil {
+		log.Print("Metrics server starting on :2005")
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("Metrics server error: %v", err)
 		}
 	}()
 
 	log.Print("Subscriber is listening for messages...")
 
-	// SUBSCRIBE コマンドでチャンネル購読
-	err = client.Receive(ctx, client.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
-		log.Printf("Received message: %s from channel: %s", msg.Message, msg.Channel)
+	// Create context for subscription that can be cancelled
+	subCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-		start := time.Now()
-		err := processMessage(ctx, db, client, msg.Message)
-		duration := time.Since(start)
+	// Track processing messages for graceful shutdown
+	var wg sync.WaitGroup
+	processing := make(chan struct{}, 100) // Buffer to limit concurrent processing
 
-		// メトリクス更新は processMessage 内で行う
-		_ = duration // 使用しない場合の警告回避
+	// Set up signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start subscriber in goroutine
+	subErrChan := make(chan error, 1)
+	go func() {
+		err := client.Receive(subCtx, client.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
+			log.Printf("Received message: %s from channel: %s", msg.Message, msg.Channel)
+
+			// Track this message processing
+			wg.Add(1)
+			processing <- struct{}{} // Acquire processing slot
+
+			go func() {
+				defer func() {
+					<-processing // Release processing slot
+					wg.Done()
+				}()
+
+				start := time.Now()
+				err := processMessage(subCtx, db, client, msg.Message)
+				duration := time.Since(start)
+
+				// メトリクス更新は processMessage 内で行う
+				_ = duration // 使用しない場合の警告回避
+
+				if err != nil {
+					log.Printf("Failed to process message: %v", err)
+				}
+			}()
+		})
 
 		if err != nil {
-			log.Printf("Failed to process message: %v", err)
+			subErrChan <- err
 		}
-	})
+	}()
 
-	if err != nil {
-		log.Fatalf("Failed to subscribe: %v", err)
+	// Wait for shutdown signal or subscription error
+	select {
+	case sig := <-sigChan:
+		log.Printf("Received signal %v, initiating graceful shutdown...", sig)
+
+		// Cancel subscription context to stop receiving new messages
+		cancel()
+		log.Print("Stopped accepting new messages")
+
+		// Create context with timeout for graceful shutdown
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer shutdownCancel()
+
+		// Wait for all processing messages to complete or timeout
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			log.Print("All messages processed successfully")
+		case <-shutdownCtx.Done():
+			log.Print("Graceful shutdown timeout, some messages may not have been processed")
+		}
+
+		// Stop metrics server
+		if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+			log.Printf("Metrics server shutdown error: %v", err)
+		} else {
+			log.Print("Metrics server stopped")
+		}
+
+	case err := <-subErrChan:
+		log.Printf("Subscription error: %v", err)
+		cancel()
 	}
 
 	log.Print("Subscriber ended")

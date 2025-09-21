@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/project-mikan/umi.mikan/backend/constants"
@@ -157,10 +160,12 @@ func main() {
 	log.Print("Connected to Redis successfully")
 
 	// メトリクスサーバー開始
+	metricsServer := &http.Server{Addr: ":2006"}
+	http.Handle("/metrics", promhttp.Handler())
+
 	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		log.Print("Metrics server starting on :8081")
-		if err := http.ListenAndServe(":8081", nil); err != nil {
+		log.Print("Metrics server starting on :2006")
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("Metrics server error: %v", err)
 		}
 	}()
@@ -174,8 +179,28 @@ func main() {
 
 	log.Print("Scheduler is running...")
 
-	// プログラム終了まで待機
-	select {}
+	// Set up signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Wait for shutdown signal
+	sig := <-sigChan
+	log.Printf("Received signal %v, initiating graceful shutdown...", sig)
+
+	// Create context with timeout for graceful shutdown
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Stop scheduler
+	scheduler.Stop()
+	log.Print("Scheduler stopped")
+
+	// Stop metrics server
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Metrics server shutdown error: %v", err)
+	} else {
+		log.Print("Metrics server stopped")
+	}
 }
 
 // DailySummaryJob implementation
