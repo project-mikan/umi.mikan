@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -385,17 +386,17 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 		}
 	}()
 
-	// 2. 指定された年月の日次要約を全て取得
+	// 2. 指定された年月の日記エントリーを全て取得
 	query := `
-		SELECT summary
-		FROM diary_summary_days
+		SELECT date, content
+		FROM diaries
 		WHERE user_id = $1 AND EXTRACT(YEAR FROM date) = $2 AND EXTRACT(MONTH FROM date) = $3
 		ORDER BY date
 	`
 
 	rows, err := db.Query(query, userID, year, month)
 	if err != nil {
-		return fmt.Errorf("failed to get daily summaries: %w", err)
+		return fmt.Errorf("failed to get diary entries: %w", err)
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -403,23 +404,23 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 		}
 	}()
 
-	var dailySummaries []string
+	var diaryEntries []string
 	for rows.Next() {
-		var summary string
-		if err := rows.Scan(&summary); err != nil {
-			return fmt.Errorf("failed to scan daily summary: %w", err)
+		var date, content string
+		if err := rows.Scan(&date, &content); err != nil {
+			return fmt.Errorf("failed to scan diary entry: %w", err)
 		}
-		dailySummaries = append(dailySummaries, summary)
+		diaryEntries = append(diaryEntries, fmt.Sprintf("[%s]\n%s", date, content))
 	}
 
-	if len(dailySummaries) == 0 {
-		return fmt.Errorf("no daily summaries found for user %s, year %d, month %d", userID, year, month)
+	if len(diaryEntries) == 0 {
+		return fmt.Errorf("no diary entries found for user %s, year %d, month %d", userID, year, month)
 	}
 
 	// 2. LLMで月次要約生成
-	combinedDailySummaries := fmt.Sprintf("Daily summaries for %d/%d:\n%s", year, month,
-		fmt.Sprintf("- %s", fmt.Sprintf("%s\n", dailySummaries)))
-	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, userID, combinedDailySummaries)
+	combinedDiaryEntries := fmt.Sprintf("Diary entries for %d/%d:\n\n%s", year, month,
+		strings.Join(diaryEntries, "\n\n"))
+	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, userID, combinedDiaryEntries)
 
 	// 3. diary_summary_monthsに保存
 	insertQuery := `
@@ -479,23 +480,23 @@ func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content str
 	return summary
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, combinedSummaries string) string {
+func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, combinedEntries string) string {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
 	err := db.QueryRow(query, userID).Scan(&apiKey)
 	if err != nil {
 		log.Printf("Failed to get user's Gemini API key for user %s: %v", userID, err)
-		return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
-			len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
+		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
+			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
 
 	// Gemini クライアント作成
 	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
 	if err != nil {
 		log.Printf("Failed to create Gemini client: %v", err)
-		return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
-			len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
+		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
+			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
 	defer func() {
 		if closeErr := geminiClient.Close(); closeErr != nil {
@@ -504,11 +505,11 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, comb
 	}()
 
 	// 月次要約生成
-	summary, err := geminiClient.GenerateSummary(ctx, combinedSummaries)
+	summary, err := geminiClient.GenerateSummary(ctx, combinedEntries)
 	if err != nil {
 		log.Printf("Failed to generate monthly summary: %v", err)
-		return fmt.Sprintf("Monthly summary based on daily summaries (total length: %d characters) - Generated at %s",
-			len(combinedSummaries), time.Now().Format("2006-01-02 15:04:05"))
+		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
+			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
 
 	log.Printf("Successfully generated monthly summary using Gemini API")

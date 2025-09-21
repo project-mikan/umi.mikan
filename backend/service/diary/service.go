@@ -361,20 +361,20 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		return nil, status.Errorf(codes.FailedPrecondition, "Monthly summary generation is only allowed for past months")
 	}
 
-	// その月に日次要約が存在するかチェック
+	// その月に日記が存在するかチェック
 	var count int
 	checkQuery := `
-		SELECT COUNT(*) FROM diary_summary_days
+		SELECT COUNT(*) FROM diaries
 		WHERE user_id = $1
 		AND EXTRACT(YEAR FROM date) = $2
 		AND EXTRACT(MONTH FROM date) = $3
 	`
 	err = s.DB.(*sql.DB).QueryRow(checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to check daily summaries")
+		return nil, status.Errorf(codes.Internal, "failed to check diary entries")
 	}
 	if count == 0 {
-		return nil, status.Errorf(codes.NotFound, "no daily summaries found for the specified month")
+		return nil, status.Errorf(codes.NotFound, "no diary entries found for the specified month")
 	}
 
 	// タスクキーを生成

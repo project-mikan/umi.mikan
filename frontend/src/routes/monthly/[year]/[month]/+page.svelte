@@ -14,6 +14,7 @@ import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
 import MonthYearSelector from "$lib/components/molecules/MonthYearSelector.svelte";
 import CharacterCountChart from "$lib/components/molecules/CharacterCountChart.svelte";
+import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
 
 $: title = $_("page.title.calendar");
 
@@ -50,11 +51,7 @@ let showSummary = false;
 let errorMessage = "";
 let showErrorModal = false;
 let hasNewerEntries = false;
-let summaryStatus: "none" | "queued" | "processing" | "completed" | "error" =
-	"none";
-let summaryGenerating = false;
-let pollingInterval: ReturnType<typeof setInterval> | null = null;
-let summaryJustUpdated = false;
+let summaryError: string | null = null;
 let isCurrentMonth = false;
 
 // 現在の月かどうかの判定（リアクティブ）
@@ -174,6 +171,15 @@ function _handleMonthSelectorCancel() {
 	showMonthSelector = false;
 }
 
+function handleSummaryUpdated(event: CustomEvent) {
+	summary = event.detail.summary;
+	showSummary = true;
+}
+
+function handleSummaryError(event: CustomEvent) {
+	summaryError = event.detail.message;
+}
+
 // サマリー関連の関数
 async function fetchMonthlySummary() {
 	if (!browser) return;
@@ -185,10 +191,8 @@ async function fetchMonthlySummary() {
 		if (response.ok) {
 			const result = await response.json();
 			summary = result.summary;
-			summaryStatus = "completed";
 		} else if (response.status === 404) {
 			summary = null;
-			summaryStatus = "none";
 		} else if (response.status === 401) {
 			await goto("/login");
 		} else {
@@ -197,11 +201,9 @@ async function fetchMonthlySummary() {
 				response.status,
 				response.statusText,
 			);
-			summaryStatus = "error";
 		}
 	} catch (error) {
 		console.error("Failed to fetch summary:", error);
-		summaryStatus = "error";
 	}
 }
 
