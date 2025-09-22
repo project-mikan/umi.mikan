@@ -52,6 +52,11 @@ let summaryError: string | null = null;
 let isCurrentMonth = false;
 let isFutureMonth = false;
 let hasEntries = false;
+let isSummaryGenerating = false; // 要約生成中のフラグ
+let monthlySummary: MonthlySummary | null = null;
+let isMonthlySummaryOutdated = false;
+let lastMonthlySummaryUpdateTime = 0; // 最後に月次要約が更新された時刻（ミリ秒）
+let isInitialLoad = true; // 初回読み込みかどうかのフラグ
 
 // Check if user has LLM key configured
 $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
@@ -77,7 +82,52 @@ $: {
 	entries = data.entries;
 	currentYear = data.year;
 	currentMonth = data.month;
+	// 月が変わった時は初回読み込み扱いにリセット
+	isInitialLoad = true;
 }
+
+// 月次要約が古いかどうかを判定（リアクティブ）
+$: isMonthlySummaryOutdated = (() => {
+	if (!monthlySummary || !entries?.entries) return false;
+
+	// その月の全ての日記エントリの最新更新日時を取得
+	const latestEntryUpdatedAt = entries.entries.reduce((latest, entry) => {
+		const entryUpdatedAt = Number(entry.updatedAt) * 1000; // 秒 → ミリ秒
+		return entryUpdatedAt > latest ? entryUpdatedAt : latest;
+	}, 0);
+
+	// 月次要約の更新日時（既にミリ秒）
+	const summaryUpdatedAt = Number(monthlySummary.updatedAt);
+
+	// 要約が最近更新された場合（5秒以内）は古くないとみなす
+	const now = Date.now();
+	const recentlyUpdated =
+		lastMonthlySummaryUpdateTime > 0 &&
+		now - lastMonthlySummaryUpdateTime < 5000;
+
+	// 要約が最新の日記エントリよりも新しい場合、または最近更新された場合は古くない
+	const isOutdated =
+		latestEntryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
+
+	// デバッグ用ログ（開発環境でのみ）
+	if (
+		typeof window !== "undefined" &&
+		window.location.hostname === "localhost"
+	) {
+		console.log("🔍 Monthly summary outdated check:", {
+			latestEntryUpdatedAt: new Date(latestEntryUpdatedAt),
+			summaryUpdatedAt: new Date(summaryUpdatedAt),
+			isOutdated,
+			recentlyUpdated,
+			lastMonthlySummaryUpdateTime: new Date(lastMonthlySummaryUpdateTime),
+			entriesCount: entries.entries.length,
+			now: new Date(now),
+			timeDiff: now - lastMonthlySummaryUpdateTime,
+		});
+	}
+
+	return isOutdated;
+})();
 
 // クライアントサイドでデータを再取得する関数
 async function fetchMonthData(year: number, month: number) {
@@ -182,12 +232,62 @@ function _handleMonthSelectorCancel() {
 	showMonthSelector = false;
 }
 
-function handleSummaryUpdated(_event: CustomEvent) {
-	// SummaryDisplayコンポーネントが内部でサマリー状態を管理
+function handleSummaryUpdated(event: CustomEvent) {
+	const newSummary = event.detail.summary;
+	const oldSummary = monthlySummary;
+
+	// 要約が実際に変更されたかどうかを確認
+	// 初回読み込み時は変更とみなさない
+	const actuallyUpdated =
+		!isInitialLoad &&
+		oldSummary &&
+		(oldSummary.updatedAt !== newSummary.updatedAt ||
+		oldSummary.summary !== newSummary.summary);
+
+	// デバッグ用ログ（開発環境でのみ）
+	if (
+		typeof window !== "undefined" &&
+		window.location.hostname === "localhost"
+	) {
+		console.log("📨 Monthly summary updated event received:", {
+			oldSummary: oldSummary ? {
+				updatedAt: oldSummary.updatedAt,
+				summary: oldSummary.summary.substring(0, 50) + "..."
+			} : null,
+			newSummary: {
+				updatedAt: newSummary.updatedAt,
+				summary: newSummary.summary.substring(0, 50) + "..."
+			},
+			newUpdatedAt: new Date(newSummary.updatedAt),
+			actuallyUpdated,
+			isInitialLoad,
+			timestamp: new Date().toISOString(),
+		});
+	}
+
+	// 常に要約は更新するが、初回読み込み時は時刻は記録しない
+	monthlySummary = newSummary;
+	if (actuallyUpdated) {
+		lastMonthlySummaryUpdateTime = Date.now();
+	}
+
+	// 初回読み込み完了をマーク
+	if (isInitialLoad) {
+		isInitialLoad = false;
+	}
 }
 
 function handleSummaryError(event: CustomEvent) {
 	summaryError = event.detail.message;
+}
+
+function handleGenerationStarted() {
+	isSummaryGenerating = true;
+	summaryError = null;
+}
+
+function handleGenerationCompleted() {
+	isSummaryGenerating = false;
 }
 
 // エラー表示用ヘルパー関数
@@ -293,8 +393,12 @@ $: _weekDays = (() => {
 		isDisabled={isFutureMonth || isCurrentMonth || !hasEntries}
 		disabledMessage={getDisabledMessage()}
 		{hasLLMKey}
+		isSummaryOutdated={isMonthlySummaryOutdated}
+		isGenerating={isSummaryGenerating}
 		on:summaryUpdated={handleSummaryUpdated}
 		on:summaryError={handleSummaryError}
+		on:generationStarted={handleGenerationStarted}
+		on:generationCompleted={handleGenerationCompleted}
 	/>
 
 	<!-- 月ナビゲーション -->

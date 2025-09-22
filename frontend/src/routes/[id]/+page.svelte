@@ -59,6 +59,8 @@ let showSummary = !!data.dailySummary;
 let summaryError: string | null = null;
 let isToday = false;
 let isFutureDate = false;
+let isSummaryGenerating = false; // 要約生成中のフラグ
+let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
 
 // Check if user has LLM key configured
 $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
@@ -112,7 +114,31 @@ $: isSummaryOutdated = (() => {
 	const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
 	const summaryUpdatedAt = Number(summary.updatedAt); // 既にミリ秒
 
-	return diaryUpdatedAt > summaryUpdatedAt;
+	// 要約が最近更新された場合（5秒以内）は古くないとみなす
+	const now = Date.now();
+	const recentlyUpdated =
+		lastSummaryUpdateTime > 0 && now - lastSummaryUpdateTime < 5000;
+
+	// 要約が日記よりも新しい場合、または最近更新された場合は古くない
+	const isOutdated = diaryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
+
+	// デバッグ用ログ（開発環境でのみ）
+	if (
+		typeof window !== "undefined" &&
+		window.location.hostname === "localhost"
+	) {
+		console.log("Summary outdated check:", {
+			diaryUpdatedAt: new Date(diaryUpdatedAt),
+			summaryUpdatedAt: new Date(summaryUpdatedAt),
+			isOutdated,
+			recentlyUpdated,
+			lastSummaryUpdateTime: new Date(lastSummaryUpdateTime),
+			diaryTimestamp: diaryUpdatedAt,
+			summaryTimestamp: summaryUpdatedAt,
+		});
+	}
+
+	return isOutdated;
 })();
 
 // Character count calculation
@@ -125,12 +151,48 @@ $: {
 }
 
 function handleSummaryUpdated(event: CustomEvent) {
-	summary = event.detail.summary;
+	const newSummary = event.detail.summary;
+	const oldSummary = summary;
+
+	// 要約が実際に変更されたかどうかを確認
+	const actuallyUpdated =
+		!oldSummary ||
+		oldSummary.updatedAt !== newSummary.updatedAt ||
+		oldSummary.summary !== newSummary.summary;
+
+	// デバッグ用ログ（開発環境でのみ）
+	if (
+		typeof window !== "undefined" &&
+		window.location.hostname === "localhost"
+	) {
+		console.log("Summary updated:", {
+			oldSummary,
+			newSummary,
+			newUpdatedAt: new Date(newSummary.updatedAt),
+			actuallyUpdated,
+		});
+	}
+
+	summary = newSummary;
 	showSummary = true;
+
+	// 要約が実際に更新された場合のみ時刻を記録
+	if (actuallyUpdated) {
+		lastSummaryUpdateTime = Date.now();
+	}
 }
 
 function handleSummaryError(event: CustomEvent) {
 	summaryError = event.detail.message;
+}
+
+function handleGenerationStarted() {
+	isSummaryGenerating = true;
+	summaryError = null;
+}
+
+function handleGenerationCompleted() {
+	isSummaryGenerating = false;
 }
 
 function _formatDateStr(ymd: {
@@ -206,10 +268,14 @@ function _handleDelete() {
 				}}
 				{hasLLMKey}
 				{showSummary}
+				{isSummaryOutdated}
 				isDisabled={isToday || isFutureDate}
 				disabledMessage={getDisabledMessage()}
+				isGenerating={isSummaryGenerating}
 				on:summaryUpdated={handleSummaryUpdated}
 				on:error={handleSummaryError}
+				on:generationStarted={handleGenerationStarted}
+				on:generationCompleted={handleGenerationCompleted}
 			/>
 		{/if}
 

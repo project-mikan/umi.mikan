@@ -154,6 +154,7 @@
 			"label": "Summary",
 			"view": "View Summary",
 			"hide": "Hide Summary",
+			"outdated": "The diary has been updated since this summary was created, so the summary may be outdated.",
 			"outdatedWarning": "The diary has been updated since this summary was created, so the summary may be outdated.",
 			"statusQueued": "Summary generation has been queued. Please wait a moment.",
 			"statusProcessing": "Summary is being generated. Please wait a moment."
@@ -242,6 +243,7 @@
 			"regenerate": "Regenerate Summary",
 			"regenerating": "Regenerating summary...",
 			"error": "Failed to generate summary",
+			"outdated": "Diary entries have been updated since this summary was created. Regenerate the summary for the latest version.",
 			"noEntries": "No diary entries found for this month. To generate a monthly summary, please write diary entries first.",
 			"noApiKey": "Gemini API key is not configured. Please set it up in settings.",
 			"updateAvailable": "Diary entries have been updated since this summary was generated. We recommend regenerating the summary.",
