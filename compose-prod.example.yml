@@ -198,6 +198,35 @@ services:
     networks:
       - internal
 
+  loki:
+    image: grafana/loki:latest
+    restart: unless-stopped
+    ports:
+      - "2010:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_prod_volume:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    user: "0"
+    networks:
+      - internal
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: unless-stopped
+    ports:
+      - "2011:12345"
+    volumes:
+      - ./monitoring/alloy/alloy-config.alloy:/etc/alloy/config.alloy
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    networks:
+      - internal
+
   tunnel:
     restart: always
     image: cloudflare/cloudflared
@@ -214,6 +243,7 @@ volumes:
   redis_prod_volume:
   prometheus_prod_volume:
   grafana_prod_volume:
+  loki_prod_volume:
 
 networks:
   internal:
