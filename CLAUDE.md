@@ -303,6 +303,12 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Follow atomic design**: Place components in appropriate atoms/molecules/organisms directories
 - **Consistent imports**: Always include necessary i18n imports
 
+### TypeScript Guidelines
+
+- **No any or unknown types**: Always use specific, properly typed interfaces and types
+- **Type safety**: Ensure all variables, function parameters, and return values have explicit types
+- **Generated types**: Use the auto-generated gRPC types from `frontend/src/lib/grpc/`
+
 ## Production Notes
 
 - Copy `compose-prod.example.yml` to `compose-prod.yml` for production
