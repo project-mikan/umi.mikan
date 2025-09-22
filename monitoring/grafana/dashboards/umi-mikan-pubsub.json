@@ -134,11 +134,11 @@
     },
     {
       "id": 5,
-      "title": "Subscriber Message Processing Rate",
+      "title": "Subscriber Message Processing Count",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(subscriber_messages_processed_total[5m])",
+          "expr": "subscriber_messages_processed_total",
           "legendFormat": "{{message_type}} - {{status}}",
           "refId": "A"
         }
@@ -148,7 +148,7 @@
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "reqps"
+          "unit": "short"
         }
       },
       "gridPos": {
