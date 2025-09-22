@@ -145,6 +145,7 @@
 		"regeneratingSummary": "Regenerating Summary...",
 		"summaryRequires1000Chars": "Summary available for 1000+ characters",
 		"summaryNotAvailableToday": "Summary not available for today's entries",
+		"summaryNotAvailableFuture": "Summary not available for future dates",
 		"summaryAutoEnabled": "Auto-summary is enabled",
 		"summaryGenerationFailed": "Summary generation failed",
 		"summaryTimeout": "Summary generation timed out. Please try again.",
@@ -239,12 +240,15 @@
 			"view": "View Summary",
 			"hide": "Hide Summary",
 			"regenerate": "Regenerate Summary",
+			"regenerating": "Regenerating summary...",
 			"error": "Failed to generate summary",
 			"noEntries": "No diary entries found for this month. To generate a monthly summary, please write diary entries first.",
 			"noApiKey": "Gemini API key is not configured. Please set it up in settings.",
 			"updateAvailable": "Diary entries have been updated since this summary was generated. We recommend regenerating the summary.",
 			"currentMonthError": "Monthly summary can only be generated for past months. Current month cannot be processed.",
-			"currentMonthNote": "Summary cannot be generated for current month"
+			"currentMonthNote": "Summary cannot be generated for current month",
+			"futureMonthError": "Summary cannot be generated for future months.",
+			"noEntriesError": "No diary entries found for this month. Please write diary entries first to generate a summary."
 		}
 	},
 	"timeProgress": {

@@ -57,11 +57,38 @@ let summary: {
 } | null = data.dailySummary;
 let showSummary = !!data.dailySummary;
 let summaryError: string | null = null;
+let isToday = false;
+let isFutureDate = false;
 
 // Check if user has LLM key configured
 $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
 $: hasLLMKey = !!existingLLMKey;
+
+// 日付判定（当日・未来日）
+$: {
+	const now = new Date();
+	const currentDate = new Date(
+		data.date.year,
+		data.date.month - 1,
+		data.date.day,
+	);
+	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+	isToday = currentDate.getTime() === today.getTime();
+	isFutureDate = currentDate.getTime() > today.getTime();
+}
 $: autoSummaryDisabled = !existingLLMKey?.autoSummaryDaily;
+
+// 無効化メッセージを取得
+function getDisabledMessage(): string {
+	if (isFutureDate) {
+		return $_("diary.summaryNotAvailableFuture");
+	}
+	if (isToday) {
+		return $_("diary.summaryNotAvailableToday");
+	}
+	return "";
+}
 
 // Check if the diary date is not today (only allow summary generation for past entries)
 $: isNotToday = (() => {
@@ -166,7 +193,7 @@ function _handleDelete() {
 		<DiaryNavigation currentDate={data.date} />
 
 		<!-- Summary display area -->
-		{#if data.entry && characterCount >= 1000 && isNotToday}
+		{#if data.entry && characterCount >= 1000}
 			<SummaryDisplay
 				type="daily"
 				{summary}
@@ -179,6 +206,8 @@ function _handleDelete() {
 				}}
 				{hasLLMKey}
 				{showSummary}
+				isDisabled={isToday || isFutureDate}
+				disabledMessage={getDisabledMessage()}
 				on:summaryUpdated={handleSummaryUpdated}
 				on:error={handleSummaryError}
 			/>
