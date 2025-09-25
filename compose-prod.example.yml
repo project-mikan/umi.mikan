@@ -80,8 +80,14 @@ services:
       dockerfile: ../infra/prod/subscriber/Dockerfile
     environment:
       TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: prod-pass
+      DB_NAME: umi_mikan
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SUBSCRIBER_MAX_CONCURRENT_JOBS: 20
     ports:
       - "2005:8082" # metrics endpoint
     restart: unless-stopped
@@ -104,6 +110,8 @@ services:
       DB_NAME: umi_mikan
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SCHEDULER_DAILY_INTERVAL: 10m
+      SCHEDULER_MONTHLY_INTERVAL: 30m
     ports:
       - "2006:8081" # metrics endpoint
     restart: unless-stopped

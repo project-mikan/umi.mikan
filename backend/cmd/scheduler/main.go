@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,6 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -64,6 +64,7 @@ type Scheduler struct {
 	redis  rueidis.Client
 	ctx    context.Context
 	cancel context.CancelFunc
+	logger *logrus.Entry
 }
 
 type ScheduledJob interface {
@@ -72,13 +73,14 @@ type ScheduledJob interface {
 	Execute(ctx context.Context, s *Scheduler) error
 }
 
-func NewScheduler(db *sql.DB, redis rueidis.Client) *Scheduler {
+func NewScheduler(db *sql.DB, redis rueidis.Client, logger *logrus.Entry) *Scheduler {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Scheduler{
 		db:     db,
 		redis:  redis,
 		ctx:    ctx,
 		cancel: cancel,
+		logger: logger,
 	}
 }
 
@@ -87,15 +89,18 @@ func (s *Scheduler) AddJob(job ScheduledJob) {
 		ticker := time.NewTicker(job.Interval())
 		defer ticker.Stop()
 
-		log.Printf("Scheduled job '%s' started with interval %v", job.Name(), job.Interval())
+		s.logger.WithFields(logrus.Fields{
+			"job_name": job.Name(),
+			"interval": job.Interval(),
+		}).Info("Scheduled job started")
 
 		for {
 			select {
 			case <-s.ctx.Done():
-				log.Printf("Scheduled job '%s' stopped", job.Name())
+				s.logger.WithField("job_name", job.Name()).Info("Scheduled job stopped")
 				return
 			case <-ticker.C:
-				log.Printf("Executing job: %s", job.Name())
+				s.logger.WithField("job_name", job.Name()).Debug("Executing job")
 
 				// Metrics tracking
 				start := time.Now()
@@ -105,9 +110,16 @@ func (s *Scheduler) AddJob(job ScheduledJob) {
 				jobDuration.WithLabelValues(job.Name()).Observe(duration.Seconds())
 
 				if err != nil {
-					log.Printf("Error executing job '%s': %v", job.Name(), err)
+					s.logger.WithError(err).WithFields(logrus.Fields{
+						"job_name": job.Name(),
+						"duration": duration,
+					}).Error("Error executing job")
 					jobExecutionCounter.WithLabelValues(job.Name(), "error").Inc()
 				} else {
+					s.logger.WithFields(logrus.Fields{
+						"job_name": job.Name(),
+						"duration": duration,
+					}).Debug("Job executed successfully")
 					jobExecutionCounter.WithLabelValues(job.Name(), "success").Inc()
 				}
 			}
@@ -120,26 +132,30 @@ func (s *Scheduler) Stop() {
 }
 
 func main() {
-	log.Print("=== umi.mikan scheduler started ===")
+	// Initialize structured logger
+	logger := logrus.WithFields(logrus.Fields{
+		"service": "scheduler",
+	})
+	logger.Info("=== umi.mikan scheduler started ===")
 
 	// DB設定の読み込み
 	dbConfig, err := constants.LoadDBConfig()
 	if err != nil {
-		log.Fatalf("Failed to load DB config: %v", err)
+		logger.WithError(err).Fatal("Failed to load DB config")
 	}
 
 	// DB接続
 	db := database.NewDB(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
 	defer func() {
 		if err := db.Close(); err != nil {
-			log.Printf("Failed to close database connection: %v", err)
+			logger.WithError(err).Error("Failed to close database connection")
 		}
 	}()
 
 	// Redis設定の読み込み
 	redisConfig, err := constants.LoadRedisConfig()
 	if err != nil {
-		log.Fatalf("Failed to load Redis config: %v", err)
+		logger.WithError(err).Fatal("Failed to load Redis config")
 	}
 
 	// Redisクライアント作成
@@ -147,7 +163,7 @@ func main() {
 		InitAddress: []string{fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port)},
 	})
 	if err != nil {
-		log.Fatalf("Failed to create Redis client: %v", err)
+		logger.WithError(err).Fatal("Failed to create Redis client")
 	}
 	defer redisClient.Close()
 
@@ -155,29 +171,35 @@ func main() {
 	ctx := context.Background()
 	pingCmd := redisClient.B().Ping().Build()
 	if err := redisClient.Do(ctx, pingCmd).Error(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		logger.WithError(err).Fatal("Failed to connect to Redis")
 	}
-	log.Print("Connected to Redis successfully")
+	logger.Info("Connected to Redis successfully")
 
 	// メトリクスサーバー開始
 	metricsServer := &http.Server{Addr: ":2006"}
 	http.Handle("/metrics", promhttp.Handler())
 
 	go func() {
-		log.Print("Metrics server starting on :2006")
+		logger.Info("Metrics server starting on :2006")
 		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("Metrics server error: %v", err)
+			logger.WithError(err).Error("Metrics server error")
 		}
 	}()
 
+	// Scheduler設定の読み込み
+	schedulerConfig, err := constants.LoadSchedulerConfig()
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to load scheduler config")
+	}
+
 	// スケジューラー作成
-	scheduler := NewScheduler(db, redisClient)
+	scheduler := NewScheduler(db, redisClient, logger)
 
 	// ジョブを追加
-	scheduler.AddJob(&DailySummaryJob{})
-	scheduler.AddJob(&MonthlySummaryJob{})
+	scheduler.AddJob(NewDailySummaryJob(schedulerConfig.DailySummaryInterval))
+	scheduler.AddJob(NewMonthlySummaryJob(schedulerConfig.MonthlySummaryInterval))
 
-	log.Print("Scheduler is running...")
+	logger.Info("Scheduler is running...")
 
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -185,7 +207,7 @@ func main() {
 
 	// Wait for shutdown signal
 	sig := <-sigChan
-	log.Printf("Received signal %v, initiating graceful shutdown...", sig)
+	logger.WithField("signal", sig).Info("Received signal, initiating graceful shutdown...")
 
 	// Create context with timeout for graceful shutdown
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -193,18 +215,24 @@ func main() {
 
 	// Stop scheduler
 	scheduler.Stop()
-	log.Print("Scheduler stopped")
+	logger.Info("Scheduler stopped")
 
 	// Stop metrics server
 	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Metrics server shutdown error: %v", err)
+		logger.WithError(err).Error("Metrics server shutdown error")
 	} else {
-		log.Print("Metrics server stopped")
+		logger.Info("Metrics server stopped")
 	}
 }
 
 // DailySummaryJob implementation
-type DailySummaryJob struct{}
+type DailySummaryJob struct {
+	interval time.Duration
+}
+
+func NewDailySummaryJob(interval time.Duration) *DailySummaryJob {
+	return &DailySummaryJob{interval: interval}
+}
 
 type SummaryGenerationMessage struct {
 	Type   string `json:"type"`
@@ -217,11 +245,11 @@ func (j *DailySummaryJob) Name() string {
 }
 
 func (j *DailySummaryJob) Interval() time.Duration {
-	return 5 * time.Minute
+	return j.interval
 }
 
 func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
-	log.Print("Checking for missing daily summaries...")
+	s.logger.Info("Checking for missing daily summaries...")
 
 	// 1. auto_summary_daily が true のユーザーを取得
 	usersQuery := `
@@ -236,7 +264,7 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("Failed to close rows: %v", err)
+			s.logger.WithError(err).Error("Failed to close rows")
 		}
 	}()
 
@@ -250,17 +278,17 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	}
 
 	if len(userIDs) == 0 {
-		log.Print("No users with auto daily summary enabled")
+		s.logger.Info("No users with auto daily summary enabled")
 		return nil
 	}
 
-	log.Printf("Found %d users with auto daily summary enabled", len(userIDs))
+	s.logger.WithField("count", len(userIDs)).Info("Found users with auto daily summary enabled")
 	usersWithAutoSummaryGauge.WithLabelValues("daily").Set(float64(len(userIDs)))
 
 	// 2. 各ユーザーについて、summaryが作られていない日を確認
 	for _, userID := range userIDs {
 		if err := j.processUserSummaries(ctx, s, userID); err != nil {
-			log.Printf("Error processing summaries for user %s: %v", userID, err)
+			s.logger.WithError(err).WithField("user_id", userID).Error("Error processing summaries for user")
 			continue
 		}
 	}
@@ -289,7 +317,7 @@ func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("Failed to close rows: %v", err)
+			s.logger.WithError(err).Error("Failed to close rows")
 		}
 	}()
 
@@ -303,11 +331,11 @@ func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler
 	}
 
 	if len(missingDates) == 0 {
-		log.Printf("No missing summaries for user %s", userID)
+		s.logger.WithField("user_id", userID).Debug("No missing summaries for user")
 		return nil
 	}
 
-	log.Printf("Found %d missing summaries for user %s", len(missingDates), userID)
+	s.logger.WithFields(logrus.Fields{"user_id": userID, "count": len(missingDates)}).Info("Found missing summaries for user")
 
 	// 3. 各日付についてRedisキューにジョブを投入
 	for _, date := range missingDates {
@@ -319,26 +347,32 @@ func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler
 
 		messageBytes, err := json.Marshal(message)
 		if err != nil {
-			log.Printf("Failed to marshal message for user %s, date %s: %v", userID, date.Format("2006-01-02"), err)
+			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to marshal message")
 			continue
 		}
 
 		// Redisにメッセージを送信
 		publishCmd := s.redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 		if err := s.redis.Do(ctx, publishCmd).Error(); err != nil {
-			log.Printf("Failed to publish message for user %s, date %s: %v", userID, date.Format("2006-01-02"), err)
+			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to publish message")
 			continue
 		}
 
 		queuedMessagesCounter.WithLabelValues("daily_summary").Inc()
-		log.Printf("Queued summary generation for user %s, date %s", userID, date.Format("2006-01-02"))
+		s.logger.WithFields(logrus.Fields{"user_id": userID, "date": date.Format("2006-01-02")}).Debug("Queued summary generation")
 	}
 
 	return nil
 }
 
 // MonthlySummaryJob implementation
-type MonthlySummaryJob struct{}
+type MonthlySummaryJob struct {
+	interval time.Duration
+}
+
+func NewMonthlySummaryJob(interval time.Duration) *MonthlySummaryJob {
+	return &MonthlySummaryJob{interval: interval}
+}
 
 type MonthlySummaryGenerationMessage struct {
 	Type   string `json:"type"`
@@ -352,11 +386,11 @@ func (j *MonthlySummaryJob) Name() string {
 }
 
 func (j *MonthlySummaryJob) Interval() time.Duration {
-	return 5 * time.Minute
+	return j.interval
 }
 
 func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
-	log.Print("Checking for missing monthly summaries...")
+	s.logger.Info("Checking for missing monthly summaries...")
 
 	// 1. auto_summary_monthly が true のユーザーを取得
 	usersQuery := `
@@ -371,7 +405,7 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("Failed to close rows: %v", err)
+			s.logger.WithError(err).Error("Failed to close rows")
 		}
 	}()
 
@@ -385,17 +419,17 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	}
 
 	if len(userIDs) == 0 {
-		log.Print("No users with auto monthly summary enabled")
+		s.logger.Info("No users with auto monthly summary enabled")
 		return nil
 	}
 
-	log.Printf("Found %d users with auto monthly summary enabled", len(userIDs))
+	s.logger.WithField("count", len(userIDs)).Info("Found users with auto monthly summary enabled")
 	usersWithAutoSummaryGauge.WithLabelValues("monthly").Set(float64(len(userIDs)))
 
 	// 2. 各ユーザーについて、summaryが作られていない月を確認
 	for _, userID := range userIDs {
 		if err := j.processUserMonthlySummaries(ctx, s, userID); err != nil {
-			log.Printf("Error processing monthly summaries for user %s: %v", userID, err)
+			s.logger.WithError(err).WithField("user_id", userID).Error("Error processing monthly summaries for user")
 			continue
 		}
 	}
@@ -450,7 +484,7 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("Failed to close rows: %v", err)
+			s.logger.WithError(err).Error("Failed to close rows")
 		}
 	}()
 
@@ -469,11 +503,11 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 	}
 
 	if len(missingMonths) == 0 {
-		log.Printf("No missing monthly summaries for user %s", userID)
+		s.logger.WithField("user_id", userID).Debug("No missing monthly summaries for user")
 		return nil
 	}
 
-	log.Printf("Found %d missing monthly summaries for user %s", len(missingMonths), userID)
+	s.logger.WithFields(logrus.Fields{"user_id": userID, "count": len(missingMonths)}).Info("Found missing monthly summaries for user")
 
 	// 3. 各年月についてRedisキューにジョブを投入
 	for _, ym := range missingMonths {
@@ -486,19 +520,19 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 
 		messageBytes, err := json.Marshal(message)
 		if err != nil {
-			log.Printf("Failed to marshal message for user %s, year %d, month %d: %v", userID, ym.Year, ym.Month, err)
+			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "year": ym.Year, "month": ym.Month}).Error("Failed to marshal message")
 			continue
 		}
 
 		// Redisにメッセージを送信
 		publishCmd := s.redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 		if err := s.redis.Do(ctx, publishCmd).Error(); err != nil {
-			log.Printf("Failed to publish message for user %s, year %d, month %d: %v", userID, ym.Year, ym.Month, err)
+			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "year": ym.Year, "month": ym.Month}).Error("Failed to publish message")
 			continue
 		}
 
 		queuedMessagesCounter.WithLabelValues("monthly_summary").Inc()
-		log.Printf("Queued monthly summary generation for user %s, year %d, month %d", userID, ym.Year, ym.Month)
+		s.logger.WithFields(logrus.Fields{"user_id": userID, "year": ym.Year, "month": ym.Month}).Debug("Queued monthly summary generation")
 	}
 
 	return nil

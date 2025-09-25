@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,6 +21,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -78,26 +78,30 @@ type MonthlySummaryGenerationMessage struct {
 }
 
 func main() {
-	log.Print("=== umi.mikan subscriber started ===")
+	// Initialize structured logger
+	logger := logrus.WithFields(logrus.Fields{
+		"service": "subscriber",
+	})
+	logger.Info("=== umi.mikan subscriber started ===")
 
 	// DB設定の読み込み
 	dbConfig, err := constants.LoadDBConfig()
 	if err != nil {
-		log.Fatalf("Failed to load DB config: %v", err)
+		logger.WithError(err).Fatal("Failed to load DB config")
 	}
 
 	// DB接続
 	db := database.NewDB(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
 	defer func() {
 		if err := db.Close(); err != nil {
-			log.Printf("Failed to close database connection: %v", err)
+			logger.WithError(err).Error("Failed to close database connection")
 		}
 	}()
 
 	// Redis設定の読み込み
 	redisConfig, err := constants.LoadRedisConfig()
 	if err != nil {
-		log.Fatalf("Failed to load Redis config: %v", err)
+		logger.WithError(err).Fatal("Failed to load Redis config")
 	}
 
 	// Redisクライアント作成
@@ -105,7 +109,7 @@ func main() {
 		InitAddress: []string{fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port)},
 	})
 	if err != nil {
-		log.Fatalf("Failed to create Redis client: %v", err)
+		logger.WithError(err).Fatal("Failed to create Redis client")
 	}
 	defer client.Close()
 
@@ -113,22 +117,28 @@ func main() {
 	ctx := context.Background()
 	pingCmd := client.B().Ping().Build()
 	if err := client.Do(ctx, pingCmd).Error(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		logger.WithError(err).Fatal("Failed to connect to Redis")
 	}
-	log.Print("Connected to Redis successfully")
+	logger.Info("Connected to Redis successfully")
 
 	// メトリクスサーバー開始
 	metricsServer := &http.Server{Addr: ":2005"}
 	http.Handle("/metrics", promhttp.Handler())
 
 	go func() {
-		log.Print("Metrics server starting on :2005")
+		logger.Info("Metrics server starting on :2005")
 		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("Metrics server error: %v", err)
+			logger.WithError(err).Error("Metrics server error")
 		}
 	}()
 
-	log.Print("Subscriber is listening for messages...")
+	// Subscriber設定の読み込み
+	subscriberConfig, err := constants.LoadSubscriberConfig()
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to load subscriber config")
+	}
+
+	logger.WithField("max_concurrent_jobs", subscriberConfig.MaxConcurrentJobs).Info("Subscriber is listening for messages...")
 
 	// Create context for subscription that can be cancelled
 	subCtx, cancel := context.WithCancel(ctx)
@@ -136,7 +146,7 @@ func main() {
 
 	// Track processing messages for graceful shutdown
 	var wg sync.WaitGroup
-	processing := make(chan struct{}, 100) // Buffer to limit concurrent processing
+	processing := make(chan struct{}, subscriberConfig.MaxConcurrentJobs) // Buffer to limit concurrent processing
 
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -146,7 +156,10 @@ func main() {
 	subErrChan := make(chan error, 1)
 	go func() {
 		err := client.Receive(subCtx, client.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
-			log.Printf("Received message: %s from channel: %s", msg.Message, msg.Channel)
+			logger.WithFields(logrus.Fields{
+				"channel": msg.Channel,
+				"message": msg.Message,
+			}).Debug("Received message")
 
 			// Track this message processing
 			wg.Add(1)
@@ -159,14 +172,14 @@ func main() {
 				}()
 
 				start := time.Now()
-				err := processMessage(subCtx, db, client, msg.Message)
+				err := processMessage(subCtx, db, client, msg.Message, logger)
 				duration := time.Since(start)
 
 				// メトリクス更新は processMessage 内で行う
 				_ = duration // 使用しない場合の警告回避
 
 				if err != nil {
-					log.Printf("Failed to process message: %v", err)
+					logger.WithError(err).Error("Failed to process message")
 				}
 			}()
 		})
@@ -179,11 +192,11 @@ func main() {
 	// Wait for shutdown signal or subscription error
 	select {
 	case sig := <-sigChan:
-		log.Printf("Received signal %v, initiating graceful shutdown...", sig)
+		logger.WithField("signal", sig).Info("Received signal, initiating graceful shutdown...")
 
 		// Cancel subscription context to stop receiving new messages
 		cancel()
-		log.Print("Stopped accepting new messages")
+		logger.Info("Stopped accepting new messages")
 
 		// Create context with timeout for graceful shutdown
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -198,27 +211,27 @@ func main() {
 
 		select {
 		case <-done:
-			log.Print("All messages processed successfully")
+			logger.Info("All messages processed successfully")
 		case <-shutdownCtx.Done():
-			log.Print("Graceful shutdown timeout, some messages may not have been processed")
+			logger.Warn("Graceful shutdown timeout, some messages may not have been processed")
 		}
 
 		// Stop metrics server
 		if err := metricsServer.Shutdown(shutdownCtx); err != nil {
-			log.Printf("Metrics server shutdown error: %v", err)
+			logger.WithError(err).Error("Metrics server shutdown error")
 		} else {
-			log.Print("Metrics server stopped")
+			logger.Info("Metrics server stopped")
 		}
 
 	case err := <-subErrChan:
-		log.Printf("Subscription error: %v", err)
+		logger.WithError(err).Error("Subscription error")
 		cancel()
 	}
 
-	log.Print("Subscriber ended")
+	logger.Info("Subscriber ended")
 }
 
-func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, payload string) error {
+func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, payload string, logger *logrus.Entry) error {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -239,7 +252,7 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
 			return fmt.Errorf("failed to unmarshal daily summary message: %w", unmarshalErr)
 		}
-		err = generateDailySummary(ctx, db, redisClient, message.UserID, message.Date)
+		err = generateDailySummary(ctx, db, redisClient, message.UserID, message.Date, logger)
 		if err != nil {
 			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
 		} else {
@@ -253,7 +266,7 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
 			return fmt.Errorf("failed to unmarshal monthly summary message: %w", unmarshalErr)
 		}
-		err = generateMonthlySummary(ctx, db, redisClient, message.UserID, message.Year, message.Month)
+		err = generateMonthlySummary(ctx, db, redisClient, message.UserID, message.Year, message.Month, logger)
 		if err != nil {
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
 		} else {
@@ -261,14 +274,17 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 		}
 		return err
 	default:
-		log.Printf("Unknown message type: %s", baseMessage.Type)
+		logger.WithField("message_type", baseMessage.Type).Warn("Unknown message type")
 		messagesProcessedCounter.WithLabelValues("unknown", "ignored").Inc()
 		return nil
 	}
 }
 
-func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID, dateStr string) error {
-	log.Printf("Generating daily summary for user %s, date %s", userID, dateStr)
+func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID, dateStr string, logger *logrus.Entry) error {
+	logger.WithFields(logrus.Fields{
+		"user_id": userID,
+		"date":    dateStr,
+	}).Info("Generating daily summary")
 
 	// 1. 分散ロックを取得
 	lockKey := lock.DailySummaryLockKey(userID, dateStr)
@@ -283,12 +299,18 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	if !locked {
 		// Lock already held by another process, skip processing
 		lockOperationsCounter.WithLabelValues("acquire", "failed", "daily").Inc()
-		log.Printf("Daily summary for user %s, date %s is already being processed by another instance", userID, dateStr)
+		logger.WithFields(logrus.Fields{
+			"user_id": userID,
+			"date":    dateStr,
+		}).Info("Daily summary is already being processed by another instance, skipping")
 		return nil
 	}
 
 	lockOperationsCounter.WithLabelValues("acquire", "success", "daily").Inc()
-	log.Printf("Acquired lock for daily summary generation: user %s, date %s", userID, dateStr)
+	logger.WithFields(logrus.Fields{
+		"user_id": userID,
+		"date":    dateStr,
+	}).Debug("Acquired lock for daily summary generation")
 
 	// タスクステータスを「処理中」に更新
 	taskKey := fmt.Sprintf("task:daily_summary:%s:%s", userID, dateStr)
@@ -303,10 +325,16 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 
 		if unlockErr := distributedLock.Unlock(ctx); unlockErr != nil {
 			lockOperationsCounter.WithLabelValues("release", "error", "daily").Inc()
-			log.Printf("Failed to release lock for user %s, date %s: %v", userID, dateStr, unlockErr)
+			logger.WithError(unlockErr).WithFields(logrus.Fields{
+				"user_id": userID,
+				"date":    dateStr,
+			}).Error("Failed to release lock")
 		} else {
 			lockOperationsCounter.WithLabelValues("release", "success", "daily").Inc()
-			log.Printf("Released lock for daily summary generation: user %s, date %s", userID, dateStr)
+			logger.WithFields(logrus.Fields{
+				"user_id": userID,
+				"date":    dateStr,
+			}).Debug("Released lock for daily summary generation")
 		}
 	}()
 
@@ -319,7 +347,7 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	}
 
 	// 2. LLMで要約生成
-	summary := generateSummaryWithLLM(ctx, db, userID, diaryContent)
+	summary := generateSummaryWithLLM(ctx, db, userID, diaryContent, logger)
 
 	// 3. diary_summary_daysに保存
 	insertQuery := `
@@ -339,12 +367,19 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	}
 
 	summariesGeneratedCounter.WithLabelValues("daily").Inc()
-	log.Printf("Successfully generated and saved summary for user %s, date %s", userID, dateStr)
+	logger.WithFields(logrus.Fields{
+		"user_id": userID,
+		"date":    dateStr,
+	}).Info("Successfully generated and saved daily summary")
 	return nil
 }
 
-func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID string, year, month int) error {
-	log.Printf("Generating monthly summary for user %s, year %d, month %d", userID, year, month)
+func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID string, year, month int, logger *logrus.Entry) error {
+	logger.WithFields(logrus.Fields{
+		"user_id": userID,
+		"year":    year,
+		"month":   month,
+	}).Info("Generating monthly summary")
 
 	// 1. 分散ロックを取得
 	lockKey := lock.MonthlySummaryLockKey(userID, year, month)
@@ -359,12 +394,12 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	if !locked {
 		// Lock already held by another process, skip processing
 		lockOperationsCounter.WithLabelValues("acquire", "failed", "monthly").Inc()
-		log.Printf("Monthly summary for user %s, year %d, month %d is already being processed by another instance", userID, year, month)
+		logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Info("Monthly summary is already being processed by another instance, skipping")
 		return nil
 	}
 
 	lockOperationsCounter.WithLabelValues("acquire", "success", "monthly").Inc()
-	log.Printf("Acquired lock for monthly summary generation: user %s, year %d, month %d", userID, year, month)
+	logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Debug("Acquired lock for monthly summary generation")
 
 	// タスクステータスを「処理中」に更新
 	taskKey := fmt.Sprintf("task:monthly_summary:%s:%d-%d", userID, year, month)
@@ -379,10 +414,10 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 
 		if unlockErr := distributedLock.Unlock(ctx); unlockErr != nil {
 			lockOperationsCounter.WithLabelValues("release", "error", "monthly").Inc()
-			log.Printf("Failed to release lock for user %s, year %d, month %d: %v", userID, year, month, unlockErr)
+			logger.WithError(unlockErr).WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Error("Failed to release lock")
 		} else {
 			lockOperationsCounter.WithLabelValues("release", "success", "monthly").Inc()
-			log.Printf("Released lock for monthly summary generation: user %s, year %d, month %d", userID, year, month)
+			logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Debug("Released lock for monthly summary generation")
 		}
 	}()
 
@@ -400,7 +435,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("Failed to close rows: %v", err)
+			logger.WithError(err).Error("Failed to close rows")
 		}
 	}()
 
@@ -420,7 +455,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	// 2. LLMで月次要約生成
 	combinedDiaryEntries := fmt.Sprintf("Diary entries for %d/%d:\n\n%s", year, month,
 		strings.Join(diaryEntries, "\n\n"))
-	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, userID, combinedDiaryEntries)
+	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, userID, combinedDiaryEntries, logger)
 
 	// 3. diary_summary_monthsに保存
 	insertQuery := `
@@ -440,17 +475,17 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	}
 
 	summariesGeneratedCounter.WithLabelValues("monthly").Inc()
-	log.Printf("Successfully generated and saved monthly summary for user %s, year %d, month %d", userID, year, month)
+	logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Info("Successfully generated and saved monthly summary")
 	return nil
 }
 
-func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content string) string {
+func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content string, logger *logrus.Entry) string {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
 	err := db.QueryRow(query, userID).Scan(&apiKey)
 	if err != nil {
-		log.Printf("Failed to get user's Gemini API key for user %s: %v", userID, err)
+		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
 		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
 			len(content), time.Now().Format("2006-01-02 15:04:05"))
 	}
@@ -458,35 +493,35 @@ func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content str
 	// Gemini クライアント作成
 	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
 	if err != nil {
-		log.Printf("Failed to create Gemini client: %v", err)
+		logger.WithError(err).Error("Failed to create Gemini client")
 		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
 			len(content), time.Now().Format("2006-01-02 15:04:05"))
 	}
 	defer func() {
 		if closeErr := geminiClient.Close(); closeErr != nil {
-			log.Printf("Failed to close Gemini client: %v", closeErr)
+			logger.WithError(closeErr).Error("Failed to close Gemini client")
 		}
 	}()
 
 	// 日次要約生成
 	summary, err := geminiClient.GenerateDailySummary(ctx, content)
 	if err != nil {
-		log.Printf("Failed to generate daily summary: %v", err)
+		logger.WithError(err).Error("Failed to generate daily summary")
 		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
 			len(content), time.Now().Format("2006-01-02 15:04:05"))
 	}
 
-	log.Printf("Successfully generated daily summary using Gemini API")
+	logger.WithError(err).Error("Successfully generated daily summary using Gemini API")
 	return summary
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, combinedEntries string) string {
+func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, combinedEntries string, logger *logrus.Entry) string {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
 	err := db.QueryRow(query, userID).Scan(&apiKey)
 	if err != nil {
-		log.Printf("Failed to get user's Gemini API key for user %s: %v", userID, err)
+		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
 		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
 			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
@@ -494,24 +529,24 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, comb
 	// Gemini クライアント作成
 	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
 	if err != nil {
-		log.Printf("Failed to create Gemini client: %v", err)
+		logger.WithError(err).Error("Failed to create Gemini client")
 		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
 			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
 	defer func() {
 		if closeErr := geminiClient.Close(); closeErr != nil {
-			log.Printf("Failed to close Gemini client: %v", closeErr)
+			logger.WithError(closeErr).Error("Failed to close Gemini client")
 		}
 	}()
 
 	// 月次要約生成
 	summary, err := geminiClient.GenerateSummary(ctx, combinedEntries)
 	if err != nil {
-		log.Printf("Failed to generate monthly summary: %v", err)
+		logger.WithError(err).Error("Failed to generate monthly summary")
 		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
 			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
 
-	log.Printf("Successfully generated monthly summary using Gemini API")
+	logger.WithError(err).Error("Successfully generated monthly summary using Gemini API")
 	return summary
 }

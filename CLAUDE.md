@@ -309,6 +309,33 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Type safety**: Ensure all variables, function parameters, and return values have explicit types
 - **Generated types**: Use the auto-generated gRPC types from `frontend/src/lib/grpc/`
 
+## Configuration Options
+
+### Scheduler Configuration
+
+Environment variables for controlling scheduler behavior:
+
+- `SCHEDULER_DAILY_INTERVAL`: Interval for daily summary job execution (default: `5m`)
+- `SCHEDULER_MONTHLY_INTERVAL`: Interval for monthly summary job execution (default: `5m`)
+
+Examples:
+```bash
+SCHEDULER_DAILY_INTERVAL=10m    # Run daily summaries every 10 minutes
+SCHEDULER_MONTHLY_INTERVAL=1h   # Run monthly summaries every hour
+```
+
+### Subscriber Configuration
+
+Environment variables for controlling async message processing:
+
+- `SUBSCRIBER_MAX_CONCURRENT_JOBS`: Maximum number of concurrent message processing jobs (default: `10`)
+
+Examples:
+```bash
+SUBSCRIBER_MAX_CONCURRENT_JOBS=5    # Limit to 5 concurrent jobs
+SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
+```
+
 ## Production Notes
 
 - Copy `compose-prod.example.yml` to `compose-prod.yml` for production
