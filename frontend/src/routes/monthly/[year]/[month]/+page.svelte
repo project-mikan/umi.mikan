@@ -242,7 +242,7 @@ function handleSummaryUpdated(event: CustomEvent) {
 		!isInitialLoad &&
 		oldSummary &&
 		(oldSummary.updatedAt !== newSummary.updatedAt ||
-		oldSummary.summary !== newSummary.summary);
+			oldSummary.summary !== newSummary.summary);
 
 	// デバッグ用ログ（開発環境でのみ）
 	if (
@@ -250,13 +250,15 @@ function handleSummaryUpdated(event: CustomEvent) {
 		window.location.hostname === "localhost"
 	) {
 		console.log("📨 Monthly summary updated event received:", {
-			oldSummary: oldSummary ? {
-				updatedAt: oldSummary.updatedAt,
-				summary: oldSummary.summary.substring(0, 50) + "..."
-			} : null,
+			oldSummary: oldSummary
+				? {
+						updatedAt: oldSummary.updatedAt,
+						summary: `${oldSummary.summary.substring(0, 50)}...`,
+					}
+				: null,
 			newSummary: {
 				updatedAt: newSummary.updatedAt,
-				summary: newSummary.summary.substring(0, 50) + "..."
+				summary: `${newSummary.summary.substring(0, 50)}...`,
 			},
 			newUpdatedAt: new Date(newSummary.updatedAt),
 			actuallyUpdated,

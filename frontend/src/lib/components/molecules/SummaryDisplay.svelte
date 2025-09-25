@@ -35,7 +35,7 @@ let pollingInterval: ReturnType<typeof setInterval> | null = null;
 let summaryJustUpdated = false;
 
 // ポーリング機能
-async function pollSummaryStatus(isUpdate = false) {
+async function pollSummaryStatus(_isUpdate = false) {
 	if (!browser) return;
 	try {
 		const response = await authenticatedFetch(fetchUrl);
@@ -71,7 +71,7 @@ async function pollSummaryStatus(isUpdate = false) {
 					const actuallyUpdated =
 						oldSummary &&
 						(oldSummary.updatedAt !== newSummary.updatedAt ||
-						oldSummary.summary !== newSummary.summary);
+							oldSummary.summary !== newSummary.summary);
 
 					// 実際に更新された場合、または初回取得の場合のみsummaryを更新
 					if (actuallyUpdated || !summary) {
@@ -94,7 +94,9 @@ async function pollSummaryStatus(isUpdate = false) {
 						dispatch("generationCompleted");
 					} else {
 						// 同じ内容の場合はポーリング継続
-						console.log("Polling: Same summary content received, continuing polling");
+						console.log(
+							"Polling: Same summary content received, continuing polling",
+						);
 					}
 				}
 			}
@@ -114,13 +116,16 @@ function clearPolling() {
 // 要約更新時のアニメーション
 function triggerSummaryUpdateAnimation() {
 	// デバッグ用ログ（開発環境でのみ）
-	if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+	if (
+		typeof window !== "undefined" &&
+		window.location.hostname === "localhost"
+	) {
 		console.log("🎯 Animation triggered!", {
 			isRegenerating,
 			summaryGenerating,
 			summaryStatus,
 			timestamp: new Date().toISOString(),
-			stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
+			stackTrace: new Error().stack?.split("\n").slice(1, 4).join("\n"),
 		});
 	}
 
@@ -178,7 +183,7 @@ async function generateSummary() {
 					const actuallyUpdated =
 						oldSummary &&
 						(oldSummary.updatedAt !== newSummary.updatedAt ||
-						oldSummary.summary !== newSummary.summary);
+							oldSummary.summary !== newSummary.summary);
 
 					// 実際に更新された場合、または初回取得の場合のみsummaryを更新
 					if (actuallyUpdated || !summary) {
@@ -196,7 +201,9 @@ async function generateSummary() {
 					} else {
 						// 同じ内容の場合は状態を変更せずにポーリング継続
 						// 実際の新しい要約が生成されるまで待機
-						console.log("Same summary content received, continuing to wait for actual update");
+						console.log(
+							"Same summary content received, continuing to wait for actual update",
+						);
 					}
 				}
 			} else {
