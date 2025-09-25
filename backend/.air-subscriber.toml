@@ -9,7 +9,7 @@ cmd = "go build -o ./tmp-subscriber/subscriber cmd/subscriber/main.go"
 bin = "tmp-subscriber/subscriber"
 full_bin = "APP_ENV=dev APP_USER=air ./tmp-subscriber/subscriber"
 include_ext = ["go", "tpl", "tmpl", "html"]
-exclude_dir = ["assets", "tmp", "tmp-subscriber", "vendor", "frontend/node_modules"]
+exclude_dir = ["assets", "tmp", "tmp-subscriber", "vendor"]
 include_dir = []
 include_file = []
 exclude_file = []
@@ -18,11 +18,11 @@ exclude_unchanged = true
 follow_symlink = true
 log = "air-subscriber.log"
 poll = false
-poll_interval = 500 # ms
-delay = 0 # ms
+poll_interval = 500                                                    # ms
+delay = 0                                                              # ms
 stop_on_error = true
 send_interrupt = false
-kill_delay = 500 # nanosecond
+kill_delay = 500                                                       # nanosecond
 rerun = false
 rerun_delay = 500
 
@@ -42,3 +42,4 @@ clean_on_exit = true
 [screen]
 clear_on_rebuild = true
 keep_scroll = true
+
