@@ -12,6 +12,8 @@ import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
 import type { PageData } from "./$types";
 
+$: title = $_("page.title.home");
+
 export let data: PageData;
 
 let todayContent = data.today.entry?.content || "";
@@ -59,6 +61,10 @@ function handleDayBeforeYesterdaySave() {
 	dayBeforeYesterdayFormElement?.requestSubmit();
 }
 </script>
+
+<svelte:head>
+	<title>{title}</title>
+</svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<div class="flex justify-between items-center mb-8">

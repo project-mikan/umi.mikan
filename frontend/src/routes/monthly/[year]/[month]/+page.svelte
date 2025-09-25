@@ -8,12 +8,16 @@ import { authenticatedFetch } from "$lib/auth-client";
 import type {
 	DiaryEntry,
 	GetDiaryEntriesByMonthResponse,
+	YMD,
 } from "$lib/grpc/diary/diary_pb";
 import type { PageData } from "./$types";
 import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
 import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
 import MonthYearSelector from "$lib/components/molecules/MonthYearSelector.svelte";
 import CharacterCountChart from "$lib/components/molecules/CharacterCountChart.svelte";
+import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
+
+$: title = $_("page.title.calendar");
 
 interface MonthlySummary {
 	id: string;
@@ -23,27 +27,107 @@ interface MonthlySummary {
 	updatedAt: number;
 }
 
+interface SerializedDiaryEntry {
+	id: string;
+	date?: { year: number; month: number; day: number };
+	content: string;
+	createdAt: number;
+	updatedAt: number;
+}
+
+interface SerializedGetDiaryEntriesByMonthResponse {
+	entries: SerializedDiaryEntry[];
+}
+
 export let data: PageData;
 
-let entries: GetDiaryEntriesByMonthResponse | { entries: DiaryEntry[] } =
-	data.entries;
+let entries: SerializedGetDiaryEntriesByMonthResponse = data.entries;
 let currentYear = data.year;
 let currentMonth = data.month;
 let _loading = false;
 let showMonthSelector = false;
-let summary: MonthlySummary | null = null;
-let summaryLoading = false;
-let showSummary = false;
 let errorMessage = "";
 let showErrorModal = false;
-let hasNewerEntries = false;
+let summaryError: string | null = null;
+let isCurrentMonth = false;
+let isFutureMonth = false;
+let hasEntries = false;
+let isSummaryGenerating = false; // 要約生成中のフラグ
+let monthlySummary: MonthlySummary | null = null;
+let isMonthlySummaryOutdated = false;
+let lastMonthlySummaryUpdateTime = 0; // 最後に月次要約が更新された時刻（ミリ秒）
+let isInitialLoad = true; // 初回読み込みかどうかのフラグ
+
+// Check if user has LLM key configured
+$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
+$: hasLLMKey = !!existingLLMKey;
+
+// 現在の月かどうかの判定（リアクティブ）
+$: {
+	const now = new Date();
+	const currentDate = new Date(currentYear, currentMonth - 1, 1);
+	const todayDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+	isCurrentMonth = currentDate.getTime() === todayDate.getTime();
+	isFutureMonth = currentDate.getTime() > todayDate.getTime();
+}
+
+// 日記エントリがあるかどうかの判定（リアクティブ）
+$: {
+	hasEntries = entries?.entries && entries.entries.length > 0;
+}
 
 // データの更新
 $: {
 	entries = data.entries;
 	currentYear = data.year;
 	currentMonth = data.month;
+	// 月が変わった時は初回読み込み扱いにリセット
+	isInitialLoad = true;
 }
+
+// 月次要約が古いかどうかを判定（リアクティブ）
+$: isMonthlySummaryOutdated = (() => {
+	if (!monthlySummary || !entries?.entries) return false;
+
+	// その月の全ての日記エントリの最新更新日時を取得
+	const latestEntryUpdatedAt = entries.entries.reduce((latest, entry) => {
+		const entryUpdatedAt = Number(entry.updatedAt) * 1000; // 秒 → ミリ秒
+		return entryUpdatedAt > latest ? entryUpdatedAt : latest;
+	}, 0);
+
+	// 月次要約の更新日時（既にミリ秒）
+	const summaryUpdatedAt = Number(monthlySummary.updatedAt);
+
+	// 要約が最近更新された場合（5秒以内）は古くないとみなす
+	const now = Date.now();
+	const recentlyUpdated =
+		lastMonthlySummaryUpdateTime > 0 &&
+		now - lastMonthlySummaryUpdateTime < 5000;
+
+	// 要約が最新の日記エントリよりも新しい場合、または最近更新された場合は古くない
+	const isOutdated =
+		latestEntryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
+
+	// デバッグ用ログ（開発環境でのみ）
+	if (
+		typeof window !== "undefined" &&
+		window.location.hostname === "localhost"
+	) {
+		console.log("🔍 Monthly summary outdated check:", {
+			latestEntryUpdatedAt: new Date(latestEntryUpdatedAt),
+			summaryUpdatedAt: new Date(summaryUpdatedAt),
+			isOutdated,
+			recentlyUpdated,
+			lastMonthlySummaryUpdateTime: new Date(lastMonthlySummaryUpdateTime),
+			entriesCount: entries.entries.length,
+			now: new Date(now),
+			timeDiff: now - lastMonthlySummaryUpdateTime,
+		});
+	}
+
+	return isOutdated;
+})();
 
 // クライアントサイドでデータを再取得する関数
 async function fetchMonthData(year: number, month: number) {
@@ -55,9 +139,8 @@ async function fetchMonthData(year: number, month: number) {
 			`/api/diary/monthly/${year}/${month}`,
 		);
 		if (response.ok) {
-			const newEntries:
-				| GetDiaryEntriesByMonthResponse
-				| { entries: DiaryEntry[] } = await response.json();
+			const newEntries: SerializedGetDiaryEntriesByMonthResponse =
+				await response.json();
 			entries = newEntries;
 			currentYear = year;
 			currentMonth = month;
@@ -149,75 +232,64 @@ function _handleMonthSelectorCancel() {
 	showMonthSelector = false;
 }
 
-// サマリー関連の関数
-async function fetchMonthlySummary() {
-	if (!browser) return;
+function handleSummaryUpdated(event: CustomEvent) {
+	const newSummary = event.detail.summary;
+	const oldSummary = monthlySummary;
 
-	try {
-		const response = await authenticatedFetch(
-			`/api/diary/summary/${currentYear}/${currentMonth}`,
-		);
-		if (response.ok) {
-			const summaryData = await response.json();
-			summary = summaryData;
-			showSummary = true;
-		} else if (response.status === 404) {
-			summary = null;
-			showSummary = false;
-		} else if (response.status === 401) {
-			await goto("/login");
-		} else {
-			console.error(
-				"Failed to fetch summary:",
-				response.status,
-				response.statusText,
-			);
-		}
-	} catch (error) {
-		console.error("Failed to fetch summary:", error);
+	// 要約が実際に変更されたかどうかを確認
+	// 初回読み込み時は変更とみなさない
+	const actuallyUpdated =
+		!isInitialLoad &&
+		oldSummary &&
+		(oldSummary.updatedAt !== newSummary.updatedAt ||
+			oldSummary.summary !== newSummary.summary);
+
+	// デバッグ用ログ（開発環境でのみ）
+	if (
+		typeof window !== "undefined" &&
+		window.location.hostname === "localhost"
+	) {
+		console.log("📨 Monthly summary updated event received:", {
+			oldSummary: oldSummary
+				? {
+						updatedAt: oldSummary.updatedAt,
+						summary: `${oldSummary.summary.substring(0, 50)}...`,
+					}
+				: null,
+			newSummary: {
+				updatedAt: newSummary.updatedAt,
+				summary: `${newSummary.summary.substring(0, 50)}...`,
+			},
+			newUpdatedAt: new Date(newSummary.updatedAt),
+			actuallyUpdated,
+			isInitialLoad,
+			timestamp: new Date().toISOString(),
+		});
+	}
+
+	// 常に要約は更新するが、初回読み込み時は時刻は記録しない
+	monthlySummary = newSummary;
+	if (actuallyUpdated) {
+		lastMonthlySummaryUpdateTime = Date.now();
+	}
+
+	// 初回読み込み完了をマーク
+	if (isInitialLoad) {
+		isInitialLoad = false;
 	}
 }
 
-async function generateMonthlySummary() {
-	if (!browser) return;
+function handleSummaryError(event: CustomEvent) {
+	summaryError = event.detail.message;
+}
 
-	summaryLoading = true;
-	try {
-		const response = await authenticatedFetch(`/api/diary/summary/generate`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				year: currentYear,
-				month: currentMonth,
-			}),
-		});
+function handleGenerationStarted() {
+	isSummaryGenerating = true;
+	summaryError = null;
+}
 
-		if (response.ok) {
-			const summaryData = await response.json();
-			summary = summaryData;
-			showSummary = true;
-		} else if (response.status === 401) {
-			await goto("/login");
-		} else if (response.status === 404) {
-			showError($_("monthly.summary.noEntries"));
-		} else if (response.status === 400) {
-			const errorData = await response.json();
-			if (errorData.message?.includes("API key")) {
-				showError($_("monthly.summary.noApiKey"));
-			} else {
-				showError($_("monthly.summary.error"));
-			}
-		} else {
-			showError($_("monthly.summary.error"));
-		}
-	} catch (error) {
-		console.error("Failed to generate summary:", error);
-		showError($_("monthly.summary.error"));
-	} finally {
-		summaryLoading = false;
-	}
+function handleGenerationCompleted() {
+	isSummaryGenerating = false;
 }
 
 // エラー表示用ヘルパー関数
@@ -226,78 +298,19 @@ function showError(message: string) {
 	showErrorModal = true;
 }
 
-// 日記の最新更新日を取得
-function getLatestEntryUpdate(): number {
-	if (!entries || !entries.entries || entries.entries.length === 0) return 0;
-
-	// 各日記エントリのupdatedAtフィールドから最も新しい更新日時を取得
-	let latestUpdate = 0;
-	for (const entry of entries.entries) {
-		if (entry.updatedAt) {
-			// 日記エントリは秒単位なのでミリ秒に変換
-			const updatedAtMs = Number(entry.updatedAt) * 1000;
-			if (updatedAtMs > latestUpdate) {
-				latestUpdate = updatedAtMs;
-			}
-		}
+// 無効化メッセージを取得（リアクティブ）
+$: getDisabledMessage = (): string => {
+	if (isFutureMonth) {
+		return $_("monthly.summary.futureMonthError");
 	}
-
-	return latestUpdate;
-}
-
-// サマリーが古いかどうかをチェック
-function checkForNewerEntries() {
-	if (!summary || !entries || !entries.entries) {
-		hasNewerEntries = false;
-		return;
+	if (isCurrentMonth) {
+		return $_("monthly.summary.currentMonthError");
 	}
-
-	const latestEntryTime = getLatestEntryUpdate(); // 既にミリ秒変換済み
-	const summaryTime = Number(summary.updatedAt); // 既にミリ秒
-
-	// サマリー更新後にエントリが追加/更新されているかチェック
-	hasNewerEntries = latestEntryTime > summaryTime;
-}
-
-// エントリまたはサマリーが変わったときに更新検知を実行
-$: if (entries || summary) {
-	checkForNewerEntries();
-}
-
-// ページロード時の初期化処理
-onMount(async () => {
-	// 既存のサマリーがあるかチェック
-	await fetchMonthlySummary();
-});
-
-// 月が変わったときの処理
-async function handleMonthChange() {
-	// 状態をリセット
-	summary = null;
-	hasNewerEntries = false;
-
-	// 新しい月のサマリーを取得
-	await fetchMonthlySummary();
-}
-
-// 月が変わったときにサマリーをリセット
-let previousYear = currentYear;
-let previousMonth = currentMonth;
-
-$: if (currentYear !== previousYear || currentMonth !== previousMonth) {
-	// 以前の値を保存
-	const oldYear = previousYear;
-	const oldMonth = previousMonth;
-
-	// 以前の値を更新
-	previousYear = currentYear;
-	previousMonth = currentMonth;
-
-	// 新しい月のサマリーを取得（初回ロード以外）
-	if (browser && (oldYear !== currentYear || oldMonth !== currentMonth)) {
-		handleMonthChange();
+	if (!hasEntries) {
+		return $_("monthly.summary.noEntriesError");
 	}
-}
+	return "";
+};
 
 // カレンダーデータの準備（リアクティブ）
 $: daysInMonth = getDaysInMonth(currentYear, currentMonth);
@@ -321,7 +334,21 @@ $: entryMap = (() => {
 	if (entries && Array.isArray(entries.entries)) {
 		for (const entry of entries.entries) {
 			if (entry?.date) {
-				map.set(entry.date.day, entry);
+				// シリアライズされたエントリをDiaryEntry形式に変換
+				const compatibleEntry: DiaryEntry = {
+					id: entry.id,
+					content: entry.content,
+					createdAt: BigInt(entry.createdAt),
+					updatedAt: BigInt(entry.updatedAt),
+					date: {
+						year: entry.date.year,
+						month: entry.date.month,
+						day: entry.date.day,
+						$typeName: "diary.YMD" as const,
+					} as YMD,
+					$typeName: "diary.DiaryEntry" as const,
+				};
+				map.set(entry.date.day, compatibleEntry);
 			}
 		}
 	}
@@ -344,46 +371,37 @@ $: _weekDays = (() => {
 })();
 </script>
 
+<svelte:head>
+	<title>{title}</title>
+</svelte:head>
+
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<!-- ヘッダー -->
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
 			{_formatMonth(currentYear, currentMonth)}
 		</h1>
-		<div class="flex gap-2">
-			{#if summary}
-				<button
-					on:click={() => showSummary = !showSummary}
-					class="px-4 py-2 {showSummary ? 'bg-gray-600 hover:bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-				>
-					{showSummary ? $_("monthly.summary.hide") : $_("monthly.summary.view")}
-				</button>
-				<button
-					on:click={generateMonthlySummary}
-					disabled={summaryLoading}
-					class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-				>
-					{#if summaryLoading}
-						{$_("monthly.summary.generating")}
-					{:else}
-						{$_("monthly.summary.regenerate")}
-					{/if}
-				</button>
-			{:else}
-				<button
-					on:click={generateMonthlySummary}
-					disabled={summaryLoading}
-					class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-				>
-					{#if summaryLoading}
-						{$_("monthly.summary.generating")}
-					{:else}
-						{$_("monthly.summary.generate")}
-					{/if}
-				</button>
-			{/if}
-		</div>
 	</div>
+
+	<!-- サマリー表示エリア -->
+	<SummaryDisplay
+		type="monthly"
+		fetchUrl="/api/diary/summary/{currentYear}/{currentMonth}"
+		generateUrl="/api/diary/summary/generate"
+		generatePayload={{
+			year: currentYear,
+			month: currentMonth
+		}}
+		isDisabled={isFutureMonth || isCurrentMonth || !hasEntries}
+		disabledMessage={getDisabledMessage()}
+		{hasLLMKey}
+		isSummaryOutdated={isMonthlySummaryOutdated}
+		isGenerating={isSummaryGenerating}
+		on:summaryUpdated={handleSummaryUpdated}
+		on:summaryError={handleSummaryError}
+		on:generationStarted={handleGenerationStarted}
+		on:generationCompleted={handleGenerationCompleted}
+	/>
 
 	<!-- 月ナビゲーション -->
 	<div class="flex justify-center items-center mb-8 space-x-4">
@@ -436,38 +454,6 @@ $: _weekDays = (() => {
 		</button>
 	</div>
 
-	<!-- サマリー表示エリア -->
-	{#if showSummary && summary}
-		<div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-			<div class="p-6">
-				<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-					{$_("diary.summary.label")}
-				</h2>
-				<div class="prose dark:prose-invert max-w-none">
-					<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-						{summary.summary}
-					</p>
-				</div>
-				{#if hasNewerEntries}
-					<div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-						<p class="text-sm text-yellow-800 dark:text-yellow-200">
-							💡 {$_("monthly.summary.updateAvailable")}
-						</p>
-					</div>
-				{/if}
-				<div class="mt-6 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-					<span>
-						{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleDateString()}
-					</span>
-					{#if summary.updatedAt !== summary.createdAt}
-						<span>
-							{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleDateString()}
-						</span>
-					{/if}
-				</div>
-			</div>
-		</div>
-	{/if}
 
 	<!-- デスクトップ・タブレット: カレンダー表示 -->
 	<div class="hidden md:block">
@@ -541,4 +527,5 @@ $: _weekDays = (() => {
 		</div>
 	</div>
 {/if}
+
 

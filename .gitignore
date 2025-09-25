@@ -1,2 +1,13 @@
 tmp
 compose-prod.yml
+
+# Air logs and build artifacts
+backend/tmp-scheduler/
+backend/tmp-subscriber/
+*.log
+
+# Build artifacts
+backend/cmd/*/main
+backend/cmd/server/server
+backend/cmd/scheduler/scheduler
+backend/cmd/subscriber/subscriber

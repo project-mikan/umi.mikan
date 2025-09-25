@@ -27,7 +27,7 @@ async function _goToNextDay() {
 }
 </script>
 
-<div class="flex items-center justify-between mb-6">
+<div class="flex items-center justify-between">
 	<Button
 		variant="secondary"
 		size="sm"
@@ -35,33 +35,43 @@ async function _goToNextDay() {
 		class="flex items-center gap-2"
 	>
 		<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M15 19l-7-7 7-7"
+			/>
 		</svg>
-		{$_('diary.previousDay')}
+		{$_("diary.previousDay")}
 	</Button>
-	
+
 	<div class="text-center">
-		<span class="text-lg font-semibold text-gray-700 dark:text-gray-300">
-			{$_('date.format.yearMonthDayWithDayOfWeek', {
+		<span class="text-xl font-semibold text-gray-700 dark:text-gray-300">
+			{$_("date.format.yearMonthDayWithDayOfWeek", {
 				values: {
 					year: currentDate.year,
 					month: currentDate.month,
 					day: currentDate.day,
-					dayOfWeek: $_(`date.dayOfWeek.${getDayOfWeekKey(currentDate)}`)
-				}
+					dayOfWeek: $_(`date.dayOfWeek.${getDayOfWeekKey(currentDate)}`),
+				},
 			})}
 		</span>
 	</div>
-	
+
 	<Button
 		variant="secondary"
 		size="sm"
 		on:click={_goToNextDay}
 		class="flex items-center gap-2"
 	>
-		{$_('diary.nextDay')}
+		{$_("diary.nextDay")}
 		<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M9 5l7 7-7 7"
+			/>
 		</svg>
 	</Button>
 </div>

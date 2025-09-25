@@ -29,18 +29,32 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 		}
 
 		return json({
-			id: summaryResponse.summary.id,
-			month: {
-				year: summaryResponse.summary.month?.year,
-				month: summaryResponse.summary.month?.month,
+			summary: {
+				id: summaryResponse.summary.id,
+				month: {
+					year: summaryResponse.summary.month?.year,
+					month: summaryResponse.summary.month?.month,
+				},
+				summary: summaryResponse.summary.summary,
+				createdAt: unixToMilliseconds(summaryResponse.summary.createdAt || 0),
+				updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt || 0),
 			},
-			summary: summaryResponse.summary.summary,
-			createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
-			updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
 		});
 	} catch (err) {
 		console.error("Failed to load monthly summary:", err);
-		if ((err as { code?: string })?.code === "NOT_FOUND") {
+		console.error("Error details:", {
+			message: (err as Error)?.message,
+			code: (err as { code?: string })?.code,
+			stack: (err as Error)?.stack,
+		});
+
+		// Handle different types of not found errors
+		if (
+			(err as { code?: string })?.code === "NOT_FOUND" ||
+			(err as { code?: number })?.code === 5 || // gRPC NOT_FOUND code
+			(err as Error)?.message?.includes("not found") ||
+			(err as Error)?.message?.includes("no daily summaries")
+		) {
 			throw error(404, "Summary not found");
 		}
 		throw error(500, "Failed to load monthly summary");

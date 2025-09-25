@@ -27,6 +27,7 @@ const (
 	UserService_DeleteAccount_FullMethodName             = "/user.UserService/DeleteAccount"
 	UserService_UpdateAutoSummarySettings_FullMethodName = "/user.UserService/UpdateAutoSummarySettings"
 	UserService_GetAutoSummarySettings_FullMethodName    = "/user.UserService/GetAutoSummarySettings"
+	UserService_GetPubSubMetrics_FullMethodName          = "/user.UserService/GetPubSubMetrics"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -49,6 +50,8 @@ type UserServiceClient interface {
 	UpdateAutoSummarySettings(ctx context.Context, in *UpdateAutoSummarySettingsRequest, opts ...grpc.CallOption) (*UpdateAutoSummarySettingsResponse, error)
 	// 自動要約設定取得
 	GetAutoSummarySettings(ctx context.Context, in *GetAutoSummarySettingsRequest, opts ...grpc.CallOption) (*GetAutoSummarySettingsResponse, error)
+	// Pub/Sub処理状況メトリクス取得
+	GetPubSubMetrics(ctx context.Context, in *GetPubSubMetricsRequest, opts ...grpc.CallOption) (*GetPubSubMetricsResponse, error)
 }
 
 type userServiceClient struct {
@@ -139,6 +142,16 @@ func (c *userServiceClient) GetAutoSummarySettings(ctx context.Context, in *GetA
 	return out, nil
 }
 
+func (c *userServiceClient) GetPubSubMetrics(ctx context.Context, in *GetPubSubMetricsRequest, opts ...grpc.CallOption) (*GetPubSubMetricsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPubSubMetricsResponse)
+	err := c.cc.Invoke(ctx, UserService_GetPubSubMetrics_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -159,6 +172,8 @@ type UserServiceServer interface {
 	UpdateAutoSummarySettings(context.Context, *UpdateAutoSummarySettingsRequest) (*UpdateAutoSummarySettingsResponse, error)
 	// 自動要約設定取得
 	GetAutoSummarySettings(context.Context, *GetAutoSummarySettingsRequest) (*GetAutoSummarySettingsResponse, error)
+	// Pub/Sub処理状況メトリクス取得
+	GetPubSubMetrics(context.Context, *GetPubSubMetricsRequest) (*GetPubSubMetricsResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -192,6 +207,9 @@ func (UnimplementedUserServiceServer) UpdateAutoSummarySettings(context.Context,
 }
 func (UnimplementedUserServiceServer) GetAutoSummarySettings(context.Context, *GetAutoSummarySettingsRequest) (*GetAutoSummarySettingsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAutoSummarySettings not implemented")
+}
+func (UnimplementedUserServiceServer) GetPubSubMetrics(context.Context, *GetPubSubMetricsRequest) (*GetPubSubMetricsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPubSubMetrics not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -358,6 +376,24 @@ func _UserService_GetAutoSummarySettings_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetPubSubMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPubSubMetricsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetPubSubMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetPubSubMetrics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetPubSubMetrics(ctx, req.(*GetPubSubMetricsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -396,6 +432,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAutoSummarySettings",
 			Handler:    _UserService_GetAutoSummarySettings_Handler,
+		},
+		{
+			MethodName: "GetPubSubMetrics",
+			Handler:    _UserService_GetPubSubMetrics_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

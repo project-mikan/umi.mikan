@@ -33,3 +33,15 @@ export function isTokenExpiringSoon(token: string, bufferMinutes = 5): boolean {
 		return true;
 	}
 }
+
+/**
+ * Parse JWT token and return payload
+ */
+export function parseJWT(token: string): { sub?: string; exp?: number } | null {
+	try {
+		const payload = JSON.parse(atob(token.split(".")[1]));
+		return payload;
+	} catch {
+		return null;
+	}
+}

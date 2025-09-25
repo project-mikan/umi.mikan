@@ -14,10 +14,16 @@ services:
       DB_PASS: prod-pass
       DB_NAME: umi_mikan
       JWT_SECRET: prod-secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "2001:8080"
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   frontend:
     build:
@@ -27,6 +33,8 @@ services:
       TZ: Asia/Tokyo
       NODE_ENV: production
       BODY_SIZE_LIMIT: 1M
+    ports:
+      - "2000:5173"
     restart: unless-stopped
     depends_on:
       - backend
@@ -41,6 +49,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: prod-pass
       POSTGRES_DB: umi_mikan
+    ports:
+      - "2002:5432"
     volumes:
       - postgres_prod_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
@@ -50,6 +60,103 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - internal
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    ports:
+      - "2004:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_prod_volume:/data
+    networks:
+      - internal
+
+  subscriber:
+    build:
+      context: ./backend
+      dockerfile: ../infra/prod/subscriber/Dockerfile
+    environment:
+      TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: prod-pass
+      DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SUBSCRIBER_MAX_CONCURRENT_JOBS: 20
+    ports:
+      - "2005:8082" # metrics endpoint
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_started
+    networks:
+      - internal
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: ../infra/prod/scheduler/Dockerfile
+    environment:
+      TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: prod-pass
+      DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SCHEDULER_DAILY_INTERVAL: 10m
+      SCHEDULER_MONTHLY_INTERVAL: 30m
+    ports:
+      - "2006:8081" # metrics endpoint
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - internal
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "2007:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_prod_volume:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
+    depends_on:
+      - scheduler
+      - subscriber
+    networks:
+      - internal
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "2008:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana_prod_volume:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
     networks:
       - internal
 
@@ -70,12 +177,63 @@ services:
       DB_USER: postgres
       DB_PASS: prod-pass
       DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     tty: true
     depends_on:
       postgres:
         condition: service_healthy
     profiles:
       - dev-tools
+    networks:
+      - internal
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: always
+    ports:
+      - "2009:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - internal
+
+  loki:
+    image: grafana/loki:latest
+    restart: unless-stopped
+    ports:
+      - "2010:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_prod_volume:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    user: "0"
+    networks:
+      - internal
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: unless-stopped
+    ports:
+      - "2011:12345"
+    volumes:
+      - ./monitoring/alloy/alloy-config.alloy:/etc/alloy/config.alloy
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    networks:
+      - internal
 
   tunnel:
     restart: always
@@ -90,6 +248,10 @@ services:
 
 volumes:
   postgres_prod_volume:
+  redis_prod_volume:
+  prometheus_prod_volume:
+  grafana_prod_volume:
+  loki_prod_volume:
 
 networks:
   internal:

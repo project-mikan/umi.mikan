@@ -15,8 +15,8 @@ function formatContentWithLineBreaks(content: string): string {
 }
 </script>
 
-<Card>
-	<div class="flex justify-between items-center mb-4">
+<Card padding="sm">
+	<div class="flex justify-between items-center">
 		<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
 			{#if href}
 				<a
@@ -34,7 +34,9 @@ function formatContentWithLineBreaks(content: string): string {
 	{#if showForm}
 		<slot name="form" />
 	{:else if entry}
-		<div class="text-gray-700 dark:text-gray-300">{@html formatContentWithLineBreaks(entry.content || '')}</div>
+		<div class="text-gray-700 dark:text-gray-300">
+			{@html formatContentWithLineBreaks(entry.content || "")}
+		</div>
 		{#if onView}
 			<div class="mt-4">
 				<Button
@@ -42,7 +44,7 @@ function formatContentWithLineBreaks(content: string): string {
 					size="sm"
 					on:click={() => onView && onView(entry)}
 				>
-					{$_('diary.viewDetail')}
+					{$_("diary.viewDetail")}
 				</Button>
 			</div>
 		{/if}
@@ -52,3 +54,4 @@ function formatContentWithLineBreaks(content: string): string {
 		</p>
 	{/if}
 </Card>
+

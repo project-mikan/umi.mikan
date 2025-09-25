@@ -28,6 +28,9 @@ service UserService {
 
   // 自動要約設定取得
   rpc GetAutoSummarySettings(GetAutoSummarySettingsRequest) returns (GetAutoSummarySettingsResponse);
+
+  // Pub/Sub処理状況メトリクス取得
+  rpc GetPubSubMetrics(GetPubSubMetricsRequest) returns (GetPubSubMetricsResponse);
 }
 
 // ユーザー名更新用のリクエスト
@@ -130,4 +133,45 @@ message GetAutoSummarySettingsRequest {
 message GetAutoSummarySettingsResponse {
   bool auto_summary_daily = 1; // 日毎の自動要約生成
   bool auto_summary_monthly = 2; // 月毎の自動要約生成
+}
+
+// Pub/Subメトリクス取得用のリクエスト
+message GetPubSubMetricsRequest {
+  // 空のリクエスト（認証はヘッダーから）
+}
+
+// Pub/Subメトリクス取得用のレスポンス
+message GetPubSubMetricsResponse {
+  // 過去24時間の処理状況
+  repeated HourlyMetrics hourly_metrics = 1;
+  // 処理中のタスク
+  repeated ProcessingTask processing_tasks = 2;
+  // 統計情報
+  MetricsSummary summary = 3;
+}
+
+// 1時間ごとのメトリクス
+message HourlyMetrics {
+  int64 timestamp = 1; // Unix timestamp of the hour
+  int32 daily_summaries_processed = 2;
+  int32 monthly_summaries_processed = 3;
+  int32 daily_summaries_failed = 4;
+  int32 monthly_summaries_failed = 5;
+}
+
+// 処理中のタスク
+message ProcessingTask {
+  string task_type = 1; // "daily_summary" or "monthly_summary"
+  string date = 2; // YYYY-MM-DD for daily, YYYY-MM for monthly
+  int64 started_at = 3; // Unix timestamp
+}
+
+// メトリクス統計情報
+message MetricsSummary {
+  int32 total_daily_summaries = 1;
+  int32 total_monthly_summaries = 2;
+  int32 pending_daily_summaries = 3;
+  int32 pending_monthly_summaries = 4;
+  bool auto_summary_daily_enabled = 5;
+  bool auto_summary_monthly_enabled = 6;
 }

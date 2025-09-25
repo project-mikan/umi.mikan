@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_user_user: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		"Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8iaQoKTExNS2V5SW5mbxIUCgxsbG1fcHJvdmlkZXIYASABKAUSCwoDa2V5GAIgASgJEhoKEmF1dG9fc3VtbWFyeV9kYWlseRgDIAEoCBIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgEIAEoCCIrChNEZWxldGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSI4ChREZWxldGVMTE1LZXlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiFgoURGVsZXRlQWNjb3VudFJlcXVlc3QiOQoVRGVsZXRlQWNjb3VudFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSJyCiBVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUSGgoSYXV0b19zdW1tYXJ5X2RhaWx5GAIgASgIEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAMgASgIIkUKIVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiNQodR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIloKHkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIaChJhdXRvX3N1bW1hcnlfZGFpbHkYASABKAgSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAiABKAgylgUKC1VzZXJTZXJ2aWNlEksKDlVwZGF0ZVVzZXJOYW1lEhsudXNlci5VcGRhdGVVc2VyTmFtZVJlcXVlc3QaHC51c2VyLlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USSwoOQ2hhbmdlUGFzc3dvcmQSGy51c2VyLkNoYW5nZVBhc3N3b3JkUmVxdWVzdBocLnVzZXIuQ2hhbmdlUGFzc3dvcmRSZXNwb25zZRJFCgxVcGRhdGVMTE1LZXkSGS51c2VyLlVwZGF0ZUxMTUtleVJlcXVlc3QaGi51c2VyLlVwZGF0ZUxMTUtleVJlc3BvbnNlEkIKC0dldFVzZXJJbmZvEhgudXNlci5HZXRVc2VySW5mb1JlcXVlc3QaGS51c2VyLkdldFVzZXJJbmZvUmVzcG9uc2USRQoMRGVsZXRlTExNS2V5EhkudXNlci5EZWxldGVMTE1LZXlSZXF1ZXN0GhoudXNlci5EZWxldGVMTE1LZXlSZXNwb25zZRJICg1EZWxldGVBY2NvdW50EhoudXNlci5EZWxldGVBY2NvdW50UmVxdWVzdBobLnVzZXIuRGVsZXRlQWNjb3VudFJlc3BvbnNlEmwKGVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3MSJi51c2VyLlVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GicudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USYwoWR2V0QXV0b1N1bW1hcnlTZXR0aW5ncxIjLnVzZXIuR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QaJC51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
+		"Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8iaQoKTExNS2V5SW5mbxIUCgxsbG1fcHJvdmlkZXIYASABKAUSCwoDa2V5GAIgASgJEhoKEmF1dG9fc3VtbWFyeV9kYWlseRgDIAEoCBIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgEIAEoCCIrChNEZWxldGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSI4ChREZWxldGVMTE1LZXlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiFgoURGVsZXRlQWNjb3VudFJlcXVlc3QiOQoVRGVsZXRlQWNjb3VudFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSJyCiBVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUSGgoSYXV0b19zdW1tYXJ5X2RhaWx5GAIgASgIEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAMgASgIIkUKIVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiNQodR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIloKHkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIaChJhdXRvX3N1bW1hcnlfZGFpbHkYASABKAgSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAiABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSKsAQoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIQoZZGFpbHlfc3VtbWFyaWVzX3Byb2Nlc3NlZBgCIAEoBRIjChttb250aGx5X3N1bW1hcmllc19wcm9jZXNzZWQYAyABKAUSHgoWZGFpbHlfc3VtbWFyaWVzX2ZhaWxlZBgEIAEoBRIgChhtb250aGx5X3N1bW1hcmllc19mYWlsZWQYBSABKAUiRQoOUHJvY2Vzc2luZ1Rhc2sSEQoJdGFza190eXBlGAEgASgJEgwKBGRhdGUYAiABKAkSEgoKc3RhcnRlZF9hdBgDIAEoAyLeAQoOTWV0cmljc1N1bW1hcnkSHQoVdG90YWxfZGFpbHlfc3VtbWFyaWVzGAEgASgFEh8KF3RvdGFsX21vbnRobHlfc3VtbWFyaWVzGAIgASgFEh8KF3BlbmRpbmdfZGFpbHlfc3VtbWFyaWVzGAMgASgFEiEKGXBlbmRpbmdfbW9udGhseV9zdW1tYXJpZXMYBCABKAUSIgoaYXV0b19zdW1tYXJ5X2RhaWx5X2VuYWJsZWQYBSABKAgSJAocYXV0b19zdW1tYXJ5X21vbnRobHlfZW5hYmxlZBgGIAEoCDLpBQoLVXNlclNlcnZpY2USSwoOVXBkYXRlVXNlck5hbWUSGy51c2VyLlVwZGF0ZVVzZXJOYW1lUmVxdWVzdBocLnVzZXIuVXBkYXRlVXNlck5hbWVSZXNwb25zZRJLCg5DaGFuZ2VQYXNzd29yZBIbLnVzZXIuQ2hhbmdlUGFzc3dvcmRSZXF1ZXN0GhwudXNlci5DaGFuZ2VQYXNzd29yZFJlc3BvbnNlEkUKDFVwZGF0ZUxMTUtleRIZLnVzZXIuVXBkYXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuVXBkYXRlTExNS2V5UmVzcG9uc2USQgoLR2V0VXNlckluZm8SGC51c2VyLkdldFVzZXJJbmZvUmVxdWVzdBoZLnVzZXIuR2V0VXNlckluZm9SZXNwb25zZRJFCgxEZWxldGVMTE1LZXkSGS51c2VyLkRlbGV0ZUxMTUtleVJlcXVlc3QaGi51c2VyLkRlbGV0ZUxMTUtleVJlc3BvbnNlEkgKDURlbGV0ZUFjY291bnQSGi51c2VyLkRlbGV0ZUFjY291bnRSZXF1ZXN0GhsudXNlci5EZWxldGVBY2NvdW50UmVzcG9uc2USbAoZVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5ncxImLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QaJy51c2VyLlVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRJjChZHZXRBdXRvU3VtbWFyeVNldHRpbmdzEiMudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBokLnVzZXIuR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlElEKEEdldFB1YlN1Yk1ldHJpY3MSHS51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXF1ZXN0Gh4udXNlci5HZXRQdWJTdWJNZXRyaWNzUmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
 	);
 
 /**
@@ -466,6 +466,184 @@ export const GetAutoSummarySettingsResponseSchema: GenMessage<GetAutoSummarySett
 	messageDesc(file_user_user, 16);
 
 /**
+ * Pub/Subメトリクス取得用のリクエスト
+ *
+ * 空のリクエスト（認証はヘッダーから）
+ *
+ * @generated from message user.GetPubSubMetricsRequest
+ */
+export type GetPubSubMetricsRequest =
+	Message<"user.GetPubSubMetricsRequest"> & {};
+
+/**
+ * Describes the message user.GetPubSubMetricsRequest.
+ * Use `create(GetPubSubMetricsRequestSchema)` to create a new message.
+ */
+export const GetPubSubMetricsRequestSchema: GenMessage<GetPubSubMetricsRequest> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 17);
+
+/**
+ * Pub/Subメトリクス取得用のレスポンス
+ *
+ * @generated from message user.GetPubSubMetricsResponse
+ */
+export type GetPubSubMetricsResponse =
+	Message<"user.GetPubSubMetricsResponse"> & {
+		/**
+		 * 過去24時間の処理状況
+		 *
+		 * @generated from field: repeated user.HourlyMetrics hourly_metrics = 1;
+		 */
+		hourlyMetrics: HourlyMetrics[];
+
+		/**
+		 * 処理中のタスク
+		 *
+		 * @generated from field: repeated user.ProcessingTask processing_tasks = 2;
+		 */
+		processingTasks: ProcessingTask[];
+
+		/**
+		 * 統計情報
+		 *
+		 * @generated from field: user.MetricsSummary summary = 3;
+		 */
+		summary?: MetricsSummary;
+	};
+
+/**
+ * Describes the message user.GetPubSubMetricsResponse.
+ * Use `create(GetPubSubMetricsResponseSchema)` to create a new message.
+ */
+export const GetPubSubMetricsResponseSchema: GenMessage<GetPubSubMetricsResponse> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 18);
+
+/**
+ * 1時間ごとのメトリクス
+ *
+ * @generated from message user.HourlyMetrics
+ */
+export type HourlyMetrics = Message<"user.HourlyMetrics"> & {
+	/**
+	 * Unix timestamp of the hour
+	 *
+	 * @generated from field: int64 timestamp = 1;
+	 */
+	timestamp: bigint;
+
+	/**
+	 * @generated from field: int32 daily_summaries_processed = 2;
+	 */
+	dailySummariesProcessed: number;
+
+	/**
+	 * @generated from field: int32 monthly_summaries_processed = 3;
+	 */
+	monthlySummariesProcessed: number;
+
+	/**
+	 * @generated from field: int32 daily_summaries_failed = 4;
+	 */
+	dailySummariesFailed: number;
+
+	/**
+	 * @generated from field: int32 monthly_summaries_failed = 5;
+	 */
+	monthlySummariesFailed: number;
+};
+
+/**
+ * Describes the message user.HourlyMetrics.
+ * Use `create(HourlyMetricsSchema)` to create a new message.
+ */
+export const HourlyMetricsSchema: GenMessage<HourlyMetrics> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 19);
+
+/**
+ * 処理中のタスク
+ *
+ * @generated from message user.ProcessingTask
+ */
+export type ProcessingTask = Message<"user.ProcessingTask"> & {
+	/**
+	 * "daily_summary" or "monthly_summary"
+	 *
+	 * @generated from field: string task_type = 1;
+	 */
+	taskType: string;
+
+	/**
+	 * YYYY-MM-DD for daily, YYYY-MM for monthly
+	 *
+	 * @generated from field: string date = 2;
+	 */
+	date: string;
+
+	/**
+	 * Unix timestamp
+	 *
+	 * @generated from field: int64 started_at = 3;
+	 */
+	startedAt: bigint;
+};
+
+/**
+ * Describes the message user.ProcessingTask.
+ * Use `create(ProcessingTaskSchema)` to create a new message.
+ */
+export const ProcessingTaskSchema: GenMessage<ProcessingTask> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 20);
+
+/**
+ * メトリクス統計情報
+ *
+ * @generated from message user.MetricsSummary
+ */
+export type MetricsSummary = Message<"user.MetricsSummary"> & {
+	/**
+	 * @generated from field: int32 total_daily_summaries = 1;
+	 */
+	totalDailySummaries: number;
+
+	/**
+	 * @generated from field: int32 total_monthly_summaries = 2;
+	 */
+	totalMonthlySummaries: number;
+
+	/**
+	 * @generated from field: int32 pending_daily_summaries = 3;
+	 */
+	pendingDailySummaries: number;
+
+	/**
+	 * @generated from field: int32 pending_monthly_summaries = 4;
+	 */
+	pendingMonthlySummaries: number;
+
+	/**
+	 * @generated from field: bool auto_summary_daily_enabled = 5;
+	 */
+	autoSummaryDailyEnabled: boolean;
+
+	/**
+	 * @generated from field: bool auto_summary_monthly_enabled = 6;
+	 */
+	autoSummaryMonthlyEnabled: boolean;
+};
+
+/**
+ * Describes the message user.MetricsSummary.
+ * Use `create(MetricsSummarySchema)` to create a new message.
+ */
+export const MetricsSummarySchema: GenMessage<MetricsSummary> =
+	/*@__PURE__*/
+	messageDesc(file_user_user, 21);
+
+/**
  * @generated from service user.UserService
  */
 export const UserService: GenService<{
@@ -548,5 +726,15 @@ export const UserService: GenService<{
 		methodKind: "unary";
 		input: typeof GetAutoSummarySettingsRequestSchema;
 		output: typeof GetAutoSummarySettingsResponseSchema;
+	};
+	/**
+	 * Pub/Sub処理状況メトリクス取得
+	 *
+	 * @generated from rpc user.UserService.GetPubSubMetrics
+	 */
+	getPubSubMetrics: {
+		methodKind: "unary";
+		input: typeof GetPubSubMetricsRequestSchema;
+		output: typeof GetPubSubMetricsResponseSchema;
 	};
 }> = /*@__PURE__*/ serviceDesc(file_user_user, 0);

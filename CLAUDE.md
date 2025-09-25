@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS.
+**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS. The system includes automated AI summary generation via Redis Pub/Sub, scheduled background processing, distributed locking, and comprehensive monitoring with Prometheus and Grafana.
 
 ## Development Setup
 
@@ -20,14 +20,23 @@ npm install -g @grpc/proto-loader
 ### Starting Development Environment
 
 ```bash
-dc up -d  # Starts all services (backend, frontend, postgres)
+dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, redis, scheduler, subscriber, prometheus, grafana, loki, promtail, cadvisor)
 ```
 
 **Service URLs:**
 
-- Backend gRPC: http://localhost:8080
-- Frontend: http://localhost:5173
-- PostgreSQL: localhost:5432
+- Backend gRPC: http://localhost:2001
+- Frontend: http://localhost:2000
+- PostgreSQL: localhost:2002
+- PostgreSQL Test: localhost:2003
+- Redis: localhost:2004
+- Subscriber Metrics: http://localhost:2005/metrics
+- Scheduler Metrics: http://localhost:2006/metrics
+- Prometheus: http://localhost:2007
+- Grafana: http://localhost:2008 (admin/admin)
+- cAdvisor: http://localhost:2009
+- Loki: http://localhost:2010
+- Grafana Alloy: http://localhost:2011
 
 ## Common Development Commands
 
@@ -74,6 +83,52 @@ When you change the backend, make sure that
 
 are OK.
 
+### Async Processing Services
+
+```bash
+# Scheduler service (periodic task execution)
+docker compose logs scheduler        # View scheduler logs
+docker compose exec scheduler sh     # Access scheduler container
+
+# Subscriber service (async message processing)
+docker compose logs subscriber       # View subscriber logs
+docker compose exec subscriber sh    # Access subscriber container
+
+# Redis (message queue)
+docker compose logs redis            # View Redis logs
+docker compose exec redis redis-cli  # Access Redis CLI
+```
+
+### Monitoring Services
+
+```bash
+# Prometheus (metrics collection)
+docker compose logs prometheus       # View Prometheus logs
+docker compose exec prometheus sh    # Access Prometheus container
+
+# Grafana (monitoring dashboard)
+docker compose logs grafana          # View Grafana logs
+docker compose exec grafana sh       # Access Grafana container
+
+# Loki (log aggregation)
+docker compose logs loki             # View Loki logs
+docker compose exec loki sh          # Access Loki container
+
+# Grafana Alloy (log collection)
+docker compose logs alloy            # View Alloy logs
+docker compose exec alloy sh         # Access Alloy container
+
+# cAdvisor (container metrics)
+docker compose logs cadvisor         # View cAdvisor logs
+
+# Access monitoring endpoints
+curl http://localhost:2005/metrics   # Subscriber metrics
+curl http://localhost:2006/metrics   # Scheduler metrics
+curl http://localhost:2009/metrics   # cAdvisor metrics
+curl http://localhost:2010/ready     # Loki health check
+curl http://localhost:2011/metrics   # Grafana Alloy metrics
+```
+
 ### Database Operations
 
 ```bash
@@ -94,10 +149,11 @@ make xo                # Generate database models from schema
 ### gRPC Debugging
 
 ```bash
-grpc_cli ls localhost:8080                                           # List services
-grpc_cli ls localhost:8080 diary.DiaryService -l                     # Service details
-grpc_cli type localhost:8080 diary.CreateDiaryEntryRequest           # Show message type
-grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'  # Test call
+grpc_cli ls localhost:2001                                           # List services
+grpc_cli ls localhost:2001 diary.DiaryService -l                     # Service details
+grpc_cli type localhost:2001 diary.CreateDiaryEntryRequest           # Show message type
+grpc_cli call localhost:2001 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'  # Test call
+grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'  # Search entries
 ```
 
 ## Architecture
@@ -107,8 +163,11 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - **Clean Architecture**: Domain models, services, and infrastructure layers
 - **gRPC Services**: AuthService and DiaryService
 - **JWT Authentication**: 15-minute access tokens, 30-day refresh tokens
-- **Database**: PostgreSQL with xo-generated models
+- **Database**: PostgreSQL with xo-generated models (separate test DB)
 - **Hot Reload**: Air tool for automatic backend reloading
+- **Async Processing**: Scheduler and Subscriber services with Redis Pub/Sub
+- **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
+- **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Promtail, and cAdvisor
 
 ### Frontend Structure
 
@@ -123,7 +182,50 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - **users**: UUID primary keys, email-based authentication
 - **diaries**: One diary per user per date (unique constraint)
 - **user_password_authes**: Separate password authentication table
+- **user_llms**: LLM provider settings and auto-summary preferences
+- **diary_summary_days**: AI-generated daily summaries
+- **diary_summary_months**: AI-generated monthly summaries
 - **Migrations**: Numbered SQL files in /schema directory
+
+### Async Processing Architecture
+
+```
+Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Database
+                          ↓
+                    Distributed Locks
+                          ↓
+                    Prometheus Metrics
+```
+
+- **Scheduler**: `backend/cmd/scheduler` - Periodic task execution
+  - Identifies users with auto-summary enabled
+  - Queues summary generation tasks (excluding today/current month)
+  - Uses generic `ScheduledJob` interface for extensibility
+  - Exposes metrics on port 2006 for monitoring
+
+- **Redis Pub/Sub**: Message queue with `diary_events` channel
+  - JSON message format with type-based routing
+  - Message types: `daily_summary`, `monthly_summary`
+  - Uses rueidis client for high performance
+
+- **Subscriber**: `backend/cmd/subscriber` - Async message processor
+  - Consumes messages from Redis queue
+  - Generates summaries via LLM APIs
+  - Saves results to database with conflict resolution
+  - Exposes metrics on port 2005 for monitoring
+
+- **Distributed Locking**: `backend/infrastructure/lock` - Redis-based coordination
+  - Prevents duplicate task execution across multiple instances
+  - Uses Lua scripts for atomic lock operations
+  - Separate locks for daily and monthly summary generation
+
+- **Comprehensive Monitoring Stack**: Prometheus + Grafana + Loki + Alloy + cAdvisor
+  - **Prometheus**: Collects metrics from scheduler and subscriber services
+  - **Grafana**: Custom dashboards for pub/sub monitoring and container resource monitoring
+  - **Loki**: Log aggregation system for centralized log management
+  - **Grafana Alloy**: Modern log collection agent that ships logs to Loki (replacement for Promtail)
+  - **cAdvisor**: Container resource usage and performance metrics
+  - Tracks job execution rates, duration, success rates, container resources, and logs
 
 ## Authentication Flow
 
@@ -148,10 +250,45 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - `proto/`: gRPC service definitions
 - `schema/`: Database migration files
 - `backend/cmd/server/main.go`: Backend entry point
+- `backend/cmd/scheduler/main.go`: Scheduler service entry point
+- `backend/cmd/subscriber/main.go`: Subscriber service entry point
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
 - `frontend/src/locales/`: Internationalization files (ja.json, en.json)
+- `adr/`: Architecture Decision Records
+  - `0004-pubsub.md`: Redis Pub/Sub implementation details
+  - `0005-scheduler.md`: Scheduler system architecture
+- `monitoring/`: Monitoring configuration
+  - `prometheus.yml`: Metrics collection configuration
+  - `loki/loki-config.yml`: Loki log aggregation configuration
+  - `alloy/alloy-config.alloy`: Grafana Alloy log collection configuration
+  - `grafana/`: Dashboard and data source provisioning
+    - `dashboards/umi-mikan-pubsub.json`: Pub/Sub monitoring dashboard
+    - `dashboards/container-monitoring.json`: Container resource monitoring dashboard
+    - `dashboards/container-logs.json`: Container logs monitoring dashboard
+    - `provisioning/datasources/`: Prometheus and Loki data source configurations
+- `backend/infrastructure/lock/`: Distributed locking system
+  - `distributed_lock.go`: Redis-based lock implementation
 
 ## Development Guidelines
+
+### Port Usage
+
+- **Always use 2000 series ports**: All services must use ports in the 2000-2099 range
+- **Port allocation**: Follow the existing port scheme documented in Service URLs
+- **Current port allocation**:
+  - 2000: Frontend
+  - 2001: Backend gRPC
+  - 2002: PostgreSQL
+  - 2003: PostgreSQL Test
+  - 2004: Redis
+  - 2005: Subscriber Metrics
+  - 2006: Scheduler Metrics
+  - 2007: Prometheus
+  - 2008: Grafana
+  - 2009: cAdvisor
+  - 2010: Loki
+  - 2011: Grafana Alloy
+- **Custom services**: New services should use available ports in the 2000 range (e.g., 2012+)
 
 ### Internationalization (i18n)
 
@@ -165,6 +302,39 @@ grpc_cli call localhost:8080 DiaryService.CreateDiaryEntry 'title: "test",conten
 - **New components must support i18n**: All user-facing text should be translatable
 - **Follow atomic design**: Place components in appropriate atoms/molecules/organisms directories
 - **Consistent imports**: Always include necessary i18n imports
+
+### TypeScript Guidelines
+
+- **No any or unknown types**: Always use specific, properly typed interfaces and types
+- **Type safety**: Ensure all variables, function parameters, and return values have explicit types
+- **Generated types**: Use the auto-generated gRPC types from `frontend/src/lib/grpc/`
+
+## Configuration Options
+
+### Scheduler Configuration
+
+Environment variables for controlling scheduler behavior:
+
+- `SCHEDULER_DAILY_INTERVAL`: Interval for daily summary job execution (default: `5m`)
+- `SCHEDULER_MONTHLY_INTERVAL`: Interval for monthly summary job execution (default: `5m`)
+
+Examples:
+```bash
+SCHEDULER_DAILY_INTERVAL=10m    # Run daily summaries every 10 minutes
+SCHEDULER_MONTHLY_INTERVAL=1h   # Run monthly summaries every hour
+```
+
+### Subscriber Configuration
+
+Environment variables for controlling async message processing:
+
+- `SUBSCRIBER_MAX_CONCURRENT_JOBS`: Maximum number of concurrent message processing jobs (default: `10`)
+
+Examples:
+```bash
+SUBSCRIBER_MAX_CONCURRENT_JOBS=5    # Limit to 5 concurrent jobs
+SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
+```
 
 ## Production Notes
 

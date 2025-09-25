@@ -1,0 +1,45 @@
+# Config file for [Air](https://github.com/air-verse/air) in TOML format for scheduler
+
+# Working directory
+root = "."
+tmp_dir = "tmp-scheduler"
+
+[build]
+cmd = "go build -o ./tmp-scheduler/scheduler cmd/scheduler/main.go"
+bin = "tmp-scheduler/scheduler"
+full_bin = "APP_ENV=dev APP_USER=air ./tmp-scheduler/scheduler"
+include_ext = ["go", "tpl", "tmpl", "html"]
+exclude_dir = ["assets", "tmp", "tmp-scheduler", "tmp-subscriber", "vendor"]
+include_dir = []
+include_file = []
+exclude_file = []
+exclude_regex = ["_test\\.go"]
+exclude_unchanged = true
+follow_symlink = true
+log = "air-scheduler.log"
+poll = false
+poll_interval = 500                                                          # ms
+delay = 0                                                                    # ms
+stop_on_error = true
+send_interrupt = false
+kill_delay = 500                                                             # nanosecond
+rerun = false
+rerun_delay = 500
+
+[log]
+time = false
+main_only = false
+
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[misc]
+clean_on_exit = true
+
+[screen]
+clear_on_rebuild = true
+keep_scroll = true
+

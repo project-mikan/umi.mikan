@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,11 +13,13 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
+	"github.com/redis/rueidis"
 )
 
 type UserEntry struct {
 	g.UnimplementedUserServiceServer
-	DB database.DB
+	DB          database.DB
+	RedisClient rueidis.Client
 }
 
 func (s *UserEntry) UpdateUserName(ctx context.Context, req *g.UpdateUserNameRequest) (*g.UpdateUserNameResponse, error) {
@@ -513,5 +517,239 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	return &g.GetAutoSummarySettingsResponse{
 		AutoSummaryDaily:   userLLMDB.AutoSummaryDaily,
 		AutoSummaryMonthly: userLLMDB.AutoSummaryMonthly,
+	}, nil
+}
+
+func (s *UserEntry) GetPubSubMetrics(ctx context.Context, req *g.GetPubSubMetricsRequest) (*g.GetPubSubMetricsResponse, error) {
+	// コンテキストからユーザーIDを取得
+	userID, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID")
+	}
+
+	// 1. 過去24時間の時間別メトリクスを生成
+	hourlyMetrics, err := s.getHourlyMetrics(ctx, parsedUserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get hourly metrics: %w", err)
+	}
+
+	// 2. 現在処理中のタスクを取得
+	processingTasks, err := s.getProcessingTasks(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get processing tasks: %w", err)
+	}
+
+	// 3. 統計情報を取得
+	summary, err := s.getMetricsSummary(ctx, parsedUserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics summary: %w", err)
+	}
+
+	return &g.GetPubSubMetricsResponse{
+		HourlyMetrics:   hourlyMetrics,
+		ProcessingTasks: processingTasks,
+		Summary:         summary,
+	}, nil
+}
+
+func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*g.HourlyMetrics, error) {
+	// 過去24時間のデータを1時間ごとに集約
+	query := `
+		WITH hours AS (
+			SELECT generate_series(
+				date_trunc('hour', NOW() - INTERVAL '23 hours'),
+				date_trunc('hour', NOW()),
+				INTERVAL '1 hour'
+			) AS hour
+		),
+		daily_summaries AS (
+			SELECT
+				date_trunc('hour', to_timestamp(created_at)) as hour,
+				COUNT(*) as created_count
+			FROM diary_summary_days
+			WHERE user_id = $1
+			AND created_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '24 hours')
+			GROUP BY date_trunc('hour', to_timestamp(created_at))
+		),
+		monthly_summaries AS (
+			SELECT
+				date_trunc('hour', to_timestamp(created_at)) as hour,
+				COUNT(*) as created_count
+			FROM diary_summary_months
+			WHERE user_id = $1
+			AND created_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '24 hours')
+			GROUP BY date_trunc('hour', to_timestamp(created_at))
+		)
+		SELECT
+			h.hour,
+			COALESCE(ds.created_count, 0) as daily_summaries_processed,
+			COALESCE(ms.created_count, 0) as monthly_summaries_processed
+		FROM hours h
+		LEFT JOIN daily_summaries ds ON h.hour = ds.hour
+		LEFT JOIN monthly_summaries ms ON h.hour = ms.hour
+		ORDER BY h.hour
+	`
+
+	rows, err := s.DB.(*sql.DB).Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
+
+	var metrics []*g.HourlyMetrics
+	for rows.Next() {
+		var hour time.Time
+		var dailyProcessed, monthlyProcessed int32
+
+		if err := rows.Scan(&hour, &dailyProcessed, &monthlyProcessed); err != nil {
+			return nil, err
+		}
+
+		metrics = append(metrics, &g.HourlyMetrics{
+			Timestamp:                 hour.Unix(),
+			DailySummariesProcessed:   dailyProcessed,
+			MonthlySummariesProcessed: monthlyProcessed,
+			DailySummariesFailed:      0, // TODO: 失敗ログを記録する仕組みを追加後に実装
+			MonthlySummariesFailed:    0, // TODO: 失敗ログを記録する仕組みを追加後に実装
+		})
+	}
+
+	return metrics, nil
+}
+
+func (s *UserEntry) getProcessingTasks(ctx context.Context, userID string) ([]*g.ProcessingTask, error) {
+	// Redisから現在処理中のタスクを取得
+	var tasks []*g.ProcessingTask
+
+	// 日次サマリータスクの検索
+	dailyPattern := fmt.Sprintf("task:daily_summary:%s:*", userID)
+	dailyCmd := s.RedisClient.B().Keys().Pattern(dailyPattern).Build()
+	dailyKeys, err := s.RedisClient.Do(ctx, dailyCmd).AsStrSlice()
+	if err == nil {
+		for _, key := range dailyKeys {
+			// キーから日付を抽出: task:daily_summary:userID:YYYY-MM-DD
+			parts := strings.Split(key, ":")
+			if len(parts) >= 4 {
+				date := parts[3]
+				// タスクの開始時刻は現在時刻から推定（より正確には開始時刻をRedisに保存すべき）
+				tasks = append(tasks, &g.ProcessingTask{
+					TaskType:  "daily_summary",
+					Date:      date,
+					StartedAt: time.Now().Add(-time.Minute * 5).Unix(), // 推定値
+				})
+			}
+		}
+	}
+
+	// 月次サマリータスクの検索
+	monthlyPattern := fmt.Sprintf("task:monthly_summary:%s:*", userID)
+	monthlyCmd := s.RedisClient.B().Keys().Pattern(monthlyPattern).Build()
+	monthlyKeys, err := s.RedisClient.Do(ctx, monthlyCmd).AsStrSlice()
+	if err == nil {
+		for _, key := range monthlyKeys {
+			// キーから年月を抽出: task:monthly_summary:userID:YYYY-MM
+			parts := strings.Split(key, ":")
+			if len(parts) >= 4 {
+				yearMonth := parts[3]
+				tasks = append(tasks, &g.ProcessingTask{
+					TaskType:  "monthly_summary",
+					Date:      yearMonth,
+					StartedAt: time.Now().Add(-time.Minute * 5).Unix(), // 推定値
+				})
+			}
+		}
+	}
+
+	return tasks, nil
+}
+
+func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g.MetricsSummary, error) {
+	// 日次サマリー総数を取得
+	var totalDaily int32
+	dailyQuery := `SELECT COUNT(*) FROM diary_summary_days WHERE user_id = $1`
+	if err := s.DB.(*sql.DB).QueryRow(dailyQuery, userID).Scan(&totalDaily); err != nil {
+		return nil, err
+	}
+
+	// 月次サマリー総数を取得
+	var totalMonthly int32
+	monthlyQuery := `SELECT COUNT(*) FROM diary_summary_months WHERE user_id = $1`
+	if err := s.DB.(*sql.DB).QueryRow(monthlyQuery, userID).Scan(&totalMonthly); err != nil {
+		return nil, err
+	}
+
+	// 未作成の日次サマリー数を取得（今日を除く）
+	var pendingDaily int32
+	pendingDailyQuery := `
+		SELECT COUNT(*)
+		FROM diaries d
+		LEFT JOIN diary_summary_days dsd ON d.user_id = dsd.user_id AND d.date = dsd.date
+		WHERE d.user_id = $1
+		  AND d.date < CURRENT_DATE
+		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
+	`
+	if err := s.DB.(*sql.DB).QueryRow(pendingDailyQuery, userID).Scan(&pendingDaily); err != nil {
+		return nil, err
+	}
+
+	// 未作成の月次サマリー数を取得（今月を除く）
+	var pendingMonthly int32
+	pendingMonthlyQuery := `
+		WITH monthly_diary_stats AS (
+			SELECT
+				EXTRACT(YEAR FROM d.date) as year,
+				EXTRACT(MONTH FROM d.date) as month,
+				MAX(d.updated_at) as latest_diary_updated_at
+			FROM diaries d
+			WHERE d.user_id = $1
+			GROUP BY EXTRACT(YEAR FROM d.date), EXTRACT(MONTH FROM d.date)
+		)
+		SELECT COUNT(*)
+		FROM monthly_diary_stats mds
+		LEFT JOIN diary_summary_months dsm ON dsm.user_id = $1
+			AND dsm.year = mds.year
+			AND dsm.month = mds.month
+		WHERE EXISTS (
+			SELECT 1 FROM diary_summary_days dsd
+			WHERE dsd.user_id = $1
+			AND EXTRACT(YEAR FROM dsd.date) = mds.year
+			AND EXTRACT(MONTH FROM dsd.date) = mds.month
+		)
+		AND (mds.year < EXTRACT(YEAR FROM CURRENT_DATE)
+			OR (mds.year = EXTRACT(YEAR FROM CURRENT_DATE) AND mds.month < EXTRACT(MONTH FROM CURRENT_DATE)))
+		AND (dsm.updated_at IS NULL OR dsm.updated_at < mds.latest_diary_updated_at)
+	`
+	if err := s.DB.(*sql.DB).QueryRow(pendingMonthlyQuery, userID).Scan(&pendingMonthly); err != nil {
+		return nil, err
+	}
+
+	// 自動要約設定を取得
+	var autoDaily, autoMonthly bool
+	autoQuery := `SELECT auto_summary_daily, auto_summary_monthly FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	if err := s.DB.(*sql.DB).QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly); err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+		// 設定が存在しない場合はfalse
+		autoDaily = false
+		autoMonthly = false
+	}
+
+	return &g.MetricsSummary{
+		TotalDailySummaries:       totalDaily,
+		TotalMonthlySummaries:     totalMonthly,
+		PendingDailySummaries:     pendingDaily,
+		PendingMonthlySummaries:   pendingMonthly,
+		AutoSummaryDailyEnabled:   autoDaily,
+		AutoSummaryMonthlyEnabled: autoMonthly,
 	}, nil
 }

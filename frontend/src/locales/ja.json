@@ -7,10 +7,18 @@
 		"success": "成功",
 		"createdAt": "作成日",
 		"updatedAt": "更新日",
-		"close": "閉じる"
+		"close": "閉じる",
+		"enabled": "有効",
+		"disabled": "無効"
 	},
 	"settings": {
 		"title": "設定",
+		"nav": {
+			"title": "目次",
+			"userSettings": "ユーザー設定",
+			"llmSettings": "LLM設定",
+			"dangerZone": "その他"
+		},
 		"username": {
 			"title": "お名前変更",
 			"label": "新しいお名前",
@@ -40,16 +48,21 @@
 			"save": "トークンを保存"
 		},
 		"autoSummary": {
-			"title": "自動要約設定",
-			"description": "1000文字以上の日記に対して自動で要約を生成する設定です。",
-			"dailyLabel": "日毎の自動要約を有効にする",
-			"monthlyLabel": "月毎の自動要約を有効にする",
+			"title": "自動まとめ設定",
+			"description": "1000文字以上の日記に対して自動でまとめを生成する設定です。",
+			"dailyLabel": "日毎の自動まとめを有効にする",
+			"monthlyLabel": "月毎の自動まとめを有効にする",
 			"save": "設定を保存"
 		},
 		"deleteToken": {
 			"button": "トークンを削除",
 			"confirm": "LLMトークンを削除",
 			"confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
+		},
+		"llmStatus": {
+			"title": "LLM処理状況",
+			"description": "AIまとめの処理状況とパフォーマンスメトリクスを確認できます。",
+			"viewButton": "処理状況を表示"
 		},
 		"deleteAccount": {
 			"title": "アカウント削除",
@@ -63,7 +76,7 @@
 			"passwordChangeSuccess": "パスワードを変更しました",
 			"llmTokenUpdateSuccess": "LLMトークンを保存しました",
 			"llmTokenDeleteSuccess": "LLMトークンを削除しました",
-			"autoSummarySettingsUpdateSuccess": "自動要約設定を更新しました",
+			"autoSummarySettingsUpdateSuccess": "自動まとめ設定を更新しました",
 			"accountDeleteSuccess": "アカウントを削除しました",
 			"unauthorized": "認証が必要です",
 			"userNotFound": "ユーザーが見つかりません",
@@ -125,21 +138,26 @@
 		"viewThisMonth": "この月の日記",
 		"placeholder": "今日の出来事を書いてください...",
 		"characterCount": "{count}文字",
-		"autoSummaryEligible": "自動要約対象",
-		"generateSummary": "要約を生成",
-		"regenerateSummary": "要約を再生成",
-		"generatingSummary": "要約生成中...",
-		"regeneratingSummary": "要約再生成中...",
-		"summaryRequires1000Chars": "1000文字以上で要約が利用できます",
-		"summaryNotAvailableToday": "要約は当日は利用できません",
-		"summaryAutoEnabled": "自動要約が有効です",
-		"summaryGenerationFailed": "要約の生成に失敗しました",
+		"autoSummaryEligible": "自動まとめ対象",
+		"generateSummary": "まとめを生成",
+		"regenerateSummary": "まとめを再生成",
+		"generatingSummary": "まとめ生成中...",
+		"regeneratingSummary": "まとめ再生成中...",
+		"summaryRequires1000Chars": "1000文字以上でまとめが利用できます",
+		"summaryNotAvailableToday": "まとめは当日は利用できません",
+		"summaryNotAvailableFuture": "まとめは未来の日付では利用できません",
+		"summaryAutoEnabled": "自動まとめが有効です",
+		"summaryGenerationFailed": "まとめの生成に失敗しました",
+		"summaryTimeout": "まとめの生成がタイムアウトしました。再度お試しください。",
 		"summary": {
-			"title": "日記の要約",
+			"title": "日記のまとめ",
 			"label": "まとめ",
-			"view": "要約を表示",
-			"hide": "要約を非表示",
-			"outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。"
+			"view": "まとめを表示",
+			"hide": "まとめを非表示",
+			"outdated": "日記が更新されています。最新のまとめにする場合は再生成してください。",
+			"outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。",
+			"statusQueued": "まとめの生成をキューに追加しました。しばらくお待ちください。",
+			"statusProcessing": "まとめを生成中です。しばらくお待ちください。"
 		},
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
@@ -217,16 +235,22 @@
 		"detail": "詳細",
 		"edit": "編集",
 		"summary": {
-			"title": "月間サマリー",
-			"generate": "サマリーを生成",
-			"generating": "サマリー生成中...",
-			"view": "サマリーを表示",
-			"hide": "サマリーを非表示",
-			"regenerate": "サマリーを再生成",
-			"error": "サマリーの生成に失敗しました",
-			"noEntries": "この月の日記が見つかりません",
+			"title": "月間まとめ",
+			"generate": "まとめを生成",
+			"generating": "まとめ生成中...",
+			"view": "まとめを表示",
+			"hide": "まとめを非表示",
+			"regenerate": "まとめを再生成",
+			"regenerating": "まとめ再生成中...",
+			"error": "まとめの生成に失敗しました",
+			"outdated": "この月の日記が更新されています。最新のまとめにする場合は再生成してください。",
+			"noEntries": "この月の日記が見つかりません。月次まとめを生成するには、まず日記を書いてください。",
 			"noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
-			"updateAvailable": "このサマリー生成後に日記が更新されています。最新のサマリーを得るには再生成してください。"
+			"updateAvailable": "このまとめ生成後に日記が更新されています。最新のまとめを得るには再生成してください。",
+			"currentMonthError": "月次まとめは過去の月のみ生成できます。現在の月は生成できません。",
+			"currentMonthNote": "現在の月のためまとめは生成できません",
+			"futureMonthError": "未来の月のまとめは生成できません。",
+			"noEntriesError": "この月には日記がありません。まとめを生成するには、まず日記を書いてください。"
 		}
 	},
 	"timeProgress": {
@@ -247,6 +271,13 @@
 		"search": "検索",
 		"settings": "設定"
 	},
+	"page": {
+		"title": {
+			"home": "トップ - umi.mikan",
+			"calendar": "カレンダー - umi.mikan",
+			"individual": "{date} - umi.mikan"
+		}
+	},
 	"footer": {
 		"github": "GitHub"
 	},
@@ -255,5 +286,34 @@
 		"charactersUnit": "文字",
 		"day": "日",
 		"dailyCharacterCount": "日毎の文字数推移"
+	},
+	"llm": {
+		"title": "LLM処理状況",
+		"description": "AIまとめの処理状況と統計情報を表示します",
+		"metrics": {
+			"totalDailySummaries": "日次まとめ総数",
+			"totalMonthlySummaries": "月次まとめ総数",
+			"pendingDailySummaries": "未処理日次まとめ",
+			"pendingMonthlySummaries": "未処理月次まとめ",
+			"autoSummarySettings": "自動まとめ設定",
+			"dailyAutoSummary": "日次自動まとめ",
+			"monthlyAutoSummary": "月次自動まとめ",
+			"processingTasks": "処理中のタスク",
+			"processing": "処理中",
+			"last24Hours": "過去24時間の処理状況",
+			"processingActivity": "処理活動",
+			"time": "時刻",
+			"processedCount": "処理件数",
+			"dailySummaries": "日次まとめ",
+			"monthlySummaries": "月次まとめ",
+			"dailySummary": "日次まとめ",
+			"monthlySummary": "月次まとめ",
+			"startedAt": "開始時刻",
+			"aboutTitle": "LLM処理について",
+			"aboutDescription": "このページでは、AI（Gemini）による自動まとめ処理の状況を確認できます。",
+			"dailySummaryExplanation": "日次まとめ: 1000文字以上の日記に対して毎日自動で生成されるまとめ",
+			"monthlySummaryExplanation": "月次まとめ: 日次まとめから生成される月間の総合まとめ",
+			"processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
+		}
 	}
 }

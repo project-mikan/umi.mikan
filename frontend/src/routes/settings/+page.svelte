@@ -2,7 +2,9 @@
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
 import { enhance } from "$app/forms";
+import { onMount } from "svelte";
 import Modal from "$lib/components/molecules/Modal.svelte";
+import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
 import type { ActionData, PageData } from "./$types";
 
 export let form: ActionData;
@@ -44,6 +46,57 @@ $: {
 		autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
 	}
 }
+
+// Active section tracking
+let activeSection = "";
+
+// Intersection Observer for tracking active section
+onMount(() => {
+	let isUserScrolling = false;
+	let scrollTimeout: number;
+
+	// Listen for scroll events to detect user scrolling
+	const handleScroll = () => {
+		isUserScrolling = true;
+		if (scrollTimeout) {
+			clearTimeout(scrollTimeout);
+		}
+		scrollTimeout = setTimeout(() => {
+			isUserScrolling = false;
+		}, 150);
+	};
+
+	window.addEventListener("scroll", handleScroll);
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			// Only update if not currently scrolling programmatically
+			if (!isUserScrolling) {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						activeSection = entry.target.id;
+					}
+				});
+			}
+		},
+		{ threshold: 0.3, rootMargin: "-20% 0px -60% 0px" },
+	);
+
+	const sections = document.querySelectorAll("section[id]");
+	for (const section of sections) {
+		observer.observe(section);
+	}
+
+	return () => {
+		window.removeEventListener("scroll", handleScroll);
+		for (const section of sections) {
+			observer.unobserve(section);
+		}
+		if (scrollTimeout) {
+			clearTimeout(scrollTimeout);
+		}
+	};
+});
 
 // Modal helper functions
 function confirmDeleteLLMToken() {
@@ -100,11 +153,25 @@ function handleDeleteAccount() {
 <main class="container mx-auto px-4 py-8">
 	<h1 class="text-3xl font-bold mb-8">{$_("settings.title")}</h1>
 
-	<div class="max-w-2xl mx-auto space-y-8">
+	<div class="flex gap-8 max-w-6xl mx-auto">
+		<!-- Settings Navigation -->
+		<aside class="w-64 flex-shrink-0">
+			<SettingsNav {activeSection} />
+		</aside>
 
-		<!-- ユーザー名変更セクション -->
-		<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-			<h2 class="text-xl font-semibold mb-4">{$_("settings.username.title")}</h2>
+		<!-- Settings Content -->
+		<div class="flex-1 space-y-8">
+
+			<!-- ユーザー設定セクション -->
+			<div class="space-y-8">
+				<div>
+					<h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+						{$_("settings.nav.userSettings")}
+					</h2>
+
+					<!-- ユーザー名変更セクション -->
+					<section id="username" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+						<h3 class="text-xl font-semibold mb-4">{$_("settings.username.title")}</h3>
 			<form
 				method="POST"
 				action="?/updateUsername"
@@ -152,11 +219,11 @@ function handleDeleteAccount() {
 					</div>
 				{/if}
 			</form>
-		</section>
+					</section>
 
-		<!-- パスワード変更セクション -->
-		<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-			<h2 class="text-xl font-semibold mb-4">{$_("settings.password.title")}</h2>
+					<!-- パスワード変更セクション -->
+					<section id="password" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+						<h3 class="text-xl font-semibold mb-4">{$_("settings.password.title")}</h3>
 			<form
 				method="POST"
 				action="?/changePassword"
@@ -289,11 +356,20 @@ function handleDeleteAccount() {
 					</div>
 				{/if}
 			</form>
-		</section>
+					</section>
+				</div>
+			</div>
 
-		<!-- LLMトークン変更セクション -->
-		<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-			<h2 class="text-xl font-semibold mb-4">{$_("settings.llmToken.title")}</h2>
+			<!-- LLM設定セクション -->
+			<div class="space-y-8">
+				<div>
+					<h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+						{$_("settings.nav.llmSettings")}
+					</h2>
+
+					<!-- LLMトークン変更セクション -->
+					<section id="llm-token" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+						<h3 class="text-xl font-semibold mb-4">{$_("settings.llmToken.title")}</h3>
 			<form
 				method="POST"
 				action="?/updateLLMKey"
@@ -385,12 +461,12 @@ function handleDeleteAccount() {
 					{/if}
 				</div>
 			{/if}
-		</section>
+					</section>
 
-		<!-- 自動要約設定セクション -->
-		{#if existingLLMToken}
-			<section class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-				<h2 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h2>
+					<!-- 自動要約設定セクション -->
+					{#if existingLLMToken}
+						<section id="auto-summary" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+							<h3 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h3>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
 					{$_("settings.autoSummary.description")}
 				</p>
@@ -458,17 +534,56 @@ function handleDeleteAccount() {
 							{$_(`settings.messages.${form.message}`) || form.message}
 						</div>
 					{/if}
-				</form>
-			</section>
-		{/if}
+							</form>
+						</section>
+					{/if}
 
-		<!-- Account Deletion Section -->
-		<hr class="my-8 border-gray-300 dark:border-gray-600" />
+					<!-- LLM処理状況セクション -->
+					{#if existingLLMKey}
+						<section id="llm-status" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+							<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+								{$_("settings.llmStatus.title")}
+							</h3>
+				<p class="text-gray-700 dark:text-gray-300 mb-4">
+					{$_("settings.llmStatus.description")}
+				</p>
+				<a
+					href="/llm"
+					class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				>
+					<svg
+						class="w-5 h-5 mr-2"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+						xmlns="http://www.w3.org/2000/svg"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+						></path>
+					</svg>
+					{$_("settings.llmStatus.viewButton")}
+								</a>
+						</section>
+					{/if}
+				</div>
+			</div>
 
-		<section class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-			<h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-				{$_("settings.deleteAccount.title")}
-			</h2>
+			<!-- 危険な操作セクション -->
+			<div class="space-y-8">
+				<div>
+					<h2 class="text-2xl font-bold mb-6 text-red-600 dark:text-red-400">
+						{$_("settings.nav.dangerZone")}
+					</h2>
+
+					<!-- Account Deletion Section -->
+					<section id="delete-account" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-red-200 dark:border-red-800">
+						<h3 class="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">
+							{$_("settings.deleteAccount.title")}
+						</h3>
 			<div class="mb-4">
 				<p class="text-gray-700 dark:text-gray-300 mb-2">
 					{$_("settings.deleteAccount.warning")}
@@ -493,7 +608,10 @@ function handleDeleteAccount() {
 					{$_(`settings.messages.${form.message}`) || form.message}
 				</div>
 			{/if}
-		</section>
+				</section>
+			</div>
+		</div>
+	</div>
 	</div>
 </main>
 

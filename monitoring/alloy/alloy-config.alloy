@@ -1,0 +1,65 @@
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+// Discovery component for Docker containers
+discovery.docker "containers" {
+	host             = "unix:///var/run/docker.sock"
+	refresh_interval = "5s"
+}
+
+// Relabeling to add container metadata
+discovery.relabel "docker_logs" {
+	targets = discovery.docker.containers.targets
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+		target_label  = "project"
+	}
+
+	rule {
+		replacement  = "docker"
+		target_label = "job"
+	}
+}
+
+// Log collection from Docker containers
+loki.source.docker "docker_logs" {
+	host             = "unix:///var/run/docker.sock"
+	targets          = discovery.relabel.docker_logs.output
+	refresh_interval = "5s"
+	relabel_rules    = discovery.relabel.docker_logs.rules
+
+	forward_to = [loki.write.loki.receiver]
+}
+
+// Static log collection from system files
+loki.source.file "system_logs" {
+	targets = [
+		{
+			__path__ = "/var/log/*log",
+			job      = "varlogs",
+		},
+	]
+
+	forward_to = [loki.write.loki.receiver]
+}
+
+// Write logs to Loki
+loki.write "loki" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

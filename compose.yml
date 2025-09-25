@@ -21,9 +21,11 @@ services:
       TEST_DB_USER: postgres
       TEST_DB_PASSWORD: test-pass
       TEST_DB_NAME: umi_mikan_test
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     tty: true
     ports:
-      - 8080:8080
+      - 2001:8080
 
   frontend:
     build:
@@ -32,7 +34,7 @@ services:
     tty: true
     stdin_open: true
     ports:
-      - "5173:5173"
+      - "2000:5173"
       # - "2802:2802" # playwright report
       # - "24678:24678" # hot relaod
     user: "1000:1000"
@@ -49,7 +51,7 @@ services:
       POSTGRES_PASSWORD: "dev-pass"
       POSTGRES_DB: "umi_mikan"
     ports:
-      - "5432:5432"
+      - "2002:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
@@ -63,11 +65,145 @@ services:
       POSTGRES_PASSWORD: "test-pass"
       POSTGRES_DB: "umi_mikan_test"
     ports:
-      - "5433:5432"
+      - "2003:5432"
     volumes:
       - postgres_test_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
 
+  redis:
+    image: redis:8-alpine
+    restart: always
+    ports:
+      - "2004:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_volume:/data
+
+  subscriber:
+    build:
+      context: ./backend
+      dockerfile: ../infra/dev/subscriber/Dockerfile
+    volumes:
+      - ./backend:/backend
+    environment:
+      TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: dev-pass
+      DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SUBSCRIBER_MAX_CONCURRENT_JOBS: 10
+    ports:
+      - "2005:8082"  # metrics endpoint
+    tty: true
+    depends_on:
+      - postgres
+      - redis
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: ../infra/dev/scheduler/Dockerfile
+    volumes:
+      - ./backend:/backend
+    environment:
+      TZ: Asia/Tokyo
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: dev-pass
+      DB_NAME: umi_mikan
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SCHEDULER_DAILY_INTERVAL: 5m
+      SCHEDULER_MONTHLY_INTERVAL: 5m
+    ports:
+      - "2006:8081"  # metrics endpoint
+    tty: true
+    depends_on:
+      - postgres
+      - redis
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - "2007:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_volume:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - scheduler
+      - subscriber
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - "2008:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_volume:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: always
+    ports:
+      - "2009:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+
+  loki:
+    image: grafana/loki:latest
+    restart: always
+    ports:
+      - "2010:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_volume:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    user: "0"
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: always
+    ports:
+      - "2011:12345"
+    volumes:
+      - ./monitoring/alloy/alloy-config.alloy:/etc/alloy/config.alloy
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    depends_on:
+      - loki
+
 volumes:
   postgres_volume:
   postgres_test_volume:
+  redis_volume:
+  prometheus_volume:
+  grafana_volume:
+  loki_volume:

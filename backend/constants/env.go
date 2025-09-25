@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 type DBConfig struct {
@@ -12,6 +13,20 @@ type DBConfig struct {
 	User     string
 	Password string
 	DBName   string
+}
+
+type RedisConfig struct {
+	Host string
+	Port int
+}
+
+type SchedulerConfig struct {
+	DailySummaryInterval   time.Duration
+	MonthlySummaryInterval time.Duration
+}
+
+type SubscriberConfig struct {
+	MaxConcurrentJobs int
 }
 
 func LoadEnv(name string) (string, error) {
@@ -71,5 +86,71 @@ func LoadDBConfig() (*DBConfig, error) {
 		User:     user,
 		Password: password,
 		DBName:   dbname,
+	}, nil
+}
+
+func LoadRedisConfig() (*RedisConfig, error) {
+	host, err := LoadEnv("REDIS_HOST")
+	if err != nil {
+		return nil, err
+	}
+	portString, err := LoadEnv("REDIS_PORT")
+	if err != nil {
+		return nil, err
+	}
+	port, err := strconv.Atoi(portString)
+	if err != nil {
+		return nil, err
+	}
+	return &RedisConfig{
+		Host: host,
+		Port: port,
+	}, nil
+}
+
+func LoadSchedulerConfig() (*SchedulerConfig, error) {
+	dailyIntervalStr := os.Getenv("SCHEDULER_DAILY_INTERVAL")
+	if dailyIntervalStr == "" {
+		dailyIntervalStr = "5m" // Default to 5 minutes
+	}
+
+	monthlyIntervalStr := os.Getenv("SCHEDULER_MONTHLY_INTERVAL")
+	if monthlyIntervalStr == "" {
+		monthlyIntervalStr = "5m" // Default to 5 minutes
+	}
+
+	dailyInterval, err := time.ParseDuration(dailyIntervalStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SCHEDULER_DAILY_INTERVAL format: %w", err)
+	}
+
+	monthlyInterval, err := time.ParseDuration(monthlyIntervalStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SCHEDULER_MONTHLY_INTERVAL format: %w", err)
+	}
+
+	return &SchedulerConfig{
+		DailySummaryInterval:   dailyInterval,
+		MonthlySummaryInterval: monthlyInterval,
+	}, nil
+}
+
+func LoadSubscriberConfig() (*SubscriberConfig, error) {
+	maxConcurrentJobsStr := os.Getenv("SUBSCRIBER_MAX_CONCURRENT_JOBS")
+	if maxConcurrentJobsStr == "" {
+		maxConcurrentJobsStr = "10" // Default to 10 concurrent jobs
+	}
+
+	maxConcurrentJobs, err := strconv.Atoi(maxConcurrentJobsStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SUBSCRIBER_MAX_CONCURRENT_JOBS format: %w", err)
+	}
+
+	if maxConcurrentJobs <= 0 {
+		return nil, fmt.Errorf("SUBSCRIBER_MAX_CONCURRENT_JOBS must be a positive integer")
+	}
+
+	return &SubscriberConfig{
+		MaxConcurrentJobs: maxConcurrentJobs,
 	}, nil
 }
