@@ -48,18 +48,38 @@ async function pollSummaryStatus(_isUpdate = false) {
 				if (
 					summaryText.includes("queued") ||
 					summaryText.includes("Please check back later") ||
-					summaryText.includes("generation has been queued")
+					summaryText.includes("generation has been queued") ||
+					summaryText.includes("generation is queued")
 				) {
 					// まだキューイング中
 					summaryStatus = "queued";
+					// "(Updating)"が含まれている場合のみ再生成として判定
+					if (!isRegenerating) {
+						isRegenerating = summaryText.includes("Updating");
+					}
 					// ポーリング継続
 				} else if (
 					summaryText.includes("processing") ||
 					summaryText.includes("Updating") ||
-					summaryText.includes("generating")
+					summaryText.includes("generating") ||
+					summaryText.includes("generation is processing")
 				) {
 					// まだ処理中
 					summaryStatus = "processing";
+					// "(Updating)" が含まれている場合のみ再生成として判定
+					if (!isRegenerating) {
+						isRegenerating = summaryText.includes("Updating");
+					}
+
+					// "(Updating)"が含まれている場合、元のまとめ内容を保持して処理中状態にする
+					if (summaryText.includes("(Updating)")) {
+						const cleanedSummary = {
+							...result.summary,
+							summary: summaryText.replace(/\s*\(Updating\)$/, ""),
+						};
+						summary = cleanedSummary;
+					}
+
 					// ポーリング継続
 				} else {
 					// 正常な要約が完成した
@@ -75,7 +95,16 @@ async function pollSummaryStatus(_isUpdate = false) {
 
 					// 実際に更新された場合、または初回取得の場合のみsummaryを更新
 					if (actuallyUpdated || !summary) {
-						summary = newSummary;
+						// "(Updating)"が含まれている場合は除去して元のまとめ内容を復元
+						let cleanedSummary = newSummary;
+						if (newSummary.summary.includes("(Updating)")) {
+							cleanedSummary = {
+								...newSummary,
+								summary: newSummary.summary.replace(/\s*\(Updating\)$/, ""),
+							};
+						}
+
+						summary = cleanedSummary;
 						summaryStatus = "completed";
 						showSummary = true;
 						summaryGenerating = false; // ポーリング完了時にローディング終了
@@ -89,7 +118,7 @@ async function pollSummaryStatus(_isUpdate = false) {
 
 						// 実際に更新された場合のみイベントを発火
 						if (actuallyUpdated) {
-							dispatch("summaryUpdated", { summary: newSummary });
+							dispatch("summaryUpdated", { summary: cleanedSummary });
 						}
 						dispatch("generationCompleted");
 					} else {
@@ -162,14 +191,16 @@ async function generateSummary() {
 				if (
 					summaryText.includes("queued") ||
 					summaryText.includes("Please check back later") ||
-					summaryText.includes("generation has been queued")
+					summaryText.includes("generation has been queued") ||
+					summaryText.includes("generation is queued")
 				) {
 					summaryStatus = "queued";
 					startPolling(true);
 				} else if (
 					summaryText.includes("processing") ||
 					summaryText.includes("Updating") ||
-					summaryText.includes("generating")
+					summaryText.includes("generating") ||
+					summaryText.includes("generation is processing")
 				) {
 					summaryStatus = "processing";
 					startPolling(true);
@@ -187,7 +218,16 @@ async function generateSummary() {
 
 					// 実際に更新された場合、または初回取得の場合のみsummaryを更新
 					if (actuallyUpdated || !summary) {
-						summary = newSummary;
+						// "(Updating)"が含まれている場合は除去して元のまとめ内容を復元
+						let cleanedSummary = newSummary;
+						if (newSummary.summary.includes("(Updating)")) {
+							cleanedSummary = {
+								...newSummary,
+								summary: newSummary.summary.replace(/\s*\(Updating\)$/, ""),
+							};
+						}
+
+						summary = cleanedSummary;
 						summaryStatus = "completed";
 						showSummary = true;
 						summaryGenerating = false;
@@ -195,7 +235,7 @@ async function generateSummary() {
 
 						// 実際に更新された場合のみイベントを発火
 						if (actuallyUpdated) {
-							dispatch("summaryUpdated", { summary: newSummary });
+							dispatch("summaryUpdated", { summary: cleanedSummary });
 						}
 						dispatch("generationCompleted");
 					} else {
@@ -281,19 +321,35 @@ async function fetchExistingSummary() {
 				if (
 					summaryText.includes("queued") ||
 					summaryText.includes("Please check back later") ||
-					summaryText.includes("generation has been queued")
+					summaryText.includes("generation has been queued") ||
+					summaryText.includes("generation is queued")
 				) {
 					summaryStatus = "queued";
 					summaryGenerating = true;
+					// "(Updating)"が含まれている場合のみ再生成として判定
+					isRegenerating = summaryText.includes("Updating");
 					startPolling(true);
 					dispatch("generationStarted");
 				} else if (
 					summaryText.includes("processing") ||
 					summaryText.includes("Updating") ||
-					summaryText.includes("generating")
+					summaryText.includes("generating") ||
+					summaryText.includes("generation is processing")
 				) {
 					summaryStatus = "processing";
 					summaryGenerating = true;
+					// "(Updating)" が含まれている場合のみ再生成として判定
+					isRegenerating = summaryText.includes("Updating");
+
+					// "(Updating)"が含まれている場合、元のまとめ内容を保持して処理中状態にする
+					if (summaryText.includes("(Updating)")) {
+						const cleanedSummary = {
+							...result.summary,
+							summary: summaryText.replace(/\s*\(Updating\)$/, ""),
+						};
+						summary = cleanedSummary;
+					}
+
 					startPolling(true);
 					dispatch("generationStarted");
 				} else {
@@ -364,6 +420,7 @@ $: {
 		summary = null;
 		summaryStatus = "none";
 		summaryGenerating = false;
+		isRegenerating = false;
 		// showSummaryは無効化状態でも表示が必要なのでリセットしない
 		// showSummary = false;
 		clearPolling();
@@ -420,7 +477,7 @@ $: {
 	{:else}
 		<div class="space-y-4">
 			{#if summaryGenerating}
-				<div class="flex items-center text-blue-600 dark:text-blue-400">
+				<div class="flex items-center text-blue-600 dark:text-blue-400 mb-4">
 					<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
 					<span>
 						{#if isRegenerating}
@@ -430,17 +487,65 @@ $: {
 						{/if}
 					</span>
 				</div>
+
+				{#if isRegenerating && summary && showSummary}
+					<div class="prose dark:prose-invert max-w-none">
+						{#if isSummaryOutdated}
+							<div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
+								<div class="flex">
+									<div class="flex-shrink-0">
+										<svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+											<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+										</svg>
+									</div>
+									<div class="ml-3">
+										<p class="text-sm text-yellow-800 dark:text-yellow-200">
+											{type === "daily" ? $_("diary.summary.outdated") : $_("monthly.summary.outdated")}
+										</p>
+									</div>
+								</div>
+							</div>
+						{/if}
+						<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
+							{summary.summary.replace(/\s*\(Updating\)$/, "")}
+						</p>
+					</div>
+				{/if}
 			{:else if summaryStatus === 'queued'}
 				<div class="flex items-center text-blue-600 dark:text-blue-400">
 					<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
 					<span>{$_("diary.summary.statusQueued")}</span>
 				</div>
 			{:else if summaryStatus === 'processing'}
-				<div class="flex items-center text-blue-600 dark:text-blue-400">
+				<div class="flex items-center text-blue-600 dark:text-blue-400 mb-4">
 					<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
 					<span>{$_("diary.summary.statusProcessing")}</span>
 				</div>
-			{:else if summary && showSummary}
+
+				{#if isRegenerating && summary && showSummary}
+					<div class="prose dark:prose-invert max-w-none">
+						{#if isSummaryOutdated}
+							<div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
+								<div class="flex">
+									<div class="flex-shrink-0">
+										<svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+											<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+										</svg>
+									</div>
+									<div class="ml-3">
+										<p class="text-sm text-yellow-800 dark:text-yellow-200">
+											{type === "daily" ? $_("diary.summary.outdated") : $_("monthly.summary.outdated")}
+										</p>
+									</div>
+								</div>
+							</div>
+						{/if}
+						<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
+							{summary.summary.replace(/\s*\(Updating\)$/, "")}
+						</p>
+					</div>
+				{/if}
+			{:else if summary && showSummary && !summary.summary.includes("(Updating)")}
 				<div class="prose dark:prose-invert max-w-none">
 					{#if isSummaryOutdated}
 						<div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
@@ -460,7 +565,7 @@ $: {
 					{/if}
 					<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded"
 					   class:summary-highlight={summaryJustUpdated}>
-						{summary.summary}
+						{summary.summary.replace(/\s*\(Updating\)$/, "")}
 					</p>
 				</div>
 			{/if}

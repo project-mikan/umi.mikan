@@ -148,6 +148,8 @@ $: characterCount = content ? content.length : 0;
 $: {
 	summary = data.dailySummary;
 	showSummary = !!data.dailySummary;
+	// ページ変更時に生成状態をリセット
+	isSummaryGenerating = false;
 }
 
 function handleSummaryUpdated(event: CustomEvent) {

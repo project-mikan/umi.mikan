@@ -474,9 +474,42 @@ func (s *DiaryEntry) GetMonthlySummary(
 		return nil, err
 	}
 
-	// Get the summary for the specified month
-	summary, err := database.DiarySummaryMonthByUserIDYearMonth(ctx, s.DB, userID, int(message.Month.Year), int(message.Month.Month))
-	if err != nil {
+	// タスクの状態をチェック（月次要約タスクの状態確認）
+	taskKey := fmt.Sprintf("task:monthly_summary:%s:%d-%d", userID.String(), message.Month.Year, message.Month.Month)
+	taskStatus, taskErr := s.getTaskStatus(ctx, taskKey)
+
+	// 既存の要約を取得
+	summary, summaryErr := database.DiarySummaryMonthByUserIDYearMonth(ctx, s.DB, userID, int(message.Month.Year), int(message.Month.Month))
+
+	// タスクが実行中の場合は状態メッセージを返す
+	if taskErr == nil && (taskStatus == "queued" || taskStatus == "processing") {
+		if summaryErr != nil {
+			// 要約がまだ存在しない場合、状態メッセージのみ
+			return &g.GetMonthlySummaryResponse{
+				Summary: &g.MonthlySummary{
+					Id:        "",
+					Month:     message.Month,
+					Summary:   fmt.Sprintf("Monthly summary generation is %s. Please check back later.", taskStatus),
+					CreatedAt: 0,
+					UpdatedAt: 0,
+				},
+			}, nil
+		} else {
+			// 既存の要約があるが更新中の場合、要約に状態を付加
+			return &g.GetMonthlySummaryResponse{
+				Summary: &g.MonthlySummary{
+					Id:        summary.ID.String(),
+					Month:     message.Month,
+					Summary:   fmt.Sprintf("%s (Updating)", summary.Summary),
+					CreatedAt: summary.CreatedAt,
+					UpdatedAt: summary.UpdatedAt,
+				},
+			}, nil
+		}
+	}
+
+	// タスクが実行中でない場合、通常の要約取得処理
+	if summaryErr != nil {
 		return nil, status.Errorf(codes.NotFound, "summary not found for the specified month")
 	}
 
@@ -656,8 +689,46 @@ func (s *DiaryEntry) GetDailySummary(
 
 	// 日付から要約を直接取得
 	date := time.Date(int(req.Date.Year), time.Month(req.Date.Month), int(req.Date.Day), 0, 0, 0, 0, time.UTC)
-	summary, err := database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, date)
-	if err != nil {
+
+	// タスクの状態をチェック（日記要約タスクの状態確認）
+	dateStr := date.Format("2006-01-02")
+	taskKey := fmt.Sprintf("task:daily_summary:%s:%s", userID.String(), dateStr)
+	taskStatus, taskErr := s.getTaskStatus(ctx, taskKey)
+
+	// 既存の要約を取得
+	summary, summaryErr := database.DiarySummaryDayByUserIDDate(ctx, s.DB, userID, date)
+
+	// タスクが実行中の場合は状態メッセージを返す
+	if taskErr == nil && (taskStatus == "queued" || taskStatus == "processing") {
+		if summaryErr != nil {
+			// 要約がまだ存在しない場合、状態メッセージのみ
+			return &g.GetDailySummaryResponse{
+				Summary: &g.DailySummary{
+					Id:        "",
+					DiaryId:   "",
+					Date:      req.Date,
+					Summary:   fmt.Sprintf("Summary generation is %s. Please check back later.", taskStatus),
+					CreatedAt: 0,
+					UpdatedAt: 0,
+				},
+			}, nil
+		} else {
+			// 既存の要約があるが更新中の場合、要約に状態を付加
+			return &g.GetDailySummaryResponse{
+				Summary: &g.DailySummary{
+					Id:        summary.ID.String(),
+					DiaryId:   "",
+					Date:      req.Date,
+					Summary:   fmt.Sprintf("%s (Updating)", summary.Summary),
+					CreatedAt: summary.CreatedAt,
+					UpdatedAt: summary.UpdatedAt,
+				},
+			}, nil
+		}
+	}
+
+	// タスクが実行中でない場合、通常の要約取得処理
+	if summaryErr != nil {
 		return nil, status.Error(codes.NotFound, "Daily summary not found")
 	}
 
