@@ -29,74 +29,66 @@ on:
         required: false
 
 jobs:
-  build:
-    name: Build Docker Images
+  build-backend:
+    name: Build Backend
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: ${{ fromJson(inputs.services) }}
-      max-parallel: 4
-
+    if: contains(fromJson(inputs.services), 'backend')
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v4
-
-      - name: Login to Container Registry
-        uses: docker/login-action@v3
+      - name: Build and Push Backend
+        uses: ./.github/actions/docker-build
         with:
+          service: backend
           registry: ${{ inputs.registry }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache-${{ matrix.service }}
-          key: ${{ runner.os }}-buildx-${{ matrix.service }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.service }}-
-
-      - name: Set build context
-        id: context
-        run: |
-          case "${{ matrix.service }}" in
-            "backend"|"scheduler"|"subscriber")
-              echo "context=./backend" >> $GITHUB_OUTPUT
-              ;;
-            "frontend")
-              echo "context=./frontend" >> $GITHUB_OUTPUT
-              ;;
-            *)
-              echo "context=./${{ matrix.service }}" >> $GITHUB_OUTPUT
-              ;;
-          esac
-
-      - name: Build and Push to Container Registry
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ steps.context.outputs.context }}
-          file: ./infra/prod/${{ matrix.service }}/Dockerfile
-          push: ${{ inputs.push }}
           platforms: ${{ inputs.platforms }}
-          tags: |
-            ${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ matrix.service }}:${{ github.sha }}
-            ${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ matrix.service }}:latest
-          labels: latest
-          cache-from: type=local,src=/tmp/.buildx-cache-${{ matrix.service }}
-          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.service }}-new,mode=max
+          push: ${{ inputs.push }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache-${{ matrix.service }}
-          mv /tmp/.buildx-cache-${{ matrix.service }}-new /tmp/.buildx-cache-${{ matrix.service }}
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    if: contains(fromJson(inputs.services), 'frontend')
+    steps:
+      - name: Build and Push Frontend
+        uses: ./.github/actions/docker-build
+        with:
+          service: frontend
+          registry: ${{ inputs.registry }}
+          platforms: ${{ inputs.platforms }}
+          push: ${{ inputs.push }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-scheduler:
+    name: Build Scheduler
+    runs-on: ubuntu-latest
+    if: contains(fromJson(inputs.services), 'scheduler')
+    steps:
+      - name: Build and Push Scheduler
+        uses: ./.github/actions/docker-build
+        with:
+          service: scheduler
+          registry: ${{ inputs.registry }}
+          platforms: ${{ inputs.platforms }}
+          push: ${{ inputs.push }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-subscriber:
+    name: Build Subscriber
+    runs-on: ubuntu-latest
+    if: contains(fromJson(inputs.services), 'subscriber')
+    steps:
+      - name: Build and Push Subscriber
+        uses: ./.github/actions/docker-build
+        with:
+          service: subscriber
+          registry: ${{ inputs.registry }}
+          platforms: ${{ inputs.platforms }}
+          push: ${{ inputs.push }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   notify:
     name: Send Notification
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build-backend, build-frontend, build-scheduler, build-subscriber]
     if: always() && secrets.NOTIFY_DISCORD_WEBHOOK != ''
 
     steps:
@@ -108,10 +100,10 @@ jobs:
           description: |
             **PR**: ${{ github.event.pull_request.title || github.ref_name }}
             **Author**: ${{ github.event.pull_request.user.login || github.actor }}
-            **Status**: ${{ needs.build.result == 'success' && '✅ All Docker images built successfully!' || '❌ Docker build failed' }}
+            **Status**: ${{ (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') && (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') && (needs.build-scheduler.result == 'success' || needs.build-scheduler.result == 'skipped') && (needs.build-subscriber.result == 'success' || needs.build-subscriber.result == 'skipped') && '✅ All Docker images built successfully!' || '❌ Docker build failed' }}
 
             **Images Built**: ${{ inputs.services }}
-          color: ${{ needs.build.result == 'success' && '3066993' || '15158332' }}
+          color: ${{ (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') && (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') && (needs.build-scheduler.result == 'success' || needs.build-scheduler.result == 'skipped') && (needs.build-subscriber.result == 'success' || needs.build-subscriber.result == 'skipped') && '3066993' || '15158332' }}
           url: ${{ github.event.pull_request.html_url || github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           username: "GitHub Actions"
           avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
