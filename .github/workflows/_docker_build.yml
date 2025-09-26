@@ -35,6 +35,7 @@ jobs:
     strategy:
       matrix:
         service: ${{ fromJson(inputs.services) }}
+      max-parallel: 4
 
     steps:
       - name: Check out the repo
