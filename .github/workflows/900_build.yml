@@ -1,0 +1,22 @@
+name: 【deploy】build
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/**"
+      - "infra/prod/**"
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/_docker_build.yml
+    with:
+      services: '["backend", "frontend", "scheduler", "subscriber"]'
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      NOTIFY_DISCORD_WEBHOOK: ${{ secrets.NOTIFY_DISCORD_WEBHOOK }}
