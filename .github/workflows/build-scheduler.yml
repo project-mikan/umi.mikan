@@ -1,0 +1,19 @@
+name: Build Scheduler Docker Image
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+    paths:
+      - 'backend/**'
+      - 'proto/**'
+      - 'infra/prod/scheduler/**'
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/_build-docker-image.yml
+    with:
+      service_name: scheduler
+      dockerfile_path: ./infra/prod/scheduler/Dockerfile

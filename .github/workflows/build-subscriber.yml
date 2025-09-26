@@ -1,0 +1,19 @@
+name: Build Subscriber Docker Image
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+    paths:
+      - 'backend/**'
+      - 'proto/**'
+      - 'infra/prod/subscriber/**'
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/_build-docker-image.yml
+    with:
+      service_name: subscriber
+      dockerfile_path: ./infra/prod/subscriber/Dockerfile

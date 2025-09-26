@@ -1,0 +1,19 @@
+name: Build Backend Docker Image
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+    paths:
+      - 'backend/**'
+      - 'proto/**'
+      - 'infra/prod/backend/**'
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/_build-docker-image.yml
+    with:
+      service_name: backend
+      dockerfile_path: ./infra/prod/backend/Dockerfile
