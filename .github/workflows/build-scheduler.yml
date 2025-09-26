@@ -7,7 +7,7 @@ on:
     types: [closed]
     paths:
       - 'backend/**'
-      - 'proto/**'
+      - '.github/**'
       - 'infra/prod/scheduler/**'
 
 jobs:
@@ -17,3 +17,4 @@ jobs:
     with:
       service_name: scheduler
       dockerfile_path: ./infra/prod/scheduler/Dockerfile
+      context_path: ./backend
