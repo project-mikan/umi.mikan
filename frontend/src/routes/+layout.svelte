@@ -7,6 +7,7 @@ import Head from "$lib/components/atoms/Head.svelte";
 import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
 import QuickNavigation from "$lib/components/molecules/QuickNavigation.svelte";
 import Footer from "$lib/components/organisms/Footer.svelte";
+import { summaryVisibility } from "$lib/summary-visibility-store";
 import type { LayoutData } from "./$types";
 
 export let data: LayoutData;
@@ -16,7 +17,8 @@ $: isAuthPage =
 	$page.url.pathname === "/login" || $page.url.pathname === "/register";
 
 onMount(() => {
-	// Layout initialization
+	// ストアを初期化（アプリケーション全体で一度だけ）
+	summaryVisibility.init();
 });
 </script>
 
