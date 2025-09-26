@@ -1,0 +1,19 @@
+name: Build Frontend Docker Image
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+    paths:
+      - 'frontend/**'
+      - 'proto/**'
+      - 'infra/prod/frontend/**'
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/_build-docker-image.yml
+    with:
+      service_name: frontend
+      dockerfile_path: ./infra/prod/frontend/Dockerfile

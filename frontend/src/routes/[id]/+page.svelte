@@ -55,7 +55,6 @@ let summary: {
 	createdAt: number;
 	updatedAt: number;
 } | null = data.dailySummary;
-let showSummary = !!data.dailySummary;
 let summaryError: string | null = null;
 let isToday = false;
 let isFutureDate = false;
@@ -147,7 +146,6 @@ $: characterCount = content ? content.length : 0;
 // データが変更された時に要約状態を更新
 $: {
 	summary = data.dailySummary;
-	showSummary = !!data.dailySummary;
 	// ページ変更時に生成状態をリセット
 	isSummaryGenerating = false;
 }
@@ -176,7 +174,6 @@ function handleSummaryUpdated(event: CustomEvent) {
 	}
 
 	summary = newSummary;
-	showSummary = true;
 
 	// 要約が実際に更新された場合のみ時刻を記録
 	if (actuallyUpdated) {
@@ -269,7 +266,6 @@ function _handleDelete() {
 					date: data.date
 				}}
 				{hasLLMKey}
-				{showSummary}
 				{isSummaryOutdated}
 				isDisabled={isToday || isFutureDate}
 				disabledMessage={getDisabledMessage()}

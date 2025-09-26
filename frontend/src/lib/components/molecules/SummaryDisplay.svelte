@@ -3,6 +3,7 @@ import { _, locale } from "svelte-i18n";
 import { browser } from "$app/environment";
 import { onMount, onDestroy, createEventDispatcher } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
+import { summaryVisibility } from "$lib/summary-visibility-store";
 import "$lib/i18n";
 
 interface Summary {
@@ -19,10 +20,13 @@ export let generateUrl: string; // 要約生成用URL
 export let generatePayload: Record<string, unknown> = {}; // 生成時に送信するペイロード
 export let isDisabled = false; // 生成ボタンを無効にするかどうか
 export let disabledMessage = ""; // 無効時のメッセージ
-export let showSummary = true;
 export let hasLLMKey = true;
 export let isGenerating = false; // 親コンポーネントから生成状況を受け取る
 export let isSummaryOutdated = false; // 要約が古いかどうか
+
+// ストアから表示状態を取得
+$: showSummary =
+	type === "daily" ? $summaryVisibility.daily : $summaryVisibility.monthly;
 
 const dispatch = createEventDispatcher();
 
@@ -106,7 +110,6 @@ async function pollSummaryStatus(_isUpdate = false) {
 
 						summary = cleanedSummary;
 						summaryStatus = "completed";
-						showSummary = true;
 						summaryGenerating = false; // ポーリング完了時にローディング終了
 						clearPolling();
 
@@ -229,7 +232,6 @@ async function generateSummary() {
 
 						summary = cleanedSummary;
 						summaryStatus = "completed";
-						showSummary = true;
 						summaryGenerating = false;
 						isRegenerating = false;
 
@@ -356,7 +358,6 @@ async function fetchExistingSummary() {
 					// 正常な要約が存在
 					summary = result.summary;
 					summaryStatus = "completed";
-					showSummary = true;
 					summaryGenerating = false;
 					dispatch("summaryUpdated", { summary });
 				}
@@ -376,7 +377,11 @@ function startPolling(isUpdate = false) {
 }
 
 function toggleSummary() {
-	showSummary = !showSummary;
+	if (type === "daily") {
+		summaryVisibility.toggleDaily();
+	} else {
+		summaryVisibility.toggleMonthly();
+	}
 }
 
 onMount(() => {
