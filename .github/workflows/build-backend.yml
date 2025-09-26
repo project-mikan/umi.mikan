@@ -7,7 +7,7 @@ on:
     types: [closed]
     paths:
       - 'backend/**'
-      - 'proto/**'
+      - '.github/**'
       - 'infra/prod/backend/**'
 
 jobs:
@@ -17,3 +17,4 @@ jobs:
     with:
       service_name: backend
       dockerfile_path: ./infra/prod/backend/Dockerfile
+      context_path: ./backend
