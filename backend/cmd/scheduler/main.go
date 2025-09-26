@@ -438,7 +438,7 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 }
 
 func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *Scheduler, userID string) error {
-	// diary_summary_daysから該当ユーザーの要約がある年月を取得し、
+	// diariesテーブルから該当ユーザーの日記がある年月を取得し、
 	// diary_summary_monthsに月次要約がない月、またはその月の日記の最新updated_atより月次要約のupdated_atが古い月を見つける（今月を除く）
 	// 日記数が1以上の月のみ対象とする
 	query := `
@@ -452,30 +452,16 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 			WHERE d.user_id = $1
 			GROUP BY EXTRACT(YEAR FROM d.date), EXTRACT(MONTH FROM d.date)
 			HAVING COUNT(*) >= 1
-		),
-		monthly_summary_exists AS (
-			SELECT
-				mds.year,
-				mds.month,
-				mds.latest_diary_updated_at,
-				dsm.updated_at as summary_updated_at
-			FROM monthly_diary_stats mds
-			LEFT JOIN diary_summary_months dsm ON dsm.user_id = $1
-				AND dsm.year = mds.year
-				AND dsm.month = mds.month
-			WHERE EXISTS (
-				SELECT 1 FROM diary_summary_days dsd
-				WHERE dsd.user_id = $1
-				AND EXTRACT(YEAR FROM dsd.date) = mds.year
-				AND EXTRACT(MONTH FROM dsd.date) = mds.month
-			)
 		)
-		SELECT year, month
-		FROM monthly_summary_exists
-		WHERE (year < EXTRACT(YEAR FROM CURRENT_DATE)
-			OR (year = EXTRACT(YEAR FROM CURRENT_DATE) AND month < EXTRACT(MONTH FROM CURRENT_DATE)))
-		AND (summary_updated_at IS NULL OR summary_updated_at < latest_diary_updated_at)
-		ORDER BY year, month
+		SELECT mds.year, mds.month
+		FROM monthly_diary_stats mds
+		LEFT JOIN diary_summary_months dsm ON dsm.user_id = $1
+			AND dsm.year = mds.year
+			AND dsm.month = mds.month
+		WHERE (mds.year < EXTRACT(YEAR FROM CURRENT_DATE)
+			OR (mds.year = EXTRACT(YEAR FROM CURRENT_DATE) AND mds.month < EXTRACT(MONTH FROM CURRENT_DATE)))
+		AND (dsm.updated_at IS NULL OR dsm.updated_at < mds.latest_diary_updated_at)
+		ORDER BY mds.year, mds.month
 	`
 
 	rows, err := s.db.Query(query, userID)
