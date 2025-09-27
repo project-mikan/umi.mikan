@@ -1,233 +1,173 @@
+<div align="center">
+  <img src="frontend/static/favicon.png" alt="umi.mikan logo" width="120" height="120">
+</div>
+
 # umi.mikan
 
-**umi.mikan** is a full-stack diary application with automated AI summary generation.
+**umi.mikan** はシンプルなWeb日記アプリです
+外部LLMを用いたまとめ機能もあります
 
-## Architecture
+## アーキテクチャ
 
 ```mermaid
 graph TB
-    User[User] --> Frontend[Frontend<br/>SvelteKit + TypeScript]
+    User[ユーザー] --> Frontend[Frontend<br/>SvelteKit + TypeScript]
     Frontend --> Backend[Backend<br/>gRPC Server]
     Backend --> DB[(PostgreSQL<br/>Database)]
 
-    Scheduler[Scheduler<br/>Periodic Tasks] --> Redis[Redis Pub/Sub<br/>Message Queue]
-    Redis --> Subscriber[Subscriber<br/>Async Processor]
+    Scheduler[Scheduler<br/>定期タスク] --> Redis[Redis Pub/Sub<br/>Message Queue]
+    Redis --> Subscriber[Subscriber<br/>非同期処理]
     Subscriber --> LLM[LLM APIs<br/>Gemini, etc.]
 
     Backend -.-> Scheduler
     Subscriber --> DB
 
-    subgraph "Backend Services"
+    subgraph "バックエンドサービス"
         Backend
         Scheduler
         Subscriber
     end
 
-    subgraph "Data Layer"
+    subgraph "データ層"
         DB
         Redis
     end
 
-    subgraph "External"
+    subgraph "外部サービス"
         LLM
     end
 ```
 
-### System Components
+### システムコンポーネント
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Frontend** | SvelteKit + TypeScript | User interface, diary management |
-| **Backend** | Go + gRPC | API server, authentication, data access |
-| **Scheduler** | Go + Cron | Periodic task execution, summary scheduling |
-| **Subscriber** | Go + Redis | Async processing, LLM integration |
-| **Database** | PostgreSQL 17 | Data persistence, user accounts, diary entries |
-| **Test Database** | PostgreSQL 17 | Isolated testing environment |
-| **Message Queue** | Redis Pub/Sub | Async job queuing, inter-service communication |
-| **Distributed Lock** | Redis + Lua Scripts | Prevents duplicate task execution across instances |
-| **Monitoring** | Prometheus + Grafana + Loki + Promtail + cAdvisor | Comprehensive metrics, logs, and container monitoring |
+| コンポーネント    | 技術                                                   | 目的                   |
+| ----------------- | ------------------------------------------------------ | ---------------------- |
+| **Frontend**      | SvelteKit + TypeScript                                 | WebUI                  |
+| **Backend**       | Go + gRPC                                              | 認証とAPIサーバ        |
+| **Scheduler**     | Go                                                     | 要約の定期ディスパッチ |
+| **Subscriber**    | Go + Redis                                             | 要約の非同期生成       |
+| **Database**      | PostgreSQL 17                                          | 日記保存               |
+| **Message Queue** | Redis Pub/Sub                                          | 重たい処理の非同期実行 |
+| **Monitoring**    | Prometheus + Grafana + Loki + Grafana Alloy + cAdvisor | Pub/Subやログの監視    |
 
-### Data Flow
+### データフロー
 
-1. **User Interaction**: Frontend ↔ Backend (gRPC)
-2. **Data Persistence**: Backend → Database
-3. **Async Processing**: Scheduler → Redis → Subscriber
-4. **AI Processing**: Subscriber → LLM APIs → Database
+1. **ユーザー操作**: Frontend ↔ Backend (gRPC)
+2. **データ永続化**: Backend → Database
+3. **非同期処理**: Scheduler → Redis → Subscriber
+4. **AI 処理**: Subscriber → LLM APIs → Database
 
-### Service Architecture
+### サービスアーキテクチャ
 
-The application follows a microservices architecture with async processing capabilities:
+#### 非同期処理フロー
 
-#### Core Services
-- **Frontend**: SvelteKit-based UI with TypeScript and Tailwind CSS
-- **Backend**: Go gRPC server handling API requests and authentication
-- **Scheduler**: Periodic task runner for automated summary generation
-- **Subscriber**: Async worker processing LLM tasks
+1. Scheduler が自動要約有効ユーザーを特定（5分毎）
+2. 欠落した日次/月次要約のタスクを生成（今日/今月を除く）
+3. Redis `diary_events` チャンネルに JSON メッセージを公開
+4. Subscriber がメッセージを消費し LLM APIs 経由で処理
+5. 生成された要約をデータベースに保存
 
-#### Infrastructure
-- **Database**: PostgreSQL for persistent data storage (separate test DB)
-- **Message Queue**: Redis Pub/Sub for async communication
-- **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
-- **Authentication**: JWT-based with refresh token mechanism
-- **Monitoring**: Comprehensive stack with Prometheus (metrics), Grafana (dashboards), Loki (logs), Promtail (log collection), and cAdvisor (container monitoring)
-- **Hot Reload**: Air for backend, Vite for frontend development
+## 技術スタック
 
-#### Async Processing Flow
-1. Scheduler identifies users with auto-summary enabled (every 5 minutes)
-2. Generates tasks for missing daily/monthly summaries (excluding today/current month)
-3. Publishes JSON messages to Redis `diary_events` channel
-4. Subscriber consumes messages and processes via LLM APIs
-5. Generated summaries saved back to database
+### バックエンド
 
-## Tech Stack
+- **言語**: Go 1.25
+- **通信**: gRPC (prootoを元にbackend,frontendのコードを自動生成)
+- **ORM**: schema/の定義を元にxoで自動生成
 
-### Backend
-- **Language**: Go 1.25
-- **Framework**: gRPC
-- **Database**: PostgreSQL 17
-- **Authentication**: JWT (15min access + 30day refresh)
-- **Architecture**: Clean Architecture
-- **Hot Reload**: Air
-- **Code Generation**: Protocol Buffers, XO (database models)
-- **Message Queue**: Redis Pub/Sub with rueidis client
+### フロントエンド
 
-### Frontend
-- **Framework**: SvelteKit
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Component Architecture**: Atomic Design
-- **Internationalization**: svelte-i18n (Japanese/English)
-- **Code Quality**: Biome (formatting/linting)
+- **フレームワーク**: SvelteKit
+- **言語**: TypeScript 5
+- **スタイリング**: Tailwind CSS 4
+- **i18n**: svelte-i18n（日本語/英語）
+- **format/lint**: Biome
 
-### Infrastructure
-- **Containerization**: Docker + Docker Compose
-- **Database**: PostgreSQL 17 (main + test instances)
-- **Cache/Queue**: Redis 8 Alpine with persistence
-- **Monitoring Stack**: Prometheus + Grafana + Loki + Promtail + cAdvisor with custom dashboards
-- **Deployment**: Multi-stage Docker builds for production
-- **Development Tools**: Hot reload (Air/Vite), code generation (protoc/XO)
+### インフラ
 
-## Getting Started
+- **コンテナ**: Docker + Docker Compose
+- **DB**: PostgreSQL 17
+- **キャッシュ/キュー**: Redis 8
+- **監視**: Prometheus + Grafana + Loki + Grafana Alloy + cAdvisor
 
-### install
+## はじめに
 
-```bash
-sudo pacman -S protobuf
-```
+### インストール
 
-メモ：go toolにしたいがdockerの外なので悩ましい
+dockerさえあれば動くはず
 
-```bash
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-```
-
-```bash
-npm install -g @grpc/proto-loader
-```
-
-### run
+### 実行
 
 ```bash
 dc up -d
 ```
 
-#### Service URLs
+### 開発URL
 
-| Service | Port | URL | Description |
-|---------|------|-----|-------------|
-| **Frontend** | 2000 | http://localhost:2000 | SvelteKit development server |
-| **Backend** | 2001 | http://localhost:2001 | gRPC API server |
-| **PostgreSQL** | 2002 | localhost:2002 | Main database |
-| **PostgreSQL Test** | 2003 | localhost:2003 | Test database |
-| **Redis** | 2004 | localhost:2004 | Pub/Sub message queue |
-| **Subscriber Metrics** | 2005 | http://localhost:2005/metrics | Prometheus metrics |
-| **Scheduler Metrics** | 2006 | http://localhost:2006/metrics | Prometheus metrics |
-| **Prometheus** | 2007 | http://localhost:2007 | Metrics collection dashboard |
-| **Grafana** | 2008 | http://localhost:2008 | Monitoring dashboard (admin/admin) |
-| **cAdvisor** | 2009 | http://localhost:2009 | Container metrics collection |
-| **Loki** | 2010 | http://localhost:2010 | Log aggregation system |
-| **Promtail** | 2011 | http://localhost:2011 | Log collection agent |
+- **アプリケーション**: http://localhost:2000（Frontend）
+- **監視**: http://localhost:2008（Grafana Dashboard）
 
-#### Key Access Points
-- **Application**: http://localhost:2000 (Frontend)
-- **API**: http://localhost:2001 (Backend gRPC)
-- **Monitoring**: http://localhost:2008 (Grafana Dashboard)
+#### 詳細
 
-### Development Commands
+| サービス               | ポート | URL                           | 説明                              |
+| ---------------------- | ------ | ----------------------------- | --------------------------------- |
+| **Frontend**           | 2000   | http://localhost:2000         | SvelteKit 開発サーバー            |
+| **Backend**            | 2001   | http://localhost:2001         | gRPC API サーバー                 |
+| **PostgreSQL**         | 2002   | localhost:2002                | メインデータベース                |
+| **PostgreSQL Test**    | 2003   | localhost:2003                | テストデータベース                |
+| **Redis**              | 2004   | localhost:2004                | Pub/Sub メッセージキュー          |
+| **Subscriber Metrics** | 2005   | http://localhost:2005/metrics | Prometheus メトリクス             |
+| **Scheduler Metrics**  | 2006   | http://localhost:2006/metrics | Prometheus メトリクス             |
+| **Prometheus**         | 2007   | http://localhost:2007         | メトリクス収集ダッシュボード      |
+| **Grafana**            | 2008   | http://localhost:2008         | 監視ダッシュボード（admin/admin） |
+| **cAdvisor**           | 2009   | http://localhost:2009         | コンテナメトリクス収集            |
+| **Loki**               | 2010   | http://localhost:2010         | ログ集約システム                  |
+| **Grafana Alloy**      | 2011   | http://localhost:2011         | ログ収集エージェント              |
 
-#### Frontend Development
+### 開発コマンド
+
+#### フロントエンド
+
 ```bash
-make f-format      # Format code with Biome
-make f-lint        # Lint and format check
-make f-test        # Run frontend tests
-make f-log         # View frontend logs
-make f-sh          # Access frontend container
+make f-format      # Biome でコードフォーマット
+make f-lint        # リントとフォーマットチェック
+make f-test        # フロントエンドテスト実行
+make f-log         # フロントエンドログ表示
+make f-sh          # フロントエンドコンテナアクセス
 ```
 
-#### Backend Development
+#### バックエンド
+
 ```bash
-make b-format      # Format Go code with gofmt and golangci-lint
-make b-lint        # Run linting
-make b-test        # Run backend tests
-make b-log         # View backend logs
-make b-sh          # Access backend container
-make tidy          # Run go mod tidy
+make b-format      # gofmt と golangci-lint で Go コードフォーマット
+make b-lint        # リント実行
+make b-test        # バックエンドテスト実行
+make b-log         # バックエンドログ表示
+make b-sh          # バックエンドコンテナアクセス
+make tidy          # go mod tidy 実行
 ```
 
-#### Database Operations
+#### DB
+
 ```bash
-make db            # Connect to PostgreSQL
-make xo            # Generate database models
-make db-diff       # Show schema differences
-make db-apply      # Apply schema changes
+make db            # PostgreSQL 接続
+make db-diff       # schema/とのスキーマ差分表示
+make db-apply      # schema/とのスキーマ変更適用
+make xo            # dbを元にbackendのコードを生成
 ```
 
-#### gRPC Development
+#### gRPC
+
 ```bash
-make grpc          # Generate both Go and TypeScript gRPC code
-make grpc-go       # Generate Go gRPC code only
-make grpc-ts       # Generate TypeScript gRPC code only
+make grpc          # proto/を元にGoとTypeScript両方のgRPC コード生成
 ```
 
-#### gRPC Debugging
+#### gRPC デバッグ
+
 ```bash
-grpc_cli ls localhost:2001                                           # List services
-grpc_cli ls localhost:2001 diary.DiaryService -l                     # Service details
-grpc_cli type localhost:2001 diary.CreateDiaryEntryRequest           # Show message type
-grpc_cli call localhost:2001 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'  # Test call
-grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'  # Search entries
+grpc_cli ls localhost:2001                                           # サービス一覧
+grpc_cli ls localhost:2001 diary.DiaryService -l                     # サービス詳細
+grpc_cli type localhost:2001 diary.CreateDiaryEntryRequest           # メッセージタイプ表示
+grpc_cli call localhost:2001 DiaryService.CreateDiaryEntry 'title: "test",content:"test"'  # テスト呼び出し
+grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keyword:"%日記%"'  # エントリ検索
 ```
-
-### Monitoring & Observability
-
-The application includes comprehensive monitoring stack with Prometheus, Grafana, Loki, Promtail, and cAdvisor:
-
-#### Available Monitoring Data
-- **Application Metrics** (Prometheus):
-  - Scheduler: Job execution rates, duration, queued messages, auto-summary user counts
-  - Subscriber: Message processing rates, duration, summary generation counts
-  - Success Rates: Job execution and message processing success percentages
-- **Container Metrics** (cAdvisor): CPU, memory, network, disk I/O usage by container
-- **Logs** (Loki + Promtail): Centralized log aggregation with filtering and search capabilities
-
-#### Grafana Dashboards
-1. **umi.mikan Pub/Sub Monitoring**: Application-specific metrics and job processing
-2. **Container Resource Monitoring**: Container CPU, memory, network, and disk usage
-3. **Container Logs**: Centralized log viewing with error/warning filtering
-
-#### Accessing Monitoring
-1. **Grafana Dashboard**: http://localhost:2008
-   - Login: admin/admin
-   - Multiple dashboards available for different monitoring aspects
-2. **Prometheus**: http://localhost:2007
-   - Raw metrics and query interface
-3. **Loki**: http://localhost:2010
-   - Log aggregation system (API access)
-4. **cAdvisor**: http://localhost:2009
-   - Container monitoring interface
-5. **Individual Metrics**:
-   - Scheduler: http://localhost:2006/metrics
-   - Subscriber: http://localhost:2005/metrics
-   - cAdvisor: http://localhost:2009/metrics
-   - Promtail: http://localhost:2011/metrics

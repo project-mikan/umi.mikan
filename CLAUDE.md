@@ -167,7 +167,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Hot Reload**: Air tool for automatic backend reloading
 - **Async Processing**: Scheduler and Subscriber services with Redis Pub/Sub
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
-- **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Promtail, and cAdvisor
+- **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Grafana Alloy, and cAdvisor
 
 ### Frontend Structure
 
