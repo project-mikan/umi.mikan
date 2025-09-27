@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build and Push Backend
-        uses: ./.github/workflows/_docker_build.yml
+        uses: ./.github/actions/docker-build
         with:
           service: backend
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build and Push Frontend
-        uses: ./.github/workflows/_docker_build.yml
+        uses: ./.github/actions/docker-build
         with:
           service: frontend
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build and Push Scheduler
-        uses: ./.github/workflows/_docker_build.yml
+        uses: ./.github/actions/docker-build
         with:
           service: scheduler
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build and Push Subscriber
-        uses: ./.github/workflows/_docker_build.yml
+        uses: ./.github/actions/docker-build
         with:
           service: subscriber
           github-token: ${{ secrets.GITHUB_TOKEN }}
