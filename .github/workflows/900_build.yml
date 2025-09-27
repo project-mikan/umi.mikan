@@ -1,0 +1,74 @@
+name: 【deploy】build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/**"
+      - "infra/prod/**"
+
+jobs:
+  build-backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and Push Backend
+        uses: ./.github/workflows/_docker_build.yml
+        with:
+          service: backend
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and Push Frontend
+        uses: ./.github/workflows/_docker_build.yml
+        with:
+          service: frontend
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-scheduler:
+    name: Build Scheduler
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and Push Scheduler
+        uses: ./.github/workflows/_docker_build.yml
+        with:
+          service: scheduler
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-subscriber:
+    name: Build Subscriber
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and Push Subscriber
+        uses: ./.github/workflows/_docker_build.yml
+        with:
+          service: subscriber
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Send Notification
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend, build-scheduler, build-subscriber]
+    if: always()
+    steps:
+      - name: Send Discord notification
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.NOTIFY_DISCORD_WEBHOOK }}
+          title: "🐳 Docker Build Notification"
+          description: |
+            **Branch**: ${{ github.ref_name }}
+            **Author**: ${{ github.actor }}
+            **Status**: ${{ (needs.build-backend.result == 'success') && (needs.build-frontend.result == 'success') && (needs.build-scheduler.result == 'success') && (needs.build-subscriber.result == 'success') && '✅ All Docker images built successfully!' || '❌ Docker build failed' }}
+
+            **Images Built**: backend, frontend, scheduler, subscriber
+          color: ${{ (needs.build-backend.result == 'success') && (needs.build-frontend.result == 'success') && (needs.build-scheduler.result == 'success') && (needs.build-subscriber.result == 'success') && '3066993' || '15158332' }}
+          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          username: "GitHub Actions"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"

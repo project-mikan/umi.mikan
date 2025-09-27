@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/usuyuki/umi-mikan-backend:latest
+    image: ghcr.io/project-mikan/umi-mikan-backend:latest
     volumes:
       - ./schema:/schema # pg-schema-diff用
     environment:
@@ -24,7 +24,7 @@ services:
         condition: service_started
 
   frontend:
-    image: ghcr.io/usuyuki/umi-mikan-frontend:latest
+    image: ghcr.io/project-mikan/umi-mikan-frontend:latest
     environment:
       TZ: Asia/Tokyo
       NODE_ENV: production
@@ -71,7 +71,7 @@ services:
       - internal
 
   subscriber:
-    image: ghcr.io/usuyuki/umi-mikan-subscriber:latest
+    image: ghcr.io/project-mikan/umi-mikan-subscriber:latest
     environment:
       TZ: Asia/Tokyo
       DB_HOST: postgres
@@ -92,7 +92,7 @@ services:
       - internal
 
   scheduler:
-    image: ghcr.io/usuyuki/umi-mikan-scheduler:latest
+    image: ghcr.io/project-mikan/umi-mikan-scheduler:latest
     environment:
       TZ: Asia/Tokyo
       DB_HOST: postgres
