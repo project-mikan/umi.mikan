@@ -1,4 +1,6 @@
-FROM golang:1.25.1-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.1-alpine AS builder
+
+ARG TARGETARCH
 
 WORKDIR /build
 
@@ -7,13 +9,16 @@ RUN apk add --no-cache ca-certificates git
 
 # Copy go mod files and download dependencies
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 # Copy source code
 COPY . .
 
 # Build the binary with optimizations
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build \
     -ldflags='-w -s -extldflags "-static"' \
     -a -installsuffix cgo \
     -o scheduler cmd/scheduler/main.go

@@ -4,74 +4,92 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "backend/**"
-      - "frontend/**"
-      - ".github/**"
-      - "infra/prod/**"
-
-env:
-  REGISTRY: ghcr.io
-  PLATFORMS: linux/amd64  # 本番環境に合わせてプラットフォームを単一に
 
 jobs:
-  # 変更されたサービスを検出
-  detect-changes:
-    name: Detect Changes
+  build-backend:
+    name: Build Backend
     runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.changes.outputs.backend }}
-      frontend: ${{ steps.changes.outputs.frontend }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
-      - name: Detect changes
-        id: changes
+          fetch-depth: 1
+      - name: Free disk space
         run: |
-          echo "backend=$(git diff --name-only HEAD~1 HEAD | grep -E '^(backend/|infra/prod/(backend|scheduler|subscriber)/)' | wc -l | awk '{print ($1 > 0)}')" >> $GITHUB_OUTPUT
-          echo "frontend=$(git diff --name-only HEAD~1 HEAD | grep -E '^(frontend/|infra/prod/frontend/)' | wc -l | awk '{print ($1 > 0)}')" >> $GITHUB_OUTPUT
-
-  # Backend系サービスを並列build（共通の依存関係を利用）
-  build-backend-services:
-    name: Build Backend Services
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.backend == 'true'
-    strategy:
-      matrix:
-        service: [backend, scheduler, subscriber]
-      max-parallel: 3
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v4
-      - name: Build and Push ${{ matrix.service }}
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Build and Push Backend
         uses: ./.github/actions/docker-build
         with:
-          service: ${{ matrix.service }}
+          service: backend
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          platforms: ${{ env.PLATFORMS }}
 
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true'
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Build and Push Frontend
         uses: ./.github/actions/docker-build
         with:
           service: frontend
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          platforms: ${{ env.PLATFORMS }}
+
+  build-scheduler:
+    name: Build Scheduler
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Build and Push Scheduler
+        uses: ./.github/actions/docker-build
+        with:
+          service: scheduler
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-subscriber:
+    name: Build Subscriber
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Build and Push Subscriber
+        uses: ./.github/actions/docker-build
+        with:
+          service: subscriber
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   notify:
     name: Send Notification
     runs-on: ubuntu-latest
-    needs: [detect-changes, build-backend-services, build-frontend]
+    needs: [build-backend, build-frontend, build-scheduler, build-subscriber]
     if: always()
     steps:
       - name: Send Discord notification
@@ -82,12 +100,10 @@ jobs:
           description: |
             **Branch**: ${{ github.ref_name }}
             **Author**: ${{ github.actor }}
-            **Backend Changed**: ${{ needs.detect-changes.outputs.backend }}
-            **Frontend Changed**: ${{ needs.detect-changes.outputs.frontend }}
-            **Backend Status**: ${{ needs.build-backend-services.result || 'skipped' }}
-            **Frontend Status**: ${{ needs.build-frontend.result || 'skipped' }}
-            **Overall Status**: ${{ (needs.build-backend-services.result == 'success' || needs.build-backend-services.result == 'skipped') && (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') && '✅ Build completed successfully!' || '❌ Build failed' }}
-          color: ${{ (needs.build-backend-services.result == 'success' || needs.build-backend-services.result == 'skipped') && (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') && '3066993' || '15158332' }}
+            **Status**: ${{ (needs.build-backend.result == 'success') && (needs.build-frontend.result == 'success') && (needs.build-scheduler.result == 'success') && (needs.build-subscriber.result == 'success') && '✅ All Docker images built successfully!' || '❌ Docker build failed' }}
+
+            **Images Built**: backend, frontend, scheduler, subscriber
+          color: ${{ (needs.build-backend.result == 'success') && (needs.build-frontend.result == 'success') && (needs.build-scheduler.result == 'success') && (needs.build-subscriber.result == 'success') && '3066993' || '15158332' }}
           url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           username: "GitHub Actions"
           avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
