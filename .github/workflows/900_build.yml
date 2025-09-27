@@ -15,6 +15,8 @@ jobs:
     name: Build Backend
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
       - name: Build and Push Backend
         uses: ./.github/actions/docker-build
         with:
@@ -25,6 +27,8 @@ jobs:
     name: Build Frontend
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
       - name: Build and Push Frontend
         uses: ./.github/actions/docker-build
         with:
@@ -35,6 +39,8 @@ jobs:
     name: Build Scheduler
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
       - name: Build and Push Scheduler
         uses: ./.github/actions/docker-build
         with:
@@ -45,6 +51,8 @@ jobs:
     name: Build Subscriber
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
       - name: Build and Push Subscriber
         uses: ./.github/actions/docker-build
         with:
