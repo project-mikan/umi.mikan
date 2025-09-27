@@ -8,6 +8,8 @@ import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
 import QuickNavigation from "$lib/components/molecules/QuickNavigation.svelte";
 import Footer from "$lib/components/organisms/Footer.svelte";
 import { summaryVisibility } from "$lib/summary-visibility-store";
+import PWAInstallPrompt from "$lib/components/PWAInstallPrompt.svelte";
+import PWAUpdateNotification from "$lib/components/PWAUpdateNotification.svelte";
 import type { LayoutData } from "./$types";
 
 export let data: LayoutData;
@@ -37,3 +39,7 @@ onMount(() => {
 
 	<Footer {isAuthenticated} />
 </div>
+
+<!-- PWA Components -->
+<PWAInstallPrompt />
+<PWAUpdateNotification />

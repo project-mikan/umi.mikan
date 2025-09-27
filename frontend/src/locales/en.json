@@ -11,6 +11,41 @@
 		"enabled": "Enabled",
 		"disabled": "Disabled"
 	},
+	"offline": {
+		"title": "Offline",
+		"description": "No internet connection. Some features are limited.",
+		"availableFeatures": {
+			"title": "Available Features",
+			"readCachedDiaries": "Read cached diaries",
+			"navigation": "App navigation",
+			"darkMode": "Dark mode toggle",
+			"languageSettings": "Language settings"
+		},
+		"limitedFeatures": {
+			"title": "Limited Features",
+			"createDiary": "Create new diary",
+			"editDiary": "Edit/delete diary",
+			"aiSummary": "AI summary feature",
+			"search": "Search function (new)"
+		},
+		"connectionStatus": "When connection is restored, click the button below to refresh the page.",
+		"retryConnection": "Retry Connection",
+		"backToHome": "Back to Home"
+	},
+	"pwa": {
+		"install": {
+			"title": "Install App",
+			"description": "Add to home screen for easier access",
+			"install": "Install",
+			"dismiss": "Later"
+		},
+		"update": {
+			"title": "Update Available",
+			"description": "A new version is available. Please update.",
+			"update": "Update Now",
+			"later": "Later"
+		}
+	},
 	"settings": {
 		"title": "Settings",
 		"nav": {
