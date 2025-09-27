@@ -718,13 +718,7 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		LEFT JOIN diary_summary_months dsm ON dsm.user_id = $1
 			AND dsm.year = mds.year
 			AND dsm.month = mds.month
-		WHERE EXISTS (
-			SELECT 1 FROM diary_summary_days dsd
-			WHERE dsd.user_id = $1
-			AND EXTRACT(YEAR FROM dsd.date) = mds.year
-			AND EXTRACT(MONTH FROM dsd.date) = mds.month
-		)
-		AND (mds.year < EXTRACT(YEAR FROM CURRENT_DATE)
+		WHERE (mds.year < EXTRACT(YEAR FROM CURRENT_DATE)
 			OR (mds.year = EXTRACT(YEAR FROM CURRENT_DATE) AND mds.month < EXTRACT(MONTH FROM CURRENT_DATE)))
 		AND (dsm.updated_at IS NULL OR dsm.updated_at < mds.latest_diary_updated_at)
 	`
