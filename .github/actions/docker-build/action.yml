@@ -32,14 +32,21 @@ runs:
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-
-    - name: Cache Docker layers
-      uses: actions/cache@v4
       with:
-        path: /tmp/.buildx-cache-${{ inputs.service }}
-        key: ${{ runner.os }}-buildx-${{ inputs.service }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-${{ inputs.service }}-
+        driver-opts: |
+          network=host
+          image=moby/buildkit:latest
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ inputs.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Set build context
       id: context
@@ -57,6 +64,26 @@ runs:
             ;;
         esac
 
+    - name: Cache Go modules
+      if: contains(inputs.service, 'backend') || contains(inputs.service, 'scheduler') || contains(inputs.service, 'subscriber')
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Cache pnpm dependencies
+      if: inputs.service == 'frontend'
+      uses: actions/cache@v4
+      with:
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-
+
     - name: Build and Push to Container Registry
       uses: docker/build-push-action@v5
       with:
@@ -64,15 +91,16 @@ runs:
         file: ./infra/prod/${{ inputs.service }}/Dockerfile
         push: ${{ inputs.push }}
         platforms: ${{ inputs.platforms }}
-        tags: |
-          ${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ inputs.service }}:${{ github.sha }}
-          ${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ inputs.service }}:latest
-        labels: latest
-        cache-from: type=local,src=/tmp/.buildx-cache-${{ inputs.service }}
-        cache-to: type=local,dest=/tmp/.buildx-cache-${{ inputs.service }}-new,mode=max
-
-    - name: Move cache
-      shell: bash
-      run: |
-        rm -rf /tmp/.buildx-cache-${{ inputs.service }}
-        mv /tmp/.buildx-cache-${{ inputs.service }}-new /tmp/.buildx-cache-${{ inputs.service }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+        cache-from: |
+          type=gha,scope=${{ inputs.service }}
+          type=registry,ref=${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ inputs.service }}:buildcache
+          type=registry,ref=${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ inputs.service }}:latest
+        cache-to: |
+          type=gha,scope=${{ inputs.service }},mode=max
+          type=registry,ref=${{ inputs.registry }}/${{ github.repository_owner }}/umi-mikan-${{ inputs.service }}:buildcache,mode=max
+        provenance: false
+        sbom: false
