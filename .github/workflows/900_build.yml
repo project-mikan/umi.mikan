@@ -1,10 +1,9 @@
 name: 【deploy】build
 
 on:
-  pull_request:
+  push:
     branches:
       - main
-    types: [closed]
     paths:
       - "backend/**"
       - "frontend/**"
@@ -15,7 +14,6 @@ jobs:
   build-backend:
     name: Build Backend
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     steps:
       - name: Build and Push Backend
         uses: ./.github/workflows/_docker_build.yml
@@ -26,7 +24,6 @@ jobs:
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     steps:
       - name: Build and Push Frontend
         uses: ./.github/workflows/_docker_build.yml
@@ -37,7 +34,6 @@ jobs:
   build-scheduler:
     name: Build Scheduler
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     steps:
       - name: Build and Push Scheduler
         uses: ./.github/workflows/_docker_build.yml
@@ -48,7 +44,6 @@ jobs:
   build-subscriber:
     name: Build Subscriber
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     steps:
       - name: Build and Push Subscriber
         uses: ./.github/workflows/_docker_build.yml
@@ -68,12 +63,12 @@ jobs:
           webhook: ${{ secrets.NOTIFY_DISCORD_WEBHOOK }}
           title: "🐳 Docker Build Notification"
           description: |
-            **PR**: ${{ github.event.pull_request.title }}
-            **Author**: ${{ github.event.pull_request.user.login }}
+            **Branch**: ${{ github.ref_name }}
+            **Author**: ${{ github.actor }}
             **Status**: ${{ (needs.build-backend.result == 'success') && (needs.build-frontend.result == 'success') && (needs.build-scheduler.result == 'success') && (needs.build-subscriber.result == 'success') && '✅ All Docker images built successfully!' || '❌ Docker build failed' }}
 
             **Images Built**: backend, frontend, scheduler, subscriber
           color: ${{ (needs.build-backend.result == 'success') && (needs.build-frontend.result == 'success') && (needs.build-scheduler.result == 'success') && (needs.build-subscriber.result == 'success') && '3066993' || '15158332' }}
-          url: ${{ github.event.pull_request.html_url }}
+          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           username: "GitHub Actions"
           avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
