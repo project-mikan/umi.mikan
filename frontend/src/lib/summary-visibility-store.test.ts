@@ -27,7 +27,9 @@ describe("summaryVisibility store", () => {
 		// デフォルト状態にリセット
 		localStorageMock.getItem.mockReturnValue(null);
 		// ストアをリセット
-		(summaryVisibility as typeof summaryVisibility & { _reset: () => void })._reset();
+		(
+			summaryVisibility as typeof summaryVisibility & { _reset: () => void }
+		)._reset();
 	});
 
 	afterEach(() => {
