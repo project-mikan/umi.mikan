@@ -1,4 +1,4 @@
-interface BeforeInstallPromptEvent extends Event {
+export interface BeforeInstallPromptEvent extends Event {
 	readonly platforms: string[];
 	readonly userChoice: Promise<{
 		outcome: "accepted" | "dismissed";
@@ -12,5 +12,3 @@ declare global {
 		beforeinstallprompt: BeforeInstallPromptEvent;
 	}
 }
-
-export {};

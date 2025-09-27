@@ -2,7 +2,7 @@
 import { onMount } from "svelte";
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
-import type {} from "../pwa-types";
+import type { BeforeInstallPromptEvent } from "../pwa-types";
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 let showInstallPrompt = false;

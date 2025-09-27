@@ -2,7 +2,7 @@
 import { onMount } from "svelte";
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
-// @ts-ignore
+// @ts-expect-error
 import { pwaInfo } from "virtual:pwa-info";
 
 let showUpdatePrompt = false;
@@ -10,7 +10,7 @@ let updateServiceWorker: (() => Promise<void>) | null = null;
 
 onMount(async () => {
 	if (pwaInfo) {
-		// @ts-ignore
+		// @ts-expect-error
 		const { registerSW } = await import("virtual:pwa-register");
 
 		updateServiceWorker = registerSW({
