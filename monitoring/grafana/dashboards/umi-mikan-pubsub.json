@@ -327,6 +327,168 @@
         "x": 12,
         "y": 24
       }
+    },
+    {
+      "id": 10,
+      "title": "Redis Connection Status",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "subscriber_connection_status",
+          "legendFormat": "{{connection_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "Disconnected"
+                },
+                "1": {
+                  "text": "Connected"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "unit": "none"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      }
+    },
+    {
+      "id": 11,
+      "title": "Redis Connection Reconnects",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(subscriber_connection_reconnects_total[5m])",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      }
+    },
+    {
+      "id": 12,
+      "title": "Connection Health Over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "subscriber_connection_status{connection_type=\"pubsub\"}",
+          "legendFormat": "Pub/Sub Connection",
+          "refId": "A"
+        },
+        {
+          "expr": "subscriber_connection_status{connection_type=\"ping\"}",
+          "legendFormat": "Ping Health Check",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "max": 1,
+          "unit": "none"
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "visible",
+          "placement": "bottom"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      }
+    },
+    {
+      "id": 13,
+      "title": "Total Reconnection Attempts",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "subscriber_connection_reconnects_total",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      }
     }
   ],
   "time": {
