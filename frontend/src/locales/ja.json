@@ -11,6 +11,41 @@
 		"enabled": "有効",
 		"disabled": "無効"
 	},
+	"offline": {
+		"title": "オフライン",
+		"description": "インターネット接続がありません。一部の機能が制限されています。",
+		"availableFeatures": {
+			"title": "利用可能な機能",
+			"readCachedDiaries": "キャッシュされた日記の閲覧",
+			"navigation": "アプリ内ナビゲーション",
+			"darkMode": "ダークモード切り替え",
+			"languageSettings": "言語設定変更"
+		},
+		"limitedFeatures": {
+			"title": "制限される機能",
+			"createDiary": "新規日記作成",
+			"editDiary": "日記編集・削除",
+			"aiSummary": "AI要約機能",
+			"search": "検索機能（新規）"
+		},
+		"connectionStatus": "接続が復旧したら、下のボタンをクリックしてページを更新してください。",
+		"retryConnection": "接続を再試行",
+		"backToHome": "ホームに戻る"
+	},
+	"pwa": {
+		"install": {
+			"title": "アプリをインストール",
+			"description": "ホーム画面に追加してより便利に使用できます",
+			"install": "インストール",
+			"dismiss": "後で"
+		},
+		"update": {
+			"title": "アップデート利用可能",
+			"description": "新しいバージョンが利用可能です。更新してください。",
+			"update": "今すぐ更新",
+			"later": "後で"
+		}
+	},
 	"settings": {
 		"title": "設定",
 		"nav": {
