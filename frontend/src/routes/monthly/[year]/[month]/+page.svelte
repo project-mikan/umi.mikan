@@ -376,35 +376,8 @@ $: _weekDays = (() => {
 </svelte:head>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	<!-- ヘッダー -->
-	<div class="flex justify-between items-center mb-8">
-		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-			{_formatMonth(currentYear, currentMonth)}
-		</h1>
-	</div>
-
-	<!-- サマリー表示エリア -->
-	<SummaryDisplay
-		type="monthly"
-		fetchUrl="/api/diary/summary/{currentYear}/{currentMonth}"
-		generateUrl="/api/diary/summary/generate"
-		generatePayload={{
-			year: currentYear,
-			month: currentMonth
-		}}
-		isDisabled={isFutureMonth || isCurrentMonth || !hasEntries}
-		disabledMessage={getDisabledMessage()}
-		{hasLLMKey}
-		isSummaryOutdated={isMonthlySummaryOutdated}
-		isGenerating={isSummaryGenerating}
-		on:summaryUpdated={handleSummaryUpdated}
-		on:summaryError={handleSummaryError}
-		on:generationStarted={handleGenerationStarted}
-		on:generationCompleted={handleGenerationCompleted}
-	/>
-
-	<!-- 月ナビゲーション -->
-	<div class="flex justify-center items-center mb-8 space-x-4">
+	<!-- 月ナビゲーション（最上段に配置） -->
+	<div class="flex justify-center items-center mb-6 space-x-4">
 		<button
 			on:click={_previousMonth}
 			class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
@@ -454,6 +427,32 @@ $: _weekDays = (() => {
 		</button>
 	</div>
 
+	<!-- ヘッダー -->
+	<div class="flex justify-between items-center mb-8">
+		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+			{_formatMonth(currentYear, currentMonth)}
+		</h1>
+	</div>
+
+	<!-- サマリー表示エリア -->
+	<SummaryDisplay
+		type="monthly"
+		fetchUrl="/api/diary/summary/{currentYear}/{currentMonth}"
+		generateUrl="/api/diary/summary/generate"
+		generatePayload={{
+			year: currentYear,
+			month: currentMonth
+		}}
+		isDisabled={isFutureMonth || isCurrentMonth || !hasEntries}
+		disabledMessage={getDisabledMessage()}
+		{hasLLMKey}
+		isSummaryOutdated={isMonthlySummaryOutdated}
+		isGenerating={isSummaryGenerating}
+		on:summaryUpdated={handleSummaryUpdated}
+		on:summaryError={handleSummaryError}
+		on:generationStarted={handleGenerationStarted}
+		on:generationCompleted={handleGenerationCompleted}
+	/>
 
 	<!-- デスクトップ・タブレット: カレンダー表示 -->
 	<div class="hidden md:block">
