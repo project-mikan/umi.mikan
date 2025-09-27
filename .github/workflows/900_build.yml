@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "backend/**"
-      - "frontend/**"
-      - ".github/**"
-      - "infra/prod/**"
 
 env:
   REGISTRY: ghcr.io
