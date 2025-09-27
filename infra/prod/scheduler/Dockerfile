@@ -1,4 +1,6 @@
-FROM golang:1.25.1-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.1-alpine AS builder
+
+ARG TARGETARCH
 
 WORKDIR /build
 
@@ -16,7 +18,7 @@ COPY . .
 # Build the binary with optimizations
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build \
     -ldflags='-w -s -extldflags "-static"' \
     -a -installsuffix cgo \
     -o scheduler cmd/scheduler/main.go
