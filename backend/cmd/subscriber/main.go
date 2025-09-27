@@ -55,6 +55,20 @@ var (
 		},
 		[]string{"operation", "status", "lock_type"},
 	)
+	connectionReconnectsCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "subscriber_connection_reconnects_total",
+			Help: "Total number of Redis connection reconnects",
+		},
+		[]string{"status"},
+	)
+	connectionStatusGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "subscriber_connection_status",
+			Help: "Current Redis connection status (1=connected, 0=disconnected)",
+		},
+		[]string{"connection_type"},
+	)
 )
 
 func init() {
@@ -62,6 +76,8 @@ func init() {
 	prometheus.MustRegister(processingDuration)
 	prometheus.MustRegister(summariesGeneratedCounter)
 	prometheus.MustRegister(lockOperationsCounter)
+	prometheus.MustRegister(connectionReconnectsCounter)
+	prometheus.MustRegister(connectionStatusGauge)
 }
 
 type SummaryGenerationMessage struct {
@@ -144,6 +160,9 @@ func main() {
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Initialize connection status
+	connectionStatusGauge.WithLabelValues("pubsub").Set(0)
+
 	// Track processing messages for graceful shutdown
 	var wg sync.WaitGroup
 	processing := make(chan struct{}, subscriberConfig.MaxConcurrentJobs) // Buffer to limit concurrent processing
@@ -152,40 +171,101 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start subscriber in goroutine
+	// Start connection health monitor
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				// Ping Redis to check connection health
+				pingCmd := client.B().Ping().Build()
+				if err := client.Do(ctx, pingCmd).Error(); err != nil {
+					logger.WithError(err).Warn("Redis ping failed, connection may be unhealthy")
+					connectionStatusGauge.WithLabelValues("ping").Set(0)
+				} else {
+					connectionStatusGauge.WithLabelValues("ping").Set(1)
+				}
+			case <-subCtx.Done():
+				logger.Info("Connection health monitor stopping")
+				return
+			}
+		}
+	}()
+
+	// Start subscriber with automatic reconnection
 	subErrChan := make(chan error, 1)
 	go func() {
-		err := client.Receive(subCtx, client.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
-			logger.WithFields(logrus.Fields{
-				"channel": msg.Channel,
-				"message": msg.Message,
-			}).Debug("Received message")
+		// Infinite loop for automatic reconnection
+		for {
+			select {
+			case <-subCtx.Done():
+				logger.Info("Subscription context cancelled, stopping subscriber")
+				return
+			default:
+				// Attempt to subscribe
+				logger.Info("Starting Redis Pub/Sub subscription...")
+				connectionReconnectsCounter.WithLabelValues("attempt").Inc()
+				err := client.Receive(subCtx, client.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
+					// Mark connection as active when receiving messages
+					connectionStatusGauge.WithLabelValues("pubsub").Set(1)
+					logger.WithFields(logrus.Fields{
+						"channel": msg.Channel,
+						"message": msg.Message,
+					}).Debug("Received message")
 
-			// Track this message processing
-			wg.Add(1)
-			processing <- struct{}{} // Acquire processing slot
+					// Track this message processing
+					wg.Add(1)
+					processing <- struct{}{} // Acquire processing slot
 
-			go func() {
-				defer func() {
-					<-processing // Release processing slot
-					wg.Done()
-				}()
+					go func() {
+						defer func() {
+							<-processing // Release processing slot
+							wg.Done()
+						}()
 
-				start := time.Now()
-				err := processMessage(subCtx, db, client, msg.Message, logger)
-				duration := time.Since(start)
+						start := time.Now()
+						err := processMessage(subCtx, db, client, msg.Message, logger)
+						duration := time.Since(start)
 
-				// メトリクス更新は processMessage 内で行う
-				_ = duration // 使用しない場合の警告回避
+						// メトリクス更新は processMessage 内で行う
+						_ = duration // 使用しない場合の警告回避
+
+						if err != nil {
+							logger.WithError(err).Error("Failed to process message")
+						}
+					}()
+				})
 
 				if err != nil {
-					logger.WithError(err).Error("Failed to process message")
-				}
-			}()
-		})
+					// Mark connection as lost
+					connectionStatusGauge.WithLabelValues("pubsub").Set(0)
 
-		if err != nil {
-			subErrChan <- err
+					if subCtx.Err() != nil {
+						// Context was cancelled, stop retrying
+						logger.Info("Subscription context cancelled during connection")
+						return
+					}
+
+					logger.WithError(err).Error("Redis Pub/Sub connection lost, attempting to reconnect...")
+					connectionReconnectsCounter.WithLabelValues("failed").Inc()
+
+					// Wait before attempting to reconnect
+					select {
+					case <-time.After(5 * time.Second):
+						// Continue to retry
+						continue
+					case <-subCtx.Done():
+						logger.Info("Subscription context cancelled during reconnection wait")
+						return
+					}
+				} else {
+					// Successful connection established
+					connectionReconnectsCounter.WithLabelValues("success").Inc()
+					logger.Info("Redis Pub/Sub subscription established successfully")
+				}
+			}
 		}
 	}()
 
