@@ -177,6 +177,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **State Management**: Svelte stores for user state and UI state
 - **Type Safety**: Full TypeScript with generated gRPC types
 - **Internationalization**: svelte-i18n with Japanese and English support
+- **Progressive Web App**: @vite-pwa/sveltekit with offline support and app installation
 
 ### Database Schema
 
@@ -257,6 +258,9 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `backend/container/container.go`: Central dependency injection configuration
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
 - `frontend/src/locales/`: Internationalization files (ja.json, en.json)
+- `frontend/vite.config.ts`: PWA configuration with @vite-pwa/sveltekit
+- `frontend/src/lib/components/PWA*`: PWA install/update components
+- `frontend/static/icons/`: PWA app icons (72px-512px)
 - `adr/`: Architecture Decision Records
   - `0004-pubsub.md`: Redis Pub/Sub implementation details
   - `0005-scheduler.md`: Scheduler system architecture
@@ -308,6 +312,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **New components must support i18n**: All user-facing text should be translatable
 - **Follow atomic design**: Place components in appropriate atoms/molecules/organisms directories
 - **Consistent imports**: Always include necessary i18n imports
+- **PWA considerations**: Ensure components work offline when cached data is available
 
 ### TypeScript Guidelines
 
@@ -347,4 +352,6 @@ SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
 - Copy `compose-prod.example.yml` to `compose-prod.yml` for production
 - gRPC reflection is enabled in development (TODO: disable in production)
 - JWT_SECRET should be changed from "hogehoge" in production
-- Frontend builds with `dcoker compose exec frontend pnpm build`, backend builds with `docker compopse exec backend go build`
+- Frontend builds with `docker compose exec frontend pnpm build`, backend builds with `docker compose exec backend go build`
+- PWA manifest and service worker are automatically generated during build
+- PWA icons are pre-generated in `frontend/static/icons/` directory

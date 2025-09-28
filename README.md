@@ -51,7 +51,7 @@ graph TB
 
 | コンポーネント    | 技術                                                   | 目的                   |
 | ----------------- | ------------------------------------------------------ | ---------------------- |
-| **Frontend**      | SvelteKit + TypeScript                                 | WebUI                  |
+| **Frontend**      | SvelteKit + TypeScript + PWA                           | WebUI（PWA対応）       |
 | **Backend**       | Go + gRPC                                              | 認証とAPIサーバ        |
 | **Scheduler**     | Go                                                     | 要約の定期ディスパッチ |
 | **Subscriber**    | Go + Redis                                             | 要約の非同期生成       |
@@ -65,6 +65,7 @@ graph TB
 2. **データ永続化**: Backend → Database
 3. **非同期処理**: Scheduler → Redis → Subscriber
 4. **AI 処理**: Subscriber → LLM APIs → Database
+5. **PWA機能**: Service Worker → キャッシュ → オフライン対応
 
 ### サービスアーキテクチャ
 
@@ -75,6 +76,15 @@ graph TB
 3. Redis `diary_events` チャンネルに JSON メッセージを公開
 4. Subscriber がメッセージを消費し LLM APIs 経由で処理
 5. 生成された要約をデータベースに保存
+
+#### PWA（プログレッシブウェブアプリ）機能
+
+- **自動更新**: Service Worker による自動アップデート通知
+- **オフライン対応**: キャッシュされた日記の閲覧が可能
+- **インストール**: ホーム画面への追加とアプリライクな体験
+- **レスポンシブ**: 様々なデバイスサイズに対応
+- **アイコン**: 8サイズ（72px〜512px）のアプリアイコン
+- **キャッシュ戦略**: NetworkFirst でAPI呼び出しを最適化
 
 ## 技術スタック
 
@@ -91,6 +101,7 @@ graph TB
 - **スタイリング**: Tailwind CSS 4
 - **i18n**: svelte-i18n（日本語/英語）
 - **format/lint**: Biome
+- **PWA**: @vite-pwa/sveltekit によるプログレッシブウェブアプリ対応
 
 ### インフラ
 
