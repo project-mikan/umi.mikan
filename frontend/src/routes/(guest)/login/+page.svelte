@@ -4,6 +4,12 @@ import "$lib/i18n";
 import AuthForm from "$lib/components/molecules/AuthForm.svelte";
 import type { ActionData } from "./$types";
 
+// フォームデータに含まれる可能性のあるプロパティを定義
+interface FormDataWithRateLimit {
+	error?: string;
+	isRateLimited?: boolean;
+}
+
 export let form: ActionData;
 </script>
 
@@ -15,5 +21,5 @@ export let form: ActionData;
 	linkHref="/register"
 	showNameField={false}
 	error={form?.error}
-	isRateLimited={(form as any)?.isRateLimited ?? false}
+	isRateLimited={(form as FormDataWithRateLimit)?.isRateLimited ?? false}
 />
