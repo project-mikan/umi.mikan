@@ -17,8 +17,27 @@ function selectLanguage(langCode: string) {
 	if (browser) {
 		locale.set(langCode);
 		localStorage.setItem("locale", langCode);
+
+		// Update manifest link for new language
+		updateManifest(langCode);
 	}
 	isOpen = false;
+}
+
+function updateManifest(lang: string) {
+	if (!browser) return;
+
+	// Remove existing manifest link
+	const existingManifest = document.querySelector('link[rel="manifest"]');
+	if (existingManifest) {
+		existingManifest.remove();
+	}
+
+	// Add new manifest link with updated language
+	const manifestLink = document.createElement("link");
+	manifestLink.rel = "manifest";
+	manifestLink.href = `/manifest.webmanifest?lang=${lang}`;
+	document.head.appendChild(manifestLink);
 }
 
 function closeDropdown() {

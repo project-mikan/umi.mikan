@@ -161,6 +161,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 ### Backend Structure
 
 - **Clean Architecture**: Domain models, services, and infrastructure layers
+- **Dependency Injection**: uber-go/dig container with centralized DI management (`backend/container/container.go`)
 - **gRPC Services**: AuthService and DiaryService
 - **JWT Authentication**: 15-minute access tokens, 30-day refresh tokens
 - **Database**: PostgreSQL with xo-generated models (separate test DB)
@@ -176,6 +177,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **State Management**: Svelte stores for user state and UI state
 - **Type Safety**: Full TypeScript with generated gRPC types
 - **Internationalization**: svelte-i18n with Japanese and English support
+- **Progressive Web App**: @vite-pwa/sveltekit with offline support and app installation
 
 ### Database Schema
 
@@ -242,6 +244,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 3. **Proto Changes**: Update .proto files, run `make grpc`
 4. **Frontend**: Uses pnpm for package management, Biome for formatting
 5. **Backend**: Uses Go modules, standard Go formatting
+6. **DI Container**: Add new dependencies to `backend/container/container.go` provider functions
 
 ## Key Files
 
@@ -249,11 +252,15 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `Makefile`: All development commands
 - `proto/`: gRPC service definitions
 - `schema/`: Database migration files
-- `backend/cmd/server/main.go`: Backend entry point
-- `backend/cmd/scheduler/main.go`: Scheduler service entry point
-- `backend/cmd/subscriber/main.go`: Subscriber service entry point
+- `backend/cmd/server/main.go`: Backend entry point (uses DI container)
+- `backend/cmd/scheduler/main.go`: Scheduler service entry point (uses DI container)
+- `backend/cmd/subscriber/main.go`: Subscriber service entry point (uses DI container)
+- `backend/container/container.go`: Central dependency injection configuration
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
 - `frontend/src/locales/`: Internationalization files (ja.json, en.json)
+- `frontend/vite.config.ts`: PWA configuration with @vite-pwa/sveltekit
+- `frontend/src/lib/components/PWA*`: PWA install/update components
+- `frontend/static/icons/`: PWA app icons (72px-512px)
 - `adr/`: Architecture Decision Records
   - `0004-pubsub.md`: Redis Pub/Sub implementation details
   - `0005-scheduler.md`: Scheduler system architecture
@@ -268,6 +275,9 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
     - `provisioning/datasources/`: Prometheus and Loki data source configurations
 - `backend/infrastructure/lock/`: Distributed locking system
   - `distributed_lock.go`: Redis-based lock implementation
+- `backend/container/`: Dependency injection container
+  - `container.go`: Central DI container with uber-go/dig
+  - `container_test.go`: Comprehensive container tests
 
 ## Development Guidelines
 
@@ -302,6 +312,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **New components must support i18n**: All user-facing text should be translatable
 - **Follow atomic design**: Place components in appropriate atoms/molecules/organisms directories
 - **Consistent imports**: Always include necessary i18n imports
+- **PWA considerations**: Ensure components work offline when cached data is available
 
 ### TypeScript Guidelines
 
@@ -341,4 +352,6 @@ SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
 - Copy `compose-prod.example.yml` to `compose-prod.yml` for production
 - gRPC reflection is enabled in development (TODO: disable in production)
 - JWT_SECRET should be changed from "hogehoge" in production
-- Frontend builds with `dcoker compose exec frontend pnpm build`, backend builds with `docker compopse exec backend go build`
+- Frontend builds with `docker compose exec frontend pnpm build`, backend builds with `docker compose exec backend go build`
+- PWA manifest and service worker are automatically generated during build
+- PWA icons are pre-generated in `frontend/static/icons/` directory

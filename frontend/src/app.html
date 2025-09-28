@@ -5,6 +5,21 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 
+		<!-- PWA Manifest (dynamic) -->
+		<script>
+			// Set dynamic manifest based on user language
+			(function() {
+				const stored = localStorage.getItem('locale');
+				const browserLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
+				const lang = stored || browserLang;
+
+				const manifestLink = document.createElement('link');
+				manifestLink.rel = 'manifest';
+				manifestLink.href = `/manifest.webmanifest?lang=${lang}`;
+				document.head.appendChild(manifestLink);
+			})();
+		</script>
+
 		<!-- PWA Meta Tags -->
 		<meta name="theme-color" content="#3b82f6" />
 		<meta name="description" content="毎日使う日記アプリ" />
