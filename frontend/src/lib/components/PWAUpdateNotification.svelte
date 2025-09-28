@@ -2,26 +2,33 @@
 import { onMount } from "svelte";
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
-// @ts-expect-error
-import { pwaInfo } from "virtual:pwa-info";
+let pwaInfo: any = null;
 
 let showUpdatePrompt = false;
 let updateServiceWorker: (() => Promise<void>) | null = null;
 
 onMount(async () => {
-	if (pwaInfo) {
+	try {
 		// @ts-expect-error
-		const { registerSW } = await import("virtual:pwa-register");
+		const pwaModule = await import("virtual:pwa-info");
+		pwaInfo = pwaModule.pwaInfo;
 
-		updateServiceWorker = registerSW({
-			immediate: true,
-			onNeedRefresh() {
-				showUpdatePrompt = true;
-			},
-			onOfflineReady() {
-				console.log("App is ready to work offline");
-			},
-		});
+		if (pwaInfo) {
+			// @ts-expect-error
+			const { registerSW } = await import("virtual:pwa-register");
+
+			updateServiceWorker = registerSW({
+				immediate: true,
+				onNeedRefresh() {
+					showUpdatePrompt = true;
+				},
+				onOfflineReady() {
+					console.log("App is ready to work offline");
+				},
+			});
+		}
+	} catch (error) {
+		console.warn("PWA modules not available:", error);
 	}
 });
 
