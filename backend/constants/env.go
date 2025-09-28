@@ -154,3 +154,15 @@ func LoadSubscriberConfig() (*SubscriberConfig, error) {
 		MaxConcurrentJobs: maxConcurrentJobs,
 	}, nil
 }
+
+func LoadGRPCReflectionEnabled() bool {
+	env := os.Getenv("BACKEND_ENV")
+
+	// Production環境では一律でリフレクションを無効にする
+	if env == "prod" || env == "production" {
+		return false
+	}
+
+	// Development環境ではデフォルトで有効
+	return true
+}

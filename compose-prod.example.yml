@@ -4,6 +4,7 @@ services:
     volumes:
       - ./schema:/schema # pg-schema-diff用
     environment:
+      BACKEND_ENV: production
       TZ: Asia/Tokyo
       PORT: 8080
       DB_HOST: postgres

@@ -47,9 +47,13 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	g.RegisterAuthServiceServer(grpcServer, app.AuthService)
 	g.RegisterUserServiceServer(grpcServer, app.UserService)
 
-	// Enable reflection for local debugging
-	// TODO: disable in production based on environment variable
-	reflection.Register(grpcServer)
+	// Enable reflection based on environment variable
+	if constants.LoadGRPCReflectionEnabled() {
+		log.Print("gRPC reflection enabled")
+		reflection.Register(grpcServer)
+	} else {
+		log.Print("gRPC reflection disabled")
+	}
 
 	// Start gRPC server
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
