@@ -1,11 +1,20 @@
+# umi.mikan
+
 <div align="center">
   <img src="frontend/static/favicon.png" alt="umi.mikan logo" width="120" height="120">
 </div>
 
-# umi.mikan
+**umi.mikan** はシンプルなWeb日記アプリです。
 
-**umi.mikan** はシンプルなWeb日記アプリです
-外部LLMを用いたまとめ機能もあります
+外部LLMを用いたまとめ機能もあります。
+
+# ユーザ向け
+
+compose-prod.example.yamlを参考にセルフホスティングしてお使いいただけます。
+
+コンテナはarm64とamd64向けにbuildされています。
+
+# 開発向け
 
 ## アーキテクチャ
 
