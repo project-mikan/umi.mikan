@@ -36,7 +36,7 @@
 		"install": {
 			"title": "アプリをインストール",
 			"description": "ホーム画面に追加してより便利に使用できます",
-			"install": "インストール",
+			"install": "umi.mikanをインストールできます",
 			"dismiss": "閉じる",
 			"benefit1": "オフラインでも利用可能",
 			"benefit2": "ホーム画面からワンタップでアクセス",

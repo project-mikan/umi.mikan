@@ -2,101 +2,68 @@
 import { onMount } from "svelte";
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
-import type { BeforeInstallPromptEvent } from "../pwa-types";
 
-let deferredPrompt: BeforeInstallPromptEvent | null = null;
-let canInstall = false;
-let isInstalled = false;
+let showInstallButton = false;
+let installPrompt: BeforeInstallPromptEvent | null = null;
+
+interface BeforeInstallPromptEvent extends Event {
+	prompt(): Promise<void>;
+	userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
 
 onMount(() => {
-	// Check if already installed
-	isInstalled = window.matchMedia("(display-mode: standalone)").matches;
-
-	if (isInstalled) {
-		return;
-	}
-
-	// Note: Always show install button regardless of previous dismissals
-
 	// Listen for beforeinstallprompt event
 	window.addEventListener("beforeinstallprompt", (e) => {
-		console.log("beforeinstallprompt event fired");
 		e.preventDefault();
-		deferredPrompt = e;
-		canInstall = true;
+		installPrompt = e as BeforeInstallPromptEvent;
+		showInstallButton = true;
 	});
 
-	// Check if PWA is already installable via other means
-	if ("serviceWorker" in navigator && "BeforeInstallPromptEvent" in window) {
-		canInstall = true;
-	}
+	// Hide button if app is already installed
+	window.addEventListener("appinstalled", () => {
+		showInstallButton = false;
+		installPrompt = null;
+	});
 
-	// For browsers that support PWA but don't fire beforeinstallprompt immediately
+	// For development/testing: show button if no install prompt is available
+	// In production, this will be overridden by the beforeinstallprompt event
 	setTimeout(() => {
-		if (!canInstall && !isInstalled) {
-			console.log("Enabling install button as fallback");
-			canInstall = true;
+		if (!installPrompt) {
+			showInstallButton = true;
 		}
-	}, 2000);
+	}, 1000);
 });
 
-const handleInstall = async () => {
-	if (deferredPrompt) {
-		// Use native browser install prompt
-		console.log("Using native install prompt");
-		deferredPrompt.prompt();
-		const { outcome } = await deferredPrompt.userChoice;
-
-		if (outcome === "accepted") {
-			console.log("PWA installation accepted");
-			localStorage.setItem("pwa-installed", "true");
-			canInstall = false;
-		} else {
-			console.log("PWA installation dismissed");
-		}
-
-		deferredPrompt = null;
+async function handleInstall() {
+	if (!installPrompt) {
+		// Show manual installation instructions if no automatic prompt is available
+		alert($_("pwa.install.manualInstructions"));
 		return;
 	}
 
-	// Fallback: Show manual installation instructions
-	console.log("Showing manual installation instructions");
+	try {
+		await installPrompt.prompt();
+		const choiceResult = await installPrompt.userChoice;
 
-	// Detect browser type for specific instructions
-	const userAgent = navigator.userAgent.toLowerCase();
-	let instructions = $_("pwa.install.manualInstructions");
+		if (choiceResult.outcome === "accepted") {
+			showInstallButton = false;
+		}
 
-	if (userAgent.includes("chrome") && !userAgent.includes("edg")) {
-		instructions =
-			"Chrome: 右上の⋮メニュー → 「アプリをインストール」を選択してください。";
-	} else if (userAgent.includes("edg")) {
-		instructions =
-			"Edge: 右上の⋯メニュー → 「アプリ」→ 「このサイトをアプリとしてインストール」を選択してください。";
-	} else if (userAgent.includes("firefox")) {
-		instructions =
-			"Firefox: アドレスバーの🏠アイコンをクリックするか、右上のメニューから「ホーム画面に追加」を選択してください。";
-	} else if (userAgent.includes("safari")) {
-		instructions =
-			"Safari: 下部の共有ボタン📤 → 「ホーム画面に追加」を選択してください。";
+		installPrompt = null;
+	} catch (error) {
+		console.error("Install failed:", error);
 	}
-
-	alert(instructions);
-};
-
-const handleDismiss = () => {
-	// Do nothing - keep the button visible
-	// User can always access install button from home page
-};
+}
 </script>
 
-{#if canInstall && !isInstalled}
-	<div class="mt-8 flex justify-center">
+{#if showInstallButton}
+	<div class="mt-8 text-center">
 		<button
 			on:click={handleInstall}
-			class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center"
+			class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 border border-blue-600 dark:border-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
 		>
 			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8l-8-8-8 8"/>
 			</svg>
 			{$_("pwa.install.install")}
 		</button>
