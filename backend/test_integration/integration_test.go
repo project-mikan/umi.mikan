@@ -17,15 +17,15 @@ import (
 func TestCompleteUserJourney(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 
-	// Initialize services
+	// サービスを初期化
 	authService := &auth.AuthEntry{DB: db}
 	diaryService := &diary.DiaryEntry{DB: db}
 	ctx := context.Background()
 
-	// Generate unique test identifier
+	// ユニークなテスト識別子を生成
 	testID := fmt.Sprintf("%d", time.Now().UnixNano())
 
-	// Step 1: Register a new user
+	// ステップ1: 新しいユーザーを登録
 	registerReq := &g.RegisterByPasswordRequest{
 		Email:    fmt.Sprintf("journey-integration-%s@example.com", testID),
 		Password: "securePassword123",
@@ -39,7 +39,7 @@ func TestCompleteUserJourney(t *testing.T) {
 		t.Fatal("Expected access token after registration")
 	}
 
-	// Step 2: Login with the registered user
+	// ステップ2: 登録したユーザーでログイン
 	loginReq := &g.LoginByPasswordRequest{
 		Email:    registerReq.Email,
 		Password: registerReq.Password,
@@ -52,15 +52,15 @@ func TestCompleteUserJourney(t *testing.T) {
 		t.Fatal("Expected access token after login")
 	}
 
-	// Step 3: Create authenticated context (simulating middleware)
-	// In a real scenario, this would be done by the auth interceptor
+	// ステップ3: 認証コンテキストを作成（ミドルウェアをシミュレート）
+	// 実際のシナリオでは、これは認証インターセプターによって行われる
 	user, err := getUserFromToken(t, db, loginResp.AccessToken)
 	if err != nil {
 		t.Fatalf("Failed to get user from token: %v", err)
 	}
 	authCtx := testutil.CreateAuthenticatedContext(user.ID)
 
-	// Step 4: Create diary entries with unique dates
+	// ステップ4: ユニークな日付で日記エントリを作成
 	// Use nanoseconds to get more unique values for each test run
 	nanoTime := time.Now().UnixNano()
 	baseDate := uint32((nanoTime % 25) + 1) // Get a day between 1-25 (leaving room for +2)
@@ -180,12 +180,12 @@ func TestCompleteUserJourney(t *testing.T) {
 func TestUserIsolation(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 
-	// Initialize services
+	// サービスを初期化
 	authService := &auth.AuthEntry{DB: db}
 	diaryService := &diary.DiaryEntry{DB: db}
 	ctx := context.Background()
 
-	// Generate unique test identifier
+	// ユニークなテスト識別子を生成
 	testID := fmt.Sprintf("%d", time.Now().UnixNano())
 
 	// Create two users

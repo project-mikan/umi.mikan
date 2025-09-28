@@ -39,7 +39,7 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "Valid diary entry",
+			name: "正常系：正常な日記エントリ",
 			request: &g.CreateDiaryEntryRequest{
 				Content: "This is a test diary entry",
 				Date: &g.YMD{
@@ -51,7 +51,7 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 			shouldSucceed: true,
 		},
 		{
-			name: "Empty content",
+			name: "正常系：空のコンテンツ",
 			request: &g.CreateDiaryEntryRequest{
 				Content: "",
 				Date: &g.YMD{
@@ -60,10 +60,10 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 					Day:   16,
 				},
 			},
-			shouldSucceed: true, // Empty content should be allowed
+			shouldSucceed: true, // 空のコンテンツも許可
 		},
 		{
-			name: "Future date",
+			name: "正常系：未来の日付",
 			request: &g.CreateDiaryEntryRequest{
 				Content: "Future diary entry",
 				Date: &g.YMD{
@@ -72,7 +72,7 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 					Day:   31,
 				},
 			},
-			shouldSucceed: true, // Future dates should be allowed
+			shouldSucceed: true, // 未来の日付も許可
 		},
 	}
 
@@ -82,16 +82,13 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 
 			if tt.shouldSucceed {
 				if err != nil {
-					t.Errorf("Expected success but got error: %v", err)
-					return
+					t.Fatalf("Expected success but got error: %v", err)
 				}
 				if response == nil {
-					t.Error("Expected response but got nil")
-					return
+					t.Fatal("Expected response but got nil")
 				}
 				if response.Entry == nil {
-					t.Error("Expected entry but got nil")
-					return
+					t.Fatal("Expected entry but got nil")
 				}
 				if response.Entry.Id == "" {
 					t.Error("Expected entry ID but got empty string")
@@ -106,7 +103,7 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 				}
 			} else {
 				if err == nil {
-					t.Error("Expected error but got nil")
+					t.Fatal("Expected error but got nil")
 				}
 			}
 		})
@@ -120,7 +117,7 @@ func TestDiaryEntry_GetDiaryEntry(t *testing.T) {
 	diaryService := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
-	// Create a diary entry first
+	// まず日記エントリを作成
 	createReq := &g.CreateDiaryEntryRequest{
 		Content: "Test diary for getting",
 		Date: &g.YMD{
@@ -141,7 +138,7 @@ func TestDiaryEntry_GetDiaryEntry(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "Get existing diary entry",
+			name: "正常系：既存の日記エントリを取得",
 			date: &g.YMD{
 				Year:  2024,
 				Month: 2,
@@ -150,7 +147,7 @@ func TestDiaryEntry_GetDiaryEntry(t *testing.T) {
 			shouldSucceed: true,
 		},
 		{
-			name: "Get non-existent diary entry",
+			name: "異常系：存在しない日記エントリを取得",
 			date: &g.YMD{
 				Year:  2024,
 				Month: 2,
@@ -169,23 +166,20 @@ func TestDiaryEntry_GetDiaryEntry(t *testing.T) {
 
 			if tt.shouldSucceed {
 				if err != nil {
-					t.Errorf("Expected success but got error: %v", err)
-					return
+					t.Fatalf("Expected success but got error: %v", err)
 				}
 				if response == nil {
-					t.Error("Expected response but got nil")
-					return
+					t.Fatal("Expected response but got nil")
 				}
 				if response.Entry == nil {
-					t.Error("Expected entry but got nil")
-					return
+					t.Fatal("Expected entry but got nil")
 				}
 				if response.Entry.Content != createReq.Content {
 					t.Errorf("Expected content '%s' but got '%s'", createReq.Content, response.Entry.Content)
 				}
 			} else {
 				if err == nil {
-					t.Error("Expected error but got nil")
+					t.Fatal("Expected error but got nil")
 				}
 			}
 		})
@@ -199,7 +193,7 @@ func TestDiaryEntry_UpdateDiaryEntry(t *testing.T) {
 	diaryService := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
-	// Create a diary entry first
+	// まず日記エントリを作成
 	createReq := &g.CreateDiaryEntryRequest{
 		Content: "Original content",
 		Date: &g.YMD{
@@ -222,14 +216,14 @@ func TestDiaryEntry_UpdateDiaryEntry(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name:          "Valid update",
+			name:          "正常系：正常な更新",
 			entryID:       createResp.Entry.Id,
 			content:       "Updated content",
 			date:          createReq.Date,
 			shouldSucceed: true,
 		},
 		{
-			name:    "Update with new date",
+			name:    "正常系：新しい日付で更新",
 			entryID: createResp.Entry.Id,
 			content: "Updated content with new date",
 			date: &g.YMD{
@@ -240,14 +234,14 @@ func TestDiaryEntry_UpdateDiaryEntry(t *testing.T) {
 			shouldSucceed: true,
 		},
 		{
-			name:          "Invalid entry ID",
+			name:          "異常系：無効なエントリID",
 			entryID:       "invalid-uuid",
 			content:       "Updated content",
 			date:          createReq.Date,
 			shouldSucceed: false,
 		},
 		{
-			name:          "Non-existent entry ID",
+			name:          "異常系：存在しないエントリID",
 			entryID:       uuid.New().String(),
 			content:       "Updated content",
 			date:          createReq.Date,
@@ -266,23 +260,20 @@ func TestDiaryEntry_UpdateDiaryEntry(t *testing.T) {
 
 			if tt.shouldSucceed {
 				if err != nil {
-					t.Errorf("Expected success but got error: %v", err)
-					return
+					t.Fatalf("Expected success but got error: %v", err)
 				}
 				if response == nil {
-					t.Error("Expected response but got nil")
-					return
+					t.Fatal("Expected response but got nil")
 				}
 				if response.Entry == nil {
-					t.Error("Expected entry but got nil")
-					return
+					t.Fatal("Expected entry but got nil")
 				}
 				if response.Entry.Content != tt.content {
 					t.Errorf("Expected content '%s' but got '%s'", tt.content, response.Entry.Content)
 				}
 			} else {
 				if err == nil {
-					t.Error("Expected error but got nil")
+					t.Fatal("Expected error but got nil")
 				}
 			}
 		})
@@ -296,7 +287,7 @@ func TestDiaryEntry_DeleteDiaryEntry(t *testing.T) {
 	diaryService := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
-	// Create a diary entry first
+	// まず日記エントリを作成
 	createReq := &g.CreateDiaryEntryRequest{
 		Content: "Content to be deleted",
 		Date: &g.YMD{
@@ -317,17 +308,17 @@ func TestDiaryEntry_DeleteDiaryEntry(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name:          "Valid deletion",
+			name:          "正常系：正常な削除",
 			entryID:       createResp.Entry.Id,
 			shouldSucceed: true,
 		},
 		{
-			name:          "Invalid entry ID",
+			name:          "異常系：無効なエントリーID",
 			entryID:       "invalid-uuid",
 			shouldSucceed: false,
 		},
 		{
-			name:          "Non-existent entry ID",
+			name:          "異常系：存在しないエントリーID",
 			entryID:       uuid.New().String(),
 			shouldSucceed: false,
 		},
@@ -342,19 +333,17 @@ func TestDiaryEntry_DeleteDiaryEntry(t *testing.T) {
 
 			if tt.shouldSucceed {
 				if err != nil {
-					t.Errorf("Expected success but got error: %v", err)
-					return
+					t.Fatalf("Expected success but got error: %v", err)
 				}
 				if response == nil {
-					t.Error("Expected response but got nil")
-					return
+					t.Fatal("Expected response but got nil")
 				}
 				if !response.Success {
 					t.Error("Expected success to be true")
 				}
 			} else {
 				if err == nil {
-					t.Error("Expected error but got nil")
+					t.Fatal("Expected error but got nil")
 				}
 			}
 		})

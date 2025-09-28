@@ -27,7 +27,7 @@ func TestContainerProviders(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// Test that we can resolve each application type
+	// 各アプリケーションタイプが解決できることをテスト
 	var serverApp *ServerApp
 	err = container.Invoke(func(app *ServerApp) {
 		serverApp = app
@@ -75,14 +75,14 @@ func TestContainerProviders(t *testing.T) {
 
 func TestLLMClientFactory(t *testing.T) {
 	factory := &geminiClientFactory{}
-	// Test that the factory implements the interface
+	// ファクトリがインターフェースを実装していることをテスト
 	var _ LLMClientFactory = factory
 }
 
 func TestLockService(t *testing.T) {
-	// This is a minimal test since we don't have a real Redis connection in tests
+	// テストでは実際のRedis接続がないため、最小限のテスト
 	lockSvc := &lockService{}
-	// Test that the lock service implements the interface
+	// ロックサービスがインターフェースを実装していることをテスト
 	var _ LockService = lockSvc
 }
 

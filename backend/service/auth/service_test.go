@@ -24,6 +24,10 @@ func generateTestEmail(t *testing.T, prefix string) string {
 	return fmt.Sprintf("%s-%s@example.com", prefix, testID)
 }
 
+func containsString(s, substr string) bool {
+	return strings.Contains(s, substr)
+}
+
 func TestAuthEntry_RegisterByPassword(t *testing.T) {
 	db := setupTestDB(t)
 
@@ -37,7 +41,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "Valid registration",
+			name: "正常系：正常な登録",
 			request: &g.RegisterByPasswordRequest{
 				Email:    generateTestEmail(t, "test"),
 				Password: "validPassword123",
@@ -46,7 +50,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 			shouldSucceed: true,
 		},
 		{
-			name: "Empty email",
+			name: "異常系：空のメールアドレス",
 			request: &g.RegisterByPasswordRequest{
 				Email:    "",
 				Password: "validPassword123",
@@ -56,7 +60,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 			expectedError: "validation error",
 		},
 		{
-			name: "Invalid email format",
+			name: "異常系：無効なメールアドレス形式",
 			request: &g.RegisterByPasswordRequest{
 				Email:    "invalid-email",
 				Password: "validPassword123",
@@ -66,7 +70,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 			expectedError: "validation error",
 		},
 		{
-			name: "Password too short",
+			name: "異常系：パスワードが短すぎる",
 			request: &g.RegisterByPasswordRequest{
 				Email:    "test2@example.com",
 				Password: "123",
@@ -76,7 +80,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 			expectedError: "validation error",
 		},
 		{
-			name: "Empty name",
+			name: "異常系：空の名前",
 			request: &g.RegisterByPasswordRequest{
 				Email:    "test3@example.com",
 				Password: "validPassword123",
@@ -93,12 +97,10 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 
 			if tt.shouldSucceed {
 				if err != nil {
-					t.Errorf("Expected success but got error: %v", err)
-					return
+					t.Fatalf("Expected success but got error: %v", err)
 				}
 				if response == nil {
-					t.Error("Expected response but got nil")
-					return
+					t.Fatal("Expected response but got nil")
 				}
 				if response.AccessToken == "" {
 					t.Error("Expected access token but got empty string")
@@ -114,8 +116,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 				}
 			} else {
 				if err == nil {
-					t.Error("Expected error but got nil")
-					return
+					t.Fatal("Expected error but got nil")
 				}
 				if tt.expectedError != "" && !containsString(err.Error(), tt.expectedError) {
 					t.Errorf("Expected error containing '%s' but got '%s'", tt.expectedError, err.Error())
@@ -131,7 +132,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 	authService := &AuthEntry{DB: db}
 	ctx := context.Background()
 
-	// First, register a user
+	// まず、ユーザーを登録
 	testEmail := generateTestEmail(t, "login-test")
 	registerReq := &g.RegisterByPasswordRequest{
 		Email:    testEmail,
@@ -150,7 +151,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "Valid login",
+			name: "正常系：正常なログイン",
 			request: &g.LoginByPasswordRequest{
 				Email:    testEmail,
 				Password: "validPassword123",
@@ -158,7 +159,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 			shouldSucceed: true,
 		},
 		{
-			name: "Invalid email",
+			name: "異常系：無効なメールアドレス",
 			request: &g.LoginByPasswordRequest{
 				Email:    "nonexistent@example.com",
 				Password: "validPassword123",
@@ -167,7 +168,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 			expectedError: "user not found",
 		},
 		{
-			name: "Invalid password",
+			name: "異常系：無効なパスワード",
 			request: &g.LoginByPasswordRequest{
 				Email:    testEmail,
 				Password: "wrongPassword",
@@ -176,7 +177,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 			expectedError: "password does not match",
 		},
 		{
-			name: "Empty email",
+			name: "異常系：空のメールアドレス",
 			request: &g.LoginByPasswordRequest{
 				Email:    "",
 				Password: "validPassword123",
@@ -185,7 +186,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 			expectedError: "validation error",
 		},
 		{
-			name: "Empty password",
+			name: "異常系：空のパスワード",
 			request: &g.LoginByPasswordRequest{
 				Email:    "login-test@example.com",
 				Password: "",
@@ -201,12 +202,10 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 
 			if tt.shouldSucceed {
 				if err != nil {
-					t.Errorf("Expected success but got error: %v", err)
-					return
+					t.Fatalf("Expected success but got error: %v", err)
 				}
 				if response == nil {
-					t.Error("Expected response but got nil")
-					return
+					t.Fatal("Expected response but got nil")
 				}
 				if response.AccessToken == "" {
 					t.Error("Expected access token but got empty string")
@@ -219,8 +218,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 				}
 			} else {
 				if err == nil {
-					t.Error("Expected error but got nil")
-					return
+					t.Fatal("Expected error but got nil")
 				}
 				if tt.expectedError != "" && !containsString(err.Error(), tt.expectedError) {
 					t.Errorf("Expected error containing '%s' but got '%s'", tt.expectedError, err.Error())
@@ -254,18 +252,18 @@ func TestAuthEntry_RefreshAccessToken(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name:          "Valid refresh token",
+			name:          "正常系：正常なリフレッシュトークン",
 			refreshToken:  registerResp.RefreshToken,
 			shouldSucceed: true,
 		},
 		{
-			name:          "Invalid refresh token",
+			name:          "異常系：無効なリフレッシュトークン",
 			refreshToken:  "invalid.token.here",
 			shouldSucceed: false,
 			expectedError: "validation error",
 		},
 		{
-			name:          "Empty refresh token",
+			name:          "異常系：空のリフレッシュトークン",
 			refreshToken:  "",
 			shouldSucceed: false,
 			expectedError: "validation error",
@@ -281,12 +279,10 @@ func TestAuthEntry_RefreshAccessToken(t *testing.T) {
 
 			if tt.shouldSucceed {
 				if err != nil {
-					t.Errorf("Expected success but got error: %v", err)
-					return
+					t.Fatalf("Expected success but got error: %v", err)
 				}
 				if response == nil {
-					t.Error("Expected response but got nil")
-					return
+					t.Fatal("Expected response but got nil")
 				}
 				if response.AccessToken == "" {
 					t.Error("Expected access token but got empty string")
@@ -300,8 +296,7 @@ func TestAuthEntry_RefreshAccessToken(t *testing.T) {
 				}
 			} else {
 				if err == nil {
-					t.Error("Expected error but got nil")
-					return
+					t.Fatal("Expected error but got nil")
 				}
 				if tt.expectedError != "" && !containsString(err.Error(), tt.expectedError) {
 					t.Errorf("Expected error containing '%s' but got '%s'", tt.expectedError, err.Error())
@@ -336,9 +331,4 @@ func TestAuthEntry_DuplicateRegistration(t *testing.T) {
 	} else if !containsString(err.Error(), "already exists") {
 		t.Errorf("Expected error about user already existing but got: %v", err)
 	}
-}
-
-// Helper function to check if a string contains a substring
-func containsString(s, substr string) bool {
-	return strings.Contains(s, substr)
 }

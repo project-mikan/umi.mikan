@@ -74,6 +74,6 @@ func TestProcessMessage_InvalidJSON(t *testing.T) {
 	// This should return an error for invalid JSON
 	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
 	if err == nil {
-		t.Errorf("expected error for invalid JSON, got nil")
+		t.Fatal("expected error for invalid JSON, got nil")
 	}
 }
