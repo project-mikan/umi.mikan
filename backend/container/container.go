@@ -66,14 +66,14 @@ func (c *Container) registerProviders() {
 }
 
 // mustProvide panics if provider registration fails
-func mustProvide(container *dig.Container, constructor interface{}) {
+func mustProvide(container *dig.Container, constructor any) {
 	if err := container.Provide(constructor); err != nil {
 		panic(fmt.Sprintf("failed to provide dependency: %v", err))
 	}
 }
 
 // Invoke runs the provided function with dependency injection
-func (c *Container) Invoke(fn interface{}) error {
+func (c *Container) Invoke(fn any) error {
 	return c.container.Invoke(fn)
 }
 

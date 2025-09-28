@@ -253,7 +253,7 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 		}
 
 		// Create daily summary message
-		message := map[string]interface{}{
+		message := map[string]any{
 			"type":    "daily_summary",
 			"user_id": userID,
 			"date":    yesterday,
@@ -330,7 +330,7 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 		}
 
 		// Create monthly summary message
-		message := map[string]interface{}{
+		message := map[string]any{
 			"type":    "monthly_summary",
 			"user_id": userID,
 			"year":    year,
