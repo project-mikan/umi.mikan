@@ -161,6 +161,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 ### Backend Structure
 
 - **Clean Architecture**: Domain models, services, and infrastructure layers
+- **Dependency Injection**: uber-go/dig container with centralized DI management (`backend/container/container.go`)
 - **gRPC Services**: AuthService and DiaryService
 - **JWT Authentication**: 15-minute access tokens, 30-day refresh tokens
 - **Database**: PostgreSQL with xo-generated models (separate test DB)
@@ -242,6 +243,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 3. **Proto Changes**: Update .proto files, run `make grpc`
 4. **Frontend**: Uses pnpm for package management, Biome for formatting
 5. **Backend**: Uses Go modules, standard Go formatting
+6. **DI Container**: Add new dependencies to `backend/container/container.go` provider functions
 
 ## Key Files
 
@@ -249,9 +251,10 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `Makefile`: All development commands
 - `proto/`: gRPC service definitions
 - `schema/`: Database migration files
-- `backend/cmd/server/main.go`: Backend entry point
-- `backend/cmd/scheduler/main.go`: Scheduler service entry point
-- `backend/cmd/subscriber/main.go`: Subscriber service entry point
+- `backend/cmd/server/main.go`: Backend entry point (uses DI container)
+- `backend/cmd/scheduler/main.go`: Scheduler service entry point (uses DI container)
+- `backend/cmd/subscriber/main.go`: Subscriber service entry point (uses DI container)
+- `backend/container/container.go`: Central dependency injection configuration
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
 - `frontend/src/locales/`: Internationalization files (ja.json, en.json)
 - `adr/`: Architecture Decision Records
@@ -268,6 +271,9 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
     - `provisioning/datasources/`: Prometheus and Loki data source configurations
 - `backend/infrastructure/lock/`: Distributed locking system
   - `distributed_lock.go`: Redis-based lock implementation
+- `backend/container/`: Dependency injection container
+  - `container.go`: Central DI container with uber-go/dig
+  - `container_test.go`: Comprehensive container tests
 
 ## Development Guidelines
 
