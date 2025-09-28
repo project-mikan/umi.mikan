@@ -6,19 +6,23 @@ WORKDIR /frontend
 # Install pnpm
 RUN npm install -g pnpm@latest
 
-# Copy package files
+# Copy package files first for better caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies with cache mount for faster rebuilds
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    --mount=type=cache,target=/frontend/node_modules/.pnpm \
+    pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
-# Use production config and build
+# Use production config and build with cache mounts
 RUN cp svelte.config.prod.js svelte.config.js
-RUN pnpm exec svelte-kit sync
-RUN pnpm build
+RUN --mount=type=cache,target=/frontend/node_modules/.pnpm \
+    --mount=type=cache,target=/frontend/.svelte-kit \
+    --mount=type=cache,target=/tmp \
+    pnpm exec svelte-kit sync && pnpm build
 
 # Production stage
 FROM node:22-alpine AS production

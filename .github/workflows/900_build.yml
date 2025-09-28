@@ -44,6 +44,7 @@ jobs:
         uses: ./.github/actions/docker-build
         with:
           service: frontend
+          platforms: linux/amd64
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
   build-scheduler:

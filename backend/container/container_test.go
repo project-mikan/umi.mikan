@@ -27,7 +27,7 @@ func TestContainerProviders(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// Test that we can resolve each application type
+	// 各アプリケーションタイプが解決できることをテスト
 	var serverApp *ServerApp
 	err = container.Invoke(func(app *ServerApp) {
 		serverApp = app
@@ -75,18 +75,18 @@ func TestContainerProviders(t *testing.T) {
 
 func TestLLMClientFactory(t *testing.T) {
 	factory := &geminiClientFactory{}
-	// Test that the factory implements the interface
+	// ファクトリがインターフェースを実装していることをテスト
 	var _ LLMClientFactory = factory
 }
 
 func TestLockService(t *testing.T) {
-	// This is a minimal test since we don't have a real Redis connection in tests
+	// テストでは実際のRedis接続がないため、最小限のテスト
 	lockSvc := &lockService{}
-	// Test that the lock service implements the interface
+	// ロックサービスがインターフェースを実装していることをテスト
 	var _ LockService = lockSvc
 }
 
-// TestContainerDependencyResolution tests that all dependencies are correctly resolved
+// TestContainerDependencyResolution すべての依存関係が正しく解決されることをテスト
 func TestContainerDependencyResolution(t *testing.T) {
 	container, err := NewContainer()
 	if err != nil {
@@ -151,14 +151,14 @@ func TestContainerDependencyResolution(t *testing.T) {
 	}
 }
 
-// TestApplicationBundles tests that application bundles contain all necessary dependencies
+// TestApplicationBundles アプリケーションバンドルが必要なすべての依存関係を含んでいることをテスト
 func TestApplicationBundles(t *testing.T) {
 	container, err := NewContainer()
 	if err != nil {
 		t.Fatalf("expected no error creating container, got %v", err)
 	}
 
-	// Test ServerApp dependencies
+	// ServerAppの依存関係をテスト
 	t.Run("ServerApp", func(t *testing.T) {
 		err := container.Invoke(func(app *ServerApp) {
 			if app == nil {
@@ -185,7 +185,7 @@ func TestApplicationBundles(t *testing.T) {
 		}
 	})
 
-	// Test SchedulerApp dependencies
+	// SchedulerAppの依存関係をテスト
 	t.Run("SchedulerApp", func(t *testing.T) {
 		err := container.Invoke(func(app *SchedulerApp) {
 			if app == nil {
@@ -206,7 +206,7 @@ func TestApplicationBundles(t *testing.T) {
 		}
 	})
 
-	// Test SubscriberApp dependencies
+	// SubscriberAppの依存関係をテスト
 	t.Run("SubscriberApp", func(t *testing.T) {
 		err := container.Invoke(func(app *SubscriberApp) {
 			if app == nil {
@@ -234,7 +234,7 @@ func TestApplicationBundles(t *testing.T) {
 	})
 }
 
-// TestCleanupFunction tests the cleanup functionality
+// TestCleanupFunction クリーンアップ機能をテスト
 func TestCleanupFunction(t *testing.T) {
 	container, err := NewContainer()
 	if err != nil {
@@ -252,28 +252,28 @@ func TestCleanupFunction(t *testing.T) {
 			t.Error("Cleanup.redis should not be nil")
 		}
 
-		// Test that cleanup doesn't panic (actual cleanup would close connections)
-		// In a real test environment, we'd want to test this properly
-		// For now, just ensure the method exists and can be called
+		// クリーンアップがパニックしないことをテスト（実際のクリーンアップでは接続を閉じる）
+		// 実際のテスト環境では、これを適切にテストしたい
+		// 今のところは、メソッドが存在して呼び出し可能であることを確認
 		err := cleanup.Close()
-		// We expect an error here because we're in a test environment
-		// without real connections, but the method should exist
-		_ = err // Ignore the error as it's expected in test environment
+		// テスト環境では実際の接続がないため、ここでエラーが期待される
+		// しかしメソッドは存在するべき
+		_ = err // テスト環境では期待されるエラーなので無視
 	})
 	if err != nil {
 		t.Errorf("failed to resolve Cleanup: %v", err)
 	}
 }
 
-// TestLLMClientFactoryFunctionality tests the LLM client factory
+// TestLLMClientFactoryFunctionality LLMクライアントファクトリをテスト
 func TestLLMClientFactoryFunctionality(t *testing.T) {
 	factory := &geminiClientFactory{}
 
-	// Test with empty API key (should return error)
+	// 空のAPIキーでテスト（エラーを返すべき）
 	ctx := context.Background()
 	client, err := factory.CreateGeminiClient(ctx, "")
 
-	// We expect this to fail with empty key
+	// 空のキーでは失敗することを期待
 	if err == nil {
 		t.Error("Expected error with empty API key, but got success")
 	}
@@ -281,29 +281,29 @@ func TestLLMClientFactoryFunctionality(t *testing.T) {
 		t.Error("Expected nil client with empty API key")
 	}
 
-	// Test with non-empty API key (may or may not fail, but should not panic)
-	// The actual validation might happen during API calls, not during client creation
+	// 空でないAPIキーでテスト（失敗するかもしれないが、パニックしてはいけない）
+	// 実際の検証はAPI呼び出し時に発生する可能性があり、クライアント作成時ではない
 	client2, err2 := factory.CreateGeminiClient(ctx, "test-key")
-	// We don't assert on the result here since the behavior may vary
-	// Just ensure it doesn't panic and returns something reasonable
+	// 動作が異なる可能性があるため、ここでは結果をアサートしない
+	// パニックせず、合理的な結果を返すことだけを確認
 	_ = client2
 	_ = err2
 }
 
-// TestLockServiceFunctionality tests the lock service
+// TestLockServiceFunctionality ロックサービスをテスト
 func TestLockServiceFunctionality(t *testing.T) {
-	// Note: This test would require a real Redis connection to be meaningful
-	// For now, we just test that the methods exist and can be called
+	// 注意: このテストが意味を成すには実際のRedis接続が必要
+	// 今のところは、メソッドが存在して呼び出し可能であることだけをテスト
 	lockSvc := &lockService{}
 
-	// Test that we can create a distributed lock (won't work without Redis)
+	// 分散ロックを作成できることをテスト（Redisなしでは動作しない）
 	lock := lockSvc.NewDistributedLock("test-key", 5*time.Minute)
 	if lock == nil {
 		t.Error("NewDistributedLock should return a non-nil lock")
 	}
 }
 
-// TestConfigurationValues tests that configuration values are reasonable
+// TestConfigurationValues 設定値が合理的であることをテスト
 func TestConfigurationValues(t *testing.T) {
 	container, err := NewContainer()
 	if err != nil {
@@ -316,7 +316,7 @@ func TestConfigurationValues(t *testing.T) {
 		schedulerConfig *SchedulerConfig,
 		subscriberConfig *SubscriberConfig,
 	) {
-		// Test DB config
+		// DB設定をテスト
 		if dbConfig.Host == "" {
 			t.Error("DB host should not be empty")
 		}
@@ -330,7 +330,7 @@ func TestConfigurationValues(t *testing.T) {
 			t.Error("DB name should not be empty")
 		}
 
-		// Test Redis config
+		// Redis設定をテスト
 		if redisConfig.Host == "" {
 			t.Error("Redis host should not be empty")
 		}
@@ -338,7 +338,7 @@ func TestConfigurationValues(t *testing.T) {
 			t.Errorf("Redis port should be valid, got %d", redisConfig.Port)
 		}
 
-		// Test Scheduler config
+		// Scheduler設定をテスト
 		if schedulerConfig.DailySummaryInterval <= 0 {
 			t.Error("Daily summary interval should be positive")
 		}
@@ -346,7 +346,7 @@ func TestConfigurationValues(t *testing.T) {
 			t.Error("Monthly summary interval should be positive")
 		}
 
-		// Test Subscriber config
+		// Subscriber設定をテスト
 		if subscriberConfig.MaxConcurrentJobs <= 0 {
 			t.Error("Max concurrent jobs should be positive")
 		}

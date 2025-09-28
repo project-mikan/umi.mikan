@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important Requirements
+
+**Keep CLAUDE.md updated**: When implementation changes or Claude Code instructions differ from CLAUDE.md, always update CLAUDE.md to reflect the latest state.
+
 ## Project Overview
 
 **umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS. The system includes automated AI summary generation via Redis Pub/Sub, scheduled background processing, distributed locking, and comprehensive monitoring with Prometheus and Grafana.
@@ -313,6 +317,11 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Follow atomic design**: Place components in appropriate atoms/molecules/organisms directories
 - **Consistent imports**: Always include necessary i18n imports
 - **PWA considerations**: Ensure components work offline when cached data is available
+
+### Code Language Guidelines
+
+- **Comments in Japanese**: All code comments must be written in Japanese
+- **Test case names in Japanese**: All test case names and descriptions should be written in Japanese
 
 ### TypeScript Guidelines
 

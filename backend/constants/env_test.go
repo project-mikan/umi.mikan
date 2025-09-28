@@ -16,7 +16,7 @@ func TestLoadSchedulerConfig(t *testing.T) {
 		expectError     bool
 	}{
 		{
-			name:            "default values",
+			name:            "正常系：デフォルト値",
 			dailyInterval:   "",
 			monthlyInterval: "",
 			expectedDaily:   5 * time.Minute,
@@ -24,7 +24,7 @@ func TestLoadSchedulerConfig(t *testing.T) {
 			expectError:     false,
 		},
 		{
-			name:            "custom values",
+			name:            "正常系：カスタム値",
 			dailyInterval:   "10m",
 			monthlyInterval: "1h",
 			expectedDaily:   10 * time.Minute,
@@ -32,7 +32,7 @@ func TestLoadSchedulerConfig(t *testing.T) {
 			expectError:     false,
 		},
 		{
-			name:            "invalid daily interval",
+			name:            "異常系：無効な日次インターバル",
 			dailyInterval:   "invalid",
 			monthlyInterval: "5m",
 			expectedDaily:   0,
@@ -40,7 +40,7 @@ func TestLoadSchedulerConfig(t *testing.T) {
 			expectError:     true,
 		},
 		{
-			name:            "invalid monthly interval",
+			name:            "異常系：無効な月次インターバル",
 			dailyInterval:   "5m",
 			monthlyInterval: "invalid",
 			expectedDaily:   0,
@@ -69,14 +69,13 @@ func TestLoadSchedulerConfig(t *testing.T) {
 
 			if tt.expectError {
 				if err == nil {
-					t.Errorf("expected error but got none")
+					t.Fatal("expected error but got none")
 				}
 				return
 			}
 
 			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-				return
+				t.Fatalf("unexpected error: %v", err)
 			}
 
 			if config.DailySummaryInterval != tt.expectedDaily {
@@ -98,31 +97,31 @@ func TestLoadSubscriberConfig(t *testing.T) {
 		expectError       bool
 	}{
 		{
-			name:              "default value",
+			name:              "正常系：デフォルト値",
 			maxConcurrentJobs: "",
 			expectedMaxJobs:   10,
 			expectError:       false,
 		},
 		{
-			name:              "custom value",
+			name:              "正常系：カスタム値",
 			maxConcurrentJobs: "5",
 			expectedMaxJobs:   5,
 			expectError:       false,
 		},
 		{
-			name:              "invalid value - non-numeric",
+			name:              "異常系：無効な値（非数値）",
 			maxConcurrentJobs: "invalid",
 			expectedMaxJobs:   0,
 			expectError:       true,
 		},
 		{
-			name:              "invalid value - zero",
+			name:              "異常系：無効な値（ゼロ）",
 			maxConcurrentJobs: "0",
 			expectedMaxJobs:   0,
 			expectError:       true,
 		},
 		{
-			name:              "invalid value - negative",
+			name:              "異常系：無効な値（負の値）",
 			maxConcurrentJobs: "-1",
 			expectedMaxJobs:   0,
 			expectError:       true,
@@ -143,14 +142,13 @@ func TestLoadSubscriberConfig(t *testing.T) {
 
 			if tt.expectError {
 				if err == nil {
-					t.Errorf("expected error but got none")
+					t.Fatal("expected error but got none")
 				}
 				return
 			}
 
 			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-				return
+				t.Fatalf("unexpected error: %v", err)
 			}
 
 			if config.MaxConcurrentJobs != tt.expectedMaxJobs {
