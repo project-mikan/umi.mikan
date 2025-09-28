@@ -15,5 +15,5 @@ export let form: ActionData;
 	linkHref="/register"
 	showNameField={false}
 	error={form?.error}
-	isRateLimited={form?.isRateLimited}
+	isRateLimited={(form as any)?.isRateLimited ?? false}
 />

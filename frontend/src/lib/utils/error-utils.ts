@@ -20,7 +20,7 @@ export function extractRateLimitResetTime(error: unknown): string | null {
 		// "try again in 14m32s" のような形式からリセット時間を抽出
 		// より厳密な正規表現でセキュリティを向上
 		const match = message.match(/try again in (\d+(?:[smh])+)(?:\s|$)/);
-		if (match && match[1]) {
+		if (match?.[1]) {
 			return match[1];
 		}
 	}

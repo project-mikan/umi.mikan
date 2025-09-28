@@ -1,6 +1,9 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { loginByPassword } from "$lib/server/auth-api";
-import { translateErrorMessage, isRateLimitError } from "$lib/utils/error-utils";
+import {
+	translateErrorMessage,
+	isRateLimitError,
+} from "$lib/utils/error-utils";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {
