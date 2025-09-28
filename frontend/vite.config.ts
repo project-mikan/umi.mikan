@@ -21,11 +21,8 @@ export default defineConfig({
 				runtimeCaching: [
 					{
 						urlPattern: ({ url }) => {
-							// 開発環境とプロダクション環境でのAPI URLを動的に判定
-							const apiBase =
-								process.env.NODE_ENV === "production"
-									? process.env.VITE_API_URL || ""
-									: "http://localhost:2001";
+							// 環境変数からAPI URLを取得（開発・本番環境共通）
+							const apiBase = process.env.VITE_API_URL || "";
 							return apiBase
 								? url.href.startsWith(apiBase)
 								: url.pathname.startsWith("/api");
