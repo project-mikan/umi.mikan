@@ -38,12 +38,12 @@ COPY --from=builder /frontend/build ./build
 COPY --from=builder /frontend/package.json ./package.json
 
 # Cannot find package '@bufbuild/protobuf'になるので必要↓
-RUN mkdir -p /frontend/node_modules/@bufbuild/protobuf
-RUN mkdir -p /frontend/node_modules/@connectrpc/connect
-RUN mkdir -p /frontend/node_modules/@connectrpc/connect-node
+# 必要なnode_modulesを選択的にコピー
 COPY --from=builder /frontend/node_modules/@bufbuild/protobuf/ ./node_modules/@bufbuild/protobuf/
 COPY --from=builder /frontend/node_modules/@connectrpc/connect/ ./node_modules/@connectrpc/connect/
-COPY --from=builder /frontend/node_modules/@connectrpc/connect-node/ ./node_modules/@connectrpc/connect-node/
+
+# @connectrpc/connect-nodeは本番環境では使用されないため、存在しない場合はスキップ
+RUN mkdir -p ./node_modules/@connectrpc/connect-node || true
 
 
 
