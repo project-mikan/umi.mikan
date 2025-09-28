@@ -10,6 +10,15 @@ import (
 	"github.com/redis/rueidis"
 )
 
+// DistributedLockInterface defines the interface for distributed locks
+type DistributedLockInterface interface {
+	TryLock(ctx context.Context) (bool, error)
+	Unlock(ctx context.Context) error
+	Extend(ctx context.Context, newDuration time.Duration) error
+	IsLocked(ctx context.Context) (bool, error)
+	IsOwnedByMe(ctx context.Context) (bool, error)
+}
+
 // DistributedLock represents a Redis-based distributed lock
 type DistributedLock struct {
 	client   rueidis.Client

@@ -59,7 +59,7 @@ func TestProcessMessage_UnknownType(t *testing.T) {
 	payload := `{"type": "unknown_type", "user_id": "test"}`
 
 	// This should not return an error for unknown message types
-	err := processMessage(ctx, nil, nil, payload, logger)
+	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
 	if err != nil {
 		t.Errorf("expected no error for unknown message type, got %v", err)
 	}
@@ -72,7 +72,7 @@ func TestProcessMessage_InvalidJSON(t *testing.T) {
 	payload := `invalid json`
 
 	// This should return an error for invalid JSON
-	err := processMessage(ctx, nil, nil, payload, logger)
+	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
 	if err == nil {
 		t.Errorf("expected error for invalid JSON, got nil")
 	}
