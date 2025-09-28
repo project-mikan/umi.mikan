@@ -13,7 +13,7 @@ interface NavItem {
 }
 
 let isScrolling = false;
-let scrollTimeout: number;
+let scrollTimeout: ReturnType<typeof setTimeout>;
 
 $: navItems = [
 	{

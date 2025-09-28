@@ -37,7 +37,11 @@
 			"title": "Install App",
 			"description": "Add to home screen for easier access",
 			"install": "Install",
-			"dismiss": "Later"
+			"dismiss": "Close",
+			"benefit1": "Works offline",
+			"benefit2": "One-tap access from home screen",
+			"benefit3": "App-like experience",
+			"manualInstructions": "Please select 'Add to Home Screen' or 'Install App' from your browser menu."
 		},
 		"update": {
 			"title": "Update Available",

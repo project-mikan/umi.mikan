@@ -60,7 +60,7 @@ function toggleMobileNav() {
 // Intersection Observer for tracking active section
 onMount(() => {
 	let isUserScrolling = false;
-	let scrollTimeout: number;
+	let scrollTimeout: ReturnType<typeof setTimeout>;
 
 	// Listen for scroll events to detect user scrolling
 	const handleScroll = () => {

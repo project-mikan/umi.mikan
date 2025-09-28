@@ -2,7 +2,7 @@
 import { onMount } from "svelte";
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
-let pwaInfo: any = null;
+let pwaInfo: unknown = null;
 
 let showUpdatePrompt = false;
 let updateServiceWorker: (() => Promise<void>) | null = null;
