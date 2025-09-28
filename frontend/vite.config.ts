@@ -20,7 +20,16 @@ export default defineConfig({
 				globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
 				runtimeCaching: [
 					{
-						urlPattern: /^http:\/\/localhost:2001\/.*$/,
+						urlPattern: ({ url }) => {
+							// 開発環境とプロダクション環境でのAPI URLを動的に判定
+							const apiBase =
+								process.env.NODE_ENV === "production"
+									? process.env.VITE_API_URL || ""
+									: "http://localhost:2001";
+							return apiBase
+								? url.href.startsWith(apiBase)
+								: url.pathname.startsWith("/api");
+						},
 						handler: "NetworkFirst",
 						options: {
 							cacheName: "api-cache",

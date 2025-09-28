@@ -30,6 +30,7 @@ services:
       TZ: Asia/Tokyo
       NODE_ENV: production
       BODY_SIZE_LIMIT: 1M
+      VITE_API_URL: ${VITE_API_URL:-https://api.yourdomain.com}
     ports:
       - "2000:5173"
     restart: unless-stopped

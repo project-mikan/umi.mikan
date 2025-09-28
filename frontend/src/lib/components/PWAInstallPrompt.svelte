@@ -65,7 +65,7 @@ const handleDismiss = () => {
 };
 </script>
 
-{#if false}
+{#if showInstallPrompt}
 	<div class="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto">
 		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4">
 			<div class="flex items-start space-x-3">
