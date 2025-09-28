@@ -11,13 +11,9 @@ import (
 	"time"
 
 	"github.com/project-mikan/umi.mikan/backend/constants"
-	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
+	"github.com/project-mikan/umi.mikan/backend/container"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
-	"github.com/project-mikan/umi.mikan/backend/service/auth"
-	"github.com/project-mikan/umi.mikan/backend/service/diary"
-	"github.com/project-mikan/umi.mikan/backend/service/user"
-	"github.com/redis/rueidis"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -25,55 +21,47 @@ import (
 func main() {
 	log.Print("=== umi.mikan backend started ===")
 
-	port, err := constants.LoadPort()
+	// Create DI container
+	diContainer, err := container.NewContainer()
 	if err != nil {
-		log.Fatalf("%v", err)
+		log.Fatalf("Failed to create DI container: %v", err)
 	}
 
-	// grpc server
+	// Initialize and run server using DI container
+	if err := diContainer.Invoke(runServer); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+}
+
+func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
+	// Load port configuration
+	port, err := constants.LoadPort()
+	if err != nil {
+		return fmt.Errorf("failed to load port: %w", err)
+	}
+
+	// Create grpc server
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(middleware.AuthInterceptor),
 	)
 
-	// DB接続
-	dbConfig, err := constants.LoadDBConfig()
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
-	db := database.NewDB(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Failed to close database connection: %v", err)
-		}
-	}()
+	// Register services
+	g.RegisterDiaryServiceServer(grpcServer, app.DiaryService)
+	g.RegisterAuthServiceServer(grpcServer, app.AuthService)
+	g.RegisterUserServiceServer(grpcServer, app.UserService)
 
-	// Redis接続
-	redisConfig, err := constants.LoadRedisConfig()
-	if err != nil {
-		log.Fatalf("Failed to load Redis config: %v", err)
+	// Enable reflection based on environment variable
+	if constants.LoadGRPCReflectionEnabled() {
+		log.Print("gRPC reflection enabled")
+		reflection.Register(grpcServer)
+	} else {
+		log.Print("gRPC reflection disabled")
 	}
 
-	redisClient, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port)},
-	})
-	if err != nil {
-		log.Fatalf("Failed to create Redis client: %v", err)
-	}
-	defer redisClient.Close()
-
-	// サービス登録
-	g.RegisterDiaryServiceServer(grpcServer, &diary.DiaryEntry{DB: db, Redis: redisClient})
-	g.RegisterAuthServiceServer(grpcServer, &auth.AuthEntry{DB: db})
-	g.RegisterUserServiceServer(grpcServer, &user.UserEntry{DB: db, RedisClient: redisClient})
-
-	// localでcliからデバッグできるようにする
-	// TODO: 環境変数で本番では有効にならないようにする
-	reflection.Register(grpcServer)
-
-	// gRPCサーバーを起動
+	// Start gRPC server
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %w", err)
 	}
 
 	log.Printf("gRPC server listening on :%d", port)
@@ -115,9 +103,20 @@ func main() {
 			grpcServer.Stop()
 		}
 
+		// Cleanup resources
+		if err := cleanup.Close(); err != nil {
+			log.Printf("Error during cleanup: %v", err)
+		}
+
 	case err := <-serverErrChan:
 		log.Printf("gRPC server error: %v", err)
+		// Cleanup resources on error
+		if cleanupErr := cleanup.Close(); cleanupErr != nil {
+			log.Printf("Error during cleanup: %v", cleanupErr)
+		}
+		return err
 	}
 
 	log.Print("backend end")
+	return nil
 }

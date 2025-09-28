@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,10 +13,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/project-mikan/umi.mikan/backend/constants"
+	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
-	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
-	"github.com/project-mikan/umi.mikan/backend/infrastructure/lock"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -100,40 +97,26 @@ func main() {
 	})
 	logger.Info("=== umi.mikan subscriber started ===")
 
-	// DB設定の読み込み
-	dbConfig, err := constants.LoadDBConfig()
+	// Create DI container
+	diContainer, err := container.NewContainer()
 	if err != nil {
-		logger.WithError(err).Fatal("Failed to load DB config")
+		logger.WithError(err).Fatal("Failed to create DI container")
 	}
 
-	// DB接続
-	db := database.NewDB(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
-	defer func() {
-		if err := db.Close(); err != nil {
-			logger.WithError(err).Error("Failed to close database connection")
-		}
-	}()
-
-	// Redis設定の読み込み
-	redisConfig, err := constants.LoadRedisConfig()
-	if err != nil {
-		logger.WithError(err).Fatal("Failed to load Redis config")
+	// Initialize and run subscriber using DI container
+	if err := diContainer.Invoke(func(app *container.SubscriberApp, cleanup *container.Cleanup) error {
+		return runSubscriber(app, cleanup, logger)
+	}); err != nil {
+		logger.WithError(err).Fatal("Failed to start subscriber")
 	}
+}
 
-	// Redisクライアント作成
-	client, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port)},
-	})
-	if err != nil {
-		logger.WithError(err).Fatal("Failed to create Redis client")
-	}
-	defer client.Close()
-
+func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, logger *logrus.Entry) error {
 	// Redis接続確認
 	ctx := context.Background()
-	pingCmd := client.B().Ping().Build()
-	if err := client.Do(ctx, pingCmd).Error(); err != nil {
-		logger.WithError(err).Fatal("Failed to connect to Redis")
+	pingCmd := app.Redis.B().Ping().Build()
+	if err := app.Redis.Do(ctx, pingCmd).Error(); err != nil {
+		return fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 	logger.Info("Connected to Redis successfully")
 
@@ -148,13 +131,7 @@ func main() {
 		}
 	}()
 
-	// Subscriber設定の読み込み
-	subscriberConfig, err := constants.LoadSubscriberConfig()
-	if err != nil {
-		logger.WithError(err).Fatal("Failed to load subscriber config")
-	}
-
-	logger.WithField("max_concurrent_jobs", subscriberConfig.MaxConcurrentJobs).Info("Subscriber is listening for messages...")
+	logger.WithField("max_concurrent_jobs", app.SubscriberConfig.MaxConcurrentJobs).Info("Subscriber is listening for messages...")
 
 	// Create context for subscription that can be cancelled
 	subCtx, cancel := context.WithCancel(ctx)
@@ -165,7 +142,7 @@ func main() {
 
 	// Track processing messages for graceful shutdown
 	var wg sync.WaitGroup
-	processing := make(chan struct{}, subscriberConfig.MaxConcurrentJobs) // Buffer to limit concurrent processing
+	processing := make(chan struct{}, app.SubscriberConfig.MaxConcurrentJobs) // Buffer to limit concurrent processing
 
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -180,8 +157,8 @@ func main() {
 			select {
 			case <-ticker.C:
 				// Ping Redis to check connection health
-				pingCmd := client.B().Ping().Build()
-				if err := client.Do(ctx, pingCmd).Error(); err != nil {
+				pingCmd := app.Redis.B().Ping().Build()
+				if err := app.Redis.Do(ctx, pingCmd).Error(); err != nil {
 					logger.WithError(err).Warn("Redis ping failed, connection may be unhealthy")
 					connectionStatusGauge.WithLabelValues("ping").Set(0)
 				} else {
@@ -207,7 +184,7 @@ func main() {
 				// Attempt to subscribe
 				logger.Info("Starting Redis Pub/Sub subscription...")
 				connectionReconnectsCounter.WithLabelValues("attempt").Inc()
-				err := client.Receive(subCtx, client.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
+				err := app.Redis.Receive(subCtx, app.Redis.B().Subscribe().Channel("diary_events").Build(), func(msg rueidis.PubSubMessage) {
 					// Mark connection as active when receiving messages
 					connectionStatusGauge.WithLabelValues("pubsub").Set(1)
 					logger.WithFields(logrus.Fields{
@@ -226,7 +203,7 @@ func main() {
 						}()
 
 						start := time.Now()
-						err := processMessage(subCtx, db, client, msg.Message, logger)
+						err := processMessage(subCtx, app.DB, app.Redis, app.LLMFactory, app.LockService, msg.Message, logger)
 						duration := time.Since(start)
 
 						// メトリクス更新は processMessage 内で行う
@@ -303,15 +280,27 @@ func main() {
 			logger.Info("Metrics server stopped")
 		}
 
+		// Cleanup resources
+		if err := cleanup.Close(); err != nil {
+			logger.WithError(err).Error("Error during cleanup")
+			return err
+		}
+
 	case err := <-subErrChan:
 		logger.WithError(err).Error("Subscription error")
 		cancel()
+		// Cleanup resources on error
+		if cleanupErr := cleanup.Close(); cleanupErr != nil {
+			logger.WithError(cleanupErr).Error("Error during cleanup")
+		}
+		return err
 	}
 
 	logger.Info("Subscriber ended")
+	return nil
 }
 
-func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, payload string, logger *logrus.Entry) error {
+func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -332,7 +321,7 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
 			return fmt.Errorf("failed to unmarshal daily summary message: %w", unmarshalErr)
 		}
-		err = generateDailySummary(ctx, db, redisClient, message.UserID, message.Date, logger)
+		err = generateDailySummary(ctx, db, redisClient, llmFactory, lockService, message.UserID, message.Date, logger)
 		if err != nil {
 			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
 		} else {
@@ -346,7 +335,7 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
 			return fmt.Errorf("failed to unmarshal monthly summary message: %w", unmarshalErr)
 		}
-		err = generateMonthlySummary(ctx, db, redisClient, message.UserID, message.Year, message.Month, logger)
+		err = generateMonthlySummary(ctx, db, redisClient, llmFactory, lockService, message.UserID, message.Year, message.Month, logger)
 		if err != nil {
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
 		} else {
@@ -360,15 +349,15 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 	}
 }
 
-func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID, dateStr string, logger *logrus.Entry) error {
+func generateDailySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"date":    dateStr,
 	}).Info("Generating daily summary")
 
 	// 1. 分散ロックを取得
-	lockKey := lock.DailySummaryLockKey(userID, dateStr)
-	distributedLock := lock.NewDistributedLock(redisClient, lockKey, 5*time.Minute)
+	lockKey := fmt.Sprintf("summary_lock:daily:%s:%s", userID, dateStr)
+	distributedLock := lockService.NewDistributedLock(lockKey, 5*time.Minute)
 
 	locked, err := distributedLock.TryLock(ctx)
 	if err != nil {
@@ -421,13 +410,13 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	// 2. 指定された日の日記内容を取得
 	var diaryContent string
 	query := `SELECT content FROM diaries WHERE user_id = $1 AND date = $2`
-	err = db.QueryRow(query, userID, dateStr).Scan(&diaryContent)
+	err = db.QueryRowContext(ctx, query, userID, dateStr).Scan(&diaryContent)
 	if err != nil {
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
 
 	// 2. LLMで要約生成
-	summary := generateSummaryWithLLM(ctx, db, userID, diaryContent, logger)
+	summary := generateSummaryWithLLM(ctx, db, llmFactory, userID, diaryContent, logger)
 
 	// 3. diary_summary_daysに保存
 	insertQuery := `
@@ -441,7 +430,7 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.Exec(insertQuery, summaryID, userID, dateStr, summary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, dateStr, summary, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save summary: %w", err)
 	}
@@ -454,7 +443,7 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	return nil
 }
 
-func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, userID string, year, month int, logger *logrus.Entry) error {
+func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"year":    year,
@@ -462,8 +451,8 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	}).Info("Generating monthly summary")
 
 	// 1. 分散ロックを取得
-	lockKey := lock.MonthlySummaryLockKey(userID, year, month)
-	distributedLock := lock.NewDistributedLock(redisClient, lockKey, 5*time.Minute)
+	lockKey := fmt.Sprintf("summary_lock:monthly:%s:%d:%d", userID, year, month)
+	distributedLock := lockService.NewDistributedLock(lockKey, 5*time.Minute)
 
 	locked, err := distributedLock.TryLock(ctx)
 	if err != nil {
@@ -509,7 +498,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 		ORDER BY date
 	`
 
-	rows, err := db.Query(query, userID, year, month)
+	rows, err := db.QueryContext(ctx, query, userID, year, month)
 	if err != nil {
 		return fmt.Errorf("failed to get diary entries: %w", err)
 	}
@@ -535,7 +524,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	// 2. LLMで月次要約生成
 	combinedDiaryEntries := fmt.Sprintf("Diary entries for %d/%d:\n\n%s", year, month,
 		strings.Join(diaryEntries, "\n\n"))
-	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, userID, combinedDiaryEntries, logger)
+	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
 
 	// 3. diary_summary_monthsに保存
 	insertQuery := `
@@ -549,7 +538,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.Exec(insertQuery, summaryID, userID, year, month, monthlySummary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, year, month, monthlySummary, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save monthly summary: %w", err)
 	}
@@ -559,11 +548,11 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	return nil
 }
 
-func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content string, logger *logrus.Entry) string {
+func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) string {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRow(query, userID).Scan(&apiKey)
+	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
 	if err != nil {
 		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
 		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
@@ -571,7 +560,7 @@ func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content str
 	}
 
 	// Gemini クライアント作成
-	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
@@ -595,11 +584,11 @@ func generateSummaryWithLLM(ctx context.Context, db *sql.DB, userID, content str
 	return summary
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, combinedEntries string, logger *logrus.Entry) string {
+func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) string {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRow(query, userID).Scan(&apiKey)
+	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
 	if err != nil {
 		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
 		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
@@ -607,7 +596,7 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, userID, comb
 	}
 
 	// Gemini クライアント作成
-	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",

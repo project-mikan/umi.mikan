@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
@@ -17,7 +18,7 @@ type contextKey string
 const UserIDKey contextKey = "userID"
 
 // AuthInterceptor gRPCの認証インターセプター
-func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func AuthInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	// 認証が不要なメソッドをスキップ
 	if isAuthExempt(info.FullMethod) {
 		return handler(ctx, req)
@@ -67,12 +68,7 @@ func isAuthExempt(method string) bool {
 		"/auth.AuthService/RefreshAccessToken",
 	}
 
-	for _, exemptMethod := range exemptMethods {
-		if method == exemptMethod {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(exemptMethods, method)
 }
 
 // GetUserIDFromContext コンテキストからユーザーIDを取得

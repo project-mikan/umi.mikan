@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/project-mikan/umi.mikan/backend/constants"
+	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -59,8 +58,9 @@ func init() {
 	prometheus.MustRegister(usersWithAutoSummaryGauge)
 }
 
+// Scheduler types and functions
 type Scheduler struct {
-	db     *sql.DB
+	db     database.DB
 	redis  rueidis.Client
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -73,15 +73,16 @@ type ScheduledJob interface {
 	Execute(ctx context.Context, s *Scheduler) error
 }
 
-func NewScheduler(db *sql.DB, redis rueidis.Client, logger *logrus.Entry) *Scheduler {
+func NewScheduler(app *container.SchedulerApp, logger *logrus.Entry) (*Scheduler, error) {
 	ctx, cancel := context.WithCancel(context.Background())
+
 	return &Scheduler{
-		db:     db,
-		redis:  redis,
+		db:     app.DB,
+		redis:  app.Redis,
 		ctx:    ctx,
 		cancel: cancel,
 		logger: logger,
-	}
+	}, nil
 }
 
 func (s *Scheduler) AddJob(job ScheduledJob) {
@@ -138,40 +139,26 @@ func main() {
 	})
 	logger.Info("=== umi.mikan scheduler started ===")
 
-	// DB設定の読み込み
-	dbConfig, err := constants.LoadDBConfig()
+	// Create DI container
+	diContainer, err := container.NewContainer()
 	if err != nil {
-		logger.WithError(err).Fatal("Failed to load DB config")
+		logger.WithError(err).Fatal("Failed to create DI container")
 	}
 
-	// DB接続
-	db := database.NewDB(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
-	defer func() {
-		if err := db.Close(); err != nil {
-			logger.WithError(err).Error("Failed to close database connection")
-		}
-	}()
-
-	// Redis設定の読み込み
-	redisConfig, err := constants.LoadRedisConfig()
-	if err != nil {
-		logger.WithError(err).Fatal("Failed to load Redis config")
+	// Initialize and run scheduler using DI container
+	if err := diContainer.Invoke(func(app *container.SchedulerApp, cleanup *container.Cleanup) error {
+		return runScheduler(app, cleanup, logger)
+	}); err != nil {
+		logger.WithError(err).Fatal("Failed to start scheduler")
 	}
+}
 
-	// Redisクライアント作成
-	redisClient, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port)},
-	})
-	if err != nil {
-		logger.WithError(err).Fatal("Failed to create Redis client")
-	}
-	defer redisClient.Close()
-
+func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logger *logrus.Entry) error {
 	// Redis接続確認
 	ctx := context.Background()
-	pingCmd := redisClient.B().Ping().Build()
-	if err := redisClient.Do(ctx, pingCmd).Error(); err != nil {
-		logger.WithError(err).Fatal("Failed to connect to Redis")
+	pingCmd := app.Redis.B().Ping().Build()
+	if err := app.Redis.Do(ctx, pingCmd).Error(); err != nil {
+		return fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 	logger.Info("Connected to Redis successfully")
 
@@ -186,18 +173,15 @@ func main() {
 		}
 	}()
 
-	// Scheduler設定の読み込み
-	schedulerConfig, err := constants.LoadSchedulerConfig()
+	// スケジューラー作成
+	scheduler, err := NewScheduler(app, logger)
 	if err != nil {
-		logger.WithError(err).Fatal("Failed to load scheduler config")
+		return fmt.Errorf("failed to create scheduler: %w", err)
 	}
 
-	// スケジューラー作成
-	scheduler := NewScheduler(db, redisClient, logger)
-
 	// ジョブを追加
-	scheduler.AddJob(NewDailySummaryJob(schedulerConfig.DailySummaryInterval))
-	scheduler.AddJob(NewMonthlySummaryJob(schedulerConfig.MonthlySummaryInterval))
+	scheduler.AddJob(NewDailySummaryJob(app.SchedulerConfig.DailySummaryInterval))
+	scheduler.AddJob(NewMonthlySummaryJob(app.SchedulerConfig.MonthlySummaryInterval))
 
 	logger.Info("Scheduler is running...")
 
@@ -223,21 +207,23 @@ func main() {
 	} else {
 		logger.Info("Metrics server stopped")
 	}
+
+	// Cleanup resources
+	if err := cleanup.Close(); err != nil {
+		logger.WithError(err).Error("Error during cleanup")
+		return err
+	}
+
+	return nil
 }
 
-// DailySummaryJob implementation
+// DailySummaryJob handles daily summary generation
 type DailySummaryJob struct {
 	interval time.Duration
 }
 
 func NewDailySummaryJob(interval time.Duration) *DailySummaryJob {
 	return &DailySummaryJob{interval: interval}
-}
-
-type SummaryGenerationMessage struct {
-	Type   string `json:"type"`
-	UserID string `json:"user_id"`
-	Date   string `json:"date"` // YYYY-MM-DD format
 }
 
 func (j *DailySummaryJob) Name() string {
@@ -258,7 +244,7 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 		WHERE auto_summary_daily = true
 	`
 
-	rows, err := s.db.Query(usersQuery)
+	rows, err := s.db.QueryContext(ctx, usersQuery)
 	if err != nil {
 		return fmt.Errorf("failed to query users with auto summary enabled: %w", err)
 	}
@@ -311,7 +297,7 @@ func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler
 		ORDER BY d.date
 	`
 
-	rows, err := s.db.Query(query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return fmt.Errorf("failed to query missing summaries for user %s: %w", userID, err)
 	}
@@ -335,50 +321,43 @@ func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler
 		return nil
 	}
 
-	s.logger.WithFields(logrus.Fields{"user_id": userID, "count": len(missingDates)}).Info("Found missing summaries for user")
+	s.logger.WithFields(map[string]any{"user_id": userID, "count": len(missingDates)}).Info("Found missing summaries for user")
 
 	// 3. 各日付についてRedisキューにジョブを投入
 	for _, date := range missingDates {
-		message := SummaryGenerationMessage{
-			Type:   "daily_summary",
-			UserID: userID,
-			Date:   date.Format("2006-01-02"),
+		message := map[string]any{
+			"type":    "daily_summary",
+			"user_id": userID,
+			"date":    date.Format("2006-01-02"),
 		}
 
 		messageBytes, err := json.Marshal(message)
 		if err != nil {
-			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to marshal message")
+			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to marshal message")
 			continue
 		}
 
 		// Redisにメッセージを送信
 		publishCmd := s.redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 		if err := s.redis.Do(ctx, publishCmd).Error(); err != nil {
-			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to publish message")
+			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to publish message")
 			continue
 		}
 
 		queuedMessagesCounter.WithLabelValues("daily_summary").Inc()
-		s.logger.WithFields(logrus.Fields{"user_id": userID, "date": date.Format("2006-01-02")}).Debug("Queued summary generation")
+		s.logger.WithFields(map[string]any{"user_id": userID, "date": date.Format("2006-01-02")}).Debug("Queued summary generation")
 	}
 
 	return nil
 }
 
-// MonthlySummaryJob implementation
+// MonthlySummaryJob handles monthly summary generation
 type MonthlySummaryJob struct {
 	interval time.Duration
 }
 
 func NewMonthlySummaryJob(interval time.Duration) *MonthlySummaryJob {
 	return &MonthlySummaryJob{interval: interval}
-}
-
-type MonthlySummaryGenerationMessage struct {
-	Type   string `json:"type"`
-	UserID string `json:"user_id"`
-	Year   int    `json:"year"`
-	Month  int    `json:"month"`
 }
 
 func (j *MonthlySummaryJob) Name() string {
@@ -399,7 +378,7 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 		WHERE auto_summary_monthly = true
 	`
 
-	rows, err := s.db.Query(usersQuery)
+	rows, err := s.db.QueryContext(ctx, usersQuery)
 	if err != nil {
 		return fmt.Errorf("failed to query users with auto monthly summary enabled: %w", err)
 	}
@@ -464,7 +443,7 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 		ORDER BY mds.year, mds.month
 	`
 
-	rows, err := s.db.Query(query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return fmt.Errorf("failed to query missing monthly summaries for user %s: %w", userID, err)
 	}
@@ -493,32 +472,32 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 		return nil
 	}
 
-	s.logger.WithFields(logrus.Fields{"user_id": userID, "count": len(missingMonths)}).Info("Found missing monthly summaries for user")
+	s.logger.WithFields(map[string]any{"user_id": userID, "count": len(missingMonths)}).Info("Found missing monthly summaries for user")
 
 	// 3. 各年月についてRedisキューにジョブを投入
 	for _, ym := range missingMonths {
-		message := MonthlySummaryGenerationMessage{
-			Type:   "monthly_summary",
-			UserID: userID,
-			Year:   ym.Year,
-			Month:  ym.Month,
+		message := map[string]any{
+			"type":    "monthly_summary",
+			"user_id": userID,
+			"year":    ym.Year,
+			"month":   ym.Month,
 		}
 
 		messageBytes, err := json.Marshal(message)
 		if err != nil {
-			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "year": ym.Year, "month": ym.Month}).Error("Failed to marshal message")
+			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "year": ym.Year, "month": ym.Month}).Error("Failed to marshal message")
 			continue
 		}
 
 		// Redisにメッセージを送信
 		publishCmd := s.redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
 		if err := s.redis.Do(ctx, publishCmd).Error(); err != nil {
-			s.logger.WithError(err).WithFields(logrus.Fields{"user_id": userID, "year": ym.Year, "month": ym.Month}).Error("Failed to publish message")
+			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "year": ym.Year, "month": ym.Month}).Error("Failed to publish message")
 			continue
 		}
 
 		queuedMessagesCounter.WithLabelValues("monthly_summary").Inc()
-		s.logger.WithFields(logrus.Fields{"user_id": userID, "year": ym.Year, "month": ym.Month}).Debug("Queued monthly summary generation")
+		s.logger.WithFields(map[string]any{"user_id": userID, "year": ym.Year, "month": ym.Month}).Debug("Queued monthly summary generation")
 	}
 
 	return nil

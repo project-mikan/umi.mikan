@@ -25,6 +25,16 @@ jobs:
         ports:
           - 5432:5432
 
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
     steps:
       - uses: actions/checkout@v4
 
@@ -68,6 +78,13 @@ jobs:
           TEST_DB_USER: postgres
           TEST_DB_PASSWORD: dev-pass
           TEST_DB_NAME: umi_mikan
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASS: dev-pass
+          DB_NAME: umi_mikan
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
 
       - name: Run tests with coverage
         working-directory: ./backend
@@ -79,6 +96,13 @@ jobs:
           TEST_DB_USER: postgres
           TEST_DB_PASSWORD: dev-pass
           TEST_DB_NAME: umi_mikan
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASS: dev-pass
+          DB_NAME: umi_mikan
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
