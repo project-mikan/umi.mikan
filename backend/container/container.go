@@ -55,6 +55,9 @@ func (c *Container) registerProviders() error {
 	if err := c.container.Provide(NewSubscriberConfig); err != nil {
 		return fmt.Errorf("failed to provide NewSubscriberConfig: %w", err)
 	}
+	if err := c.container.Provide(NewRateLimitConfig); err != nil {
+		return fmt.Errorf("failed to provide NewRateLimitConfig: %w", err)
+	}
 
 	// Infrastructure providers
 	if err := c.container.Provide(NewDatabase); err != nil {
@@ -132,6 +135,11 @@ type SchedulerConfig struct {
 
 type SubscriberConfig struct {
 	MaxConcurrentJobs int
+}
+
+type RateLimitConfig struct {
+	LoginMaxAttempts int
+	LoginWindow      time.Duration
 }
 
 // LLMClientFactory creates LLM clients
@@ -214,6 +222,19 @@ func NewSubscriberConfig() (*SubscriberConfig, error) {
 	}, nil
 }
 
+// NewRateLimitConfig creates rate limit configuration
+func NewRateLimitConfig() (*RateLimitConfig, error) {
+	config, err := constants.LoadRateLimitConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load rate limit config: %w", err)
+	}
+
+	return &RateLimitConfig{
+		LoginMaxAttempts: config.LoginMaxAttempts,
+		LoginWindow:      config.LoginWindow,
+	}, nil
+}
+
 // NewDatabase creates a database connection
 func NewDatabase(config *DBConfig) (database.DB, error) {
 	db := database.NewDB(config.Host, config.Port, config.User, config.Password, config.DBName)
@@ -250,9 +271,8 @@ func NewRateLimiter(redis rueidis.Client) ratelimiter.RateLimiter {
 }
 
 // NewLoginAttemptLimiter creates a login attempt limiter
-func NewLoginAttemptLimiter(rateLimiter ratelimiter.RateLimiter) *ratelimiter.LoginAttemptLimiter {
-	// 15分間に5回までのログイン試行を許可
-	return ratelimiter.NewLoginAttemptLimiter(rateLimiter, 5, 15*time.Minute)
+func NewLoginAttemptLimiter(rateLimiter ratelimiter.RateLimiter, config *RateLimitConfig) *ratelimiter.LoginAttemptLimiter {
+	return ratelimiter.NewLoginAttemptLimiter(rateLimiter, config.LoginMaxAttempts, config.LoginWindow)
 }
 
 // NewAuthService creates an auth service

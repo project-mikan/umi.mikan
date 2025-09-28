@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
@@ -68,23 +69,58 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 
 // getClientIdentifier クライアントを識別するための文字列を取得（IPアドレス + User-Agent）
 func (s *AuthEntry) getClientIdentifier(ctx context.Context) string {
-	// IPアドレスを取得
-	clientIP := "unknown"
-	if p, ok := peer.FromContext(ctx); ok {
-		if tcpAddr, ok := p.Addr.(*net.TCPAddr); ok {
-			clientIP = tcpAddr.IP.String()
-		}
-	}
+	// IPアドレスを取得（プロキシ/ロードバランサー対応）
+	clientIP := s.getClientIP(ctx)
 
-	// User-Agentを取得（もし利用可能であれば）
-	userAgent := "unknown"
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if ua := md.Get("user-agent"); len(ua) > 0 {
-			userAgent = ua[0]
-		}
-	}
+	// User-Agentを取得（gRPC Gateway経由とダイレクト両方に対応）
+	userAgent := s.getUserAgent(ctx)
 
 	return fmt.Sprintf("%s:%s", clientIP, userAgent)
+}
+
+// getClientIP X-Forwarded-Forヘッダーを考慮してクライアントIPを取得
+func (s *AuthEntry) getClientIP(ctx context.Context) string {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		// X-Forwarded-Forヘッダーをチェック（プロキシ/ロードバランサー経由の場合）
+		if xff := md.Get("x-forwarded-for"); len(xff) > 0 {
+			// 最初のIPアドレスを使用（カンマ区切りの場合）
+			ip := strings.TrimSpace(strings.Split(xff[0], ",")[0])
+			if ip != "" {
+				return ip
+			}
+		}
+
+		// X-Real-IPヘッダーもチェック
+		if xri := md.Get("x-real-ip"); len(xri) > 0 && xri[0] != "" {
+			return strings.TrimSpace(xri[0])
+		}
+	}
+
+	// フォールバック: ピア接続からIPアドレスを取得
+	if p, ok := peer.FromContext(ctx); ok {
+		if tcpAddr, ok := p.Addr.(*net.TCPAddr); ok {
+			return tcpAddr.IP.String()
+		}
+	}
+
+	return "unknown"
+}
+
+// getUserAgent 複数のヘッダー形式からUser-Agentを取得
+func (s *AuthEntry) getUserAgent(ctx context.Context) string {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		// 標準的なUser-Agentヘッダー
+		if ua := md.Get("user-agent"); len(ua) > 0 && ua[0] != "" {
+			return ua[0]
+		}
+
+		// gRPC Gateway経由の場合のヘッダー
+		if ua := md.Get("grpcgateway-user-agent"); len(ua) > 0 && ua[0] != "" {
+			return ua[0]
+		}
+	}
+
+	return "unknown"
 }
 
 func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordRequest) (*g.AuthResponse, error) {

@@ -218,3 +218,54 @@ func TestRedisRateLimiter_SlidingWindow(t *testing.T) {
 	assert.True(t, allowed, "ウィンドウ期間後は再度許可されるべき")
 	assert.Equal(t, limit-1, remaining, "ウィンドウ期間後の残り回数が正しいべき")
 }
+
+func TestRedisRateLimiter_ConnectionFailure(t *testing.T) {
+	// 存在しないRedisサーバーへの接続を試行
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{"localhost:99999"}, // 存在しないポート
+		DisableCache: true,
+	})
+	require.NoError(t, err) // クライアント作成は成功する
+
+	rateLimiter := NewRedisRateLimiter(client)
+	ctx := context.Background()
+
+	// Redis接続エラーが発生することを確認
+	allowed, remaining, resetTime, err := rateLimiter.IsAllowed(ctx, "test_key", 5, time.Minute)
+	assert.Error(t, err, "Redis接続エラーが発生するべき")
+	assert.False(t, allowed, "エラー時は許可されないべき")
+	assert.Equal(t, 0, remaining, "エラー時は残り回数は0であるべき")
+	assert.Equal(t, time.Duration(0), resetTime, "エラー時はリセット時間は0であるべき")
+
+	// Reset操作でもエラーが発生することを確認
+	err = rateLimiter.Reset(ctx, "test_key")
+	assert.Error(t, err, "Redis接続エラーが発生するべき")
+
+	client.Close()
+}
+
+func TestLoginAttemptLimiter_ConnectionFailure(t *testing.T) {
+	// 存在しないRedisサーバーへの接続を試行
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{"localhost:99998"}, // 存在しないポート
+		DisableCache: true,
+	})
+	require.NoError(t, err)
+
+	rateLimiter := NewRedisRateLimiter(client)
+	loginLimiter := NewLoginAttemptLimiter(rateLimiter, 3, time.Minute)
+	ctx := context.Background()
+
+	// Redis接続エラーが発生することを確認
+	allowed, remaining, resetTime, err := loginLimiter.CheckAttempt(ctx, "test_user")
+	assert.Error(t, err, "Redis接続エラーが発生するべき")
+	assert.False(t, allowed, "エラー時は許可されないべき")
+	assert.Equal(t, 0, remaining, "エラー時は残り回数は0であるべき")
+	assert.Equal(t, time.Duration(0), resetTime, "エラー時はリセット時間は0であるべき")
+
+	// ResetAttempts操作でもエラーが発生することを確認
+	err = loginLimiter.ResetAttempts(ctx, "test_user")
+	assert.Error(t, err, "Redis接続エラーが発生するべき")
+
+	client.Close()
+}
