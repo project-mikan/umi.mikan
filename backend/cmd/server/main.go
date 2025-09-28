@@ -22,7 +22,10 @@ func main() {
 	log.Print("=== umi.mikan backend started ===")
 
 	// Create DI container
-	diContainer := container.NewContainer()
+	diContainer, err := container.NewContainer()
+	if err != nil {
+		log.Fatalf("Failed to create DI container: %v", err)
+	}
 
 	// Initialize and run server using DI container
 	if err := diContainer.Invoke(runServer); err != nil {

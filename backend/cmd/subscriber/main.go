@@ -98,7 +98,10 @@ func main() {
 	logger.Info("=== umi.mikan subscriber started ===")
 
 	// Create DI container
-	diContainer := container.NewContainer()
+	diContainer, err := container.NewContainer()
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to create DI container")
+	}
 
 	// Initialize and run subscriber using DI container
 	if err := diContainer.Invoke(func(app *container.SubscriberApp, cleanup *container.Cleanup) error {

@@ -24,7 +24,7 @@ type Container struct {
 }
 
 // NewContainer creates and configures a new DI container
-func NewContainer() *Container {
+func NewContainer() (*Container, error) {
 	container := dig.New()
 
 	c := &Container{
@@ -32,44 +32,71 @@ func NewContainer() *Container {
 	}
 
 	// Register all providers
-	c.registerProviders()
+	if err := c.registerProviders(); err != nil {
+		return nil, fmt.Errorf("failed to register providers: %w", err)
+	}
 
-	return c
+	return c, nil
 }
 
 // registerProviders registers all the providers
-func (c *Container) registerProviders() {
+func (c *Container) registerProviders() error {
 	// Configuration providers
-	mustProvide(c.container, NewDBConfig)
-	mustProvide(c.container, NewRedisConfig)
-	mustProvide(c.container, NewSchedulerConfig)
-	mustProvide(c.container, NewSubscriberConfig)
+	if err := c.container.Provide(NewDBConfig); err != nil {
+		return fmt.Errorf("failed to provide NewDBConfig: %w", err)
+	}
+	if err := c.container.Provide(NewRedisConfig); err != nil {
+		return fmt.Errorf("failed to provide NewRedisConfig: %w", err)
+	}
+	if err := c.container.Provide(NewSchedulerConfig); err != nil {
+		return fmt.Errorf("failed to provide NewSchedulerConfig: %w", err)
+	}
+	if err := c.container.Provide(NewSubscriberConfig); err != nil {
+		return fmt.Errorf("failed to provide NewSubscriberConfig: %w", err)
+	}
 
 	// Infrastructure providers
-	mustProvide(c.container, NewDatabase)
-	mustProvide(c.container, NewRedisClient)
-	mustProvide(c.container, NewLLMClientFactory)
-	mustProvide(c.container, NewLockService)
+	if err := c.container.Provide(NewDatabase); err != nil {
+		return fmt.Errorf("failed to provide NewDatabase: %w", err)
+	}
+	if err := c.container.Provide(NewRedisClient); err != nil {
+		return fmt.Errorf("failed to provide NewRedisClient: %w", err)
+	}
+	if err := c.container.Provide(NewLLMClientFactory); err != nil {
+		return fmt.Errorf("failed to provide NewLLMClientFactory: %w", err)
+	}
+	if err := c.container.Provide(NewLockService); err != nil {
+		return fmt.Errorf("failed to provide NewLockService: %w", err)
+	}
 
 	// Service providers
-	mustProvide(c.container, NewAuthService)
-	mustProvide(c.container, NewDiaryService)
-	mustProvide(c.container, NewUserService)
+	if err := c.container.Provide(NewAuthService); err != nil {
+		return fmt.Errorf("failed to provide NewAuthService: %w", err)
+	}
+	if err := c.container.Provide(NewDiaryService); err != nil {
+		return fmt.Errorf("failed to provide NewDiaryService: %w", err)
+	}
+	if err := c.container.Provide(NewUserService); err != nil {
+		return fmt.Errorf("failed to provide NewUserService: %w", err)
+	}
 
 	// Application providers
-	mustProvide(c.container, NewServerApp)
-	mustProvide(c.container, NewSchedulerApp)
-	mustProvide(c.container, NewSubscriberApp)
+	if err := c.container.Provide(NewServerApp); err != nil {
+		return fmt.Errorf("failed to provide NewServerApp: %w", err)
+	}
+	if err := c.container.Provide(NewSchedulerApp); err != nil {
+		return fmt.Errorf("failed to provide NewSchedulerApp: %w", err)
+	}
+	if err := c.container.Provide(NewSubscriberApp); err != nil {
+		return fmt.Errorf("failed to provide NewSubscriberApp: %w", err)
+	}
 
 	// Cleanup provider
-	mustProvide(c.container, NewCleanup)
-}
-
-// mustProvide panics if provider registration fails
-func mustProvide(container *dig.Container, constructor any) {
-	if err := container.Provide(constructor); err != nil {
-		panic(fmt.Sprintf("failed to provide dependency: %v", err))
+	if err := c.container.Provide(NewCleanup); err != nil {
+		return fmt.Errorf("failed to provide NewCleanup: %w", err)
 	}
+
+	return nil
 }
 
 // Invoke runs the provided function with dependency injection
@@ -320,7 +347,11 @@ func (c *Cleanup) Close() error {
 			if closeErr := sqlDB.Close(); closeErr != nil {
 				log.Printf("Failed to close database connection: %v", closeErr)
 				err = closeErr
+			} else {
+				log.Printf("Database connection closed")
 			}
+		} else {
+			log.Printf("Warning: Cannot close database connection - unexpected type %T", c.db)
 		}
 	}
 
