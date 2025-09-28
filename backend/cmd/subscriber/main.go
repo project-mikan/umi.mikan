@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/container"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -203,7 +203,7 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 						}()
 
 						start := time.Now()
-						err := processMessage(subCtx, app.DB.(*sql.DB), app.Redis, app.LLMFactory, app.LockService, msg.Message, logger)
+						err := processMessage(subCtx, app.DB, app.Redis, app.LLMFactory, app.LockService, msg.Message, logger)
 						duration := time.Since(start)
 
 						// メトリクス更新は processMessage 内で行う
@@ -300,7 +300,7 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 	return nil
 }
 
-func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
+func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -349,7 +349,7 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 	}
 }
 
-func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
+func generateDailySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"date":    dateStr,
@@ -410,7 +410,7 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	// 2. 指定された日の日記内容を取得
 	var diaryContent string
 	query := `SELECT content FROM diaries WHERE user_id = $1 AND date = $2`
-	err = db.QueryRow(query, userID, dateStr).Scan(&diaryContent)
+	err = db.QueryRowContext(ctx, query, userID, dateStr).Scan(&diaryContent)
 	if err != nil {
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
@@ -430,7 +430,7 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.Exec(insertQuery, summaryID, userID, dateStr, summary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, dateStr, summary, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save summary: %w", err)
 	}
@@ -443,7 +443,7 @@ func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.C
 	return nil
 }
 
-func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
+func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"year":    year,
@@ -498,7 +498,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 		ORDER BY date
 	`
 
-	rows, err := db.Query(query, userID, year, month)
+	rows, err := db.QueryContext(ctx, query, userID, year, month)
 	if err != nil {
 		return fmt.Errorf("failed to get diary entries: %w", err)
 	}
@@ -538,7 +538,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.Exec(insertQuery, summaryID, userID, year, month, monthlySummary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, year, month, monthlySummary, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save monthly summary: %w", err)
 	}
@@ -548,11 +548,11 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	return nil
 }
 
-func generateSummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) string {
+func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) string {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRow(query, userID).Scan(&apiKey)
+	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
 	if err != nil {
 		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
 		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
@@ -584,11 +584,11 @@ func generateSummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory containe
 	return summary
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) string {
+func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) string {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRow(query, userID).Scan(&apiKey)
+	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
 	if err != nil {
 		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
 		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",

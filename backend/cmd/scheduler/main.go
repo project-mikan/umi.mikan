@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/project-mikan/umi.mikan/backend/container"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -60,7 +60,7 @@ func init() {
 
 // Scheduler types and functions
 type Scheduler struct {
-	db     *sql.DB
+	db     database.DB
 	redis  rueidis.Client
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -76,15 +76,8 @@ type ScheduledJob interface {
 func NewScheduler(app *container.SchedulerApp, logger *logrus.Entry) (*Scheduler, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Type assertion with safety check
-	sqlDB, ok := app.DB.(*sql.DB)
-	if !ok {
-		cancel()
-		return nil, fmt.Errorf("expected *sql.DB, got %T", app.DB)
-	}
-
 	return &Scheduler{
-		db:     sqlDB,
+		db:     app.DB,
 		redis:  app.Redis,
 		ctx:    ctx,
 		cancel: cancel,
