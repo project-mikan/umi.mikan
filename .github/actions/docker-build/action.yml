@@ -82,10 +82,9 @@ runs:
         path: |
           ~/.pnpm-store
           frontend/node_modules/.pnpm
-          frontend/.svelte-kit
-        key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/src/**/*') }}
+        key: ${{ runner.os }}-pnpm-v1-${{ hashFiles('frontend/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}-
+          ${{ runner.os }}-pnpm-v1-
           ${{ runner.os }}-pnpm-
 
     - name: Build and Push to Container Registry

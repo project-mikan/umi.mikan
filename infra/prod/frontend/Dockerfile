@@ -21,11 +21,8 @@ COPY . .
 RUN cp svelte.config.prod.js svelte.config.js
 RUN --mount=type=cache,target=/frontend/node_modules/.pnpm \
     --mount=type=cache,target=/frontend/.svelte-kit \
-    pnpm exec svelte-kit sync
-RUN --mount=type=cache,target=/frontend/node_modules/.pnpm \
-    --mount=type=cache,target=/frontend/.svelte-kit \
     --mount=type=cache,target=/tmp \
-    pnpm build
+    pnpm exec svelte-kit sync && pnpm build
 
 # Production stage
 FROM node:22-alpine AS production
