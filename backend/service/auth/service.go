@@ -129,7 +129,7 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 
 	// レート制限チェック
 	if s.LoginLimiter != nil {
-		allowed, remaining, resetTime, err := s.LoginLimiter.CheckAttempt(ctx, clientID)
+		allowed, _, resetTime, err := s.LoginLimiter.CheckAttempt(ctx, clientID)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "rate limit check failed: %v", err)
 		}
@@ -138,7 +138,6 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 			return nil, status.Errorf(codes.ResourceExhausted,
 				"too many login attempts, try again in %v", resetTime)
 		}
-
 	}
 	passwordAuth, err := request.ValidateLoginByPasswordRequest(req)
 	if err != nil {
