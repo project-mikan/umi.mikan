@@ -37,13 +37,16 @@ RUN adduser -S sveltekit -u 1001
 COPY --from=builder /frontend/build ./build
 COPY --from=builder /frontend/package.json ./package.json
 
-# Cannot find package '@bufbuild/protobuf'になるので必要↓
-# 必要なnode_modulesを選択的にコピー
-COPY --from=builder /frontend/node_modules/@bufbuild/protobuf/ ./node_modules/@bufbuild/protobuf/
-COPY --from=builder /frontend/node_modules/@connectrpc/connect/ ./node_modules/@connectrpc/connect/
+# 本番環境で必要な依存関係をpackage.jsonに基づいてインストール
+# pnpmのキャッシュマウントを使用しているため、node_modulesは永続化されない
+# package.jsonとpnpm-lock.yamlを使用して一貫性のある依存関係管理を行う
+RUN npm install -g pnpm@latest
 
-# @connectrpc/connect-nodeは本番環境では使用されないため、存在しない場合はスキップ
-RUN mkdir -p ./node_modules/@connectrpc/connect-node || true
+# pnpm-lock.yamlもコピーしてロックファイルを使用
+COPY --from=builder /frontend/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# 本番依存関係のみをインストール（devDependenciesを除外）
+RUN pnpm install --prod --frozen-lockfile
 
 
 

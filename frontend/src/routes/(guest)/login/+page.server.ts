@@ -1,5 +1,9 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { loginByPassword } from "$lib/server/auth-api";
+import {
+	translateErrorMessage,
+	isRateLimitError,
+} from "$lib/utils/error-utils";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -42,8 +46,13 @@ export const actions: Actions = {
 			});
 		} catch (error: unknown) {
 			console.error("Login error:", error);
-			return fail(400, {
-				error: error instanceof Error ? error.message : "Login failed",
+
+			// レート制限エラーの場合は429ステータスを返す
+			const statusCode = isRateLimitError(error) ? 429 : 400;
+
+			return fail(statusCode, {
+				error: translateErrorMessage(error),
+				isRateLimited: isRateLimitError(error),
 			});
 		}
 

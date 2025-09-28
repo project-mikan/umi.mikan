@@ -11,6 +11,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/lock"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/ratelimiter"
 	"github.com/project-mikan/umi.mikan/backend/service/auth"
 	"github.com/project-mikan/umi.mikan/backend/service/diary"
 	"github.com/project-mikan/umi.mikan/backend/service/user"
@@ -54,6 +55,9 @@ func (c *Container) registerProviders() error {
 	if err := c.container.Provide(NewSubscriberConfig); err != nil {
 		return fmt.Errorf("failed to provide NewSubscriberConfig: %w", err)
 	}
+	if err := c.container.Provide(NewRateLimitConfig); err != nil {
+		return fmt.Errorf("failed to provide NewRateLimitConfig: %w", err)
+	}
 
 	// Infrastructure providers
 	if err := c.container.Provide(NewDatabase); err != nil {
@@ -67,6 +71,12 @@ func (c *Container) registerProviders() error {
 	}
 	if err := c.container.Provide(NewLockService); err != nil {
 		return fmt.Errorf("failed to provide NewLockService: %w", err)
+	}
+	if err := c.container.Provide(NewRateLimiter); err != nil {
+		return fmt.Errorf("failed to provide NewRateLimiter: %w", err)
+	}
+	if err := c.container.Provide(NewLoginAttemptLimiter); err != nil {
+		return fmt.Errorf("failed to provide NewLoginAttemptLimiter: %w", err)
 	}
 
 	// Service providers
@@ -125,6 +135,11 @@ type SchedulerConfig struct {
 
 type SubscriberConfig struct {
 	MaxConcurrentJobs int
+}
+
+type RateLimitConfig struct {
+	LoginMaxAttempts int
+	LoginWindow      time.Duration
 }
 
 // LLMClientFactory creates LLM clients
@@ -207,6 +222,19 @@ func NewSubscriberConfig() (*SubscriberConfig, error) {
 	}, nil
 }
 
+// NewRateLimitConfig creates rate limit configuration
+func NewRateLimitConfig() (*RateLimitConfig, error) {
+	config, err := constants.LoadRateLimitConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load rate limit config: %w", err)
+	}
+
+	return &RateLimitConfig{
+		LoginMaxAttempts: config.LoginMaxAttempts,
+		LoginWindow:      config.LoginWindow,
+	}, nil
+}
+
 // NewDatabase creates a database connection
 func NewDatabase(config *DBConfig) (database.DB, error) {
 	db := database.NewDB(config.Host, config.Port, config.User, config.Password, config.DBName)
@@ -237,9 +265,19 @@ func NewLockService(redis rueidis.Client) LockService {
 	return &lockService{redis: redis}
 }
 
+// NewRateLimiter creates a rate limiter
+func NewRateLimiter(redis rueidis.Client) ratelimiter.RateLimiter {
+	return ratelimiter.NewRedisRateLimiter(redis)
+}
+
+// NewLoginAttemptLimiter creates a login attempt limiter
+func NewLoginAttemptLimiter(rateLimiter ratelimiter.RateLimiter, config *RateLimitConfig) *ratelimiter.LoginAttemptLimiter {
+	return ratelimiter.NewLoginAttemptLimiter(rateLimiter, config.LoginMaxAttempts, config.LoginWindow)
+}
+
 // NewAuthService creates an auth service
-func NewAuthService(db database.DB) *auth.AuthEntry {
-	return &auth.AuthEntry{DB: db}
+func NewAuthService(db database.DB, loginLimiter *ratelimiter.LoginAttemptLimiter) *auth.AuthEntry {
+	return &auth.AuthEntry{DB: db, LoginLimiter: loginLimiter}
 }
 
 // NewDiaryService creates a diary service

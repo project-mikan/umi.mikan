@@ -56,7 +56,8 @@
 			"title": "目次",
 			"userSettings": "ユーザー設定",
 			"llmSettings": "LLM設定",
-			"dangerZone": "その他"
+			"dangerZone": "その他",
+			"close": "閉じる"
 		},
 		"username": {
 			"title": "お名前変更",

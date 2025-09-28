@@ -29,6 +29,11 @@ type SubscriberConfig struct {
 	MaxConcurrentJobs int
 }
 
+type RateLimitConfig struct {
+	LoginMaxAttempts int
+	LoginWindow      time.Duration
+}
+
 func LoadEnv(name string) (string, error) {
 	value, ok := os.LookupEnv(name)
 	if !ok {
@@ -152,6 +157,41 @@ func LoadSubscriberConfig() (*SubscriberConfig, error) {
 
 	return &SubscriberConfig{
 		MaxConcurrentJobs: maxConcurrentJobs,
+	}, nil
+}
+
+func LoadRateLimitConfig() (*RateLimitConfig, error) {
+	maxAttemptsStr := os.Getenv("LOGIN_MAX_ATTEMPTS")
+	if maxAttemptsStr == "" {
+		maxAttemptsStr = "5" // デフォルト: 5回まで
+	}
+
+	windowStr := os.Getenv("LOGIN_WINDOW")
+	if windowStr == "" {
+		windowStr = "15m" // デフォルト: 15分
+	}
+
+	maxAttempts, err := strconv.Atoi(maxAttemptsStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid LOGIN_MAX_ATTEMPTS format: %w", err)
+	}
+
+	if maxAttempts <= 0 {
+		return nil, fmt.Errorf("LOGIN_MAX_ATTEMPTS must be a positive integer")
+	}
+
+	window, err := time.ParseDuration(windowStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid LOGIN_WINDOW format: %w", err)
+	}
+
+	if window <= 0 {
+		return nil, fmt.Errorf("LOGIN_WINDOW must be a positive duration")
+	}
+
+	return &RateLimitConfig{
+		LoginMaxAttempts: maxAttempts,
+		LoginWindow:      window,
 	}, nil
 }
 

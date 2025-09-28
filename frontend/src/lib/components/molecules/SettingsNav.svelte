@@ -72,7 +72,10 @@ function scrollToSection(sectionId: string) {
 <!-- Mobile Navigation Overlay -->
 <div
 	class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 {isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
+	role="button"
+	tabindex="0"
 	on:click={onToggle}
+	on:keydown={(e) => e.key === 'Escape' && onToggle()}
 ></div>
 
 <!-- Navigation Sidebar -->
@@ -90,6 +93,7 @@ function scrollToSection(sectionId: string) {
 			type="button"
 			on:click={onToggle}
 			class="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+			aria-label={$_("settings.nav.close")}
 		>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

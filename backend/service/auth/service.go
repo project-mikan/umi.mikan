@@ -4,17 +4,25 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
 	"github.com/project-mikan/umi.mikan/backend/domain/request"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/ratelimiter"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 )
 
 type AuthEntry struct {
 	g.UnimplementedAuthServiceServer
-	DB database.DB
+	DB           database.DB
+	LoginLimiter *ratelimiter.LoginAttemptLimiter
 }
 
 func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPasswordRequest) (*g.AuthResponse, error) {
@@ -59,7 +67,78 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 	return token.ConvertAuthResponse(), nil
 }
 
+// getClientIdentifier クライアントを識別するための文字列を取得（IPアドレス + User-Agent）
+func (s *AuthEntry) getClientIdentifier(ctx context.Context) string {
+	// IPアドレスを取得（プロキシ/ロードバランサー対応）
+	clientIP := s.getClientIP(ctx)
+
+	// User-Agentを取得（gRPC Gateway経由とダイレクト両方に対応）
+	userAgent := s.getUserAgent(ctx)
+
+	return fmt.Sprintf("%s:%s", clientIP, userAgent)
+}
+
+// getClientIP X-Forwarded-Forヘッダーを考慮してクライアントIPを取得
+func (s *AuthEntry) getClientIP(ctx context.Context) string {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		// X-Forwarded-Forヘッダーをチェック（プロキシ/ロードバランサー経由の場合）
+		if xff := md.Get("x-forwarded-for"); len(xff) > 0 {
+			// 最初のIPアドレスを使用（カンマ区切りの場合）
+			ip := strings.TrimSpace(strings.Split(xff[0], ",")[0])
+			if ip != "" {
+				return ip
+			}
+		}
+
+		// X-Real-IPヘッダーもチェック
+		if xri := md.Get("x-real-ip"); len(xri) > 0 && xri[0] != "" {
+			return strings.TrimSpace(xri[0])
+		}
+	}
+
+	// フォールバック: ピア接続からIPアドレスを取得
+	if p, ok := peer.FromContext(ctx); ok {
+		if tcpAddr, ok := p.Addr.(*net.TCPAddr); ok {
+			return tcpAddr.IP.String()
+		}
+	}
+
+	return "unknown"
+}
+
+// getUserAgent 複数のヘッダー形式からUser-Agentを取得
+func (s *AuthEntry) getUserAgent(ctx context.Context) string {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		// 標準的なUser-Agentヘッダー
+		if ua := md.Get("user-agent"); len(ua) > 0 && ua[0] != "" {
+			return ua[0]
+		}
+
+		// gRPC Gateway経由の場合のヘッダー
+		if ua := md.Get("grpcgateway-user-agent"); len(ua) > 0 && ua[0] != "" {
+			return ua[0]
+		}
+	}
+
+	return "unknown"
+}
+
 func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordRequest) (*g.AuthResponse, error) {
+	// クライアント識別子を取得
+	clientID := s.getClientIdentifier(ctx)
+
+	// レート制限チェック
+	if s.LoginLimiter != nil {
+		allowed, _, resetTime, err := s.LoginLimiter.CheckAttempt(ctx, clientID)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "rate limit check failed: %v", err)
+		}
+
+		if !allowed {
+			return nil, status.Errorf(codes.ResourceExhausted,
+				"too many login attempts, try again in %v", resetTime)
+		}
+	}
 	passwordAuth, err := request.ValidateLoginByPasswordRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
@@ -88,6 +167,11 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 	token, err := model.GenerateAuthTokens(userDB.ID.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate auth tokens: %w", err)
+	}
+
+	// ログイン成功時はレート制限をリセット
+	if s.LoginLimiter != nil {
+		_ = s.LoginLimiter.ResetAttempts(ctx, clientID)
 	}
 
 	return token.ConvertAuthResponse(), nil

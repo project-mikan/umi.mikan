@@ -13,6 +13,7 @@ export let linkText: string;
 export let linkHref: string;
 export let showNameField = false;
 export let error: string | undefined = undefined;
+export let isRateLimited = false;
 
 let loading = false;
 let email = "";
@@ -82,7 +83,7 @@ let name = "";
 			</div>
 
 			{#if error}
-				<Alert type="error">
+				<Alert type={isRateLimited ? "warning" : "error"}>
 					{error}
 				</Alert>
 			{/if}
@@ -92,7 +93,7 @@ let name = "";
 					type="submit"
 					variant="primary"
 					size="md"
-					disabled={loading}
+					disabled={loading || isRateLimited}
 					class="group relative w-full flex justify-center"
 				>
 					{loading ? loadingText : submitText}

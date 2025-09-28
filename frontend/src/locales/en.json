@@ -56,7 +56,8 @@
 			"title": "Table of Contents",
 			"userSettings": "User Settings",
 			"llmSettings": "LLM Settings",
-			"dangerZone": "Danger Zone"
+			"dangerZone": "Danger Zone",
+			"close": "Close"
 		},
 		"username": {
 			"title": "Change Username",
