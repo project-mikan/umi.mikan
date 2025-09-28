@@ -79,9 +79,13 @@ runs:
       if: inputs.service == 'frontend'
       uses: actions/cache@v4
       with:
-        path: ~/.pnpm-store
-        key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+        path: |
+          ~/.pnpm-store
+          frontend/node_modules/.pnpm
+          frontend/.svelte-kit
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/src/**/*') }}
         restore-keys: |
+          ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}-
           ${{ runner.os }}-pnpm-
 
     - name: Build and Push to Container Registry
