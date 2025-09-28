@@ -4,17 +4,24 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
 	"github.com/project-mikan/umi.mikan/backend/domain/request"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/ratelimiter"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 )
 
 type AuthEntry struct {
 	g.UnimplementedAuthServiceServer
-	DB database.DB
+	DB           database.DB
+	LoginLimiter *ratelimiter.LoginAttemptLimiter
 }
 
 func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPasswordRequest) (*g.AuthResponse, error) {
@@ -59,7 +66,44 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 	return token.ConvertAuthResponse(), nil
 }
 
+// getClientIdentifier クライアントを識別するための文字列を取得（IPアドレス + User-Agent）
+func (s *AuthEntry) getClientIdentifier(ctx context.Context) string {
+	// IPアドレスを取得
+	clientIP := "unknown"
+	if p, ok := peer.FromContext(ctx); ok {
+		if tcpAddr, ok := p.Addr.(*net.TCPAddr); ok {
+			clientIP = tcpAddr.IP.String()
+		}
+	}
+
+	// User-Agentを取得（もし利用可能であれば）
+	userAgent := "unknown"
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if ua := md.Get("user-agent"); len(ua) > 0 {
+			userAgent = ua[0]
+		}
+	}
+
+	return fmt.Sprintf("%s:%s", clientIP, userAgent)
+}
+
 func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordRequest) (*g.AuthResponse, error) {
+	// クライアント識別子を取得
+	clientID := s.getClientIdentifier(ctx)
+
+	// レート制限チェック
+	if s.LoginLimiter != nil {
+		allowed, remaining, resetTime, err := s.LoginLimiter.CheckAttempt(ctx, clientID)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "rate limit check failed: %v", err)
+		}
+
+		if !allowed {
+			return nil, status.Errorf(codes.ResourceExhausted,
+				"too many login attempts, try again in %v", resetTime)
+		}
+
+	}
 	passwordAuth, err := request.ValidateLoginByPasswordRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
@@ -88,6 +132,11 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 	token, err := model.GenerateAuthTokens(userDB.ID.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate auth tokens: %w", err)
+	}
+
+	// ログイン成功時はレート制限をリセット
+	if s.LoginLimiter != nil {
+		_ = s.LoginLimiter.ResetAttempts(ctx, clientID)
 	}
 
 	return token.ConvertAuthResponse(), nil

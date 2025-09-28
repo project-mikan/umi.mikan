@@ -65,7 +65,6 @@ func ValidateRegisterByPasswordRequest(req *g.RegisterByPasswordRequest) (*Passw
 
 // ログイン時は平文パスワードを返す
 func ValidateLoginByPasswordRequest(req *g.LoginByPasswordRequest) (*PasswordAuth, error) {
-	// TODO: 細かくやる
 	if req.GetEmail() == "" || req.GetPassword() == "" {
 		return nil, fmt.Errorf("email and password must not be empty")
 	}
