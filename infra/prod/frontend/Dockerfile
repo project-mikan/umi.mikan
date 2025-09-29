@@ -9,20 +9,20 @@ RUN npm install -g pnpm@latest
 # Copy package files first for better caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies with cache mount for faster rebuilds
+# Install dependencies (cached layer when package.json unchanged)
 RUN --mount=type=cache,target=/root/.pnpm-store \
-    --mount=type=cache,target=/frontend/node_modules/.pnpm \
     pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy source code after dependency installation
 COPY . .
 
-# Use production config and build with cache mounts
-RUN cp svelte.config.prod.js svelte.config.js
-RUN --mount=type=cache,target=/frontend/node_modules/.pnpm \
+# Build application with cache mounts
+RUN --mount=type=cache,target=/root/.pnpm-store \
     --mount=type=cache,target=/frontend/.svelte-kit \
     --mount=type=cache,target=/tmp \
-    pnpm prepare && pnpm build
+    cp svelte.config.prod.js svelte.config.js && \
+    pnpm prepare && \
+    pnpm build
 
 # Production stage
 FROM node:22-alpine AS production
