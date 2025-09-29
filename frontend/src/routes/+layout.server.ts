@@ -1,5 +1,7 @@
 import { refreshAccessToken } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
+import { ACCESS_TOKEN_COOKIE_OPTIONS, REFRESH_TOKEN_COOKIE_OPTIONS } from "$lib/utils/cookie-utils";
+import { setCSRFToken, getCSRFToken } from "$lib/server/csrf";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ cookies, url }) => {
@@ -11,22 +13,10 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 		try {
 			const response = await refreshAccessToken(refreshToken);
 
-			cookies.set("accessToken", response.accessToken, {
-				path: "/",
-				httpOnly: true,
-				secure: false,
-				sameSite: "strict",
-				maxAge: 60 * 15,
-			});
+			cookies.set("accessToken", response.accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
 
 			if (response.refreshToken) {
-				cookies.set("refreshToken", response.refreshToken, {
-					path: "/",
-					httpOnly: true,
-					secure: false,
-					sameSite: "strict",
-					maxAge: 60 * 60 * 24 * 30,
-				});
+				cookies.set("refreshToken", response.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
 			}
 
 			accessToken = response.accessToken;
@@ -39,8 +29,15 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 		}
 	}
 
+	// CSRFトークンを設定・取得
+	let csrfToken = getCSRFToken(cookies);
+	if (!csrfToken) {
+		csrfToken = setCSRFToken(cookies);
+	}
+
 	return {
 		isAuthenticated,
 		path: url.pathname,
+		csrfToken,
 	};
 };
