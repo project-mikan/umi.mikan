@@ -21,11 +21,8 @@ export default defineConfig({
 				runtimeCaching: [
 					{
 						urlPattern: ({ url }) => {
-							// 環境変数からAPI URLを取得（開発・本番環境共通）
-							const apiBase = process.env.VITE_API_URL || "";
-							return apiBase
-								? url.href.startsWith(apiBase)
-								: url.pathname.startsWith("/api");
+							// SvelteKit API routesをキャッシュ対象とする
+							return url.pathname.startsWith("/api/");
 						},
 						handler: "NetworkFirst",
 						options: {
