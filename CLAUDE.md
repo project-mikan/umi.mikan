@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS. The system includes automated AI summary generation via Redis Pub/Sub, scheduled background processing, distributed locking, and comprehensive monitoring with Prometheus and Grafana.
+**umi.mikan** is a full-stack diary application with Go backend (gRPC) and SvelteKit frontend. The backend uses PostgreSQL with JWT authentication and CSRF protection, while the frontend is built with SvelteKit, TypeScript, and Tailwind CSS with comprehensive security headers. The system includes automated AI summary generation via Redis Pub/Sub, scheduled background processing, distributed locking, and comprehensive monitoring with Prometheus and Grafana.
 
 ## Development Setup
 
@@ -167,7 +167,8 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Clean Architecture**: Domain models, services, and infrastructure layers
 - **Dependency Injection**: uber-go/dig container with centralized DI management (`backend/container/container.go`)
 - **gRPC Services**: AuthService and DiaryService
-- **JWT Authentication**: 15-minute access tokens, 30-day refresh tokens
+- **JWT Authentication**: 15-minute access tokens, 30-day refresh tokens with secure HTTP-only cookies
+- **CSRF Protection**: Token-based CSRF protection with timing-safe validation
 - **Database**: PostgreSQL with xo-generated models (separate test DB)
 - **Hot Reload**: Air tool for automatic backend reloading
 - **Async Processing**: Scheduler and Subscriber services with Redis Pub/Sub
@@ -182,6 +183,8 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Type Safety**: Full TypeScript with generated gRPC types
 - **Internationalization**: svelte-i18n with Japanese and English support
 - **Progressive Web App**: @vite-pwa/sveltekit with offline support and app installation
+- **Security Headers**: Content Security Policy (CSP), X-Frame-Options, X-Content-Type-Options, and Referrer Policy
+- **CSRF Protection**: Client-side CSRF token handling for form submissions
 
 ### Database Schema
 
@@ -233,13 +236,21 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - **cAdvisor**: Container resource usage and performance metrics
   - Tracks job execution rates, duration, success rates, container resources, and logs
 
-## Authentication Flow
+## Security & Authentication Flow
 
+### Authentication
 1. **Registration/Login**: Password-based via AuthService
-2. **Token Storage**: JWT tokens in HTTP-only cookies (frontend)
+2. **Token Storage**: JWT tokens in secure HTTP-only cookies with proper SameSite settings
 3. **Authorization**: Bearer tokens in gRPC metadata headers
 4. **Middleware**: Automatic token validation for protected endpoints
 5. **User Context**: Injected user info available in all services
+
+### Security Features
+1. **CSRF Protection**: Token-based protection with timing-safe validation
+2. **Content Security Policy**: Restrictive CSP headers with environment-specific rules
+3. **Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+4. **Cookie Security**: Secure, HttpOnly, SameSite=Strict cookies with environment-aware settings
+5. **Timing Attack Prevention**: Constant-time string comparison for token validation
 
 ## Development Workflow
 
@@ -261,6 +272,9 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `backend/cmd/subscriber/main.go`: Subscriber service entry point (uses DI container)
 - `backend/container/container.go`: Central dependency injection configuration
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
+- `frontend/src/hooks.server.ts`: Security headers and CSP configuration
+- `frontend/src/lib/server/csrf.ts`: CSRF protection utilities
+- `frontend/src/lib/utils/cookie-utils.ts`: Secure cookie configuration utilities
 - `frontend/src/locales/`: Internationalization files (ja.json, en.json)
 - `frontend/vite.config.ts`: PWA configuration with @vite-pwa/sveltekit
 - `frontend/src/lib/components/PWA*`: PWA install/update components
@@ -318,6 +332,14 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Consistent imports**: Always include necessary i18n imports
 - **PWA considerations**: Ensure components work offline when cached data is available
 
+### Security Guidelines
+
+- **Always use CSRF protection**: Include CSRF tokens in all state-changing forms
+- **Secure cookie configuration**: Use `getSecureCookieOptions()` for all authentication cookies
+- **CSP compliance**: Ensure all new features comply with the defined Content Security Policy
+- **Input validation**: Always validate and sanitize user inputs on both client and server sides
+- **Timing attack prevention**: Use timing-safe comparisons for sensitive operations
+
 ### Code Language Guidelines
 
 - **Comments in Japanese**: All code comments must be written in Japanese
@@ -364,3 +386,11 @@ SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
 - Frontend builds with `docker compose exec frontend pnpm build`, backend builds with `docker compose exec backend go build`
 - PWA manifest and service worker are automatically generated during build
 - PWA icons are pre-generated in `frontend/static/icons/` directory
+
+### Security in Production
+
+- **HTTPS Required**: All cookies are configured with `secure: true` in production environments
+- **CSP Headers**: Content Security Policy headers are automatically applied via `hooks.server.ts`
+- **CSRF Protection**: CSRF tokens are mandatory for all state-changing operations
+- **Cookie Security**: HTTP-only, secure, SameSite=Strict cookies for authentication tokens
+- **CI/CD Optimization**: Build workflow optimized for performance (removed disk space cleanup step)
