@@ -40,7 +40,6 @@ services:
     user: "1000:1000"
     environment:
       NODE_ENV: development
-      VITE_API_URL: http://localhost:2001
     volumes:
       - ./frontend:/frontend
       - ./proto:/proto # 内部で解決できるようにマウント
