@@ -1,6 +1,7 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
+import { page } from "$app/stores";
 import Alert from "../atoms/Alert.svelte";
 import Button from "../atoms/Button.svelte";
 import Link from "../atoms/Link.svelte";
@@ -19,6 +20,8 @@ let loading = false;
 let email = "";
 let password = "";
 let name = "";
+
+$: csrfToken = $page.data.csrfToken;
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -39,6 +42,9 @@ let name = "";
 				};
 			}}
 		>
+			<!-- CSRFトークンを隠しフィールドとして追加 -->
+			<input type="hidden" name="csrfToken" value={csrfToken} />
+
 			<div class="space-y-4">
 				{#if showNameField}
 					<FormField
