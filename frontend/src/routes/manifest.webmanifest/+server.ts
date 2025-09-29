@@ -96,10 +96,11 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 	const manifest = getManifestConfig(lang);
 
-	return new Response(JSON.stringify(manifest), {
+	return new Response(JSON.stringify(manifest, null, 2), {
 		headers: {
 			"Content-Type": "application/manifest+json",
 			"Cache-Control": "public, max-age=3600", // Cache for 1 hour
+			"Access-Control-Allow-Origin": "*", // PWA manifest files need CORS
 		},
 	});
 };

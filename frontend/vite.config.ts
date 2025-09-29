@@ -16,6 +16,8 @@ export default defineConfig({
 				type: "module",
 				navigateFallback: "/",
 			},
+			injectRegister: "auto",
+			mode: process.env.NODE_ENV === "development" ? "development" : "production",
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
 				runtimeCaching: [
@@ -32,6 +34,11 @@ export default defineConfig({
 						},
 					},
 				],
+				// 本番環境での静的ファイル配信を改善
+				navigateFallback: "/",
+				navigateFallbackAllowlist: [/^(?!\/__).*/], // __で始まるパス以外
+				// 本番環境での動的URLマッチングを無効にし、相対パスを使用
+				cleanupOutdatedCaches: true,
 			},
 			manifest: false, // Disable static manifest generation - use dynamic API route instead
 		}),
