@@ -17,7 +17,8 @@ export default defineConfig({
 				navigateFallback: "/",
 			},
 			injectRegister: "auto",
-			mode: process.env.NODE_ENV === "development" ? "development" : "production",
+			mode:
+				process.env.NODE_ENV === "development" ? "development" : "production",
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
 				runtimeCaching: [

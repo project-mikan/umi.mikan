@@ -1,6 +1,9 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { registerByPassword } from "$lib/server/auth-api";
-import { ACCESS_TOKEN_COOKIE_OPTIONS, REFRESH_TOKEN_COOKIE_OPTIONS } from "$lib/utils/cookie-utils";
+import {
+	ACCESS_TOKEN_COOKIE_OPTIONS,
+	REFRESH_TOKEN_COOKIE_OPTIONS,
+} from "$lib/utils/cookie-utils";
 import { validateCSRFToken } from "$lib/server/csrf";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -35,9 +38,17 @@ export const actions: Actions = {
 				password,
 			});
 
-			cookies.set("accessToken", response.accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+			cookies.set(
+				"accessToken",
+				response.accessToken,
+				ACCESS_TOKEN_COOKIE_OPTIONS,
+			);
 
-			cookies.set("refreshToken", response.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+			cookies.set(
+				"refreshToken",
+				response.refreshToken,
+				REFRESH_TOKEN_COOKIE_OPTIONS,
+			);
 		} catch (error: unknown) {
 			console.error("Register error:", error);
 			let errorMessage = "Registration failed";

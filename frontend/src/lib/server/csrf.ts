@@ -36,7 +36,10 @@ export function getCSRFToken(cookies: Cookies): string | undefined {
 /**
  * CSRFトークンを検証します
  */
-export function validateCSRFToken(cookies: Cookies, submittedToken: string | null): boolean {
+export function validateCSRFToken(
+	cookies: Cookies,
+	submittedToken: string | null,
+): boolean {
 	if (!submittedToken) {
 		return false;
 	}

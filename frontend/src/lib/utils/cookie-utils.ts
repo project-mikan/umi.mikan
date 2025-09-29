@@ -1,7 +1,7 @@
 import { dev } from "$app/environment";
 
 export interface CookieOptions {
-	path?: string;
+	path: string;
 	httpOnly?: boolean;
 	secure?: boolean;
 	sameSite?: "strict" | "lax" | "none";
@@ -23,4 +23,6 @@ export function getSecureCookieOptions(maxAge: number): CookieOptions {
 export const ACCESS_TOKEN_COOKIE_OPTIONS = getSecureCookieOptions(60 * 15);
 
 // リフレッシュトークン用のクッキー設定（30日）
-export const REFRESH_TOKEN_COOKIE_OPTIONS = getSecureCookieOptions(60 * 60 * 24 * 30);
+export const REFRESH_TOKEN_COOKIE_OPTIONS = getSecureCookieOptions(
+	60 * 60 * 24 * 30,
+);

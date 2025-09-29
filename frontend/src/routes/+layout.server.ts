@@ -1,6 +1,9 @@
 import { refreshAccessToken } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
-import { ACCESS_TOKEN_COOKIE_OPTIONS, REFRESH_TOKEN_COOKIE_OPTIONS } from "$lib/utils/cookie-utils";
+import {
+	ACCESS_TOKEN_COOKIE_OPTIONS,
+	REFRESH_TOKEN_COOKIE_OPTIONS,
+} from "$lib/utils/cookie-utils";
 import { setCSRFToken, getCSRFToken } from "$lib/server/csrf";
 import type { LayoutServerLoad } from "./$types";
 
@@ -13,10 +16,18 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 		try {
 			const response = await refreshAccessToken(refreshToken);
 
-			cookies.set("accessToken", response.accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+			cookies.set(
+				"accessToken",
+				response.accessToken,
+				ACCESS_TOKEN_COOKIE_OPTIONS,
+			);
 
 			if (response.refreshToken) {
-				cookies.set("refreshToken", response.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+				cookies.set(
+					"refreshToken",
+					response.refreshToken,
+					REFRESH_TOKEN_COOKIE_OPTIONS,
+				);
 			}
 
 			accessToken = response.accessToken;
