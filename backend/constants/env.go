@@ -58,6 +58,7 @@ func LoadJWTSecret() (string, error) {
 	return value, nil
 }
 
+
 func LoadDBConfig() (*DBConfig, error) {
 	host, err := LoadEnv("DB_HOST")
 	if err != nil {
