@@ -71,7 +71,7 @@ function scrollToSection(sectionId: string) {
 
 <!-- Mobile Navigation Overlay -->
 <div
-	class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 {isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
+	class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300 {isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
 	role="button"
 	tabindex="0"
 	on:click={onToggle}
@@ -79,7 +79,7 @@ function scrollToSection(sectionId: string) {
 ></div>
 
 <!-- Navigation Sidebar -->
-<nav class="bg-white dark:bg-gray-800 shadow-md z-50
+<nav class="bg-white dark:bg-gray-800 shadow-md z-40
 	md:block md:relative md:transform-none md:opacity-100 md:w-auto md:rounded-lg md:p-4 md:sticky md:top-4
 	{isOpen ? 'fixed top-0 left-0 h-full w-full transform translate-x-0 p-6 overflow-y-auto' : 'hidden md:block md:translate-x-0'}
 	transition-transform duration-300 ease-in-out md:transition-none">
