@@ -20,7 +20,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// 本番環境ではより厳しいCSPを設定
 	if (process.env.NODE_ENV === "production") {
-		cspDirectives[5] = "connect-src 'self' https://backend:8080"; // HTTPSのみ
+		cspDirectives[5] = "connect-src 'self' http://backend:8080"; // Docker環境でのHTTP接続
 	}
 
 	response.headers.set("Content-Security-Policy", cspDirectives.join("; "));
