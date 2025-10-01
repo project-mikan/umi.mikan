@@ -2,15 +2,26 @@
 // @generated from file auth/auth.proto (package auth, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type {
+	GenFile,
+	GenMessage,
+	GenService,
+} from "@bufbuild/protobuf/codegenv2";
+import {
+	fileDesc,
+	messageDesc,
+	serviceDesc,
+} from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file auth/auth.proto.
  */
-export const file_auth_auth: GenFile = /*@__PURE__*/
-  fileDesc("Cg9hdXRoL2F1dGgucHJvdG8SBGF1dGgiHgocR2V0UmVnaXN0cmF0aW9uQ29uZmlnUmVxdWVzdCI+Ch1HZXRSZWdpc3RyYXRpb25Db25maWdSZXNwb25zZRIdChVyZWdpc3Rlcl9rZXlfcmVxdWlyZWQYASABKAgiMgoZUmVmcmVzaEFjY2Vzc1Rva2VuUmVxdWVzdBIVCg1yZWZyZXNoX3Rva2VuGAEgASgJImAKGVJlZ2lzdGVyQnlQYXNzd29yZFJlcXVlc3QSDQoFZW1haWwYASABKAkSEAoIcGFzc3dvcmQYAiABKAkSDAoEbmFtZRgDIAEoCRIUCgxyZWdpc3Rlcl9rZXkYBCABKAkiOQoWTG9naW5CeVBhc3N3b3JkUmVxdWVzdBINCgVlbWFpbBgBIAEoCRIQCghwYXNzd29yZBgCIAEoCSJjCgxBdXRoUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhIKCnRva2VuX3R5cGUYAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoBRIVCg1yZWZyZXNoX3Rva2VuGAQgASgJMsoCCgtBdXRoU2VydmljZRJgChVHZXRSZWdpc3RyYXRpb25Db25maWcSIi5hdXRoLkdldFJlZ2lzdHJhdGlvbkNvbmZpZ1JlcXVlc3QaIy5hdXRoLkdldFJlZ2lzdHJhdGlvbkNvbmZpZ1Jlc3BvbnNlEkkKElJlZ2lzdGVyQnlQYXNzd29yZBIfLmF1dGguUmVnaXN0ZXJCeVBhc3N3b3JkUmVxdWVzdBoSLmF1dGguQXV0aFJlc3BvbnNlEkMKD0xvZ2luQnlQYXNzd29yZBIcLmF1dGguTG9naW5CeVBhc3N3b3JkUmVxdWVzdBoSLmF1dGguQXV0aFJlc3BvbnNlEkkKElJlZnJlc2hBY2Nlc3NUb2tlbhIfLmF1dGguUmVmcmVzaEFjY2Vzc1Rva2VuUmVxdWVzdBoSLmF1dGguQXV0aFJlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM");
+export const file_auth_auth: GenFile =
+	/*@__PURE__*/
+	fileDesc(
+		"Cg9hdXRoL2F1dGgucHJvdG8SBGF1dGgiHgocR2V0UmVnaXN0cmF0aW9uQ29uZmlnUmVxdWVzdCI+Ch1HZXRSZWdpc3RyYXRpb25Db25maWdSZXNwb25zZRIdChVyZWdpc3Rlcl9rZXlfcmVxdWlyZWQYASABKAgiMgoZUmVmcmVzaEFjY2Vzc1Rva2VuUmVxdWVzdBIVCg1yZWZyZXNoX3Rva2VuGAEgASgJImAKGVJlZ2lzdGVyQnlQYXNzd29yZFJlcXVlc3QSDQoFZW1haWwYASABKAkSEAoIcGFzc3dvcmQYAiABKAkSDAoEbmFtZRgDIAEoCRIUCgxyZWdpc3Rlcl9rZXkYBCABKAkiOQoWTG9naW5CeVBhc3N3b3JkUmVxdWVzdBINCgVlbWFpbBgBIAEoCRIQCghwYXNzd29yZBgCIAEoCSJjCgxBdXRoUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhIKCnRva2VuX3R5cGUYAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoBRIVCg1yZWZyZXNoX3Rva2VuGAQgASgJMsoCCgtBdXRoU2VydmljZRJgChVHZXRSZWdpc3RyYXRpb25Db25maWcSIi5hdXRoLkdldFJlZ2lzdHJhdGlvbkNvbmZpZ1JlcXVlc3QaIy5hdXRoLkdldFJlZ2lzdHJhdGlvbkNvbmZpZ1Jlc3BvbnNlEkkKElJlZ2lzdGVyQnlQYXNzd29yZBIfLmF1dGguUmVnaXN0ZXJCeVBhc3N3b3JkUmVxdWVzdBoSLmF1dGguQXV0aFJlc3BvbnNlEkMKD0xvZ2luQnlQYXNzd29yZBIcLmF1dGguTG9naW5CeVBhc3N3b3JkUmVxdWVzdBoSLmF1dGguQXV0aFJlc3BvbnNlEkkKElJlZnJlc2hBY2Nlc3NUb2tlbhIfLmF1dGguUmVmcmVzaEFjY2Vzc1Rva2VuUmVxdWVzdBoSLmF1dGguQXV0aFJlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM",
+	);
 
 /**
  * 新規登録設定取得用のリクエスト
@@ -19,91 +30,98 @@ export const file_auth_auth: GenFile = /*@__PURE__*/
  *
  * @generated from message auth.GetRegistrationConfigRequest
  */
-export type GetRegistrationConfigRequest = Message<"auth.GetRegistrationConfigRequest"> & {
-};
+export type GetRegistrationConfigRequest =
+	Message<"auth.GetRegistrationConfigRequest"> & {};
 
 /**
  * Describes the message auth.GetRegistrationConfigRequest.
  * Use `create(GetRegistrationConfigRequestSchema)` to create a new message.
  */
-export const GetRegistrationConfigRequestSchema: GenMessage<GetRegistrationConfigRequest> = /*@__PURE__*/
-  messageDesc(file_auth_auth, 0);
+export const GetRegistrationConfigRequestSchema: GenMessage<GetRegistrationConfigRequest> =
+	/*@__PURE__*/
+	messageDesc(file_auth_auth, 0);
 
 /**
  * 新規登録設定取得用のレスポンス
  *
  * @generated from message auth.GetRegistrationConfigResponse
  */
-export type GetRegistrationConfigResponse = Message<"auth.GetRegistrationConfigResponse"> & {
-  /**
-   * 登録キーが必要かどうか
-   *
-   * @generated from field: bool register_key_required = 1;
-   */
-  registerKeyRequired: boolean;
-};
+export type GetRegistrationConfigResponse =
+	Message<"auth.GetRegistrationConfigResponse"> & {
+		/**
+		 * 登録キーが必要かどうか
+		 *
+		 * @generated from field: bool register_key_required = 1;
+		 */
+		registerKeyRequired: boolean;
+	};
 
 /**
  * Describes the message auth.GetRegistrationConfigResponse.
  * Use `create(GetRegistrationConfigResponseSchema)` to create a new message.
  */
-export const GetRegistrationConfigResponseSchema: GenMessage<GetRegistrationConfigResponse> = /*@__PURE__*/
-  messageDesc(file_auth_auth, 1);
+export const GetRegistrationConfigResponseSchema: GenMessage<GetRegistrationConfigResponse> =
+	/*@__PURE__*/
+	messageDesc(file_auth_auth, 1);
 
 /**
  * アクセストークン更新用のリクエスト
  *
  * @generated from message auth.RefreshAccessTokenRequest
  */
-export type RefreshAccessTokenRequest = Message<"auth.RefreshAccessTokenRequest"> & {
-  /**
-   * @generated from field: string refresh_token = 1;
-   */
-  refreshToken: string;
-};
+export type RefreshAccessTokenRequest =
+	Message<"auth.RefreshAccessTokenRequest"> & {
+		/**
+		 * @generated from field: string refresh_token = 1;
+		 */
+		refreshToken: string;
+	};
 
 /**
  * Describes the message auth.RefreshAccessTokenRequest.
  * Use `create(RefreshAccessTokenRequestSchema)` to create a new message.
  */
-export const RefreshAccessTokenRequestSchema: GenMessage<RefreshAccessTokenRequest> = /*@__PURE__*/
-  messageDesc(file_auth_auth, 2);
+export const RefreshAccessTokenRequestSchema: GenMessage<RefreshAccessTokenRequest> =
+	/*@__PURE__*/
+	messageDesc(file_auth_auth, 2);
 
 /**
  * パスワード新規登録用のリクエスト
  *
  * @generated from message auth.RegisterByPasswordRequest
  */
-export type RegisterByPasswordRequest = Message<"auth.RegisterByPasswordRequest"> & {
-  /**
-   * @generated from field: string email = 1;
-   */
-  email: string;
+export type RegisterByPasswordRequest =
+	Message<"auth.RegisterByPasswordRequest"> & {
+		/**
+		 * @generated from field: string email = 1;
+		 */
+		email: string;
 
-  /**
-   * @generated from field: string password = 2;
-   */
-  password: string;
+		/**
+		 * @generated from field: string password = 2;
+		 */
+		password: string;
 
-  /**
-   * @generated from field: string name = 3;
-   */
-  name: string;
+		/**
+		 * @generated from field: string name = 3;
+		 */
+		name: string;
 
-  /**
-   * 新規登録キー（REGISTER_KEYが設定されている場合に必須）
-   *
-   * @generated from field: string register_key = 4;
-   */
-  registerKey: string;
-};
+		/**
+		 * 新規登録キー（REGISTER_KEYが設定されている場合に必須）
+		 *
+		 * @generated from field: string register_key = 4;
+		 */
+		registerKey: string;
+	};
 
 /**
  * Describes the message auth.RegisterByPasswordRequest.
  * Use `create(RegisterByPasswordRequestSchema)` to create a new message.
  */
-export const RegisterByPasswordRequestSchema: GenMessage<RegisterByPasswordRequest> = /*@__PURE__*/
-  messageDesc(file_auth_auth, 3);
+export const RegisterByPasswordRequestSchema: GenMessage<RegisterByPasswordRequest> =
+	/*@__PURE__*/
+	messageDesc(file_auth_auth, 3);
 
 /**
  * パスワードログイン用のリクエスト
@@ -111,23 +129,24 @@ export const RegisterByPasswordRequestSchema: GenMessage<RegisterByPasswordReque
  * @generated from message auth.LoginByPasswordRequest
  */
 export type LoginByPasswordRequest = Message<"auth.LoginByPasswordRequest"> & {
-  /**
-   * @generated from field: string email = 1;
-   */
-  email: string;
+	/**
+	 * @generated from field: string email = 1;
+	 */
+	email: string;
 
-  /**
-   * @generated from field: string password = 2;
-   */
-  password: string;
+	/**
+	 * @generated from field: string password = 2;
+	 */
+	password: string;
 };
 
 /**
  * Describes the message auth.LoginByPasswordRequest.
  * Use `create(LoginByPasswordRequestSchema)` to create a new message.
  */
-export const LoginByPasswordRequestSchema: GenMessage<LoginByPasswordRequest> = /*@__PURE__*/
-  messageDesc(file_auth_auth, 4);
+export const LoginByPasswordRequestSchema: GenMessage<LoginByPasswordRequest> =
+	/*@__PURE__*/
+	messageDesc(file_auth_auth, 4);
 
 /**
  * レスポンスはログイン方法に関わらず共通
@@ -135,80 +154,79 @@ export const LoginByPasswordRequestSchema: GenMessage<LoginByPasswordRequest> = 
  * @generated from message auth.AuthResponse
  */
 export type AuthResponse = Message<"auth.AuthResponse"> & {
-  /**
-   * @generated from field: string access_token = 1;
-   */
-  accessToken: string;
+	/**
+	 * @generated from field: string access_token = 1;
+	 */
+	accessToken: string;
 
-  /**
-   * @generated from field: string token_type = 2;
-   */
-  tokenType: string;
+	/**
+	 * @generated from field: string token_type = 2;
+	 */
+	tokenType: string;
 
-  /**
-   * 秒単位
-   *
-   * @generated from field: int32 expires_in = 3;
-   */
-  expiresIn: number;
+	/**
+	 * 秒単位
+	 *
+	 * @generated from field: int32 expires_in = 3;
+	 */
+	expiresIn: number;
 
-  /**
-   * @generated from field: string refresh_token = 4;
-   */
-  refreshToken: string;
+	/**
+	 * @generated from field: string refresh_token = 4;
+	 */
+	refreshToken: string;
 };
 
 /**
  * Describes the message auth.AuthResponse.
  * Use `create(AuthResponseSchema)` to create a new message.
  */
-export const AuthResponseSchema: GenMessage<AuthResponse> = /*@__PURE__*/
-  messageDesc(file_auth_auth, 5);
+export const AuthResponseSchema: GenMessage<AuthResponse> =
+	/*@__PURE__*/
+	messageDesc(file_auth_auth, 5);
 
 /**
  * @generated from service auth.AuthService
  */
 export const AuthService: GenService<{
-  /**
-   * 新規登録設定の取得
-   *
-   * @generated from rpc auth.AuthService.GetRegistrationConfig
-   */
-  getRegistrationConfig: {
-    methodKind: "unary";
-    input: typeof GetRegistrationConfigRequestSchema;
-    output: typeof GetRegistrationConfigResponseSchema;
-  },
-  /**
-   * 新規登録
-   *
-   * @generated from rpc auth.AuthService.RegisterByPassword
-   */
-  registerByPassword: {
-    methodKind: "unary";
-    input: typeof RegisterByPasswordRequestSchema;
-    output: typeof AuthResponseSchema;
-  },
-  /**
-   * ログイン
-   *
-   * @generated from rpc auth.AuthService.LoginByPassword
-   */
-  loginByPassword: {
-    methodKind: "unary";
-    input: typeof LoginByPasswordRequestSchema;
-    output: typeof AuthResponseSchema;
-  },
-  /**
-   * AccessTokenの更新
-   *
-   * @generated from rpc auth.AuthService.RefreshAccessToken
-   */
-  refreshAccessToken: {
-    methodKind: "unary";
-    input: typeof RefreshAccessTokenRequestSchema;
-    output: typeof AuthResponseSchema;
-  },
-}> = /*@__PURE__*/
-  serviceDesc(file_auth_auth, 0);
-
+	/**
+	 * 新規登録設定の取得
+	 *
+	 * @generated from rpc auth.AuthService.GetRegistrationConfig
+	 */
+	getRegistrationConfig: {
+		methodKind: "unary";
+		input: typeof GetRegistrationConfigRequestSchema;
+		output: typeof GetRegistrationConfigResponseSchema;
+	};
+	/**
+	 * 新規登録
+	 *
+	 * @generated from rpc auth.AuthService.RegisterByPassword
+	 */
+	registerByPassword: {
+		methodKind: "unary";
+		input: typeof RegisterByPasswordRequestSchema;
+		output: typeof AuthResponseSchema;
+	};
+	/**
+	 * ログイン
+	 *
+	 * @generated from rpc auth.AuthService.LoginByPassword
+	 */
+	loginByPassword: {
+		methodKind: "unary";
+		input: typeof LoginByPasswordRequestSchema;
+		output: typeof AuthResponseSchema;
+	};
+	/**
+	 * AccessTokenの更新
+	 *
+	 * @generated from rpc auth.AuthService.RefreshAccessToken
+	 */
+	refreshAccessToken: {
+		methodKind: "unary";
+		input: typeof RefreshAccessTokenRequestSchema;
+		output: typeof AuthResponseSchema;
+	};
+}> = /*@__PURE__*/ serviceDesc(file_auth_auth, 0);

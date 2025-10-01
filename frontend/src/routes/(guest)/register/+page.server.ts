@@ -1,5 +1,8 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { registerByPassword, getRegistrationConfig } from "$lib/server/auth-api";
+import {
+	registerByPassword,
+	getRegistrationConfig,
+} from "$lib/server/auth-api";
 import {
 	ACCESS_TOKEN_COOKIE_OPTIONS,
 	REFRESH_TOKEN_COOKIE_OPTIONS,
@@ -24,7 +27,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 	}
 
 	return {
-		registerKeyRequired
+		registerKeyRequired,
 	};
 };
 
