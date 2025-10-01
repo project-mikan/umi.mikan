@@ -31,8 +31,22 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 	response.headers.set(
 		"Permissions-Policy",
-		"camera=(), microphone=(), geolocation=()",
+		"camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
 	);
+
+	// XSS保護
+	response.headers.set("X-XSS-Protection", "1; mode=block");
+
+	// コンテンツタイプ検出を無効化（追加のセキュリティ）
+	response.headers.set("X-Download-Options", "noopen");
+
+	// HTTPS Strict Transport Security (本番環境のみ)
+	if (process.env.NODE_ENV === "production") {
+		response.headers.set(
+			"Strict-Transport-Security",
+			"max-age=31536000; includeSubDomains; preload",
+		);
+	}
 
 	return response;
 };
