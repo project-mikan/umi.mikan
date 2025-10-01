@@ -64,11 +64,12 @@ p-log:
 grpc-go:
 	# 削除分は反映されないのでrm -rfしてから実行
 	rm -rf backend/infrastructure/grpc/*
-	protoc --go_out=backend/ \
+	docker compose exec backend protoc --proto_path=/proto \
+	--go_out=. \
 	--go_opt=module=github.com/project-mikan/umi.mikan/backend \
-	--go-grpc_out=backend/ \
+	--go-grpc_out=. \
 	--go-grpc_opt=module=github.com/project-mikan/umi.mikan/backend \
-	proto/**/*.proto
+	auth/auth.proto diary/diary.proto user/user.proto
 
 grpc-ts:
 	# 削除分は反映されないのでrm -rfしてから実行
