@@ -75,6 +75,7 @@ grpc-ts:
 	# 削除分は反映されないのでrm -rfしてから実行
 	rm -rf frontend/src/lib/grpc/*
 	docker compose exec frontend pnpm exec buf generate
+	docker compose exec frontend pnpm format
 
 
 grpc:
