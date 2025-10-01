@@ -3,7 +3,9 @@ import { createClient } from "@connectrpc/connect";
 import { createGrpcTransport } from "@connectrpc/connect-node";
 import {
 	type AuthResponse,
+	type GetRegistrationConfigResponse,
 	AuthService,
+	GetRegistrationConfigRequestSchema,
 	LoginByPasswordRequestSchema,
 	RefreshAccessTokenRequestSchema,
 	RegisterByPasswordRequestSchema,
@@ -32,6 +34,12 @@ const transport = createGrpcTransport({
 
 const authClient = createClient(AuthService, transport);
 
+export async function getRegistrationConfig(): Promise<GetRegistrationConfigResponse> {
+	const request = create(GetRegistrationConfigRequestSchema, {});
+	const response = await authClient.getRegistrationConfig(request);
+	return response;
+}
+
 export interface LoginByPasswordParams {
 	email: string;
 	password: string;
@@ -41,6 +49,7 @@ export interface RegisterByPasswordParams {
 	email: string;
 	password: string;
 	name: string;
+	registerKey: string;
 }
 
 export async function loginByPassword(
@@ -62,6 +71,7 @@ export async function registerByPassword(
 		email: params.email,
 		password: params.password,
 		name: params.name,
+		registerKey: params.registerKey,
 	});
 
 	const response = await authClient.registerByPassword(request);

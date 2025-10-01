@@ -277,7 +277,12 @@ func NewLoginAttemptLimiter(rateLimiter ratelimiter.RateLimiter, config *RateLim
 
 // NewAuthService creates an auth service
 func NewAuthService(db database.DB, loginLimiter *ratelimiter.LoginAttemptLimiter) *auth.AuthEntry {
-	return &auth.AuthEntry{DB: db, LoginLimiter: loginLimiter}
+	registerKey := constants.LoadRegisterKey()
+	return &auth.AuthEntry{
+		DB:           db,
+		LoginLimiter: loginLimiter,
+		RegisterKey:  registerKey,
+	}
 }
 
 // NewDiaryService creates a diary service

@@ -150,6 +150,7 @@
 			"name": "氏名",
 			"email": "メールアドレス",
 			"password": "パスワード",
+			"registerKey": "登録キー",
 			"submit": "サインアップ",
 			"submitting": "サインアップ中...",
 			"hasAccount": "すでにアカウントをお持ちの方はこちら",

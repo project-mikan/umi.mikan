@@ -251,6 +251,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 3. **Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 4. **Cookie Security**: Secure, HttpOnly, SameSite=Strict cookies with environment-aware settings
 5. **Timing Attack Prevention**: Constant-time string comparison for token validation
+6. **Registration Key Protection**: Optional registration key (REGISTER_KEY) to restrict new user signups
 
 ## Development Workflow
 
@@ -377,6 +378,35 @@ Examples:
 SUBSCRIBER_MAX_CONCURRENT_JOBS=5    # Limit to 5 concurrent jobs
 SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
 ```
+
+### Registration Key Configuration
+
+Environment variable for restricting new user registrations:
+
+- `REGISTER_KEY`: Secret key required for new user registration (optional, no default)
+
+**Usage:**
+- **Not set**: Anyone can register without a key (default behavior)
+- **Set**: Users must provide the correct registration key during signup
+
+**Configuration:**
+1. Set `REGISTER_KEY` value in the `backend` service in `compose.yml`
+2. Backend validates the key during registration
+3. Frontend always displays the registration key field (users can leave it empty if not required)
+
+Examples:
+```yaml
+# compose.yml - backend service only
+environment:
+  REGISTER_KEY: "your-secret-registration-key"
+```
+
+**Security Notes:**
+- Use a strong, unique key for production environments
+- Keys are validated with timing-safe comparison to prevent timing attacks
+- Invalid or missing keys return appropriate error codes:
+  - `codes.InvalidArgument`: Registration key is required but not provided
+  - `codes.PermissionDenied`: Provided registration key is incorrect
 
 ## Production Notes
 

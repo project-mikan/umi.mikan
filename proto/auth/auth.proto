@@ -5,6 +5,9 @@ package auth;
 option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
 
 service AuthService {
+  // 新規登録設定の取得
+  rpc GetRegistrationConfig(GetRegistrationConfigRequest) returns (GetRegistrationConfigResponse);
+
   // 新規登録
   rpc RegisterByPassword(RegisterByPasswordRequest) returns (AuthResponse);
 
@@ -13,6 +16,16 @@ service AuthService {
 
   // AccessTokenの更新
   rpc RefreshAccessToken(RefreshAccessTokenRequest) returns (AuthResponse);
+}
+
+// 新規登録設定取得用のリクエスト
+message GetRegistrationConfigRequest {
+  // 空のリクエスト
+}
+
+// 新規登録設定取得用のレスポンス
+message GetRegistrationConfigResponse {
+  bool register_key_required = 1; // 登録キーが必要かどうか
 }
 
 // アクセストークン更新用のリクエスト
@@ -25,6 +38,7 @@ message RegisterByPasswordRequest {
   string email = 1;
   string password = 2;
   string name = 3;
+  string register_key = 4; // 新規登録キー（REGISTER_KEYが設定されている場合に必須）
 }
 
 // パスワードログイン用のリクエスト

@@ -13,6 +13,7 @@ export let loadingText: string;
 export let linkText: string;
 export let linkHref: string;
 export let showNameField = false;
+export let showRegisterKeyField = false;
 export let error: string | undefined = undefined;
 export let isRateLimited = false;
 
@@ -20,6 +21,7 @@ let loading = false;
 let email = "";
 let password = "";
 let name = "";
+let registerKey = "";
 
 $: csrfToken = $page.data.csrfToken;
 </script>
@@ -86,6 +88,21 @@ $: csrfToken = $page.data.csrfToken;
 					srOnlyLabel
 					bind:value={password}
 				/>
+
+				{#if showRegisterKeyField}
+					<FormField
+						type="input"
+						inputType="text"
+						label={$_('auth.register.registerKey')}
+						id="registerKey"
+						name="registerKey"
+						autocomplete="off"
+						placeholder={$_('auth.register.registerKey')}
+						required
+						srOnlyLabel
+						bind:value={registerKey}
+					/>
+				{/if}
 			</div>
 
 			{#if error}

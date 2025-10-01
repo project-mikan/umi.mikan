@@ -23,9 +23,29 @@ type AuthEntry struct {
 	g.UnimplementedAuthServiceServer
 	DB           database.DB
 	LoginLimiter *ratelimiter.LoginAttemptLimiter
+	RegisterKey  string // REGISTER_KEY環境変数の値（空文字の場合は制限なし）
+}
+
+func (s *AuthEntry) GetRegistrationConfig(ctx context.Context, req *g.GetRegistrationConfigRequest) (*g.GetRegistrationConfigResponse, error) {
+	// REGISTER_KEYが設定されている場合は登録キーが必要
+	registerKeyRequired := s.RegisterKey != ""
+	return &g.GetRegistrationConfigResponse{
+		RegisterKeyRequired: registerKeyRequired,
+	}, nil
 }
 
 func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPasswordRequest) (*g.AuthResponse, error) {
+	// --- REGISTER_KEYのチェック ---
+	if s.RegisterKey != "" {
+		// REGISTER_KEYが設定されている場合は、リクエストのregister_keyと一致する必要がある
+		if req.GetRegisterKey() == "" {
+			return nil, status.Error(codes.InvalidArgument, "register_key is required")
+		}
+		if req.GetRegisterKey() != s.RegisterKey {
+			return nil, status.Error(codes.PermissionDenied, "invalid register_key")
+		}
+	}
+
 	passwordAuth, err := request.ValidateRegisterByPasswordRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)

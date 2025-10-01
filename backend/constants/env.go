@@ -58,7 +58,6 @@ func LoadJWTSecret() (string, error) {
 	return value, nil
 }
 
-
 func LoadDBConfig() (*DBConfig, error) {
 	host, err := LoadEnv("DB_HOST")
 	if err != nil {
@@ -206,4 +205,9 @@ func LoadGRPCReflectionEnabled() bool {
 
 	// Development環境ではデフォルトで有効
 	return true
+}
+
+// LoadRegisterKey REGISTER_KEY環境変数を読み込む（設定されていない場合は空文字を返す）
+func LoadRegisterKey() string {
+	return os.Getenv("REGISTER_KEY")
 }
