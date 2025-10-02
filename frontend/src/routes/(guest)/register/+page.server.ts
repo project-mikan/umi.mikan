@@ -1,5 +1,8 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { registerByPassword } from "$lib/server/auth-api";
+import {
+	registerByPassword,
+	getRegistrationConfig,
+} from "$lib/server/auth-api";
 import {
 	ACCESS_TOKEN_COOKIE_OPTIONS,
 	REFRESH_TOKEN_COOKIE_OPTIONS,
@@ -12,6 +15,20 @@ export const load: PageServerLoad = async ({ parent }) => {
 	if (isAuthenticated) {
 		throw redirect(302, "/");
 	}
+
+	// backendからREGISTER_KEYが設定されているかを取得
+	let registerKeyRequired = false;
+	try {
+		const config = await getRegistrationConfig();
+		registerKeyRequired = config.registerKeyRequired;
+	} catch (error) {
+		// バックエンドが起動中などでエラーの場合は、デフォルトでfalseを返す
+		console.error("Failed to get registration config:", error);
+	}
+
+	return {
+		registerKeyRequired,
+	};
 };
 
 export const actions: Actions = {
@@ -20,6 +37,7 @@ export const actions: Actions = {
 		const name = data.get("name") as string;
 		const email = data.get("email") as string;
 		const password = data.get("password") as string;
+		const registerKey = data.get("registerKey") as string;
 		const csrfToken = data.get("csrfToken") as string;
 
 		// CSRF トークンの検証
@@ -36,6 +54,7 @@ export const actions: Actions = {
 				name,
 				email,
 				password,
+				registerKey: registerKey || "",
 			});
 
 			cookies.set(

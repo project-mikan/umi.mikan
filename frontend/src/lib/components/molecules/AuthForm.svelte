@@ -13,6 +13,7 @@ export let loadingText: string;
 export let linkText: string;
 export let linkHref: string;
 export let showNameField = false;
+export let showRegisterKeyField = false;
 export let error: string | undefined = undefined;
 export let isRateLimited = false;
 
@@ -20,8 +21,22 @@ let loading = false;
 let email = "";
 let password = "";
 let name = "";
+let registerKey = "";
+let validationError = "";
 
 $: csrfToken = $page.data.csrfToken;
+
+// クライアント側の検証
+function validateForm(): boolean {
+	validationError = "";
+
+	if (showRegisterKeyField && !registerKey.trim()) {
+		validationError = $_("auth.register.registerKeyRequired");
+		return false;
+	}
+
+	return true;
+}
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -31,10 +46,14 @@ $: csrfToken = $page.data.csrfToken;
 				{title}
 			</h2>
 		</div>
-		<form 
-			class="mt-8 space-y-6" 
-			method="POST" 
+		<form
+			class="mt-8 space-y-6"
+			method="POST"
 			use:enhance={({ formElement, formData, action, cancel }) => {
+				if (!validateForm()) {
+					cancel();
+					return;
+				}
 				loading = true;
 				return async ({ result, update }) => {
 					loading = false;
@@ -86,9 +105,28 @@ $: csrfToken = $page.data.csrfToken;
 					srOnlyLabel
 					bind:value={password}
 				/>
+
+				{#if showRegisterKeyField}
+					<FormField
+						type="input"
+						inputType="text"
+						label={$_('auth.register.registerKey')}
+						id="registerKey"
+						name="registerKey"
+						autocomplete="off"
+						placeholder={$_('auth.register.registerKey')}
+						required
+						srOnlyLabel
+						bind:value={registerKey}
+					/>
+				{/if}
 			</div>
 
-			{#if error}
+			{#if validationError}
+				<Alert type="error">
+					{validationError}
+				</Alert>
+			{:else if error}
 				<Alert type={isRateLimited ? "warning" : "error"}>
 					{error}
 				</Alert>

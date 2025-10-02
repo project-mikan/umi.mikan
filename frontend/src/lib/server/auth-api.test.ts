@@ -21,11 +21,13 @@ describe("Auth API Types and Validation", () => {
 				email: "test@example.com",
 				password: "password123",
 				name: "Test User",
+				registerKey: "",
 			};
 
 			expect(validParams.email).toBe("test@example.com");
 			expect(validParams.password).toBe("password123");
 			expect(validParams.name).toBe("Test User");
+			expect(validParams.registerKey).toBe("");
 		});
 	});
 

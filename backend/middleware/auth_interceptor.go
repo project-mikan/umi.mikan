@@ -66,6 +66,7 @@ func isAuthExempt(method string) bool {
 		"/auth.AuthService/RegisterByPassword",
 		"/auth.AuthService/LoginByPassword",
 		"/auth.AuthService/RefreshAccessToken",
+		"/auth.AuthService/GetRegistrationConfig",
 	}
 
 	return slices.Contains(exemptMethods, method)

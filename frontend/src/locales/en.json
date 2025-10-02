@@ -150,6 +150,8 @@
 			"name": "Full name",
 			"email": "Email address",
 			"password": "Password",
+			"registerKey": "Registration Key",
+			"registerKeyRequired": "Please enter registration key",
 			"submit": "Sign up",
 			"submitting": "Signing up...",
 			"hasAccount": "Already have an account? Sign in",

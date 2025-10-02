@@ -14,6 +14,23 @@ compose-prod.example.yamlを参考にセルフホスティングしてお使い�
 
 コンテナはarm64とamd64向けにbuildされています。
 
+## セキュリティ設定
+
+### 新規登録の制限
+
+`REGISTER_KEY` 環境変数をバックエンドに設定することで、新規ユーザー登録を制限できます。
+
+```yaml
+# compose.ymlまたはcompose-prod.yml
+services:
+  backend:
+    environment:
+      REGISTER_KEY: "your-secret-registration-key"
+```
+
+- **未設定時**: 誰でも自由に新規登録可能(登録キーフィールドは空欄でOK)
+- **設定時**: 登録時に正しいキーの入力が必須
+
 # 開発向け
 
 ## アーキテクチャ

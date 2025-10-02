@@ -332,3 +332,153 @@ func TestAuthEntry_DuplicateRegistration(t *testing.T) {
 		t.Errorf("Expected error about user already existing but got: %v", err)
 	}
 }
+
+func TestAuthEntry_GetRegistrationConfig(t *testing.T) {
+	db := setupTestDB(t)
+	ctx := context.Background()
+
+	tests := []struct {
+		name                string
+		registerKey         string
+		expectedKeyRequired bool
+	}{
+		{
+			name:                "登録キーが設定されている場合",
+			registerKey:         "test-secret-key",
+			expectedKeyRequired: true,
+		},
+		{
+			name:                "登録キーが設定されていない場合",
+			registerKey:         "",
+			expectedKeyRequired: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			authService := &AuthEntry{
+				DB:          db,
+				RegisterKey: tt.registerKey,
+			}
+
+			req := &g.GetRegistrationConfigRequest{}
+			resp, err := authService.GetRegistrationConfig(ctx, req)
+
+			if err != nil {
+				t.Fatalf("Expected success but got error: %v", err)
+			}
+			if resp == nil {
+				t.Fatal("Expected response but got nil")
+			}
+			if resp.RegisterKeyRequired != tt.expectedKeyRequired {
+				t.Errorf("Expected RegisterKeyRequired=%v but got %v", tt.expectedKeyRequired, resp.RegisterKeyRequired)
+			}
+		})
+	}
+}
+
+func TestAuthEntry_RegisterByPasswordWithRegisterKey(t *testing.T) {
+	db := setupTestDB(t)
+	ctx := context.Background()
+
+	const correctKey = "correct-secret-key"
+
+	tests := []struct {
+		name          string
+		registerKey   string // サーバー側に設定される登録キー
+		requestKey    string // リクエストで送信される登録キー
+		email         string
+		password      string
+		userName      string
+		shouldSucceed bool
+		expectedError string
+	}{
+		{
+			name:          "正常系：登録キーが設定されており、正しいキーを送信",
+			registerKey:   correctKey,
+			requestKey:    correctKey,
+			email:         generateTestEmail(t, "with-key-valid"),
+			password:      "validPassword123",
+			userName:      "Test User",
+			shouldSucceed: true,
+		},
+		{
+			name:          "異常系：登録キーが設定されているが、キーが空",
+			registerKey:   correctKey,
+			requestKey:    "",
+			email:         generateTestEmail(t, "with-key-empty"),
+			password:      "validPassword123",
+			userName:      "Test User",
+			shouldSucceed: false,
+			expectedError: "registration failed",
+		},
+		{
+			name:          "異常系：登録キーが設定されているが、間違ったキーを送信",
+			registerKey:   correctKey,
+			requestKey:    "wrong-key",
+			email:         generateTestEmail(t, "with-key-wrong"),
+			password:      "validPassword123",
+			userName:      "Test User",
+			shouldSucceed: false,
+			expectedError: "registration failed",
+		},
+		{
+			name:          "正常系：登録キーが設定されていない場合、キー無しで登録可能",
+			registerKey:   "",
+			requestKey:    "",
+			email:         generateTestEmail(t, "without-key-empty"),
+			password:      "validPassword123",
+			userName:      "Test User",
+			shouldSucceed: true,
+		},
+		{
+			name:          "正常系：登録キーが設定されていない場合、キーがあっても無視される",
+			registerKey:   "",
+			requestKey:    "some-key",
+			email:         generateTestEmail(t, "without-key-with-value"),
+			password:      "validPassword123",
+			userName:      "Test User",
+			shouldSucceed: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			authService := &AuthEntry{
+				DB:          db,
+				RegisterKey: tt.registerKey,
+			}
+
+			req := &g.RegisterByPasswordRequest{
+				Email:       tt.email,
+				Password:    tt.password,
+				Name:        tt.userName,
+				RegisterKey: tt.requestKey,
+			}
+
+			resp, err := authService.RegisterByPassword(ctx, req)
+
+			if tt.shouldSucceed {
+				if err != nil {
+					t.Fatalf("Expected success but got error: %v", err)
+				}
+				if resp == nil {
+					t.Fatal("Expected response but got nil")
+				}
+				if resp.AccessToken == "" {
+					t.Error("Expected access token but got empty string")
+				}
+				if resp.RefreshToken == "" {
+					t.Error("Expected refresh token but got empty string")
+				}
+			} else {
+				if err == nil {
+					t.Fatal("Expected error but got nil")
+				}
+				if tt.expectedError != "" && !containsString(err.Error(), tt.expectedError) {
+					t.Errorf("Expected error containing '%s' but got '%s'", tt.expectedError, err.Error())
+				}
+			}
+		})
+	}
+}

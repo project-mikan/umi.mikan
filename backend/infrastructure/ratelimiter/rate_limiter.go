@@ -131,3 +131,31 @@ func (l *LoginAttemptLimiter) ResetAttempts(ctx context.Context, identifier stri
 	key := fmt.Sprintf("login_attempts:%s", identifier)
 	return l.rateLimiter.Reset(ctx, key)
 }
+
+// RegisterAttemptLimiter 登録試行専用のレート制限
+type RegisterAttemptLimiter struct {
+	rateLimiter RateLimiter
+	maxAttempts int
+	window      time.Duration
+}
+
+// NewRegisterAttemptLimiter 新しいRegisterAttemptLimiterを作成
+func NewRegisterAttemptLimiter(rateLimiter RateLimiter, maxAttempts int, window time.Duration) *RegisterAttemptLimiter {
+	return &RegisterAttemptLimiter{
+		rateLimiter: rateLimiter,
+		maxAttempts: maxAttempts,
+		window:      window,
+	}
+}
+
+// CheckAttempt 登録試行が許可されているかチェック
+func (r *RegisterAttemptLimiter) CheckAttempt(ctx context.Context, identifier string) (bool, int, time.Duration, error) {
+	key := fmt.Sprintf("register_attempts:%s", identifier)
+	return r.rateLimiter.IsAllowed(ctx, key, r.maxAttempts, r.window)
+}
+
+// ResetAttempts 指定された識別子の登録試行回数をリセット
+func (r *RegisterAttemptLimiter) ResetAttempts(ctx context.Context, identifier string) error {
+	key := fmt.Sprintf("register_attempts:%s", identifier)
+	return r.rateLimiter.Reset(ctx, key)
+}

@@ -12,15 +12,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Setup
 
-### Prerequisites
-
-```bash
-sudo pacman -S protobuf
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-npm install -g @grpc/proto-loader
-```
-
 ### Starting Development Environment
 
 ```bash
@@ -86,6 +77,16 @@ When you change the backend, make sure that
 - `make b-log`
 
 are OK.
+
+### Full Stack Changes
+
+When you have changes in both backend and frontend, run:
+
+```bash
+make 1                 # Run all lint, test, and logs for both backend and frontend
+```
+
+This command will execute all necessary checks in one go instead of running individual commands.
 
 ### Async Processing Services
 
@@ -239,6 +240,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 ## Security & Authentication Flow
 
 ### Authentication
+
 1. **Registration/Login**: Password-based via AuthService
 2. **Token Storage**: JWT tokens in secure HTTP-only cookies with proper SameSite settings
 3. **Authorization**: Bearer tokens in gRPC metadata headers
@@ -246,11 +248,13 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 5. **User Context**: Injected user info available in all services
 
 ### Security Features
+
 1. **CSRF Protection**: Token-based protection with timing-safe validation
 2. **Content Security Policy**: Restrictive CSP headers with environment-specific rules
 3. **Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 4. **Cookie Security**: Secure, HttpOnly, SameSite=Strict cookies with environment-aware settings
 5. **Timing Attack Prevention**: Constant-time string comparison for token validation
+6. **Registration Key Protection**: Optional registration key (REGISTER_KEY) to restrict new user signups
 
 ## Development Workflow
 
@@ -361,6 +365,7 @@ Environment variables for controlling scheduler behavior:
 - `SCHEDULER_MONTHLY_INTERVAL`: Interval for monthly summary job execution (default: `5m`)
 
 Examples:
+
 ```bash
 SCHEDULER_DAILY_INTERVAL=10m    # Run daily summaries every 10 minutes
 SCHEDULER_MONTHLY_INTERVAL=1h   # Run monthly summaries every hour
@@ -373,10 +378,44 @@ Environment variables for controlling async message processing:
 - `SUBSCRIBER_MAX_CONCURRENT_JOBS`: Maximum number of concurrent message processing jobs (default: `10`)
 
 Examples:
+
 ```bash
 SUBSCRIBER_MAX_CONCURRENT_JOBS=5    # Limit to 5 concurrent jobs
 SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
 ```
+
+### Registration Key Configuration
+
+Environment variable for restricting new user registrations:
+
+- `REGISTER_KEY`: Secret key required for new user registration (optional, no default)
+
+**Usage:**
+
+- **Not set**: Anyone can register without a key (default behavior)
+- **Set**: Users must provide the correct registration key during signup
+
+**Configuration:**
+
+1. Set `REGISTER_KEY` value in the `backend` service in `compose.yml`
+2. Backend validates the key during registration
+3. Frontend always displays the registration key field (users can leave it empty if not required)
+
+Examples:
+
+```yaml
+# compose.yml - backend service only
+environment:
+  REGISTER_KEY: "your-secret-registration-key"
+```
+
+**Security Notes:**
+
+- Use a strong, unique key for production environments
+- Keys are validated with timing-safe comparison to prevent timing attacks
+- Invalid or missing keys return appropriate error codes:
+  - `codes.InvalidArgument`: Registration key is required but not provided
+  - `codes.PermissionDenied`: Provided registration key is incorrect
 
 ## Production Notes
 
