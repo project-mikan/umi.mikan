@@ -4,7 +4,7 @@ import { browser } from "$app/environment";
 import { onMount, onDestroy, createEventDispatcher } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
 import { summaryVisibility } from "$lib/summary-visibility-store";
-import { applyBudouX } from "$lib/utils/budoux";
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 import "$lib/i18n";
 
 interface Summary {
@@ -492,8 +492,11 @@ $: {
 								</div>
 							</div>
 						{/if}
-						<div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
-							{@html applyBudouX(summary.summary.replace(/\s*\(Updating\)$/, ""))}
+						<div
+							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70"
+							class:auto-phrase={$autoPhraseEnabled}
+						>
+							{summary.summary.replace(/\s*\(Updating\)$/, "")}
 						</div>
 					</div>
 				{/if}
@@ -526,8 +529,11 @@ $: {
 								</div>
 							</div>
 						{/if}
-						<div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
-							{@html applyBudouX(summary.summary.replace(/\s*\(Updating\)$/, ""))}
+						<div
+							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70"
+							class:auto-phrase={$autoPhraseEnabled}
+						>
+							{summary.summary.replace(/\s*\(Updating\)$/, "")}
 						</div>
 					</div>
 				{/if}
@@ -549,9 +555,12 @@ $: {
 							</div>
 						</div>
 					{/if}
-					<div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded"
-					   class:summary-highlight={summaryJustUpdated}>
-						{@html applyBudouX(summary.summary.replace(/\s*\(Updating\)$/, ""))}
+					<div
+						class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded"
+						class:summary-highlight={summaryJustUpdated}
+						class:auto-phrase={$autoPhraseEnabled}
+					>
+						{summary.summary.replace(/\s*\(Updating\)$/, "")}
 					</div>
 				</div>
 			{/if}
@@ -612,5 +621,9 @@ $: {
 	100% {
 		box-shadow: inset 0 0 0 2px #3b82f6;
 	}
+}
+
+.auto-phrase {
+	word-break: auto-phrase;
 }
 </style>

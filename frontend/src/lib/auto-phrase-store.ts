@@ -1,16 +1,17 @@
 import { writable } from "svelte/store";
 import { browser } from "$app/environment";
 
-// BudouXが有効かどうかを管理するストア
-function createBudouXStore() {
+// word-break: auto-phraseが有効かどうかを管理するストア
+function createAutoPhraseStore() {
 	// localStorageから初期値を読み込む
 	const getInitialValue = (): boolean => {
-		if (!browser) return false;
+		if (!browser) return true; // デフォルトで有効
 		try {
-			const stored = localStorage.getItem("budoux-enabled");
-			return stored === "true";
+			const stored = localStorage.getItem("auto-phrase-enabled");
+			// 未設定の場合はtrueをデフォルトとする
+			return stored === null ? true : stored === "true";
 		} catch {
-			return false;
+			return true;
 		}
 	};
 
@@ -24,7 +25,7 @@ function createBudouXStore() {
 				// localStorageに保存
 				if (browser) {
 					try {
-						localStorage.setItem("budoux-enabled", String(newValue));
+						localStorage.setItem("auto-phrase-enabled", String(newValue));
 					} catch {
 						// localStorage保存失敗時は無視
 					}
@@ -37,7 +38,7 @@ function createBudouXStore() {
 			// localStorageに保存
 			if (browser) {
 				try {
-					localStorage.setItem("budoux-enabled", String(value));
+					localStorage.setItem("auto-phrase-enabled", String(value));
 				} catch {
 					// localStorage保存失敗時は無視
 				}
@@ -46,4 +47,4 @@ function createBudouXStore() {
 	};
 }
 
-export const budouxEnabled = createBudouXStore();
+export const autoPhraseEnabled = createAutoPhraseStore();

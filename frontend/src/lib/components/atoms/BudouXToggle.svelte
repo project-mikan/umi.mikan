@@ -1,27 +1,22 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
-import { browser } from "$app/environment";
 import "$lib/i18n";
-import { budouxEnabled } from "$lib/budoux-store";
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 
-function toggleBudouX() {
-	budouxEnabled.toggle();
-	// ページをリロードして設定を反映
-	if (browser) {
-		window.location.reload();
-	}
+function toggleAutoPhrase() {
+	autoPhraseEnabled.toggle();
 }
 </script>
 
 <button
 	type="button"
-	on:click={toggleBudouX}
+	on:click={toggleAutoPhrase}
 	class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
 	aria-label={$_("budoux.toggle")}
 	title={$_("budoux.description")}
 >
-	{#if $budouxEnabled}
-		<!-- BudouX有効時のアイコン -->
+	{#if $autoPhraseEnabled}
+		<!-- auto-phrase有効時のアイコン -->
 		<svg
 			class="w-6 h-6 text-blue-600 dark:text-blue-400"
 			fill="none"
@@ -36,7 +31,7 @@ function toggleBudouX() {
 			/>
 		</svg>
 	{:else}
-		<!-- BudouX無効時のアイコン -->
+		<!-- auto-phrase無効時のアイコン -->
 		<svg
 			class="w-6 h-6 text-gray-600 dark:text-gray-400"
 			fill="none"

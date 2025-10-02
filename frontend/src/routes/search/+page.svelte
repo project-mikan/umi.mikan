@@ -3,7 +3,7 @@ import { _ } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-import { applyBudouX } from "$lib/utils/budoux";
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 import type { PageData } from "./$types";
 
 export let data: PageData;
@@ -44,12 +44,6 @@ function _handleKeydown(event: KeyboardEvent) {
 	if (event.key === "Enter") {
 		_handleSearch();
 	}
-}
-
-function _formatContentWithLineBreaks(content: string): string {
-	// 改行をBRタグに変換してからBudouXを適用
-	const withBreaks = content.replace(/\n/g, "<br>");
-	return applyBudouX(withBreaks);
 }
 </script>
 
@@ -108,11 +102,14 @@ function _formatContentWithLineBreaks(content: string): string {
 								{entry.date ? _formatDate(entry.date) : $_('diary.dateUnknown')}
 							</h3>
 						</div>
-						<div class="text-gray-700 dark:text-gray-300 text-sm">
+						<div
+							class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap"
+							class:auto-phrase={$autoPhraseEnabled}
+						>
 							<p class="line-clamp-3">
-								{@html _formatContentWithLineBreaks(entry.content.length > 150 
-									? entry.content.substring(0, 150) + '...' 
-									: entry.content)}
+								{entry.content.length > 150
+									? entry.content.substring(0, 150) + '...'
+									: entry.content}
 							</p>
 						</div>
 					</div>
@@ -143,5 +140,9 @@ function _formatContentWithLineBreaks(content: string): string {
 		line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+	}
+
+	.auto-phrase {
+		word-break: auto-phrase;
 	}
 </style>
