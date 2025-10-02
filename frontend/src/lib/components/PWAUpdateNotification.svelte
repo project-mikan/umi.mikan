@@ -23,12 +23,12 @@ onMount(async () => {
 					showUpdatePrompt = true;
 				},
 				onOfflineReady() {
-					console.log("App is ready to work offline");
+					// PWA is ready for offline use
 				},
 			});
 		}
 	} catch (error) {
-		console.warn("PWA modules not available:", error);
+		// PWA modules not available - this is expected in development
 	}
 });
 

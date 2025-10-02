@@ -121,22 +121,6 @@ $: isSummaryOutdated = (() => {
 	// 要約が日記よりも新しい場合、または最近更新された場合は古くない
 	const isOutdated = diaryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
 
-	// デバッグ用ログ（開発環境でのみ）
-	if (
-		typeof window !== "undefined" &&
-		window.location.hostname === "localhost"
-	) {
-		console.log("Summary outdated check:", {
-			diaryUpdatedAt: new Date(diaryUpdatedAt),
-			summaryUpdatedAt: new Date(summaryUpdatedAt),
-			isOutdated,
-			recentlyUpdated,
-			lastSummaryUpdateTime: new Date(lastSummaryUpdateTime),
-			diaryTimestamp: diaryUpdatedAt,
-			summaryTimestamp: summaryUpdatedAt,
-		});
-	}
-
 	return isOutdated;
 })();
 
@@ -159,19 +143,6 @@ function handleSummaryUpdated(event: CustomEvent) {
 		!oldSummary ||
 		oldSummary.updatedAt !== newSummary.updatedAt ||
 		oldSummary.summary !== newSummary.summary;
-
-	// デバッグ用ログ（開発環境でのみ）
-	if (
-		typeof window !== "undefined" &&
-		window.location.hostname === "localhost"
-	) {
-		console.log("Summary updated:", {
-			oldSummary,
-			newSummary,
-			newUpdatedAt: new Date(newSummary.updatedAt),
-			actuallyUpdated,
-		});
-	}
 
 	summary = newSummary;
 

@@ -357,5 +357,9 @@
 			"monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from daily summaries",
 			"processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
 		}
+	},
+	"budoux": {
+		"toggle": "Toggle BudouX",
+		"description": "Japanese line break segmentation mode. When enabled, Japanese text will break naturally at appropriate points"
 	}
 }

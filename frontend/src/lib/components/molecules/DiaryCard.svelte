@@ -3,6 +3,7 @@ import { _ } from "svelte-i18n";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 import Button from "../atoms/Button.svelte";
 import Card from "../atoms/Card.svelte";
+import { applyBudouX } from "$lib/utils/budoux";
 
 export let title: string;
 export let entry: DiaryEntry | null = null;
@@ -11,7 +12,9 @@ export let onView: ((entry: DiaryEntry) => void) | null = null;
 export let href: string | null = null;
 
 function formatContentWithLineBreaks(content: string): string {
-	return content.replace(/\n/g, "<br>");
+	// 改行をBRタグに変換してからBudouXを適用
+	const withBreaks = content.replace(/\n/g, "<br>");
+	return applyBudouX(withBreaks);
 }
 </script>
 

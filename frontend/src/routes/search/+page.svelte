@@ -3,6 +3,7 @@ import { _ } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+import { applyBudouX } from "$lib/utils/budoux";
 import type { PageData } from "./$types";
 
 export let data: PageData;
@@ -46,7 +47,9 @@ function _handleKeydown(event: KeyboardEvent) {
 }
 
 function _formatContentWithLineBreaks(content: string): string {
-	return content.replace(/\n/g, "<br>");
+	// 改行をBRタグに変換してからBudouXを適用
+	const withBreaks = content.replace(/\n/g, "<br>");
+	return applyBudouX(withBreaks);
 }
 </script>
 

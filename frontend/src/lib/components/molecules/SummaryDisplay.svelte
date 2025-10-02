@@ -4,6 +4,7 @@ import { browser } from "$app/environment";
 import { onMount, onDestroy, createEventDispatcher } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
 import { summaryVisibility } from "$lib/summary-visibility-store";
+import { applyBudouX } from "$lib/utils/budoux";
 import "$lib/i18n";
 
 interface Summary {
@@ -126,9 +127,6 @@ async function pollSummaryStatus(_isUpdate = false) {
 						dispatch("generationCompleted");
 					} else {
 						// 同じ内容の場合はポーリング継続
-						console.log(
-							"Polling: Same summary content received, continuing polling",
-						);
 					}
 				}
 			}
@@ -147,20 +145,6 @@ function clearPolling() {
 
 // 要約更新時のアニメーション
 function triggerSummaryUpdateAnimation() {
-	// デバッグ用ログ（開発環境でのみ）
-	if (
-		typeof window !== "undefined" &&
-		window.location.hostname === "localhost"
-	) {
-		console.log("🎯 Animation triggered!", {
-			isRegenerating,
-			summaryGenerating,
-			summaryStatus,
-			timestamp: new Date().toISOString(),
-			stackTrace: new Error().stack?.split("\n").slice(1, 4).join("\n"),
-		});
-	}
-
 	summaryJustUpdated = true;
 	setTimeout(() => {
 		summaryJustUpdated = false;
@@ -243,9 +227,6 @@ async function generateSummary() {
 					} else {
 						// 同じ内容の場合は状態を変更せずにポーリング継続
 						// 実際の新しい要約が生成されるまで待機
-						console.log(
-							"Same summary content received, continuing to wait for actual update",
-						);
 					}
 				}
 			} else {
@@ -511,9 +492,9 @@ $: {
 								</div>
 							</div>
 						{/if}
-						<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
-							{summary.summary.replace(/\s*\(Updating\)$/, "")}
-						</p>
+						<div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
+							{@html applyBudouX(summary.summary.replace(/\s*\(Updating\)$/, ""))}
+						</div>
 					</div>
 				{/if}
 			{:else if summaryStatus === 'queued'}
@@ -545,9 +526,9 @@ $: {
 								</div>
 							</div>
 						{/if}
-						<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
-							{summary.summary.replace(/\s*\(Updating\)$/, "")}
-						</p>
+						<div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70">
+							{@html applyBudouX(summary.summary.replace(/\s*\(Updating\)$/, ""))}
+						</div>
 					</div>
 				{/if}
 			{:else if summary && showSummary && !summary.summary.includes("(Updating)")}
@@ -568,10 +549,10 @@ $: {
 							</div>
 						</div>
 					{/if}
-					<p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded"
+					<div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded"
 					   class:summary-highlight={summaryJustUpdated}>
-						{summary.summary.replace(/\s*\(Updating\)$/, "")}
-					</p>
+						{@html applyBudouX(summary.summary.replace(/\s*\(Updating\)$/, ""))}
+					</div>
 				</div>
 			{/if}
 

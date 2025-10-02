@@ -109,23 +109,6 @@ $: isMonthlySummaryOutdated = (() => {
 	const isOutdated =
 		latestEntryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
 
-	// デバッグ用ログ（開発環境でのみ）
-	if (
-		typeof window !== "undefined" &&
-		window.location.hostname === "localhost"
-	) {
-		console.log("🔍 Monthly summary outdated check:", {
-			latestEntryUpdatedAt: new Date(latestEntryUpdatedAt),
-			summaryUpdatedAt: new Date(summaryUpdatedAt),
-			isOutdated,
-			recentlyUpdated,
-			lastMonthlySummaryUpdateTime: new Date(lastMonthlySummaryUpdateTime),
-			entriesCount: entries.entries.length,
-			now: new Date(now),
-			timeDiff: now - lastMonthlySummaryUpdateTime,
-		});
-	}
-
 	return isOutdated;
 })();
 
@@ -243,29 +226,6 @@ function handleSummaryUpdated(event: CustomEvent) {
 		oldSummary &&
 		(oldSummary.updatedAt !== newSummary.updatedAt ||
 			oldSummary.summary !== newSummary.summary);
-
-	// デバッグ用ログ（開発環境でのみ）
-	if (
-		typeof window !== "undefined" &&
-		window.location.hostname === "localhost"
-	) {
-		console.log("📨 Monthly summary updated event received:", {
-			oldSummary: oldSummary
-				? {
-						updatedAt: oldSummary.updatedAt,
-						summary: `${oldSummary.summary.substring(0, 50)}...`,
-					}
-				: null,
-			newSummary: {
-				updatedAt: newSummary.updatedAt,
-				summary: `${newSummary.summary.substring(0, 50)}...`,
-			},
-			newUpdatedAt: new Date(newSummary.updatedAt),
-			actuallyUpdated,
-			isInitialLoad,
-			timestamp: new Date().toISOString(),
-		});
-	}
 
 	// 常に要約は更新するが、初回読み込み時は時刻は記録しない
 	monthlySummary = newSummary;
