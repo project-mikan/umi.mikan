@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { _ } from "svelte-i18n";
-	import { browser } from "$app/environment";
-	import "$lib/i18n";
-	import { budouxEnabled } from "$lib/budoux-store";
+import { _ } from "svelte-i18n";
+import { browser } from "$app/environment";
+import "$lib/i18n";
+import { budouxEnabled } from "$lib/budoux-store";
 
-	function toggleBudouX() {
-		budouxEnabled.toggle();
-		// ページをリロードして設定を反映
-		if (browser) {
-			window.location.reload();
-		}
+function toggleBudouX() {
+	budouxEnabled.toggle();
+	// ページをリロードして設定を反映
+	if (browser) {
+		window.location.reload();
 	}
+}
 </script>
 
 <button
