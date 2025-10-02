@@ -4,6 +4,7 @@ import { enhance } from "$app/forms";
 import Button from "../atoms/Button.svelte";
 import LanguageSelector from "../atoms/LanguageSelector.svelte";
 import DarkModeToggle from "../atoms/DarkModeToggle.svelte";
+import BudouXToggle from "../atoms/BudouXToggle.svelte";
 
 export let isAuthenticated = false;
 export let isAuthPage = false;
@@ -65,6 +66,7 @@ const currentMonth = currentDate.getMonth() + 1;
 					</div>
 				</div>
 				<div class="flex items-center space-x-4">
+					<BudouXToggle />
 					<DarkModeToggle />
 					<LanguageSelector />
 				</div>
@@ -83,6 +85,7 @@ const currentMonth = currentDate.getMonth() + 1;
 					</div>
 				</div>
 				<div class="flex items-center space-x-4">
+					<BudouXToggle />
 					<DarkModeToggle />
 					<LanguageSelector />
 				</div>

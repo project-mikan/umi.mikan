@@ -25,11 +25,8 @@ function createSummaryVisibilityStore() {
 			if (stored) {
 				return { ...DEFAULT_STATE, ...JSON.parse(stored) };
 			}
-		} catch (error) {
-			console.warn(
-				"Failed to load summary visibility from localStorage:",
-				error,
-			);
+		} catch (_error) {
+			// Failed to load from localStorage, using default state
 		}
 		return DEFAULT_STATE;
 	}
@@ -39,8 +36,8 @@ function createSummaryVisibilityStore() {
 
 		try {
 			localStorage.setItem("summary-visibility", JSON.stringify(state));
-		} catch (error) {
-			console.warn("Failed to save summary visibility to localStorage:", error);
+		} catch (_error) {
+			// Failed to save to localStorage
 		}
 	}
 

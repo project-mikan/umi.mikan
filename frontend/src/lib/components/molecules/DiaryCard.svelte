@@ -3,16 +3,13 @@ import { _ } from "svelte-i18n";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 import Button from "../atoms/Button.svelte";
 import Card from "../atoms/Card.svelte";
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 
 export let title: string;
 export let entry: DiaryEntry | null = null;
 export let showForm = false;
 export let onView: ((entry: DiaryEntry) => void) | null = null;
 export let href: string | null = null;
-
-function formatContentWithLineBreaks(content: string): string {
-	return content.replace(/\n/g, "<br>");
-}
 </script>
 
 <Card padding="sm">
@@ -34,8 +31,11 @@ function formatContentWithLineBreaks(content: string): string {
 	{#if showForm}
 		<slot name="form" />
 	{:else if entry}
-		<div class="text-gray-700 dark:text-gray-300">
-			{@html formatContentWithLineBreaks(entry.content || "")}
+		<div
+			class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap"
+			class:auto-phrase={$autoPhraseEnabled}
+		>
+			{entry.content || ""}
 		</div>
 		{#if onView}
 			<div class="mt-4">
@@ -54,4 +54,10 @@ function formatContentWithLineBreaks(content: string): string {
 		</p>
 	{/if}
 </Card>
+
+<style>
+.auto-phrase {
+	word-break: auto-phrase;
+}
+</style>
 

@@ -357,5 +357,9 @@
 			"monthlySummaryExplanation": "月次まとめ: 日次まとめから生成される月間の総合まとめ",
 			"processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
 		}
+	},
+	"budoux": {
+		"toggle": "BudouX切り替え",
+		"description": "日本語の改行分節区切りモード。これを使用すると日本語での改行が自然な単位で改行されるようになります"
 	}
 }
