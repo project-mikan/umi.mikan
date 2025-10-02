@@ -2,7 +2,8 @@
 import "../app.css";
 import "$lib/i18n";
 import { page } from "$app/stores";
-import { onMount } from "svelte";
+import { onMount, onDestroy } from "svelte";
+import { invalidateAll } from "$app/navigation";
 import Head from "$lib/components/atoms/Head.svelte";
 import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
 import QuickNavigation from "$lib/components/molecules/QuickNavigation.svelte";
@@ -18,9 +19,42 @@ $: isAuthenticated = data.isAuthenticated;
 $: isAuthPage =
 	$page.url.pathname === "/login" || $page.url.pathname === "/register";
 
+let lastActiveTime = Date.now();
+
+// ページがフォーカスされた時にトークンをチェック
+function handleVisibilityChange() {
+	if (document.visibilityState === "visible") {
+		const inactiveTime = Date.now() - lastActiveTime;
+		// 5分以上非アクティブだった場合、トークンをリフレッシュ
+		if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
+			invalidateAll();
+		}
+		lastActiveTime = Date.now();
+	}
+}
+
+// ページがフォーカスされた時
+function handleFocus() {
+	const inactiveTime = Date.now() - lastActiveTime;
+	// 5分以上非アクティブだった場合、トークンをリフレッシュ
+	if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
+		invalidateAll();
+	}
+	lastActiveTime = Date.now();
+}
+
 onMount(() => {
 	// ストアを初期化（アプリケーション全体で一度だけ）
 	summaryVisibility.init();
+
+	// visibilitychangeイベントをリッスン
+	document.addEventListener("visibilitychange", handleVisibilityChange);
+	window.addEventListener("focus", handleFocus);
+});
+
+onDestroy(() => {
+	document.removeEventListener("visibilitychange", handleVisibilityChange);
+	window.removeEventListener("focus", handleFocus);
 });
 </script>
 
