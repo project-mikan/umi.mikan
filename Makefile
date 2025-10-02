@@ -111,3 +111,8 @@ b-test-benchmark:
 
 b-test-race:
 	docker compose exec backend go test -race ./...
+1:
+	make b-lint
+	make f-lint
+	make b-test
+	make f-test
