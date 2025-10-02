@@ -21,9 +21,10 @@ import (
 
 type AuthEntry struct {
 	g.UnimplementedAuthServiceServer
-	DB           database.DB
-	LoginLimiter *ratelimiter.LoginAttemptLimiter
-	RegisterKey  string // REGISTER_KEY環境変数の値（空文字の場合は制限なし）
+	DB              database.DB
+	LoginLimiter    *ratelimiter.LoginAttemptLimiter
+	RegisterLimiter *ratelimiter.RegisterAttemptLimiter
+	RegisterKey     string // REGISTER_KEY環境変数の値（空文字の場合は制限なし）
 }
 
 func (s *AuthEntry) GetRegistrationConfig(ctx context.Context, req *g.GetRegistrationConfigRequest) (*g.GetRegistrationConfigResponse, error) {
@@ -35,14 +36,26 @@ func (s *AuthEntry) GetRegistrationConfig(ctx context.Context, req *g.GetRegistr
 }
 
 func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPasswordRequest) (*g.AuthResponse, error) {
+	// --- レート制限チェック ---
+	clientID := s.getClientIdentifier(ctx)
+	if s.RegisterLimiter != nil {
+		allowed, _, resetTime, err := s.RegisterLimiter.CheckAttempt(ctx, clientID)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "rate limit check failed: %v", err)
+		}
+
+		if !allowed {
+			return nil, status.Errorf(codes.ResourceExhausted,
+				"too many registration attempts, try again in %v", resetTime)
+		}
+	}
+
 	// --- REGISTER_KEYのチェック ---
 	if s.RegisterKey != "" {
 		// REGISTER_KEYが設定されている場合は、リクエストのregister_keyと一致する必要がある
-		if req.GetRegisterKey() == "" {
-			return nil, status.Error(codes.InvalidArgument, "register_key is required")
-		}
-		if req.GetRegisterKey() != s.RegisterKey {
-			return nil, status.Error(codes.PermissionDenied, "invalid register_key")
+		// 空の場合も不一致の場合も同じエラーメッセージで情報漏洩を防ぐ
+		if req.GetRegisterKey() == "" || req.GetRegisterKey() != s.RegisterKey {
+			return nil, status.Error(codes.PermissionDenied, "registration failed")
 		}
 	}
 

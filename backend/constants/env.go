@@ -30,8 +30,10 @@ type SubscriberConfig struct {
 }
 
 type RateLimitConfig struct {
-	LoginMaxAttempts int
-	LoginWindow      time.Duration
+	LoginMaxAttempts    int
+	LoginWindow         time.Duration
+	RegisterMaxAttempts int
+	RegisterWindow      time.Duration
 }
 
 func LoadEnv(name string) (string, error) {
@@ -161,37 +163,69 @@ func LoadSubscriberConfig() (*SubscriberConfig, error) {
 }
 
 func LoadRateLimitConfig() (*RateLimitConfig, error) {
-	maxAttemptsStr := os.Getenv("LOGIN_MAX_ATTEMPTS")
-	if maxAttemptsStr == "" {
-		maxAttemptsStr = "5" // デフォルト: 5回まで
+	// Login rate limit config
+	loginMaxAttemptsStr := os.Getenv("LOGIN_MAX_ATTEMPTS")
+	if loginMaxAttemptsStr == "" {
+		loginMaxAttemptsStr = "5" // デフォルト: 5回まで
 	}
 
-	windowStr := os.Getenv("LOGIN_WINDOW")
-	if windowStr == "" {
-		windowStr = "15m" // デフォルト: 15分
+	loginWindowStr := os.Getenv("LOGIN_WINDOW")
+	if loginWindowStr == "" {
+		loginWindowStr = "15m" // デフォルト: 15分
 	}
 
-	maxAttempts, err := strconv.Atoi(maxAttemptsStr)
+	loginMaxAttempts, err := strconv.Atoi(loginMaxAttemptsStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid LOGIN_MAX_ATTEMPTS format: %w", err)
 	}
 
-	if maxAttempts <= 0 {
+	if loginMaxAttempts <= 0 {
 		return nil, fmt.Errorf("LOGIN_MAX_ATTEMPTS must be a positive integer")
 	}
 
-	window, err := time.ParseDuration(windowStr)
+	loginWindow, err := time.ParseDuration(loginWindowStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid LOGIN_WINDOW format: %w", err)
 	}
 
-	if window <= 0 {
+	if loginWindow <= 0 {
 		return nil, fmt.Errorf("LOGIN_WINDOW must be a positive duration")
 	}
 
+	// Register rate limit config
+	registerMaxAttemptsStr := os.Getenv("REGISTER_MAX_ATTEMPTS")
+	if registerMaxAttemptsStr == "" {
+		registerMaxAttemptsStr = "3" // デフォルト: 3回まで
+	}
+
+	registerWindowStr := os.Getenv("REGISTER_WINDOW")
+	if registerWindowStr == "" {
+		registerWindowStr = "1h" // デフォルト: 1時間
+	}
+
+	registerMaxAttempts, err := strconv.Atoi(registerMaxAttemptsStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid REGISTER_MAX_ATTEMPTS format: %w", err)
+	}
+
+	if registerMaxAttempts <= 0 {
+		return nil, fmt.Errorf("REGISTER_MAX_ATTEMPTS must be a positive integer")
+	}
+
+	registerWindow, err := time.ParseDuration(registerWindowStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid REGISTER_WINDOW format: %w", err)
+	}
+
+	if registerWindow <= 0 {
+		return nil, fmt.Errorf("REGISTER_WINDOW must be a positive duration")
+	}
+
 	return &RateLimitConfig{
-		LoginMaxAttempts: maxAttempts,
-		LoginWindow:      window,
+		LoginMaxAttempts:    loginMaxAttempts,
+		LoginWindow:         loginWindow,
+		RegisterMaxAttempts: registerMaxAttempts,
+		RegisterWindow:      registerWindow,
 	}, nil
 }
 

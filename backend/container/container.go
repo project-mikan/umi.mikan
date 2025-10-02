@@ -78,6 +78,9 @@ func (c *Container) registerProviders() error {
 	if err := c.container.Provide(NewLoginAttemptLimiter); err != nil {
 		return fmt.Errorf("failed to provide NewLoginAttemptLimiter: %w", err)
 	}
+	if err := c.container.Provide(NewRegisterAttemptLimiter); err != nil {
+		return fmt.Errorf("failed to provide NewRegisterAttemptLimiter: %w", err)
+	}
 
 	// Service providers
 	if err := c.container.Provide(NewAuthService); err != nil {
@@ -138,8 +141,10 @@ type SubscriberConfig struct {
 }
 
 type RateLimitConfig struct {
-	LoginMaxAttempts int
-	LoginWindow      time.Duration
+	LoginMaxAttempts    int
+	LoginWindow         time.Duration
+	RegisterMaxAttempts int
+	RegisterWindow      time.Duration
 }
 
 // LLMClientFactory creates LLM clients
@@ -230,8 +235,10 @@ func NewRateLimitConfig() (*RateLimitConfig, error) {
 	}
 
 	return &RateLimitConfig{
-		LoginMaxAttempts: config.LoginMaxAttempts,
-		LoginWindow:      config.LoginWindow,
+		LoginMaxAttempts:    config.LoginMaxAttempts,
+		LoginWindow:         config.LoginWindow,
+		RegisterMaxAttempts: config.RegisterMaxAttempts,
+		RegisterWindow:      config.RegisterWindow,
 	}, nil
 }
 
@@ -275,13 +282,19 @@ func NewLoginAttemptLimiter(rateLimiter ratelimiter.RateLimiter, config *RateLim
 	return ratelimiter.NewLoginAttemptLimiter(rateLimiter, config.LoginMaxAttempts, config.LoginWindow)
 }
 
+// NewRegisterAttemptLimiter creates a register attempt limiter
+func NewRegisterAttemptLimiter(rateLimiter ratelimiter.RateLimiter, config *RateLimitConfig) *ratelimiter.RegisterAttemptLimiter {
+	return ratelimiter.NewRegisterAttemptLimiter(rateLimiter, config.RegisterMaxAttempts, config.RegisterWindow)
+}
+
 // NewAuthService creates an auth service
-func NewAuthService(db database.DB, loginLimiter *ratelimiter.LoginAttemptLimiter) *auth.AuthEntry {
+func NewAuthService(db database.DB, loginLimiter *ratelimiter.LoginAttemptLimiter, registerLimiter *ratelimiter.RegisterAttemptLimiter) *auth.AuthEntry {
 	registerKey := constants.LoadRegisterKey()
 	return &auth.AuthEntry{
-		DB:           db,
-		LoginLimiter: loginLimiter,
-		RegisterKey:  registerKey,
+		DB:              db,
+		LoginLimiter:    loginLimiter,
+		RegisterLimiter: registerLimiter,
+		RegisterKey:     registerKey,
 	}
 }
 
