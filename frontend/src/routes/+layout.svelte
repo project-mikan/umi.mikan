@@ -1,6 +1,7 @@
 <script lang="ts">
 import "../app.css";
 import "$lib/i18n";
+import { browser } from "$app/environment";
 import { page } from "$app/stores";
 import { onMount, onDestroy } from "svelte";
 import { invalidateAll } from "$app/navigation";
@@ -23,7 +24,7 @@ let lastActiveTime = Date.now();
 
 // ページがフォーカスされた時にトークンをチェック
 function handleVisibilityChange() {
-	if (document.visibilityState === "visible") {
+	if (browser && document.visibilityState === "visible") {
 		const inactiveTime = Date.now() - lastActiveTime;
 		// 5分以上非アクティブだった場合、トークンをリフレッシュ
 		if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
@@ -35,6 +36,7 @@ function handleVisibilityChange() {
 
 // ページがフォーカスされた時
 function handleFocus() {
+	if (!browser) return;
 	const inactiveTime = Date.now() - lastActiveTime;
 	// 5分以上非アクティブだった場合、トークンをリフレッシュ
 	if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
@@ -53,8 +55,11 @@ onMount(() => {
 });
 
 onDestroy(() => {
-	document.removeEventListener("visibilitychange", handleVisibilityChange);
-	window.removeEventListener("focus", handleFocus);
+	// ブラウザ環境でのみイベントリスナーを削除
+	if (browser) {
+		document.removeEventListener("visibilitychange", handleVisibilityChange);
+		window.removeEventListener("focus", handleFocus);
+	}
 });
 </script>
 
