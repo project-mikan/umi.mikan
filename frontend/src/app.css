@@ -7,3 +7,8 @@
 @utility auto-phrase {
 	word-break: auto-phrase;
 }
+
+/* グローバルなauto-phrase適用 */
+.auto-phrase-enabled .auto-phrase-target {
+	word-break: auto-phrase;
+}

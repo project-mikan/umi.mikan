@@ -3,7 +3,6 @@ import { _ } from "svelte-i18n";
 import { goto } from "$app/navigation";
 import "$lib/i18n";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 import type { PageData } from "./$types";
 
 export let data: PageData;
@@ -103,7 +102,7 @@ function _handleKeydown(event: KeyboardEvent) {
 							</h3>
 						</div>
 						<div
-							class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap {$autoPhraseEnabled ? 'auto-phrase' : ''}"
+							class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap auto-phrase-target"
 						>
 							<p class="line-clamp-3">
 								{entry.content.length > 150

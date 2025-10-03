@@ -4,7 +4,6 @@ import { browser } from "$app/environment";
 import { onMount, onDestroy, createEventDispatcher } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
 import { summaryVisibility } from "$lib/summary-visibility-store";
-import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 import "$lib/i18n";
 
 interface Summary {
@@ -493,7 +492,7 @@ $: {
 							</div>
 						{/if}
 						<div
-							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70 {$autoPhraseEnabled ? 'auto-phrase' : ''}"
+							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70 auto-phrase-target"
 						>
 							{summary.summary.replace(/\s*\(Updating\)$/, "")}
 						</div>
@@ -529,7 +528,7 @@ $: {
 							</div>
 						{/if}
 						<div
-							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70 {$autoPhraseEnabled ? 'auto-phrase' : ''}"
+							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70 auto-phrase-target"
 						>
 							{summary.summary.replace(/\s*\(Updating\)$/, "")}
 						</div>
@@ -554,7 +553,7 @@ $: {
 						</div>
 					{/if}
 					<div
-						class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded {summaryJustUpdated ? 'summary-highlight' : ''} {$autoPhraseEnabled ? 'auto-phrase' : ''}"
+						class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded auto-phrase-target {summaryJustUpdated ? 'summary-highlight' : ''}"
 					>
 						{summary.summary.replace(/\s*\(Updating\)$/, "")}
 					</div>

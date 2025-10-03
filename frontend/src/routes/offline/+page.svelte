@@ -1,7 +1,6 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
-import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 </script>
 
 <svelte:head>
@@ -35,7 +34,7 @@ import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 			</h1>
 
 			<!-- Description -->
-			<p class="text-lg text-gray-600 dark:text-gray-400 mb-8 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
+			<p class="text-lg text-gray-600 dark:text-gray-400 mb-8 auto-phrase-target">
 				{$_("offline.description")}
 			</p>
 
@@ -44,7 +43,7 @@ import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 				<h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
 					{$_("offline.availableFeatures.title")}
 				</h2>
-				<ul class="space-y-2 text-gray-700 dark:text-gray-300 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
+				<ul class="space-y-2 text-gray-700 dark:text-gray-300 auto-phrase-target">
 					<li class="flex items-center">
 						<svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
 							<path
@@ -93,7 +92,7 @@ import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 				<h2 class="text-xl font-semibold mb-4 text-red-800 dark:text-red-300">
 					{$_("offline.limitedFeatures.title")}
 				</h2>
-				<ul class="space-y-2 text-red-700 dark:text-red-300 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
+				<ul class="space-y-2 text-red-700 dark:text-red-300 auto-phrase-target">
 					<li class="flex items-center">
 						<svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
 							<path
@@ -139,7 +138,7 @@ import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 
 			<!-- Connection Status -->
 			<div class="mb-8">
-				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
+				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 auto-phrase-target">
 					{$_("offline.connectionStatus")}
 				</p>
 				<button

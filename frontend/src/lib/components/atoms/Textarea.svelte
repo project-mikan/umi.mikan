@@ -1,6 +1,5 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte";
-import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 
 export let value = "";
 export let placeholder = "";
@@ -183,7 +182,7 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 	{id}
 	data-placeholder={placeholder}
 	contenteditable={!disabled}
-	class="{classes} {$autoPhraseEnabled ? 'auto-phrase' : ''}"
+	class="{classes} auto-phrase-target"
 	style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
 	on:input={_handleInput}
 	on:keydown={_handleKeydown}

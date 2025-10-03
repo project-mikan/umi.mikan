@@ -4,7 +4,6 @@ import "$lib/i18n";
 import Head from "$lib/components/atoms/Head.svelte";
 import Card from "$lib/components/atoms/Card.svelte";
 import PubSubMetricsChart from "$lib/components/molecules/PubSubMetricsChart.svelte";
-import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 import type { PageData } from "./$types";
 
 export let data: PageData;
@@ -58,7 +57,7 @@ $: summaryCards = [
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
 			{$_("llm.title")}
 		</h1>
-		<p class="text-gray-600 dark:text-gray-400 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
+		<p class="text-gray-600 dark:text-gray-400 auto-phrase-target">
 			{$_("llm.description")}
 		</p>
 	</div>
@@ -150,10 +149,10 @@ $: summaryCards = [
 			{$_("llm.metrics.aboutTitle")}
 		</h3>
 		<div class="prose dark:prose-invert max-w-none">
-			<p class="text-gray-600 dark:text-gray-400 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
+			<p class="text-gray-600 dark:text-gray-400 auto-phrase-target">
 				{$_("llm.metrics.aboutDescription")}
 			</p>
-			<ul class="text-gray-600 dark:text-gray-400 mt-2 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
+			<ul class="text-gray-600 dark:text-gray-400 mt-2 auto-phrase-target">
 				<li>{$_("llm.metrics.dailySummaryExplanation")}</li>
 				<li>{$_("llm.metrics.monthlySummaryExplanation")}</li>
 				<li>{$_("llm.metrics.processingExplanation")}</li>

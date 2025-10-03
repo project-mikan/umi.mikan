@@ -3,7 +3,6 @@ import { _ } from "svelte-i18n";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 import Button from "../atoms/Button.svelte";
 import Card from "../atoms/Card.svelte";
-import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 
 export let title: string;
 export let entry: DiaryEntry | null = null;
@@ -32,7 +31,7 @@ export let href: string | null = null;
 		<slot name="form" />
 	{:else if entry}
 		<div
-			class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap {$autoPhraseEnabled ? 'auto-phrase' : ''}"
+			class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap auto-phrase-target"
 		>
 			{entry.content || ""}
 		</div>

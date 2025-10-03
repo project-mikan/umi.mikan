@@ -10,6 +10,7 @@ import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
 import QuickNavigation from "$lib/components/molecules/QuickNavigation.svelte";
 import Footer from "$lib/components/organisms/Footer.svelte";
 import { summaryVisibility } from "$lib/summary-visibility-store";
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 import PWAInstallPrompt from "$lib/components/PWAInstallPrompt.svelte";
 import PWAUpdateNotification from "$lib/components/PWAUpdateNotification.svelte";
 import type { LayoutData } from "./$types";
@@ -49,9 +50,24 @@ onMount(() => {
 	// ストアを初期化（アプリケーション全体で一度だけ）
 	summaryVisibility.init();
 
+	// auto-phraseの状態をbody要素のクラスに反映
+	const unsubscribe = autoPhraseEnabled.subscribe((enabled) => {
+		if (browser) {
+			if (enabled) {
+				document.body.classList.add("auto-phrase-enabled");
+			} else {
+				document.body.classList.remove("auto-phrase-enabled");
+			}
+		}
+	});
+
 	// visibilitychangeイベントをリッスン
 	document.addEventListener("visibilitychange", handleVisibilityChange);
 	window.addEventListener("focus", handleFocus);
+
+	return () => {
+		unsubscribe();
+	};
 });
 
 onDestroy(() => {
