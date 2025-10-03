@@ -237,12 +237,12 @@ function handleDeleteAccount() {
 				</button>
 				<!-- ユーザー名変更メッセージ -->
 				{#if form?.error && isMessageForAction("updateUsername")}
-					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
 						{$_(`settings.messages.${form.error}`) || form.error}
 					</div>
 				{/if}
 				{#if form?.success && isMessageForAction("updateUsername")}
-					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
 						{$_(`settings.messages.${form.message}`) || form.message}
 					</div>
 				{/if}
@@ -374,12 +374,12 @@ function handleDeleteAccount() {
 				</button>
 				<!-- パスワード変更メッセージ -->
 				{#if form?.error && isMessageForAction("changePassword")}
-					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
 						{$_(`settings.messages.${form.error}`) || form.error}
 					</div>
 				{/if}
 				{#if form?.success && isMessageForAction("changePassword")}
-					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
 						{$_(`settings.messages.${form.message}`) || form.message}
 					</div>
 				{/if}
@@ -427,10 +427,10 @@ function handleDeleteAccount() {
 					<label for="llmToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 						{$_("settings.llmToken.tokenLabel")}
 					</label>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2 auto-phrase-target">
 						{$_("settings.llmToken.tokenHelp")} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">https://aistudio.google.com/apikey</a>
 					</p>
-					<p class="text-xs text-orange-600 dark:text-orange-400 mb-2 bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-200 dark:border-orange-800">
+					<p class="text-xs text-orange-600 dark:text-orange-400 mb-2 bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-200 dark:border-orange-800 auto-phrase-target">
 						{$_("settings.llmToken.freeWarning")}
 					</p>
 					<input
@@ -454,12 +454,12 @@ function handleDeleteAccount() {
 				</button>
 				<!-- LLMトークン変更メッセージ -->
 				{#if form?.error && isMessageForAction("updateLLMKey")}
-					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
 						{$_(`settings.messages.${form.error}`) || form.error}
 					</div>
 				{/if}
 				{#if form?.success && isMessageForAction("updateLLMKey")}
-					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
 						{$_(`settings.messages.${form.message}`) || form.message}
 					</div>
 				{/if}
@@ -478,12 +478,12 @@ function handleDeleteAccount() {
 					</button>
 					<!-- LLMトークン削除メッセージ -->
 					{#if form?.error && isMessageForAction("deleteLLMKey")}
-						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
 							{$_(`settings.messages.${form.error}`) || form.error}
 						</div>
 					{/if}
 					{#if form?.success && isMessageForAction("deleteLLMKey")}
-						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
 							{$_(`settings.messages.${form.message}`) || form.message}
 						</div>
 					{/if}
@@ -495,7 +495,7 @@ function handleDeleteAccount() {
 					{#if existingLLMToken}
 						<section id="auto-summary" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
 							<h3 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h3>
-				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 auto-phrase-target">
 					{$_("settings.autoSummary.description")}
 				</p>
 				<form
@@ -553,12 +553,12 @@ function handleDeleteAccount() {
 					</button>
 					<!-- 自動要約設定メッセージ -->
 					{#if form?.error && isMessageForAction("updateAutoSummarySettings")}
-						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
 							{$_(`settings.messages.${form.error}`) || form.error}
 						</div>
 					{/if}
 					{#if form?.success && isMessageForAction("updateAutoSummarySettings")}
-						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
 							{$_(`settings.messages.${form.message}`) || form.message}
 						</div>
 					{/if}
@@ -572,7 +572,7 @@ function handleDeleteAccount() {
 							<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
 								{$_("settings.llmStatus.title")}
 							</h3>
-				<p class="text-gray-700 dark:text-gray-300 mb-4">
+				<p class="text-gray-700 dark:text-gray-300 mb-4 auto-phrase-target">
 					{$_("settings.llmStatus.description")}
 				</p>
 				<a
@@ -613,7 +613,7 @@ function handleDeleteAccount() {
 							{$_("settings.deleteAccount.title")}
 						</h3>
 			<div class="mb-4">
-				<p class="text-gray-700 dark:text-gray-300 mb-2">
+				<p class="text-gray-700 dark:text-gray-300 mb-2 auto-phrase-target">
 					{$_("settings.deleteAccount.warning")}
 				</p>
 			</div>
@@ -627,12 +627,12 @@ function handleDeleteAccount() {
 			</button>
 			<!-- アカウント削除メッセージ -->
 			{#if form?.error && isMessageForAction("deleteAccount")}
-				<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+				<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
 					{$_(`settings.messages.${form.error}`) || form.error}
 				</div>
 			{/if}
 			{#if form?.success && isMessageForAction("deleteAccount")}
-				<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+				<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
 					{$_(`settings.messages.${form.message}`) || form.message}
 				</div>
 			{/if}
@@ -653,7 +653,7 @@ function handleDeleteAccount() {
 	onConfirm={handleDeleteLLMToken}
 	onCancel={cancelDeleteLLMToken}
 >
-	<p class="text-sm text-gray-500 dark:text-gray-400">
+	<p class="text-sm text-gray-500 dark:text-gray-400 auto-phrase-target">
 		{$_("settings.deleteToken.confirmMessage")}
 	</p>
 </Modal>
@@ -668,10 +668,10 @@ function handleDeleteAccount() {
 	onConfirm={handleDeleteAccount}
 	onCancel={cancelDeleteAccount}
 >
-	<p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+	<p class="text-sm text-gray-500 dark:text-gray-400 mb-2 auto-phrase-target">
 		{$_("settings.deleteAccount.confirmMessage")}
 	</p>
-	<p class="text-sm text-red-600 dark:text-red-400 font-medium">
+	<p class="text-sm text-red-600 dark:text-red-400 font-medium auto-phrase-target">
 		{$_("settings.deleteAccount.warning")}
 	</p>
 </Modal>

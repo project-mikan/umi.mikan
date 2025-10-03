@@ -15,52 +15,21 @@ function toggleDropdown() {
 
 function selectLanguage(langCode: string) {
 	if (browser) {
-		locale.set(langCode);
 		localStorage.setItem("locale", langCode);
-
-		// Update manifest link for new language
-		updateManifest(langCode);
+		location.reload();
 	}
-	isOpen = false;
-}
-
-function updateManifest(lang: string) {
-	if (!browser) return;
-
-	// Remove existing manifest link
-	const existingManifest = document.querySelector('link[rel="manifest"]');
-	if (existingManifest) {
-		existingManifest.remove();
-	}
-
-	// Add new manifest link with updated language
-	const manifestLink = document.createElement("link");
-	manifestLink.rel = "manifest";
-	manifestLink.href = `/manifest.webmanifest?lang=${lang}`;
-	document.head.appendChild(manifestLink);
-}
-
-function closeDropdown() {
-	isOpen = false;
-}
-
-// Close dropdown when clicking outside
-function handleClickOutside(event: MouseEvent) {
-	const target = event.target as Element;
-	if (!target.closest(".language-selector")) {
-		isOpen = false;
-	}
-}
-
-$: if (browser && isOpen) {
-	document.addEventListener("click", handleClickOutside);
-} else if (browser) {
-	document.removeEventListener("click", handleClickOutside);
 }
 
 $: currentLanguage =
 	languages.find((lang) => lang.code === $locale) || languages[0];
 </script>
+
+<svelte:window on:click={(e) => {
+	const target = e.target as HTMLElement | null;
+	if (target && !target.closest('.language-selector')) {
+		isOpen = false;
+	}
+}} />
 
 <div class="language-selector relative">
 	<button

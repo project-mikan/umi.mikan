@@ -250,7 +250,7 @@ function _handleDelete() {
 
 		<!-- Summary error display -->
 		{#if summaryError}
-			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 auto-phrase-target">
 				<div class="flex">
 					<div class="flex-shrink-0">
 						<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
