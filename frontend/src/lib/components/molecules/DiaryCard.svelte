@@ -32,8 +32,7 @@ export let href: string | null = null;
 		<slot name="form" />
 	{:else if entry}
 		<div
-			class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap"
-			class:auto-phrase={$autoPhraseEnabled}
+			class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap {$autoPhraseEnabled ? 'auto-phrase' : ''}"
 		>
 			{entry.content || ""}
 		</div>
@@ -54,10 +53,4 @@ export let href: string | null = null;
 		</p>
 	{/if}
 </Card>
-
-<style>
-.auto-phrase {
-	word-break: auto-phrase;
-}
-</style>
 

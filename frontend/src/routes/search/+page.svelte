@@ -103,8 +103,7 @@ function _handleKeydown(event: KeyboardEvent) {
 							</h3>
 						</div>
 						<div
-							class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap"
-							class:auto-phrase={$autoPhraseEnabled}
+							class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap {$autoPhraseEnabled ? 'auto-phrase' : ''}"
 						>
 							<p class="line-clamp-3">
 								{entry.content.length > 150
@@ -140,9 +139,5 @@ function _handleKeydown(event: KeyboardEvent) {
 		line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
-	}
-
-	.auto-phrase {
-		word-break: auto-phrase;
 	}
 </style>

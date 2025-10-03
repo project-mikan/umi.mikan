@@ -493,8 +493,7 @@ $: {
 							</div>
 						{/if}
 						<div
-							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70"
-							class:auto-phrase={$autoPhraseEnabled}
+							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70 {$autoPhraseEnabled ? 'auto-phrase' : ''}"
 						>
 							{summary.summary.replace(/\s*\(Updating\)$/, "")}
 						</div>
@@ -530,8 +529,7 @@ $: {
 							</div>
 						{/if}
 						<div
-							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70"
-							class:auto-phrase={$autoPhraseEnabled}
+							class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded opacity-70 {$autoPhraseEnabled ? 'auto-phrase' : ''}"
 						>
 							{summary.summary.replace(/\s*\(Updating\)$/, "")}
 						</div>
@@ -556,9 +554,7 @@ $: {
 						</div>
 					{/if}
 					<div
-						class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded"
-						class:summary-highlight={summaryJustUpdated}
-						class:auto-phrase={$autoPhraseEnabled}
+						class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed transition-all duration-300 px-2 py-1 rounded {summaryJustUpdated ? 'summary-highlight' : ''} {$autoPhraseEnabled ? 'auto-phrase' : ''}"
 					>
 						{summary.summary.replace(/\s*\(Updating\)$/, "")}
 					</div>
@@ -621,9 +617,5 @@ $: {
 	100% {
 		box-shadow: inset 0 0 0 2px #3b82f6;
 	}
-}
-
-.auto-phrase {
-	word-break: auto-phrase;
 }
 </style>

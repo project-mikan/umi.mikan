@@ -3,3 +3,7 @@
 @variant dark (.dark &);
 
 @source "./src/**/*.{html,js,svelte,ts}";
+
+@utility auto-phrase {
+	word-break: auto-phrase;
+}
