@@ -52,12 +52,10 @@ onMount(() => {
 
 	// auto-phraseの状態をbody要素のクラスに反映
 	const unsubscribe = autoPhraseEnabled.subscribe((enabled) => {
-		if (browser) {
-			if (enabled) {
-				document.body.classList.add("auto-phrase-enabled");
-			} else {
-				document.body.classList.remove("auto-phrase-enabled");
-			}
+		if (enabled) {
+			document.body.classList.add("auto-phrase-enabled");
+		} else {
+			document.body.classList.remove("auto-phrase-enabled");
 		}
 	});
 
@@ -67,15 +65,9 @@ onMount(() => {
 
 	return () => {
 		unsubscribe();
-	};
-});
-
-onDestroy(() => {
-	// ブラウザ環境でのみイベントリスナーを削除
-	if (browser) {
 		document.removeEventListener("visibilitychange", handleVisibilityChange);
 		window.removeEventListener("focus", handleFocus);
-	}
+	};
 });
 </script>
 

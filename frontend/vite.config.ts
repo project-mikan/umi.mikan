@@ -14,7 +14,6 @@ export default defineConfig({
 			devOptions: {
 				enabled: true,
 				type: "module",
-				navigateFallback: "/",
 			},
 			injectRegister: "auto",
 			mode:
@@ -34,11 +33,17 @@ export default defineConfig({
 							networkTimeoutSeconds: 10,
 						},
 					},
+					{
+						// SvelteKitのナビゲーションリクエスト(HTMLページ)をキャッシュ
+						urlPattern: ({ request }) => request.mode === "navigate",
+						handler: "NetworkFirst",
+						options: {
+							cacheName: "pages-cache",
+							cacheableResponse: { statuses: [0, 200] },
+							networkTimeoutSeconds: 3,
+						},
+					},
 				],
-				// 本番環境での静的ファイル配信を改善
-				navigateFallback: "/",
-				navigateFallbackAllowlist: [/^(?!\/__).*/], // __で始まるパス以外
-				// 本番環境での動的URLマッチングを無効にし、相対パスを使用
 				cleanupOutdatedCaches: true,
 			},
 			manifest: false, // Disable static manifest generation - use dynamic API route instead
