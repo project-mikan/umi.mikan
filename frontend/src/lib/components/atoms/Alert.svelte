@@ -1,4 +1,6 @@
 <script lang="ts">
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
+
 export let type: "error" | "success" | "warning" | "info" = "info";
 
 const typeClasses = {
@@ -11,7 +13,7 @@ const typeClasses = {
 	info: "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300",
 };
 
-$: classes = `px-4 py-3 rounded ${typeClasses[type]}`;
+$: classes = `px-4 py-3 rounded ${typeClasses[type]} ${$autoPhraseEnabled ? "auto-phrase" : ""}`;
 </script>
 
 <div class={classes}>

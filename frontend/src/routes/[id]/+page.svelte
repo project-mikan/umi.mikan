@@ -11,6 +11,7 @@ import FormField from "$lib/components/molecules/FormField.svelte";
 import Modal from "$lib/components/molecules/Modal.svelte";
 import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
 import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 import { getDayOfWeekKey } from "$lib/utils/date-utils";
 import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { ActionData, PageData } from "./$types";
@@ -250,7 +251,7 @@ function _handleDelete() {
 
 		<!-- Summary error display -->
 		{#if summaryError}
-			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
 				<div class="flex">
 					<div class="flex-shrink-0">
 						<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">

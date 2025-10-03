@@ -1,6 +1,7 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
+import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 </script>
 
 <svelte:head>
@@ -34,7 +35,7 @@ import "$lib/i18n";
 			</h1>
 
 			<!-- Description -->
-			<p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+			<p class="text-lg text-gray-600 dark:text-gray-400 mb-8 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
 				{$_("offline.description")}
 			</p>
 
@@ -43,7 +44,7 @@ import "$lib/i18n";
 				<h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
 					{$_("offline.availableFeatures.title")}
 				</h2>
-				<ul class="space-y-2 text-gray-700 dark:text-gray-300">
+				<ul class="space-y-2 text-gray-700 dark:text-gray-300 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
 					<li class="flex items-center">
 						<svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
 							<path
@@ -92,7 +93,7 @@ import "$lib/i18n";
 				<h2 class="text-xl font-semibold mb-4 text-red-800 dark:text-red-300">
 					{$_("offline.limitedFeatures.title")}
 				</h2>
-				<ul class="space-y-2 text-red-700 dark:text-red-300">
+				<ul class="space-y-2 text-red-700 dark:text-red-300 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
 					<li class="flex items-center">
 						<svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
 							<path
@@ -138,7 +139,7 @@ import "$lib/i18n";
 
 			<!-- Connection Status -->
 			<div class="mb-8">
-				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 {$autoPhraseEnabled ? 'auto-phrase' : ''}">
 					{$_("offline.connectionStatus")}
 				</p>
 				<button
