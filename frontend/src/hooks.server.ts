@@ -31,7 +31,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 	response.headers.set(
 		"Permissions-Policy",
-		"camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+		"camera=(), microphone=(), geolocation=(), payment=(), usb=()",
 	);
 
 	// XSS保護
