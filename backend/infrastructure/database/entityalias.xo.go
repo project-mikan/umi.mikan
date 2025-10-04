@@ -128,6 +128,26 @@ func (ea *EntityAlias) Delete(ctx context.Context, db DB) error {
 	return nil
 }
 
+// EntityAliasByEntityIDAlias retrieves a row from 'public.entity_aliases' as a [EntityAlias].
+//
+// Generated from index 'entity_aliases_entity_id_alias_key'.
+func EntityAliasByEntityIDAlias(ctx context.Context, db DB, entityID uuid.UUID, alias string) (*EntityAlias, error) {
+	// query
+	const sqlstr = `SELECT ` +
+		`id, entity_id, created_at, updated_at, alias ` +
+		`FROM public.entity_aliases ` +
+		`WHERE entity_id = $1 AND alias = $2`
+	// run
+	logf(sqlstr, entityID, alias)
+	ea := EntityAlias{
+		_exists: true,
+	}
+	if err := db.QueryRowContext(ctx, sqlstr, entityID, alias).Scan(&ea.ID, &ea.EntityID, &ea.CreatedAt, &ea.UpdatedAt, &ea.Alias); err != nil {
+		return nil, logerror(err)
+	}
+	return &ea, nil
+}
+
 // EntityAliasByID retrieves a row from 'public.entity_aliases' as a [EntityAlias].
 //
 // Generated from index 'entity_aliases_pkey'.

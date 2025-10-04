@@ -65,6 +65,16 @@ export const actions = {
 					});
 				}
 
+				// エイリアスとして使用されているエラー
+				if (error.message.includes("already used as an alias")) {
+					return fail(400, {
+						error: "entity.messages.nameUsedAsAlias",
+						name,
+						category: categoryStr,
+						memo,
+					});
+				}
+
 				// エラーの詳細情報を取得
 				let errorDetail = error.message;
 				// ConnectErrorの場合、追加情報を含める

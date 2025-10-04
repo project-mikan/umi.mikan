@@ -409,6 +409,9 @@
 			"aliasDeleteSuccess": "Alias deleted successfully",
 			"nameRequired": "Name is required",
 			"duplicateName": "An entity with the same name already exists",
+			"nameUsedAsAlias": "That name is already used as an alias",
+			"aliasUsedAsName": "That alias is already used as an entity name",
+			"aliasAlreadyExists": "That alias is already used",
 			"error": "An error occurred"
 		}
 	}

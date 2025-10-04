@@ -35,6 +35,20 @@ func (s *EntityEntry) CreateEntity(
 		return nil, err
 	}
 
+	// エンティティ名が既存のエイリアスと重複していないかチェック
+	checkAliasQuery := `
+		SELECT COUNT(*) FROM entity_aliases ea
+		INNER JOIN entities e ON ea.entity_id = e.id
+		WHERE e.user_id = $1 AND ea.alias = $2
+	`
+	var aliasCount int
+	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkAliasQuery, userID, message.Name).Scan(&aliasCount); err != nil {
+		return nil, err
+	}
+	if aliasCount > 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "name '%s' is already used as an alias", message.Name)
+	}
+
 	id := uuid.New()
 	currentTime := time.Now().Unix()
 
@@ -353,6 +367,33 @@ func (s *EntityEntry) CreateEntityAlias(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to add alias to this entity")
 	}
 
+	// エイリアスが既存のエンティティ名と重複していないかチェック
+	checkEntityQuery := `
+		SELECT COUNT(*) FROM entities
+		WHERE user_id = $1 AND name = $2
+	`
+	var entityCount int
+	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
+		return nil, err
+	}
+	if entityCount > 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used as an entity name", message.Alias)
+	}
+
+	// エイリアスが既存の他のエイリアスと重複していないかチェック（同じユーザー内）
+	checkOtherAliasQuery := `
+		SELECT COUNT(*) FROM entity_aliases ea
+		INNER JOIN entities e ON ea.entity_id = e.id
+		WHERE e.user_id = $1 AND ea.alias = $2
+	`
+	var otherAliasCount int
+	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias).Scan(&otherAliasCount); err != nil {
+		return nil, err
+	}
+	if otherAliasCount > 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used", message.Alias)
+	}
+
 	id := uuid.New()
 	currentTime := time.Now().Unix()
 
@@ -365,6 +406,13 @@ func (s *EntityEntry) CreateEntityAlias(
 	}
 
 	if err := alias.Insert(ctx, s.DB); err != nil {
+		// PostgreSQLのユニーク制約違反エラーをチェック
+		if pqErr, ok := err.(*pq.Error); ok {
+			// エラーコード 23505 はユニーク制約違反
+			if pqErr.Code == "23505" {
+				return nil, status.Errorf(codes.AlreadyExists, "alias '%s' already exists for this entity", message.Alias)
+			}
+		}
 		return nil, err
 	}
 

@@ -409,6 +409,9 @@
 			"aliasDeleteSuccess": "別名を削除しました",
 			"nameRequired": "名前は必須です",
 			"duplicateName": "同じ名前のエンティティが既に存在します",
+			"nameUsedAsAlias": "その名前は既に別名として使用されています",
+			"aliasUsedAsName": "その別名は既にエンティティ名として使用されています",
+			"aliasAlreadyExists": "その別名は既に使用されています",
 			"error": "エラーが発生しました"
 		}
 	}

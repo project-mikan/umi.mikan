@@ -146,6 +146,29 @@ export const actions: Actions = {
 			};
 		} catch (err) {
 			console.error("Failed to create alias:", err);
+
+			// エラーメッセージを判定
+			if (err instanceof Error) {
+				// エンティティ名として使用されているエラー
+				if (err.message.includes("already used as an entity name")) {
+					return fail(400, {
+						error: "aliasUsedAsName",
+						action: "createAlias",
+					});
+				}
+
+				// エイリアスとして既に使用されているエラー
+				if (
+					err.message.includes("already used") ||
+					err.message.includes("already exists")
+				) {
+					return fail(400, {
+						error: "aliasAlreadyExists",
+						action: "createAlias",
+					});
+				}
+			}
+
 			return fail(500, {
 				error: "error",
 				action: "createAlias",
