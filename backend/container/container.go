@@ -14,6 +14,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/ratelimiter"
 	"github.com/project-mikan/umi.mikan/backend/service/auth"
 	"github.com/project-mikan/umi.mikan/backend/service/diary"
+	"github.com/project-mikan/umi.mikan/backend/service/entity"
 	"github.com/project-mikan/umi.mikan/backend/service/user"
 	"github.com/redis/rueidis"
 	"go.uber.org/dig"
@@ -88,6 +89,9 @@ func (c *Container) registerProviders() error {
 	}
 	if err := c.container.Provide(NewDiaryService); err != nil {
 		return fmt.Errorf("failed to provide NewDiaryService: %w", err)
+	}
+	if err := c.container.Provide(NewEntityService); err != nil {
+		return fmt.Errorf("failed to provide NewEntityService: %w", err)
 	}
 	if err := c.container.Provide(NewUserService); err != nil {
 		return fmt.Errorf("failed to provide NewUserService: %w", err)
@@ -303,6 +307,11 @@ func NewDiaryService(db database.DB, redis rueidis.Client) *diary.DiaryEntry {
 	return &diary.DiaryEntry{DB: db, Redis: redis}
 }
 
+// NewEntityService creates an entity service
+func NewEntityService(db database.DB) *entity.EntityEntry {
+	return &entity.EntityEntry{DB: db}
+}
+
 // NewUserService creates a user service
 func NewUserService(db database.DB, redis rueidis.Client) *user.UserEntry {
 	return &user.UserEntry{DB: db, RedisClient: redis}
@@ -312,11 +321,12 @@ func NewUserService(db database.DB, redis rueidis.Client) *user.UserEntry {
 
 // ServerApp represents the gRPC server application
 type ServerApp struct {
-	DB           database.DB
-	Redis        rueidis.Client
-	AuthService  *auth.AuthEntry
-	DiaryService *diary.DiaryEntry
-	UserService  *user.UserEntry
+	DB            database.DB
+	Redis         rueidis.Client
+	AuthService   *auth.AuthEntry
+	DiaryService  *diary.DiaryEntry
+	EntityService *entity.EntityEntry
+	UserService   *user.UserEntry
 }
 
 // SchedulerApp represents the scheduler application
@@ -341,14 +351,16 @@ func NewServerApp(
 	redis rueidis.Client,
 	authService *auth.AuthEntry,
 	diaryService *diary.DiaryEntry,
+	entityService *entity.EntityEntry,
 	userService *user.UserEntry,
 ) *ServerApp {
 	return &ServerApp{
-		DB:           db,
-		Redis:        redis,
-		AuthService:  authService,
-		DiaryService: diaryService,
-		UserService:  userService,
+		DB:            db,
+		Redis:         redis,
+		AuthService:   authService,
+		DiaryService:  diaryService,
+		EntityService: entityService,
+		UserService:   userService,
 	}
 }
 
