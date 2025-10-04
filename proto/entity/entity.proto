@@ -1,0 +1,177 @@
+syntax = "proto3";
+
+package entity;
+
+option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
+
+service EntityService {
+  // エンティティ作成
+  rpc CreateEntity(CreateEntityRequest) returns (CreateEntityResponse);
+  // エンティティ更新
+  rpc UpdateEntity(UpdateEntityRequest) returns (UpdateEntityResponse);
+  // エンティティ削除
+  rpc DeleteEntity(DeleteEntityRequest) returns (DeleteEntityResponse);
+  // エンティティ取得
+  rpc GetEntity(GetEntityRequest) returns (GetEntityResponse);
+  // エンティティ一覧取得
+  rpc ListEntities(ListEntitiesRequest) returns (ListEntitiesResponse);
+
+  // エイリアス追加
+  rpc CreateEntityAlias(CreateEntityAliasRequest) returns (CreateEntityAliasResponse);
+  // エイリアス削除
+  rpc DeleteEntityAlias(DeleteEntityAliasRequest) returns (DeleteEntityAliasResponse);
+
+  // エンティティ検索（ユーザーの入力に対する候補表示）
+  rpc SearchEntities(SearchEntitiesRequest) returns (SearchEntitiesResponse);
+
+  // エンティティに紐づく日記取得
+  rpc GetDiariesByEntity(GetDiariesByEntityRequest) returns (GetDiariesByEntityResponse);
+}
+
+// エンティティのカテゴリー
+enum EntityCategory {
+  NO_CATEGORY = 0; // 未分類
+  PEOPLE = 1; // 人物
+}
+
+// 位置情報
+message Position {
+  uint32 start = 1; // 開始位置
+  uint32 end = 2; // 終了位置
+}
+
+// エンティティ
+message Entity {
+  string id = 1;
+  string name = 2;
+  EntityCategory category = 3;
+  string memo = 4;
+  repeated EntityAlias aliases = 5; // エイリアスのリスト
+  int64 created_at = 6;
+  int64 updated_at = 7;
+}
+
+// エイリアス
+message EntityAlias {
+  string id = 1;
+  string entity_id = 2;
+  string alias = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
+}
+
+// 日記とエンティティの紐付け
+message DiaryEntity {
+  string id = 1;
+  string diary_id = 2;
+  string entity_id = 3;
+  repeated Position positions = 4; // 日記本文中での登場位置
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}
+
+// エンティティ作成リクエスト
+message CreateEntityRequest {
+  string name = 1;
+  EntityCategory category = 2;
+  string memo = 3;
+}
+
+// エンティティ作成レスポンス
+message CreateEntityResponse {
+  Entity entity = 1;
+}
+
+// エンティティ更新リクエスト
+message UpdateEntityRequest {
+  string id = 1;
+  string name = 2;
+  EntityCategory category = 3;
+  string memo = 4;
+}
+
+// エンティティ更新レスポンス
+message UpdateEntityResponse {
+  Entity entity = 1;
+}
+
+// エンティティ削除リクエスト
+message DeleteEntityRequest {
+  string id = 1;
+}
+
+// エンティティ削除レスポンス
+message DeleteEntityResponse {
+  bool success = 1;
+}
+
+// エンティティ取得リクエスト
+message GetEntityRequest {
+  string id = 1;
+}
+
+// エンティティ取得レスポンス
+message GetEntityResponse {
+  Entity entity = 1;
+}
+
+// エンティティ一覧取得リクエスト
+message ListEntitiesRequest {
+  EntityCategory category = 1; // カテゴリでフィルタ（0の場合は全て）
+}
+
+// エンティティ一覧取得レスポンス
+message ListEntitiesResponse {
+  repeated Entity entities = 1;
+}
+
+// エイリアス追加リクエスト
+message CreateEntityAliasRequest {
+  string entity_id = 1;
+  string alias = 2;
+}
+
+// エイリアス追加レスポンス
+message CreateEntityAliasResponse {
+  EntityAlias alias = 1;
+}
+
+// エイリアス削除リクエスト
+message DeleteEntityAliasRequest {
+  string id = 1;
+}
+
+// エイリアス削除レスポンス
+message DeleteEntityAliasResponse {
+  bool success = 1;
+}
+
+// エンティティ検索リクエスト
+message SearchEntitiesRequest {
+  string query = 1; // 検索クエリ
+}
+
+// エンティティ検索レスポンス
+message SearchEntitiesResponse {
+  repeated Entity entities = 1;
+}
+
+// エンティティに紐づく日記取得リクエスト
+message GetDiariesByEntityRequest {
+  string entity_id = 1;
+}
+
+// エンティティに紐づく日記取得レスポンス
+message GetDiariesByEntityResponse {
+  repeated DiaryWithEntity diaries = 1;
+}
+
+// 日記とエンティティ情報
+message DiaryWithEntity {
+  string id = 1;
+  string content = 2;
+  string date = 3; // YYYY-MM-DD形式
+  repeated Position positions = 4; // この日記でのエンティティの登場位置
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}

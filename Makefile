@@ -69,7 +69,7 @@ grpc-go:
 	--go_opt=module=github.com/project-mikan/umi.mikan/backend \
 	--go-grpc_out=. \
 	--go-grpc_opt=module=github.com/project-mikan/umi.mikan/backend \
-	auth/auth.proto diary/diary.proto user/user.proto
+	auth/auth.proto diary/diary.proto user/user.proto entity/entity.proto
 
 grpc-ts:
 	# 削除分は反映されないのでrm -rfしてから実行

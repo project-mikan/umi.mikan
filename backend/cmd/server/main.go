@@ -48,6 +48,7 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	// Register services
 	g.RegisterDiaryServiceServer(grpcServer, app.DiaryService)
 	g.RegisterAuthServiceServer(grpcServer, app.AuthService)
+	g.RegisterEntityServiceServer(grpcServer, app.EntityService)
 	g.RegisterUserServiceServer(grpcServer, app.UserService)
 
 	// Enable reflection based on environment variable
