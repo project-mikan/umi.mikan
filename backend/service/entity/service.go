@@ -301,8 +301,9 @@ func (s *EntityEntry) ListEntities(
 
 	protoEntities := make([]*g.Entity, 0)
 	for _, entity := range entities {
-		// カテゴリフィルタ（0の場合はすべて）
-		if message.Category != g.EntityCategory_NO_CATEGORY && g.EntityCategory(entity.CategoryID) != message.Category {
+		// カテゴリフィルタ
+		// all_categories が true の場合は全て表示、false の場合は category でフィルタ
+		if !message.AllCategories && g.EntityCategory(entity.CategoryID) != message.Category {
 			continue
 		}
 

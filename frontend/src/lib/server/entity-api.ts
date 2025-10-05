@@ -64,6 +64,7 @@ export interface GetEntityParams {
 
 export interface ListEntitiesParams {
 	category: EntityCategory;
+	allCategories: boolean;
 	accessToken: string;
 }
 
@@ -163,6 +164,7 @@ export async function listEntities(
 
 	const request = create(ListEntitiesRequestSchema, {
 		category: params.category,
+		allCategories: params.allCategories,
 	});
 
 	return await client.listEntities(request);

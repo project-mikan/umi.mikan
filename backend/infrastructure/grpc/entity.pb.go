@@ -779,7 +779,8 @@ func (x *GetEntityResponse) GetEntity() *Entity {
 // エンティティ一覧取得リクエスト
 type ListEntitiesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Category      EntityCategory         `protobuf:"varint,1,opt,name=category,proto3,enum=entity.EntityCategory" json:"category,omitempty"` // カテゴリでフィルタ（0の場合は全て）
+	Category      EntityCategory         `protobuf:"varint,1,opt,name=category,proto3,enum=entity.EntityCategory" json:"category,omitempty"`     // カテゴリでフィルタ
+	AllCategories bool                   `protobuf:"varint,2,opt,name=all_categories,json=allCategories,proto3" json:"all_categories,omitempty"` // trueの場合は全てのカテゴリを表示、falseの場合はcategoryでフィルタ
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -819,6 +820,13 @@ func (x *ListEntitiesRequest) GetCategory() EntityCategory {
 		return x.Category
 	}
 	return EntityCategory_NO_CATEGORY
+}
+
+func (x *ListEntitiesRequest) GetAllCategories() bool {
+	if x != nil {
+		return x.AllCategories
+	}
+	return false
 }
 
 // エンティティ一覧取得レスポンス
@@ -1374,9 +1382,10 @@ const file_entity_entity_proto_rawDesc = "" +
 	"\x10GetEntityRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\";\n" +
 	"\x11GetEntityResponse\x12&\n" +
-	"\x06entity\x18\x01 \x01(\v2\x0e.entity.EntityR\x06entity\"I\n" +
+	"\x06entity\x18\x01 \x01(\v2\x0e.entity.EntityR\x06entity\"p\n" +
 	"\x13ListEntitiesRequest\x122\n" +
-	"\bcategory\x18\x01 \x01(\x0e2\x16.entity.EntityCategoryR\bcategory\"B\n" +
+	"\bcategory\x18\x01 \x01(\x0e2\x16.entity.EntityCategoryR\bcategory\x12%\n" +
+	"\x0eall_categories\x18\x02 \x01(\bR\rallCategories\"B\n" +
 	"\x14ListEntitiesResponse\x12*\n" +
 	"\bentities\x18\x01 \x03(\v2\x0e.entity.EntityR\bentities\"M\n" +
 	"\x18CreateEntityAliasRequest\x12\x1b\n" +

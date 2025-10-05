@@ -117,7 +117,8 @@ message GetEntityResponse {
 
 // エンティティ一覧取得リクエスト
 message ListEntitiesRequest {
-  EntityCategory category = 1; // カテゴリでフィルタ（0の場合は全て）
+  EntityCategory category = 1; // カテゴリでフィルタ
+  bool all_categories = 2; // trueの場合は全てのカテゴリを表示、falseの場合はcategoryでフィルタ
 }
 
 // エンティティ一覧取得レスポンス

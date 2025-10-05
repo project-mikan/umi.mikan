@@ -13,19 +13,25 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 
 	// カテゴリフィルタパラメータを取得
 	const categoryParam = url.searchParams.get("category");
-	let category = EntityCategory.NO_CATEGORY; // デフォルトは全て表示
+	let category = EntityCategory.NO_CATEGORY;
+	let allCategories = true; // デフォルトは全て表示
 
+	// カテゴリの判定
 	if (categoryParam === "people") {
 		category = EntityCategory.PEOPLE;
+		allCategories = false;
 	} else if (categoryParam === "noCategory") {
 		category = EntityCategory.NO_CATEGORY;
-	} else if (categoryParam === "all") {
-		category = EntityCategory.NO_CATEGORY; // 0は全て表示の意味
+		allCategories = false;
+	} else {
+		// "all" またはパラメータなし: 全て表示
+		allCategories = true;
 	}
 
 	try {
 		const response = await listEntities({
 			category: category,
+			allCategories: allCategories,
 			accessToken: authResult.accessToken,
 		});
 
