@@ -2,6 +2,8 @@
 import { createEventDispatcher, onMount, onDestroy } from "svelte";
 import EntitySuggestions from "../molecules/EntitySuggestions.svelte";
 import type { Entity } from "$lib/grpc/entity/entity_pb";
+import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
+import { highlightEntities } from "$lib/utils/diary-entity-highlighter";
 
 export let value = "";
 export let placeholder = "";
@@ -10,6 +12,12 @@ export let disabled = false;
 export let id = "";
 export let name = "";
 export let rows = 4;
+export let diaryEntities: DiaryEntityOutput[] = [];
+
+// エンティティハイライトを適用すべき元のコンテンツ
+// （保存されたコンテンツとdiaryEntitiesのpositionsが対応している）
+let savedContent = "";
+let previousDiaryEntities: DiaryEntityOutput[] = [];
 
 const dispatch = createEventDispatcher();
 
@@ -26,12 +34,48 @@ let currentQuery = ""; // 現在の検索クエリ
 let suggestionsComponent: EntitySuggestions;
 
 let contentElement: HTMLDivElement;
+let isUpdatingFromValue = false; // valueからの更新中かどうかのフラグ
+let isComposing = false; // IME入力中かどうかのフラグ
+let updateTimeout: ReturnType<typeof setTimeout> | null = null; // エンティティハイライト更新のタイムアウト
+let isTyping = false; // ユーザーが入力中かどうかのフラグ
+
+// diaryEntitiesが外部から変更されたら、保存されたコンテンツを更新
+$: if (diaryEntities !== previousDiaryEntities) {
+	previousDiaryEntities = diaryEntities;
+	savedContent = value;
+}
+
+// エンティティハイライトを適用したHTMLを生成
+// 入力中でない場合のみエンティティハイライトを表示
+// また、現在のvalueが保存されたコンテンツと一致する場合のみハイライトを適用
+$: highlightedHTML = (() => {
+	// 入力中は常にプレーンテキスト
+	if (isTyping) {
+		return value.replace(/\n/g, "<br>");
+	}
+
+	// diaryEntitiesがない場合もプレーンテキスト
+	if (!diaryEntities || diaryEntities.length === 0) {
+		return value.replace(/\n/g, "<br>");
+	}
+
+	// 現在のvalueが保存されたコンテンツと異なる場合はプレーンテキスト
+	// （編集中のテキストには古いpositionデータを適用しない）
+	if (value !== savedContent) {
+		return value.replace(/\n/g, "<br>");
+	}
+
+	// 保存されたコンテンツと一致する場合のみハイライトを適用
+	return highlightEntities(value, diaryEntities);
+})();
 
 // captureフェーズでTabキーをキャプチャするためのリスナー
 onMount(() => {
 	if (contentElement) {
 		// captureフェーズで追加してTabキーを早期にキャプチャ
 		contentElement.addEventListener("keydown", _handleKeydown, true);
+		// 初期値を設定
+		updateContentElement();
 	}
 });
 
@@ -47,6 +91,103 @@ $: classes = `${baseClasses} ${disabled ? "bg-gray-100 dark:bg-gray-800 cursor-n
 
 // Calculate min height based on rows
 $: minHeight = `${rows * 1.5}rem`;
+
+// diaryEntitiesが外部から変更されたときのみコンテンツを更新
+// 入力中や編集中のテキストには古いpositionデータを適用しない
+$: if (
+	contentElement &&
+	!isUpdatingFromValue &&
+	!isComposing &&
+	!isTyping &&
+	diaryEntities &&
+	diaryEntities.length > 0 &&
+	value === savedContent
+) {
+	updateContentElement();
+}
+
+function updateContentElement() {
+	if (!contentElement) return;
+
+	// 現在のカーソル位置を取得
+	const selection = window.getSelection();
+	let cursorPos = 0;
+
+	if (selection && selection.rangeCount > 0) {
+		const range = selection.getRangeAt(0);
+		cursorPos = getTextOffset(
+			contentElement,
+			range.startContainer,
+			range.startOffset,
+		);
+	}
+
+	// HTMLを更新
+	contentElement.innerHTML = highlightedHTML;
+
+	// カーソル位置を復元
+	if (cursorPos > 0) {
+		restoreCursorPosition(cursorPos);
+	}
+}
+
+function restoreCursorPosition(targetPos: number) {
+	if (!contentElement) return;
+
+	const selection = window.getSelection();
+	if (!selection) return;
+
+	let currentPos = 0;
+	let targetNode: Node | null = null;
+	let targetOffset = 0;
+
+	function traverse(node: Node): boolean {
+		if (node.nodeType === Node.TEXT_NODE) {
+			const textLength = node.textContent?.length || 0;
+			if (currentPos + textLength >= targetPos) {
+				targetNode = node;
+				targetOffset = targetPos - currentPos;
+				return true;
+			}
+			currentPos += textLength;
+		} else if (node.nodeType === Node.ELEMENT_NODE) {
+			if (node.nodeName === "BR") {
+				currentPos += 1;
+				if (currentPos >= targetPos) {
+					const parent = node.parentNode;
+					if (parent) {
+						targetNode = parent;
+						targetOffset = Array.from(parent.childNodes).indexOf(
+							node as ChildNode,
+						);
+						return true;
+					}
+				}
+			}
+			for (const child of Array.from(node.childNodes)) {
+				if (traverse(child)) return true;
+			}
+		}
+		return false;
+	}
+
+	traverse(contentElement);
+
+	if (targetNode) {
+		try {
+			const range = document.createRange();
+			// TypeScriptの型推論の問題を回避するため、Node型として明示的にキャスト
+			const node = targetNode as Node;
+			const textLength = node.textContent?.length || 0;
+			range.setStart(node, Math.min(targetOffset, textLength));
+			range.collapse(true);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		} catch (e) {
+			// カーソル復元に失敗した場合は無視
+		}
+	}
+}
 
 function htmlToPlainText(html: string): string {
 	// Create a temporary div to process HTML
@@ -94,10 +235,21 @@ function htmlToPlainText(html: string): string {
 
 async function _handleInput(event: Event) {
 	const target = event.target as HTMLDivElement;
+	isUpdatingFromValue = true;
+	isTyping = true; // 入力中フラグを立てる
+
+	// 既存のタイムアウトをクリア
+	if (updateTimeout !== null) {
+		clearTimeout(updateTimeout);
+	}
+
 	value = htmlToPlainText(target.innerHTML);
 
 	// contentElementが初期化されていない場合は何もしない
-	if (!contentElement) return;
+	if (!contentElement) {
+		isUpdatingFromValue = false;
+		return;
+	}
 
 	// Entity候補検索のロジック
 	const selection = window.getSelection();
@@ -116,24 +268,34 @@ async function _handleInput(event: Event) {
 	const beforeCursor = text.substring(0, cursorPos);
 
 	// カーソル前の最後の単語を検索
-	// 単語の区切り: スペース、改行、句読点など
-	const wordMatch = beforeCursor.match(/([^\s\n。、！？,.!?]+)$/);
-	if (wordMatch && wordMatch[1].length > 0) {
-		const word = wordMatch[1];
+	// 空白、改行、句読点で区切られた単語を抽出
+	// エンティティ名には様々な文字が含まれる可能性があるため、
+	// 区切り文字は最小限にする
+	const entityMatch = beforeCursor.match(/([^\s\n。、！？,.!?]+)$/);
+	if (entityMatch && entityMatch[1].length > 0) {
+		const word = entityMatch[1];
 		currentTriggerPos = cursorPos - word.length;
-		currentQuery = word; // 検索クエリを保存
+		currentQuery = word;
 		await searchForSuggestions(word);
 	} else {
-		// 入力がない、またはスペース/改行の直後の場合は候補を閉じる
+		// エンティティ候補がない場合は候補を閉じる
 		showSuggestions = false;
 		currentQuery = "";
-		return;
+		currentTriggerPos = -1;
 	}
 
 	if (showSuggestions) {
 		// カーソル位置に候補を表示
 		updateSuggestionPosition(target);
 	}
+
+	isUpdatingFromValue = false;
+
+	// 500ms後に入力が止まったら入力完了フラグを下ろす
+	// （エンティティハイライトは保存後にサーバーから返されるpositionデータで適用される）
+	updateTimeout = setTimeout(() => {
+		isTyping = false; // 入力完了フラグ
+	}, 500);
 }
 
 // テキスト位置を取得（contenteditable用）
@@ -254,6 +416,7 @@ function _handleKeydown(event: KeyboardEvent) {
 		}
 		if (event.key === "Enter") {
 			event.preventDefault();
+			event.stopPropagation();
 			// 候補が選択されている場合はその候補を、
 			// 選択されていない場合は最も先頭一致する候補を採用
 			let indexToSelect: number;
@@ -345,7 +508,8 @@ function _handleKeydown(event: KeyboardEvent) {
 function selectSuggestion(entity: Entity, selectedText?: string) {
 	if (currentTriggerPos === -1) return;
 
-	// currentTriggerPosから現在のカーソル位置までを entity の名前またはエイリアスに置き換え
+	// valueのプレーンテキストから現在のカーソル位置を計算
+	// （HTMLではなくvalueの文字数で計算）
 	const selection = window.getSelection();
 	if (!selection || selection.rangeCount === 0) return;
 
@@ -356,26 +520,37 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 		range.startOffset,
 	);
 
+	// 入力中の単語の開始位置
 	const beforeTrigger = value.substring(0, currentTriggerPos);
 	const afterCursor = value.substring(cursorPos);
 
 	// 選択されたテキスト（エイリアスまたはエンティティ名）を使用
 	const textToInsert = selectedText || entity.name;
 
-	// 単語を選択されたテキストに置き換え
-	value = `${beforeTrigger}${textToInsert} ${afterCursor}`;
+	// 単語を選択されたテキストに置き換え（@とスペースなし）
+	value = `${beforeTrigger}${textToInsert}${afterCursor}`;
 
 	showSuggestions = false;
 	selectedSuggestionIndex = -1;
 	currentTriggerPos = -1;
 
+	// 既存のタイムアウトをクリア
+	if (updateTimeout !== null) {
+		clearTimeout(updateTimeout);
+	}
+
+	// 入力中フラグを下ろす
+	isTyping = false;
+
 	// contentEditableの内容を更新してフォーカスを戻す
 	setTimeout(() => {
+		// プレーンテキスト（エンティティハイライトなし）で更新
+		// （まだdiaryEntitiesに新しいエンティティ情報がないため）
 		contentElement.innerHTML = value.replace(/\n/g, "<br>");
 		contentElement.focus();
 
-		// カーソル位置を設定
-		const newCursorPos = beforeTrigger.length + textToInsert.length + 1; // textToInsert + space
+		// カーソル位置を設定（テキストの直後）
+		const newCursorPos = beforeTrigger.length + textToInsert.length;
 		const newRange = createRangeAtTextOffset(contentElement, newCursorPos);
 		if (newRange) {
 			const sel = window.getSelection();
@@ -426,7 +601,7 @@ function saveCursorPosition() {
 	return null;
 }
 
-function restoreCursorPosition(range: Range) {
+function restoreCursorFromRange(range: Range) {
 	const selection = window.getSelection();
 	if (selection && range) {
 		selection.removeAllRanges();
@@ -435,13 +610,26 @@ function restoreCursorPosition(range: Range) {
 }
 
 // Update content when value changes externally
-$: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
+// ただし、updateContentElement()が呼ばれる条件の場合はスキップ
+// （エンティティハイライトが適用される場合は、updateContentElement()に任せる）
+$: if (
+	contentElement &&
+	htmlToPlainText(contentElement.innerHTML) !== value &&
+	!(
+		!isUpdatingFromValue &&
+		!isComposing &&
+		!isTyping &&
+		diaryEntities &&
+		diaryEntities.length > 0 &&
+		value === savedContent
+	)
+) {
 	const savedRange = saveCursorPosition();
 	contentElement.innerHTML = value.replace(/\n/g, "<br>");
 	if (savedRange) {
 		// Adjust range if it's out of bounds
 		try {
-			restoreCursorPosition(savedRange);
+			restoreCursorFromRange(savedRange);
 		} catch {
 			// If range is invalid, place cursor at end
 			const range = document.createRange();
@@ -467,6 +655,8 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 		class="{classes} auto-phrase-target"
 		style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
 		on:input={_handleInput}
+		on:compositionstart={() => { isComposing = true; }}
+		on:compositionend={() => { isComposing = false; }}
 		{...$$restProps}
 	></div>
 	{#if showSuggestions}

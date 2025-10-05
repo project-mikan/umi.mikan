@@ -105,6 +105,7 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
+					diaryEntities={data.today.entry?.diaryEntities || []}
 					bind:value={todayContent}
 					on:save={handleSave}
 				/>
@@ -153,6 +154,7 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
+					diaryEntities={data.yesterday.entry?.diaryEntities || []}
 					bind:value={yesterdayContent}
 					on:save={handleYesterdaySave}
 				/>
@@ -205,6 +207,7 @@ use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
+					diaryEntities={data.dayBeforeYesterday.entry?.diaryEntities || []}
 					bind:value={dayBeforeYesterdayContent}
 					on:save={handleDayBeforeYesterdaySave}
 				/>

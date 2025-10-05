@@ -7,7 +7,7 @@ import { EntityCategory, PositionSchema } from "$lib/grpc/entity/entity_pb";
 import { listEntities } from "$lib/server/entity-api";
 
 /**
- * contentからentity/aliasを抽出してDiaryEntityInputを作成
+ * contentから@で明示的に指定されたentity/aliasを抽出してDiaryEntityInputを作成
  */
 export async function extractEntitiesFromContent(
 	content: string,
@@ -41,7 +41,7 @@ export async function extractEntitiesFromContent(
 		}
 	}
 
-	// contentの各位置で最長の前方一致を探す
+	// contentの各位置で最長の前方一致を探す（@なしで明示的なエンティティとして扱う）
 	const matches: {
 		entityId: string;
 		start: number;

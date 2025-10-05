@@ -3,6 +3,7 @@ import { createEventDispatcher } from "svelte";
 import Input from "../atoms/Input.svelte";
 import Label from "../atoms/Label.svelte";
 import Textarea from "../atoms/Textarea.svelte";
+import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
 
 export let type: "input" | "textarea" = "input";
 export let inputType: "text" | "email" | "password" | "date" = "text";
@@ -16,6 +17,7 @@ export let disabled = false;
 export let autocomplete = "";
 export let rows = 4;
 export let srOnlyLabel = false;
+export let diaryEntities: DiaryEntityOutput[] = [];
 
 const dispatch = createEventDispatcher();
 </script>
@@ -33,6 +35,7 @@ const dispatch = createEventDispatcher();
 			{required}
 			{disabled}
 			{rows}
+			{diaryEntities}
 			bind:value
 			on:save={() => dispatch('save')}
 		/>

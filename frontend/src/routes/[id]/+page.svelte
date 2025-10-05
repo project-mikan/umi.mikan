@@ -287,6 +287,7 @@ use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
+					diaryEntities={data.entry?.diaryEntities || []}
 					bind:value={content}
 					on:save={_handleSave}
 				/>

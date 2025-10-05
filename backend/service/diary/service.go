@@ -391,12 +391,19 @@ func (s *DiaryEntry) SearchDiaryEntries(
 	}
 	entries := make([]*g.DiaryEntry, 0, len(ds))
 	for _, d := range ds {
+		// diary_entitiesを取得
+		diaryEntityOutputs, err := s.getDiaryEntityOutputs(ctx, d.ID)
+		if err != nil {
+			return nil, err
+		}
+
 		entries = append(entries, &g.DiaryEntry{
-			Id:        d.ID.String(),
-			Content:   d.Content,
-			Date:      &g.YMD{Year: uint32(d.Date.Year()), Month: uint32(d.Date.Month()), Day: uint32(d.Date.Day())},
-			CreatedAt: d.CreatedAt,
-			UpdatedAt: d.UpdatedAt,
+			Id:            d.ID.String(),
+			Content:       d.Content,
+			Date:          &g.YMD{Year: uint32(d.Date.Year()), Month: uint32(d.Date.Month()), Day: uint32(d.Date.Day())},
+			CreatedAt:     d.CreatedAt,
+			UpdatedAt:     d.UpdatedAt,
+			DiaryEntities: diaryEntityOutputs,
 		})
 	}
 	return &g.SearchDiaryEntriesResponse{
