@@ -6,6 +6,7 @@ import {
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { extractEntitiesFromContent } from "$lib/server/entity-extraction";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies }) => {
@@ -123,6 +124,12 @@ export const actions: Actions = {
 			const [year, month, day] = dateStr.split("-").map(Number);
 			const date = createYMD(year, month, day);
 
+			// contentからentityを抽出
+			const diaryEntities = await extractEntitiesFromContent(
+				content,
+				authResult.accessToken,
+			);
+
 			if (id) {
 				// 更新
 				await updateDiaryEntry({
@@ -130,6 +137,7 @@ export const actions: Actions = {
 					title: "",
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			} else {
@@ -137,6 +145,7 @@ export const actions: Actions = {
 				await createDiaryEntry({
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			}
@@ -167,18 +176,26 @@ export const actions: Actions = {
 			const [year, month, day] = dateStr.split("-").map(Number);
 			const date = createYMD(year, month, day);
 
+			// contentからentityを抽出
+			const diaryEntities = await extractEntitiesFromContent(
+				content,
+				authResult.accessToken,
+			);
+
 			if (id) {
 				await updateDiaryEntry({
 					id,
 					title: "",
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			} else {
 				await createDiaryEntry({
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			}
@@ -209,18 +226,26 @@ export const actions: Actions = {
 			const [year, month, day] = dateStr.split("-").map(Number);
 			const date = createYMD(year, month, day);
 
+			// contentからentityを抽出
+			const diaryEntities = await extractEntitiesFromContent(
+				content,
+				authResult.accessToken,
+			);
+
 			if (id) {
 				await updateDiaryEntry({
 					id,
 					title: "",
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			} else {
 				await createDiaryEntry({
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			}

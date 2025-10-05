@@ -16,6 +16,7 @@ type DiaryEntity struct {
 	CreatedAt int64     `json:"created_at"` // created_at
 	UpdatedAt int64     `json:"updated_at"` // updated_at
 	Positions []byte    `json:"positions"`  // positions
+	UsedText  string    `json:"used_text"`  // used_text
 	// xo fields
 	_exists, _deleted bool
 }
@@ -41,13 +42,13 @@ func (de *DiaryEntity) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.diary_entities (` +
-		`id, diary_id, entity_id, created_at, updated_at, positions` +
+		`id, diary_id, entity_id, created_at, updated_at, positions, used_text` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`)`
 	// run
-	logf(sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions)
-	if _, err := db.ExecContext(ctx, sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions); err != nil {
+	logf(sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.UsedText)
+	if _, err := db.ExecContext(ctx, sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.UsedText); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -65,11 +66,11 @@ func (de *DiaryEntity) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.diary_entities SET ` +
-		`diary_id = $1, entity_id = $2, created_at = $3, updated_at = $4, positions = $5 ` +
-		`WHERE id = $6`
+		`diary_id = $1, entity_id = $2, created_at = $3, updated_at = $4, positions = $5, used_text = $6 ` +
+		`WHERE id = $7`
 	// run
-	logf(sqlstr, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.ID); err != nil {
+	logf(sqlstr, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.UsedText, de.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.UsedText, de.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -91,16 +92,16 @@ func (de *DiaryEntity) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.diary_entities (` +
-		`id, diary_id, entity_id, created_at, updated_at, positions` +
+		`id, diary_id, entity_id, created_at, updated_at, positions, used_text` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`diary_id = EXCLUDED.diary_id, entity_id = EXCLUDED.entity_id, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, positions = EXCLUDED.positions `
+		`diary_id = EXCLUDED.diary_id, entity_id = EXCLUDED.entity_id, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, positions = EXCLUDED.positions, used_text = EXCLUDED.used_text `
 	// run
-	logf(sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions)
-	if _, err := db.ExecContext(ctx, sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions); err != nil {
+	logf(sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.UsedText)
+	if _, err := db.ExecContext(ctx, sqlstr, de.ID, de.DiaryID, de.EntityID, de.CreatedAt, de.UpdatedAt, de.Positions, de.UsedText); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -135,7 +136,7 @@ func (de *DiaryEntity) Delete(ctx context.Context, db DB) error {
 func DiaryEntityByID(ctx context.Context, db DB, id uuid.UUID) (*DiaryEntity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, diary_id, entity_id, created_at, updated_at, positions ` +
+		`id, diary_id, entity_id, created_at, updated_at, positions, used_text ` +
 		`FROM public.diary_entities ` +
 		`WHERE id = $1`
 	// run
@@ -143,7 +144,7 @@ func DiaryEntityByID(ctx context.Context, db DB, id uuid.UUID) (*DiaryEntity, er
 	de := DiaryEntity{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions, &de.UsedText); err != nil {
 		return nil, logerror(err)
 	}
 	return &de, nil
@@ -155,7 +156,7 @@ func DiaryEntityByID(ctx context.Context, db DB, id uuid.UUID) (*DiaryEntity, er
 func DiaryEntitiesByDiaryID(ctx context.Context, db DB, diaryID uuid.UUID) ([]*DiaryEntity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, diary_id, entity_id, created_at, updated_at, positions ` +
+		`id, diary_id, entity_id, created_at, updated_at, positions, used_text ` +
 		`FROM public.diary_entities ` +
 		`WHERE diary_id = $1`
 	// run
@@ -172,7 +173,7 @@ func DiaryEntitiesByDiaryID(ctx context.Context, db DB, diaryID uuid.UUID) ([]*D
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions); err != nil {
+		if err := rows.Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions, &de.UsedText); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &de)
@@ -189,7 +190,7 @@ func DiaryEntitiesByDiaryID(ctx context.Context, db DB, diaryID uuid.UUID) ([]*D
 func DiaryEntitiesByEntityID(ctx context.Context, db DB, entityID uuid.UUID) ([]*DiaryEntity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, diary_id, entity_id, created_at, updated_at, positions ` +
+		`id, diary_id, entity_id, created_at, updated_at, positions, used_text ` +
 		`FROM public.diary_entities ` +
 		`WHERE entity_id = $1`
 	// run
@@ -206,7 +207,7 @@ func DiaryEntitiesByEntityID(ctx context.Context, db DB, entityID uuid.UUID) ([]
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions); err != nil {
+		if err := rows.Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions, &de.UsedText); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &de)
@@ -223,7 +224,7 @@ func DiaryEntitiesByEntityID(ctx context.Context, db DB, entityID uuid.UUID) ([]
 func DiaryEntityByDiaryIDEntityID(ctx context.Context, db DB, diaryID, entityID uuid.UUID) (*DiaryEntity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, diary_id, entity_id, created_at, updated_at, positions ` +
+		`id, diary_id, entity_id, created_at, updated_at, positions, used_text ` +
 		`FROM public.diary_entities ` +
 		`WHERE diary_id = $1 AND entity_id = $2`
 	// run
@@ -231,7 +232,7 @@ func DiaryEntityByDiaryIDEntityID(ctx context.Context, db DB, diaryID, entityID 
 	de := DiaryEntity{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, diaryID, entityID).Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, diaryID, entityID).Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions, &de.UsedText); err != nil {
 		return nil, logerror(err)
 	}
 	return &de, nil

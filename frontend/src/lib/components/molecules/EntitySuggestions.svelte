@@ -1,50 +1,66 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
 import "$lib/i18n";
-import type { Entity } from "$lib/grpc/entity/entity_pb";
+import type { Entity, EntityAlias } from "$lib/grpc/entity/entity_pb";
 
 export let suggestions: Entity[] = [];
 export let selectedIndex = -1;
-export let onSelect: (entity: Entity) => void;
+export let onSelect: (entity: Entity, selectedText?: string) => void;
 export let position: { top: number; left: number } = { top: 0, left: 0 };
 
+// フラット化された候補リスト
+type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
+let flatSuggestions: FlatSuggestion[] = [];
+
+// suggestionsが変更されたらフラット化
+$: {
+	flatSuggestions = [];
+	for (const entity of suggestions) {
+		flatSuggestions.push({ entity, text: entity.name, isAlias: false });
+		for (const alias of entity.aliases) {
+			flatSuggestions.push({ entity, text: alias.alias, isAlias: true });
+		}
+	}
+}
+
 // 候補選択
-function handleSelect(entity: Entity) {
-	onSelect(entity);
+function handleSelect(entity: Entity, selectedText?: string) {
+	onSelect(entity, selectedText);
 }
 
 // キーボード操作のために外部から呼び出される
 export function selectByIndex(index: number) {
-	if (index >= 0 && index < suggestions.length) {
-		handleSelect(suggestions[index]);
+	if (index >= 0 && index < flatSuggestions.length) {
+		const selected = flatSuggestions[index];
+		handleSelect(selected.entity, selected.text);
 	}
 }
 </script>
 
-{#if suggestions.length > 0}
+{#if flatSuggestions.length > 0}
 	<div
 		class="entity-suggestions"
 		style="top: {position.top}px; left: {position.left}px;"
 	>
 		<ul class="suggestions-list">
-			{#each suggestions as entity, i}
-				<button
-					type="button"
-					class="suggestion-item {i === selectedIndex ? 'selected' : ''}"
-					on:click={() => handleSelect(entity)}
-					on:keydown={(e) => {
-						if (e.key === 'Enter') {
-							handleSelect(entity);
-						}
-					}}
-				>
-					<div class="entity-name">{entity.name}</div>
-					{#if entity.aliases.length > 0}
-						<div class="entity-aliases">
-							{entity.aliases.map((a) => a.alias).join(', ')}
-						</div>
-					{/if}
-				</button>
+			{#each flatSuggestions as suggestion, i}
+				<li>
+					<button
+						type="button"
+						class="suggestion-item {i === selectedIndex ? 'selected' : ''} {suggestion.isAlias ? 'alias' : ''}"
+						on:click={() => handleSelect(suggestion.entity, suggestion.text)}
+						on:keydown={(e) => {
+							if (e.key === 'Enter') {
+								handleSelect(suggestion.entity, suggestion.text);
+							}
+						}}
+					>
+						{#if suggestion.isAlias}
+							<span class="alias-prefix">→</span>
+						{/if}
+						{suggestion.text}
+					</button>
+				</li>
 			{/each}
 		</ul>
 	</div>
@@ -74,6 +90,10 @@ export function selectByIndex(index: number) {
 		padding: 0.25rem;
 	}
 
+	.suggestions-list li {
+		list-style: none;
+	}
+
 	.suggestion-item {
 		width: 100%;
 		text-align: left;
@@ -83,6 +103,14 @@ export function selectByIndex(index: number) {
 		background: transparent;
 		border-radius: 0.25rem;
 		transition: background-color 0.15s;
+		font-weight: 500;
+		color: #111827;
+	}
+
+	.suggestion-item.alias {
+		font-weight: 400;
+		color: #6b7280;
+		padding-left: 1.5rem;
 	}
 
 	.suggestion-item:hover,
@@ -90,27 +118,21 @@ export function selectByIndex(index: number) {
 		background-color: #f3f4f6;
 	}
 
+	:global(.dark) .suggestion-item {
+		color: #f9fafb;
+	}
+
+	:global(.dark) .suggestion-item.alias {
+		color: #9ca3af;
+	}
+
 	:global(.dark) .suggestion-item:hover,
 	:global(.dark) .suggestion-item.selected {
 		background-color: #4b5563;
 	}
 
-	.entity-name {
-		font-weight: 500;
-		color: #111827;
-	}
-
-	:global(.dark) .entity-name {
-		color: #f9fafb;
-	}
-
-	.entity-aliases {
-		font-size: 0.875rem;
-		color: #6b7280;
-		margin-top: 0.25rem;
-	}
-
-	:global(.dark) .entity-aliases {
+	.alias-prefix {
+		margin-right: 0.5rem;
 		color: #9ca3af;
 	}
 </style>

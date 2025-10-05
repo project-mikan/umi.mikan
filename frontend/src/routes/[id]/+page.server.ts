@@ -11,6 +11,7 @@ import { unixToMilliseconds } from "$lib/utils/token-utils";
 import { getUserInfo } from "$lib/server/auth-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
+import { extractEntitiesFromContent } from "$lib/server/entity-extraction";
 import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -286,6 +287,12 @@ export const actions: Actions = {
 				Number.parseInt(day, 10),
 			);
 
+			// contentからentityを抽出
+			const diaryEntities = await extractEntitiesFromContent(
+				content,
+				authResult.accessToken,
+			);
+
 			if (id) {
 				// Update existing entry
 				await updateDiaryEntry({
@@ -293,6 +300,7 @@ export const actions: Actions = {
 					title: "",
 					content,
 					date: ymd,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			} else {
@@ -300,6 +308,7 @@ export const actions: Actions = {
 				await createDiaryEntry({
 					content,
 					date: ymd,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			}

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { createEventDispatcher } from "svelte";
+import { createEventDispatcher, onMount, onDestroy } from "svelte";
 import EntitySuggestions from "../molecules/EntitySuggestions.svelte";
 import type { Entity } from "$lib/grpc/entity/entity_pb";
 
@@ -15,13 +15,31 @@ const dispatch = createEventDispatcher();
 
 // Entity候補関連
 let suggestions: Entity[] = [];
+// フラット化された候補リスト（エンティティ名とエイリアスを含む）
+type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
+let flatSuggestions: FlatSuggestion[] = [];
 let selectedSuggestionIndex = -1;
 let showSuggestions = false;
 let suggestionPosition = { top: 0, left: 0 };
 let currentTriggerPos = -1;
+let currentQuery = ""; // 現在の検索クエリ
 let suggestionsComponent: EntitySuggestions;
 
 let contentElement: HTMLDivElement;
+
+// captureフェーズでTabキーをキャプチャするためのリスナー
+onMount(() => {
+	if (contentElement) {
+		// captureフェーズで追加してTabキーを早期にキャプチャ
+		contentElement.addEventListener("keydown", _handleKeydown, true);
+	}
+});
+
+onDestroy(() => {
+	if (contentElement) {
+		contentElement.removeEventListener("keydown", _handleKeydown, true);
+	}
+});
 
 const baseClasses =
 	"block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
@@ -87,30 +105,30 @@ async function _handleInput(event: Event) {
 
 	if (selection && selection.rangeCount > 0) {
 		const range = selection.getRangeAt(0);
-		cursorPos = getTextOffset(contentElement, range.startContainer, range.startOffset);
+		cursorPos = getTextOffset(
+			contentElement,
+			range.startContainer,
+			range.startOffset,
+		);
 	}
 
 	const text = value;
-
-	// @記号を探す
 	const beforeCursor = text.substring(0, cursorPos);
-	const lastAtPos = beforeCursor.lastIndexOf("@");
 
-	if (lastAtPos === -1) {
+	// カーソル前の最後の単語を検索
+	// 単語の区切り: スペース、改行、句読点など
+	const wordMatch = beforeCursor.match(/([^\s\n。、！？,.!?]+)$/);
+	if (wordMatch && wordMatch[1].length > 0) {
+		const word = wordMatch[1];
+		currentTriggerPos = cursorPos - word.length;
+		currentQuery = word; // 検索クエリを保存
+		await searchForSuggestions(word);
+	} else {
+		// 入力がない、またはスペース/改行の直後の場合は候補を閉じる
 		showSuggestions = false;
+		currentQuery = "";
 		return;
 	}
-
-	// @記号の後の文字列を取得（スペースまたは改行があれば終了）
-	const afterAt = beforeCursor.substring(lastAtPos + 1);
-	if (/[\s\n]/.test(afterAt)) {
-		showSuggestions = false;
-		return;
-	}
-
-	// 候補を検索
-	currentTriggerPos = lastAtPos;
-	await searchForSuggestions(afterAt);
 
 	if (showSuggestions) {
 		// カーソル位置に候補を表示
@@ -143,10 +161,27 @@ async function searchForSuggestions(query: string) {
 		);
 		const data = await response.json();
 		suggestions = data.entities || [];
-		showSuggestions = suggestions.length > 0;
+
+		// 候補をフラット化（エンティティ名とエイリアスを含む）
+		flatSuggestions = [];
+		for (const entity of suggestions) {
+			// エンティティ名を追加
+			flatSuggestions.push({ entity, text: entity.name, isAlias: false });
+			// エイリアスを追加
+			for (const alias of entity.aliases) {
+				flatSuggestions.push({ entity, text: alias.alias, isAlias: true });
+			}
+		}
+
+		showSuggestions = flatSuggestions.length > 0;
+		// 候補が表示されたら最も先頭一致する候補を選択状態にする
+		if (showSuggestions) {
+			selectedSuggestionIndex = getBestFlatMatchIndex(query, flatSuggestions);
+		}
 	} catch (err) {
 		console.error("Failed to search entities:", err);
 		suggestions = [];
+		flatSuggestions = [];
 		showSuggestions = false;
 	}
 }
@@ -161,14 +196,54 @@ function updateSuggestionPosition(_target: HTMLDivElement) {
 	};
 }
 
+// 最も先頭一致する候補のインデックスを取得（フラット化されたリスト用）
+function getBestFlatMatchIndex(
+	query: string,
+	flatSugs: FlatSuggestion[],
+): number {
+	if (!query || flatSugs.length === 0) return 0;
+
+	const lowerQuery = query.toLowerCase();
+
+	// 先頭一致するものを探す
+	for (let i = 0; i < flatSugs.length; i++) {
+		if (flatSugs[i].text.toLowerCase().startsWith(lowerQuery)) {
+			return i;
+		}
+	}
+
+	// 先頭一致がなければ最初の候補を返す
+	return 0;
+}
+
 function _handleKeydown(event: KeyboardEvent) {
 	// Entity候補のキーボード操作
-	if (showSuggestions) {
+	if (showSuggestions && flatSuggestions.length > 0) {
+		// Tabキーは候補が表示されている時のみ処理
+		if (event.key === "Tab") {
+			event.preventDefault();
+			event.stopPropagation();
+
+			// Tabで次の候補へ、Shift+Tabで前の候補へ
+			if (event.shiftKey) {
+				selectedSuggestionIndex =
+					selectedSuggestionIndex <= 0
+						? flatSuggestions.length - 1
+						: selectedSuggestionIndex - 1;
+			} else {
+				selectedSuggestionIndex =
+					selectedSuggestionIndex >= flatSuggestions.length - 1
+						? 0
+						: selectedSuggestionIndex + 1;
+			}
+
+			return;
+		}
 		if (event.key === "ArrowDown") {
 			event.preventDefault();
 			selectedSuggestionIndex = Math.min(
 				selectedSuggestionIndex + 1,
-				suggestions.length - 1,
+				flatSuggestions.length - 1,
 			);
 			return;
 		}
@@ -177,9 +252,18 @@ function _handleKeydown(event: KeyboardEvent) {
 			selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
 			return;
 		}
-		if (event.key === "Enter" && selectedSuggestionIndex >= 0) {
+		if (event.key === "Enter") {
 			event.preventDefault();
-			selectSuggestion(suggestions[selectedSuggestionIndex]);
+			// 候補が選択されている場合はその候補を、
+			// 選択されていない場合は最も先頭一致する候補を採用
+			let indexToSelect: number;
+			if (selectedSuggestionIndex >= 0) {
+				indexToSelect = selectedSuggestionIndex;
+			} else {
+				indexToSelect = getBestFlatMatchIndex(currentQuery, flatSuggestions);
+			}
+			const selected = flatSuggestions[indexToSelect];
+			selectSuggestion(selected.entity, selected.text);
 			return;
 		}
 		if (event.key === "Escape") {
@@ -258,19 +342,28 @@ function _handleKeydown(event: KeyboardEvent) {
 }
 
 // 候補選択
-function selectSuggestion(entity: Entity) {
+function selectSuggestion(entity: Entity, selectedText?: string) {
 	if (currentTriggerPos === -1) return;
 
-	// @記号から現在のカーソル位置までを entity の名前に置き換え
+	// currentTriggerPosから現在のカーソル位置までを entity の名前またはエイリアスに置き換え
 	const selection = window.getSelection();
 	if (!selection || selection.rangeCount === 0) return;
 
 	const range = selection.getRangeAt(0);
-	const cursorPos = getTextOffset(contentElement, range.startContainer, range.startOffset);
+	const cursorPos = getTextOffset(
+		contentElement,
+		range.startContainer,
+		range.startOffset,
+	);
 
 	const beforeTrigger = value.substring(0, currentTriggerPos);
 	const afterCursor = value.substring(cursorPos);
-	value = `${beforeTrigger}@${entity.name} ${afterCursor}`;
+
+	// 選択されたテキスト（エイリアスまたはエンティティ名）を使用
+	const textToInsert = selectedText || entity.name;
+
+	// 単語を選択されたテキストに置き換え
+	value = `${beforeTrigger}${textToInsert} ${afterCursor}`;
 
 	showSuggestions = false;
 	selectedSuggestionIndex = -1;
@@ -282,7 +375,7 @@ function selectSuggestion(entity: Entity) {
 		contentElement.focus();
 
 		// カーソル位置を設定
-		const newCursorPos = beforeTrigger.length + entity.name.length + 2; // @ + name + space
+		const newCursorPos = beforeTrigger.length + textToInsert.length + 1; // textToInsert + space
 		const newRange = createRangeAtTextOffset(contentElement, newCursorPos);
 		if (newRange) {
 			const sel = window.getSelection();
@@ -293,7 +386,10 @@ function selectSuggestion(entity: Entity) {
 }
 
 // テキストオフセット位置にRangeを作成（contenteditable用）
-function createRangeAtTextOffset(root: Node, targetOffset: number): Range | null {
+function createRangeAtTextOffset(
+	root: Node,
+	targetOffset: number,
+): Range | null {
 	const range = document.createRange();
 	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
@@ -371,7 +467,6 @@ $: if (contentElement && htmlToPlainText(contentElement.innerHTML) !== value) {
 		class="{classes} auto-phrase-target"
 		style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
 		on:input={_handleInput}
-		on:keydown={_handleKeydown}
 		{...$$restProps}
 	></div>
 	{#if showSuggestions}

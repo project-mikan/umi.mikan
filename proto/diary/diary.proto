@@ -56,12 +56,21 @@ message DiaryEntry {
   string content = 3; // 内容
   int64 created_at = 4; // 作成日時（Unix timestamp）
   int64 updated_at = 5; // 更新日時（Unix timestamp）
+  repeated DiaryEntityOutput diary_entities = 6; // エンティティと位置情報のリスト
+}
+
+// エンティティ出力（取得時）
+message DiaryEntityOutput {
+  string entity_id = 1;
+  repeated entity.Position positions = 2;
+  string used_text = 3; // 実際に使用されたテキスト（entity nameまたはalias）
 }
 
 // エンティティと位置情報
 message DiaryEntityInput {
   string entity_id = 1;
   repeated entity.Position positions = 2;
+  string used_text = 3; // 実際に使用されたテキスト（entity nameまたはalias）
 }
 
 // 新しい日記エントリを作成するためのリクエスト
