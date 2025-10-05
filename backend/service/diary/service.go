@@ -81,7 +81,20 @@ func (s *DiaryEntry) CreateDiaryEntry(
 		UpdatedAt: currentTime,
 	}
 
-	if err := diary.Insert(ctx, s.DB); err != nil {
+	// トランザクション内でdiaryとdiary_entitiesを保存
+	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+		if err := diary.Insert(ctx, tx); err != nil {
+			return err
+		}
+
+		// diary_entitiesを保存
+		if err := s.saveDiaryEntities(ctx, tx, diary.ID, message.DiaryEntities, currentTime); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -237,11 +250,23 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 		if message.Date != nil {
 			diary.Date = time.Date(int(message.Date.Year), time.Month(message.Date.Month), int(message.Date.Day), 0, 0, 0, 0, time.UTC)
 		}
-		diary.UpdatedAt = time.Now().Unix()
+		currentTime := time.Now().Unix()
+		diary.UpdatedAt = currentTime
 
 		if err := diary.Update(ctx, tx); err != nil {
 			return err
 		}
+
+		// 既存のdiary_entitiesを削除してから新しいものを保存
+		if err := s.deleteDiaryEntities(ctx, tx, diary.ID); err != nil {
+			return err
+		}
+
+		// 新しいdiary_entitiesを保存
+		if err := s.saveDiaryEntities(ctx, tx, diary.ID, message.DiaryEntities, currentTime); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -742,4 +767,54 @@ func (s *DiaryEntry) GetDailySummary(
 			UpdatedAt: summary.UpdatedAt,
 		},
 	}, nil
+}
+
+// saveDiaryEntities diary_entitiesを保存
+func (s *DiaryEntry) saveDiaryEntities(ctx context.Context, tx *sql.Tx, diaryID uuid.UUID, entities []*g.DiaryEntityInput, currentTime int64) error {
+	if len(entities) == 0 {
+		return nil
+	}
+
+	for _, entity := range entities {
+		entityID, err := uuid.Parse(entity.EntityId)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "invalid entity ID: %s", entity.EntityId)
+		}
+
+		// positionsをJSONBに変換
+		positions := make([]map[string]uint32, 0, len(entity.Positions))
+		for _, pos := range entity.Positions {
+			positions = append(positions, map[string]uint32{
+				"start": pos.Start,
+				"end":   pos.End,
+			})
+		}
+		positionsJSON, err := json.Marshal(positions)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal positions")
+		}
+
+		// diary_entityを作成
+		diaryEntity := &database.DiaryEntity{
+			ID:        uuid.New(),
+			DiaryID:   diaryID,
+			EntityID:  entityID,
+			Positions: positionsJSON,
+			CreatedAt: currentTime,
+			UpdatedAt: currentTime,
+		}
+
+		if err := diaryEntity.Insert(ctx, tx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// deleteDiaryEntities 特定の日記に紐づくdiary_entitiesを削除
+func (s *DiaryEntry) deleteDiaryEntities(ctx context.Context, tx *sql.Tx, diaryID uuid.UUID) error {
+	query := "DELETE FROM diary_entities WHERE diary_id = $1"
+	_, err := tx.ExecContext(ctx, query, diaryID)
+	return err
 }

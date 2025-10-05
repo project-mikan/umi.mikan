@@ -210,18 +210,72 @@ func (x *DiaryEntry) GetUpdatedAt() int64 {
 	return 0
 }
 
+// エンティティと位置情報
+type DiaryEntityInput struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EntityId      string                 `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	Positions     []*Position            `protobuf:"bytes,2,rep,name=positions,proto3" json:"positions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DiaryEntityInput) Reset() {
+	*x = DiaryEntityInput{}
+	mi := &file_diary_diary_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DiaryEntityInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DiaryEntityInput) ProtoMessage() {}
+
+func (x *DiaryEntityInput) ProtoReflect() protoreflect.Message {
+	mi := &file_diary_diary_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DiaryEntityInput.ProtoReflect.Descriptor instead.
+func (*DiaryEntityInput) Descriptor() ([]byte, []int) {
+	return file_diary_diary_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *DiaryEntityInput) GetEntityId() string {
+	if x != nil {
+		return x.EntityId
+	}
+	return ""
+}
+
+func (x *DiaryEntityInput) GetPositions() []*Position {
+	if x != nil {
+		return x.Positions
+	}
+	return nil
+}
+
 // 新しい日記エントリを作成するためのリクエスト
 type CreateDiaryEntryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	Date          *YMD                   `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`
+	DiaryEntities []*DiaryEntityInput    `protobuf:"bytes,3,rep,name=diary_entities,json=diaryEntities,proto3" json:"diary_entities,omitempty"` // エンティティと位置情報のリスト
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateDiaryEntryRequest) Reset() {
 	*x = CreateDiaryEntryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[3]
+	mi := &file_diary_diary_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -233,7 +287,7 @@ func (x *CreateDiaryEntryRequest) String() string {
 func (*CreateDiaryEntryRequest) ProtoMessage() {}
 
 func (x *CreateDiaryEntryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[3]
+	mi := &file_diary_diary_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -246,7 +300,7 @@ func (x *CreateDiaryEntryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDiaryEntryRequest.ProtoReflect.Descriptor instead.
 func (*CreateDiaryEntryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{3}
+	return file_diary_diary_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateDiaryEntryRequest) GetContent() string {
@@ -263,6 +317,13 @@ func (x *CreateDiaryEntryRequest) GetDate() *YMD {
 	return nil
 }
 
+func (x *CreateDiaryEntryRequest) GetDiaryEntities() []*DiaryEntityInput {
+	if x != nil {
+		return x.DiaryEntities
+	}
+	return nil
+}
+
 // 日記エントリを作成した結果を返すレスポンス
 type CreateDiaryEntryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -273,7 +334,7 @@ type CreateDiaryEntryResponse struct {
 
 func (x *CreateDiaryEntryResponse) Reset() {
 	*x = CreateDiaryEntryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[4]
+	mi := &file_diary_diary_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -285,7 +346,7 @@ func (x *CreateDiaryEntryResponse) String() string {
 func (*CreateDiaryEntryResponse) ProtoMessage() {}
 
 func (x *CreateDiaryEntryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[4]
+	mi := &file_diary_diary_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -298,7 +359,7 @@ func (x *CreateDiaryEntryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDiaryEntryResponse.ProtoReflect.Descriptor instead.
 func (*CreateDiaryEntryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{4}
+	return file_diary_diary_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreateDiaryEntryResponse) GetEntry() *DiaryEntry {
@@ -318,7 +379,7 @@ type GetDiaryEntryRequest struct {
 
 func (x *GetDiaryEntryRequest) Reset() {
 	*x = GetDiaryEntryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[5]
+	mi := &file_diary_diary_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -330,7 +391,7 @@ func (x *GetDiaryEntryRequest) String() string {
 func (*GetDiaryEntryRequest) ProtoMessage() {}
 
 func (x *GetDiaryEntryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[5]
+	mi := &file_diary_diary_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -343,7 +404,7 @@ func (x *GetDiaryEntryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEntryRequest.ProtoReflect.Descriptor instead.
 func (*GetDiaryEntryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{5}
+	return file_diary_diary_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetDiaryEntryRequest) GetDate() *YMD {
@@ -363,7 +424,7 @@ type GetDiaryEntriesRequest struct {
 
 func (x *GetDiaryEntriesRequest) Reset() {
 	*x = GetDiaryEntriesRequest{}
-	mi := &file_diary_diary_proto_msgTypes[6]
+	mi := &file_diary_diary_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -375,7 +436,7 @@ func (x *GetDiaryEntriesRequest) String() string {
 func (*GetDiaryEntriesRequest) ProtoMessage() {}
 
 func (x *GetDiaryEntriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[6]
+	mi := &file_diary_diary_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -388,7 +449,7 @@ func (x *GetDiaryEntriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEntriesRequest.ProtoReflect.Descriptor instead.
 func (*GetDiaryEntriesRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{6}
+	return file_diary_diary_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetDiaryEntriesRequest) GetDates() []*YMD {
@@ -408,7 +469,7 @@ type GetDiaryEntriesByMonthRequest struct {
 
 func (x *GetDiaryEntriesByMonthRequest) Reset() {
 	*x = GetDiaryEntriesByMonthRequest{}
-	mi := &file_diary_diary_proto_msgTypes[7]
+	mi := &file_diary_diary_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -420,7 +481,7 @@ func (x *GetDiaryEntriesByMonthRequest) String() string {
 func (*GetDiaryEntriesByMonthRequest) ProtoMessage() {}
 
 func (x *GetDiaryEntriesByMonthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[7]
+	mi := &file_diary_diary_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -433,7 +494,7 @@ func (x *GetDiaryEntriesByMonthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEntriesByMonthRequest.ProtoReflect.Descriptor instead.
 func (*GetDiaryEntriesByMonthRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{7}
+	return file_diary_diary_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetDiaryEntriesByMonthRequest) GetMonth() *YM {
@@ -452,7 +513,7 @@ type SearchDiaryEntriesRequest struct {
 
 func (x *SearchDiaryEntriesRequest) Reset() {
 	*x = SearchDiaryEntriesRequest{}
-	mi := &file_diary_diary_proto_msgTypes[8]
+	mi := &file_diary_diary_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -464,7 +525,7 @@ func (x *SearchDiaryEntriesRequest) String() string {
 func (*SearchDiaryEntriesRequest) ProtoMessage() {}
 
 func (x *SearchDiaryEntriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[8]
+	mi := &file_diary_diary_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -477,7 +538,7 @@ func (x *SearchDiaryEntriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchDiaryEntriesRequest.ProtoReflect.Descriptor instead.
 func (*SearchDiaryEntriesRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{8}
+	return file_diary_diary_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SearchDiaryEntriesRequest) GetKeyword() string {
@@ -497,7 +558,7 @@ type SearchDiaryEntriesResponse struct {
 
 func (x *SearchDiaryEntriesResponse) Reset() {
 	*x = SearchDiaryEntriesResponse{}
-	mi := &file_diary_diary_proto_msgTypes[9]
+	mi := &file_diary_diary_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -509,7 +570,7 @@ func (x *SearchDiaryEntriesResponse) String() string {
 func (*SearchDiaryEntriesResponse) ProtoMessage() {}
 
 func (x *SearchDiaryEntriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[9]
+	mi := &file_diary_diary_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -522,7 +583,7 @@ func (x *SearchDiaryEntriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchDiaryEntriesResponse.ProtoReflect.Descriptor instead.
 func (*SearchDiaryEntriesResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{9}
+	return file_diary_diary_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SearchDiaryEntriesResponse) GetSearchedKeyword() string {
@@ -548,7 +609,7 @@ type GetDiaryEntriesResponse struct {
 
 func (x *GetDiaryEntriesResponse) Reset() {
 	*x = GetDiaryEntriesResponse{}
-	mi := &file_diary_diary_proto_msgTypes[10]
+	mi := &file_diary_diary_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -560,7 +621,7 @@ func (x *GetDiaryEntriesResponse) String() string {
 func (*GetDiaryEntriesResponse) ProtoMessage() {}
 
 func (x *GetDiaryEntriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[10]
+	mi := &file_diary_diary_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -573,7 +634,7 @@ func (x *GetDiaryEntriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEntriesResponse.ProtoReflect.Descriptor instead.
 func (*GetDiaryEntriesResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{10}
+	return file_diary_diary_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetDiaryEntriesResponse) GetEntries() []*DiaryEntry {
@@ -592,7 +653,7 @@ type GetDiaryEntriesByMonthResponse struct {
 
 func (x *GetDiaryEntriesByMonthResponse) Reset() {
 	*x = GetDiaryEntriesByMonthResponse{}
-	mi := &file_diary_diary_proto_msgTypes[11]
+	mi := &file_diary_diary_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -604,7 +665,7 @@ func (x *GetDiaryEntriesByMonthResponse) String() string {
 func (*GetDiaryEntriesByMonthResponse) ProtoMessage() {}
 
 func (x *GetDiaryEntriesByMonthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[11]
+	mi := &file_diary_diary_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -617,7 +678,7 @@ func (x *GetDiaryEntriesByMonthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEntriesByMonthResponse.ProtoReflect.Descriptor instead.
 func (*GetDiaryEntriesByMonthResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{11}
+	return file_diary_diary_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetDiaryEntriesByMonthResponse) GetEntries() []*DiaryEntry {
@@ -637,7 +698,7 @@ type GetDiaryEntryResponse struct {
 
 func (x *GetDiaryEntryResponse) Reset() {
 	*x = GetDiaryEntryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[12]
+	mi := &file_diary_diary_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -649,7 +710,7 @@ func (x *GetDiaryEntryResponse) String() string {
 func (*GetDiaryEntryResponse) ProtoMessage() {}
 
 func (x *GetDiaryEntryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[12]
+	mi := &file_diary_diary_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -662,7 +723,7 @@ func (x *GetDiaryEntryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEntryResponse.ProtoReflect.Descriptor instead.
 func (*GetDiaryEntryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{12}
+	return file_diary_diary_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetDiaryEntryResponse) GetEntry() *DiaryEntry {
@@ -679,13 +740,14 @@ type UpdateDiaryEntryRequest struct {
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
 	Date          *YMD                   `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
+	DiaryEntities []*DiaryEntityInput    `protobuf:"bytes,5,rep,name=diary_entities,json=diaryEntities,proto3" json:"diary_entities,omitempty"` // エンティティと位置情報のリスト
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateDiaryEntryRequest) Reset() {
 	*x = UpdateDiaryEntryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[13]
+	mi := &file_diary_diary_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -697,7 +759,7 @@ func (x *UpdateDiaryEntryRequest) String() string {
 func (*UpdateDiaryEntryRequest) ProtoMessage() {}
 
 func (x *UpdateDiaryEntryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[13]
+	mi := &file_diary_diary_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -710,7 +772,7 @@ func (x *UpdateDiaryEntryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDiaryEntryRequest.ProtoReflect.Descriptor instead.
 func (*UpdateDiaryEntryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{13}
+	return file_diary_diary_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateDiaryEntryRequest) GetId() string {
@@ -741,6 +803,13 @@ func (x *UpdateDiaryEntryRequest) GetDate() *YMD {
 	return nil
 }
 
+func (x *UpdateDiaryEntryRequest) GetDiaryEntities() []*DiaryEntityInput {
+	if x != nil {
+		return x.DiaryEntities
+	}
+	return nil
+}
+
 // 更新された日記エントリを返すレスポンス
 type UpdateDiaryEntryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -751,7 +820,7 @@ type UpdateDiaryEntryResponse struct {
 
 func (x *UpdateDiaryEntryResponse) Reset() {
 	*x = UpdateDiaryEntryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[14]
+	mi := &file_diary_diary_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -763,7 +832,7 @@ func (x *UpdateDiaryEntryResponse) String() string {
 func (*UpdateDiaryEntryResponse) ProtoMessage() {}
 
 func (x *UpdateDiaryEntryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[14]
+	mi := &file_diary_diary_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -776,7 +845,7 @@ func (x *UpdateDiaryEntryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDiaryEntryResponse.ProtoReflect.Descriptor instead.
 func (*UpdateDiaryEntryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{14}
+	return file_diary_diary_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UpdateDiaryEntryResponse) GetEntry() *DiaryEntry {
@@ -796,7 +865,7 @@ type DeleteDiaryEntryRequest struct {
 
 func (x *DeleteDiaryEntryRequest) Reset() {
 	*x = DeleteDiaryEntryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[15]
+	mi := &file_diary_diary_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -808,7 +877,7 @@ func (x *DeleteDiaryEntryRequest) String() string {
 func (*DeleteDiaryEntryRequest) ProtoMessage() {}
 
 func (x *DeleteDiaryEntryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[15]
+	mi := &file_diary_diary_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -821,7 +890,7 @@ func (x *DeleteDiaryEntryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDiaryEntryRequest.ProtoReflect.Descriptor instead.
 func (*DeleteDiaryEntryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{15}
+	return file_diary_diary_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DeleteDiaryEntryRequest) GetId() string {
@@ -841,7 +910,7 @@ type DeleteDiaryEntryResponse struct {
 
 func (x *DeleteDiaryEntryResponse) Reset() {
 	*x = DeleteDiaryEntryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[16]
+	mi := &file_diary_diary_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -853,7 +922,7 @@ func (x *DeleteDiaryEntryResponse) String() string {
 func (*DeleteDiaryEntryResponse) ProtoMessage() {}
 
 func (x *DeleteDiaryEntryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[16]
+	mi := &file_diary_diary_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -866,7 +935,7 @@ func (x *DeleteDiaryEntryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDiaryEntryResponse.ProtoReflect.Descriptor instead.
 func (*DeleteDiaryEntryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{16}
+	return file_diary_diary_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *DeleteDiaryEntryResponse) GetSuccess() bool {
@@ -890,7 +959,7 @@ type MonthlySummary struct {
 
 func (x *MonthlySummary) Reset() {
 	*x = MonthlySummary{}
-	mi := &file_diary_diary_proto_msgTypes[17]
+	mi := &file_diary_diary_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -902,7 +971,7 @@ func (x *MonthlySummary) String() string {
 func (*MonthlySummary) ProtoMessage() {}
 
 func (x *MonthlySummary) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[17]
+	mi := &file_diary_diary_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -915,7 +984,7 @@ func (x *MonthlySummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonthlySummary.ProtoReflect.Descriptor instead.
 func (*MonthlySummary) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{17}
+	return file_diary_diary_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *MonthlySummary) GetId() string {
@@ -963,7 +1032,7 @@ type GenerateMonthlySummaryRequest struct {
 
 func (x *GenerateMonthlySummaryRequest) Reset() {
 	*x = GenerateMonthlySummaryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[18]
+	mi := &file_diary_diary_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -975,7 +1044,7 @@ func (x *GenerateMonthlySummaryRequest) String() string {
 func (*GenerateMonthlySummaryRequest) ProtoMessage() {}
 
 func (x *GenerateMonthlySummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[18]
+	mi := &file_diary_diary_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -988,7 +1057,7 @@ func (x *GenerateMonthlySummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateMonthlySummaryRequest.ProtoReflect.Descriptor instead.
 func (*GenerateMonthlySummaryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{18}
+	return file_diary_diary_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GenerateMonthlySummaryRequest) GetMonth() *YM {
@@ -1008,7 +1077,7 @@ type GenerateMonthlySummaryResponse struct {
 
 func (x *GenerateMonthlySummaryResponse) Reset() {
 	*x = GenerateMonthlySummaryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[19]
+	mi := &file_diary_diary_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1020,7 +1089,7 @@ func (x *GenerateMonthlySummaryResponse) String() string {
 func (*GenerateMonthlySummaryResponse) ProtoMessage() {}
 
 func (x *GenerateMonthlySummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[19]
+	mi := &file_diary_diary_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1033,7 +1102,7 @@ func (x *GenerateMonthlySummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateMonthlySummaryResponse.ProtoReflect.Descriptor instead.
 func (*GenerateMonthlySummaryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{19}
+	return file_diary_diary_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GenerateMonthlySummaryResponse) GetSummary() *MonthlySummary {
@@ -1053,7 +1122,7 @@ type GetMonthlySummaryRequest struct {
 
 func (x *GetMonthlySummaryRequest) Reset() {
 	*x = GetMonthlySummaryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[20]
+	mi := &file_diary_diary_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1065,7 +1134,7 @@ func (x *GetMonthlySummaryRequest) String() string {
 func (*GetMonthlySummaryRequest) ProtoMessage() {}
 
 func (x *GetMonthlySummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[20]
+	mi := &file_diary_diary_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1078,7 +1147,7 @@ func (x *GetMonthlySummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMonthlySummaryRequest.ProtoReflect.Descriptor instead.
 func (*GetMonthlySummaryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{20}
+	return file_diary_diary_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetMonthlySummaryRequest) GetMonth() *YM {
@@ -1098,7 +1167,7 @@ type GetMonthlySummaryResponse struct {
 
 func (x *GetMonthlySummaryResponse) Reset() {
 	*x = GetMonthlySummaryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[21]
+	mi := &file_diary_diary_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1110,7 +1179,7 @@ func (x *GetMonthlySummaryResponse) String() string {
 func (*GetMonthlySummaryResponse) ProtoMessage() {}
 
 func (x *GetMonthlySummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[21]
+	mi := &file_diary_diary_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1123,7 +1192,7 @@ func (x *GetMonthlySummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMonthlySummaryResponse.ProtoReflect.Descriptor instead.
 func (*GetMonthlySummaryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{21}
+	return file_diary_diary_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetMonthlySummaryResponse) GetSummary() *MonthlySummary {
@@ -1148,7 +1217,7 @@ type DailySummary struct {
 
 func (x *DailySummary) Reset() {
 	*x = DailySummary{}
-	mi := &file_diary_diary_proto_msgTypes[22]
+	mi := &file_diary_diary_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1160,7 +1229,7 @@ func (x *DailySummary) String() string {
 func (*DailySummary) ProtoMessage() {}
 
 func (x *DailySummary) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[22]
+	mi := &file_diary_diary_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1173,7 +1242,7 @@ func (x *DailySummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DailySummary.ProtoReflect.Descriptor instead.
 func (*DailySummary) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{22}
+	return file_diary_diary_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *DailySummary) GetId() string {
@@ -1228,7 +1297,7 @@ type GenerateDailySummaryRequest struct {
 
 func (x *GenerateDailySummaryRequest) Reset() {
 	*x = GenerateDailySummaryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[23]
+	mi := &file_diary_diary_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1240,7 +1309,7 @@ func (x *GenerateDailySummaryRequest) String() string {
 func (*GenerateDailySummaryRequest) ProtoMessage() {}
 
 func (x *GenerateDailySummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[23]
+	mi := &file_diary_diary_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1253,7 +1322,7 @@ func (x *GenerateDailySummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateDailySummaryRequest.ProtoReflect.Descriptor instead.
 func (*GenerateDailySummaryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{23}
+	return file_diary_diary_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GenerateDailySummaryRequest) GetDiaryId() string {
@@ -1273,7 +1342,7 @@ type GenerateDailySummaryResponse struct {
 
 func (x *GenerateDailySummaryResponse) Reset() {
 	*x = GenerateDailySummaryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[24]
+	mi := &file_diary_diary_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1285,7 +1354,7 @@ func (x *GenerateDailySummaryResponse) String() string {
 func (*GenerateDailySummaryResponse) ProtoMessage() {}
 
 func (x *GenerateDailySummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[24]
+	mi := &file_diary_diary_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1298,7 +1367,7 @@ func (x *GenerateDailySummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateDailySummaryResponse.ProtoReflect.Descriptor instead.
 func (*GenerateDailySummaryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{24}
+	return file_diary_diary_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GenerateDailySummaryResponse) GetSummary() *DailySummary {
@@ -1318,7 +1387,7 @@ type GetDailySummaryRequest struct {
 
 func (x *GetDailySummaryRequest) Reset() {
 	*x = GetDailySummaryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[25]
+	mi := &file_diary_diary_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1330,7 +1399,7 @@ func (x *GetDailySummaryRequest) String() string {
 func (*GetDailySummaryRequest) ProtoMessage() {}
 
 func (x *GetDailySummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[25]
+	mi := &file_diary_diary_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1343,7 +1412,7 @@ func (x *GetDailySummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDailySummaryRequest.ProtoReflect.Descriptor instead.
 func (*GetDailySummaryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{25}
+	return file_diary_diary_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *GetDailySummaryRequest) GetDate() *YMD {
@@ -1363,7 +1432,7 @@ type GetDailySummaryResponse struct {
 
 func (x *GetDailySummaryResponse) Reset() {
 	*x = GetDailySummaryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[26]
+	mi := &file_diary_diary_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1375,7 +1444,7 @@ func (x *GetDailySummaryResponse) String() string {
 func (*GetDailySummaryResponse) ProtoMessage() {}
 
 func (x *GetDailySummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[26]
+	mi := &file_diary_diary_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1388,7 +1457,7 @@ func (x *GetDailySummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDailySummaryResponse.ProtoReflect.Descriptor instead.
 func (*GetDailySummaryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{26}
+	return file_diary_diary_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *GetDailySummaryResponse) GetSummary() *DailySummary {
@@ -1402,7 +1471,7 @@ var File_diary_diary_proto protoreflect.FileDescriptor
 
 const file_diary_diary_proto_rawDesc = "" +
 	"\n" +
-	"\x11diary/diary.proto\x12\x05diary\"A\n" +
+	"\x11diary/diary.proto\x12\x05diary\x1a\x13entity/entity.proto\"A\n" +
 	"\x03YMD\x12\x12\n" +
 	"\x04year\x18\x01 \x01(\rR\x04year\x12\x14\n" +
 	"\x05month\x18\x02 \x01(\rR\x05month\x12\x10\n" +
@@ -1419,11 +1488,15 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\"S\n" +
+	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\"_\n" +
+	"\x10DiaryEntityInput\x12\x1b\n" +
+	"\tentity_id\x18\x01 \x01(\tR\bentityId\x12.\n" +
+	"\tpositions\x18\x02 \x03(\v2\x10.entity.PositionR\tpositions\"\x93\x01\n" +
 	"\x17CreateDiaryEntryRequest\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12\x1e\n" +
 	"\x04date\x18\x02 \x01(\v2\n" +
-	".diary.YMDR\x04date\"C\n" +
+	".diary.YMDR\x04date\x12>\n" +
+	"\x0ediary_entities\x18\x03 \x03(\v2\x17.diary.DiaryEntityInputR\rdiaryEntities\"C\n" +
 	"\x18CreateDiaryEntryResponse\x12'\n" +
 	"\x05entry\x18\x01 \x01(\v2\x11.diary.DiaryEntryR\x05entry\"6\n" +
 	"\x14GetDiaryEntryRequest\x12\x1e\n" +
@@ -1444,13 +1517,14 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x1eGetDiaryEntriesByMonthResponse\x12+\n" +
 	"\aentries\x18\x01 \x03(\v2\x11.diary.DiaryEntryR\aentries\"@\n" +
 	"\x15GetDiaryEntryResponse\x12'\n" +
-	"\x05entry\x18\x01 \x01(\v2\x11.diary.DiaryEntryR\x05entry\"y\n" +
+	"\x05entry\x18\x01 \x01(\v2\x11.diary.DiaryEntryR\x05entry\"\xb9\x01\n" +
 	"\x17UpdateDiaryEntryRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1e\n" +
 	"\x04date\x18\x04 \x01(\v2\n" +
-	".diary.YMDR\x04date\"C\n" +
+	".diary.YMDR\x04date\x12>\n" +
+	"\x0ediary_entities\x18\x05 \x03(\v2\x17.diary.DiaryEntityInputR\rdiaryEntities\"C\n" +
 	"\x18UpdateDiaryEntryResponse\x12'\n" +
 	"\x05entry\x18\x01 \x01(\v2\x11.diary.DiaryEntryR\x05entry\")\n" +
 	"\x17DeleteDiaryEntryRequest\x12\x0e\n" +
@@ -1517,85 +1591,90 @@ func file_diary_diary_proto_rawDescGZIP() []byte {
 	return file_diary_diary_proto_rawDescData
 }
 
-var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_diary_diary_proto_goTypes = []any{
 	(*YMD)(nil),                            // 0: diary.YMD
 	(*YM)(nil),                             // 1: diary.YM
 	(*DiaryEntry)(nil),                     // 2: diary.DiaryEntry
-	(*CreateDiaryEntryRequest)(nil),        // 3: diary.CreateDiaryEntryRequest
-	(*CreateDiaryEntryResponse)(nil),       // 4: diary.CreateDiaryEntryResponse
-	(*GetDiaryEntryRequest)(nil),           // 5: diary.GetDiaryEntryRequest
-	(*GetDiaryEntriesRequest)(nil),         // 6: diary.GetDiaryEntriesRequest
-	(*GetDiaryEntriesByMonthRequest)(nil),  // 7: diary.GetDiaryEntriesByMonthRequest
-	(*SearchDiaryEntriesRequest)(nil),      // 8: diary.SearchDiaryEntriesRequest
-	(*SearchDiaryEntriesResponse)(nil),     // 9: diary.SearchDiaryEntriesResponse
-	(*GetDiaryEntriesResponse)(nil),        // 10: diary.GetDiaryEntriesResponse
-	(*GetDiaryEntriesByMonthResponse)(nil), // 11: diary.GetDiaryEntriesByMonthResponse
-	(*GetDiaryEntryResponse)(nil),          // 12: diary.GetDiaryEntryResponse
-	(*UpdateDiaryEntryRequest)(nil),        // 13: diary.UpdateDiaryEntryRequest
-	(*UpdateDiaryEntryResponse)(nil),       // 14: diary.UpdateDiaryEntryResponse
-	(*DeleteDiaryEntryRequest)(nil),        // 15: diary.DeleteDiaryEntryRequest
-	(*DeleteDiaryEntryResponse)(nil),       // 16: diary.DeleteDiaryEntryResponse
-	(*MonthlySummary)(nil),                 // 17: diary.MonthlySummary
-	(*GenerateMonthlySummaryRequest)(nil),  // 18: diary.GenerateMonthlySummaryRequest
-	(*GenerateMonthlySummaryResponse)(nil), // 19: diary.GenerateMonthlySummaryResponse
-	(*GetMonthlySummaryRequest)(nil),       // 20: diary.GetMonthlySummaryRequest
-	(*GetMonthlySummaryResponse)(nil),      // 21: diary.GetMonthlySummaryResponse
-	(*DailySummary)(nil),                   // 22: diary.DailySummary
-	(*GenerateDailySummaryRequest)(nil),    // 23: diary.GenerateDailySummaryRequest
-	(*GenerateDailySummaryResponse)(nil),   // 24: diary.GenerateDailySummaryResponse
-	(*GetDailySummaryRequest)(nil),         // 25: diary.GetDailySummaryRequest
-	(*GetDailySummaryResponse)(nil),        // 26: diary.GetDailySummaryResponse
+	(*DiaryEntityInput)(nil),               // 3: diary.DiaryEntityInput
+	(*CreateDiaryEntryRequest)(nil),        // 4: diary.CreateDiaryEntryRequest
+	(*CreateDiaryEntryResponse)(nil),       // 5: diary.CreateDiaryEntryResponse
+	(*GetDiaryEntryRequest)(nil),           // 6: diary.GetDiaryEntryRequest
+	(*GetDiaryEntriesRequest)(nil),         // 7: diary.GetDiaryEntriesRequest
+	(*GetDiaryEntriesByMonthRequest)(nil),  // 8: diary.GetDiaryEntriesByMonthRequest
+	(*SearchDiaryEntriesRequest)(nil),      // 9: diary.SearchDiaryEntriesRequest
+	(*SearchDiaryEntriesResponse)(nil),     // 10: diary.SearchDiaryEntriesResponse
+	(*GetDiaryEntriesResponse)(nil),        // 11: diary.GetDiaryEntriesResponse
+	(*GetDiaryEntriesByMonthResponse)(nil), // 12: diary.GetDiaryEntriesByMonthResponse
+	(*GetDiaryEntryResponse)(nil),          // 13: diary.GetDiaryEntryResponse
+	(*UpdateDiaryEntryRequest)(nil),        // 14: diary.UpdateDiaryEntryRequest
+	(*UpdateDiaryEntryResponse)(nil),       // 15: diary.UpdateDiaryEntryResponse
+	(*DeleteDiaryEntryRequest)(nil),        // 16: diary.DeleteDiaryEntryRequest
+	(*DeleteDiaryEntryResponse)(nil),       // 17: diary.DeleteDiaryEntryResponse
+	(*MonthlySummary)(nil),                 // 18: diary.MonthlySummary
+	(*GenerateMonthlySummaryRequest)(nil),  // 19: diary.GenerateMonthlySummaryRequest
+	(*GenerateMonthlySummaryResponse)(nil), // 20: diary.GenerateMonthlySummaryResponse
+	(*GetMonthlySummaryRequest)(nil),       // 21: diary.GetMonthlySummaryRequest
+	(*GetMonthlySummaryResponse)(nil),      // 22: diary.GetMonthlySummaryResponse
+	(*DailySummary)(nil),                   // 23: diary.DailySummary
+	(*GenerateDailySummaryRequest)(nil),    // 24: diary.GenerateDailySummaryRequest
+	(*GenerateDailySummaryResponse)(nil),   // 25: diary.GenerateDailySummaryResponse
+	(*GetDailySummaryRequest)(nil),         // 26: diary.GetDailySummaryRequest
+	(*GetDailySummaryResponse)(nil),        // 27: diary.GetDailySummaryResponse
+	(*Position)(nil),                       // 28: entity.Position
 }
 var file_diary_diary_proto_depIdxs = []int32{
 	0,  // 0: diary.DiaryEntry.date:type_name -> diary.YMD
-	0,  // 1: diary.CreateDiaryEntryRequest.date:type_name -> diary.YMD
-	2,  // 2: diary.CreateDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
-	0,  // 3: diary.GetDiaryEntryRequest.date:type_name -> diary.YMD
-	0,  // 4: diary.GetDiaryEntriesRequest.dates:type_name -> diary.YMD
-	1,  // 5: diary.GetDiaryEntriesByMonthRequest.month:type_name -> diary.YM
-	2,  // 6: diary.SearchDiaryEntriesResponse.entries:type_name -> diary.DiaryEntry
-	2,  // 7: diary.GetDiaryEntriesResponse.entries:type_name -> diary.DiaryEntry
-	2,  // 8: diary.GetDiaryEntriesByMonthResponse.entries:type_name -> diary.DiaryEntry
-	2,  // 9: diary.GetDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
-	0,  // 10: diary.UpdateDiaryEntryRequest.date:type_name -> diary.YMD
-	2,  // 11: diary.UpdateDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
-	1,  // 12: diary.MonthlySummary.month:type_name -> diary.YM
-	1,  // 13: diary.GenerateMonthlySummaryRequest.month:type_name -> diary.YM
-	17, // 14: diary.GenerateMonthlySummaryResponse.summary:type_name -> diary.MonthlySummary
-	1,  // 15: diary.GetMonthlySummaryRequest.month:type_name -> diary.YM
-	17, // 16: diary.GetMonthlySummaryResponse.summary:type_name -> diary.MonthlySummary
-	0,  // 17: diary.DailySummary.date:type_name -> diary.YMD
-	22, // 18: diary.GenerateDailySummaryResponse.summary:type_name -> diary.DailySummary
-	0,  // 19: diary.GetDailySummaryRequest.date:type_name -> diary.YMD
-	22, // 20: diary.GetDailySummaryResponse.summary:type_name -> diary.DailySummary
-	3,  // 21: diary.DiaryService.CreateDiaryEntry:input_type -> diary.CreateDiaryEntryRequest
-	13, // 22: diary.DiaryService.UpdateDiaryEntry:input_type -> diary.UpdateDiaryEntryRequest
-	15, // 23: diary.DiaryService.DeleteDiaryEntry:input_type -> diary.DeleteDiaryEntryRequest
-	5,  // 24: diary.DiaryService.GetDiaryEntry:input_type -> diary.GetDiaryEntryRequest
-	6,  // 25: diary.DiaryService.GetDiaryEntries:input_type -> diary.GetDiaryEntriesRequest
-	7,  // 26: diary.DiaryService.GetDiaryEntriesByMonth:input_type -> diary.GetDiaryEntriesByMonthRequest
-	8,  // 27: diary.DiaryService.SearchDiaryEntries:input_type -> diary.SearchDiaryEntriesRequest
-	18, // 28: diary.DiaryService.GenerateMonthlySummary:input_type -> diary.GenerateMonthlySummaryRequest
-	20, // 29: diary.DiaryService.GetMonthlySummary:input_type -> diary.GetMonthlySummaryRequest
-	23, // 30: diary.DiaryService.GenerateDailySummary:input_type -> diary.GenerateDailySummaryRequest
-	25, // 31: diary.DiaryService.GetDailySummary:input_type -> diary.GetDailySummaryRequest
-	4,  // 32: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
-	14, // 33: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
-	16, // 34: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
-	12, // 35: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
-	10, // 36: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
-	11, // 37: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
-	9,  // 38: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
-	19, // 39: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
-	21, // 40: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
-	24, // 41: diary.DiaryService.GenerateDailySummary:output_type -> diary.GenerateDailySummaryResponse
-	26, // 42: diary.DiaryService.GetDailySummary:output_type -> diary.GetDailySummaryResponse
-	32, // [32:43] is the sub-list for method output_type
-	21, // [21:32] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	28, // 1: diary.DiaryEntityInput.positions:type_name -> entity.Position
+	0,  // 2: diary.CreateDiaryEntryRequest.date:type_name -> diary.YMD
+	3,  // 3: diary.CreateDiaryEntryRequest.diary_entities:type_name -> diary.DiaryEntityInput
+	2,  // 4: diary.CreateDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
+	0,  // 5: diary.GetDiaryEntryRequest.date:type_name -> diary.YMD
+	0,  // 6: diary.GetDiaryEntriesRequest.dates:type_name -> diary.YMD
+	1,  // 7: diary.GetDiaryEntriesByMonthRequest.month:type_name -> diary.YM
+	2,  // 8: diary.SearchDiaryEntriesResponse.entries:type_name -> diary.DiaryEntry
+	2,  // 9: diary.GetDiaryEntriesResponse.entries:type_name -> diary.DiaryEntry
+	2,  // 10: diary.GetDiaryEntriesByMonthResponse.entries:type_name -> diary.DiaryEntry
+	2,  // 11: diary.GetDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
+	0,  // 12: diary.UpdateDiaryEntryRequest.date:type_name -> diary.YMD
+	3,  // 13: diary.UpdateDiaryEntryRequest.diary_entities:type_name -> diary.DiaryEntityInput
+	2,  // 14: diary.UpdateDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
+	1,  // 15: diary.MonthlySummary.month:type_name -> diary.YM
+	1,  // 16: diary.GenerateMonthlySummaryRequest.month:type_name -> diary.YM
+	18, // 17: diary.GenerateMonthlySummaryResponse.summary:type_name -> diary.MonthlySummary
+	1,  // 18: diary.GetMonthlySummaryRequest.month:type_name -> diary.YM
+	18, // 19: diary.GetMonthlySummaryResponse.summary:type_name -> diary.MonthlySummary
+	0,  // 20: diary.DailySummary.date:type_name -> diary.YMD
+	23, // 21: diary.GenerateDailySummaryResponse.summary:type_name -> diary.DailySummary
+	0,  // 22: diary.GetDailySummaryRequest.date:type_name -> diary.YMD
+	23, // 23: diary.GetDailySummaryResponse.summary:type_name -> diary.DailySummary
+	4,  // 24: diary.DiaryService.CreateDiaryEntry:input_type -> diary.CreateDiaryEntryRequest
+	14, // 25: diary.DiaryService.UpdateDiaryEntry:input_type -> diary.UpdateDiaryEntryRequest
+	16, // 26: diary.DiaryService.DeleteDiaryEntry:input_type -> diary.DeleteDiaryEntryRequest
+	6,  // 27: diary.DiaryService.GetDiaryEntry:input_type -> diary.GetDiaryEntryRequest
+	7,  // 28: diary.DiaryService.GetDiaryEntries:input_type -> diary.GetDiaryEntriesRequest
+	8,  // 29: diary.DiaryService.GetDiaryEntriesByMonth:input_type -> diary.GetDiaryEntriesByMonthRequest
+	9,  // 30: diary.DiaryService.SearchDiaryEntries:input_type -> diary.SearchDiaryEntriesRequest
+	19, // 31: diary.DiaryService.GenerateMonthlySummary:input_type -> diary.GenerateMonthlySummaryRequest
+	21, // 32: diary.DiaryService.GetMonthlySummary:input_type -> diary.GetMonthlySummaryRequest
+	24, // 33: diary.DiaryService.GenerateDailySummary:input_type -> diary.GenerateDailySummaryRequest
+	26, // 34: diary.DiaryService.GetDailySummary:input_type -> diary.GetDailySummaryRequest
+	5,  // 35: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
+	15, // 36: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
+	17, // 37: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
+	13, // 38: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
+	11, // 39: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
+	12, // 40: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
+	10, // 41: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
+	20, // 42: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
+	22, // 43: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
+	25, // 44: diary.DiaryService.GenerateDailySummary:output_type -> diary.GenerateDailySummaryResponse
+	27, // 45: diary.DiaryService.GetDailySummary:output_type -> diary.GetDailySummaryResponse
+	35, // [35:46] is the sub-list for method output_type
+	24, // [24:35] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_diary_diary_proto_init() }
@@ -1603,13 +1682,14 @@ func file_diary_diary_proto_init() {
 	if File_diary_diary_proto != nil {
 		return
 	}
+	file_entity_entity_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_diary_diary_proto_rawDesc), len(file_diary_diary_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   27,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

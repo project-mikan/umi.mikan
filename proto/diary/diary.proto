@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package diary;
 
+import "entity/entity.proto";
+
 option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
 
 service DiaryService {
@@ -56,10 +58,17 @@ message DiaryEntry {
   int64 updated_at = 5; // 更新日時（Unix timestamp）
 }
 
+// エンティティと位置情報
+message DiaryEntityInput {
+  string entity_id = 1;
+  repeated entity.Position positions = 2;
+}
+
 // 新しい日記エントリを作成するためのリクエスト
 message CreateDiaryEntryRequest {
   string content = 1;
   YMD date = 2;
+  repeated DiaryEntityInput diary_entities = 3; // エンティティと位置情報のリスト
 }
 
 // 日記エントリを作成した結果を返すレスポンス
@@ -110,6 +119,7 @@ message UpdateDiaryEntryRequest {
   string title = 2;
   string content = 3;
   YMD date = 4;
+  repeated DiaryEntityInput diary_entities = 5; // エンティティと位置情報のリスト
 }
 
 // 更新された日記エントリを返すレスポンス

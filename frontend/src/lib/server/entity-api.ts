@@ -18,6 +18,8 @@ import {
 	type GetEntityResponse,
 	ListEntitiesRequestSchema,
 	type ListEntitiesResponse,
+	SearchEntitiesRequestSchema,
+	type SearchEntitiesResponse,
 	UpdateEntityRequestSchema,
 	type UpdateEntityResponse,
 } from "$lib/grpc/entity/entity_pb";
@@ -81,6 +83,11 @@ export interface DeleteEntityAliasParams {
 
 export interface GetDiariesByEntityParams {
 	entityId: string;
+	accessToken: string;
+}
+
+export interface SearchEntitiesParams {
+	query: string;
 	accessToken: string;
 }
 
@@ -217,4 +224,20 @@ export async function getDiariesByEntity(
 	});
 
 	return await client.getDiariesByEntity(request);
+}
+
+/**
+ * エンティティを検索（ユーザーの入力に対する候補表示）
+ */
+export async function searchEntities(
+	params: SearchEntitiesParams,
+): Promise<SearchEntitiesResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(EntityService, transport);
+
+	const request = create(SearchEntitiesRequestSchema, {
+		query: params.query,
+	});
+
+	return await client.searchEntities(request);
 }

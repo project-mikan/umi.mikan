@@ -490,16 +490,31 @@ func (s *EntityEntry) SearchEntities(
 
 	// エンティティ名とエイリアスから検索
 	// LIKE検索を使用して部分一致検索を行う
-	query := `
-		SELECT DISTINCT e.id, e.user_id, e.created_at, e.updated_at, e.category_id, e.name, e.memo
-		FROM entities e
-		LEFT JOIN entity_aliases ea ON e.id = ea.entity_id
-		WHERE e.user_id = $1
-		AND (e.name ILIKE $2 OR ea.alias ILIKE $2)
-		ORDER BY e.name
-	`
+	// 空文字列の場合は全件取得
+	var query string
+	var rows *sql.Rows
 
-	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, userID, "%"+message.Query+"%")
+	if message.Query == "" {
+		// 空文字列の場合は全件取得
+		query = `
+			SELECT DISTINCT e.id, e.user_id, e.created_at, e.updated_at, e.category_id, e.name, e.memo
+			FROM entities e
+			WHERE e.user_id = $1
+			ORDER BY e.name
+		`
+		rows, err = s.DB.(*sql.DB).QueryContext(ctx, query, userID)
+	} else {
+		// クエリがある場合は部分一致検索
+		query = `
+			SELECT DISTINCT e.id, e.user_id, e.created_at, e.updated_at, e.category_id, e.name, e.memo
+			FROM entities e
+			LEFT JOIN entity_aliases ea ON e.id = ea.entity_id
+			WHERE e.user_id = $1
+			AND (e.name ILIKE $2 OR ea.alias ILIKE $2)
+			ORDER BY e.name
+		`
+		rows, err = s.DB.(*sql.DB).QueryContext(ctx, query, userID, "%"+message.Query+"%")
+	}
 	if err != nil {
 		return nil, err
 	}
