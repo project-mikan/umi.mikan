@@ -33,6 +33,10 @@ let currentTriggerPos = -1;
 let currentQuery = ""; // 現在の検索クエリ
 let suggestionsComponent: EntitySuggestions;
 
+// 全エンティティデータをキャッシュ（ページロード時に取得）
+let allEntities: Entity[] = [];
+let allFlatEntities: FlatSuggestion[] = [];
+
 let contentElement: HTMLDivElement;
 let isUpdatingFromValue = false; // valueからの更新中かどうかのフラグ
 let isComposing = false; // IME入力中かどうかのフラグ
@@ -70,7 +74,10 @@ $: highlightedHTML = (() => {
 })();
 
 // captureフェーズでTabキーをキャプチャするためのリスナー
-onMount(() => {
+onMount(async () => {
+	// 全エンティティデータを事前取得
+	await loadAllEntities();
+
 	if (contentElement) {
 		// captureフェーズで追加してTabキーを早期にキャプチャ
 		contentElement.addEventListener("keydown", _handleKeydown, true);
@@ -274,9 +281,60 @@ async function _handleInput(event: Event) {
 	const entityMatch = beforeCursor.match(/([^\s\n。、！？,.!?]+)$/);
 	if (entityMatch && entityMatch[1].length > 0) {
 		const word = entityMatch[1];
-		currentTriggerPos = cursorPos - word.length;
-		currentQuery = word;
-		await searchForSuggestions(word);
+
+		// 末尾から長い順に検索して、最初に候補が見つかった部分文字列を使用
+		// 例: "名取と" の場合、以下を順に試す:
+		//   1. "名取と"(word全体, len=3)
+		//   2. "名取"(word全体から末尾1文字除外, len=2) ← これで「名取」がマッチ！
+		//   3. "取と"(末尾2文字, len=2)
+		// これにより、「例えば適当に名取と」のような場合でも「名取」で候補が表示される
+		// 2文字以上の一致のみを検索対象とする
+		let foundMatch = false;
+
+		// まず単語全体を試す
+		if (word.length >= 2) {
+			currentTriggerPos = cursorPos - word.length;
+			currentQuery = word;
+			await searchForSuggestions(word);
+			if (showSuggestions && suggestions.length > 0) {
+				foundMatch = true;
+			}
+		}
+
+		// 次に、末尾1文字を除いた部分を試す（入力中の文字を除外）
+		if (!foundMatch && word.length >= 3) {
+			const wordWithoutLast = word.substring(0, word.length - 1);
+			if (wordWithoutLast.length >= 2) {
+				// 単語の開始位置から計算
+				currentTriggerPos = cursorPos - word.length;
+				currentQuery = wordWithoutLast;
+				await searchForSuggestions(wordWithoutLast);
+				if (showSuggestions && suggestions.length > 0) {
+					foundMatch = true;
+				}
+			}
+		}
+
+		// 最後に、末尾から順に短くして試す
+		if (!foundMatch) {
+			for (let len = word.length - 1; len >= 2; len--) {
+				const partialWord = word.substring(word.length - len);
+				currentTriggerPos = cursorPos - len;
+				currentQuery = partialWord;
+				await searchForSuggestions(partialWord);
+
+				if (showSuggestions && suggestions.length > 0) {
+					foundMatch = true;
+					break;
+				}
+			}
+		}
+
+		if (!foundMatch) {
+			showSuggestions = false;
+			currentQuery = "";
+			currentTriggerPos = -1;
+		}
 	} else {
 		// エンティティ候補がない場合は候補を閉じる
 		showSuggestions = false;
@@ -316,22 +374,47 @@ function getTextOffset(root: Node, node: Node, offset: number): number {
 }
 
 // 候補検索
-async function searchForSuggestions(query: string) {
+// 全エンティティデータを事前取得
+async function loadAllEntities() {
 	try {
-		const response = await fetch(
-			`/api/entities/search?q=${encodeURIComponent(query)}`,
-		);
+		const response = await fetch("/api/entities/search?q=");
 		const data = await response.json();
-		suggestions = data.entities || [];
+		allEntities = data.entities || [];
 
-		// 候補をフラット化（エンティティ名とエイリアスを含む）
-		flatSuggestions = [];
-		for (const entity of suggestions) {
+		// フラット化して保存
+		allFlatEntities = [];
+		for (const entity of allEntities) {
 			// エンティティ名を追加
-			flatSuggestions.push({ entity, text: entity.name, isAlias: false });
+			allFlatEntities.push({ entity, text: entity.name, isAlias: false });
 			// エイリアスを追加
 			for (const alias of entity.aliases) {
-				flatSuggestions.push({ entity, text: alias.alias, isAlias: true });
+				allFlatEntities.push({ entity, text: alias.alias, isAlias: true });
+			}
+		}
+	} catch (err) {
+		console.error("Failed to load all entities:", err);
+		allEntities = [];
+		allFlatEntities = [];
+	}
+}
+
+// ブラウザ側でエンティティをフィルタリング
+async function searchForSuggestions(query: string) {
+	try {
+		const lowerQuery = query.toLowerCase();
+
+		// allFlatEntitiesから部分一致でフィルタリング
+		flatSuggestions = allFlatEntities.filter((flat) =>
+			flat.text.toLowerCase().includes(lowerQuery),
+		);
+
+		// suggestions配列も更新（重複排除）
+		const uniqueEntityIds = new Set<string>();
+		suggestions = [];
+		for (const flat of flatSuggestions) {
+			if (!uniqueEntityIds.has(flat.entity.id)) {
+				uniqueEntityIds.add(flat.entity.id);
+				suggestions.push(flat.entity);
 			}
 		}
 
@@ -508,6 +591,9 @@ function _handleKeydown(event: KeyboardEvent) {
 function selectSuggestion(entity: Entity, selectedText?: string) {
 	if (currentTriggerPos === -1) return;
 
+	// contentElementの最新の内容からvalueを更新
+	value = htmlToPlainText(contentElement.innerHTML);
+
 	// valueのプレーンテキストから現在のカーソル位置を計算
 	// （HTMLではなくvalueの文字数で計算）
 	const selection = window.getSelection();
@@ -520,14 +606,52 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 		range.startOffset,
 	);
 
-	// 入力中の単語の開始位置
+	// 選択されたテキストを使ってcurrentTriggerPosを再計算
+	// currentQueryは信頼できないため、エンティティ名/エイリアスから直接検索
+	const textToInsert = selectedText || entity.name;
+	const beforeCursor = value.substring(0, cursorPos);
+
+	// カーソル位置から逆方向に検索して、最も近い一致を見つける
+	// （複数同一entityがある場合、カーソル位置に最も近いものを選択）
+	let triggerPos = -1;
+
+	// カーソル直前から後方に検索し、最長一致を見つける
+	for (let i = 1; i <= beforeCursor.length; i++) {
+		const partialText = beforeCursor.substring(beforeCursor.length - i);
+		if (textToInsert.startsWith(partialText)) {
+			triggerPos = beforeCursor.length - i;
+			// 最長一致が見つかるまで継続（より長い一致があれば上書き）
+		}
+	}
+
+	console.log('currentQuery recalculation:', {
+		textToInsert,
+		beforeCursor,
+		triggerPos,
+		oldTriggerPos: currentTriggerPos,
+		cursorPos,
+	});
+
+	if (triggerPos !== -1) {
+		currentTriggerPos = triggerPos;
+	}
+
+	// 入力中の単語の開始位置から現在のカーソル位置までを削除して置き換え
 	const beforeTrigger = value.substring(0, currentTriggerPos);
 	const afterCursor = value.substring(cursorPos);
 
-	// 選択されたテキスト（エイリアスまたはエンティティ名）を使用
-	const textToInsert = selectedText || entity.name;
+	// デバッグログ
+	console.log('selectSuggestion:', {
+		value,
+		currentTriggerPos,
+		cursorPos,
+		beforeTrigger,
+		afterCursor,
+		textToInsert,
+		result: `${beforeTrigger}${textToInsert}${afterCursor}`
+	});
 
-	// 単語を選択されたテキストに置き換え（@とスペースなし）
+	// currentTriggerPosからcursorPosまでの文字列を選択されたテキストに置き換え
 	value = `${beforeTrigger}${textToInsert}${afterCursor}`;
 
 	showSuggestions = false;
@@ -656,7 +780,15 @@ $: if (
 		style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
 		on:input={_handleInput}
 		on:compositionstart={() => { isComposing = true; }}
-		on:compositionend={() => { isComposing = false; }}
+		on:compositionupdate={_handleInput}
+		on:compositionend={() => {
+			isComposing = false;
+			// IME確定時は候補を非表示にする
+			showSuggestions = false;
+			selectedSuggestionIndex = -1;
+			currentTriggerPos = -1;
+			currentQuery = "";
+		}}
 		{...$$restProps}
 	></div>
 	{#if showSuggestions}
