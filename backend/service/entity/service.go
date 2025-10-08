@@ -21,6 +21,39 @@ type EntityEntry struct {
 	DB database.DB
 }
 
+// getAllAliasesByUserID ユーザーの全エイリアスを一括取得してマップで返す（N+1クエリ回避）
+func (s *EntityEntry) getAllAliasesByUserID(ctx context.Context, userID uuid.UUID) (map[string][]*database.EntityAlias, error) {
+	query := `
+		SELECT ea.id, ea.entity_id, ea.created_at, ea.updated_at, ea.alias
+		FROM entity_aliases ea
+		INNER JOIN entities e ON ea.entity_id = e.id
+		WHERE e.user_id = $1
+		ORDER BY ea.entity_id, ea.created_at
+	`
+	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	aliasMap := make(map[string][]*database.EntityAlias)
+	for rows.Next() {
+		var alias database.EntityAlias
+		if err := rows.Scan(&alias.ID, &alias.EntityID, &alias.CreatedAt, &alias.UpdatedAt, &alias.Alias); err != nil {
+			return nil, err
+		}
+		entityIDStr := alias.EntityID.String()
+		aliasMap[entityIDStr] = append(aliasMap[entityIDStr], &alias)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return aliasMap, nil
+}
+
 // CreateEntity エンティティを作成する
 func (s *EntityEntry) CreateEntity(
 	ctx context.Context,
@@ -299,6 +332,12 @@ func (s *EntityEntry) ListEntities(
 		return nil, err
 	}
 
+	// N+1クエリを避けるため、全エイリアスを一括取得
+	aliasMap, err := s.getAllAliasesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
 	protoEntities := make([]*g.Entity, 0)
 	for _, entity := range entities {
 		// カテゴリフィルタ
@@ -307,12 +346,8 @@ func (s *EntityEntry) ListEntities(
 			continue
 		}
 
-		// エイリアスを取得
-		aliases, err := database.EntityAliasesByEntityID(ctx, s.DB, entity.ID)
-		if err != nil && err != sql.ErrNoRows {
-			return nil, err
-		}
-
+		// aliasMapからこのエンティティのエイリアスを取得
+		aliases := aliasMap[entity.ID.String()]
 		protoAliases := make([]*g.EntityAlias, 0, len(aliases))
 		for _, alias := range aliases {
 			protoAliases = append(protoAliases, &g.EntityAlias{
@@ -522,8 +557,9 @@ func (s *EntityEntry) SearchEntities(
 		_ = rows.Close()
 	}()
 
-	protoEntities := make([]*g.Entity, 0)
-	processedIDs := make(map[string]bool) // 重複を避けるためのマップ
+	// エンティティIDを収集
+	entityIDs := make([]uuid.UUID, 0)
+	entityMap := make(map[string]*database.Entity)
 
 	for rows.Next() {
 		var entity database.Entity
@@ -532,16 +568,28 @@ func (s *EntityEntry) SearchEntities(
 		}
 
 		// 重複チェック
-		if processedIDs[entity.ID.String()] {
-			continue
+		entityIDStr := entity.ID.String()
+		if _, exists := entityMap[entityIDStr]; !exists {
+			entityIDs = append(entityIDs, entity.ID)
+			entityMap[entityIDStr] = &entity
 		}
-		processedIDs[entity.ID.String()] = true
+	}
 
-		// エイリアスを取得
-		aliases, err := database.EntityAliasesByEntityID(ctx, s.DB, entity.ID)
-		if err != nil && err != sql.ErrNoRows {
-			return nil, err
-		}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// N+1クエリを避けるため、全エイリアスを一括取得
+	aliasMap, err := s.getAllAliasesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 結果を構築
+	protoEntities := make([]*g.Entity, 0, len(entityIDs))
+	for _, entityID := range entityIDs {
+		entity := entityMap[entityID.String()]
+		aliases := aliasMap[entityID.String()]
 
 		protoAliases := make([]*g.EntityAlias, 0, len(aliases))
 		for _, alias := range aliases {
@@ -563,10 +611,6 @@ func (s *EntityEntry) SearchEntities(
 			CreatedAt: entity.CreatedAt,
 			UpdatedAt: entity.UpdatedAt,
 		})
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
 	}
 
 	return &g.SearchEntitiesResponse{
