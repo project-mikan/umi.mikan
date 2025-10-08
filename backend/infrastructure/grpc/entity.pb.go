@@ -71,8 +71,9 @@ func (EntityCategory) EnumDescriptor() ([]byte, []int) {
 // 位置情報
 type Position struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Start         uint32                 `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"` // 開始位置
-	End           uint32                 `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`     // 終了位置
+	Start         uint32                 `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`                   // 開始位置
+	End           uint32                 `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`                       // 終了位置
+	AliasId       string                 `protobuf:"bytes,3,opt,name=alias_id,json=aliasId,proto3" json:"alias_id,omitempty"` // エイリアスID（エイリアスを使用した場合のみ設定、エンティティ名を直接使用した場合は空文字列）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -119,6 +120,13 @@ func (x *Position) GetEnd() uint32 {
 		return x.End
 	}
 	return 0
+}
+
+func (x *Position) GetAliasId() string {
+	if x != nil {
+		return x.AliasId
+	}
+	return ""
 }
 
 // エンティティ
@@ -1331,10 +1339,11 @@ var File_entity_entity_proto protoreflect.FileDescriptor
 
 const file_entity_entity_proto_rawDesc = "" +
 	"\n" +
-	"\x13entity/entity.proto\x12\x06entity\"2\n" +
+	"\x13entity/entity.proto\x12\x06entity\"M\n" +
 	"\bPosition\x12\x14\n" +
 	"\x05start\x18\x01 \x01(\rR\x05start\x12\x10\n" +
-	"\x03end\x18\x02 \x01(\rR\x03end\"\xe1\x01\n" +
+	"\x03end\x18\x02 \x01(\rR\x03end\x12\x19\n" +
+	"\balias_id\x18\x03 \x01(\tR\aaliasId\"\xe1\x01\n" +
 	"\x06Entity\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x122\n" +

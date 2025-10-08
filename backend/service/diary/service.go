@@ -118,16 +118,29 @@ func (s *DiaryEntry) getDiaryEntityOutputs(ctx context.Context, diaryID uuid.UUI
 
 	diaryEntityOutputs := make([]*g.DiaryEntityOutput, 0, len(diaryEntities))
 	for _, de := range diaryEntities {
-		// positionsをJSONからデコード
-		var positions []*g.Position
-		if err := json.Unmarshal(de.Positions, &positions); err != nil {
+		// positionsをJSONからデコード（alias_idを含む）
+		var positionsRaw []map[string]interface{}
+		if err := json.Unmarshal(de.Positions, &positionsRaw); err != nil {
 			return nil, err
+		}
+
+		// map[string]interface{}から*g.Positionに変換
+		positions := make([]*g.Position, 0, len(positionsRaw))
+		for _, posRaw := range positionsRaw {
+			pos := &g.Position{
+				Start: uint32(posRaw["start"].(float64)),
+				End:   uint32(posRaw["end"].(float64)),
+			}
+			// alias_idがあれば設定
+			if aliasID, ok := posRaw["alias_id"].(string); ok && aliasID != "" {
+				pos.AliasId = aliasID
+			}
+			positions = append(positions, pos)
 		}
 
 		diaryEntityOutputs = append(diaryEntityOutputs, &g.DiaryEntityOutput{
 			EntityId:  de.EntityID.String(),
 			Positions: positions,
-			UsedText:  de.UsedText,
 		})
 	}
 
@@ -834,13 +847,18 @@ func (s *DiaryEntry) saveDiaryEntities(ctx context.Context, tx *sql.Tx, diaryID 
 			return status.Errorf(codes.InvalidArgument, "invalid entity ID: %s", entity.EntityId)
 		}
 
-		// positionsをJSONBに変換
-		positions := make([]map[string]uint32, 0, len(entity.Positions))
+		// positionsをJSONBに変換（alias_idも含む）
+		positions := make([]map[string]interface{}, 0, len(entity.Positions))
 		for _, pos := range entity.Positions {
-			positions = append(positions, map[string]uint32{
+			posMap := map[string]interface{}{
 				"start": pos.Start,
 				"end":   pos.End,
-			})
+			}
+			// alias_idが空文字列でない場合のみ含める
+			if pos.AliasId != "" {
+				posMap["alias_id"] = pos.AliasId
+			}
+			positions = append(positions, posMap)
 		}
 		positionsJSON, err := json.Marshal(positions)
 		if err != nil {
@@ -853,7 +871,6 @@ func (s *DiaryEntry) saveDiaryEntities(ctx context.Context, tx *sql.Tx, diaryID 
 			DiaryID:   diaryID,
 			EntityID:  entityID,
 			Positions: positionsJSON,
-			UsedText:  entity.UsedText,
 			CreatedAt: currentTime,
 			UpdatedAt: currentTime,
 		}

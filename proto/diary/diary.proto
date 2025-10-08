@@ -152,15 +152,13 @@ message DiaryEntry {
 // エンティティ出力（取得時）
 message DiaryEntityOutput {
   string entity_id = 1;
-  repeated entity.Position positions = 2;
-  string used_text = 3; // 実際に使用されたテキスト（entity nameまたはalias）
+  repeated entity.Position positions = 2; // 位置情報（alias_idを含む）
 }
 
 // エンティティと位置情報
 message DiaryEntityInput {
   string entity_id = 1;
-  repeated entity.Position positions = 2;
-  string used_text = 3; // 実際に使用されたテキスト（entity nameまたはalias）
+  repeated entity.Position positions = 2; // 位置情報（alias_idを含む）
 }
 
 // 新しい日記エントリを作成するためのリクエスト

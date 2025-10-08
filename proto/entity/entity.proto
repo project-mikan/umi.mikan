@@ -104,6 +104,7 @@ enum EntityCategory {
 message Position {
   uint32 start = 1; // 開始位置
   uint32 end = 2; // 終了位置
+  string alias_id = 3; // エイリアスID（エイリアスを使用した場合のみ設定、エンティティ名を直接使用した場合は空文字列）
 }
 
 // エンティティ

@@ -222,8 +222,7 @@ func (x *DiaryEntry) GetDiaryEntities() []*DiaryEntityOutput {
 type DiaryEntityOutput struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	EntityId      string                 `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
-	Positions     []*Position            `protobuf:"bytes,2,rep,name=positions,proto3" json:"positions,omitempty"`
-	UsedText      string                 `protobuf:"bytes,3,opt,name=used_text,json=usedText,proto3" json:"used_text,omitempty"` // 実際に使用されたテキスト（entity nameまたはalias）
+	Positions     []*Position            `protobuf:"bytes,2,rep,name=positions,proto3" json:"positions,omitempty"` // 位置情報（alias_idを含む）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -272,19 +271,11 @@ func (x *DiaryEntityOutput) GetPositions() []*Position {
 	return nil
 }
 
-func (x *DiaryEntityOutput) GetUsedText() string {
-	if x != nil {
-		return x.UsedText
-	}
-	return ""
-}
-
 // エンティティと位置情報
 type DiaryEntityInput struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	EntityId      string                 `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
-	Positions     []*Position            `protobuf:"bytes,2,rep,name=positions,proto3" json:"positions,omitempty"`
-	UsedText      string                 `protobuf:"bytes,3,opt,name=used_text,json=usedText,proto3" json:"used_text,omitempty"` // 実際に使用されたテキスト（entity nameまたはalias）
+	Positions     []*Position            `protobuf:"bytes,2,rep,name=positions,proto3" json:"positions,omitempty"` // 位置情報（alias_idを含む）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -331,13 +322,6 @@ func (x *DiaryEntityInput) GetPositions() []*Position {
 		return x.Positions
 	}
 	return nil
-}
-
-func (x *DiaryEntityInput) GetUsedText() string {
-	if x != nil {
-		return x.UsedText
-	}
-	return ""
 }
 
 // 新しい日記エントリを作成するためのリクエスト
@@ -1566,15 +1550,13 @@ const file_diary_diary_proto_rawDesc = "" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12?\n" +
-	"\x0ediary_entities\x18\x06 \x03(\v2\x18.diary.DiaryEntityOutputR\rdiaryEntities\"}\n" +
+	"\x0ediary_entities\x18\x06 \x03(\v2\x18.diary.DiaryEntityOutputR\rdiaryEntities\"`\n" +
 	"\x11DiaryEntityOutput\x12\x1b\n" +
 	"\tentity_id\x18\x01 \x01(\tR\bentityId\x12.\n" +
-	"\tpositions\x18\x02 \x03(\v2\x10.entity.PositionR\tpositions\x12\x1b\n" +
-	"\tused_text\x18\x03 \x01(\tR\busedText\"|\n" +
+	"\tpositions\x18\x02 \x03(\v2\x10.entity.PositionR\tpositions\"_\n" +
 	"\x10DiaryEntityInput\x12\x1b\n" +
 	"\tentity_id\x18\x01 \x01(\tR\bentityId\x12.\n" +
-	"\tpositions\x18\x02 \x03(\v2\x10.entity.PositionR\tpositions\x12\x1b\n" +
-	"\tused_text\x18\x03 \x01(\tR\busedText\"\x93\x01\n" +
+	"\tpositions\x18\x02 \x03(\v2\x10.entity.PositionR\tpositions\"\x93\x01\n" +
 	"\x17CreateDiaryEntryRequest\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12\x1e\n" +
 	"\x04date\x18\x02 \x01(\v2\n" +
