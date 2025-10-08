@@ -33,24 +33,104 @@ const (
 // UserServiceClient is the client API for UserService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// UserService はユーザー設定とアカウント管理を提供するサービスです。
+// ユーザー情報の更新、LLMキー管理、自動要約設定、Pub/Subメトリクス取得などの機能があります。
 type UserServiceClient interface {
-	// ユーザー名変更
+	// UpdateUserName はユーザー名を変更します。
+	//
+	// 例:
+	//
+	//	request: { new_name: "新しい名前" }
+	//	response: { success: true, message: "ユーザー名を更新しました" }
+	//
+	// エラー:
+	//   - InvalidArgument: 名前が空
+	//   - Internal: データベースエラー
 	UpdateUserName(ctx context.Context, in *UpdateUserNameRequest, opts ...grpc.CallOption) (*UpdateUserNameResponse, error)
-	// パスワード変更
+	// ChangePassword は現在のパスワードを検証して新しいパスワードに変更します。
+	//
+	// 例:
+	//
+	//	request: { current_password: "old123", new_password: "new456" }
+	//	response: { success: true, message: "パスワードを変更しました" }
+	//
+	// エラー:
+	//   - Unauthenticated: 現在のパスワードが不正
+	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
-	// LLMキー更新
+	// UpdateLLMKey はLLM APIキーを更新または新規作成します。
+	// 現在はGemini (llm_provider=1) のみ対応しています。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1, key: "AIza..." }
+	//	response: { success: true, message: "LLMキーを更新しました" }
+	//
+	// エラー:
+	//   - InvalidArgument: プロバイダーまたはキーが不正
 	UpdateLLMKey(ctx context.Context, in *UpdateLLMKeyRequest, opts ...grpc.CallOption) (*UpdateLLMKeyResponse, error)
-	// ユーザー情報取得
+	// GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
+	//
+	// エラー:
+	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
-	// LLMキー削除
+	// DeleteLLMKey は指定されたLLM APIキーを削除します。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1 }
+	//	response: { success: true, message: "LLMキーを削除しました" }
+	//
+	// エラー:
+	//   - NotFound: 指定されたプロバイダーのキーが存在しない
 	DeleteLLMKey(ctx context.Context, in *DeleteLLMKeyRequest, opts ...grpc.CallOption) (*DeleteLLMKeyResponse, error)
-	// アカウント削除
+	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
+	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { success: true, message: "アカウントを削除しました" }
+	//
+	// エラー:
+	//   - Internal: 削除処理エラー
 	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
-	// 自動要約設定更新
+	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
+	// 日次要約と月次要約をそれぞれ有効/無効にできます。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
+	//	response: { success: true, message: "自動要約設定を更新しました" }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
 	UpdateAutoSummarySettings(ctx context.Context, in *UpdateAutoSummarySettingsRequest, opts ...grpc.CallOption) (*UpdateAutoSummarySettingsResponse, error)
-	// 自動要約設定取得
+	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1 }
+	//	response: { auto_summary_daily: true, auto_summary_monthly: false }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
 	GetAutoSummarySettings(ctx context.Context, in *GetAutoSummarySettingsRequest, opts ...grpc.CallOption) (*GetAutoSummarySettingsResponse, error)
-	// Pub/Sub処理状況メトリクス取得
+	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
+	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { hourly_metrics: [...], processing_tasks: [...], summary: { total_daily_summaries: 10, ... } }
+	//
+	// エラー: なし（データがない場合は空配列）
 	GetPubSubMetrics(ctx context.Context, in *GetPubSubMetricsRequest, opts ...grpc.CallOption) (*GetPubSubMetricsResponse, error)
 }
 
@@ -155,24 +235,104 @@ func (c *userServiceClient) GetPubSubMetrics(ctx context.Context, in *GetPubSubM
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
+//
+// UserService はユーザー設定とアカウント管理を提供するサービスです。
+// ユーザー情報の更新、LLMキー管理、自動要約設定、Pub/Subメトリクス取得などの機能があります。
 type UserServiceServer interface {
-	// ユーザー名変更
+	// UpdateUserName はユーザー名を変更します。
+	//
+	// 例:
+	//
+	//	request: { new_name: "新しい名前" }
+	//	response: { success: true, message: "ユーザー名を更新しました" }
+	//
+	// エラー:
+	//   - InvalidArgument: 名前が空
+	//   - Internal: データベースエラー
 	UpdateUserName(context.Context, *UpdateUserNameRequest) (*UpdateUserNameResponse, error)
-	// パスワード変更
+	// ChangePassword は現在のパスワードを検証して新しいパスワードに変更します。
+	//
+	// 例:
+	//
+	//	request: { current_password: "old123", new_password: "new456" }
+	//	response: { success: true, message: "パスワードを変更しました" }
+	//
+	// エラー:
+	//   - Unauthenticated: 現在のパスワードが不正
+	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
-	// LLMキー更新
+	// UpdateLLMKey はLLM APIキーを更新または新規作成します。
+	// 現在はGemini (llm_provider=1) のみ対応しています。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1, key: "AIza..." }
+	//	response: { success: true, message: "LLMキーを更新しました" }
+	//
+	// エラー:
+	//   - InvalidArgument: プロバイダーまたはキーが不正
 	UpdateLLMKey(context.Context, *UpdateLLMKeyRequest) (*UpdateLLMKeyResponse, error)
-	// ユーザー情報取得
+	// GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
+	//
+	// エラー:
+	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
-	// LLMキー削除
+	// DeleteLLMKey は指定されたLLM APIキーを削除します。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1 }
+	//	response: { success: true, message: "LLMキーを削除しました" }
+	//
+	// エラー:
+	//   - NotFound: 指定されたプロバイダーのキーが存在しない
 	DeleteLLMKey(context.Context, *DeleteLLMKeyRequest) (*DeleteLLMKeyResponse, error)
-	// アカウント削除
+	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
+	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { success: true, message: "アカウントを削除しました" }
+	//
+	// エラー:
+	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
-	// 自動要約設定更新
+	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
+	// 日次要約と月次要約をそれぞれ有効/無効にできます。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
+	//	response: { success: true, message: "自動要約設定を更新しました" }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
 	UpdateAutoSummarySettings(context.Context, *UpdateAutoSummarySettingsRequest) (*UpdateAutoSummarySettingsResponse, error)
-	// 自動要約設定取得
+	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
+	//
+	// 例:
+	//
+	//	request: { llm_provider: 1 }
+	//	response: { auto_summary_daily: true, auto_summary_monthly: false }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
 	GetAutoSummarySettings(context.Context, *GetAutoSummarySettingsRequest) (*GetAutoSummarySettingsResponse, error)
-	// Pub/Sub処理状況メトリクス取得
+	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
+	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { hourly_metrics: [...], processing_tasks: [...], summary: { total_daily_summaries: 10, ... } }
+	//
+	// エラー: なし（データがない場合は空配列）
 	GetPubSubMetrics(context.Context, *GetPubSubMetricsRequest) (*GetPubSubMetricsResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }

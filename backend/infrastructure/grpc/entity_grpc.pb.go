@@ -33,24 +33,93 @@ const (
 // EntityServiceClient is the client API for EntityService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// EntityService は固有名詞（人物、場所など）を管理するサービスです。
+// エンティティは日記本文中で使用され、ハイライト表示や検索に利用されます。
 type EntityServiceClient interface {
-	// エンティティ作成
+	// CreateEntity は新しいエンティティを作成します。
+	//
+	// 例:
+	//
+	//	request: { name: "山田太郎", category: PEOPLE, memo: "友人" }
+	//	response: { entity: { id: "uuid", name: "山田太郎", ... } }
+	//
+	// エラー:
+	//   - AlreadyExists: 同じ名前のエンティティまたはエイリアスが既に存在する
 	CreateEntity(ctx context.Context, in *CreateEntityRequest, opts ...grpc.CallOption) (*CreateEntityResponse, error)
-	// エンティティ更新
+	// UpdateEntity は既存のエンティティを更新します。
+	//
+	// 例:
+	//
+	//	request: { id: "uuid", name: "山田花子", category: PEOPLE, memo: "同僚" }
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	UpdateEntity(ctx context.Context, in *UpdateEntityRequest, opts ...grpc.CallOption) (*UpdateEntityResponse, error)
-	// エンティティ削除
+	// DeleteEntity はエンティティとそれに紐づくエイリアスを削除します。
+	// 日記との紐付け(diary_entities)もカスケード削除されます。
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	DeleteEntity(ctx context.Context, in *DeleteEntityRequest, opts ...grpc.CallOption) (*DeleteEntityResponse, error)
-	// エンティティ取得
+	// GetEntity は指定されたIDのエンティティを取得します。
+	// エイリアスも含めて返されます。
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	GetEntity(ctx context.Context, in *GetEntityRequest, opts ...grpc.CallOption) (*GetEntityResponse, error)
-	// エンティティ一覧取得
+	// ListEntities はユーザーのエンティティ一覧を取得します。
+	// カテゴリでフィルタリングも可能です。
+	//
+	// 例（全件取得）:
+	//
+	//	request: { all_categories: true }
+	//
+	// 例（カテゴリフィルタ）:
+	//
+	//	request: { category: PEOPLE, all_categories: false }
 	ListEntities(ctx context.Context, in *ListEntitiesRequest, opts ...grpc.CallOption) (*ListEntitiesResponse, error)
-	// エイリアス追加
+	// CreateEntityAlias はエンティティにエイリアス（別名）を追加します。
+	// エイリアスは日記入力時の補完候補として使用されます。
+	//
+	// 例:
+	//
+	//	request: { entity_id: "uuid", alias: "太郎" }
+	//
+	// エラー:
+	//   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	CreateEntityAlias(ctx context.Context, in *CreateEntityAliasRequest, opts ...grpc.CallOption) (*CreateEntityAliasResponse, error)
-	// エイリアス削除
+	// DeleteEntityAlias はエイリアスを削除します。
+	//
+	// エラー:
+	//   - NotFound: エイリアスが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
 	DeleteEntityAlias(ctx context.Context, in *DeleteEntityAliasRequest, opts ...grpc.CallOption) (*DeleteEntityAliasResponse, error)
-	// エンティティ検索（ユーザーの入力に対する候補表示）
+	// SearchEntities はエンティティ名またはエイリアスで部分一致検索を行います。
+	// 主に日記入力時の補完候補として使用されます。
+	//
+	// 例:
+	//
+	//	request: { query: "山田" }
+	//	response: { entities: [{ name: "山田太郎", ... }, { name: "山田花子", ... }] }
+	//
+	// 空文字列を指定すると全件取得されます。
 	SearchEntities(ctx context.Context, in *SearchEntitiesRequest, opts ...grpc.CallOption) (*SearchEntitiesResponse, error)
-	// エンティティに紐づく日記取得
+	// GetDiariesByEntity は指定されたエンティティが登場する日記の一覧を取得します。
+	// 各日記でのエンティティの登場位置も含まれます。
+	//
+	// 例:
+	//
+	//	request: { entity_id: "uuid" }
+	//	response: { diaries: [{ content: "...", positions: [{ start: 0, end: 4 }], ... }] }
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	GetDiariesByEntity(ctx context.Context, in *GetDiariesByEntityRequest, opts ...grpc.CallOption) (*GetDiariesByEntityResponse, error)
 }
 
@@ -155,24 +224,93 @@ func (c *entityServiceClient) GetDiariesByEntity(ctx context.Context, in *GetDia
 // EntityServiceServer is the server API for EntityService service.
 // All implementations must embed UnimplementedEntityServiceServer
 // for forward compatibility.
+//
+// EntityService は固有名詞（人物、場所など）を管理するサービスです。
+// エンティティは日記本文中で使用され、ハイライト表示や検索に利用されます。
 type EntityServiceServer interface {
-	// エンティティ作成
+	// CreateEntity は新しいエンティティを作成します。
+	//
+	// 例:
+	//
+	//	request: { name: "山田太郎", category: PEOPLE, memo: "友人" }
+	//	response: { entity: { id: "uuid", name: "山田太郎", ... } }
+	//
+	// エラー:
+	//   - AlreadyExists: 同じ名前のエンティティまたはエイリアスが既に存在する
 	CreateEntity(context.Context, *CreateEntityRequest) (*CreateEntityResponse, error)
-	// エンティティ更新
+	// UpdateEntity は既存のエンティティを更新します。
+	//
+	// 例:
+	//
+	//	request: { id: "uuid", name: "山田花子", category: PEOPLE, memo: "同僚" }
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	UpdateEntity(context.Context, *UpdateEntityRequest) (*UpdateEntityResponse, error)
-	// エンティティ削除
+	// DeleteEntity はエンティティとそれに紐づくエイリアスを削除します。
+	// 日記との紐付け(diary_entities)もカスケード削除されます。
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	DeleteEntity(context.Context, *DeleteEntityRequest) (*DeleteEntityResponse, error)
-	// エンティティ取得
+	// GetEntity は指定されたIDのエンティティを取得します。
+	// エイリアスも含めて返されます。
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	GetEntity(context.Context, *GetEntityRequest) (*GetEntityResponse, error)
-	// エンティティ一覧取得
+	// ListEntities はユーザーのエンティティ一覧を取得します。
+	// カテゴリでフィルタリングも可能です。
+	//
+	// 例（全件取得）:
+	//
+	//	request: { all_categories: true }
+	//
+	// 例（カテゴリフィルタ）:
+	//
+	//	request: { category: PEOPLE, all_categories: false }
 	ListEntities(context.Context, *ListEntitiesRequest) (*ListEntitiesResponse, error)
-	// エイリアス追加
+	// CreateEntityAlias はエンティティにエイリアス（別名）を追加します。
+	// エイリアスは日記入力時の補完候補として使用されます。
+	//
+	// 例:
+	//
+	//	request: { entity_id: "uuid", alias: "太郎" }
+	//
+	// エラー:
+	//   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	CreateEntityAlias(context.Context, *CreateEntityAliasRequest) (*CreateEntityAliasResponse, error)
-	// エイリアス削除
+	// DeleteEntityAlias はエイリアスを削除します。
+	//
+	// エラー:
+	//   - NotFound: エイリアスが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
 	DeleteEntityAlias(context.Context, *DeleteEntityAliasRequest) (*DeleteEntityAliasResponse, error)
-	// エンティティ検索（ユーザーの入力に対する候補表示）
+	// SearchEntities はエンティティ名またはエイリアスで部分一致検索を行います。
+	// 主に日記入力時の補完候補として使用されます。
+	//
+	// 例:
+	//
+	//	request: { query: "山田" }
+	//	response: { entities: [{ name: "山田太郎", ... }, { name: "山田花子", ... }] }
+	//
+	// 空文字列を指定すると全件取得されます。
 	SearchEntities(context.Context, *SearchEntitiesRequest) (*SearchEntitiesResponse, error)
-	// エンティティに紐づく日記取得
+	// GetDiariesByEntity は指定されたエンティティが登場する日記の一覧を取得します。
+	// 各日記でのエンティティの登場位置も含まれます。
+	//
+	// 例:
+	//
+	//	request: { entity_id: "uuid" }
+	//	response: { diaries: [{ content: "...", positions: [{ start: 0, end: 4 }], ... }] }
+	//
+	// エラー:
+	//   - NotFound: エンティティが見つからない
+	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	GetDiariesByEntity(context.Context, *GetDiariesByEntityRequest) (*GetDiariesByEntityResponse, error)
 	mustEmbedUnimplementedEntityServiceServer()
 }

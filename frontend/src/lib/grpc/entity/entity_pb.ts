@@ -679,11 +679,21 @@ export const EntityCategorySchema: GenEnum<EntityCategory> =
 	enumDesc(file_entity_entity, 0);
 
 /**
+ * EntityService は固有名詞（人物、場所など）を管理するサービスです。
+ * エンティティは日記本文中で使用され、ハイライト表示や検索に利用されます。
+ *
  * @generated from service entity.EntityService
  */
 export const EntityService: GenService<{
 	/**
-	 * エンティティ作成
+	 * CreateEntity は新しいエンティティを作成します。
+	 *
+	 * 例:
+	 *   request: { name: "山田太郎", category: PEOPLE, memo: "友人" }
+	 *   response: { entity: { id: "uuid", name: "山田太郎", ... } }
+	 *
+	 * エラー:
+	 *   - AlreadyExists: 同じ名前のエンティティまたはエイリアスが既に存在する
 	 *
 	 * @generated from rpc entity.EntityService.CreateEntity
 	 */
@@ -693,7 +703,14 @@ export const EntityService: GenService<{
 		output: typeof CreateEntityResponseSchema;
 	};
 	/**
-	 * エンティティ更新
+	 * UpdateEntity は既存のエンティティを更新します。
+	 *
+	 * 例:
+	 *   request: { id: "uuid", name: "山田花子", category: PEOPLE, memo: "同僚" }
+	 *
+	 * エラー:
+	 *   - NotFound: エンティティが見つからない
+	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	 *
 	 * @generated from rpc entity.EntityService.UpdateEntity
 	 */
@@ -703,7 +720,12 @@ export const EntityService: GenService<{
 		output: typeof UpdateEntityResponseSchema;
 	};
 	/**
-	 * エンティティ削除
+	 * DeleteEntity はエンティティとそれに紐づくエイリアスを削除します。
+	 * 日記との紐付け(diary_entities)もカスケード削除されます。
+	 *
+	 * エラー:
+	 *   - NotFound: エンティティが見つからない
+	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	 *
 	 * @generated from rpc entity.EntityService.DeleteEntity
 	 */
@@ -713,7 +735,12 @@ export const EntityService: GenService<{
 		output: typeof DeleteEntityResponseSchema;
 	};
 	/**
-	 * エンティティ取得
+	 * GetEntity は指定されたIDのエンティティを取得します。
+	 * エイリアスも含めて返されます。
+	 *
+	 * エラー:
+	 *   - NotFound: エンティティが見つからない
+	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	 *
 	 * @generated from rpc entity.EntityService.GetEntity
 	 */
@@ -723,7 +750,14 @@ export const EntityService: GenService<{
 		output: typeof GetEntityResponseSchema;
 	};
 	/**
-	 * エンティティ一覧取得
+	 * ListEntities はユーザーのエンティティ一覧を取得します。
+	 * カテゴリでフィルタリングも可能です。
+	 *
+	 * 例（全件取得）:
+	 *   request: { all_categories: true }
+	 *
+	 * 例（カテゴリフィルタ）:
+	 *   request: { category: PEOPLE, all_categories: false }
 	 *
 	 * @generated from rpc entity.EntityService.ListEntities
 	 */
@@ -733,7 +767,15 @@ export const EntityService: GenService<{
 		output: typeof ListEntitiesResponseSchema;
 	};
 	/**
-	 * エイリアス追加
+	 * CreateEntityAlias はエンティティにエイリアス（別名）を追加します。
+	 * エイリアスは日記入力時の補完候補として使用されます。
+	 *
+	 * 例:
+	 *   request: { entity_id: "uuid", alias: "太郎" }
+	 *
+	 * エラー:
+	 *   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	 *
 	 * @generated from rpc entity.EntityService.CreateEntityAlias
 	 */
@@ -743,7 +785,11 @@ export const EntityService: GenService<{
 		output: typeof CreateEntityAliasResponseSchema;
 	};
 	/**
-	 * エイリアス削除
+	 * DeleteEntityAlias はエイリアスを削除します。
+	 *
+	 * エラー:
+	 *   - NotFound: エイリアスが見つからない
+	 *   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
 	 *
 	 * @generated from rpc entity.EntityService.DeleteEntityAlias
 	 */
@@ -753,7 +799,14 @@ export const EntityService: GenService<{
 		output: typeof DeleteEntityAliasResponseSchema;
 	};
 	/**
-	 * エンティティ検索（ユーザーの入力に対する候補表示）
+	 * SearchEntities はエンティティ名またはエイリアスで部分一致検索を行います。
+	 * 主に日記入力時の補完候補として使用されます。
+	 *
+	 * 例:
+	 *   request: { query: "山田" }
+	 *   response: { entities: [{ name: "山田太郎", ... }, { name: "山田花子", ... }] }
+	 *
+	 * 空文字列を指定すると全件取得されます。
 	 *
 	 * @generated from rpc entity.EntityService.SearchEntities
 	 */
@@ -763,7 +816,16 @@ export const EntityService: GenService<{
 		output: typeof SearchEntitiesResponseSchema;
 	};
 	/**
-	 * エンティティに紐づく日記取得
+	 * GetDiariesByEntity は指定されたエンティティが登場する日記の一覧を取得します。
+	 * 各日記でのエンティティの登場位置も含まれます。
+	 *
+	 * 例:
+	 *   request: { entity_id: "uuid" }
+	 *   response: { diaries: [{ content: "...", positions: [{ start: 0, end: 4 }], ... }] }
+	 *
+	 * エラー:
+	 *   - NotFound: エンティティが見つからない
+	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	 *
 	 * @generated from rpc entity.EntityService.GetDiariesByEntity
 	 */

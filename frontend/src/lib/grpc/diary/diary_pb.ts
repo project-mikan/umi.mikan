@@ -781,11 +781,25 @@ export const GetDailySummaryResponseSchema: GenMessage<GetDailySummaryResponse> 
 	messageDesc(file_diary_diary, 28);
 
 /**
+ * DiaryService は日記エントリの作成・読み取り・更新・削除（CRUD）と
+ * AI要約生成機能を提供するサービスです。
+ * エンティティとの紐付けにより、固有名詞のハイライト表示や検索が可能です。
+ *
  * @generated from service diary.DiaryService
  */
 export const DiaryService: GenService<{
 	/**
-	 * 作成
+	 * CreateDiaryEntry は新しい日記エントリを作成します。
+	 * 1日1エントリの制約があり、同じ日付に複数のエントリは作成できません。
+	 * エンティティとの紐付け（diary_entities）もトランザクション内で同時に作成されます。
+	 *
+	 * 例:
+	 *   request: { content: "今日は友人と会った", date: { year: 2025, month: 10, day: 9 }, diary_entities: [...] }
+	 *   response: { entry: { id: "uuid", content: "...", ... } }
+	 *
+	 * エラー:
+	 *   - AlreadyExists: 指定された日付の日記が既に存在する
+	 *   - InvalidArgument: 日付が不正
 	 *
 	 * @generated from rpc diary.DiaryService.CreateDiaryEntry
 	 */
@@ -795,7 +809,16 @@ export const DiaryService: GenService<{
 		output: typeof CreateDiaryEntryResponseSchema;
 	};
 	/**
-	 * 更新
+	 * UpdateDiaryEntry は既存の日記エントリを更新します。
+	 * エンティティとの紐付けも同時に更新されます（既存の紐付けは全て削除され、新しい紐付けが作成されます）。
+	 *
+	 * 例:
+	 *   request: { id: "uuid", content: "更新された内容", date: { year: 2025, month: 10, day: 9 }, diary_entities: [...] }
+	 *   response: { entry: { id: "uuid", content: "更新された内容", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: 日記エントリが見つからない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	 *
 	 * @generated from rpc diary.DiaryService.UpdateDiaryEntry
 	 */
@@ -805,7 +828,12 @@ export const DiaryService: GenService<{
 		output: typeof UpdateDiaryEntryResponseSchema;
 	};
 	/**
-	 * 削除
+	 * DeleteDiaryEntry は日記エントリを削除します。
+	 * 関連するエンティティとの紐付け（diary_entities）もカスケード削除されます。
+	 *
+	 * エラー:
+	 *   - NotFound: 日記エントリが見つからない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	 *
 	 * @generated from rpc diary.DiaryService.DeleteDiaryEntry
 	 */
@@ -815,7 +843,15 @@ export const DiaryService: GenService<{
 		output: typeof DeleteDiaryEntryResponseSchema;
 	};
 	/**
-	 * 日付指定で単体取得
+	 * GetDiaryEntry は指定された日付の日記エントリを取得します。
+	 * エンティティとの紐付け情報も含まれます。
+	 *
+	 * 例:
+	 *   request: { date: { year: 2025, month: 10, day: 9 } }
+	 *   response: { entry: { id: "uuid", content: "...", diary_entities: [...] } }
+	 *
+	 * エラー:
+	 *   - NotFound: 指定された日付の日記が存在しない
 	 *
 	 * @generated from rpc diary.DiaryService.GetDiaryEntry
 	 */
@@ -825,7 +861,14 @@ export const DiaryService: GenService<{
 		output: typeof GetDiaryEntryResponseSchema;
 	};
 	/**
-	 * 日付指定で複数取得(ホームでの表示などで直近3日とかほしいケースや過去数年分ほしいケースに対応)
+	 * GetDiaryEntries は指定された複数の日付の日記エントリを取得します。
+	 * ホームでの直近3日表示や、過去数年分の取得など、柔軟な取得が可能です。
+	 *
+	 * 例:
+	 *   request: { dates: [{ year: 2025, month: 10, day: 9 }, { year: 2025, month: 10, day: 8 }] }
+	 *   response: { entries: [{ id: "uuid1", ... }, { id: "uuid2", ... }] }
+	 *
+	 * エラー: なし（存在する日記のみ返される）
 	 *
 	 * @generated from rpc diary.DiaryService.GetDiaryEntries
 	 */
@@ -835,7 +878,13 @@ export const DiaryService: GenService<{
 		output: typeof GetDiaryEntriesResponseSchema;
 	};
 	/**
-	 * 月ごとに取得
+	 * GetDiaryEntriesByMonth は指定された月の全日記エントリを取得します。
+	 *
+	 * 例:
+	 *   request: { month: { year: 2025, month: 10 } }
+	 *   response: { entries: [{ id: "uuid1", date: { year: 2025, month: 10, day: 1 }, ... }, ...] }
+	 *
+	 * エラー: なし（存在する日記のみ返される）
 	 *
 	 * @generated from rpc diary.DiaryService.GetDiaryEntriesByMonth
 	 */
@@ -845,7 +894,14 @@ export const DiaryService: GenService<{
 		output: typeof GetDiaryEntriesByMonthResponseSchema;
 	};
 	/**
-	 * 検索
+	 * SearchDiaryEntries はキーワードで日記を全文検索します。
+	 * PostgreSQLのLIKE検索を使用しています。
+	 *
+	 * 例:
+	 *   request: { keyword: "友人" }
+	 *   response: { searched_keyword: "友人", entries: [{ id: "uuid", content: "今日は友人と...", ... }] }
+	 *
+	 * エラー: なし（見つからない場合は空配列）
 	 *
 	 * @generated from rpc diary.DiaryService.SearchDiaryEntries
 	 */
@@ -855,7 +911,16 @@ export const DiaryService: GenService<{
 		output: typeof SearchDiaryEntriesResponseSchema;
 	};
 	/**
-	 * 月ごとのサマリー生成
+	 * GenerateMonthlySummary は指定された月の日記をLLMで要約します。
+	 * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
+	 *
+	 * 例:
+	 *   request: { month: { year: 2025, month: 10 } }
+	 *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: LLMキーが設定されていない、または対象月に日記が存在しない
+	 *   - Internal: LLM API呼び出しエラー
 	 *
 	 * @generated from rpc diary.DiaryService.GenerateMonthlySummary
 	 */
@@ -865,7 +930,14 @@ export const DiaryService: GenService<{
 		output: typeof GenerateMonthlySummaryResponseSchema;
 	};
 	/**
-	 * 月ごとのサマリー取得
+	 * GetMonthlySummary は指定された月のサマリーを取得します。
+	 *
+	 * 例:
+	 *   request: { month: { year: 2025, month: 10 } }
+	 *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: サマリーが存在しない
 	 *
 	 * @generated from rpc diary.DiaryService.GetMonthlySummary
 	 */
@@ -875,7 +947,17 @@ export const DiaryService: GenService<{
 		output: typeof GetMonthlySummaryResponseSchema;
 	};
 	/**
-	 * 日ごとのサマリー生成
+	 * GenerateDailySummary は指定された日記をLLMで要約します。
+	 * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
+	 *
+	 * 例:
+	 *   request: { diary_id: "uuid" }
+	 *   response: { summary: { id: "uuid", diary_id: "uuid", summary: "今日は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: LLMキーが設定されていない、または日記が存在しない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	 *   - Internal: LLM API呼び出しエラー
 	 *
 	 * @generated from rpc diary.DiaryService.GenerateDailySummary
 	 */
@@ -885,7 +967,14 @@ export const DiaryService: GenService<{
 		output: typeof GenerateDailySummaryResponseSchema;
 	};
 	/**
-	 * 日ごとのサマリー取得
+	 * GetDailySummary は指定された日付のサマリーを取得します。
+	 *
+	 * 例:
+	 *   request: { date: { year: 2025, month: 10, day: 9 } }
+	 *   response: { summary: { id: "uuid", date: { year: 2025, month: 10, day: 9 }, summary: "今日は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: サマリーが存在しない
 	 *
 	 * @generated from rpc diary.DiaryService.GetDailySummary
 	 */
