@@ -27,13 +27,6 @@ function getCategoryLabel(category: EntityCategory): string {
 function viewEntity(id: string): void {
 	goto(`/entity/${id}`);
 }
-
-/**
- * カテゴリフィルタを変更
- */
-function changeCategory(category: string): void {
-	goto(`/entities?category=${category}`);
-}
 </script>
 
 <svelte:head>
@@ -50,34 +43,6 @@ function changeCategory(category: string): void {
 			class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 		>
 			{$_("entity.list.create")}
-		</button>
-	</div>
-
-	<!-- カテゴリフィルタ -->
-	<div class="mb-6 flex gap-2">
-		<button
-			on:click={() => changeCategory("all")}
-			class="px-4 py-2 rounded-lg {data.selectedCategory === 'all'
-				? 'bg-blue-600 dark:bg-blue-500 text-white'
-				: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'} hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500"
-		>
-			{$_("entity.list.category.all")}
-		</button>
-		<button
-			on:click={() => changeCategory("people")}
-			class="px-4 py-2 rounded-lg {data.selectedCategory === 'people'
-				? 'bg-blue-600 dark:bg-blue-500 text-white'
-				: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'} hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500"
-		>
-			{$_("entity.list.category.people")}
-		</button>
-		<button
-			on:click={() => changeCategory("noCategory")}
-			class="px-4 py-2 rounded-lg {data.selectedCategory === 'noCategory'
-				? 'bg-blue-600 dark:bg-blue-500 text-white'
-				: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'} hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500"
-		>
-			{$_("entity.list.category.noCategory")}
 		</button>
 	</div>
 

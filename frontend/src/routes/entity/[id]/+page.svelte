@@ -170,22 +170,6 @@ function handleDeleteAlias(): void {
 				</div>
 
 				<div>
-					<label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						{$_("entity.detail.category")}
-					</label>
-					<select
-						id="category"
-						name="category"
-						disabled={updateLoading}
-						value={data.entity.category}
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800"
-					>
-						<option value={EntityCategory.NO_CATEGORY}>{$_("entity.list.category.noCategory")}</option>
-						<option value={EntityCategory.PEOPLE}>{$_("entity.list.category.people")}</option>
-					</select>
-				</div>
-
-				<div>
 					<label for="memo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 						{$_("entity.detail.memo")}
 					</label>

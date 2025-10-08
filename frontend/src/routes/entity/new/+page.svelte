@@ -7,7 +7,6 @@ import type { ActionData } from "./$types";
 export let form: ActionData;
 
 let name = form?.name || "";
-let category = form?.category || "noCategory";
 let memo = form?.memo || "";
 let isSubmitting = false;
 </script>
@@ -76,25 +75,6 @@ let isSubmitting = false;
 				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
 				placeholder={$_("entity.create.namePlaceholder")}
 			/>
-		</div>
-
-		<!-- カテゴリ -->
-		<div>
-			<label
-				for="category"
-				class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-			>
-				{$_("entity.create.category")}
-			</label>
-			<select
-				id="category"
-				name="category"
-				bind:value={category}
-				class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-			>
-				<option value="noCategory">{$_("entity.list.category.noCategory")}</option>
-				<option value="people">{$_("entity.list.category.people")}</option>
-			</select>
 		</div>
 
 		<!-- メモ -->

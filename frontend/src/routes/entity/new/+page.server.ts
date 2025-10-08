@@ -24,7 +24,6 @@ export const actions = {
 
 		const formData = await request.formData();
 		const name = formData.get("name") as string;
-		const categoryStr = formData.get("category") as string;
 		const memo = formData.get("memo") as string;
 
 		// バリデーション
@@ -32,16 +31,12 @@ export const actions = {
 			return fail(400, {
 				error: "entity.messages.nameRequired",
 				name,
-				category: categoryStr,
 				memo,
 			});
 		}
 
-		// カテゴリを変換
-		const category =
-			categoryStr === "people" || categoryStr === "1"
-				? EntityCategory.PEOPLE
-				: EntityCategory.NO_CATEGORY;
+		// カテゴリは常に1:人物を設定
+		const category = EntityCategory.PEOPLE;
 
 		// エンティティ作成
 		const response = await createEntity({
@@ -60,7 +55,6 @@ export const actions = {
 					return fail(400, {
 						error: "entity.messages.duplicateName",
 						name,
-						category: categoryStr,
 						memo,
 					});
 				}
@@ -70,7 +64,6 @@ export const actions = {
 					return fail(400, {
 						error: "entity.messages.nameUsedAsAlias",
 						name,
-						category: categoryStr,
 						memo,
 					});
 				}
@@ -91,7 +84,6 @@ export const actions = {
 					error: "entity.messages.error",
 					errorDetail,
 					name,
-					category: categoryStr,
 					memo,
 				});
 			}
@@ -102,7 +94,6 @@ export const actions = {
 				error: "entity.messages.error",
 				errorDetail: typeof error === "string" ? error : JSON.stringify(error),
 				name,
-				category: categoryStr,
 				memo,
 			});
 		});
@@ -117,7 +108,6 @@ export const actions = {
 			return fail(500, {
 				error: "entity.messages.error",
 				name,
-				category: categoryStr,
 				memo,
 			});
 		}

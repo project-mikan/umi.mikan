@@ -53,7 +53,6 @@ export const actions: Actions = {
 
 		const data = await request.formData();
 		const name = data.get("name")?.toString();
-		const categoryStr = data.get("category")?.toString();
 		const memo = data.get("memo")?.toString() || "";
 
 		if (!name) {
@@ -63,8 +62,8 @@ export const actions: Actions = {
 			});
 		}
 
-		const category =
-			categoryStr === "1" ? EntityCategory.PEOPLE : EntityCategory.NO_CATEGORY;
+		// カテゴリは常に1:人物を設定
+		const category = EntityCategory.PEOPLE;
 
 		try {
 			await updateEntity({
