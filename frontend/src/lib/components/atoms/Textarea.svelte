@@ -250,11 +250,27 @@ async function _handleInput(event: Event) {
 		clearTimeout(updateTimeout);
 	}
 
+	// IME入力中（compositionupdate）の場合は、エンティティ候補検索をスキップ
+	// valueの更新のみ行う
+	const isCompositionUpdate = event instanceof CompositionEvent;
+
 	value = htmlToPlainText(target.innerHTML);
 
 	// contentElementが初期化されていない場合は何もしない
 	if (!contentElement) {
 		isUpdatingFromValue = false;
+		return;
+	}
+
+	// IME入力中は候補検索をスキップ（DOM操作を最小限にしてIMEの動作を安定させる）
+	if (isCompositionUpdate) {
+		isUpdatingFromValue = false;
+
+		// 500ms後に入力が止まったら入力完了フラグを下ろす
+		updateTimeout = setTimeout(() => {
+			isTyping = false;
+		}, 500);
+
 		return;
 	}
 
@@ -545,40 +561,23 @@ function _handleKeydown(event: KeyboardEvent) {
 			// Insert the br element
 			range.insertNode(br);
 
-			// Check if we're at the end of the content
-			const isAtEnd =
-				range.endContainer === contentElement &&
-				range.endOffset === contentElement.childNodes.length;
+			// contentEditableの末尾での改行を処理するために、
+			// もう一つ<br>を挿入してカーソルが次の行に表示されるようにする
+			const afterBr = document.createElement("br");
 
-			// Check if we're at the end of content or at the end of a text node
-			const isAtEndOfContent =
-				isAtEnd ||
-				(range.endContainer.nodeType === Node.TEXT_NODE &&
-					range.endOffset === range.endContainer.textContent?.length);
+			// Create a new range after the first br element
+			const newRange = document.createRange();
+			newRange.setStartAfter(br);
+			newRange.insertNode(afterBr);
 
-			if (isAtEndOfContent) {
-				// For the last line, we need to insert a text node to position the cursor properly
-				const textNode = document.createTextNode("");
-				range.insertNode(textNode);
+			// カーソルを2つの<br>の間に配置
+			newRange.setStartAfter(br);
+			newRange.setEndBefore(afterBr);
+			newRange.collapse(true);
 
-				// Position cursor after the br and before the text node
-				const newRange = document.createRange();
-				newRange.setStartAfter(br);
-				newRange.setEndBefore(textNode);
-				newRange.collapse(false);
-
-				selection.removeAllRanges();
-				selection.addRange(newRange);
-			} else {
-				// Create a new range after the br element
-				const newRange = document.createRange();
-				newRange.setStartAfter(br);
-				newRange.collapse(true);
-
-				// Update the selection
-				selection.removeAllRanges();
-				selection.addRange(newRange);
-			}
+			// Update the selection
+			selection.removeAllRanges();
+			selection.addRange(newRange);
 		}
 
 		// Trigger input event to update the value
@@ -624,7 +623,7 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 		}
 	}
 
-	console.log('currentQuery recalculation:', {
+	console.log("currentQuery recalculation:", {
 		textToInsert,
 		beforeCursor,
 		triggerPos,
@@ -641,14 +640,14 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 	const afterCursor = value.substring(cursorPos);
 
 	// デバッグログ
-	console.log('selectSuggestion:', {
+	console.log("selectSuggestion:", {
 		value,
 		currentTriggerPos,
 		cursorPos,
 		beforeTrigger,
 		afterCursor,
 		textToInsert,
-		result: `${beforeTrigger}${textToInsert}${afterCursor}`
+		result: `${beforeTrigger}${textToInsert}${afterCursor}`,
 	});
 
 	// currentTriggerPosからcursorPosまでの文字列を選択されたテキストに置き換え
