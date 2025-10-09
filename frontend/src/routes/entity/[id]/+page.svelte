@@ -14,6 +14,7 @@ export let form: ActionData;
 let updateLoading = false;
 let deleteLoading = false;
 let createAliasLoading = false;
+let updateAliasLoading = false;
 let deleteAliasLoading = false;
 
 // モーダル状態
@@ -23,6 +24,10 @@ let selectedAliasId = "";
 
 // エイリアス追加用
 let newAlias = "";
+
+// エイリアス編集用
+let editingAliasId = "";
+let editingAliasValue = "";
 
 // アクションメッセージの判定
 function isMessageForAction(actionName: string): boolean {
@@ -119,6 +124,22 @@ function handleDeleteAlias(): void {
 	document.body.appendChild(form);
 	deleteAliasLoading = true;
 	form.submit();
+}
+
+/**
+ * エイリアス編集モードを開始
+ */
+function startEditAlias(aliasId: string, currentAlias: string): void {
+	editingAliasId = aliasId;
+	editingAliasValue = currentAlias;
+}
+
+/**
+ * エイリアス編集をキャンセル
+ */
+function cancelEditAlias(): void {
+	editingAliasId = "";
+	editingAliasValue = "";
 }
 </script>
 
@@ -264,24 +285,97 @@ function handleDeleteAlias(): void {
 				</div>
 			{/if}
 
+			<!-- 更新メッセージ -->
+			{#if form?.error && isMessageForAction("updateAlias")}
+				<div class="mb-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-400 px-4 py-3 rounded auto-phrase-target">
+					{$_(`entity.messages.${form.error}`) || form.error}
+				</div>
+			{/if}
+			{#if form?.success && isMessageForAction("updateAlias")}
+				<div class="mb-4 bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-400 px-4 py-3 rounded auto-phrase-target">
+					{$_(`entity.messages.${form.message}`) || form.message}
+				</div>
+			{/if}
+
 			<!-- エイリアス一覧表示 -->
 			{#if data.entity.aliases && data.entity.aliases.length > 0}
 				<div class="flex flex-wrap gap-2">
 					{#each data.entity.aliases as alias}
-						<div class="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
-							<span>{alias.alias}</span>
-							<button
-								type="button"
-								on:click={() => confirmDeleteAlias(alias.id)}
-								disabled={deleteAliasLoading}
-								class="text-blue-700 dark:text-blue-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none"
-								aria-label={$_("entity.detail.deleteAlias")}
+						{#if editingAliasId === alias.id}
+							<!-- 編集モード -->
+							<form
+								method="POST"
+								action="?/updateAlias"
+								class="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full"
+								use:enhance={() => {
+									updateAliasLoading = true;
+									return async ({ update }) => {
+										updateAliasLoading = false;
+										editingAliasId = "";
+										editingAliasValue = "";
+										await update();
+									};
+								}}
 							>
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-								</svg>
-							</button>
-						</div>
+								<input type="hidden" name="aliasId" value={alias.id} />
+								<input
+									type="text"
+									name="alias"
+									bind:value={editingAliasValue}
+									disabled={updateAliasLoading}
+									class="px-2 py-0.5 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-blue-300 dark:border-blue-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+									style="min-width: 100px;"
+								/>
+								<button
+									type="submit"
+									disabled={updateAliasLoading || !editingAliasValue}
+									class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-500 focus:outline-none"
+									aria-label="保存"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+									</svg>
+								</button>
+								<button
+									type="button"
+									on:click={cancelEditAlias}
+									disabled={updateAliasLoading}
+									class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-500 focus:outline-none"
+									aria-label="キャンセル"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+									</svg>
+								</button>
+							</form>
+						{:else}
+							<!-- 通常表示モード -->
+							<div class="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+								<span>{alias.alias}</span>
+								<button
+									type="button"
+									on:click={() => startEditAlias(alias.id, alias.alias)}
+									disabled={deleteAliasLoading || editingAliasId !== ""}
+									class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-200 focus:outline-none"
+									aria-label="編集"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+									</svg>
+								</button>
+								<button
+									type="button"
+									on:click={() => confirmDeleteAlias(alias.id)}
+									disabled={deleteAliasLoading || editingAliasId !== ""}
+									class="text-blue-700 dark:text-blue-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none"
+									aria-label={$_("entity.detail.deleteAlias")}
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+									</svg>
+								</button>
+							</div>
+						{/if}
 					{/each}
 				</div>
 			{:else}
@@ -291,10 +385,10 @@ function handleDeleteAlias(): void {
 			{/if}
 		</div>
 
-		<!-- 関連する日記 -->
+		<!-- 紐づく日記 -->
 		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
 			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-				{$_("entity.detail.relatedDiaries")}
+				{$_("entity.detail.linkedDiaries")}
 			</h2>
 
 			{#if data.diaries && data.diaries.length > 0}

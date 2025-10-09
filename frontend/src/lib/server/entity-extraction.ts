@@ -117,7 +117,6 @@ export async function extractEntitiesFromContent(
 			create(DiaryEntityInputSchema, {
 				entityId: entityId,
 				positions: positionMessages,
-				usedText: positions[0].text, // 最初に見つかったテキストを使用
 			}),
 		);
 	}

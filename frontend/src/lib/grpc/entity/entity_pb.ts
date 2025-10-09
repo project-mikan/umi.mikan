@@ -22,7 +22,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_entity_entity: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		"ChNlbnRpdHkvZW50aXR5LnByb3RvEgZlbnRpdHkiOAoIUG9zaXRpb24SDQoFc3RhcnQYASABKA0SCwoDZW5kGAIgASgNEhAKCGFsaWFzX2lkGAMgASgJIqgBCgZFbnRpdHkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIoCghjYXRlZ29yeRgDIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIMCgRtZW1vGAQgASgJEiQKB2FsaWFzZXMYBSADKAsyEy5lbnRpdHkuRW50aXR5QWxpYXMSEgoKY3JlYXRlZF9hdBgGIAEoAxISCgp1cGRhdGVkX2F0GAcgASgDImMKC0VudGl0eUFsaWFzEgoKAmlkGAEgASgJEhEKCWVudGl0eV9pZBgCIAEoCRINCgVhbGlhcxgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiiwEKC0RpYXJ5RW50aXR5EgoKAmlkGAEgASgJEhAKCGRpYXJ5X2lkGAIgASgJEhEKCWVudGl0eV9pZBgDIAEoCRIjCglwb3NpdGlvbnMYBCADKAsyEC5lbnRpdHkuUG9zaXRpb24SEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIlsKE0NyZWF0ZUVudGl0eVJlcXVlc3QSDAoEbmFtZRgBIAEoCRIoCghjYXRlZ29yeRgCIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIMCgRtZW1vGAMgASgJIjYKFENyZWF0ZUVudGl0eVJlc3BvbnNlEh4KBmVudGl0eRgBIAEoCzIOLmVudGl0eS5FbnRpdHkiZwoTVXBkYXRlRW50aXR5UmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEigKCGNhdGVnb3J5GAMgASgOMhYuZW50aXR5LkVudGl0eUNhdGVnb3J5EgwKBG1lbW8YBCABKAkiNgoUVXBkYXRlRW50aXR5UmVzcG9uc2USHgoGZW50aXR5GAEgASgLMg4uZW50aXR5LkVudGl0eSIhChNEZWxldGVFbnRpdHlSZXF1ZXN0EgoKAmlkGAEgASgJIicKFERlbGV0ZUVudGl0eVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiHgoQR2V0RW50aXR5UmVxdWVzdBIKCgJpZBgBIAEoCSIzChFHZXRFbnRpdHlSZXNwb25zZRIeCgZlbnRpdHkYASABKAsyDi5lbnRpdHkuRW50aXR5IlcKE0xpc3RFbnRpdGllc1JlcXVlc3QSKAoIY2F0ZWdvcnkYASABKA4yFi5lbnRpdHkuRW50aXR5Q2F0ZWdvcnkSFgoOYWxsX2NhdGVnb3JpZXMYAiABKAgiOAoUTGlzdEVudGl0aWVzUmVzcG9uc2USIAoIZW50aXRpZXMYASADKAsyDi5lbnRpdHkuRW50aXR5IjwKGENyZWF0ZUVudGl0eUFsaWFzUmVxdWVzdBIRCgllbnRpdHlfaWQYASABKAkSDQoFYWxpYXMYAiABKAkiPwoZQ3JlYXRlRW50aXR5QWxpYXNSZXNwb25zZRIiCgVhbGlhcxgBIAEoCzITLmVudGl0eS5FbnRpdHlBbGlhcyImChhEZWxldGVFbnRpdHlBbGlhc1JlcXVlc3QSCgoCaWQYASABKAkiLAoZRGVsZXRlRW50aXR5QWxpYXNSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIiYKFVNlYXJjaEVudGl0aWVzUmVxdWVzdBINCgVxdWVyeRgBIAEoCSI6ChZTZWFyY2hFbnRpdGllc1Jlc3BvbnNlEiAKCGVudGl0aWVzGAEgAygLMg4uZW50aXR5LkVudGl0eSIuChlHZXREaWFyaWVzQnlFbnRpdHlSZXF1ZXN0EhEKCWVudGl0eV9pZBgBIAEoCSJGChpHZXREaWFyaWVzQnlFbnRpdHlSZXNwb25zZRIoCgdkaWFyaWVzGAEgAygLMhcuZW50aXR5LkRpYXJ5V2l0aEVudGl0eSKJAQoPRGlhcnlXaXRoRW50aXR5EgoKAmlkGAEgASgJEg8KB2NvbnRlbnQYAiABKAkSDAoEZGF0ZRgDIAEoCRIjCglwb3NpdGlvbnMYBCADKAsyEC5lbnRpdHkuUG9zaXRpb24SEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDKi0KDkVudGl0eUNhdGVnb3J5Eg8KC05PX0NBVEVHT1JZEAASCgoGUEVPUExFEAEy3wUKDUVudGl0eVNlcnZpY2USSQoMQ3JlYXRlRW50aXR5EhsuZW50aXR5LkNyZWF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuQ3JlYXRlRW50aXR5UmVzcG9uc2USSQoMVXBkYXRlRW50aXR5EhsuZW50aXR5LlVwZGF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuVXBkYXRlRW50aXR5UmVzcG9uc2USSQoMRGVsZXRlRW50aXR5EhsuZW50aXR5LkRlbGV0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuRGVsZXRlRW50aXR5UmVzcG9uc2USQAoJR2V0RW50aXR5EhguZW50aXR5LkdldEVudGl0eVJlcXVlc3QaGS5lbnRpdHkuR2V0RW50aXR5UmVzcG9uc2USSQoMTGlzdEVudGl0aWVzEhsuZW50aXR5Lkxpc3RFbnRpdGllc1JlcXVlc3QaHC5lbnRpdHkuTGlzdEVudGl0aWVzUmVzcG9uc2USWAoRQ3JlYXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuQ3JlYXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkNyZWF0ZUVudGl0eUFsaWFzUmVzcG9uc2USWAoRRGVsZXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuRGVsZXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkRlbGV0ZUVudGl0eUFsaWFzUmVzcG9uc2USTwoOU2VhcmNoRW50aXRpZXMSHS5lbnRpdHkuU2VhcmNoRW50aXRpZXNSZXF1ZXN0Gh4uZW50aXR5LlNlYXJjaEVudGl0aWVzUmVzcG9uc2USWwoSR2V0RGlhcmllc0J5RW50aXR5EiEuZW50aXR5LkdldERpYXJpZXNCeUVudGl0eVJlcXVlc3QaIi5lbnRpdHkuR2V0RGlhcmllc0J5RW50aXR5UmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
+		"ChNlbnRpdHkvZW50aXR5LnByb3RvEgZlbnRpdHkiOAoIUG9zaXRpb24SDQoFc3RhcnQYASABKA0SCwoDZW5kGAIgASgNEhAKCGFsaWFzX2lkGAMgASgJIqgBCgZFbnRpdHkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIoCghjYXRlZ29yeRgDIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIMCgRtZW1vGAQgASgJEiQKB2FsaWFzZXMYBSADKAsyEy5lbnRpdHkuRW50aXR5QWxpYXMSEgoKY3JlYXRlZF9hdBgGIAEoAxISCgp1cGRhdGVkX2F0GAcgASgDImMKC0VudGl0eUFsaWFzEgoKAmlkGAEgASgJEhEKCWVudGl0eV9pZBgCIAEoCRINCgVhbGlhcxgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiiwEKC0RpYXJ5RW50aXR5EgoKAmlkGAEgASgJEhAKCGRpYXJ5X2lkGAIgASgJEhEKCWVudGl0eV9pZBgDIAEoCRIjCglwb3NpdGlvbnMYBCADKAsyEC5lbnRpdHkuUG9zaXRpb24SEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIlsKE0NyZWF0ZUVudGl0eVJlcXVlc3QSDAoEbmFtZRgBIAEoCRIoCghjYXRlZ29yeRgCIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIMCgRtZW1vGAMgASgJIjYKFENyZWF0ZUVudGl0eVJlc3BvbnNlEh4KBmVudGl0eRgBIAEoCzIOLmVudGl0eS5FbnRpdHkiZwoTVXBkYXRlRW50aXR5UmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEigKCGNhdGVnb3J5GAMgASgOMhYuZW50aXR5LkVudGl0eUNhdGVnb3J5EgwKBG1lbW8YBCABKAkiNgoUVXBkYXRlRW50aXR5UmVzcG9uc2USHgoGZW50aXR5GAEgASgLMg4uZW50aXR5LkVudGl0eSIhChNEZWxldGVFbnRpdHlSZXF1ZXN0EgoKAmlkGAEgASgJIicKFERlbGV0ZUVudGl0eVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiHgoQR2V0RW50aXR5UmVxdWVzdBIKCgJpZBgBIAEoCSIzChFHZXRFbnRpdHlSZXNwb25zZRIeCgZlbnRpdHkYASABKAsyDi5lbnRpdHkuRW50aXR5IlcKE0xpc3RFbnRpdGllc1JlcXVlc3QSKAoIY2F0ZWdvcnkYASABKA4yFi5lbnRpdHkuRW50aXR5Q2F0ZWdvcnkSFgoOYWxsX2NhdGVnb3JpZXMYAiABKAgiOAoUTGlzdEVudGl0aWVzUmVzcG9uc2USIAoIZW50aXRpZXMYASADKAsyDi5lbnRpdHkuRW50aXR5IjwKGENyZWF0ZUVudGl0eUFsaWFzUmVxdWVzdBIRCgllbnRpdHlfaWQYASABKAkSDQoFYWxpYXMYAiABKAkiPwoZQ3JlYXRlRW50aXR5QWxpYXNSZXNwb25zZRIiCgVhbGlhcxgBIAEoCzITLmVudGl0eS5FbnRpdHlBbGlhcyI1ChhVcGRhdGVFbnRpdHlBbGlhc1JlcXVlc3QSCgoCaWQYASABKAkSDQoFYWxpYXMYAiABKAkiPwoZVXBkYXRlRW50aXR5QWxpYXNSZXNwb25zZRIiCgVhbGlhcxgBIAEoCzITLmVudGl0eS5FbnRpdHlBbGlhcyImChhEZWxldGVFbnRpdHlBbGlhc1JlcXVlc3QSCgoCaWQYASABKAkiLAoZRGVsZXRlRW50aXR5QWxpYXNSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIiYKFVNlYXJjaEVudGl0aWVzUmVxdWVzdBINCgVxdWVyeRgBIAEoCSI6ChZTZWFyY2hFbnRpdGllc1Jlc3BvbnNlEiAKCGVudGl0aWVzGAEgAygLMg4uZW50aXR5LkVudGl0eSIuChlHZXREaWFyaWVzQnlFbnRpdHlSZXF1ZXN0EhEKCWVudGl0eV9pZBgBIAEoCSJGChpHZXREaWFyaWVzQnlFbnRpdHlSZXNwb25zZRIoCgdkaWFyaWVzGAEgAygLMhcuZW50aXR5LkRpYXJ5V2l0aEVudGl0eSKJAQoPRGlhcnlXaXRoRW50aXR5EgoKAmlkGAEgASgJEg8KB2NvbnRlbnQYAiABKAkSDAoEZGF0ZRgDIAEoCRIjCglwb3NpdGlvbnMYBCADKAsyEC5lbnRpdHkuUG9zaXRpb24SEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDKi0KDkVudGl0eUNhdGVnb3J5Eg8KC05PX0NBVEVHT1JZEAASCgoGUEVPUExFEAEyuQYKDUVudGl0eVNlcnZpY2USSQoMQ3JlYXRlRW50aXR5EhsuZW50aXR5LkNyZWF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuQ3JlYXRlRW50aXR5UmVzcG9uc2USSQoMVXBkYXRlRW50aXR5EhsuZW50aXR5LlVwZGF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuVXBkYXRlRW50aXR5UmVzcG9uc2USSQoMRGVsZXRlRW50aXR5EhsuZW50aXR5LkRlbGV0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuRGVsZXRlRW50aXR5UmVzcG9uc2USQAoJR2V0RW50aXR5EhguZW50aXR5LkdldEVudGl0eVJlcXVlc3QaGS5lbnRpdHkuR2V0RW50aXR5UmVzcG9uc2USSQoMTGlzdEVudGl0aWVzEhsuZW50aXR5Lkxpc3RFbnRpdGllc1JlcXVlc3QaHC5lbnRpdHkuTGlzdEVudGl0aWVzUmVzcG9uc2USWAoRQ3JlYXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuQ3JlYXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkNyZWF0ZUVudGl0eUFsaWFzUmVzcG9uc2USWAoRVXBkYXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuVXBkYXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LlVwZGF0ZUVudGl0eUFsaWFzUmVzcG9uc2USWAoRRGVsZXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuRGVsZXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkRlbGV0ZUVudGl0eUFsaWFzUmVzcG9uc2USTwoOU2VhcmNoRW50aXRpZXMSHS5lbnRpdHkuU2VhcmNoRW50aXRpZXNSZXF1ZXN0Gh4uZW50aXR5LlNlYXJjaEVudGl0aWVzUmVzcG9uc2USWwoSR2V0RGlhcmllc0J5RW50aXR5EiEuZW50aXR5LkdldERpYXJpZXNCeUVudGl0eVJlcXVlc3QaIi5lbnRpdHkuR2V0RGlhcmllc0J5RW50aXR5UmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
 	);
 
 /**
@@ -482,6 +482,53 @@ export const CreateEntityAliasResponseSchema: GenMessage<CreateEntityAliasRespon
 	messageDesc(file_entity_entity, 15);
 
 /**
+ * エイリアス更新リクエスト
+ *
+ * @generated from message entity.UpdateEntityAliasRequest
+ */
+export type UpdateEntityAliasRequest =
+	Message<"entity.UpdateEntityAliasRequest"> & {
+		/**
+		 * @generated from field: string id = 1;
+		 */
+		id: string;
+
+		/**
+		 * @generated from field: string alias = 2;
+		 */
+		alias: string;
+	};
+
+/**
+ * Describes the message entity.UpdateEntityAliasRequest.
+ * Use `create(UpdateEntityAliasRequestSchema)` to create a new message.
+ */
+export const UpdateEntityAliasRequestSchema: GenMessage<UpdateEntityAliasRequest> =
+	/*@__PURE__*/
+	messageDesc(file_entity_entity, 16);
+
+/**
+ * エイリアス更新レスポンス
+ *
+ * @generated from message entity.UpdateEntityAliasResponse
+ */
+export type UpdateEntityAliasResponse =
+	Message<"entity.UpdateEntityAliasResponse"> & {
+		/**
+		 * @generated from field: entity.EntityAlias alias = 1;
+		 */
+		alias?: EntityAlias;
+	};
+
+/**
+ * Describes the message entity.UpdateEntityAliasResponse.
+ * Use `create(UpdateEntityAliasResponseSchema)` to create a new message.
+ */
+export const UpdateEntityAliasResponseSchema: GenMessage<UpdateEntityAliasResponse> =
+	/*@__PURE__*/
+	messageDesc(file_entity_entity, 17);
+
+/**
  * エイリアス削除リクエスト
  *
  * @generated from message entity.DeleteEntityAliasRequest
@@ -500,7 +547,7 @@ export type DeleteEntityAliasRequest =
  */
 export const DeleteEntityAliasRequestSchema: GenMessage<DeleteEntityAliasRequest> =
 	/*@__PURE__*/
-	messageDesc(file_entity_entity, 16);
+	messageDesc(file_entity_entity, 18);
 
 /**
  * エイリアス削除レスポンス
@@ -521,7 +568,7 @@ export type DeleteEntityAliasResponse =
  */
 export const DeleteEntityAliasResponseSchema: GenMessage<DeleteEntityAliasResponse> =
 	/*@__PURE__*/
-	messageDesc(file_entity_entity, 17);
+	messageDesc(file_entity_entity, 19);
 
 /**
  * エンティティ検索リクエスト
@@ -543,7 +590,7 @@ export type SearchEntitiesRequest = Message<"entity.SearchEntitiesRequest"> & {
  */
 export const SearchEntitiesRequestSchema: GenMessage<SearchEntitiesRequest> =
 	/*@__PURE__*/
-	messageDesc(file_entity_entity, 18);
+	messageDesc(file_entity_entity, 20);
 
 /**
  * エンティティ検索レスポンス
@@ -564,7 +611,7 @@ export type SearchEntitiesResponse =
  */
 export const SearchEntitiesResponseSchema: GenMessage<SearchEntitiesResponse> =
 	/*@__PURE__*/
-	messageDesc(file_entity_entity, 19);
+	messageDesc(file_entity_entity, 21);
 
 /**
  * エンティティに紐づく日記取得リクエスト
@@ -585,7 +632,7 @@ export type GetDiariesByEntityRequest =
  */
 export const GetDiariesByEntityRequestSchema: GenMessage<GetDiariesByEntityRequest> =
 	/*@__PURE__*/
-	messageDesc(file_entity_entity, 20);
+	messageDesc(file_entity_entity, 22);
 
 /**
  * エンティティに紐づく日記取得レスポンス
@@ -606,7 +653,7 @@ export type GetDiariesByEntityResponse =
  */
 export const GetDiariesByEntityResponseSchema: GenMessage<GetDiariesByEntityResponse> =
 	/*@__PURE__*/
-	messageDesc(file_entity_entity, 21);
+	messageDesc(file_entity_entity, 23);
 
 /**
  * 日記とエンティティ情報
@@ -655,7 +702,7 @@ export type DiaryWithEntity = Message<"entity.DiaryWithEntity"> & {
  */
 export const DiaryWithEntitySchema: GenMessage<DiaryWithEntity> =
 	/*@__PURE__*/
-	messageDesc(file_entity_entity, 22);
+	messageDesc(file_entity_entity, 24);
 
 /**
  * エンティティのカテゴリー
@@ -790,6 +837,24 @@ export const EntityService: GenService<{
 		methodKind: "unary";
 		input: typeof CreateEntityAliasRequestSchema;
 		output: typeof CreateEntityAliasResponseSchema;
+	};
+	/**
+	 * UpdateEntityAlias はエイリアスを更新します。
+	 *
+	 * 例:
+	 *   request: { id: "uuid", alias: "太郎くん" }
+	 *
+	 * エラー:
+	 *   - NotFound: エイリアスが見つからない
+	 *   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+	 *   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+	 *
+	 * @generated from rpc entity.EntityService.UpdateEntityAlias
+	 */
+	updateEntityAlias: {
+		methodKind: "unary";
+		input: typeof UpdateEntityAliasRequestSchema;
+		output: typeof UpdateEntityAliasResponseSchema;
 	};
 	/**
 	 * DeleteEntityAlias はエイリアスを削除します。

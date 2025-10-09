@@ -4,6 +4,7 @@ import {
 	updateEntity,
 	deleteEntity,
 	createEntityAlias,
+	updateEntityAlias,
 	deleteEntityAlias,
 	getDiariesByEntity,
 } from "$lib/server/entity-api";
@@ -171,6 +172,68 @@ export const actions: Actions = {
 			return fail(500, {
 				error: "error",
 				action: "createAlias",
+			});
+		}
+	},
+
+	// エイリアス更新
+	updateAlias: async ({ request, cookies }) => {
+		const authResult = await ensureValidAccessToken(cookies);
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
+			return fail(401, { error: "unauthorized", action: "updateAlias" });
+		}
+
+		const data = await request.formData();
+		const aliasId = data.get("aliasId")?.toString();
+		const alias = data.get("alias")?.toString();
+
+		if (!aliasId || !alias) {
+			return fail(400, {
+				error: "nameRequired",
+				action: "updateAlias",
+			});
+		}
+
+		try {
+			await updateEntityAlias({
+				id: aliasId,
+				alias,
+				accessToken: authResult.accessToken,
+			});
+
+			return {
+				success: true,
+				message: "aliasUpdateSuccess",
+				action: "updateAlias",
+			};
+		} catch (err) {
+			console.error("Failed to update alias:", err);
+
+			// エラーメッセージを判定
+			if (err instanceof Error) {
+				// エンティティ名として使用されているエラー
+				if (err.message.includes("already used as an entity name")) {
+					return fail(400, {
+						error: "aliasUsedAsName",
+						action: "updateAlias",
+					});
+				}
+
+				// エイリアスとして既に使用されているエラー
+				if (
+					err.message.includes("already used") ||
+					err.message.includes("already exists")
+				) {
+					return fail(400, {
+						error: "aliasAlreadyExists",
+						action: "updateAlias",
+					});
+				}
+			}
+
+			return fail(500, {
+				error: "error",
+				action: "updateAlias",
 			});
 		}
 	},

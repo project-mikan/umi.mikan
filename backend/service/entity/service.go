@@ -463,6 +463,90 @@ func (s *EntityEntry) CreateEntityAlias(
 	}, nil
 }
 
+// UpdateEntityAlias エイリアスを更新する
+func (s *EntityEntry) UpdateEntityAlias(
+	ctx context.Context,
+	message *g.UpdateEntityAliasRequest,
+) (*g.UpdateEntityAliasResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	aliasID, err := uuid.Parse(message.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid alias ID")
+	}
+
+	alias, err := database.EntityAliasByID(ctx, s.DB, aliasID)
+	if err != nil {
+		return nil, err
+	}
+
+	// エンティティの所有者確認
+	entity, err := database.EntityByID(ctx, s.DB, alias.EntityID)
+	if err != nil {
+		return nil, err
+	}
+	if entity.UserID != userID {
+		return nil, status.Errorf(codes.PermissionDenied, "not authorized to update this alias")
+	}
+
+	// 新しいエイリアス名が既存のエンティティ名と重複していないかチェック
+	checkEntityQuery := `
+		SELECT COUNT(*) FROM entities
+		WHERE user_id = $1 AND name = $2
+	`
+	var entityCount int
+	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
+		return nil, err
+	}
+	if entityCount > 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used as an entity name", message.Alias)
+	}
+
+	// 新しいエイリアス名が既存の他のエイリアスと重複していないかチェック（同じユーザー内、自分自身を除く）
+	checkOtherAliasQuery := `
+		SELECT COUNT(*) FROM entity_aliases ea
+		INNER JOIN entities e ON ea.entity_id = e.id
+		WHERE e.user_id = $1 AND ea.alias = $2 AND ea.id != $3
+	`
+	var otherAliasCount int
+	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias, aliasID).Scan(&otherAliasCount); err != nil {
+		return nil, err
+	}
+	if otherAliasCount > 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used", message.Alias)
+	}
+
+	// トランザクション内でエイリアスを更新
+	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+		alias.Alias = message.Alias
+		alias.UpdatedAt = time.Now().Unix()
+		if err := alias.Update(ctx, tx); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &g.UpdateEntityAliasResponse{
+		Alias: &g.EntityAlias{
+			Id:        alias.ID.String(),
+			EntityId:  alias.EntityID.String(),
+			Alias:     alias.Alias,
+			CreatedAt: alias.CreatedAt,
+			UpdatedAt: alias.UpdatedAt,
+		},
+	}, nil
+}
+
 // DeleteEntityAlias エイリアスを削除する
 func (s *EntityEntry) DeleteEntityAlias(
 	ctx context.Context,
@@ -646,14 +730,29 @@ func (s *EntityEntry) GetDiariesByEntity(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to view this entity")
 	}
 
-	// エンティティに紐づく日記を取得
-	diaryEntities, err := database.DiaryEntitiesByEntityID(ctx, s.DB, entityID)
+	// エンティティに紐づく日記を日付降順で取得
+	query := `
+		SELECT de.id, de.diary_id, de.entity_id, de.positions, de.created_at, de.updated_at
+		FROM diary_entities de
+		INNER JOIN diaries d ON de.diary_id = d.id
+		WHERE de.entity_id = $1
+		ORDER BY d.date DESC
+	`
+	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, entityID)
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = rows.Close()
+	}()
 
-	protoDiaries := make([]*g.DiaryWithEntity, 0, len(diaryEntities))
-	for _, de := range diaryEntities {
+	protoDiaries := make([]*g.DiaryWithEntity, 0)
+	for rows.Next() {
+		var de database.DiaryEntity
+		if err := rows.Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.Positions, &de.CreatedAt, &de.UpdatedAt); err != nil {
+			return nil, err
+		}
+
 		// 日記を取得
 		diary, err := database.DiaryByID(ctx, s.DB, de.DiaryID)
 		if err != nil {
@@ -685,6 +784,10 @@ func (s *EntityEntry) GetDiariesByEntity(
 			CreatedAt: diary.CreatedAt,
 			UpdatedAt: diary.UpdatedAt,
 		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return &g.GetDiariesByEntityResponse{

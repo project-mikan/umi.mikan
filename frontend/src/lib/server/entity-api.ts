@@ -20,6 +20,8 @@ import {
 	type ListEntitiesResponse,
 	SearchEntitiesRequestSchema,
 	type SearchEntitiesResponse,
+	UpdateEntityAliasRequestSchema,
+	type UpdateEntityAliasResponse,
 	UpdateEntityRequestSchema,
 	type UpdateEntityResponse,
 } from "$lib/grpc/entity/entity_pb";
@@ -72,6 +74,12 @@ export interface ListEntitiesParams {
 
 export interface CreateEntityAliasParams {
 	entityId: string;
+	alias: string;
+	accessToken: string;
+}
+
+export interface UpdateEntityAliasParams {
+	id: string;
 	alias: string;
 	accessToken: string;
 }
@@ -192,6 +200,23 @@ export async function createEntityAlias(
 	});
 
 	return await client.createEntityAlias(request);
+}
+
+/**
+ * エイリアスを更新
+ */
+export async function updateEntityAlias(
+	params: UpdateEntityAliasParams,
+): Promise<UpdateEntityAliasResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(EntityService, transport);
+
+	const request = create(UpdateEntityAliasRequestSchema, {
+		id: params.id,
+		alias: params.alias,
+	});
+
+	return await client.updateEntityAlias(request);
 }
 
 /**

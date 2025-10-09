@@ -25,6 +25,7 @@ const (
 	EntityService_GetEntity_FullMethodName          = "/entity.EntityService/GetEntity"
 	EntityService_ListEntities_FullMethodName       = "/entity.EntityService/ListEntities"
 	EntityService_CreateEntityAlias_FullMethodName  = "/entity.EntityService/CreateEntityAlias"
+	EntityService_UpdateEntityAlias_FullMethodName  = "/entity.EntityService/UpdateEntityAlias"
 	EntityService_DeleteEntityAlias_FullMethodName  = "/entity.EntityService/DeleteEntityAlias"
 	EntityService_SearchEntities_FullMethodName     = "/entity.EntityService/SearchEntities"
 	EntityService_GetDiariesByEntity_FullMethodName = "/entity.EntityService/GetDiariesByEntity"
@@ -93,6 +94,17 @@ type EntityServiceClient interface {
 	//   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
 	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	CreateEntityAlias(ctx context.Context, in *CreateEntityAliasRequest, opts ...grpc.CallOption) (*CreateEntityAliasResponse, error)
+	// UpdateEntityAlias はエイリアスを更新します。
+	//
+	// 例:
+	//
+	//	request: { id: "uuid", alias: "太郎くん" }
+	//
+	// エラー:
+	//   - NotFound: エイリアスが見つからない
+	//   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+	//   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+	UpdateEntityAlias(ctx context.Context, in *UpdateEntityAliasRequest, opts ...grpc.CallOption) (*UpdateEntityAliasResponse, error)
 	// DeleteEntityAlias はエイリアスを削除します。
 	//
 	// エラー:
@@ -185,6 +197,16 @@ func (c *entityServiceClient) CreateEntityAlias(ctx context.Context, in *CreateE
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateEntityAliasResponse)
 	err := c.cc.Invoke(ctx, EntityService_CreateEntityAlias_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *entityServiceClient) UpdateEntityAlias(ctx context.Context, in *UpdateEntityAliasRequest, opts ...grpc.CallOption) (*UpdateEntityAliasResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateEntityAliasResponse)
+	err := c.cc.Invoke(ctx, EntityService_UpdateEntityAlias_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -284,6 +306,17 @@ type EntityServiceServer interface {
 	//   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
 	//   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
 	CreateEntityAlias(context.Context, *CreateEntityAliasRequest) (*CreateEntityAliasResponse, error)
+	// UpdateEntityAlias はエイリアスを更新します。
+	//
+	// 例:
+	//
+	//	request: { id: "uuid", alias: "太郎くん" }
+	//
+	// エラー:
+	//   - NotFound: エイリアスが見つからない
+	//   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+	//   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+	UpdateEntityAlias(context.Context, *UpdateEntityAliasRequest) (*UpdateEntityAliasResponse, error)
 	// DeleteEntityAlias はエイリアスを削除します。
 	//
 	// エラー:
@@ -339,6 +372,9 @@ func (UnimplementedEntityServiceServer) ListEntities(context.Context, *ListEntit
 }
 func (UnimplementedEntityServiceServer) CreateEntityAlias(context.Context, *CreateEntityAliasRequest) (*CreateEntityAliasResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEntityAlias not implemented")
+}
+func (UnimplementedEntityServiceServer) UpdateEntityAlias(context.Context, *UpdateEntityAliasRequest) (*UpdateEntityAliasResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEntityAlias not implemented")
 }
 func (UnimplementedEntityServiceServer) DeleteEntityAlias(context.Context, *DeleteEntityAliasRequest) (*DeleteEntityAliasResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteEntityAlias not implemented")
@@ -478,6 +514,24 @@ func _EntityService_CreateEntityAlias_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EntityService_UpdateEntityAlias_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateEntityAliasRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EntityServiceServer).UpdateEntityAlias(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EntityService_UpdateEntityAlias_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EntityServiceServer).UpdateEntityAlias(ctx, req.(*UpdateEntityAliasRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _EntityService_DeleteEntityAlias_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteEntityAliasRequest)
 	if err := dec(in); err != nil {
@@ -562,6 +616,10 @@ var EntityService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateEntityAlias",
 			Handler:    _EntityService_CreateEntityAlias_Handler,
+		},
+		{
+			MethodName: "UpdateEntityAlias",
+			Handler:    _EntityService_UpdateEntityAlias_Handler,
 		},
 		{
 			MethodName: "DeleteEntityAlias",

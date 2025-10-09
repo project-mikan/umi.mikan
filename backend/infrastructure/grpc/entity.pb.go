@@ -980,6 +980,104 @@ func (x *CreateEntityAliasResponse) GetAlias() *EntityAlias {
 	return nil
 }
 
+// エイリアス更新リクエスト
+type UpdateEntityAliasRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Alias         string                 `protobuf:"bytes,2,opt,name=alias,proto3" json:"alias,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateEntityAliasRequest) Reset() {
+	*x = UpdateEntityAliasRequest{}
+	mi := &file_entity_entity_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateEntityAliasRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateEntityAliasRequest) ProtoMessage() {}
+
+func (x *UpdateEntityAliasRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_entity_entity_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateEntityAliasRequest.ProtoReflect.Descriptor instead.
+func (*UpdateEntityAliasRequest) Descriptor() ([]byte, []int) {
+	return file_entity_entity_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *UpdateEntityAliasRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateEntityAliasRequest) GetAlias() string {
+	if x != nil {
+		return x.Alias
+	}
+	return ""
+}
+
+// エイリアス更新レスポンス
+type UpdateEntityAliasResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Alias         *EntityAlias           `protobuf:"bytes,1,opt,name=alias,proto3" json:"alias,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateEntityAliasResponse) Reset() {
+	*x = UpdateEntityAliasResponse{}
+	mi := &file_entity_entity_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateEntityAliasResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateEntityAliasResponse) ProtoMessage() {}
+
+func (x *UpdateEntityAliasResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_entity_entity_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateEntityAliasResponse.ProtoReflect.Descriptor instead.
+func (*UpdateEntityAliasResponse) Descriptor() ([]byte, []int) {
+	return file_entity_entity_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UpdateEntityAliasResponse) GetAlias() *EntityAlias {
+	if x != nil {
+		return x.Alias
+	}
+	return nil
+}
+
 // エイリアス削除リクエスト
 type DeleteEntityAliasRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -990,7 +1088,7 @@ type DeleteEntityAliasRequest struct {
 
 func (x *DeleteEntityAliasRequest) Reset() {
 	*x = DeleteEntityAliasRequest{}
-	mi := &file_entity_entity_proto_msgTypes[16]
+	mi := &file_entity_entity_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1002,7 +1100,7 @@ func (x *DeleteEntityAliasRequest) String() string {
 func (*DeleteEntityAliasRequest) ProtoMessage() {}
 
 func (x *DeleteEntityAliasRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_entity_entity_proto_msgTypes[16]
+	mi := &file_entity_entity_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1015,7 +1113,7 @@ func (x *DeleteEntityAliasRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEntityAliasRequest.ProtoReflect.Descriptor instead.
 func (*DeleteEntityAliasRequest) Descriptor() ([]byte, []int) {
-	return file_entity_entity_proto_rawDescGZIP(), []int{16}
+	return file_entity_entity_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *DeleteEntityAliasRequest) GetId() string {
@@ -1035,7 +1133,7 @@ type DeleteEntityAliasResponse struct {
 
 func (x *DeleteEntityAliasResponse) Reset() {
 	*x = DeleteEntityAliasResponse{}
-	mi := &file_entity_entity_proto_msgTypes[17]
+	mi := &file_entity_entity_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1047,7 +1145,7 @@ func (x *DeleteEntityAliasResponse) String() string {
 func (*DeleteEntityAliasResponse) ProtoMessage() {}
 
 func (x *DeleteEntityAliasResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_entity_entity_proto_msgTypes[17]
+	mi := &file_entity_entity_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1060,7 +1158,7 @@ func (x *DeleteEntityAliasResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEntityAliasResponse.ProtoReflect.Descriptor instead.
 func (*DeleteEntityAliasResponse) Descriptor() ([]byte, []int) {
-	return file_entity_entity_proto_rawDescGZIP(), []int{17}
+	return file_entity_entity_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *DeleteEntityAliasResponse) GetSuccess() bool {
@@ -1080,7 +1178,7 @@ type SearchEntitiesRequest struct {
 
 func (x *SearchEntitiesRequest) Reset() {
 	*x = SearchEntitiesRequest{}
-	mi := &file_entity_entity_proto_msgTypes[18]
+	mi := &file_entity_entity_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1092,7 +1190,7 @@ func (x *SearchEntitiesRequest) String() string {
 func (*SearchEntitiesRequest) ProtoMessage() {}
 
 func (x *SearchEntitiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_entity_entity_proto_msgTypes[18]
+	mi := &file_entity_entity_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1105,7 +1203,7 @@ func (x *SearchEntitiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchEntitiesRequest.ProtoReflect.Descriptor instead.
 func (*SearchEntitiesRequest) Descriptor() ([]byte, []int) {
-	return file_entity_entity_proto_rawDescGZIP(), []int{18}
+	return file_entity_entity_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *SearchEntitiesRequest) GetQuery() string {
@@ -1125,7 +1223,7 @@ type SearchEntitiesResponse struct {
 
 func (x *SearchEntitiesResponse) Reset() {
 	*x = SearchEntitiesResponse{}
-	mi := &file_entity_entity_proto_msgTypes[19]
+	mi := &file_entity_entity_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1137,7 +1235,7 @@ func (x *SearchEntitiesResponse) String() string {
 func (*SearchEntitiesResponse) ProtoMessage() {}
 
 func (x *SearchEntitiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_entity_entity_proto_msgTypes[19]
+	mi := &file_entity_entity_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1150,7 +1248,7 @@ func (x *SearchEntitiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchEntitiesResponse.ProtoReflect.Descriptor instead.
 func (*SearchEntitiesResponse) Descriptor() ([]byte, []int) {
-	return file_entity_entity_proto_rawDescGZIP(), []int{19}
+	return file_entity_entity_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SearchEntitiesResponse) GetEntities() []*Entity {
@@ -1170,7 +1268,7 @@ type GetDiariesByEntityRequest struct {
 
 func (x *GetDiariesByEntityRequest) Reset() {
 	*x = GetDiariesByEntityRequest{}
-	mi := &file_entity_entity_proto_msgTypes[20]
+	mi := &file_entity_entity_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1182,7 +1280,7 @@ func (x *GetDiariesByEntityRequest) String() string {
 func (*GetDiariesByEntityRequest) ProtoMessage() {}
 
 func (x *GetDiariesByEntityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_entity_entity_proto_msgTypes[20]
+	mi := &file_entity_entity_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1195,7 +1293,7 @@ func (x *GetDiariesByEntityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiariesByEntityRequest.ProtoReflect.Descriptor instead.
 func (*GetDiariesByEntityRequest) Descriptor() ([]byte, []int) {
-	return file_entity_entity_proto_rawDescGZIP(), []int{20}
+	return file_entity_entity_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetDiariesByEntityRequest) GetEntityId() string {
@@ -1215,7 +1313,7 @@ type GetDiariesByEntityResponse struct {
 
 func (x *GetDiariesByEntityResponse) Reset() {
 	*x = GetDiariesByEntityResponse{}
-	mi := &file_entity_entity_proto_msgTypes[21]
+	mi := &file_entity_entity_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1227,7 +1325,7 @@ func (x *GetDiariesByEntityResponse) String() string {
 func (*GetDiariesByEntityResponse) ProtoMessage() {}
 
 func (x *GetDiariesByEntityResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_entity_entity_proto_msgTypes[21]
+	mi := &file_entity_entity_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1240,7 +1338,7 @@ func (x *GetDiariesByEntityResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiariesByEntityResponse.ProtoReflect.Descriptor instead.
 func (*GetDiariesByEntityResponse) Descriptor() ([]byte, []int) {
-	return file_entity_entity_proto_rawDescGZIP(), []int{21}
+	return file_entity_entity_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetDiariesByEntityResponse) GetDiaries() []*DiaryWithEntity {
@@ -1265,7 +1363,7 @@ type DiaryWithEntity struct {
 
 func (x *DiaryWithEntity) Reset() {
 	*x = DiaryWithEntity{}
-	mi := &file_entity_entity_proto_msgTypes[22]
+	mi := &file_entity_entity_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1277,7 +1375,7 @@ func (x *DiaryWithEntity) String() string {
 func (*DiaryWithEntity) ProtoMessage() {}
 
 func (x *DiaryWithEntity) ProtoReflect() protoreflect.Message {
-	mi := &file_entity_entity_proto_msgTypes[22]
+	mi := &file_entity_entity_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1290,7 +1388,7 @@ func (x *DiaryWithEntity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiaryWithEntity.ProtoReflect.Descriptor instead.
 func (*DiaryWithEntity) Descriptor() ([]byte, []int) {
-	return file_entity_entity_proto_rawDescGZIP(), []int{22}
+	return file_entity_entity_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *DiaryWithEntity) GetId() string {
@@ -1401,6 +1499,11 @@ const file_entity_entity_proto_rawDesc = "" +
 	"\tentity_id\x18\x01 \x01(\tR\bentityId\x12\x14\n" +
 	"\x05alias\x18\x02 \x01(\tR\x05alias\"F\n" +
 	"\x19CreateEntityAliasResponse\x12)\n" +
+	"\x05alias\x18\x01 \x01(\v2\x13.entity.EntityAliasR\x05alias\"@\n" +
+	"\x18UpdateEntityAliasRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05alias\x18\x02 \x01(\tR\x05alias\"F\n" +
+	"\x19UpdateEntityAliasResponse\x12)\n" +
 	"\x05alias\x18\x01 \x01(\v2\x13.entity.EntityAliasR\x05alias\"*\n" +
 	"\x18DeleteEntityAliasRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"5\n" +
@@ -1426,7 +1529,7 @@ const file_entity_entity_proto_rawDesc = "" +
 	"\x0eEntityCategory\x12\x0f\n" +
 	"\vNO_CATEGORY\x10\x00\x12\n" +
 	"\n" +
-	"\x06PEOPLE\x10\x012\xdf\x05\n" +
+	"\x06PEOPLE\x10\x012\xb9\x06\n" +
 	"\rEntityService\x12I\n" +
 	"\fCreateEntity\x12\x1b.entity.CreateEntityRequest\x1a\x1c.entity.CreateEntityResponse\x12I\n" +
 	"\fUpdateEntity\x12\x1b.entity.UpdateEntityRequest\x1a\x1c.entity.UpdateEntityResponse\x12I\n" +
@@ -1434,6 +1537,7 @@ const file_entity_entity_proto_rawDesc = "" +
 	"\tGetEntity\x12\x18.entity.GetEntityRequest\x1a\x19.entity.GetEntityResponse\x12I\n" +
 	"\fListEntities\x12\x1b.entity.ListEntitiesRequest\x1a\x1c.entity.ListEntitiesResponse\x12X\n" +
 	"\x11CreateEntityAlias\x12 .entity.CreateEntityAliasRequest\x1a!.entity.CreateEntityAliasResponse\x12X\n" +
+	"\x11UpdateEntityAlias\x12 .entity.UpdateEntityAliasRequest\x1a!.entity.UpdateEntityAliasResponse\x12X\n" +
 	"\x11DeleteEntityAlias\x12 .entity.DeleteEntityAliasRequest\x1a!.entity.DeleteEntityAliasResponse\x12O\n" +
 	"\x0eSearchEntities\x12\x1d.entity.SearchEntitiesRequest\x1a\x1e.entity.SearchEntitiesResponse\x12[\n" +
 	"\x12GetDiariesByEntity\x12!.entity.GetDiariesByEntityRequest\x1a\".entity.GetDiariesByEntityResponseB@Z>github.com/project-mikan/umi.mikan/backend/infrastructure/grpcb\x06proto3"
@@ -1451,7 +1555,7 @@ func file_entity_entity_proto_rawDescGZIP() []byte {
 }
 
 var file_entity_entity_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_entity_entity_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_entity_entity_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_entity_entity_proto_goTypes = []any{
 	(EntityCategory)(0),                // 0: entity.EntityCategory
 	(*Position)(nil),                   // 1: entity.Position
@@ -1470,13 +1574,15 @@ var file_entity_entity_proto_goTypes = []any{
 	(*ListEntitiesResponse)(nil),       // 14: entity.ListEntitiesResponse
 	(*CreateEntityAliasRequest)(nil),   // 15: entity.CreateEntityAliasRequest
 	(*CreateEntityAliasResponse)(nil),  // 16: entity.CreateEntityAliasResponse
-	(*DeleteEntityAliasRequest)(nil),   // 17: entity.DeleteEntityAliasRequest
-	(*DeleteEntityAliasResponse)(nil),  // 18: entity.DeleteEntityAliasResponse
-	(*SearchEntitiesRequest)(nil),      // 19: entity.SearchEntitiesRequest
-	(*SearchEntitiesResponse)(nil),     // 20: entity.SearchEntitiesResponse
-	(*GetDiariesByEntityRequest)(nil),  // 21: entity.GetDiariesByEntityRequest
-	(*GetDiariesByEntityResponse)(nil), // 22: entity.GetDiariesByEntityResponse
-	(*DiaryWithEntity)(nil),            // 23: entity.DiaryWithEntity
+	(*UpdateEntityAliasRequest)(nil),   // 17: entity.UpdateEntityAliasRequest
+	(*UpdateEntityAliasResponse)(nil),  // 18: entity.UpdateEntityAliasResponse
+	(*DeleteEntityAliasRequest)(nil),   // 19: entity.DeleteEntityAliasRequest
+	(*DeleteEntityAliasResponse)(nil),  // 20: entity.DeleteEntityAliasResponse
+	(*SearchEntitiesRequest)(nil),      // 21: entity.SearchEntitiesRequest
+	(*SearchEntitiesResponse)(nil),     // 22: entity.SearchEntitiesResponse
+	(*GetDiariesByEntityRequest)(nil),  // 23: entity.GetDiariesByEntityRequest
+	(*GetDiariesByEntityResponse)(nil), // 24: entity.GetDiariesByEntityResponse
+	(*DiaryWithEntity)(nil),            // 25: entity.DiaryWithEntity
 }
 var file_entity_entity_proto_depIdxs = []int32{
 	0,  // 0: entity.Entity.category:type_name -> entity.EntityCategory
@@ -1490,32 +1596,35 @@ var file_entity_entity_proto_depIdxs = []int32{
 	0,  // 8: entity.ListEntitiesRequest.category:type_name -> entity.EntityCategory
 	2,  // 9: entity.ListEntitiesResponse.entities:type_name -> entity.Entity
 	3,  // 10: entity.CreateEntityAliasResponse.alias:type_name -> entity.EntityAlias
-	2,  // 11: entity.SearchEntitiesResponse.entities:type_name -> entity.Entity
-	23, // 12: entity.GetDiariesByEntityResponse.diaries:type_name -> entity.DiaryWithEntity
-	1,  // 13: entity.DiaryWithEntity.positions:type_name -> entity.Position
-	5,  // 14: entity.EntityService.CreateEntity:input_type -> entity.CreateEntityRequest
-	7,  // 15: entity.EntityService.UpdateEntity:input_type -> entity.UpdateEntityRequest
-	9,  // 16: entity.EntityService.DeleteEntity:input_type -> entity.DeleteEntityRequest
-	11, // 17: entity.EntityService.GetEntity:input_type -> entity.GetEntityRequest
-	13, // 18: entity.EntityService.ListEntities:input_type -> entity.ListEntitiesRequest
-	15, // 19: entity.EntityService.CreateEntityAlias:input_type -> entity.CreateEntityAliasRequest
-	17, // 20: entity.EntityService.DeleteEntityAlias:input_type -> entity.DeleteEntityAliasRequest
-	19, // 21: entity.EntityService.SearchEntities:input_type -> entity.SearchEntitiesRequest
-	21, // 22: entity.EntityService.GetDiariesByEntity:input_type -> entity.GetDiariesByEntityRequest
-	6,  // 23: entity.EntityService.CreateEntity:output_type -> entity.CreateEntityResponse
-	8,  // 24: entity.EntityService.UpdateEntity:output_type -> entity.UpdateEntityResponse
-	10, // 25: entity.EntityService.DeleteEntity:output_type -> entity.DeleteEntityResponse
-	12, // 26: entity.EntityService.GetEntity:output_type -> entity.GetEntityResponse
-	14, // 27: entity.EntityService.ListEntities:output_type -> entity.ListEntitiesResponse
-	16, // 28: entity.EntityService.CreateEntityAlias:output_type -> entity.CreateEntityAliasResponse
-	18, // 29: entity.EntityService.DeleteEntityAlias:output_type -> entity.DeleteEntityAliasResponse
-	20, // 30: entity.EntityService.SearchEntities:output_type -> entity.SearchEntitiesResponse
-	22, // 31: entity.EntityService.GetDiariesByEntity:output_type -> entity.GetDiariesByEntityResponse
-	23, // [23:32] is the sub-list for method output_type
-	14, // [14:23] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	3,  // 11: entity.UpdateEntityAliasResponse.alias:type_name -> entity.EntityAlias
+	2,  // 12: entity.SearchEntitiesResponse.entities:type_name -> entity.Entity
+	25, // 13: entity.GetDiariesByEntityResponse.diaries:type_name -> entity.DiaryWithEntity
+	1,  // 14: entity.DiaryWithEntity.positions:type_name -> entity.Position
+	5,  // 15: entity.EntityService.CreateEntity:input_type -> entity.CreateEntityRequest
+	7,  // 16: entity.EntityService.UpdateEntity:input_type -> entity.UpdateEntityRequest
+	9,  // 17: entity.EntityService.DeleteEntity:input_type -> entity.DeleteEntityRequest
+	11, // 18: entity.EntityService.GetEntity:input_type -> entity.GetEntityRequest
+	13, // 19: entity.EntityService.ListEntities:input_type -> entity.ListEntitiesRequest
+	15, // 20: entity.EntityService.CreateEntityAlias:input_type -> entity.CreateEntityAliasRequest
+	17, // 21: entity.EntityService.UpdateEntityAlias:input_type -> entity.UpdateEntityAliasRequest
+	19, // 22: entity.EntityService.DeleteEntityAlias:input_type -> entity.DeleteEntityAliasRequest
+	21, // 23: entity.EntityService.SearchEntities:input_type -> entity.SearchEntitiesRequest
+	23, // 24: entity.EntityService.GetDiariesByEntity:input_type -> entity.GetDiariesByEntityRequest
+	6,  // 25: entity.EntityService.CreateEntity:output_type -> entity.CreateEntityResponse
+	8,  // 26: entity.EntityService.UpdateEntity:output_type -> entity.UpdateEntityResponse
+	10, // 27: entity.EntityService.DeleteEntity:output_type -> entity.DeleteEntityResponse
+	12, // 28: entity.EntityService.GetEntity:output_type -> entity.GetEntityResponse
+	14, // 29: entity.EntityService.ListEntities:output_type -> entity.ListEntitiesResponse
+	16, // 30: entity.EntityService.CreateEntityAlias:output_type -> entity.CreateEntityAliasResponse
+	18, // 31: entity.EntityService.UpdateEntityAlias:output_type -> entity.UpdateEntityAliasResponse
+	20, // 32: entity.EntityService.DeleteEntityAlias:output_type -> entity.DeleteEntityAliasResponse
+	22, // 33: entity.EntityService.SearchEntities:output_type -> entity.SearchEntitiesResponse
+	24, // 34: entity.EntityService.GetDiariesByEntity:output_type -> entity.GetDiariesByEntityResponse
+	25, // [25:35] is the sub-list for method output_type
+	15, // [15:25] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_entity_entity_proto_init() }
@@ -1529,7 +1638,7 @@ func file_entity_entity_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_entity_entity_proto_rawDesc), len(file_entity_entity_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   23,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

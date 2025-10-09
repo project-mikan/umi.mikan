@@ -64,6 +64,17 @@ service EntityService {
   //   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
   rpc CreateEntityAlias(CreateEntityAliasRequest) returns (CreateEntityAliasResponse);
 
+  // UpdateEntityAlias はエイリアスを更新します。
+  //
+  // 例:
+  //   request: { id: "uuid", alias: "太郎くん" }
+  //
+  // エラー:
+  //   - NotFound: エイリアスが見つからない
+  //   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+  //   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+  rpc UpdateEntityAlias(UpdateEntityAliasRequest) returns (UpdateEntityAliasResponse);
+
   // DeleteEntityAlias はエイリアスを削除します。
   //
   // エラー:
@@ -201,6 +212,17 @@ message CreateEntityAliasRequest {
 
 // エイリアス追加レスポンス
 message CreateEntityAliasResponse {
+  EntityAlias alias = 1;
+}
+
+// エイリアス更新リクエスト
+message UpdateEntityAliasRequest {
+  string id = 1;
+  string alias = 2;
+}
+
+// エイリアス更新レスポンス
+message UpdateEntityAliasResponse {
   EntityAlias alias = 1;
 }
 
