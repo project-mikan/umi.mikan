@@ -365,6 +365,7 @@
 	},
 	"entity": {
 		"title": "Entity Management",
+		"description": "Register and manage people, places, and other entities that appear in your diary. Registered entities are automatically highlighted in diary entries, making it easy to find entries where they appear.",
 		"list": {
 			"title": "Entity List",
 			"empty": "No entities registered",
