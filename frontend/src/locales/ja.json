@@ -311,7 +311,7 @@
 		"home": "トップ",
 		"monthly": "カレンダー",
 		"search": "検索",
-		"entities": "エンティティ",
+		"entities": "じんぶつ",
 		"settings": "設定"
 	},
 	"page": {
@@ -364,10 +364,10 @@
 		"description": "日本語の改行分節区切りモード。これを使用すると日本語での改行が自然な単位で改行されるようになります"
 	},
 	"entity": {
-		"title": "エンティティ管理",
+		"title": "じんぶつ管理",
 		"list": {
-			"title": "エンティティ一覧",
-			"empty": "エンティティが登録されていません",
+			"title": "じんぶつ一覧",
+			"empty": "じんぶつが登録されていません",
 			"create": "新規作成",
 			"category": {
 				"all": "すべて",
@@ -376,42 +376,42 @@
 			}
 		},
 		"detail": {
-			"title": "エンティティ詳細",
+			"title": "じんぶつ詳細",
 			"name": "名前",
 			"category": "カテゴリ",
 			"memo": "メモ",
-			"aliases": "別名",
-			"addAlias": "別名を追加",
+			"aliases": "他のよびかた",
+			"addAlias": "他のよびかたを追加",
 			"deleteAlias": "削除",
 			"linkedDiaries": "紐づく日記",
 			"noDiaries": "紐づく日記がありません",
 			"update": "更新",
 			"delete": "削除",
-			"deleteConfirm": "エンティティを削除",
-			"deleteMessage": "このエンティティを削除してもよろしいですか？関連する日記の紐付けも削除されます。",
-			"deleteAliasConfirm": "別名を削除",
-			"deleteAliasMessage": "この別名を削除してもよろしいですか?"
+			"deleteConfirm": "じんぶつを削除",
+			"deleteMessage": "このじんぶつを削除してもよろしいですか？関連する日記の紐付けも削除されます。(日記は消えません)",
+			"deleteAliasConfirm": "他のよびかたを削除",
+			"deleteAliasMessage": "このよびかたを削除してもよろしいですか?"
 		},
 		"create": {
-			"title": "エンティティ作成",
+			"title": "じんぶつ作成",
 			"name": "名前",
-			"namePlaceholder": "エンティティ名を入力",
+			"namePlaceholder": "じんぶつ名を入力",
 			"category": "カテゴリ",
 			"memo": "メモ",
 			"memoPlaceholder": "メモを入力（任意）",
 			"submit": "作成"
 		},
 		"messages": {
-			"createSuccess": "エンティティを作成しました",
-			"updateSuccess": "エンティティを更新しました",
-			"deleteSuccess": "エンティティを削除しました",
+			"createSuccess": "じんぶつを作成しました",
+			"updateSuccess": "じんぶつを更新しました",
+			"deleteSuccess": "じんぶつを削除しました",
 			"aliasCreateSuccess": "別名を追加しました",
 			"aliasUpdateSuccess": "別名を更新しました",
 			"aliasDeleteSuccess": "別名を削除しました",
 			"nameRequired": "名前は必須です",
-			"duplicateName": "同じ名前のエンティティが既に存在します",
+			"duplicateName": "同じ名前のじんぶつが既に存在します",
 			"nameUsedAsAlias": "その名前は既に別名として使用されています",
-			"aliasUsedAsName": "その別名は既にエンティティ名として使用されています",
+			"aliasUsedAsName": "その別名は既にじんぶつ名として使用されています",
 			"aliasAlreadyExists": "その別名は既に使用されています",
 			"error": "エラーが発生しました"
 		}
