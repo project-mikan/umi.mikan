@@ -454,7 +454,7 @@ func TestGetAllAliasesByUserID(t *testing.T) {
 		newUserID := uuid.New()
 		newUser := &database.User{
 			ID:        newUserID,
-			Email:     "newuser@example.com",
+			Email:     fmt.Sprintf("newuser-%s@example.com", newUserID.String()),
 			CreatedAt: time.Now().Unix(),
 			UpdatedAt: time.Now().Unix(),
 		}
