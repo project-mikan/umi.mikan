@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"strings"
 	"time"
 
@@ -19,6 +20,15 @@ import (
 type EntityEntry struct {
 	g.UnimplementedEntityServiceServer
 	DB database.DB
+	db *sql.DB // 型アサーション済みフィールド
+}
+
+// getSQLDB は型アサーション済みのsql.DBを返すヘルパーメソッド
+func (s *EntityEntry) getSQLDB() *sql.DB {
+	if s.db == nil {
+		s.db = s.DB.(*sql.DB)
+	}
+	return s.db
 }
 
 // getAllAliasesByUserID ユーザーの全エイリアスを一括取得してマップで返す（N+1クエリ回避）
@@ -30,7 +40,7 @@ func (s *EntityEntry) getAllAliasesByUserID(ctx context.Context, userID uuid.UUI
 		WHERE e.user_id = $1
 		ORDER BY ea.entity_id, ea.created_at
 	`
-	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, userID)
+	rows, err := s.getSQLDB().QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,20 +78,7 @@ func (s *EntityEntry) CreateEntity(
 		return nil, err
 	}
 
-	// エンティティ名が既存のエイリアスと重複していないかチェック
-	checkAliasQuery := `
-		SELECT COUNT(*) FROM entity_aliases ea
-		INNER JOIN entities e ON ea.entity_id = e.id
-		WHERE e.user_id = $1 AND ea.alias = $2
-	`
-	var aliasCount int
-	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkAliasQuery, userID, message.Name).Scan(&aliasCount); err != nil {
-		return nil, err
-	}
-	if aliasCount > 0 {
-		return nil, status.Errorf(codes.AlreadyExists, "name '%s' is already used as an alias", message.Name)
-	}
-
+	// トランザクション内でエンティティを作成
 	id := uuid.New()
 	currentTime := time.Now().Unix()
 
@@ -102,14 +99,36 @@ func (s *EntityEntry) CreateEntity(
 		}
 	}
 
-	if err := entity.Insert(ctx, s.DB); err != nil {
-		// PostgreSQLのユニーク制約違反エラーをチェック
-		if pqErr, ok := err.(*pq.Error); ok {
-			// エラーコード 23505 はユニーク制約違反
-			if pqErr.Code == "23505" && strings.Contains(pqErr.Message, "entities_user_id_name_key") {
-				return nil, status.Errorf(codes.AlreadyExists, "entity with name '%s' already exists", message.Name)
-			}
+	// トランザクション内でエンティティを作成（一貫性のため）
+	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+		// エンティティ名が既存のエイリアスと重複していないかチェック
+		checkAliasQuery := `
+			SELECT COUNT(*) FROM entity_aliases ea
+			INNER JOIN entities e ON ea.entity_id = e.id
+			WHERE e.user_id = $1 AND ea.alias = $2
+		`
+		var aliasCount int
+		if err := tx.QueryRowContext(ctx, checkAliasQuery, userID, message.Name).Scan(&aliasCount); err != nil {
+			return err
 		}
+		if aliasCount > 0 {
+			return status.Errorf(codes.AlreadyExists, "name '%s' is already used as an alias", message.Name)
+		}
+
+		// エンティティを挿入
+		if err := entity.Insert(ctx, tx); err != nil {
+			// PostgreSQLのユニーク制約違反エラーをチェック
+			if pqErr, ok := err.(*pq.Error); ok {
+				// エラーコード 23505 はユニーク制約違反
+				if pqErr.Code == "23505" && strings.Contains(pqErr.Message, "entities_user_id_name_key") {
+					return status.Errorf(codes.AlreadyExists, "entity with name '%s' already exists", message.Name)
+				}
+			}
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -157,7 +176,7 @@ func (s *EntityEntry) UpdateEntity(
 	}
 
 	// トランザクション内でエンティティを更新
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
 		entity.Name = message.Name
 		entity.CategoryID = int(message.Category)
 		entity.UpdatedAt = time.Now().Unix()
@@ -241,7 +260,7 @@ func (s *EntityEntry) DeleteEntity(
 	}
 
 	// トランザクション内でエンティティを削除
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
 		return entity.Delete(ctx, tx)
 	})
 	if err != nil {
@@ -403,33 +422,7 @@ func (s *EntityEntry) CreateEntityAlias(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to add alias to this entity")
 	}
 
-	// エイリアスが既存のエンティティ名と重複していないかチェック
-	checkEntityQuery := `
-		SELECT COUNT(*) FROM entities
-		WHERE user_id = $1 AND name = $2
-	`
-	var entityCount int
-	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
-		return nil, err
-	}
-	if entityCount > 0 {
-		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used as an entity name", message.Alias)
-	}
-
-	// エイリアスが既存の他のエイリアスと重複していないかチェック（同じユーザー内）
-	checkOtherAliasQuery := `
-		SELECT COUNT(*) FROM entity_aliases ea
-		INNER JOIN entities e ON ea.entity_id = e.id
-		WHERE e.user_id = $1 AND ea.alias = $2
-	`
-	var otherAliasCount int
-	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias).Scan(&otherAliasCount); err != nil {
-		return nil, err
-	}
-	if otherAliasCount > 0 {
-		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used", message.Alias)
-	}
-
+	// トランザクション内でエイリアスを作成（一貫性のため）
 	id := uuid.New()
 	currentTime := time.Now().Unix()
 
@@ -441,14 +434,48 @@ func (s *EntityEntry) CreateEntityAlias(
 		UpdatedAt: currentTime,
 	}
 
-	if err := alias.Insert(ctx, s.DB); err != nil {
-		// PostgreSQLのユニーク制約違反エラーをチェック
-		if pqErr, ok := err.(*pq.Error); ok {
-			// エラーコード 23505 はユニーク制約違反
-			if pqErr.Code == "23505" {
-				return nil, status.Errorf(codes.AlreadyExists, "alias '%s' already exists for this entity", message.Alias)
-			}
+	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+		// エイリアスが既存のエンティティ名と重複していないかチェック
+		checkEntityQuery := `
+			SELECT COUNT(*) FROM entities
+			WHERE user_id = $1 AND name = $2
+		`
+		var entityCount int
+		if err := tx.QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
+			return err
 		}
+		if entityCount > 0 {
+			return status.Errorf(codes.AlreadyExists, "alias '%s' is already used as an entity name", message.Alias)
+		}
+
+		// エイリアスが既存の他のエイリアスと重複していないかチェック（同じユーザー内）
+		checkOtherAliasQuery := `
+			SELECT COUNT(*) FROM entity_aliases ea
+			INNER JOIN entities e ON ea.entity_id = e.id
+			WHERE e.user_id = $1 AND ea.alias = $2
+		`
+		var otherAliasCount int
+		if err := tx.QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias).Scan(&otherAliasCount); err != nil {
+			return err
+		}
+		if otherAliasCount > 0 {
+			return status.Errorf(codes.AlreadyExists, "alias '%s' is already used", message.Alias)
+		}
+
+		// エイリアスを挿入
+		if err := alias.Insert(ctx, tx); err != nil {
+			// PostgreSQLのユニーク制約違反エラーをチェック
+			if pqErr, ok := err.(*pq.Error); ok {
+				// エラーコード 23505 はユニーク制約違反
+				if pqErr.Code == "23505" {
+					return status.Errorf(codes.AlreadyExists, "alias '%s' already exists for this entity", message.Alias)
+				}
+			}
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -496,35 +523,36 @@ func (s *EntityEntry) UpdateEntityAlias(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to update this alias")
 	}
 
-	// 新しいエイリアス名が既存のエンティティ名と重複していないかチェック
-	checkEntityQuery := `
-		SELECT COUNT(*) FROM entities
-		WHERE user_id = $1 AND name = $2
-	`
-	var entityCount int
-	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
-		return nil, err
-	}
-	if entityCount > 0 {
-		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used as an entity name", message.Alias)
-	}
-
-	// 新しいエイリアス名が既存の他のエイリアスと重複していないかチェック（同じユーザー内、自分自身を除く）
-	checkOtherAliasQuery := `
-		SELECT COUNT(*) FROM entity_aliases ea
-		INNER JOIN entities e ON ea.entity_id = e.id
-		WHERE e.user_id = $1 AND ea.alias = $2 AND ea.id != $3
-	`
-	var otherAliasCount int
-	if err := s.DB.(*sql.DB).QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias, aliasID).Scan(&otherAliasCount); err != nil {
-		return nil, err
-	}
-	if otherAliasCount > 0 {
-		return nil, status.Errorf(codes.AlreadyExists, "alias '%s' is already used", message.Alias)
-	}
-
 	// トランザクション内でエイリアスを更新
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+		// 新しいエイリアス名が既存のエンティティ名と重複していないかチェック
+		checkEntityQuery := `
+			SELECT COUNT(*) FROM entities
+			WHERE user_id = $1 AND name = $2
+		`
+		var entityCount int
+		if err := tx.QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
+			return err
+		}
+		if entityCount > 0 {
+			return status.Errorf(codes.AlreadyExists, "alias '%s' is already used as an entity name", message.Alias)
+		}
+
+		// 新しいエイリアス名が既存の他のエイリアスと重複していないかチェック（同じユーザー内、自分自身を除く）
+		checkOtherAliasQuery := `
+			SELECT COUNT(*) FROM entity_aliases ea
+			INNER JOIN entities e ON ea.entity_id = e.id
+			WHERE e.user_id = $1 AND ea.alias = $2 AND ea.id != $3
+		`
+		var otherAliasCount int
+		if err := tx.QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias, aliasID).Scan(&otherAliasCount); err != nil {
+			return err
+		}
+		if otherAliasCount > 0 {
+			return status.Errorf(codes.AlreadyExists, "alias '%s' is already used", message.Alias)
+		}
+
+		// エイリアスを更新
 		alias.Alias = message.Alias
 		alias.UpdatedAt = time.Now().Unix()
 		if err := alias.Update(ctx, tx); err != nil {
@@ -581,7 +609,7 @@ func (s *EntityEntry) DeleteEntityAlias(
 	}
 
 	// トランザクション内でエイリアスを削除
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
 		return alias.Delete(ctx, tx)
 	})
 	if err != nil {
@@ -621,7 +649,7 @@ func (s *EntityEntry) SearchEntities(
 			WHERE e.user_id = $1
 			ORDER BY e.name
 		`
-		rows, err = s.DB.(*sql.DB).QueryContext(ctx, query, userID)
+		rows, err = s.getSQLDB().QueryContext(ctx, query, userID)
 	} else {
 		// クエリがある場合は部分一致検索
 		query = `
@@ -632,7 +660,7 @@ func (s *EntityEntry) SearchEntities(
 			AND (e.name ILIKE $2 OR ea.alias ILIKE $2)
 			ORDER BY e.name
 		`
-		rows, err = s.DB.(*sql.DB).QueryContext(ctx, query, userID, "%"+message.Query+"%")
+		rows, err = s.getSQLDB().QueryContext(ctx, query, userID, "%"+message.Query+"%")
 	}
 	if err != nil {
 		return nil, err
@@ -730,15 +758,16 @@ func (s *EntityEntry) GetDiariesByEntity(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to view this entity")
 	}
 
-	// エンティティに紐づく日記を日付降順で取得
+	// エンティティに紐づく日記を日付降順で取得（JOINで一括取得してN+1問題を回避）
 	query := `
-		SELECT de.id, de.diary_id, de.entity_id, de.positions, de.created_at, de.updated_at
+		SELECT de.id, de.diary_id, de.entity_id, de.positions, de.created_at, de.updated_at,
+		       d.id, d.content, d.date, d.created_at, d.updated_at
 		FROM diary_entities de
 		INNER JOIN diaries d ON de.diary_id = d.id
 		WHERE de.entity_id = $1
 		ORDER BY d.date DESC
 	`
-	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, entityID)
+	rows, err := s.getSQLDB().QueryContext(ctx, query, entityID)
 	if err != nil {
 		return nil, err
 	}
@@ -749,14 +778,15 @@ func (s *EntityEntry) GetDiariesByEntity(
 	protoDiaries := make([]*g.DiaryWithEntity, 0)
 	for rows.Next() {
 		var de database.DiaryEntity
-		if err := rows.Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.Positions, &de.CreatedAt, &de.UpdatedAt); err != nil {
-			return nil, err
-		}
+		var diary database.Diary
 
-		// 日記を取得
-		diary, err := database.DiaryByID(ctx, s.DB, de.DiaryID)
-		if err != nil {
-			continue // 日記が削除されている場合はスキップ
+		// diary_entitiesとdiariesの両方をスキャン
+		if err := rows.Scan(
+			&de.ID, &de.DiaryID, &de.EntityID, &de.Positions, &de.CreatedAt, &de.UpdatedAt,
+			&diary.ID, &diary.Content, &diary.Date, &diary.CreatedAt, &diary.UpdatedAt,
+		); err != nil {
+			log.Printf("failed to scan diary_entity row: %v", err)
+			continue
 		}
 
 		// positionsをJSONBから[]Positionに変換
@@ -765,6 +795,7 @@ func (s *EntityEntry) GetDiariesByEntity(
 			End   uint32 `json:"end"`
 		}
 		if err := json.Unmarshal(de.Positions, &positions); err != nil {
+			log.Printf("failed to parse positions for diary_entity %s: %v", de.ID, err)
 			return nil, status.Errorf(codes.Internal, "failed to parse positions")
 		}
 
