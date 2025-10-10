@@ -31,6 +31,15 @@
 
 jsonカラムを作り位置とentityの対応付けを記録
 
+- diary_entitiesを作る
+- diary,entityの複合PK
+  - entityとdiaryを1対1にすることでentity→diaryの探索コストを下げる
+- positionsにJSONで該当のentityのstart,endを持つ
+  - このときaliasを使用していてもaliasのuuidなどは保持しない
+  - 理由：名前が変わったとき、diaryテーブルの名前は変えられないため、あくまでentityの位置を保持することで、名前が変わっても位置を保持し続けられる
+  - aliasはユーザの参照用でDB側では保存塩内
+- 1つのdiaryに複数のentityがあるときは、entityごとにdiary_entitiesのレコードが作られる
+
 #### category_id
 
 - 0:未分類(no_category)
