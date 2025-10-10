@@ -31,6 +31,56 @@ func (s *EntityEntry) getSQLDB() *sql.DB {
 	return s.db
 }
 
+// validateEntityName はエンティティ名のバリデーションを行う
+func validateEntityName(name string) error {
+	if len(name) == 0 {
+		return status.Errorf(codes.InvalidArgument, "entity name cannot be empty")
+	}
+	if len(name) > 255 {
+		return status.Errorf(codes.InvalidArgument, "entity name must be less than 255 characters")
+	}
+
+	// 制御文字のチェック
+	for _, r := range name {
+		if r < 32 || r == 127 { // ASCII制御文字
+			return status.Errorf(codes.InvalidArgument, "entity name contains invalid control characters")
+		}
+	}
+
+	// 前後の空白チェック
+	trimmed := strings.TrimSpace(name)
+	if trimmed != name {
+		return status.Errorf(codes.InvalidArgument, "entity name cannot have leading or trailing whitespace")
+	}
+
+	return nil
+}
+
+// validateAlias はエイリアスのバリデーションを行う
+func validateAlias(alias string) error {
+	if len(alias) == 0 {
+		return status.Errorf(codes.InvalidArgument, "alias cannot be empty")
+	}
+	if len(alias) > 255 {
+		return status.Errorf(codes.InvalidArgument, "alias must be less than 255 characters")
+	}
+
+	// 制御文字のチェック
+	for _, r := range alias {
+		if r < 32 || r == 127 { // ASCII制御文字
+			return status.Errorf(codes.InvalidArgument, "alias contains invalid control characters")
+		}
+	}
+
+	// 前後の空白チェック
+	trimmed := strings.TrimSpace(alias)
+	if trimmed != alias {
+		return status.Errorf(codes.InvalidArgument, "alias cannot have leading or trailing whitespace")
+	}
+
+	return nil
+}
+
 // getAllAliasesByUserID ユーザーの全エイリアスを一括取得してマップで返す（N+1クエリ回避）
 func (s *EntityEntry) getAllAliasesByUserID(ctx context.Context, userID uuid.UUID) (map[string][]*database.EntityAlias, error) {
 	query := `
@@ -75,6 +125,11 @@ func (s *EntityEntry) CreateEntity(
 	}
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
+		return nil, err
+	}
+
+	// 入力バリデーション
+	if err := validateEntityName(message.Name); err != nil {
 		return nil, err
 	}
 
@@ -173,6 +228,11 @@ func (s *EntityEntry) UpdateEntity(
 	// エンティティの所有者確認
 	if entity.UserID != userID {
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to update this entity")
+	}
+
+	// 入力バリデーション
+	if err := validateEntityName(message.Name); err != nil {
+		return nil, err
 	}
 
 	// トランザクション内でエンティティを更新
@@ -422,6 +482,11 @@ func (s *EntityEntry) CreateEntityAlias(
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to add alias to this entity")
 	}
 
+	// 入力バリデーション
+	if err := validateAlias(message.Alias); err != nil {
+		return nil, err
+	}
+
 	// トランザクション内でエイリアスを作成（一貫性のため）
 	id := uuid.New()
 	currentTime := time.Now().Unix()
@@ -521,6 +586,11 @@ func (s *EntityEntry) UpdateEntityAlias(
 	}
 	if entity.UserID != userID {
 		return nil, status.Errorf(codes.PermissionDenied, "not authorized to update this alias")
+	}
+
+	// 入力バリデーション
+	if err := validateAlias(message.Alias); err != nil {
+		return nil, err
 	}
 
 	// トランザクション内でエイリアスを更新

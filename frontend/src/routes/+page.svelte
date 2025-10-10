@@ -17,9 +17,11 @@ $: title = $_("page.title.home");
 
 export let data: PageData;
 
-let todayContent = data.today.entry?.content || "";
-let yesterdayContent = data.yesterday.entry?.content || "";
-let dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
+// dataが更新されたときに自動的に更新されるようにリアクティブ宣言を使用
+$: todayContent = data.today.entry?.content || "";
+$: yesterdayContent = data.yesterday.entry?.content || "";
+$: dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
+
 let formElement: HTMLFormElement;
 let yesterdayFormElement: HTMLFormElement;
 let dayBeforeYesterdayFormElement: HTMLFormElement;
