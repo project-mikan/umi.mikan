@@ -22,7 +22,6 @@ let previousDiaryEntities: DiaryEntityOutput[] = [];
 const dispatch = createEventDispatcher();
 
 // Entity候補関連
-let suggestions: Entity[] = [];
 // フラット化された候補リスト（エンティティ名とエイリアスを含む）
 type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
 let flatSuggestions: FlatSuggestion[] = [];
@@ -32,6 +31,8 @@ let suggestionPosition = { top: 0, left: 0 };
 let currentTriggerPos = -1;
 let currentQuery = ""; // 現在の検索クエリ
 let suggestionsComponent: EntitySuggestions;
+let justSelectedEntity = false; // エンティティを確定した直後かどうか
+let lastSelectedEntityText = ""; // 最後に確定したエンティティ名
 
 // 全エンティティデータをキャッシュ（ページロード時に取得）
 let allEntities: Entity[] = [];
@@ -290,63 +291,43 @@ async function _handleInput(event: Event) {
 	const text = value;
 	const beforeCursor = text.substring(0, cursorPos);
 
-	// カーソル前の最後の単語を検索
-	// 空白、改行、句読点で区切られた単語を抽出
+	// カーソル前の最後の改行以降のテキストを取得
+	const lastNewlineIndex = beforeCursor.lastIndexOf("\n");
+	const textAfterLastNewline =
+		lastNewlineIndex >= 0
+			? beforeCursor.substring(lastNewlineIndex + 1)
+			: beforeCursor;
+
+	// 最後の改行以降のテキストから、最後の単語を検索
+	// 空白、句読点、助詞で区切られた単語を抽出
 	// エンティティ名には様々な文字が含まれる可能性があるため、
-	// 区切り文字は最小限にする
-	const entityMatch = beforeCursor.match(/([^\s\n。、！？,.!?]+)$/);
+	// 区切り文字は最小限にする（ただし、よく使われる助詞は含める）
+	const entityMatch = textAfterLastNewline.match(/([^\s。、！？,.!?はがのにをへとでや]+)$/);
 	if (entityMatch && entityMatch[1].length > 0) {
-		const word = entityMatch[1];
+		let word = entityMatch[1];
 
-		// 末尾から長い順に検索して、最初に候補が見つかった部分文字列を使用
-		// 例: "名取と" の場合、以下を順に試す:
-		//   1. "名取と"(word全体, len=3)
-		//   2. "名取"(word全体から末尾1文字除外, len=2) ← これで「名取」がマッチ！
-		//   3. "取と"(末尾2文字, len=2)
-		// これにより、「例えば適当に名取と」のような場合でも「名取」で候補が表示される
-		// 2文字以上の一致のみを検索対象とする
-		let foundMatch = false;
+		// エンティティ確定直後の場合、確定したエンティティ名の部分を除外
+		if (justSelectedEntity && lastSelectedEntityText) {
+			// 確定したエンティティ名を除去
+			// 例: "natori" を確定後 "natorina" となった場合、"na" のみを検索
+			if (word.startsWith(lastSelectedEntityText)) {
+				word = word.substring(lastSelectedEntityText.length);
+			}
+			justSelectedEntity = false; // フラグをリセット
+			lastSelectedEntityText = ""; // リセット
+		}
 
-		// まず単語全体を試す
+		// 2文字以上の場合のみ候補を検索
 		if (word.length >= 2) {
 			currentTriggerPos = cursorPos - word.length;
 			currentQuery = word;
 			await searchForSuggestions(word);
-			if (showSuggestions && suggestions.length > 0) {
-				foundMatch = true;
+			if (!showSuggestions || flatSuggestions.length === 0) {
+				showSuggestions = false;
+				currentQuery = "";
+				currentTriggerPos = -1;
 			}
-		}
-
-		// 次に、末尾1文字を除いた部分を試す（入力中の文字を除外）
-		if (!foundMatch && word.length >= 3) {
-			const wordWithoutLast = word.substring(0, word.length - 1);
-			if (wordWithoutLast.length >= 2) {
-				// 単語の開始位置から計算
-				currentTriggerPos = cursorPos - word.length;
-				currentQuery = wordWithoutLast;
-				await searchForSuggestions(wordWithoutLast);
-				if (showSuggestions && suggestions.length > 0) {
-					foundMatch = true;
-				}
-			}
-		}
-
-		// 最後に、末尾から順に短くして試す
-		if (!foundMatch) {
-			for (let len = word.length - 1; len >= 2; len--) {
-				const partialWord = word.substring(word.length - len);
-				currentTriggerPos = cursorPos - len;
-				currentQuery = partialWord;
-				await searchForSuggestions(partialWord);
-
-				if (showSuggestions && suggestions.length > 0) {
-					foundMatch = true;
-					break;
-				}
-			}
-		}
-
-		if (!foundMatch) {
+		} else {
 			showSuggestions = false;
 			currentQuery = "";
 			currentTriggerPos = -1;
@@ -375,18 +356,30 @@ async function _handleInput(event: Event) {
 // テキスト位置を取得（contenteditable用）
 function getTextOffset(root: Node, node: Node, offset: number): number {
 	let textOffset = 0;
-	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
-	let currentNode = walker.nextNode();
-	while (currentNode) {
+	function traverse(currentNode: Node): number | null {
 		if (currentNode === node) {
 			return textOffset + offset;
 		}
-		textOffset += currentNode.textContent?.length || 0;
-		currentNode = walker.nextNode();
+
+		if (currentNode.nodeType === Node.TEXT_NODE) {
+			textOffset += currentNode.textContent?.length || 0;
+		} else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+			if (currentNode.nodeName === "BR") {
+				textOffset += 1; // BRタグは改行文字として1文字カウント
+			}
+			// 子ノードを再帰的に処理
+			for (const child of Array.from(currentNode.childNodes)) {
+				const result = traverse(child);
+				if (result !== null) return result;
+			}
+		}
+
+		return null;
 	}
 
-	return textOffset;
+	const result = traverse(root);
+	return result !== null ? result : textOffset;
 }
 
 // 候補検索
@@ -419,20 +412,18 @@ async function searchForSuggestions(query: string) {
 	try {
 		const lowerQuery = query.toLowerCase();
 
-		// allFlatEntitiesから部分一致でフィルタリング
-		flatSuggestions = allFlatEntities.filter((flat) =>
-			flat.text.toLowerCase().includes(lowerQuery),
-		);
-
-		// suggestions配列も更新（重複排除）
-		const uniqueEntityIds = new Set<string>();
-		suggestions = [];
-		for (const flat of flatSuggestions) {
-			if (!uniqueEntityIds.has(flat.entity.id)) {
-				uniqueEntityIds.add(flat.entity.id);
-				suggestions.push(flat.entity);
+		// まず、前方一致するエンティティを特定
+		const matchingEntityIds = new Set<string>();
+		for (const flat of allFlatEntities) {
+			if (flat.text.toLowerCase().startsWith(lowerQuery)) {
+				matchingEntityIds.add(flat.entity.id);
 			}
 		}
+
+		// マッチしたエンティティの全バリエーション（名前+エイリアス）を含める
+		flatSuggestions = allFlatEntities.filter((flat) =>
+			matchingEntityIds.has(flat.entity.id),
+		);
 
 		showSuggestions = flatSuggestions.length > 0;
 		// 候補が表示されたら最も先頭一致する候補を選択状態にする
@@ -441,7 +432,6 @@ async function searchForSuggestions(query: string) {
 		}
 	} catch (err) {
 		console.error("Failed to search entities:", err);
-		suggestions = [];
 		flatSuggestions = [];
 		showSuggestions = false;
 	}
@@ -583,6 +573,17 @@ function _handleKeydown(event: KeyboardEvent) {
 		// Trigger input event to update the value
 		const inputEvent = new Event("input", { bubbles: true });
 		contentElement.dispatchEvent(inputEvent);
+
+		// 改行後はすぐに入力完了フラグを下ろして、カーソル位置が戻されないようにする
+		// 既存のタイムアウトをクリア
+		if (updateTimeout !== null) {
+			clearTimeout(updateTimeout);
+		}
+		isTyping = false;
+
+		// savedContentを更新して、エンティティハイライト復元を防ぐ
+		// （改行直後は新しいコンテンツとして扱う）
+		savedContent = "";
 	}
 }
 
@@ -623,14 +624,6 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 		}
 	}
 
-	console.log("currentQuery recalculation:", {
-		textToInsert,
-		beforeCursor,
-		triggerPos,
-		oldTriggerPos: currentTriggerPos,
-		cursorPos,
-	});
-
 	if (triggerPos !== -1) {
 		currentTriggerPos = triggerPos;
 	}
@@ -639,23 +632,16 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 	const beforeTrigger = value.substring(0, currentTriggerPos);
 	const afterCursor = value.substring(cursorPos);
 
-	// デバッグログ
-	console.log("selectSuggestion:", {
-		value,
-		currentTriggerPos,
-		cursorPos,
-		beforeTrigger,
-		afterCursor,
-		textToInsert,
-		result: `${beforeTrigger}${textToInsert}${afterCursor}`,
-	});
-
 	// currentTriggerPosからcursorPosまでの文字列を選択されたテキストに置き換え
 	value = `${beforeTrigger}${textToInsert}${afterCursor}`;
 
 	showSuggestions = false;
 	selectedSuggestionIndex = -1;
 	currentTriggerPos = -1;
+
+	// エンティティ確定直後フラグを立てる
+	justSelectedEntity = true;
+	lastSelectedEntityText = textToInsert;
 
 	// 既存のタイムアウトをクリア
 	if (updateTimeout !== null) {
@@ -689,21 +675,45 @@ function createRangeAtTextOffset(
 	targetOffset: number,
 ): Range | null {
 	const range = document.createRange();
-	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-
 	let currentOffset = 0;
-	let currentNode = walker.nextNode();
 
-	while (currentNode) {
-		const nodeLength = currentNode.textContent?.length || 0;
-		if (currentOffset + nodeLength >= targetOffset) {
-			const offset = targetOffset - currentOffset;
-			range.setStart(currentNode, offset);
-			range.collapse(true);
-			return range;
+	function traverse(currentNode: Node): boolean {
+		if (currentNode.nodeType === Node.TEXT_NODE) {
+			const textLength = currentNode.textContent?.length || 0;
+			if (currentOffset + textLength >= targetOffset) {
+				const offset = targetOffset - currentOffset;
+				range.setStart(currentNode, Math.min(offset, textLength));
+				range.collapse(true);
+				return true;
+			}
+			currentOffset += textLength;
+		} else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+			if (currentNode.nodeName === "BR") {
+				if (currentOffset === targetOffset) {
+					// BRタグの直前にカーソルを置く
+					const parent = currentNode.parentNode;
+					if (parent) {
+						const index = Array.from(parent.childNodes).indexOf(
+							currentNode as ChildNode,
+						);
+						range.setStart(parent, index);
+						range.collapse(true);
+						return true;
+					}
+				}
+				currentOffset += 1; // BRタグは改行文字として1文字カウント
+			}
+			// 子ノードを再帰的に処理
+			for (const child of Array.from(currentNode.childNodes)) {
+				if (traverse(child)) return true;
+			}
 		}
-		currentOffset += nodeLength;
-		currentNode = walker.nextNode();
+
+		return false;
+	}
+
+	if (traverse(root)) {
+		return range;
 	}
 
 	// オフセットが範囲外の場合は最後に設定
@@ -780,20 +790,17 @@ $: if (
 		on:input={_handleInput}
 		on:compositionstart={() => { isComposing = true; }}
 		on:compositionupdate={_handleInput}
-		on:compositionend={() => {
+		on:compositionend={(event) => {
 			isComposing = false;
-			// IME確定時は候補を非表示にする
-			showSuggestions = false;
-			selectedSuggestionIndex = -1;
-			currentTriggerPos = -1;
-			currentQuery = "";
+			// IME確定後に候補検索を実行
+			_handleInput(event);
 		}}
 		{...$$restProps}
 	></div>
 	{#if showSuggestions}
 		<EntitySuggestions
 			bind:this={suggestionsComponent}
-			{suggestions}
+			{flatSuggestions}
 			selectedIndex={selectedSuggestionIndex}
 			position={suggestionPosition}
 			onSelect={selectSuggestion}

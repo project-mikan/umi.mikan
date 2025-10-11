@@ -19,7 +19,8 @@ export let onDelete: (() => void) | null = null;
 
 let isSubmitting = false;
 let textarea: HTMLTextAreaElement;
-let suggestions: Entity[] = [];
+type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
+let flatSuggestions: FlatSuggestion[] = [];
 let selectedSuggestionIndex = -1;
 let showSuggestions = false;
 let suggestionPosition = { top: 0, left: 0 };
@@ -42,11 +43,23 @@ async function searchForSuggestions(query: string) {
 			`/api/entities/search?q=${encodeURIComponent(query)}`,
 		);
 		const data = await response.json();
-		suggestions = data.entities || [];
-		showSuggestions = suggestions.length > 0;
+		const entities: Entity[] = data.entities || [];
+
+		// フラット化して保存
+		flatSuggestions = [];
+		for (const entity of entities) {
+			// エンティティ名を追加
+			flatSuggestions.push({ entity, text: entity.name, isAlias: false });
+			// エイリアスを追加
+			for (const alias of entity.aliases) {
+				flatSuggestions.push({ entity, text: alias.alias, isAlias: true });
+			}
+		}
+
+		showSuggestions = flatSuggestions.length > 0;
 	} catch (err) {
 		console.error("Failed to search entities:", err);
-		suggestions = [];
+		flatSuggestions = [];
 		showSuggestions = false;
 	}
 }
@@ -104,14 +117,15 @@ function handleKeyDown(event: KeyboardEvent) {
 		event.preventDefault();
 		selectedSuggestionIndex = Math.min(
 			selectedSuggestionIndex + 1,
-			suggestions.length - 1,
+			flatSuggestions.length - 1,
 		);
 	} else if (event.key === "ArrowUp") {
 		event.preventDefault();
 		selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
 	} else if (event.key === "Enter" && selectedSuggestionIndex >= 0) {
 		event.preventDefault();
-		selectSuggestion(suggestions[selectedSuggestionIndex]);
+		const selected = flatSuggestions[selectedSuggestionIndex];
+		selectSuggestion(selected.entity, selected.text);
 	} else if (event.key === "Escape") {
 		event.preventDefault();
 		showSuggestions = false;
@@ -120,13 +134,15 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 // 候補選択
-function selectSuggestion(entity: Entity) {
+function selectSuggestion(entity: Entity, selectedText?: string) {
 	if (currentTriggerPos === -1) return;
 
-	// @記号から現在のカーソル位置までを entity の名前に置き換え
+	const textToInsert = selectedText || entity.name;
+
+	// @記号から現在のカーソル位置までを選択されたテキストに置き換え
 	const beforeTrigger = content.substring(0, currentTriggerPos);
 	const afterCursor = content.substring(textarea.selectionStart);
-	content = `${beforeTrigger}@${entity.name} ${afterCursor}`;
+	content = `${beforeTrigger}@${textToInsert} ${afterCursor}`;
 
 	showSuggestions = false;
 	selectedSuggestionIndex = -1;
@@ -135,7 +151,7 @@ function selectSuggestion(entity: Entity) {
 	// フォーカスを戻す
 	setTimeout(() => {
 		textarea.focus();
-		const newCursorPos = beforeTrigger.length + entity.name.length + 2; // @ + name + space
+		const newCursorPos = beforeTrigger.length + textToInsert.length + 2; // @ + text + space
 		textarea.setSelectionRange(newCursorPos, newCursorPos);
 	}, 0);
 }
@@ -198,7 +214,7 @@ function selectSuggestion(entity: Entity) {
 				{#if showSuggestions}
 					<EntitySuggestions
 						bind:this={suggestionsComponent}
-						{suggestions}
+						{flatSuggestions}
 						selectedIndex={selectedSuggestionIndex}
 						position={suggestionPosition}
 						onSelect={selectSuggestion}

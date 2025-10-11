@@ -3,25 +3,13 @@ import { _ } from "svelte-i18n";
 import "$lib/i18n";
 import type { Entity, EntityAlias } from "$lib/grpc/entity/entity_pb";
 
-export let suggestions: Entity[] = [];
+// フラット化された候補リスト
+type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
+
+export let flatSuggestions: FlatSuggestion[] = [];
 export let selectedIndex = -1;
 export let onSelect: (entity: Entity, selectedText?: string) => void;
 export let position: { top: number; left: number } = { top: 0, left: 0 };
-
-// フラット化された候補リスト
-type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
-let flatSuggestions: FlatSuggestion[] = [];
-
-// suggestionsが変更されたらフラット化
-$: {
-	flatSuggestions = [];
-	for (const entity of suggestions) {
-		flatSuggestions.push({ entity, text: entity.name, isAlias: false });
-		for (const alias of entity.aliases) {
-			flatSuggestions.push({ entity, text: alias.alias, isAlias: true });
-		}
-	}
-}
 
 // 候補選択
 function handleSelect(entity: Entity, selectedText?: string) {
