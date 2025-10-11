@@ -186,11 +186,21 @@ export const AuthResponseSchema: GenMessage<AuthResponse> =
 	messageDesc(file_auth_auth, 5);
 
 /**
+ * AuthService はユーザー認証と登録を管理するサービスです。
+ * JWT（Access Token + Refresh Token）ベースの認証を提供します。
+ *
  * @generated from service auth.AuthService
  */
 export const AuthService: GenService<{
 	/**
-	 * 新規登録設定の取得
+	 * GetRegistrationConfig は新規登録に必要な設定情報を取得します。
+	 * REGISTER_KEY環境変数が設定されている場合、登録キーが必要かどうかを返します。
+	 *
+	 * 例:
+	 *   request: {}
+	 *   response: { register_key_required: true }
+	 *
+	 * エラー: なし（常に成功）
 	 *
 	 * @generated from rpc auth.AuthService.GetRegistrationConfig
 	 */
@@ -200,7 +210,18 @@ export const AuthService: GenService<{
 		output: typeof GetRegistrationConfigResponseSchema;
 	};
 	/**
-	 * 新規登録
+	 * RegisterByPassword はメールアドレスとパスワードで新規ユーザーを登録します。
+	 * REGISTER_KEYが設定されている場合は、正しい登録キーが必要です。
+	 *
+	 * 例:
+	 *   request: { email: "user@example.com", password: "pass123", name: "太郎", register_key: "secret" }
+	 *   response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	 *
+	 * エラー:
+	 *   - AlreadyExists: メールアドレスが既に登録されている
+	 *   - InvalidArgument: 登録キーが必須だが提供されていない
+	 *   - PermissionDenied: 登録キーが不正
+	 *   - InvalidArgument: バリデーションエラー（メール形式、パスワード長など）
 	 *
 	 * @generated from rpc auth.AuthService.RegisterByPassword
 	 */
@@ -210,7 +231,15 @@ export const AuthService: GenService<{
 		output: typeof AuthResponseSchema;
 	};
 	/**
-	 * ログイン
+	 * LoginByPassword はメールアドレスとパスワードでログインします。
+	 *
+	 * 例:
+	 *   request: { email: "user@example.com", password: "pass123" }
+	 *   response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	 *
+	 * エラー:
+	 *   - Unauthenticated: メールアドレスまたはパスワードが不正
+	 *   - NotFound: ユーザーが存在しない
 	 *
 	 * @generated from rpc auth.AuthService.LoginByPassword
 	 */
@@ -220,7 +249,15 @@ export const AuthService: GenService<{
 		output: typeof AuthResponseSchema;
 	};
 	/**
-	 * AccessTokenの更新
+	 * RefreshAccessToken はRefresh Tokenを使用してAccess Tokenを更新します。
+	 * Access Tokenの有効期限は15分、Refresh Tokenの有効期限は30日です。
+	 *
+	 * 例:
+	 *   request: { refresh_token: "..." }
+	 *   response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	 *
+	 * エラー:
+	 *   - Unauthenticated: Refresh Tokenが無効または期限切れ
 	 *
 	 * @generated from rpc auth.AuthService.RefreshAccessToken
 	 */

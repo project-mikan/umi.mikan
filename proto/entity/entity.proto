@@ -1,0 +1,267 @@
+syntax = "proto3";
+
+package entity;
+
+option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
+
+// EntityService は固有名詞（人物、場所など）を管理するサービスです。
+// エンティティは日記本文中で使用され、ハイライト表示や検索に利用されます。
+service EntityService {
+  // CreateEntity は新しいエンティティを作成します。
+  //
+  // 例:
+  //   request: { name: "山田太郎", category: PEOPLE, memo: "友人" }
+  //   response: { entity: { id: "uuid", name: "山田太郎", ... } }
+  //
+  // エラー:
+  //   - AlreadyExists: 同じ名前のエンティティまたはエイリアスが既に存在する
+  rpc CreateEntity(CreateEntityRequest) returns (CreateEntityResponse);
+
+  // UpdateEntity は既存のエンティティを更新します。
+  //
+  // 例:
+  //   request: { id: "uuid", name: "山田花子", category: PEOPLE, memo: "同僚" }
+  //
+  // エラー:
+  //   - NotFound: エンティティが見つからない
+  //   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+  rpc UpdateEntity(UpdateEntityRequest) returns (UpdateEntityResponse);
+
+  // DeleteEntity はエンティティとそれに紐づくエイリアスを削除します。
+  // 日記との紐付け(diary_entities)もカスケード削除されます。
+  //
+  // エラー:
+  //   - NotFound: エンティティが見つからない
+  //   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+  rpc DeleteEntity(DeleteEntityRequest) returns (DeleteEntityResponse);
+
+  // GetEntity は指定されたIDのエンティティを取得します。
+  // エイリアスも含めて返されます。
+  //
+  // エラー:
+  //   - NotFound: エンティティが見つからない
+  //   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+  rpc GetEntity(GetEntityRequest) returns (GetEntityResponse);
+
+  // ListEntities はユーザーのエンティティ一覧を取得します。
+  // カテゴリでフィルタリングも可能です。
+  //
+  // 例（全件取得）:
+  //   request: { all_categories: true }
+  //
+  // 例（カテゴリフィルタ）:
+  //   request: { category: PEOPLE, all_categories: false }
+  rpc ListEntities(ListEntitiesRequest) returns (ListEntitiesResponse);
+
+  // CreateEntityAlias はエンティティにエイリアス（別名）を追加します。
+  // エイリアスは日記入力時の補完候補として使用されます。
+  //
+  // 例:
+  //   request: { entity_id: "uuid", alias: "太郎" }
+  //
+  // エラー:
+  //   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+  //   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+  rpc CreateEntityAlias(CreateEntityAliasRequest) returns (CreateEntityAliasResponse);
+
+  // UpdateEntityAlias はエイリアスを更新します。
+  //
+  // 例:
+  //   request: { id: "uuid", alias: "太郎くん" }
+  //
+  // エラー:
+  //   - NotFound: エイリアスが見つからない
+  //   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+  //   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+  rpc UpdateEntityAlias(UpdateEntityAliasRequest) returns (UpdateEntityAliasResponse);
+
+  // DeleteEntityAlias はエイリアスを削除します。
+  //
+  // エラー:
+  //   - NotFound: エイリアスが見つからない
+  //   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+  rpc DeleteEntityAlias(DeleteEntityAliasRequest) returns (DeleteEntityAliasResponse);
+
+  // SearchEntities はエンティティ名またはエイリアスで部分一致検索を行います。
+  // 主に日記入力時の補完候補として使用されます。
+  //
+  // 例:
+  //   request: { query: "山田" }
+  //   response: { entities: [{ name: "山田太郎", ... }, { name: "山田花子", ... }] }
+  //
+  // 空文字列を指定すると全件取得されます。
+  rpc SearchEntities(SearchEntitiesRequest) returns (SearchEntitiesResponse);
+
+  // GetDiariesByEntity は指定されたエンティティが登場する日記の一覧を取得します。
+  // 各日記でのエンティティの登場位置も含まれます。
+  //
+  // 例:
+  //   request: { entity_id: "uuid" }
+  //   response: { diaries: [{ content: "...", positions: [{ start: 0, end: 4 }], ... }] }
+  //
+  // エラー:
+  //   - NotFound: エンティティが見つからない
+  //   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+  rpc GetDiariesByEntity(GetDiariesByEntityRequest) returns (GetDiariesByEntityResponse);
+}
+
+// エンティティのカテゴリー
+enum EntityCategory {
+  NO_CATEGORY = 0; // 未分類
+  PEOPLE = 1; // 人物
+}
+
+// 位置情報
+message Position {
+  uint32 start = 1; // 開始位置
+  uint32 end = 2; // 終了位置
+  string alias_id = 3; // エイリアスID（エイリアスを使用した場合のみ設定、エンティティ名を直接使用した場合は空文字列）
+}
+
+// エンティティ
+message Entity {
+  string id = 1;
+  string name = 2;
+  EntityCategory category = 3;
+  string memo = 4;
+  repeated EntityAlias aliases = 5; // エイリアスのリスト
+  int64 created_at = 6;
+  int64 updated_at = 7;
+}
+
+// エイリアス
+message EntityAlias {
+  string id = 1;
+  string entity_id = 2;
+  string alias = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
+}
+
+// 日記とエンティティの紐付け
+message DiaryEntity {
+  string id = 1;
+  string diary_id = 2;
+  string entity_id = 3;
+  repeated Position positions = 4; // 日記本文中での登場位置
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}
+
+// エンティティ作成リクエスト
+message CreateEntityRequest {
+  string name = 1;
+  EntityCategory category = 2;
+  string memo = 3;
+}
+
+// エンティティ作成レスポンス
+message CreateEntityResponse {
+  Entity entity = 1;
+}
+
+// エンティティ更新リクエスト
+message UpdateEntityRequest {
+  string id = 1;
+  string name = 2;
+  EntityCategory category = 3;
+  string memo = 4;
+}
+
+// エンティティ更新レスポンス
+message UpdateEntityResponse {
+  Entity entity = 1;
+}
+
+// エンティティ削除リクエスト
+message DeleteEntityRequest {
+  string id = 1;
+}
+
+// エンティティ削除レスポンス
+message DeleteEntityResponse {
+  bool success = 1;
+}
+
+// エンティティ取得リクエスト
+message GetEntityRequest {
+  string id = 1;
+}
+
+// エンティティ取得レスポンス
+message GetEntityResponse {
+  Entity entity = 1;
+}
+
+// エンティティ一覧取得リクエスト
+message ListEntitiesRequest {
+  EntityCategory category = 1; // カテゴリでフィルタ
+  bool all_categories = 2; // trueの場合は全てのカテゴリを表示、falseの場合はcategoryでフィルタ
+}
+
+// エンティティ一覧取得レスポンス
+message ListEntitiesResponse {
+  repeated Entity entities = 1;
+}
+
+// エイリアス追加リクエスト
+message CreateEntityAliasRequest {
+  string entity_id = 1;
+  string alias = 2;
+}
+
+// エイリアス追加レスポンス
+message CreateEntityAliasResponse {
+  EntityAlias alias = 1;
+}
+
+// エイリアス更新リクエスト
+message UpdateEntityAliasRequest {
+  string id = 1;
+  string alias = 2;
+}
+
+// エイリアス更新レスポンス
+message UpdateEntityAliasResponse {
+  EntityAlias alias = 1;
+}
+
+// エイリアス削除リクエスト
+message DeleteEntityAliasRequest {
+  string id = 1;
+}
+
+// エイリアス削除レスポンス
+message DeleteEntityAliasResponse {
+  bool success = 1;
+}
+
+// エンティティ検索リクエスト
+message SearchEntitiesRequest {
+  string query = 1; // 検索クエリ
+}
+
+// エンティティ検索レスポンス
+message SearchEntitiesResponse {
+  repeated Entity entities = 1;
+}
+
+// エンティティに紐づく日記取得リクエスト
+message GetDiariesByEntityRequest {
+  string entity_id = 1;
+}
+
+// エンティティに紐づく日記取得レスポンス
+message GetDiariesByEntityResponse {
+  repeated DiaryWithEntity diaries = 1;
+}
+
+// 日記とエンティティ情報
+message DiaryWithEntity {
+  string id = 1;
+  string content = 2;
+  string date = 3; // YYYY-MM-DD形式
+  repeated Position positions = 4; // この日記でのエンティティの登場位置
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}

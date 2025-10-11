@@ -264,6 +264,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 4. **Frontend**: Uses pnpm for package management, Biome for formatting
 5. **Backend**: Uses Go modules, standard Go formatting
 6. **DI Container**: Add new dependencies to `backend/container/container.go` provider functions
+7. **QA Testing**: After completing a feature, use Chrome MCP tools to perform QA testing on the frontend (http://localhost:2000)
 
 ## Key Files
 

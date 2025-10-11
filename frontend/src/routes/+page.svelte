@@ -17,14 +17,30 @@ $: title = $_("page.title.home");
 
 export let data: PageData;
 
-let todayContent = data.today.entry?.content || "";
-let yesterdayContent = data.yesterday.entry?.content || "";
-let dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
+// dataが更新されたときに自動的に更新されるようにリアクティブ宣言を使用
+$: todayContent = data.today.entry?.content || "";
+$: yesterdayContent = data.yesterday.entry?.content || "";
+$: dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
+
 let formElement: HTMLFormElement;
 let yesterdayFormElement: HTMLFormElement;
 let dayBeforeYesterdayFormElement: HTMLFormElement;
 let [todayLoading, yesterdayLoading, dayBeforeLoading] = [false, false, false];
 let [todaySaved, yesterdaySaved, dayBeforeSaved] = [false, false, false];
+
+// 明示的に選択されたエンティティの情報
+let todaySelectedEntities: {
+	entityId: string;
+	positions: { start: number; end: number }[];
+}[] = [];
+let yesterdaySelectedEntities: {
+	entityId: string;
+	positions: { start: number; end: number }[];
+}[] = [];
+let dayBeforeYesterdaySelectedEntities: {
+	entityId: string;
+	positions: { start: number; end: number }[];
+}[] = [];
 
 // Character count calculations
 $: todayCharacterCount = todayContent ? todayContent.length : 0;
@@ -98,6 +114,7 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 				{#if data.today.entry}
 					<input type="hidden" name="id" value={data.today.entry.id} />
 				{/if}
+				<input type="hidden" name="selectedEntities" value={JSON.stringify(todaySelectedEntities)} />
 				<FormField
 					type="textarea"
 					label=""
@@ -105,7 +122,9 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
+					diaryEntities={data.today.entry?.diaryEntities || []}
 					bind:value={todayContent}
+					bind:selectedEntities={todaySelectedEntities}
 					on:save={handleSave}
 				/>
 
@@ -146,6 +165,7 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 				{#if data.yesterday.entry}
 					<input type="hidden" name="id" value={data.yesterday.entry.id} />
 				{/if}
+				<input type="hidden" name="selectedEntities" value={JSON.stringify(yesterdaySelectedEntities)} />
 				<FormField
 					type="textarea"
 					label=""
@@ -153,7 +173,9 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
+					diaryEntities={data.yesterday.entry?.diaryEntities || []}
 					bind:value={yesterdayContent}
+					bind:selectedEntities={yesterdaySelectedEntities}
 					on:save={handleYesterdaySave}
 				/>
 
@@ -198,6 +220,7 @@ use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved
 						value={data.dayBeforeYesterday.entry.id}
 					/>
 				{/if}
+				<input type="hidden" name="selectedEntities" value={JSON.stringify(dayBeforeYesterdaySelectedEntities)} />
 				<FormField
 					type="textarea"
 					label=""
@@ -205,7 +228,9 @@ use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
+					diaryEntities={data.dayBeforeYesterday.entry?.diaryEntities || []}
 					bind:value={dayBeforeYesterdayContent}
+					bind:selectedEntities={dayBeforeYesterdaySelectedEntities}
 					on:save={handleDayBeforeYesterdaySave}
 				/>
 

@@ -6,6 +6,7 @@ import {
 	type CreateDiaryEntryResponse,
 	DeleteDiaryEntryRequestSchema,
 	type DeleteDiaryEntryResponse,
+	type DiaryEntityInput,
 	DiaryService,
 	GenerateDailySummaryRequestSchema,
 	type GenerateDailySummaryResponse,
@@ -44,6 +45,7 @@ function createAuthenticatedTransport(accessToken: string) {
 export interface CreateDiaryEntryParams {
 	content: string;
 	date: YMD;
+	diaryEntities?: DiaryEntityInput[];
 	accessToken: string;
 }
 
@@ -62,6 +64,7 @@ export interface UpdateDiaryEntryParams {
 	title: string;
 	content: string;
 	date: YMD;
+	diaryEntities?: DiaryEntityInput[];
 	accessToken: string;
 }
 
@@ -94,6 +97,7 @@ export async function createDiaryEntry(
 	const request = create(CreateDiaryEntryRequestSchema, {
 		content: params.content,
 		date: params.date,
+		diaryEntities: params.diaryEntities || [],
 	});
 
 	return await client.createDiaryEntry(request);
@@ -136,6 +140,7 @@ export async function updateDiaryEntry(
 		title: params.title,
 		content: params.content,
 		date: params.date,
+		diaryEntities: params.diaryEntities || [],
 	});
 
 	return await client.updateDiaryEntry(request);

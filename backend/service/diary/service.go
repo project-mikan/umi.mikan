@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
@@ -81,7 +82,20 @@ func (s *DiaryEntry) CreateDiaryEntry(
 		UpdatedAt: currentTime,
 	}
 
-	if err := diary.Insert(ctx, s.DB); err != nil {
+	// トランザクション内でdiaryとdiary_entitiesを保存
+	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+		if err := diary.Insert(ctx, tx); err != nil {
+			return err
+		}
+
+		// diary_entitiesを保存
+		if err := s.saveDiaryEntities(ctx, tx, diary.ID, message.DiaryEntities, currentTime); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -94,6 +108,107 @@ func (s *DiaryEntry) CreateDiaryEntry(
 			UpdatedAt: diary.UpdatedAt,
 		},
 	}, nil
+}
+
+// diary_entitiesを取得してDiaryEntityOutputに変換
+func (s *DiaryEntry) getDiaryEntityOutputs(ctx context.Context, diaryID uuid.UUID) ([]*g.DiaryEntityOutput, error) {
+	diaryEntities, err := database.DiaryEntitiesByDiaryID(ctx, s.DB, diaryID)
+	if err != nil {
+		return nil, err
+	}
+
+	diaryEntityOutputs := make([]*g.DiaryEntityOutput, 0, len(diaryEntities))
+	for _, de := range diaryEntities {
+		// positionsをJSONからデコード（alias_idを含む）
+		var positionsRaw []map[string]interface{}
+		if err := json.Unmarshal(de.Positions, &positionsRaw); err != nil {
+			return nil, err
+		}
+
+		// map[string]interface{}から*g.Positionに変換
+		positions := make([]*g.Position, 0, len(positionsRaw))
+		for _, posRaw := range positionsRaw {
+			pos := &g.Position{
+				Start: uint32(posRaw["start"].(float64)),
+				End:   uint32(posRaw["end"].(float64)),
+			}
+			// alias_idがあれば設定
+			if aliasID, ok := posRaw["alias_id"].(string); ok && aliasID != "" {
+				pos.AliasId = aliasID
+			}
+			positions = append(positions, pos)
+		}
+
+		diaryEntityOutputs = append(diaryEntityOutputs, &g.DiaryEntityOutput{
+			EntityId:  de.EntityID.String(),
+			Positions: positions,
+		})
+	}
+
+	return diaryEntityOutputs, nil
+}
+
+// getDiaryEntityOutputsForDiaries 複数の日記に対してdiary_entitiesを一括取得（N+1問題を回避）
+func (s *DiaryEntry) getDiaryEntityOutputsForDiaries(ctx context.Context, diaryIDs []uuid.UUID) (map[string][]*g.DiaryEntityOutput, error) {
+	if len(diaryIDs) == 0 {
+		return make(map[string][]*g.DiaryEntityOutput), nil
+	}
+
+	// diary_entitiesを一括取得
+	query := `
+		SELECT id, diary_id, entity_id, created_at, updated_at, positions
+		FROM diary_entities
+		WHERE diary_id = ANY($1)
+		ORDER BY diary_id, created_at
+	`
+	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, pq.Array(diaryIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	// diary_idごとにグループ化
+	entityMap := make(map[string][]*g.DiaryEntityOutput)
+	for rows.Next() {
+		var de database.DiaryEntity
+		if err := rows.Scan(&de.ID, &de.DiaryID, &de.EntityID, &de.CreatedAt, &de.UpdatedAt, &de.Positions); err != nil {
+			return nil, err
+		}
+
+		// positionsをJSONからデコード
+		var positionsRaw []map[string]interface{}
+		if err := json.Unmarshal(de.Positions, &positionsRaw); err != nil {
+			return nil, err
+		}
+
+		// map[string]interface{}から*g.Positionに変換
+		positions := make([]*g.Position, 0, len(positionsRaw))
+		for _, posRaw := range positionsRaw {
+			pos := &g.Position{
+				Start: uint32(posRaw["start"].(float64)),
+				End:   uint32(posRaw["end"].(float64)),
+			}
+			// alias_idがあれば設定
+			if aliasID, ok := posRaw["alias_id"].(string); ok && aliasID != "" {
+				pos.AliasId = aliasID
+			}
+			positions = append(positions, pos)
+		}
+
+		diaryIDStr := de.DiaryID.String()
+		entityMap[diaryIDStr] = append(entityMap[diaryIDStr], &g.DiaryEntityOutput{
+			EntityId:  de.EntityID.String(),
+			Positions: positions,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return entityMap, nil
 }
 
 func (s *DiaryEntry) GetDiaryEntry(
@@ -116,13 +231,20 @@ func (s *DiaryEntry) GetDiaryEntry(
 		return nil, err
 	}
 
+	// diary_entitiesを取得
+	diaryEntityOutputs, err := s.getDiaryEntityOutputs(ctx, diary.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &g.GetDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
-			Id:        diary.ID.String(),
-			Date:      message.Date,
-			Content:   diary.Content,
-			CreatedAt: diary.CreatedAt,
-			UpdatedAt: diary.UpdatedAt,
+			Id:            diary.ID.String(),
+			Date:          message.Date,
+			Content:       diary.Content,
+			CreatedAt:     diary.CreatedAt,
+			UpdatedAt:     diary.UpdatedAt,
+			DiaryEntities: diaryEntityOutputs,
 		},
 	}, nil
 }
@@ -140,7 +262,12 @@ func (s *DiaryEntry) GetDiaryEntries(
 		return nil, err
 	}
 
-	entries := make([]*g.DiaryEntry, 0)
+	// 日記を収集
+	type diaryWithDate struct {
+		diary   *database.Diary
+		dateMsg *g.YMD
+	}
+	diariesWithDates := make([]diaryWithDate, 0)
 
 	for _, dateMsg := range message.Dates {
 		date := time.Date(int(dateMsg.Year), time.Month(dateMsg.Month), int(dateMsg.Day), 0, 0, 0, 0, time.UTC)
@@ -148,13 +275,36 @@ func (s *DiaryEntry) GetDiaryEntries(
 		if err != nil {
 			continue // Skip entries that don't exist
 		}
+		diariesWithDates = append(diariesWithDates, diaryWithDate{
+			diary:   diary,
+			dateMsg: dateMsg,
+		})
+	}
+
+	// diary_entitiesを一括取得（N+1問題を回避）
+	diaryIDs := make([]uuid.UUID, 0, len(diariesWithDates))
+	for _, dwd := range diariesWithDates {
+		diaryIDs = append(diaryIDs, dwd.diary.ID)
+	}
+	entityMap, err := s.getDiaryEntityOutputsForDiaries(ctx, diaryIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]*g.DiaryEntry, 0, len(diariesWithDates))
+	for _, dwd := range diariesWithDates {
+		diaryEntityOutputs := entityMap[dwd.diary.ID.String()]
+		if diaryEntityOutputs == nil {
+			diaryEntityOutputs = []*g.DiaryEntityOutput{}
+		}
 
 		entries = append(entries, &g.DiaryEntry{
-			Id:        diary.ID.String(),
-			Date:      dateMsg,
-			Content:   diary.Content,
-			CreatedAt: diary.CreatedAt,
-			UpdatedAt: diary.UpdatedAt,
+			Id:            dwd.diary.ID.String(),
+			Date:          dwd.dateMsg,
+			Content:       dwd.diary.Content,
+			CreatedAt:     dwd.diary.CreatedAt,
+			UpdatedAt:     dwd.diary.UpdatedAt,
+			DiaryEntities: diaryEntityOutputs,
 		})
 	}
 
@@ -177,7 +327,7 @@ func (s *DiaryEntry) GetDiaryEntriesByMonth(
 	}
 
 	// Query each day of the month to find diary entries
-	entries := make([]*g.DiaryEntry, 0)
+	diaries := make([]*database.Diary, 0)
 
 	// Get the number of days in the month
 	daysInMonth := time.Date(int(message.Month.Year), time.Month(message.Month.Month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
@@ -188,13 +338,33 @@ func (s *DiaryEntry) GetDiaryEntriesByMonth(
 		if err != nil {
 			continue // Skip entries that don't exist
 		}
+		diaries = append(diaries, diary)
+	}
+
+	// diary_entitiesを一括取得（N+1問題を回避）
+	diaryIDs := make([]uuid.UUID, 0, len(diaries))
+	for _, d := range diaries {
+		diaryIDs = append(diaryIDs, d.ID)
+	}
+	entityMap, err := s.getDiaryEntityOutputsForDiaries(ctx, diaryIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]*g.DiaryEntry, 0, len(diaries))
+	for _, diary := range diaries {
+		diaryEntityOutputs := entityMap[diary.ID.String()]
+		if diaryEntityOutputs == nil {
+			diaryEntityOutputs = []*g.DiaryEntityOutput{}
+		}
 
 		entries = append(entries, &g.DiaryEntry{
-			Id:        diary.ID.String(),
-			Date:      &g.YMD{Year: uint32(diary.Date.Year()), Month: uint32(diary.Date.Month()), Day: uint32(diary.Date.Day())},
-			Content:   diary.Content,
-			CreatedAt: diary.CreatedAt,
-			UpdatedAt: diary.UpdatedAt,
+			Id:            diary.ID.String(),
+			Date:          &g.YMD{Year: uint32(diary.Date.Year()), Month: uint32(diary.Date.Month()), Day: uint32(diary.Date.Day())},
+			Content:       diary.Content,
+			CreatedAt:     diary.CreatedAt,
+			UpdatedAt:     diary.UpdatedAt,
+			DiaryEntities: diaryEntityOutputs,
 		})
 	}
 
@@ -237,11 +407,23 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 		if message.Date != nil {
 			diary.Date = time.Date(int(message.Date.Year), time.Month(message.Date.Month), int(message.Date.Day), 0, 0, 0, 0, time.UTC)
 		}
-		diary.UpdatedAt = time.Now().Unix()
+		currentTime := time.Now().Unix()
+		diary.UpdatedAt = currentTime
 
 		if err := diary.Update(ctx, tx); err != nil {
 			return err
 		}
+
+		// 既存のdiary_entitiesを削除してから新しいものを保存
+		if err := s.deleteDiaryEntities(ctx, tx, diary.ID); err != nil {
+			return err
+		}
+
+		// 新しいdiary_entitiesを保存
+		if err := s.saveDiaryEntities(ctx, tx, diary.ID, message.DiaryEntities, currentTime); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -318,14 +500,31 @@ func (s *DiaryEntry) SearchDiaryEntries(
 	if err != nil {
 		return nil, err
 	}
+
+	// diary_entitiesを一括取得（N+1問題を回避）
+	diaryIDs := make([]uuid.UUID, 0, len(ds))
+	for _, d := range ds {
+		diaryIDs = append(diaryIDs, d.ID)
+	}
+	entityMap, err := s.getDiaryEntityOutputsForDiaries(ctx, diaryIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	entries := make([]*g.DiaryEntry, 0, len(ds))
 	for _, d := range ds {
+		diaryEntityOutputs := entityMap[d.ID.String()]
+		if diaryEntityOutputs == nil {
+			diaryEntityOutputs = []*g.DiaryEntityOutput{}
+		}
+
 		entries = append(entries, &g.DiaryEntry{
-			Id:        d.ID.String(),
-			Content:   d.Content,
-			Date:      &g.YMD{Year: uint32(d.Date.Year()), Month: uint32(d.Date.Month()), Day: uint32(d.Date.Day())},
-			CreatedAt: d.CreatedAt,
-			UpdatedAt: d.UpdatedAt,
+			Id:            d.ID.String(),
+			Content:       d.Content,
+			Date:          &g.YMD{Year: uint32(d.Date.Year()), Month: uint32(d.Date.Month()), Day: uint32(d.Date.Day())},
+			CreatedAt:     d.CreatedAt,
+			UpdatedAt:     d.UpdatedAt,
+			DiaryEntities: diaryEntityOutputs,
 		})
 	}
 	return &g.SearchDiaryEntriesResponse{
@@ -742,4 +941,59 @@ func (s *DiaryEntry) GetDailySummary(
 			UpdatedAt: summary.UpdatedAt,
 		},
 	}, nil
+}
+
+// saveDiaryEntities diary_entitiesを保存
+func (s *DiaryEntry) saveDiaryEntities(ctx context.Context, tx *sql.Tx, diaryID uuid.UUID, entities []*g.DiaryEntityInput, currentTime int64) error {
+	if len(entities) == 0 {
+		return nil
+	}
+
+	for _, entity := range entities {
+		entityID, err := uuid.Parse(entity.EntityId)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "invalid entity ID: %s", entity.EntityId)
+		}
+
+		// positionsをJSONBに変換（alias_idも含む）
+		positions := make([]map[string]interface{}, 0, len(entity.Positions))
+		for _, pos := range entity.Positions {
+			posMap := map[string]interface{}{
+				"start": pos.Start,
+				"end":   pos.End,
+			}
+			// alias_idが空文字列でない場合のみ含める
+			if pos.AliasId != "" {
+				posMap["alias_id"] = pos.AliasId
+			}
+			positions = append(positions, posMap)
+		}
+		positionsJSON, err := json.Marshal(positions)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to marshal positions")
+		}
+
+		// diary_entityを作成
+		diaryEntity := &database.DiaryEntity{
+			ID:        uuid.New(),
+			DiaryID:   diaryID,
+			EntityID:  entityID,
+			Positions: positionsJSON,
+			CreatedAt: currentTime,
+			UpdatedAt: currentTime,
+		}
+
+		if err := diaryEntity.Insert(ctx, tx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// deleteDiaryEntities 特定の日記に紐づくdiary_entitiesを削除
+func (s *DiaryEntry) deleteDiaryEntities(ctx context.Context, tx *sql.Tx, diaryID uuid.UUID) error {
+	query := "DELETE FROM diary_entities WHERE diary_id = $1"
+	_, err := tx.ExecContext(ctx, query, diaryID)
+	return err
 }

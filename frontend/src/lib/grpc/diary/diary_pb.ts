@@ -12,6 +12,8 @@ import {
 	messageDesc,
 	serviceDesc,
 } from "@bufbuild/protobuf/codegenv2";
+import type { Position } from "../entity/entity_pb";
+import { file_entity_entity } from "../entity/entity_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
@@ -20,7 +22,8 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_diary_diary: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJaChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5Ij0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIm8KDk1vbnRobHlTdW1tYXJ5EgoKAmlkGAEgASgJEhgKBW1vbnRoGAIgASgLMgkuZGlhcnkuWU0SDwoHc3VtbWFyeRgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5In8KDERhaWx5U3VtbWFyeRIKCgJpZBgBIAEoCRIQCghkaWFyeV9pZBgCIAEoCRIYCgRkYXRlGAMgASgLMgouZGlhcnkuWU1EEg8KB3N1bW1hcnkYBCABKAkSEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnky3wcKDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM",
+		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0inQEKCkRpYXJ5RW50cnkSCgoCaWQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRBIPCgdjb250ZW50GAMgASgJEhIKCmNyZWF0ZWRfYXQYBCABKAMSEgoKdXBkYXRlZF9hdBgFIAEoAxIwCg5kaWFyeV9lbnRpdGllcxgGIAMoCzIYLmRpYXJ5LkRpYXJ5RW50aXR5T3V0cHV0IksKEURpYXJ5RW50aXR5T3V0cHV0EhEKCWVudGl0eV9pZBgBIAEoCRIjCglwb3NpdGlvbnMYAiADKAsyEC5lbnRpdHkuUG9zaXRpb24iSgoQRGlhcnlFbnRpdHlJbnB1dBIRCgllbnRpdHlfaWQYASABKAkSIwoJcG9zaXRpb25zGAIgAygLMhAuZW50aXR5LlBvc2l0aW9uInUKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRBIvCg5kaWFyeV9lbnRpdGllcxgDIAMoCzIXLmRpYXJ5LkRpYXJ5RW50aXR5SW5wdXQiPAoYQ3JlYXRlRGlhcnlFbnRyeVJlc3BvbnNlEiAKBWVudHJ5GAEgASgLMhEuZGlhcnkuRGlhcnlFbnRyeSIwChRHZXREaWFyeUVudHJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIjMKFkdldERpYXJ5RW50cmllc1JlcXVlc3QSGQoFZGF0ZXMYASADKAsyCi5kaWFyeS5ZTUQiOQodR2V0RGlhcnlFbnRyaWVzQnlNb250aFJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSIsChlTZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0Eg8KB2tleXdvcmQYASABKAkiWgoaU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USGAoQc2VhcmNoZWRfa2V5d29yZBgBIAEoCRIiCgdlbnRyaWVzGAIgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI9ChdHZXREaWFyeUVudHJpZXNSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSJECh5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVzcG9uc2USIgoHZW50cmllcxgBIAMoCzIRLmRpYXJ5LkRpYXJ5RW50cnkiOQoVR2V0RGlhcnlFbnRyeVJlc3BvbnNlEiAKBWVudHJ5GAEgASgLMhEuZGlhcnkuRGlhcnlFbnRyeSKQAQoXVXBkYXRlRGlhcnlFbnRyeVJlcXVlc3QSCgoCaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDwoHY29udGVudBgDIAEoCRIYCgRkYXRlGAQgASgLMgouZGlhcnkuWU1EEi8KDmRpYXJ5X2VudGl0aWVzGAUgAygLMhcuZGlhcnkuRGlhcnlFbnRpdHlJbnB1dCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIm8KDk1vbnRobHlTdW1tYXJ5EgoKAmlkGAEgASgJEhgKBW1vbnRoGAIgASgLMgkuZGlhcnkuWU0SDwoHc3VtbWFyeRgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5In8KDERhaWx5U3VtbWFyeRIKCgJpZBgBIAEoCRIQCghkaWFyeV9pZBgCIAEoCRIYCgRkYXRlGAMgASgLMgouZGlhcnkuWU1EEg8KB3N1bW1hcnkYBCABKAkSEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnky3wcKDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM",
+		[file_entity_entity],
 	);
 
 /**
@@ -114,6 +117,13 @@ export type DiaryEntry = Message<"diary.DiaryEntry"> & {
 	 * @generated from field: int64 updated_at = 5;
 	 */
 	updatedAt: bigint;
+
+	/**
+	 * エンティティと位置情報のリスト
+	 *
+	 * @generated from field: repeated diary.DiaryEntityOutput diary_entities = 6;
+	 */
+	diaryEntities: DiaryEntityOutput[];
 };
 
 /**
@@ -123,6 +133,60 @@ export type DiaryEntry = Message<"diary.DiaryEntry"> & {
 export const DiaryEntrySchema: GenMessage<DiaryEntry> =
 	/*@__PURE__*/
 	messageDesc(file_diary_diary, 2);
+
+/**
+ * エンティティ出力（取得時）
+ *
+ * @generated from message diary.DiaryEntityOutput
+ */
+export type DiaryEntityOutput = Message<"diary.DiaryEntityOutput"> & {
+	/**
+	 * @generated from field: string entity_id = 1;
+	 */
+	entityId: string;
+
+	/**
+	 * 位置情報（alias_idを含む）
+	 *
+	 * @generated from field: repeated entity.Position positions = 2;
+	 */
+	positions: Position[];
+};
+
+/**
+ * Describes the message diary.DiaryEntityOutput.
+ * Use `create(DiaryEntityOutputSchema)` to create a new message.
+ */
+export const DiaryEntityOutputSchema: GenMessage<DiaryEntityOutput> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 3);
+
+/**
+ * エンティティと位置情報
+ *
+ * @generated from message diary.DiaryEntityInput
+ */
+export type DiaryEntityInput = Message<"diary.DiaryEntityInput"> & {
+	/**
+	 * @generated from field: string entity_id = 1;
+	 */
+	entityId: string;
+
+	/**
+	 * 位置情報（alias_idを含む）
+	 *
+	 * @generated from field: repeated entity.Position positions = 2;
+	 */
+	positions: Position[];
+};
+
+/**
+ * Describes the message diary.DiaryEntityInput.
+ * Use `create(DiaryEntityInputSchema)` to create a new message.
+ */
+export const DiaryEntityInputSchema: GenMessage<DiaryEntityInput> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 4);
 
 /**
  * 新しい日記エントリを作成するためのリクエスト
@@ -140,6 +204,13 @@ export type CreateDiaryEntryRequest =
 		 * @generated from field: diary.YMD date = 2;
 		 */
 		date?: YMD;
+
+		/**
+		 * エンティティと位置情報のリスト
+		 *
+		 * @generated from field: repeated diary.DiaryEntityInput diary_entities = 3;
+		 */
+		diaryEntities: DiaryEntityInput[];
 	};
 
 /**
@@ -148,7 +219,7 @@ export type CreateDiaryEntryRequest =
  */
 export const CreateDiaryEntryRequestSchema: GenMessage<CreateDiaryEntryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 3);
+	messageDesc(file_diary_diary, 5);
 
 /**
  * 日記エントリを作成した結果を返すレスポンス
@@ -169,7 +240,7 @@ export type CreateDiaryEntryResponse =
  */
 export const CreateDiaryEntryResponseSchema: GenMessage<CreateDiaryEntryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 4);
+	messageDesc(file_diary_diary, 6);
 
 /**
  * 特定の日記エントリを取得するためのリクエスト
@@ -191,7 +262,7 @@ export type GetDiaryEntryRequest = Message<"diary.GetDiaryEntryRequest"> & {
  */
 export const GetDiaryEntryRequestSchema: GenMessage<GetDiaryEntryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 5);
+	messageDesc(file_diary_diary, 7);
 
 /**
  * 複数日記エントリを取得するためのリクエスト (e.g., by range or count)
@@ -213,7 +284,7 @@ export type GetDiaryEntriesRequest = Message<"diary.GetDiaryEntriesRequest"> & {
  */
 export const GetDiaryEntriesRequestSchema: GenMessage<GetDiaryEntriesRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 6);
+	messageDesc(file_diary_diary, 8);
 
 /**
  * 月ごとに日記エントリを取得するためのリクエスト
@@ -236,7 +307,7 @@ export type GetDiaryEntriesByMonthRequest =
  */
 export const GetDiaryEntriesByMonthRequestSchema: GenMessage<GetDiaryEntriesByMonthRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 7);
+	messageDesc(file_diary_diary, 9);
 
 /**
  * @generated from message diary.SearchDiaryEntriesRequest
@@ -255,7 +326,7 @@ export type SearchDiaryEntriesRequest =
  */
 export const SearchDiaryEntriesRequestSchema: GenMessage<SearchDiaryEntriesRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 8);
+	messageDesc(file_diary_diary, 10);
 
 /**
  * @generated from message diary.SearchDiaryEntriesResponse
@@ -281,7 +352,7 @@ export type SearchDiaryEntriesResponse =
  */
 export const SearchDiaryEntriesResponseSchema: GenMessage<SearchDiaryEntriesResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 9);
+	messageDesc(file_diary_diary, 11);
 
 /**
  * @generated from message diary.GetDiaryEntriesResponse
@@ -300,7 +371,7 @@ export type GetDiaryEntriesResponse =
  */
 export const GetDiaryEntriesResponseSchema: GenMessage<GetDiaryEntriesResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 10);
+	messageDesc(file_diary_diary, 12);
 
 /**
  * @generated from message diary.GetDiaryEntriesByMonthResponse
@@ -319,7 +390,7 @@ export type GetDiaryEntriesByMonthResponse =
  */
 export const GetDiaryEntriesByMonthResponseSchema: GenMessage<GetDiaryEntriesByMonthResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 11);
+	messageDesc(file_diary_diary, 13);
 
 /**
  * 日記エントリを取得した結果を返すレスポンス
@@ -339,7 +410,7 @@ export type GetDiaryEntryResponse = Message<"diary.GetDiaryEntryResponse"> & {
  */
 export const GetDiaryEntryResponseSchema: GenMessage<GetDiaryEntryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 12);
+	messageDesc(file_diary_diary, 14);
 
 /**
  * 日記エントリを更新するためのリクエスト
@@ -367,6 +438,13 @@ export type UpdateDiaryEntryRequest =
 		 * @generated from field: diary.YMD date = 4;
 		 */
 		date?: YMD;
+
+		/**
+		 * エンティティと位置情報のリスト
+		 *
+		 * @generated from field: repeated diary.DiaryEntityInput diary_entities = 5;
+		 */
+		diaryEntities: DiaryEntityInput[];
 	};
 
 /**
@@ -375,7 +453,7 @@ export type UpdateDiaryEntryRequest =
  */
 export const UpdateDiaryEntryRequestSchema: GenMessage<UpdateDiaryEntryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 13);
+	messageDesc(file_diary_diary, 15);
 
 /**
  * 更新された日記エントリを返すレスポンス
@@ -396,7 +474,7 @@ export type UpdateDiaryEntryResponse =
  */
 export const UpdateDiaryEntryResponseSchema: GenMessage<UpdateDiaryEntryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 14);
+	messageDesc(file_diary_diary, 16);
 
 /**
  * 日記エントリを削除するためのリクエスト
@@ -417,7 +495,7 @@ export type DeleteDiaryEntryRequest =
  */
 export const DeleteDiaryEntryRequestSchema: GenMessage<DeleteDiaryEntryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 15);
+	messageDesc(file_diary_diary, 17);
 
 /**
  * 削除操作の結果を返すレスポンス
@@ -438,7 +516,7 @@ export type DeleteDiaryEntryResponse =
  */
 export const DeleteDiaryEntryResponseSchema: GenMessage<DeleteDiaryEntryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 16);
+	messageDesc(file_diary_diary, 18);
 
 /**
  * 月サマリー
@@ -478,7 +556,7 @@ export type MonthlySummary = Message<"diary.MonthlySummary"> & {
  */
 export const MonthlySummarySchema: GenMessage<MonthlySummary> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 17);
+	messageDesc(file_diary_diary, 19);
 
 /**
  * 月ごとのサマリー生成リクエスト
@@ -499,7 +577,7 @@ export type GenerateMonthlySummaryRequest =
  */
 export const GenerateMonthlySummaryRequestSchema: GenMessage<GenerateMonthlySummaryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 18);
+	messageDesc(file_diary_diary, 20);
 
 /**
  * 月ごとのサマリー生成レスポンス
@@ -520,7 +598,7 @@ export type GenerateMonthlySummaryResponse =
  */
 export const GenerateMonthlySummaryResponseSchema: GenMessage<GenerateMonthlySummaryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 19);
+	messageDesc(file_diary_diary, 21);
 
 /**
  * 月ごとのサマリー取得リクエスト
@@ -541,7 +619,7 @@ export type GetMonthlySummaryRequest =
  */
 export const GetMonthlySummaryRequestSchema: GenMessage<GetMonthlySummaryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 20);
+	messageDesc(file_diary_diary, 22);
 
 /**
  * 月ごとのサマリー取得レスポンス
@@ -562,7 +640,7 @@ export type GetMonthlySummaryResponse =
  */
 export const GetMonthlySummaryResponseSchema: GenMessage<GetMonthlySummaryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 21);
+	messageDesc(file_diary_diary, 23);
 
 /**
  * 日サマリー
@@ -607,7 +685,7 @@ export type DailySummary = Message<"diary.DailySummary"> & {
  */
 export const DailySummarySchema: GenMessage<DailySummary> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 22);
+	messageDesc(file_diary_diary, 24);
 
 /**
  * 日ごとのサマリー生成リクエスト
@@ -628,7 +706,7 @@ export type GenerateDailySummaryRequest =
  */
 export const GenerateDailySummaryRequestSchema: GenMessage<GenerateDailySummaryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 23);
+	messageDesc(file_diary_diary, 25);
 
 /**
  * 日ごとのサマリー生成レスポンス
@@ -649,7 +727,7 @@ export type GenerateDailySummaryResponse =
  */
 export const GenerateDailySummaryResponseSchema: GenMessage<GenerateDailySummaryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 24);
+	messageDesc(file_diary_diary, 26);
 
 /**
  * 日ごとのサマリー取得リクエスト
@@ -669,7 +747,7 @@ export type GetDailySummaryRequest = Message<"diary.GetDailySummaryRequest"> & {
  */
 export const GetDailySummaryRequestSchema: GenMessage<GetDailySummaryRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 25);
+	messageDesc(file_diary_diary, 27);
 
 /**
  * 日ごとのサマリー取得レスポンス
@@ -690,14 +768,28 @@ export type GetDailySummaryResponse =
  */
 export const GetDailySummaryResponseSchema: GenMessage<GetDailySummaryResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 26);
+	messageDesc(file_diary_diary, 28);
 
 /**
+ * DiaryService は日記エントリの作成・読み取り・更新・削除（CRUD）と
+ * AI要約生成機能を提供するサービスです。
+ * エンティティとの紐付けにより、固有名詞のハイライト表示や検索が可能です。
+ *
  * @generated from service diary.DiaryService
  */
 export const DiaryService: GenService<{
 	/**
-	 * 作成
+	 * CreateDiaryEntry は新しい日記エントリを作成します。
+	 * 1日1エントリの制約があり、同じ日付に複数のエントリは作成できません。
+	 * エンティティとの紐付け（diary_entities）もトランザクション内で同時に作成されます。
+	 *
+	 * 例:
+	 *   request: { content: "今日は友人と会った", date: { year: 2025, month: 10, day: 9 }, diary_entities: [...] }
+	 *   response: { entry: { id: "uuid", content: "...", ... } }
+	 *
+	 * エラー:
+	 *   - AlreadyExists: 指定された日付の日記が既に存在する
+	 *   - InvalidArgument: 日付が不正
 	 *
 	 * @generated from rpc diary.DiaryService.CreateDiaryEntry
 	 */
@@ -707,7 +799,16 @@ export const DiaryService: GenService<{
 		output: typeof CreateDiaryEntryResponseSchema;
 	};
 	/**
-	 * 更新
+	 * UpdateDiaryEntry は既存の日記エントリを更新します。
+	 * エンティティとの紐付けも同時に更新されます（既存の紐付けは全て削除され、新しい紐付けが作成されます）。
+	 *
+	 * 例:
+	 *   request: { id: "uuid", content: "更新された内容", date: { year: 2025, month: 10, day: 9 }, diary_entities: [...] }
+	 *   response: { entry: { id: "uuid", content: "更新された内容", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: 日記エントリが見つからない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	 *
 	 * @generated from rpc diary.DiaryService.UpdateDiaryEntry
 	 */
@@ -717,7 +818,12 @@ export const DiaryService: GenService<{
 		output: typeof UpdateDiaryEntryResponseSchema;
 	};
 	/**
-	 * 削除
+	 * DeleteDiaryEntry は日記エントリを削除します。
+	 * 関連するエンティティとの紐付け（diary_entities）もカスケード削除されます。
+	 *
+	 * エラー:
+	 *   - NotFound: 日記エントリが見つからない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	 *
 	 * @generated from rpc diary.DiaryService.DeleteDiaryEntry
 	 */
@@ -727,7 +833,15 @@ export const DiaryService: GenService<{
 		output: typeof DeleteDiaryEntryResponseSchema;
 	};
 	/**
-	 * 日付指定で単体取得
+	 * GetDiaryEntry は指定された日付の日記エントリを取得します。
+	 * エンティティとの紐付け情報も含まれます。
+	 *
+	 * 例:
+	 *   request: { date: { year: 2025, month: 10, day: 9 } }
+	 *   response: { entry: { id: "uuid", content: "...", diary_entities: [...] } }
+	 *
+	 * エラー:
+	 *   - NotFound: 指定された日付の日記が存在しない
 	 *
 	 * @generated from rpc diary.DiaryService.GetDiaryEntry
 	 */
@@ -737,7 +851,14 @@ export const DiaryService: GenService<{
 		output: typeof GetDiaryEntryResponseSchema;
 	};
 	/**
-	 * 日付指定で複数取得(ホームでの表示などで直近3日とかほしいケースや過去数年分ほしいケースに対応)
+	 * GetDiaryEntries は指定された複数の日付の日記エントリを取得します。
+	 * ホームでの直近3日表示や、過去数年分の取得など、柔軟な取得が可能です。
+	 *
+	 * 例:
+	 *   request: { dates: [{ year: 2025, month: 10, day: 9 }, { year: 2025, month: 10, day: 8 }] }
+	 *   response: { entries: [{ id: "uuid1", ... }, { id: "uuid2", ... }] }
+	 *
+	 * エラー: なし（存在する日記のみ返される）
 	 *
 	 * @generated from rpc diary.DiaryService.GetDiaryEntries
 	 */
@@ -747,7 +868,13 @@ export const DiaryService: GenService<{
 		output: typeof GetDiaryEntriesResponseSchema;
 	};
 	/**
-	 * 月ごとに取得
+	 * GetDiaryEntriesByMonth は指定された月の全日記エントリを取得します。
+	 *
+	 * 例:
+	 *   request: { month: { year: 2025, month: 10 } }
+	 *   response: { entries: [{ id: "uuid1", date: { year: 2025, month: 10, day: 1 }, ... }, ...] }
+	 *
+	 * エラー: なし（存在する日記のみ返される）
 	 *
 	 * @generated from rpc diary.DiaryService.GetDiaryEntriesByMonth
 	 */
@@ -757,7 +884,14 @@ export const DiaryService: GenService<{
 		output: typeof GetDiaryEntriesByMonthResponseSchema;
 	};
 	/**
-	 * 検索
+	 * SearchDiaryEntries はキーワードで日記を全文検索します。
+	 * PostgreSQLのLIKE検索を使用しています。
+	 *
+	 * 例:
+	 *   request: { keyword: "友人" }
+	 *   response: { searched_keyword: "友人", entries: [{ id: "uuid", content: "今日は友人と...", ... }] }
+	 *
+	 * エラー: なし（見つからない場合は空配列）
 	 *
 	 * @generated from rpc diary.DiaryService.SearchDiaryEntries
 	 */
@@ -767,7 +901,16 @@ export const DiaryService: GenService<{
 		output: typeof SearchDiaryEntriesResponseSchema;
 	};
 	/**
-	 * 月ごとのサマリー生成
+	 * GenerateMonthlySummary は指定された月の日記をLLMで要約します。
+	 * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
+	 *
+	 * 例:
+	 *   request: { month: { year: 2025, month: 10 } }
+	 *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: LLMキーが設定されていない、または対象月に日記が存在しない
+	 *   - Internal: LLM API呼び出しエラー
 	 *
 	 * @generated from rpc diary.DiaryService.GenerateMonthlySummary
 	 */
@@ -777,7 +920,14 @@ export const DiaryService: GenService<{
 		output: typeof GenerateMonthlySummaryResponseSchema;
 	};
 	/**
-	 * 月ごとのサマリー取得
+	 * GetMonthlySummary は指定された月のサマリーを取得します。
+	 *
+	 * 例:
+	 *   request: { month: { year: 2025, month: 10 } }
+	 *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: サマリーが存在しない
 	 *
 	 * @generated from rpc diary.DiaryService.GetMonthlySummary
 	 */
@@ -787,7 +937,17 @@ export const DiaryService: GenService<{
 		output: typeof GetMonthlySummaryResponseSchema;
 	};
 	/**
-	 * 日ごとのサマリー生成
+	 * GenerateDailySummary は指定された日記をLLMで要約します。
+	 * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
+	 *
+	 * 例:
+	 *   request: { diary_id: "uuid" }
+	 *   response: { summary: { id: "uuid", diary_id: "uuid", summary: "今日は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: LLMキーが設定されていない、または日記が存在しない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	 *   - Internal: LLM API呼び出しエラー
 	 *
 	 * @generated from rpc diary.DiaryService.GenerateDailySummary
 	 */
@@ -797,7 +957,14 @@ export const DiaryService: GenService<{
 		output: typeof GenerateDailySummaryResponseSchema;
 	};
 	/**
-	 * 日ごとのサマリー取得
+	 * GetDailySummary は指定された日付のサマリーを取得します。
+	 *
+	 * 例:
+	 *   request: { date: { year: 2025, month: 10, day: 9 } }
+	 *   response: { summary: { id: "uuid", date: { year: 2025, month: 10, day: 9 }, summary: "今日は...", ... } }
+	 *
+	 * エラー:
+	 *   - NotFound: サマリーが存在しない
 	 *
 	 * @generated from rpc diary.DiaryService.GetDailySummary
 	 */

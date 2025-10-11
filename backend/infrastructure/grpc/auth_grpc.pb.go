@@ -28,14 +28,55 @@ const (
 // AuthServiceClient is the client API for AuthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// AuthService はユーザー認証と登録を管理するサービスです。
+// JWT（Access Token + Refresh Token）ベースの認証を提供します。
 type AuthServiceClient interface {
-	// 新規登録設定の取得
+	// GetRegistrationConfig は新規登録に必要な設定情報を取得します。
+	// REGISTER_KEY環境変数が設定されている場合、登録キーが必要かどうかを返します。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { register_key_required: true }
+	//
+	// エラー: なし（常に成功）
 	GetRegistrationConfig(ctx context.Context, in *GetRegistrationConfigRequest, opts ...grpc.CallOption) (*GetRegistrationConfigResponse, error)
-	// 新規登録
+	// RegisterByPassword はメールアドレスとパスワードで新規ユーザーを登録します。
+	// REGISTER_KEYが設定されている場合は、正しい登録キーが必要です。
+	//
+	// 例:
+	//
+	//	request: { email: "user@example.com", password: "pass123", name: "太郎", register_key: "secret" }
+	//	response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	//
+	// エラー:
+	//   - AlreadyExists: メールアドレスが既に登録されている
+	//   - InvalidArgument: 登録キーが必須だが提供されていない
+	//   - PermissionDenied: 登録キーが不正
+	//   - InvalidArgument: バリデーションエラー（メール形式、パスワード長など）
 	RegisterByPassword(ctx context.Context, in *RegisterByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error)
-	// ログイン
+	// LoginByPassword はメールアドレスとパスワードでログインします。
+	//
+	// 例:
+	//
+	//	request: { email: "user@example.com", password: "pass123" }
+	//	response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	//
+	// エラー:
+	//   - Unauthenticated: メールアドレスまたはパスワードが不正
+	//   - NotFound: ユーザーが存在しない
 	LoginByPassword(ctx context.Context, in *LoginByPasswordRequest, opts ...grpc.CallOption) (*AuthResponse, error)
-	// AccessTokenの更新
+	// RefreshAccessToken はRefresh Tokenを使用してAccess Tokenを更新します。
+	// Access Tokenの有効期限は15分、Refresh Tokenの有効期限は30日です。
+	//
+	// 例:
+	//
+	//	request: { refresh_token: "..." }
+	//	response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	//
+	// エラー:
+	//   - Unauthenticated: Refresh Tokenが無効または期限切れ
 	RefreshAccessToken(ctx context.Context, in *RefreshAccessTokenRequest, opts ...grpc.CallOption) (*AuthResponse, error)
 }
 
@@ -90,14 +131,55 @@ func (c *authServiceClient) RefreshAccessToken(ctx context.Context, in *RefreshA
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
+//
+// AuthService はユーザー認証と登録を管理するサービスです。
+// JWT（Access Token + Refresh Token）ベースの認証を提供します。
 type AuthServiceServer interface {
-	// 新規登録設定の取得
+	// GetRegistrationConfig は新規登録に必要な設定情報を取得します。
+	// REGISTER_KEY環境変数が設定されている場合、登録キーが必要かどうかを返します。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { register_key_required: true }
+	//
+	// エラー: なし（常に成功）
 	GetRegistrationConfig(context.Context, *GetRegistrationConfigRequest) (*GetRegistrationConfigResponse, error)
-	// 新規登録
+	// RegisterByPassword はメールアドレスとパスワードで新規ユーザーを登録します。
+	// REGISTER_KEYが設定されている場合は、正しい登録キーが必要です。
+	//
+	// 例:
+	//
+	//	request: { email: "user@example.com", password: "pass123", name: "太郎", register_key: "secret" }
+	//	response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	//
+	// エラー:
+	//   - AlreadyExists: メールアドレスが既に登録されている
+	//   - InvalidArgument: 登録キーが必須だが提供されていない
+	//   - PermissionDenied: 登録キーが不正
+	//   - InvalidArgument: バリデーションエラー（メール形式、パスワード長など）
 	RegisterByPassword(context.Context, *RegisterByPasswordRequest) (*AuthResponse, error)
-	// ログイン
+	// LoginByPassword はメールアドレスとパスワードでログインします。
+	//
+	// 例:
+	//
+	//	request: { email: "user@example.com", password: "pass123" }
+	//	response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	//
+	// エラー:
+	//   - Unauthenticated: メールアドレスまたはパスワードが不正
+	//   - NotFound: ユーザーが存在しない
 	LoginByPassword(context.Context, *LoginByPasswordRequest) (*AuthResponse, error)
-	// AccessTokenの更新
+	// RefreshAccessToken はRefresh Tokenを使用してAccess Tokenを更新します。
+	// Access Tokenの有効期限は15分、Refresh Tokenの有効期限は30日です。
+	//
+	// 例:
+	//
+	//	request: { refresh_token: "..." }
+	//	response: { access_token: "...", refresh_token: "...", expires_in: 900 }
+	//
+	// エラー:
+	//   - Unauthenticated: Refresh Tokenが無効または期限切れ
 	RefreshAccessToken(context.Context, *RefreshAccessTokenRequest) (*AuthResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }

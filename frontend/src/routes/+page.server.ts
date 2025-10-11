@@ -6,9 +6,22 @@ import {
 	updateDiaryEntry,
 } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import type { DiaryEntityInput } from "$lib/grpc/diary/diary_pb";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ cookies }) => {
+export const load: PageServerLoad = async ({
+	cookies,
+	setHeaders,
+	depends,
+}) => {
+	// キャッシュを無効化して常に最新のデータを取得
+	setHeaders({
+		"cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+	});
+
+	// 明示的な依存関係を設定してinvalidateAll()で確実に再読み込み
+	depends("diary:home");
+
 	const authResult = await ensureValidAccessToken(cookies);
 
 	if (!authResult.isAuthenticated || !authResult.accessToken) {
@@ -114,6 +127,7 @@ export const actions: Actions = {
 		const content = data.get("content")?.toString();
 		const dateStr = data.get("date")?.toString();
 		const id = data.get("id")?.toString();
+		const selectedEntitiesStr = data.get("selectedEntities")?.toString();
 
 		if (!content || !dateStr) {
 			return { error: "内容と日付は必須です" };
@@ -123,6 +137,40 @@ export const actions: Actions = {
 			const [year, month, day] = dateStr.split("-").map(Number);
 			const date = createYMD(year, month, day);
 
+			// 明示的に選択されたエンティティのみを使用
+			let diaryEntities: DiaryEntityInput[] = [];
+			if (selectedEntitiesStr && selectedEntitiesStr !== "[]") {
+				try {
+					const selectedEntities = JSON.parse(selectedEntitiesStr) as {
+						entityId: string;
+						positions: { start: number; end: number }[];
+					}[];
+
+					const { create } = await import("@bufbuild/protobuf");
+					const { DiaryEntityInputSchema } = await import(
+						"$lib/grpc/diary/diary_pb"
+					);
+					const { PositionSchema } = await import("$lib/grpc/entity/entity_pb");
+
+					diaryEntities = selectedEntities.map((se) => {
+						const positionMessages = se.positions.map((pos) =>
+							create(PositionSchema, {
+								start: pos.start,
+								end: pos.end,
+							}),
+						);
+
+						return create(DiaryEntityInputSchema, {
+							entityId: se.entityId,
+							positions: positionMessages,
+						});
+					});
+				} catch (parseErr) {
+					console.error("Failed to parse selectedEntities:", parseErr);
+					diaryEntities = [];
+				}
+			}
+
 			if (id) {
 				// 更新
 				await updateDiaryEntry({
@@ -130,6 +178,7 @@ export const actions: Actions = {
 					title: "",
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			} else {
@@ -137,6 +186,7 @@ export const actions: Actions = {
 				await createDiaryEntry({
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			}
@@ -158,6 +208,7 @@ export const actions: Actions = {
 		const content = data.get("content")?.toString();
 		const dateStr = data.get("date")?.toString();
 		const id = data.get("id")?.toString();
+		const selectedEntitiesStr = data.get("selectedEntities")?.toString();
 
 		if (!content || !dateStr) {
 			return { error: "内容と日付は必須です" };
@@ -167,18 +218,54 @@ export const actions: Actions = {
 			const [year, month, day] = dateStr.split("-").map(Number);
 			const date = createYMD(year, month, day);
 
+			// 明示的に選択されたエンティティのみを使用
+			let diaryEntities: DiaryEntityInput[] = [];
+			if (selectedEntitiesStr && selectedEntitiesStr !== "[]") {
+				try {
+					const selectedEntities = JSON.parse(selectedEntitiesStr) as {
+						entityId: string;
+						positions: { start: number; end: number }[];
+					}[];
+
+					const { create } = await import("@bufbuild/protobuf");
+					const { DiaryEntityInputSchema } = await import(
+						"$lib/grpc/diary/diary_pb"
+					);
+					const { PositionSchema } = await import("$lib/grpc/entity/entity_pb");
+
+					diaryEntities = selectedEntities.map((se) => {
+						const positionMessages = se.positions.map((pos) =>
+							create(PositionSchema, {
+								start: pos.start,
+								end: pos.end,
+							}),
+						);
+
+						return create(DiaryEntityInputSchema, {
+							entityId: se.entityId,
+							positions: positionMessages,
+						});
+					});
+				} catch (parseErr) {
+					console.error("Failed to parse selectedEntities:", parseErr);
+					diaryEntities = [];
+				}
+			}
+
 			if (id) {
 				await updateDiaryEntry({
 					id,
 					title: "",
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			} else {
 				await createDiaryEntry({
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			}
@@ -200,6 +287,7 @@ export const actions: Actions = {
 		const content = data.get("content")?.toString();
 		const dateStr = data.get("date")?.toString();
 		const id = data.get("id")?.toString();
+		const selectedEntitiesStr = data.get("selectedEntities")?.toString();
 
 		if (!content || !dateStr) {
 			return { error: "内容と日付は必須です" };
@@ -209,18 +297,54 @@ export const actions: Actions = {
 			const [year, month, day] = dateStr.split("-").map(Number);
 			const date = createYMD(year, month, day);
 
+			// 明示的に選択されたエンティティのみを使用
+			let diaryEntities: DiaryEntityInput[] = [];
+			if (selectedEntitiesStr && selectedEntitiesStr !== "[]") {
+				try {
+					const selectedEntities = JSON.parse(selectedEntitiesStr) as {
+						entityId: string;
+						positions: { start: number; end: number }[];
+					}[];
+
+					const { create } = await import("@bufbuild/protobuf");
+					const { DiaryEntityInputSchema } = await import(
+						"$lib/grpc/diary/diary_pb"
+					);
+					const { PositionSchema } = await import("$lib/grpc/entity/entity_pb");
+
+					diaryEntities = selectedEntities.map((se) => {
+						const positionMessages = se.positions.map((pos) =>
+							create(PositionSchema, {
+								start: pos.start,
+								end: pos.end,
+							}),
+						);
+
+						return create(DiaryEntityInputSchema, {
+							entityId: se.entityId,
+							positions: positionMessages,
+						});
+					});
+				} catch (parseErr) {
+					console.error("Failed to parse selectedEntities:", parseErr);
+					diaryEntities = [];
+				}
+			}
+
 			if (id) {
 				await updateDiaryEntry({
 					id,
 					title: "",
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			} else {
 				await createDiaryEntry({
 					content,
 					date,
+					diaryEntities,
 					accessToken: authResult.accessToken,
 				});
 			}

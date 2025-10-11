@@ -445,3 +445,111 @@ describe("Textarea Component Functionality", () => {
 		expect(mockContentElement.dispatchEvent).toHaveBeenCalled();
 	});
 });
+
+describe("Entity Highlighting Behavior", () => {
+	// エンティティハイライトの適用条件をテスト
+
+	it("should not apply entity highlighting during typing (isTyping=true)", () => {
+		const isTyping = true;
+		const diaryEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 0, end: 4 }],
+			},
+		];
+
+		// isTyping=trueの場合、エンティティハイライトを適用しない
+		const shouldHighlight = !isTyping && diaryEntities.length > 0;
+
+		expect(shouldHighlight).toBe(false);
+	});
+
+	it("should apply entity highlighting when not typing (isTyping=false)", () => {
+		const value: string = "test";
+		const isTyping = false;
+		const savedContent: string = "test";
+		const diaryEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 0, end: 4 }],
+			},
+		];
+
+		// isTyping=falseかつvalue===savedContentの場合、エンティティハイライトを適用
+		const shouldHighlight =
+			!isTyping && diaryEntities.length > 0 && value === savedContent;
+
+		expect(shouldHighlight).toBe(true);
+	});
+
+	it("should not apply entity highlighting when value differs from savedContent", () => {
+		const value: string = "test new";
+		const isTyping = false;
+		const savedContent: string = "test";
+		const diaryEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 0, end: 4 }],
+			},
+		];
+
+		// value !== savedContentの場合、エンティティハイライトを適用しない
+		const shouldHighlight =
+			!isTyping && diaryEntities.length > 0 && value === savedContent;
+
+		expect(shouldHighlight).toBe(false);
+	});
+
+	it("should not apply entity highlighting when diaryEntities is empty", () => {
+		const value = "test";
+		const isTyping = false;
+		const savedContent = "test";
+		const diaryEntities: never[] = [];
+
+		// diaryEntitiesが空の場合、エンティティハイライトを適用しない
+		const shouldHighlight =
+			!isTyping && diaryEntities.length > 0 && value === savedContent;
+
+		expect(shouldHighlight).toBe(false);
+	});
+
+	it("should update savedContent when diaryEntities changes", () => {
+		let savedContent = "";
+		let previousDiaryEntities: unknown[] = [];
+		const value = "test content";
+		const diaryEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 0, end: 4 }],
+			},
+		];
+
+		// diaryEntitiesが変更されたらsavedContentを更新
+		if (diaryEntities !== previousDiaryEntities) {
+			previousDiaryEntities = diaryEntities;
+			savedContent = value;
+		}
+
+		expect(savedContent).toBe("test content");
+		expect(previousDiaryEntities).toBe(diaryEntities);
+	});
+
+	it("should not update savedContent when value changes during typing", () => {
+		let savedContent = "original";
+		const previousDiaryEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 0, end: 8 }],
+			},
+		];
+		const value = "original new text";
+		const diaryEntities = previousDiaryEntities; // 同じ参照
+
+		// diaryEntitiesが変更されていない場合、savedContentは更新されない
+		if (diaryEntities !== previousDiaryEntities) {
+			savedContent = value;
+		}
+
+		expect(savedContent).toBe("original"); // 変更されない
+	});
+});

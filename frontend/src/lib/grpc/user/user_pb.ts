@@ -644,11 +644,22 @@ export const MetricsSummarySchema: GenMessage<MetricsSummary> =
 	messageDesc(file_user_user, 21);
 
 /**
+ * UserService はユーザー設定とアカウント管理を提供するサービスです。
+ * ユーザー情報の更新、LLMキー管理、自動要約設定、Pub/Subメトリクス取得などの機能があります。
+ *
  * @generated from service user.UserService
  */
 export const UserService: GenService<{
 	/**
-	 * ユーザー名変更
+	 * UpdateUserName はユーザー名を変更します。
+	 *
+	 * 例:
+	 *   request: { new_name: "新しい名前" }
+	 *   response: { success: true, message: "ユーザー名を更新しました" }
+	 *
+	 * エラー:
+	 *   - InvalidArgument: 名前が空
+	 *   - Internal: データベースエラー
 	 *
 	 * @generated from rpc user.UserService.UpdateUserName
 	 */
@@ -658,7 +669,15 @@ export const UserService: GenService<{
 		output: typeof UpdateUserNameResponseSchema;
 	};
 	/**
-	 * パスワード変更
+	 * ChangePassword は現在のパスワードを検証して新しいパスワードに変更します。
+	 *
+	 * 例:
+	 *   request: { current_password: "old123", new_password: "new456" }
+	 *   response: { success: true, message: "パスワードを変更しました" }
+	 *
+	 * エラー:
+	 *   - Unauthenticated: 現在のパスワードが不正
+	 *   - InvalidArgument: 新しいパスワードが短すぎる
 	 *
 	 * @generated from rpc user.UserService.ChangePassword
 	 */
@@ -668,7 +687,15 @@ export const UserService: GenService<{
 		output: typeof ChangePasswordResponseSchema;
 	};
 	/**
-	 * LLMキー更新
+	 * UpdateLLMKey はLLM APIキーを更新または新規作成します。
+	 * 現在はGemini (llm_provider=1) のみ対応しています。
+	 *
+	 * 例:
+	 *   request: { llm_provider: 1, key: "AIza..." }
+	 *   response: { success: true, message: "LLMキーを更新しました" }
+	 *
+	 * エラー:
+	 *   - InvalidArgument: プロバイダーまたはキーが不正
 	 *
 	 * @generated from rpc user.UserService.UpdateLLMKey
 	 */
@@ -678,7 +705,14 @@ export const UserService: GenService<{
 		output: typeof UpdateLLMKeyResponseSchema;
 	};
 	/**
-	 * ユーザー情報取得
+	 * GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
+	 *
+	 * 例:
+	 *   request: {}
+	 *   response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
+	 *
+	 * エラー:
+	 *   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	 *
 	 * @generated from rpc user.UserService.GetUserInfo
 	 */
@@ -688,7 +722,14 @@ export const UserService: GenService<{
 		output: typeof GetUserInfoResponseSchema;
 	};
 	/**
-	 * LLMキー削除
+	 * DeleteLLMKey は指定されたLLM APIキーを削除します。
+	 *
+	 * 例:
+	 *   request: { llm_provider: 1 }
+	 *   response: { success: true, message: "LLMキーを削除しました" }
+	 *
+	 * エラー:
+	 *   - NotFound: 指定されたプロバイダーのキーが存在しない
 	 *
 	 * @generated from rpc user.UserService.DeleteLLMKey
 	 */
@@ -698,7 +739,15 @@ export const UserService: GenService<{
 		output: typeof DeleteLLMKeyResponseSchema;
 	};
 	/**
-	 * アカウント削除
+	 * DeleteAccount はユーザーアカウントと関連データを完全に削除します。
+	 * 日記、エンティティ、要約など全てのデータがカスケード削除されます。
+	 *
+	 * 例:
+	 *   request: {}
+	 *   response: { success: true, message: "アカウントを削除しました" }
+	 *
+	 * エラー:
+	 *   - Internal: 削除処理エラー
 	 *
 	 * @generated from rpc user.UserService.DeleteAccount
 	 */
@@ -708,7 +757,15 @@ export const UserService: GenService<{
 		output: typeof DeleteAccountResponseSchema;
 	};
 	/**
-	 * 自動要約設定更新
+	 * UpdateAutoSummarySettings は自動要約生成の設定を更新します。
+	 * 日次要約と月次要約をそれぞれ有効/無効にできます。
+	 *
+	 * 例:
+	 *   request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
+	 *   response: { success: true, message: "自動要約設定を更新しました" }
+	 *
+	 * エラー:
+	 *   - NotFound: LLMキーが設定されていない
 	 *
 	 * @generated from rpc user.UserService.UpdateAutoSummarySettings
 	 */
@@ -718,7 +775,14 @@ export const UserService: GenService<{
 		output: typeof UpdateAutoSummarySettingsResponseSchema;
 	};
 	/**
-	 * 自動要約設定取得
+	 * GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
+	 *
+	 * 例:
+	 *   request: { llm_provider: 1 }
+	 *   response: { auto_summary_daily: true, auto_summary_monthly: false }
+	 *
+	 * エラー:
+	 *   - NotFound: LLMキーが設定されていない
 	 *
 	 * @generated from rpc user.UserService.GetAutoSummarySettings
 	 */
@@ -728,7 +792,14 @@ export const UserService: GenService<{
 		output: typeof GetAutoSummarySettingsResponseSchema;
 	};
 	/**
-	 * Pub/Sub処理状況メトリクス取得
+	 * GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
+	 * 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
+	 *
+	 * 例:
+	 *   request: {}
+	 *   response: { hourly_metrics: [...], processing_tasks: [...], summary: { total_daily_summaries: 10, ... } }
+	 *
+	 * エラー: なし（データがない場合は空配列）
 	 *
 	 * @generated from rpc user.UserService.GetPubSubMetrics
 	 */

@@ -7,6 +7,7 @@ import { onMount } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
 import type {
 	DiaryEntry,
+	DiaryEntityOutput,
 	GetDiaryEntriesByMonthResponse,
 	YMD,
 } from "$lib/grpc/diary/diary_pb";
@@ -33,6 +34,7 @@ interface SerializedDiaryEntry {
 	content: string;
 	createdAt: number;
 	updatedAt: number;
+	diaryEntities?: DiaryEntityOutput[];
 }
 
 interface SerializedGetDiaryEntriesByMonthResponse {
@@ -306,6 +308,7 @@ $: entryMap = (() => {
 						day: entry.date.day,
 						$typeName: "diary.YMD" as const,
 					} as YMD,
+					diaryEntities: entry.diaryEntities || [],
 					$typeName: "diary.DiaryEntry" as const,
 				};
 				map.set(entry.date.day, compatibleEntry);

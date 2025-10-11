@@ -4,6 +4,7 @@ import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 import type { DateInfo } from "$lib/utils/date-utils";
 import { formatDateToId } from "$lib/utils/date-utils";
 import Link from "../atoms/Link.svelte";
+import { highlightEntities } from "$lib/utils/diary-entity-highlighter";
 
 export let pastEntries: {
 	oneWeekAgo: { date: DateInfo; entry: DiaryEntry | null };
@@ -106,7 +107,11 @@ function _getEntryTitle(entry: DiaryEntry | null): string {
 
 	// 最初の30文字を取得してタイトルとする
 	const firstLine = entry.content.split("\n")[0];
-	return firstLine.length > 30 ? `${firstLine.substring(0, 30)}...` : firstLine;
+	const truncated =
+		firstLine.length > 30 ? `${firstLine.substring(0, 30)}...` : firstLine;
+
+	// エンティティハイライトを適用
+	return highlightEntities(truncated, entry.diaryEntities || []);
 }
 </script>
 
@@ -131,7 +136,7 @@ function _getEntryTitle(entry: DiaryEntry | null): string {
 						</div>
 						<div class="text-sm text-gray-800 dark:text-gray-200">
 							<Link href="/{formatDateToId(pastEntry.date)}" class="text-blue-600 hover:text-blue-800">
-								{_getEntryTitle(pastEntry.entry)}
+								{@html _getEntryTitle(pastEntry.entry)}
 							</Link>
 						</div>
 					</div>

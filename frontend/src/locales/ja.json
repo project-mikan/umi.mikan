@@ -311,6 +311,7 @@
 		"home": "トップ",
 		"monthly": "カレンダー",
 		"search": "検索",
+		"entities": "人物",
 		"settings": "設定"
 	},
 	"page": {
@@ -361,5 +362,59 @@
 	"budoux": {
 		"toggle": "BudouX切り替え",
 		"description": "日本語の改行分節区切りモード。これを使用すると日本語での改行が自然な単位で改行されるようになります"
+	},
+	"entity": {
+		"title": "人物管理",
+		"description": "日記に登場する人物や場所などを登録・管理できます。登録した人物は日記本文内で自動的にハイライト表示され、そのひとが登場する日記を簡単に探すことができます。",
+		"list": {
+			"title": "人物一覧",
+			"empty": "人物が登録されていません",
+			"create": "新規作成",
+			"category": {
+				"all": "すべて",
+				"people": "人物",
+				"noCategory": "未分類"
+			}
+		},
+		"detail": {
+			"title": "人物詳細",
+			"name": "名前",
+			"category": "カテゴリ",
+			"memo": "メモ",
+			"aliases": "他のよびかた",
+			"addAlias": "他のよびかたを追加",
+			"deleteAlias": "削除",
+			"linkedDiaries": "紐づく日記",
+			"noDiaries": "紐づく日記がありません",
+			"update": "更新",
+			"delete": "削除",
+			"deleteConfirm": "人物を削除",
+			"deleteMessage": "この人物を削除してもよろしいですか？関連する日記の紐付けも削除されます。(日記は消えません)",
+			"deleteAliasConfirm": "他のよびかたを削除",
+			"deleteAliasMessage": "このよびかたを削除してもよろしいですか?"
+		},
+		"create": {
+			"title": "人物作成",
+			"name": "名前",
+			"namePlaceholder": "人物名を入力",
+			"category": "カテゴリ",
+			"memo": "メモ",
+			"memoPlaceholder": "メモを入力（任意）",
+			"submit": "作成"
+		},
+		"messages": {
+			"createSuccess": "人物を作成しました",
+			"updateSuccess": "人物を更新しました",
+			"deleteSuccess": "人物を削除しました",
+			"aliasCreateSuccess": "別名を追加しました",
+			"aliasUpdateSuccess": "別名を更新しました",
+			"aliasDeleteSuccess": "別名を削除しました",
+			"nameRequired": "名前は必須です",
+			"duplicateName": "同じ名前の人物が既に存在します",
+			"nameUsedAsAlias": "その名前は既に別名として使用されています",
+			"aliasUsedAsName": "その別名は既に人物名として使用されています",
+			"aliasAlreadyExists": "その別名は既に使用されています",
+			"error": "エラーが発生しました"
+		}
 	}
 }

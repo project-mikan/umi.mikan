@@ -311,6 +311,7 @@
 		"home": "Home",
 		"monthly": "Calendar",
 		"search": "Search",
+		"entities": "Entities",
 		"settings": "Settings"
 	},
 	"page": {
@@ -361,5 +362,59 @@
 	"budoux": {
 		"toggle": "Toggle BudouX",
 		"description": "Japanese line break segmentation mode. When enabled, Japanese text will break naturally at appropriate points"
+	},
+	"entity": {
+		"title": "Entity Management",
+		"description": "Register and manage people, places, and other entities that appear in your diary. Registered entities are automatically highlighted in diary entries, making it easy to find entries where they appear.",
+		"list": {
+			"title": "Entity List",
+			"empty": "No entities registered",
+			"create": "Create New",
+			"category": {
+				"all": "All",
+				"people": "People",
+				"noCategory": "Uncategorized"
+			}
+		},
+		"detail": {
+			"title": "Entity Details",
+			"name": "Name",
+			"category": "Category",
+			"memo": "Memo",
+			"aliases": "Aliases",
+			"addAlias": "Add Alias",
+			"deleteAlias": "Delete",
+			"linkedDiaries": "Linked Diaries",
+			"noDiaries": "No linked diaries",
+			"update": "Update",
+			"delete": "Delete",
+			"deleteConfirm": "Delete Entity",
+			"deleteMessage": "Are you sure you want to delete this entity? Related diary associations will also be deleted.",
+			"deleteAliasConfirm": "Delete Alias",
+			"deleteAliasMessage": "Are you sure you want to delete this alias?"
+		},
+		"create": {
+			"title": "Create Entity",
+			"name": "Name",
+			"namePlaceholder": "Enter entity name",
+			"category": "Category",
+			"memo": "Memo",
+			"memoPlaceholder": "Enter memo (optional)",
+			"submit": "Create"
+		},
+		"messages": {
+			"createSuccess": "Entity created successfully",
+			"updateSuccess": "Entity updated successfully",
+			"deleteSuccess": "Entity deleted successfully",
+			"aliasCreateSuccess": "Alias added successfully",
+			"aliasUpdateSuccess": "Alias updated successfully",
+			"aliasDeleteSuccess": "Alias deleted successfully",
+			"nameRequired": "Name is required",
+			"duplicateName": "An entity with the same name already exists",
+			"nameUsedAsAlias": "That name is already used as an alias",
+			"aliasUsedAsName": "That alias is already used as an entity name",
+			"aliasAlreadyExists": "That alias is already used",
+			"error": "An error occurred"
+		}
 	}
 }
