@@ -315,42 +315,50 @@ async function _handleInput(event: Event) {
 		lastSelectedEntityText = ""; // リセット
 	}
 
-	// カーソル位置から後方に向かって、全てのエンティティとマッチするかチェック
-	// 最長一致を優先する
-	let bestMatch: { word: string; startPos: number } | null = null;
+	// searchTextが空の場合は候補を表示しない
+	// （改行直後や、何も入力していない状態では候補を出さない）
+	if (searchText.length === 0) {
+		showSuggestions = false;
+		currentQuery = "";
+		currentTriggerPos = -1;
+	} else {
+		// カーソル位置から後方に向かって、全てのエンティティとマッチするかチェック
+		// 最長一致を優先する
+		let bestMatch: { word: string; startPos: number } | null = null;
 
-	// 後方から2文字以上の部分文字列を試す
-	for (let len = searchText.length; len >= 2; len--) {
-		const substring = searchText.substring(searchText.length - len);
+		// 後方から2文字以上の部分文字列を試す
+		for (let len = searchText.length; len >= 2; len--) {
+			const substring = searchText.substring(searchText.length - len);
 
-		// このsubstringで始まるエンティティがあるかチェック
-		const hasMatch = allFlatEntities.some((flat) =>
-			flat.text.toLowerCase().startsWith(substring.toLowerCase()),
-		);
+			// このsubstringで始まるエンティティがあるかチェック
+			const hasMatch = allFlatEntities.some((flat) =>
+				flat.text.toLowerCase().startsWith(substring.toLowerCase()),
+			);
 
-		if (hasMatch) {
-			bestMatch = {
-				word: substring,
-				startPos: cursorPos - len,
-			};
-			break; // 最長一致が見つかったので終了
+			if (hasMatch) {
+				bestMatch = {
+					word: substring,
+					startPos: cursorPos - len,
+				};
+				break; // 最長一致が見つかったので終了
+			}
 		}
-	}
 
-	if (bestMatch) {
-		currentTriggerPos = bestMatch.startPos;
-		currentQuery = bestMatch.word;
-		await searchForSuggestions(bestMatch.word);
-		if (!showSuggestions || flatSuggestions.length === 0) {
+		if (bestMatch) {
+			currentTriggerPos = bestMatch.startPos;
+			currentQuery = bestMatch.word;
+			await searchForSuggestions(bestMatch.word);
+			if (!showSuggestions || flatSuggestions.length === 0) {
+				showSuggestions = false;
+				currentQuery = "";
+				currentTriggerPos = -1;
+			}
+		} else {
+			// エンティティ候補がない場合は候補を閉じる
 			showSuggestions = false;
 			currentQuery = "";
 			currentTriggerPos = -1;
 		}
-	} else {
-		// エンティティ候補がない場合は候補を閉じる
-		showSuggestions = false;
-		currentQuery = "";
-		currentTriggerPos = -1;
 	}
 
 	if (showSuggestions) {
@@ -373,7 +381,29 @@ function getTextOffset(root: Node, node: Node, offset: number): number {
 
 	function traverse(currentNode: Node): number | null {
 		if (currentNode === node) {
-			return textOffset + offset;
+			// ノードが見つかった場合の処理
+			if (currentNode.nodeType === Node.TEXT_NODE) {
+				// テキストノードの場合、offsetはそのまま文字オフセット
+				return textOffset + offset;
+			} else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+				// 要素ノードの場合、offsetは子ノードのインデックス
+				// 子ノードのインデックスまでのテキスト長を計算
+				const children = Array.from(currentNode.childNodes);
+				for (let i = 0; i < Math.min(offset, children.length); i++) {
+					const child = children[i];
+					if (child.nodeType === Node.TEXT_NODE) {
+						textOffset += child.textContent?.length || 0;
+					} else if (child.nodeType === Node.ELEMENT_NODE) {
+						if (child.nodeName === "BR") {
+							textOffset += 1;
+						} else {
+							// 子要素の全テキストを再帰的にカウント
+							textOffset += getTextLength(child);
+						}
+					}
+				}
+				return textOffset;
+			}
 		}
 
 		if (currentNode.nodeType === Node.TEXT_NODE) {
@@ -390,6 +420,23 @@ function getTextOffset(root: Node, node: Node, offset: number): number {
 		}
 
 		return null;
+	}
+
+	// ノードの全テキスト長を取得する補助関数
+	function getTextLength(node: Node): number {
+		if (node.nodeType === Node.TEXT_NODE) {
+			return node.textContent?.length || 0;
+		} else if (node.nodeType === Node.ELEMENT_NODE) {
+			if (node.nodeName === "BR") {
+				return 1;
+			}
+			let length = 0;
+			for (const child of Array.from(node.childNodes)) {
+				length += getTextLength(child);
+			}
+			return length;
+		}
+		return 0;
 	}
 
 	const result = traverse(root);
