@@ -119,11 +119,41 @@ jsonカラムを作り位置とentityの対応付けを記録
 - `searchText.length === 0`の場合、候補を非表示にする
 - これにより、改行直後（カーソルの前がすべて改行）や入力開始前に候補が表示されなくなる
 
+#### 明示的選択のみ登録（2025-10-11追加）
+
+**問題**: 従来は`extractEntitiesFromContent`関数がテキスト内の全ての一致文字列を自動的にエンティティとして登録していた。これにより、ユーザーが候補を選択していない場合でも完全一致する文字列があれば自動登録されてしまう問題があった。
+
+**解決策**: エンティティは明示的に選択した場合のみ登録されるように変更
+
+**実装**:
+
+1. **フロントエンド**:
+   - Textareaコンポーネントで`selectedEntities`配列を管理
+   - エンティティ候補を明示的に選択（Enter/Click）した時のみ`selectedEntities`に追加
+   - テキスト編集時は`selectedEntities`をクリア（エンティティ選択直後を除く）
+   - フォーム送信時に`selectedEntities`をJSON形式でhidden inputとして送信
+
+2. **バックエンド**:
+   - `extractEntitiesFromContent`関数の使用を廃止
+   - フロントエンドから送信された`selectedEntities`を直接使用
+   - `DiaryEntityInput`形式に変換して保存
+
+**対象ファイル**:
+
+- `frontend/src/lib/components/atoms/Textarea.svelte`: selectedEntities管理
+- `frontend/src/lib/components/molecules/FormField.svelte`: selectedEntities伝播
+- `frontend/src/routes/[id]/+page.svelte`: selectedEntitiesバインディング
+- `frontend/src/routes/[id]/+page.server.ts`: selectedEntitiesからDiaryEntityInput変換
+- `frontend/src/routes/+page.svelte`: トップページの3フォーム対応
+- `frontend/src/routes/+page.server.ts`: トップページの3アクション対応
+
 #### 実装ファイル
 
 - `frontend/src/lib/components/atoms/Textarea.svelte`
-  - 後方substring一致検索: lines 318-362
-  - 確定後エンティティ除外ロジック: lines 301-316
-  - 空入力チェック: lines 318-323
-  - エンティティ確定時フラグ設定: lines 364-366
-  - カーソル位置計算関数(`getTextOffset`): lines 378-444
+  - selectedEntities管理とエンティティ選択時の追加
+  - 後方substring一致検索
+  - 確定後エンティティ除外ロジック
+  - 空入力チェック
+  - テキスト編集時のselectedEntitiesクリア
+  - カーソル位置計算関数(`getTextOffset`)
+  - カーソル位置設定関数(`createRangeAtTextOffset`)

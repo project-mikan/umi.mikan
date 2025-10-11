@@ -9,11 +9,19 @@ import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { DiaryEntityInput } from "$lib/grpc/diary/diary_pb";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ cookies, setHeaders }) => {
+export const load: PageServerLoad = async ({
+	cookies,
+	setHeaders,
+	depends,
+}) => {
 	// キャッシュを無効化して常に最新のデータを取得
 	setHeaders({
 		"cache-control": "no-store, no-cache, must-revalidate, max-age=0",
 	});
+
+	// 明示的な依存関係を設定してinvalidateAll()で確実に再読み込み
+	depends("diary:home");
+
 	const authResult = await ensureValidAccessToken(cookies);
 
 	if (!authResult.isAuthenticated || !authResult.accessToken) {
