@@ -1,5 +1,5 @@
 <script lang="ts">
-import { createEventDispatcher, onMount, onDestroy } from "svelte";
+import { createEventDispatcher, onMount, onDestroy, tick } from "svelte";
 import EntitySuggestions from "../molecules/EntitySuggestions.svelte";
 import type { Entity } from "$lib/grpc/entity/entity_pb";
 import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
@@ -13,6 +13,13 @@ export let id = "";
 export let name = "";
 export let rows = 4;
 export let diaryEntities: DiaryEntityOutput[] = [];
+
+// 明示的に選択されたエンティティの情報を格納
+// { entityId: string, positions: { start: number, end: number }[] }[] の形式
+export let selectedEntities: {
+	entityId: string;
+	positions: { start: number; end: number }[];
+}[] = [];
 
 // エンティティハイライトを適用すべき元のコンテンツ
 // （保存されたコンテンツとdiaryEntitiesのpositionsが対応している）
@@ -33,6 +40,7 @@ let currentQuery = ""; // 現在の検索クエリ
 let suggestionsComponent: EntitySuggestions;
 let justSelectedEntity = false; // エンティティを確定した直後かどうか
 let lastSelectedEntityText = ""; // 最後に確定したエンティティ名
+let isSelectingEntity = false; // エンティティ選択処理中かどうか（reactive statementからの上書きを防ぐ）
 
 // 全エンティティデータをキャッシュ（ページロード時に取得）
 let allEntities: Entity[] = [];
@@ -43,6 +51,58 @@ let isUpdatingFromValue = false; // valueからの更新中かどうかのフラ
 let isComposing = false; // IME入力中かどうかのフラグ
 let updateTimeout: ReturnType<typeof setTimeout> | null = null; // エンティティハイライト更新のタイムアウト
 let isTyping = false; // ユーザーが入力中かどうかのフラグ
+
+// diaryEntitiesからselectedEntitiesを初期化
+// diaryEntitiesが変更されたら（ページロード時、または日記が再取得された時）
+// ただし、ユーザーが入力中（isTyping）またはエンティティ選択中（isSelectingEntity）の場合は更新しない
+$: {
+	if (
+		diaryEntities &&
+		diaryEntities.length > 0 &&
+		!isTyping &&
+		!isSelectingEntity
+	) {
+		// diaryEntitiesからselectedEntitiesを生成
+		const entitiesFromDiary = diaryEntities
+			.map((de) => ({
+				entityId: de.entityId,
+				positions: de.positions.map((pos) => ({
+					start: pos.start,
+					end: pos.end,
+				})),
+			}))
+			.filter((e) => e.entityId !== "");
+
+		// selectedEntitiesが空の場合は無条件で更新
+		if (selectedEntities.length === 0) {
+			selectedEntities = entitiesFromDiary;
+		} else {
+			// selectedEntitiesに既にデータがある場合、diaryEntitiesと比較
+			// diaryEntitiesの方が新しいデータ（より多くのposition）を持っている場合のみ更新
+			const selectedStr = JSON.stringify(selectedEntities);
+			const diaryStr = JSON.stringify(entitiesFromDiary);
+
+			// 完全一致しない場合のみチェック
+			if (selectedStr !== diaryStr) {
+				// selectedEntitiesの方がpositionが多い場合は、ユーザーが新しく追加した可能性があるので上書きしない
+				const selectedTotalPositions = selectedEntities.reduce(
+					(sum, e) => sum + e.positions.length,
+					0,
+				);
+				const diaryTotalPositions = entitiesFromDiary.reduce(
+					(sum, e) => sum + e.positions.length,
+					0,
+				);
+
+				if (diaryTotalPositions > selectedTotalPositions) {
+					selectedEntities = entitiesFromDiary;
+				}
+			}
+		}
+	}
+	// diaryEntitiesが空の場合は何もしない
+	// （ユーザーが新しくentityを選択している可能性があるため、クリアしない）
+}
 
 // diaryEntitiesが外部から変更されたら、保存されたコンテンツを更新
 $: if (diaryEntities !== previousDiaryEntities) {
@@ -475,9 +535,15 @@ async function searchForSuggestions(query: string) {
 
 		// まず、前方一致するエンティティを特定
 		const matchingEntityIds = new Set<string>();
+		let exactMatch: FlatSuggestion | null = null;
+
 		for (const flat of allFlatEntities) {
 			if (flat.text.toLowerCase().startsWith(lowerQuery)) {
 				matchingEntityIds.add(flat.entity.id);
+				// 完全一致を検出
+				if (flat.text.toLowerCase() === lowerQuery) {
+					exactMatch = flat;
+				}
 			}
 		}
 
@@ -491,6 +557,9 @@ async function searchForSuggestions(query: string) {
 		if (showSuggestions) {
 			selectedSuggestionIndex = getBestFlatMatchIndex(query, flatSuggestions);
 		}
+
+		// 完全一致の場合は、自動的に選択（EnterまたはClickで確定待ち）
+		// ここでは候補を表示するだけで、ユーザーの明示的な選択を待つ
 	} catch (err) {
 		console.error("Failed to search entities:", err);
 		flatSuggestions = [];
@@ -649,8 +718,11 @@ function _handleKeydown(event: KeyboardEvent) {
 }
 
 // 候補選択
-function selectSuggestion(entity: Entity, selectedText?: string) {
+async function selectSuggestion(entity: Entity, selectedText?: string) {
 	if (currentTriggerPos === -1) return;
+
+	// エンティティ選択中フラグを立てる（reactive statementからの上書きを防ぐ）
+	isSelectingEntity = true;
 
 	// contentElementの最新の内容からvalueを更新
 	value = htmlToPlainText(contentElement.innerHTML);
@@ -696,6 +768,36 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 	// currentTriggerPosからcursorPosまでの文字列を選択されたテキストに置き換え
 	value = `${beforeTrigger}${textToInsert}${afterCursor}`;
 
+	// 選択されたエンティティの位置情報を記録
+	const newPosition = {
+		start: currentTriggerPos,
+		end: currentTriggerPos + textToInsert.length,
+	};
+
+	// 既存のselectedEntitiesから同じentityIdのものを探す
+	const existingEntityIndex = selectedEntities.findIndex(
+		(e) => e.entityId === entity.id,
+	);
+
+	if (existingEntityIndex >= 0) {
+		// 既に存在する場合は、positionsに追加
+		// Svelteのreactivityのために新しい配列を作成
+		selectedEntities = selectedEntities.map((e, idx) =>
+			idx === existingEntityIndex
+				? { ...e, positions: [...e.positions, newPosition] }
+				: e,
+		);
+	} else {
+		// 新しいentityの場合は追加
+		selectedEntities = [
+			...selectedEntities,
+			{
+				entityId: entity.id,
+				positions: [newPosition],
+			},
+		];
+	}
+
 	showSuggestions = false;
 	selectedSuggestionIndex = -1;
 	currentTriggerPos = -1;
@@ -711,6 +813,13 @@ function selectSuggestion(entity: Entity, selectedText?: string) {
 
 	// 入力中フラグを下ろす
 	isTyping = false;
+
+	// 次のティック（reactive statements実行後）まで待つ
+	await tick();
+
+	// エンティティ選択完了フラグを下ろす
+	// tick()後に実行することで、selectedEntitiesの更新後に reactive statement が実行される
+	isSelectingEntity = false;
 
 	// contentEditableの内容を更新してフォーカスを戻す
 	setTimeout(() => {

@@ -11,11 +11,14 @@ import { unixToMilliseconds } from "$lib/utils/token-utils";
 import { getUserInfo } from "$lib/server/auth-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
-import { extractEntitiesFromContent } from "$lib/server/entity-extraction";
-import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+import type { DiaryEntry, DiaryEntityInput } from "$lib/grpc/diary/diary_pb";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
+export const load: PageServerLoad = async ({ params, cookies, setHeaders }) => {
+	// キャッシュを無効化して常に最新のデータを取得
+	setHeaders({
+		"cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+	});
 	const authResult = await ensureValidAccessToken(cookies);
 
 	if (!authResult.isAuthenticated || !authResult.accessToken) {
@@ -265,6 +268,7 @@ export const actions: Actions = {
 		const content = data.get("content") as string;
 		const id = data.get("id") as string;
 		const dateStr = data.get("date") as string;
+		const selectedEntitiesStr = data.get("selectedEntities") as string;
 
 		if (!content || !dateStr) {
 			return {
@@ -287,11 +291,42 @@ export const actions: Actions = {
 				Number.parseInt(day, 10),
 			);
 
-			// contentからentityを抽出
-			const diaryEntities = await extractEntitiesFromContent(
-				content,
-				authResult.accessToken,
-			);
+			// 明示的に選択されたエンティティのみを使用
+			// selectedEntitiesStrが空または無効な場合は空配列
+			let diaryEntities: DiaryEntityInput[] = [];
+			if (selectedEntitiesStr && selectedEntitiesStr !== "[]") {
+				try {
+					const selectedEntities = JSON.parse(selectedEntitiesStr) as {
+						entityId: string;
+						positions: { start: number; end: number }[];
+					}[];
+
+					// selectedEntitiesをDiaryEntityInput形式に変換
+					const { create } = await import("@bufbuild/protobuf");
+					const { DiaryEntityInputSchema } = await import(
+						"$lib/grpc/diary/diary_pb"
+					);
+					const { PositionSchema } = await import("$lib/grpc/entity/entity_pb");
+
+					diaryEntities = selectedEntities.map((se) => {
+						const positionMessages = se.positions.map((pos) =>
+							create(PositionSchema, {
+								start: pos.start,
+								end: pos.end,
+							}),
+						);
+
+						return create(DiaryEntityInputSchema, {
+							entityId: se.entityId,
+							positions: positionMessages,
+						});
+					});
+				} catch (parseErr) {
+					console.error("Failed to parse selectedEntities:", parseErr);
+					// パースに失敗した場合は空配列を使用
+					diaryEntities = [];
+				}
+			}
 
 			if (id) {
 				// Update existing entry

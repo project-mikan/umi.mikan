@@ -47,6 +47,10 @@ let formElement: HTMLFormElement;
 let _showDeleteConfirm = false;
 let loading = false;
 let saved = false;
+let selectedEntities: {
+	entityId: string;
+	positions: { start: number; end: number }[];
+}[] = [];
 let summary: {
 	id: string;
 	diaryId: string;
@@ -280,6 +284,7 @@ use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 				{#if data.entry}
 					<input type="hidden" name="id" value={data.entry.id} />
 				{/if}
+				<input type="hidden" name="selectedEntities" value={JSON.stringify(selectedEntities)} />
 				<FormField
 					type="textarea"
 					label=""
@@ -289,6 +294,7 @@ use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 					rows={8}
 					diaryEntities={data.entry?.diaryEntities || []}
 					bind:value={content}
+					bind:selectedEntities
 					on:save={_handleSave}
 				/>
 				{#if form?.error}

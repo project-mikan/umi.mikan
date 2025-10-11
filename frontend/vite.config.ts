@@ -22,18 +22,6 @@ export default defineConfig({
 				globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
 				runtimeCaching: [
 					{
-						urlPattern: ({ url }) => {
-							// SvelteKit API routesをキャッシュ対象とする
-							return url.pathname.startsWith("/api/");
-						},
-						handler: "NetworkFirst",
-						options: {
-							cacheName: "api-cache",
-							cacheableResponse: { statuses: [0, 200] },
-							networkTimeoutSeconds: 10,
-						},
-					},
-					{
 						// SvelteKitのナビゲーションリクエスト(HTMLページ)をキャッシュ
 						urlPattern: ({ request }) => request.mode === "navigate",
 						handler: "NetworkFirst",

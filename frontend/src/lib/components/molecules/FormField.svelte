@@ -19,6 +19,12 @@ export let rows = 4;
 export let srOnlyLabel = false;
 export let diaryEntities: DiaryEntityOutput[] = [];
 
+// 明示的に選択されたエンティティの情報
+export let selectedEntities: {
+	entityId: string;
+	positions: { start: number; end: number }[];
+}[] = [];
+
 const dispatch = createEventDispatcher();
 </script>
 
@@ -37,6 +43,7 @@ const dispatch = createEventDispatcher();
 			{rows}
 			{diaryEntities}
 			bind:value
+			bind:selectedEntities
 			on:save={() => dispatch('save')}
 		/>
 	{:else}
