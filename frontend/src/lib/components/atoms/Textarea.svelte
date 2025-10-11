@@ -298,36 +298,50 @@ async function _handleInput(event: Event) {
 			? beforeCursor.substring(lastNewlineIndex + 1)
 			: beforeCursor;
 
-	// 最後の改行以降のテキストから、最後の単語を検索
-	// 空白、句読点、助詞で区切られた単語を抽出
-	// エンティティ名には様々な文字が含まれる可能性があるため、
-	// 区切り文字は最小限にする（ただし、よく使われる助詞は含める）
-	const entityMatch = textAfterLastNewline.match(/([^\s。、！？,.!?はがのにをへとでや]+)$/);
-	if (entityMatch && entityMatch[1].length > 0) {
-		let word = entityMatch[1];
-
-		// エンティティ確定直後の場合、確定したエンティティ名の部分を除外
-		if (justSelectedEntity && lastSelectedEntityText) {
-			// 確定したエンティティ名を除去
-			// 例: "natori" を確定後 "natorina" となった場合、"na" のみを検索
-			if (word.startsWith(lastSelectedEntityText)) {
-				word = word.substring(lastSelectedEntityText.length);
-			}
-			justSelectedEntity = false; // フラグをリセット
-			lastSelectedEntityText = ""; // リセット
+	// エンティティ確定直後の場合、確定したエンティティ名の部分を除外
+	let searchText = textAfterLastNewline;
+	if (justSelectedEntity && lastSelectedEntityText) {
+		// 確定したエンティティ名を除去
+		// 例: "natori" を確定後 "natorina" となった場合、"na" のみを検索
+		if (searchText.endsWith(lastSelectedEntityText)) {
+			searchText = searchText.substring(
+				0,
+				searchText.length - lastSelectedEntityText.length,
+			);
+		} else if (searchText.startsWith(lastSelectedEntityText)) {
+			searchText = searchText.substring(lastSelectedEntityText.length);
 		}
+		justSelectedEntity = false; // フラグをリセット
+		lastSelectedEntityText = ""; // リセット
+	}
 
-		// 2文字以上の場合のみ候補を検索
-		if (word.length >= 2) {
-			currentTriggerPos = cursorPos - word.length;
-			currentQuery = word;
-			await searchForSuggestions(word);
-			if (!showSuggestions || flatSuggestions.length === 0) {
-				showSuggestions = false;
-				currentQuery = "";
-				currentTriggerPos = -1;
-			}
-		} else {
+	// カーソル位置から後方に向かって、全てのエンティティとマッチするかチェック
+	// 最長一致を優先する
+	let bestMatch: { word: string; startPos: number } | null = null;
+
+	// 後方から2文字以上の部分文字列を試す
+	for (let len = searchText.length; len >= 2; len--) {
+		const substring = searchText.substring(searchText.length - len);
+
+		// このsubstringで始まるエンティティがあるかチェック
+		const hasMatch = allFlatEntities.some((flat) =>
+			flat.text.toLowerCase().startsWith(substring.toLowerCase()),
+		);
+
+		if (hasMatch) {
+			bestMatch = {
+				word: substring,
+				startPos: cursorPos - len,
+			};
+			break; // 最長一致が見つかったので終了
+		}
+	}
+
+	if (bestMatch) {
+		currentTriggerPos = bestMatch.startPos;
+		currentQuery = bestMatch.word;
+		await searchForSuggestions(bestMatch.word);
+		if (!showSuggestions || flatSuggestions.length === 0) {
 			showSuggestions = false;
 			currentQuery = "";
 			currentTriggerPos = -1;
