@@ -158,8 +158,11 @@ onMount(async () => {
 	// 全エンティティデータを事前取得
 	await loadAllEntities();
 
-	// entity更新イベントをリッスン
-	window.addEventListener("entityUpdated", handleEntityUpdated);
+	// ブラウザ環境でのみイベントリスナーを追加
+	if (typeof window !== "undefined") {
+		// entity更新イベントをリッスン
+		window.addEventListener("entityUpdated", handleEntityUpdated);
+	}
 
 	if (contentElement) {
 		// captureフェーズで追加してTabキーを早期にキャプチャ
@@ -173,8 +176,11 @@ onDestroy(() => {
 	if (contentElement) {
 		contentElement.removeEventListener("keydown", _handleKeydown, true);
 	}
-	// entity更新イベントリスナーを削除
-	window.removeEventListener("entityUpdated", handleEntityUpdated);
+	// ブラウザ環境でのみイベントリスナーを削除
+	if (typeof window !== "undefined") {
+		// entity更新イベントリスナーを削除
+		window.removeEventListener("entityUpdated", handleEntityUpdated);
+	}
 });
 
 // entity更新イベントハンドラー
@@ -206,6 +212,8 @@ $: if (
 
 function updateContentElement() {
 	if (!contentElement) return;
+	// SSR時は何もしない
+	if (typeof window === "undefined") return;
 
 	// 現在のカーソル位置を取得
 	const selection = window.getSelection();
@@ -231,6 +239,8 @@ function updateContentElement() {
 
 function restoreCursorPosition(targetPos: number) {
 	if (!contentElement) return;
+	// SSR時は何もしない
+	if (typeof window === "undefined") return;
 
 	const selection = window.getSelection();
 	if (!selection) return;
@@ -288,6 +298,11 @@ function restoreCursorPosition(targetPos: number) {
 }
 
 function htmlToPlainText(html: string): string {
+	// SSR時は何もせずそのまま返す
+	if (typeof document === "undefined") {
+		return html.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+	}
+
 	// Create a temporary div to process HTML
 	const tempDiv = document.createElement("div");
 	tempDiv.innerHTML = html;
