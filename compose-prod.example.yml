@@ -176,8 +176,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    profiles:
-      - dev-tools
     networks:
       - internal
 

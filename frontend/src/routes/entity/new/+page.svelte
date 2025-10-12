@@ -2,6 +2,7 @@
 import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import "$lib/i18n";
+import { notifyEntityUpdated } from "$lib/utils/entity-events";
 import type { ActionData } from "./$types";
 
 export let form: ActionData;
@@ -54,9 +55,13 @@ let isSubmitting = false;
 		action="?/create"
 		use:enhance={() => {
 			isSubmitting = true;
-			return async ({ update }) => {
+			return async ({ update, result }) => {
 				await update();
 				isSubmitting = false;
+				// リダイレクトが成功した場合（entity作成成功）、イベントを発火
+				if (result.type === "redirect") {
+					notifyEntityUpdated();
+				}
 			};
 		}}
 		class="space-y-6"
