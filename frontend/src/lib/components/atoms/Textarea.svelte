@@ -3,7 +3,10 @@ import { createEventDispatcher, onMount, onDestroy, tick } from "svelte";
 import EntitySuggestions from "../molecules/EntitySuggestions.svelte";
 import type { Entity } from "$lib/grpc/entity/entity_pb";
 import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
-import { highlightEntities } from "$lib/utils/diary-entity-highlighter";
+import {
+	highlightEntities,
+	validateDiaryEntities,
+} from "$lib/utils/diary-entity-highlighter";
 
 export let value = "";
 export let placeholder = "";
@@ -60,10 +63,20 @@ $: {
 		diaryEntities &&
 		diaryEntities.length > 0 &&
 		!isTyping &&
-		!isSelectingEntity
+		!isSelectingEntity &&
+		allEntities &&
+		allEntities.length > 0
 	) {
-		// diaryEntitiesからselectedEntitiesを生成
-		const entitiesFromDiary = diaryEntities
+		// diaryEntitiesを検証してから使用
+		// バックエンドから取得したデータに無効なエンティティが含まれている可能性があるため
+		const validatedDiaryEntities = validateDiaryEntities(
+			value,
+			diaryEntities,
+			allEntities,
+		);
+
+		// validatedDiaryEntitiesからselectedEntitiesを生成
+		const entitiesFromDiary = validatedDiaryEntities
 			.map((de) => ({
 				entityId: de.entityId,
 				positions: de.positions.map((pos) => ({
@@ -77,8 +90,8 @@ $: {
 		if (selectedEntities.length === 0) {
 			selectedEntities = entitiesFromDiary;
 		} else {
-			// selectedEntitiesに既にデータがある場合、diaryEntitiesと比較
-			// diaryEntitiesの方が新しいデータ（より多くのposition）を持っている場合のみ更新
+			// selectedEntitiesに既にデータがある場合、validatedDiaryEntitiesと比較
+			// validatedDiaryEntitiesの方が新しいデータ（より多くのposition）を持っている場合のみ更新
 			const selectedStr = JSON.stringify(selectedEntities);
 			const diaryStr = JSON.stringify(entitiesFromDiary);
 
@@ -130,8 +143,14 @@ $: highlightedHTML = (() => {
 		return value.replace(/\n/g, "<br>");
 	}
 
-	// 保存されたコンテンツと一致する場合のみハイライトを適用
-	return highlightEntities(value, diaryEntities);
+	// 保存されたコンテンツと一致する場合は、検証してからハイライトを適用
+	// バックエンドから取得したdiaryEntitiesに無効なエンティティが含まれている可能性があるため
+	const validatedEntities = validateDiaryEntities(
+		value,
+		diaryEntities,
+		allEntities,
+	);
+	return highlightEntities(value, validatedEntities);
 })();
 
 // captureフェーズでTabキーをキャプチャするためのリスナー
@@ -315,12 +334,93 @@ async function _handleInput(event: Event) {
 	// valueの更新のみ行う
 	const isCompositionUpdate = event instanceof CompositionEvent;
 
+	const oldValue = value;
 	value = htmlToPlainText(target.innerHTML);
 
 	// contentElementが初期化されていない場合は何もしない
 	if (!contentElement) {
 		isUpdatingFromValue = false;
 		return;
+	}
+
+	// エンティティ内部編集の検出と紐づけ解除
+	// DOM内の全てのリンク要素をチェックし、編集されたリンクを解除
+	// その後、残っているリンクからselectedEntitiesを再構築
+	const links = contentElement.querySelectorAll("a");
+	const linksToRemove: HTMLAnchorElement[] = [];
+
+	for (const link of links) {
+		const href = link.getAttribute("href");
+		if (!href?.includes("/entity/")) continue;
+
+		const entityId = href.split("/entity/")[1];
+		if (!entityId) continue;
+
+		const linkText = link.textContent || "";
+
+		// allEntitiesからこのentityIdのエンティティを取得
+		const entity = allEntities.find((e) => e.id === entityId);
+		if (!entity) continue; // エンティティが見つからない場合はスキップ
+
+		// このエンティティの有効なテキスト（名前とエイリアス）を収集
+		const validTexts = [entity.name];
+		for (const alias of entity.aliases) {
+			validTexts.push(alias.alias);
+		}
+
+		// linkTextが有効なテキストのいずれかと完全一致するかチェック
+		const isValid = validTexts.some((text) => text === linkText);
+
+		if (!isValid) {
+			// リンクのテキストが元のエンティティ名/エイリアスと異なる場合は編集されている
+			linksToRemove.push(link as HTMLAnchorElement);
+		}
+	}
+
+	// 無効なリンクをDOMから削除し、selectedEntitiesからも削除
+	if (linksToRemove.length > 0) {
+		// 削除されたリンクのentityIdとpositionを記録
+		const removedPositions = new Map<string, Set<string>>();
+
+		for (const link of linksToRemove) {
+			const href = link.getAttribute("href");
+			if (href?.includes("/entity/")) {
+				const entityId = href.split("/entity/")[1];
+				if (entityId) {
+					const linkStartOffset = getTextOffset(contentElement, link, 0);
+					const linkText = link.textContent || "";
+					const linkEndOffset = linkStartOffset + linkText.length;
+					const posKey = `${linkStartOffset}-${linkEndOffset}`;
+
+					if (!removedPositions.has(entityId)) {
+						removedPositions.set(entityId, new Set());
+					}
+					removedPositions.get(entityId)?.add(posKey);
+				}
+			}
+
+			// DOMから削除
+			const textNode = document.createTextNode(link.textContent || "");
+			link.parentNode?.replaceChild(textNode, link);
+		}
+
+		// selectedEntitiesから削除されたpositionを除外
+		selectedEntities = selectedEntities
+			.map((se) => {
+				const removed = removedPositions.get(se.entityId);
+				if (!removed) return se;
+
+				const filteredPositions = se.positions.filter((pos) => {
+					const posKey = `${pos.start}-${pos.end}`;
+					return !removed.has(posKey);
+				});
+
+				return {
+					...se,
+					positions: filteredPositions,
+				};
+			})
+			.filter((se) => se.positions.length > 0);
 	}
 
 	// IME入力中は候補検索をスキップ（DOM操作を最小限にしてIMEの動作を安定させる）
@@ -823,20 +923,152 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 
 	// contentEditableの内容を更新してフォーカスを戻す
 	setTimeout(() => {
-		// プレーンテキスト（エンティティハイライトなし）で更新
-		// （まだdiaryEntitiesに新しいエンティティ情報がないため）
-		contentElement.innerHTML = value.replace(/\n/g, "<br>");
+		// selectedEntitiesからエンティティハイライトを適用したHTMLを生成
+		const htmlWithEntities = generateHTMLFromSelectedEntities(
+			value,
+			selectedEntities,
+		);
+		contentElement.innerHTML = htmlWithEntities;
 		contentElement.focus();
 
-		// カーソル位置を設定（テキストの直後）
+		// カーソル位置を設定（エンティティテキストの直後）
 		const newCursorPos = beforeTrigger.length + textToInsert.length;
-		const newRange = createRangeAtTextOffset(contentElement, newCursorPos);
-		if (newRange) {
-			const sel = window.getSelection();
-			sel?.removeAllRanges();
-			sel?.addRange(newRange);
+
+		// エンティティリンクを含むHTMLからカーソル位置を設定
+		// createRangeAtTextOffsetを使用してプレーンテキスト位置からDOM位置を計算
+		const sel = window.getSelection();
+		if (sel) {
+			let currentTextPos = 0;
+			let targetNode: Node | null = null;
+			let targetOffset = 0;
+			let found = false;
+
+			// DOMツリーを走査してテキスト位置からノード位置を見つける
+			function findNodeAtPosition(node: Node): boolean {
+				if (node.nodeType === Node.TEXT_NODE) {
+					const textLength = node.textContent?.length || 0;
+					if (currentTextPos + textLength >= newCursorPos) {
+						targetNode = node;
+						targetOffset = newCursorPos - currentTextPos;
+						return true;
+					}
+					currentTextPos += textLength;
+				} else if (node.nodeType === Node.ELEMENT_NODE) {
+					if (node.nodeName === "BR") {
+						currentTextPos += 1;
+						if (currentTextPos >= newCursorPos) {
+							// BRの直後にカーソルを配置
+							targetNode = node.parentNode;
+							if (targetNode) {
+								targetOffset =
+									Array.from(targetNode.childNodes).indexOf(node as ChildNode) +
+									1;
+							}
+							return true;
+						}
+					} else {
+						// 子ノードを再帰的に処理
+						for (const child of Array.from(node.childNodes)) {
+							if (findNodeAtPosition(child)) {
+								return true;
+							}
+						}
+					}
+				}
+				return false;
+			}
+
+			found = findNodeAtPosition(contentElement);
+
+			if (found && targetNode) {
+				try {
+					const range = document.createRange();
+					range.setStart(targetNode, targetOffset);
+					range.collapse(true);
+					sel.removeAllRanges();
+					sel.addRange(range);
+				} catch (e) {
+					console.error("Failed to set cursor position:", e);
+					// フォールバック: 末尾にカーソルを配置
+					const range = document.createRange();
+					range.selectNodeContents(contentElement);
+					range.collapse(false);
+					sel.removeAllRanges();
+					sel.addRange(range);
+				}
+			}
 		}
 	}, 0);
+}
+
+// selectedEntitiesからエンティティハイライトを適用したHTMLを生成
+function generateHTMLFromSelectedEntities(
+	content: string,
+	selectedEnts: {
+		entityId: string;
+		positions: { start: number; end: number }[];
+	}[],
+): string {
+	if (!selectedEnts || selectedEnts.length === 0) {
+		return content.replace(/\n/g, "<br>");
+	}
+
+	// 全てのpositionを収集してソート
+	interface HighlightSegment {
+		start: number;
+		end: number;
+		entityId: string;
+	}
+
+	const segments: HighlightSegment[] = [];
+
+	for (const selectedEnt of selectedEnts) {
+		for (const position of selectedEnt.positions) {
+			segments.push({
+				start: position.start,
+				end: position.end,
+				entityId: selectedEnt.entityId,
+			});
+		}
+	}
+
+	// 開始位置でソート
+	segments.sort((a, b) => a.start - b.start);
+
+	// HTMLを構築
+	let result = "";
+	let lastIndex = 0;
+
+	for (const segment of segments) {
+		// segment前のテキスト
+		if (lastIndex < segment.start) {
+			const text = content.substring(lastIndex, segment.start);
+			result += escapeHtmlForEntity(text).replace(/\n/g, "<br>");
+		}
+
+		// segmentのテキスト(リンク付き青色)
+		const entityText = content.substring(segment.start, segment.end);
+		result += `<a href="/entity/${segment.entityId}" class="text-blue-600 dark:text-blue-400 hover:underline">${escapeHtmlForEntity(entityText)}</a>`;
+
+		lastIndex = segment.end;
+	}
+
+	// 残りのテキスト
+	if (lastIndex < content.length) {
+		const text = content.substring(lastIndex);
+		result += escapeHtmlForEntity(text).replace(/\n/g, "<br>");
+	}
+
+	return result;
+}
+
+function escapeHtmlForEntity(text: string): string {
+	return text
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#039;");
 }
 
 // テキストオフセット位置にRangeを作成（contenteditable用）
