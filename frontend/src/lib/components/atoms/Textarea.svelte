@@ -782,22 +782,64 @@ function _handleKeydown(event: KeyboardEvent) {
 			range.insertNode(br);
 
 			// contentEditableの末尾での改行を処理するために、
-			// もう一つ<br>を挿入してカーソルが次の行に表示されるようにする
-			const afterBr = document.createElement("br");
+			// <br>の後ろに意味のあるコンテンツ（テキストやエンティティリンクなど）が存在するかチェック
+			// 末尾の場合のみ、もう一つ<br>を挿入してカーソルが次の行に表示されるようにする
+			function hasContentAfterNode(node: Node): boolean {
+				let current: Node | null = node.nextSibling;
+				while (current) {
+					// テキストノードで空白以外のテキストがある場合
+					if (current.nodeType === Node.TEXT_NODE) {
+						const text = current.textContent || "";
+						if (text.trim().length > 0) {
+							return true;
+						}
+					}
+					// 要素ノード（<a>タグなどのエンティティリンク）がある場合
+					else if (current.nodeType === Node.ELEMENT_NODE) {
+						const element = current as Element;
+						// BRタグは無視（既存の改行）
+						if (element.nodeName !== "BR") {
+							return true;
+						}
+					}
+					current = current.nextSibling;
+				}
+				// 親ノードがcontentElementでない場合、親の兄弟をチェック
+				if (node.parentNode && node.parentNode !== contentElement) {
+					return hasContentAfterNode(node.parentNode);
+				}
+				return false;
+			}
 
-			// Create a new range after the first br element
-			const newRange = document.createRange();
-			newRange.setStartAfter(br);
-			newRange.insertNode(afterBr);
+			const isAtEnd = !hasContentAfterNode(br);
 
-			// カーソルを2つの<br>の間に配置
-			newRange.setStartAfter(br);
-			newRange.setEndBefore(afterBr);
-			newRange.collapse(true);
+			if (isAtEnd) {
+				// 末尾の場合のみ2つ目の<br>を挿入
+				const afterBr = document.createElement("br");
 
-			// Update the selection
-			selection.removeAllRanges();
-			selection.addRange(newRange);
+				// Create a new range after the first br element
+				const newRange = document.createRange();
+				newRange.setStartAfter(br);
+				newRange.insertNode(afterBr);
+
+				// カーソルを2つの<br>の間に配置
+				newRange.setStartAfter(br);
+				newRange.setEndBefore(afterBr);
+				newRange.collapse(true);
+
+				// Update the selection
+				selection.removeAllRanges();
+				selection.addRange(newRange);
+			} else {
+				// 末尾でない場合は1つの<br>のみで、カーソルをその直後に配置
+				const newRange = document.createRange();
+				newRange.setStartAfter(br);
+				newRange.collapse(true);
+
+				// Update the selection
+				selection.removeAllRanges();
+				selection.addRange(newRange);
+			}
 		}
 
 		// Trigger input event to update the value
