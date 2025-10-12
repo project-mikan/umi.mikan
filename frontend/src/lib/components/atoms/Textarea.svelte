@@ -158,6 +158,9 @@ onMount(async () => {
 	// 全エンティティデータを事前取得
 	await loadAllEntities();
 
+	// entity更新イベントをリッスン
+	window.addEventListener("entityUpdated", handleEntityUpdated);
+
 	if (contentElement) {
 		// captureフェーズで追加してTabキーを早期にキャプチャ
 		contentElement.addEventListener("keydown", _handleKeydown, true);
@@ -170,7 +173,15 @@ onDestroy(() => {
 	if (contentElement) {
 		contentElement.removeEventListener("keydown", _handleKeydown, true);
 	}
+	// entity更新イベントリスナーを削除
+	window.removeEventListener("entityUpdated", handleEntityUpdated);
 });
+
+// entity更新イベントハンドラー
+function handleEntityUpdated() {
+	// エンティティデータを再取得
+	loadAllEntities();
+}
 
 const baseClasses =
 	"block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";

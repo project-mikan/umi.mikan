@@ -5,6 +5,7 @@ import { enhance } from "$app/forms";
 import "$lib/i18n";
 import Modal from "$lib/components/molecules/Modal.svelte";
 import { EntityCategory } from "$lib/grpc/entity/entity_pb";
+import { notifyEntityUpdated } from "$lib/utils/entity-events";
 import type { ActionData, PageData } from "./$types";
 
 export let data: PageData;
@@ -169,9 +170,13 @@ function cancelEditAlias(): void {
 				class="space-y-4"
 				use:enhance={() => {
 					updateLoading = true;
-					return async ({ update }) => {
+					return async ({ update, result }) => {
 						updateLoading = false;
 						await update();
+						// 更新成功時にイベントを発火
+						if (result.type === "success" && form?.success) {
+							notifyEntityUpdated();
+						}
 					};
 				}}
 			>
@@ -249,10 +254,14 @@ function cancelEditAlias(): void {
 				class="flex gap-2 mb-4"
 				use:enhance={() => {
 					createAliasLoading = true;
-					return async ({ update }) => {
+					return async ({ update, result }) => {
 						createAliasLoading = false;
 						newAlias = "";
 						await update();
+						// エイリアス追加成功時にイベントを発火
+						if (result.type === "success" && form?.success) {
+							notifyEntityUpdated();
+						}
 					};
 				}}
 			>
@@ -309,11 +318,15 @@ function cancelEditAlias(): void {
 								class="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full"
 								use:enhance={() => {
 									updateAliasLoading = true;
-									return async ({ update }) => {
+									return async ({ update, result }) => {
 										updateAliasLoading = false;
 										editingAliasId = "";
 										editingAliasValue = "";
 										await update();
+										// エイリアス更新成功時にイベントを発火
+										if (result.type === "success" && form?.success) {
+											notifyEntityUpdated();
+										}
 									};
 								}}
 							>
