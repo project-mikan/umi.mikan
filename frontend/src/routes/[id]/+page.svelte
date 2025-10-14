@@ -2,6 +2,8 @@
 import { _, locale } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
+import { beforeNavigate } from "$app/navigation";
+import { onMount } from "svelte";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import SaveButton from "$lib/components/atoms/SaveButton.svelte";
@@ -64,6 +66,14 @@ let isToday = false;
 let isFutureDate = false;
 let isSummaryGenerating = false; // 要約生成中のフラグ
 let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
+
+// 未保存状態の管理
+let initialContent = data.entry?.content || "";
+let hasUnsavedChanges = false;
+let allowNavigation = false;
+
+// コンテンツの変更を監視して未保存状態を更新
+$: hasUnsavedChanges = content !== initialContent && !allowNavigation;
 
 // Check if user has LLM key configured
 $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
@@ -136,6 +146,10 @@ $: {
 	summary = data.dailySummary;
 	// ページ変更時に生成状態をリセット
 	isSummaryGenerating = false;
+	// ページ変更時に初期コンテンツをリセット
+	initialContent = data.entry?.content || "";
+	content = initialContent;
+	allowNavigation = false;
 }
 
 function handleSummaryUpdated(event: CustomEvent) {
@@ -200,12 +214,39 @@ function _cancelDelete() {
 }
 
 function _handleDelete() {
+	// 削除時は遷移を許可
+	allowNavigation = true;
 	const form = document.createElement("form");
 	form.method = "POST";
 	form.action = "?/delete";
 	document.body.appendChild(form);
 	form.submit();
 }
+
+// ページ遷移前の警告
+beforeNavigate((navigation) => {
+	if (hasUnsavedChanges && !allowNavigation) {
+		if (!confirm($_("diary.unsavedChangesWarning"))) {
+			navigation.cancel();
+		}
+	}
+});
+
+// ブラウザのページ離脱時の警告
+onMount(() => {
+	const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+		if (hasUnsavedChanges) {
+			e.preventDefault();
+			e.returnValue = "";
+		}
+	};
+
+	window.addEventListener("beforeunload", handleBeforeUnload);
+
+	return () => {
+		window.removeEventListener("beforeunload", handleBeforeUnload);
+	};
+});
 </script>
 
 <svelte:head>
@@ -277,7 +318,17 @@ function _handleDelete() {
 				bind:this={formElement}
 				method="POST"
 				action="?/save"
-use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
+use:enhance={createSubmitHandler(
+	(l) => loading = l,
+	(s) => {
+		saved = s;
+		if (s) {
+			// 保存成功時に初期コンテンツを更新
+			initialContent = content;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input type="hidden" name="date" value={_formatDateStr(data.date)} />

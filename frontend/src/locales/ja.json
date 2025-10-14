@@ -181,6 +181,7 @@
 		"placeholder": "今日の出来事を書いてください...",
 		"characterCount": "{count}文字",
 		"autoSummaryEligible": "自動まとめ対象",
+		"unsavedChangesWarning": "保存されていない変更があります。このページを離れてもよろしいですか?",
 		"generateSummary": "まとめを生成",
 		"regenerateSummary": "まとめを再生成",
 		"generatingSummary": "まとめ生成中...",

@@ -181,6 +181,7 @@
 		"placeholder": "Write about today's events...",
 		"characterCount": "{count} characters",
 		"autoSummaryEligible": "Auto-summary eligible",
+		"unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?",
 		"generateSummary": "Generate Summary",
 		"regenerateSummary": "Regenerate Summary",
 		"generatingSummary": "Generating Summary...",

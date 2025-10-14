@@ -2,6 +2,8 @@
 import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
+import { beforeNavigate } from "$app/navigation";
+import { onMount } from "svelte";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import SaveButton from "$lib/components/atoms/SaveButton.svelte";
@@ -49,6 +51,40 @@ $: dayBeforeYesterdayCharacterCount = dayBeforeYesterdayContent
 	? dayBeforeYesterdayContent.length
 	: 0;
 
+// 未保存状態の管理
+let initialTodayContent = data.today.entry?.content || "";
+let initialYesterdayContent = data.yesterday.entry?.content || "";
+let initialDayBeforeYesterdayContent =
+	data.dayBeforeYesterday.entry?.content || "";
+let allowNavigation = false;
+
+// 各日記の未保存状態を監視
+$: todayHasUnsavedChanges =
+	todayContent !== initialTodayContent && !allowNavigation;
+$: yesterdayHasUnsavedChanges =
+	yesterdayContent !== initialYesterdayContent && !allowNavigation;
+$: dayBeforeYesterdayHasUnsavedChanges =
+	dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent &&
+	!allowNavigation;
+
+// いずれか1つでも未保存の変更があるかチェック
+$: hasAnyUnsavedChanges =
+	todayHasUnsavedChanges ||
+	yesterdayHasUnsavedChanges ||
+	dayBeforeYesterdayHasUnsavedChanges;
+
+// データが変更された時に初期コンテンツをリセット
+$: {
+	initialTodayContent = data.today.entry?.content || "";
+	initialYesterdayContent = data.yesterday.entry?.content || "";
+	initialDayBeforeYesterdayContent =
+		data.dayBeforeYesterday.entry?.content || "";
+	todayContent = initialTodayContent;
+	yesterdayContent = initialYesterdayContent;
+	dayBeforeYesterdayContent = initialDayBeforeYesterdayContent;
+	allowNavigation = false;
+}
+
 function getMonthlyUrl(): string {
 	const now = new Date();
 	return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
@@ -77,6 +113,31 @@ function handleYesterdaySave() {
 function handleDayBeforeYesterdaySave() {
 	dayBeforeYesterdayFormElement?.requestSubmit();
 }
+
+// ページ遷移前の警告
+beforeNavigate((navigation) => {
+	if (hasAnyUnsavedChanges && !allowNavigation) {
+		if (!confirm($_("diary.unsavedChangesWarning"))) {
+			navigation.cancel();
+		}
+	}
+});
+
+// ブラウザのページ離脱時の警告
+onMount(() => {
+	const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+		if (hasAnyUnsavedChanges) {
+			e.preventDefault();
+			e.returnValue = "";
+		}
+	};
+
+	window.addEventListener("beforeunload", handleBeforeUnload);
+
+	return () => {
+		window.removeEventListener("beforeunload", handleBeforeUnload);
+	};
+});
 </script>
 
 <svelte:head>
@@ -103,7 +164,17 @@ function handleDayBeforeYesterdaySave() {
 				bind:this={formElement}
 				method="POST"
 				action="?/saveToday"
-use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) => todaySaved = saved)}
+use:enhance={createSubmitHandler(
+	(loading) => todayLoading = loading,
+	(saved) => {
+		todaySaved = saved;
+		if (saved) {
+			// 保存成功時に初期コンテンツを更新
+			initialTodayContent = todayContent;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input
@@ -154,7 +225,17 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 				bind:this={yesterdayFormElement}
 				method="POST"
 				action="?/saveYesterday"
-use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved) => yesterdaySaved = saved)}
+use:enhance={createSubmitHandler(
+	(loading) => yesterdayLoading = loading,
+	(saved) => {
+		yesterdaySaved = saved;
+		if (saved) {
+			// 保存成功時に初期コンテンツを更新
+			initialYesterdayContent = yesterdayContent;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input
@@ -205,7 +286,17 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 				bind:this={dayBeforeYesterdayFormElement}
 				method="POST"
 				action="?/saveDayBeforeYesterday"
-use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved) => dayBeforeSaved = saved)}
+use:enhance={createSubmitHandler(
+	(loading) => dayBeforeLoading = loading,
+	(saved) => {
+		dayBeforeSaved = saved;
+		if (saved) {
+			// 保存成功時に初期コンテンツを更新
+			initialDayBeforeYesterdayContent = dayBeforeYesterdayContent;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input
