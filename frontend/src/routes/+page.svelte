@@ -144,41 +144,85 @@ onMount(() => {
 		const viewportHeight = window.innerHeight;
 		const viewportCenter = scrollY + viewportHeight / 2;
 
-		// 各カードの中央位置を取得
+		// 各カードの位置を取得
 		const todayRect = todayCard?.getBoundingClientRect();
 		const yesterdayRect = yesterdayCard?.getBoundingClientRect();
 		const dayBeforeYesterdayRect =
 			dayBeforeYesterdayCard?.getBoundingClientRect();
 
-		const todayCenter = todayRect
-			? todayRect.top + scrollY + todayRect.height / 2
-			: 0;
-		const yesterdayCenter = yesterdayRect
-			? yesterdayRect.top + scrollY + yesterdayRect.height / 2
-			: 0;
-		const dayBeforeYesterdayCenter = dayBeforeYesterdayRect
-			? dayBeforeYesterdayRect.top + scrollY + dayBeforeYesterdayRect.height / 2
-			: 0;
-
-		// 画面中央に最も近いカードの中央を判定
-		const todayDistance = Math.abs(viewportCenter - todayCenter);
-		const yesterdayDistance = Math.abs(viewportCenter - yesterdayCenter);
-		const dayBeforeYesterdayDistance = Math.abs(
-			viewportCenter - dayBeforeYesterdayCenter,
-		);
-
-		const minDistance = Math.min(
-			todayDistance,
-			yesterdayDistance,
-			dayBeforeYesterdayDistance,
-		);
-
-		if (minDistance === todayDistance) {
+		// 画面中央を含むカードを優先的に選択
+		// 画面中央がカードの範囲内にある場合、そのカードを選択
+		if (
+			todayRect &&
+			todayRect.top + scrollY <= viewportCenter &&
+			todayRect.bottom + scrollY >= viewportCenter
+		) {
 			activeSection = "today";
-		} else if (minDistance === yesterdayDistance) {
+			return;
+		}
+
+		if (
+			yesterdayRect &&
+			yesterdayRect.top + scrollY <= viewportCenter &&
+			yesterdayRect.bottom + scrollY >= viewportCenter
+		) {
 			activeSection = "yesterday";
-		} else {
+			return;
+		}
+
+		if (
+			dayBeforeYesterdayRect &&
+			dayBeforeYesterdayRect.top + scrollY <= viewportCenter &&
+			dayBeforeYesterdayRect.bottom + scrollY >= viewportCenter
+		) {
 			activeSection = "dayBeforeYesterday";
+			return;
+		}
+
+		// 画面中央がどのカードにも含まれない場合、画面内で最も近いカードを選択
+		const candidates: Array<{
+			section: "today" | "yesterday" | "dayBeforeYesterday";
+			distance: number;
+		}> = [];
+
+		if (todayRect && todayRect.top < viewportHeight && todayRect.bottom > 0) {
+			const todayCenter = todayRect.top + scrollY + todayRect.height / 2;
+			const todayDistance = Math.abs(viewportCenter - todayCenter);
+			candidates.push({ section: "today", distance: todayDistance });
+		}
+
+		if (
+			yesterdayRect &&
+			yesterdayRect.top < viewportHeight &&
+			yesterdayRect.bottom > 0
+		) {
+			const yesterdayCenter =
+				yesterdayRect.top + scrollY + yesterdayRect.height / 2;
+			const yesterdayDistance = Math.abs(viewportCenter - yesterdayCenter);
+			candidates.push({ section: "yesterday", distance: yesterdayDistance });
+		}
+
+		if (
+			dayBeforeYesterdayRect &&
+			dayBeforeYesterdayRect.top < viewportHeight &&
+			dayBeforeYesterdayRect.bottom > 0
+		) {
+			const dayBeforeYesterdayCenter =
+				dayBeforeYesterdayRect.top +
+				scrollY +
+				dayBeforeYesterdayRect.height / 2;
+			const dayBeforeYesterdayDistance = Math.abs(
+				viewportCenter - dayBeforeYesterdayCenter,
+			);
+			candidates.push({
+				section: "dayBeforeYesterday",
+				distance: dayBeforeYesterdayDistance,
+			});
+		}
+
+		if (candidates.length > 0) {
+			candidates.sort((a, b) => a.distance - b.distance);
+			activeSection = candidates[0].section;
 		}
 	};
 
