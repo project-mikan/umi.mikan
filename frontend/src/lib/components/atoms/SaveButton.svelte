@@ -7,7 +7,7 @@ export let saved = false;
 export let size: "sm" | "md" | "lg" = "md";
 </script>
 
-<Button type="submit" variant={saved ? "success" : "primary"} {size} disabled={loading || saved}>
+<Button type="submit" variant={saved ? "success" : "primary"} {size} disabled={loading || saved} on:click>
 	<div class="flex items-center justify-center min-h-[1.25rem]">
 		{#if loading}
 			<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">

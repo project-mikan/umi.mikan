@@ -123,6 +123,12 @@ beforeNavigate((navigation) => {
 	}
 });
 
+// スクロール位置に基づいて表示する保存ボタンを決定
+let activeSection: "today" | "yesterday" | "dayBeforeYesterday" = "today";
+let todayCard: HTMLElement;
+let yesterdayCard: HTMLElement;
+let dayBeforeYesterdayCard: HTMLElement;
+
 // ブラウザのページ離脱時の警告
 onMount(() => {
 	const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -132,10 +138,59 @@ onMount(() => {
 		}
 	};
 
+	// スクロール位置を監視して、現在表示中のセクションを判定
+	const handleScroll = () => {
+		const scrollY = window.scrollY;
+		const viewportHeight = window.innerHeight;
+		const viewportCenter = scrollY + viewportHeight / 2;
+
+		// 各カードの中央位置を取得
+		const todayRect = todayCard?.getBoundingClientRect();
+		const yesterdayRect = yesterdayCard?.getBoundingClientRect();
+		const dayBeforeYesterdayRect =
+			dayBeforeYesterdayCard?.getBoundingClientRect();
+
+		const todayCenter = todayRect
+			? todayRect.top + scrollY + todayRect.height / 2
+			: 0;
+		const yesterdayCenter = yesterdayRect
+			? yesterdayRect.top + scrollY + yesterdayRect.height / 2
+			: 0;
+		const dayBeforeYesterdayCenter = dayBeforeYesterdayRect
+			? dayBeforeYesterdayRect.top + scrollY + dayBeforeYesterdayRect.height / 2
+			: 0;
+
+		// 画面中央に最も近いカードの中央を判定
+		const todayDistance = Math.abs(viewportCenter - todayCenter);
+		const yesterdayDistance = Math.abs(viewportCenter - yesterdayCenter);
+		const dayBeforeYesterdayDistance = Math.abs(
+			viewportCenter - dayBeforeYesterdayCenter,
+		);
+
+		const minDistance = Math.min(
+			todayDistance,
+			yesterdayDistance,
+			dayBeforeYesterdayDistance,
+		);
+
+		if (minDistance === todayDistance) {
+			activeSection = "today";
+		} else if (minDistance === yesterdayDistance) {
+			activeSection = "yesterday";
+		} else {
+			activeSection = "dayBeforeYesterday";
+		}
+	};
+
 	window.addEventListener("beforeunload", handleBeforeUnload);
+	window.addEventListener("scroll", handleScroll);
+
+	// 初期表示時に一度実行
+	handleScroll();
 
 	return () => {
 		window.removeEventListener("beforeunload", handleBeforeUnload);
+		window.removeEventListener("scroll", handleScroll);
 	};
 });
 </script>
@@ -154,6 +209,7 @@ onMount(() => {
 	</div>
 
 	<div class="space-y-6">
+		<div bind:this={todayCard}>
 		<DiaryCard
 			title={$_("diary.today")}
 			entry={data.today.entry}
@@ -209,12 +265,14 @@ use:enhance={createSubmitHandler(
 					{/if}
 				</div>
 
-				<div class="flex justify-end">
+				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
 					<SaveButton loading={todayLoading} saved={todaySaved} />
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
 
+		<div bind:this={yesterdayCard}>
 		<DiaryCard
 			title={$_("diary.yesterday")}
 			entry={data.yesterday.entry}
@@ -270,12 +328,14 @@ use:enhance={createSubmitHandler(
 					{/if}
 				</div>
 
-				<div class="flex justify-end">
+				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
 					<SaveButton loading={yesterdayLoading} saved={yesterdaySaved} />
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
 
+		<div bind:this={dayBeforeYesterdayCard}>
 		<DiaryCard
 			title={$_("diary.dayBeforeYesterday")}
 			entry={data.dayBeforeYesterday.entry}
@@ -335,14 +395,82 @@ use:enhance={createSubmitHandler(
 					{/if}
 				</div>
 
-				<div class="flex justify-end">
+				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
 					<SaveButton loading={dayBeforeLoading} saved={dayBeforeSaved} />
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
 	</div>
 
 	<!-- PWA Install Button -->
 	<PWAInstallButton />
+
+	<!-- Fixed Save Button for Mobile (shows only the active section) -->
+	<div class="fixed bottom-20 left-0 right-0 p-4 sm:hidden z-10 pointer-events-none">
+		<div class="max-w-4xl mx-auto flex justify-end pointer-events-auto">
+			{#if activeSection === "today"}
+				<Button type="button" variant={todaySaved ? "success" : "primary"} size="md" disabled={todayLoading || todaySaved} on:click={handleSave}>
+					<div class="flex items-center justify-center min-h-[1.25rem]">
+						{#if todayLoading}
+							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saving")}</span>
+						{:else if todaySaved}
+							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saved")}</span>
+						{:else}
+							<span>{$_("diary.saveTodayDiary")}</span>
+						{/if}
+					</div>
+				</Button>
+			{:else if activeSection === "yesterday"}
+				<Button type="button" variant={yesterdaySaved ? "success" : "primary"} size="md" disabled={yesterdayLoading || yesterdaySaved} on:click={handleYesterdaySave}>
+					<div class="flex items-center justify-center min-h-[1.25rem]">
+						{#if yesterdayLoading}
+							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saving")}</span>
+						{:else if yesterdaySaved}
+							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saved")}</span>
+						{:else}
+							<span>{$_("diary.saveYesterdayDiary")}</span>
+						{/if}
+					</div>
+				</Button>
+			{:else}
+				<Button type="button" variant={dayBeforeSaved ? "success" : "primary"} size="md" disabled={dayBeforeLoading || dayBeforeSaved} on:click={handleDayBeforeYesterdaySave}>
+					<div class="flex items-center justify-center min-h-[1.25rem]">
+						{#if dayBeforeLoading}
+							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saving")}</span>
+						{:else if dayBeforeSaved}
+							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saved")}</span>
+						{:else}
+							<span>{$_("diary.saveDayBeforeYesterdayDiary")}</span>
+						{/if}
+					</div>
+				</Button>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Spacer for fixed button on mobile -->
+	<div class="h-32 sm:hidden"></div>
 </div>
 
