@@ -695,11 +695,37 @@ async function searchForSuggestions(query: string) {
 
 // 候補表示位置を更新
 function updateSuggestionPosition(_target: HTMLDivElement) {
-	// 親要素（relative div）からの相対位置で指定
-	// contentElementの上端から少し下に表示
+	// SSR時は何もしない
+	if (typeof window === "undefined") return;
+
+	// 現在のカーソル位置を取得
+	const selection = window.getSelection();
+	if (!selection || selection.rangeCount === 0) return;
+
+	const range = selection.getRangeAt(0);
+
+	// カーソル位置のビューポート座標を取得
+	// collapsed rangeの場合、getBoundingClientRect()が正しい位置を返さないことがあるため、
+	// 一時的なspan要素を挿入して位置を取得する
+	const tempSpan = document.createElement("span");
+	tempSpan.textContent = "\u200B"; // ゼロ幅スペース
+	range.insertNode(tempSpan);
+
+	const rect = tempSpan.getBoundingClientRect();
+
+	// span要素を削除
+	tempSpan.remove();
+
+	// カーソル位置を復元
+	range.collapse(true);
+	selection.removeAllRanges();
+	selection.addRange(range);
+
+	// position: fixedを使用するため、ビューポート座標をそのまま使用
+	// カーソルの下に表示（5px下）
 	suggestionPosition = {
-		top: 25, // contentElementの上端から25px下
-		left: 50, // 左端から50px右
+		top: rect.bottom + 5,
+		left: rect.left,
 	};
 }
 

@@ -2,6 +2,8 @@
 import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
+import { beforeNavigate } from "$app/navigation";
+import { onMount } from "svelte";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import SaveButton from "$lib/components/atoms/SaveButton.svelte";
@@ -49,6 +51,40 @@ $: dayBeforeYesterdayCharacterCount = dayBeforeYesterdayContent
 	? dayBeforeYesterdayContent.length
 	: 0;
 
+// 未保存状態の管理
+let initialTodayContent = data.today.entry?.content || "";
+let initialYesterdayContent = data.yesterday.entry?.content || "";
+let initialDayBeforeYesterdayContent =
+	data.dayBeforeYesterday.entry?.content || "";
+let allowNavigation = false;
+
+// 各日記の未保存状態を監視
+$: todayHasUnsavedChanges =
+	todayContent !== initialTodayContent && !allowNavigation;
+$: yesterdayHasUnsavedChanges =
+	yesterdayContent !== initialYesterdayContent && !allowNavigation;
+$: dayBeforeYesterdayHasUnsavedChanges =
+	dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent &&
+	!allowNavigation;
+
+// いずれか1つでも未保存の変更があるかチェック
+$: hasAnyUnsavedChanges =
+	todayHasUnsavedChanges ||
+	yesterdayHasUnsavedChanges ||
+	dayBeforeYesterdayHasUnsavedChanges;
+
+// データが変更された時に初期コンテンツをリセット
+$: {
+	initialTodayContent = data.today.entry?.content || "";
+	initialYesterdayContent = data.yesterday.entry?.content || "";
+	initialDayBeforeYesterdayContent =
+		data.dayBeforeYesterday.entry?.content || "";
+	todayContent = initialTodayContent;
+	yesterdayContent = initialYesterdayContent;
+	dayBeforeYesterdayContent = initialDayBeforeYesterdayContent;
+	allowNavigation = false;
+}
+
 function getMonthlyUrl(): string {
 	const now = new Date();
 	return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
@@ -77,6 +113,130 @@ function handleYesterdaySave() {
 function handleDayBeforeYesterdaySave() {
 	dayBeforeYesterdayFormElement?.requestSubmit();
 }
+
+// ページ遷移前の警告
+beforeNavigate((navigation) => {
+	if (hasAnyUnsavedChanges && !allowNavigation) {
+		if (!confirm($_("diary.unsavedChangesWarning"))) {
+			navigation.cancel();
+		}
+	}
+});
+
+// スクロール位置に基づいて表示する保存ボタンを決定
+let activeSection: "today" | "yesterday" | "dayBeforeYesterday" = "today";
+let todayCard: HTMLElement;
+let yesterdayCard: HTMLElement;
+let dayBeforeYesterdayCard: HTMLElement;
+
+// ブラウザのページ離脱時の警告
+onMount(() => {
+	const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+		if (hasAnyUnsavedChanges) {
+			e.preventDefault();
+			e.returnValue = "";
+		}
+	};
+
+	// スクロール位置を監視して、現在表示中のセクションを判定
+	const handleScroll = () => {
+		const scrollY = window.scrollY;
+		const viewportHeight = window.innerHeight;
+		const viewportCenter = scrollY + viewportHeight / 2;
+
+		// 各カードの位置を取得
+		const todayRect = todayCard?.getBoundingClientRect();
+		const yesterdayRect = yesterdayCard?.getBoundingClientRect();
+		const dayBeforeYesterdayRect =
+			dayBeforeYesterdayCard?.getBoundingClientRect();
+
+		// 画面中央を含むカードを優先的に選択
+		// 画面中央がカードの範囲内にある場合、そのカードを選択
+		if (
+			todayRect &&
+			todayRect.top + scrollY <= viewportCenter &&
+			todayRect.bottom + scrollY >= viewportCenter
+		) {
+			activeSection = "today";
+			return;
+		}
+
+		if (
+			yesterdayRect &&
+			yesterdayRect.top + scrollY <= viewportCenter &&
+			yesterdayRect.bottom + scrollY >= viewportCenter
+		) {
+			activeSection = "yesterday";
+			return;
+		}
+
+		if (
+			dayBeforeYesterdayRect &&
+			dayBeforeYesterdayRect.top + scrollY <= viewportCenter &&
+			dayBeforeYesterdayRect.bottom + scrollY >= viewportCenter
+		) {
+			activeSection = "dayBeforeYesterday";
+			return;
+		}
+
+		// 画面中央がどのカードにも含まれない場合、画面内で最も近いカードを選択
+		const candidates: Array<{
+			section: "today" | "yesterday" | "dayBeforeYesterday";
+			distance: number;
+		}> = [];
+
+		if (todayRect && todayRect.top < viewportHeight && todayRect.bottom > 0) {
+			const todayCenter = todayRect.top + scrollY + todayRect.height / 2;
+			const todayDistance = Math.abs(viewportCenter - todayCenter);
+			candidates.push({ section: "today", distance: todayDistance });
+		}
+
+		if (
+			yesterdayRect &&
+			yesterdayRect.top < viewportHeight &&
+			yesterdayRect.bottom > 0
+		) {
+			const yesterdayCenter =
+				yesterdayRect.top + scrollY + yesterdayRect.height / 2;
+			const yesterdayDistance = Math.abs(viewportCenter - yesterdayCenter);
+			candidates.push({ section: "yesterday", distance: yesterdayDistance });
+		}
+
+		if (
+			dayBeforeYesterdayRect &&
+			dayBeforeYesterdayRect.top < viewportHeight &&
+			dayBeforeYesterdayRect.bottom > 0
+		) {
+			const dayBeforeYesterdayCenter =
+				dayBeforeYesterdayRect.top +
+				scrollY +
+				dayBeforeYesterdayRect.height / 2;
+			const dayBeforeYesterdayDistance = Math.abs(
+				viewportCenter - dayBeforeYesterdayCenter,
+			);
+			candidates.push({
+				section: "dayBeforeYesterday",
+				distance: dayBeforeYesterdayDistance,
+			});
+		}
+
+		if (candidates.length > 0) {
+			candidates.sort((a, b) => a.distance - b.distance);
+			activeSection = candidates[0].section;
+		}
+	};
+
+	window.addEventListener("beforeunload", handleBeforeUnload);
+	window.addEventListener("scroll", handleScroll);
+
+	// 初期表示時に一度実行
+	handleScroll();
+
+	return () => {
+		window.removeEventListener("beforeunload", handleBeforeUnload);
+		window.removeEventListener("scroll", handleScroll);
+	};
+});
 </script>
 
 <svelte:head>
@@ -93,6 +253,7 @@ function handleDayBeforeYesterdaySave() {
 	</div>
 
 	<div class="space-y-6">
+		<div bind:this={todayCard}>
 		<DiaryCard
 			title={$_("diary.today")}
 			entry={data.today.entry}
@@ -103,7 +264,17 @@ function handleDayBeforeYesterdaySave() {
 				bind:this={formElement}
 				method="POST"
 				action="?/saveToday"
-use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) => todaySaved = saved)}
+use:enhance={createSubmitHandler(
+	(loading) => todayLoading = loading,
+	(saved) => {
+		todaySaved = saved;
+		if (saved) {
+			// 保存成功時に初期コンテンツを更新
+			initialTodayContent = todayContent;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input
@@ -138,12 +309,14 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 					{/if}
 				</div>
 
-				<div class="flex justify-end">
+				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
 					<SaveButton loading={todayLoading} saved={todaySaved} />
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
 
+		<div bind:this={yesterdayCard}>
 		<DiaryCard
 			title={$_("diary.yesterday")}
 			entry={data.yesterday.entry}
@@ -154,7 +327,17 @@ use:enhance={createSubmitHandler((loading) => todayLoading = loading, (saved) =>
 				bind:this={yesterdayFormElement}
 				method="POST"
 				action="?/saveYesterday"
-use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved) => yesterdaySaved = saved)}
+use:enhance={createSubmitHandler(
+	(loading) => yesterdayLoading = loading,
+	(saved) => {
+		yesterdaySaved = saved;
+		if (saved) {
+			// 保存成功時に初期コンテンツを更新
+			initialYesterdayContent = yesterdayContent;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input
@@ -189,12 +372,14 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 					{/if}
 				</div>
 
-				<div class="flex justify-end">
+				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
 					<SaveButton loading={yesterdayLoading} saved={yesterdaySaved} />
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
 
+		<div bind:this={dayBeforeYesterdayCard}>
 		<DiaryCard
 			title={$_("diary.dayBeforeYesterday")}
 			entry={data.dayBeforeYesterday.entry}
@@ -205,7 +390,17 @@ use:enhance={createSubmitHandler((loading) => yesterdayLoading = loading, (saved
 				bind:this={dayBeforeYesterdayFormElement}
 				method="POST"
 				action="?/saveDayBeforeYesterday"
-use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved) => dayBeforeSaved = saved)}
+use:enhance={createSubmitHandler(
+	(loading) => dayBeforeLoading = loading,
+	(saved) => {
+		dayBeforeSaved = saved;
+		if (saved) {
+			// 保存成功時に初期コンテンツを更新
+			initialDayBeforeYesterdayContent = dayBeforeYesterdayContent;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input
@@ -244,14 +439,82 @@ use:enhance={createSubmitHandler((loading) => dayBeforeLoading = loading, (saved
 					{/if}
 				</div>
 
-				<div class="flex justify-end">
+				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
 					<SaveButton loading={dayBeforeLoading} saved={dayBeforeSaved} />
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
 	</div>
 
 	<!-- PWA Install Button -->
 	<PWAInstallButton />
+
+	<!-- Fixed Save Button for Mobile (shows only the active section) -->
+	<div class="fixed bottom-20 left-0 right-0 p-4 sm:hidden z-10 pointer-events-none">
+		<div class="max-w-4xl mx-auto flex justify-end pointer-events-auto">
+			{#if activeSection === "today"}
+				<Button type="button" variant={todaySaved ? "success" : "primary"} size="md" disabled={todayLoading || todaySaved} on:click={handleSave}>
+					<div class="flex items-center justify-center min-h-[1.25rem]">
+						{#if todayLoading}
+							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saving")}</span>
+						{:else if todaySaved}
+							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saved")}</span>
+						{:else}
+							<span>{$_("diary.saveTodayDiary")}</span>
+						{/if}
+					</div>
+				</Button>
+			{:else if activeSection === "yesterday"}
+				<Button type="button" variant={yesterdaySaved ? "success" : "primary"} size="md" disabled={yesterdayLoading || yesterdaySaved} on:click={handleYesterdaySave}>
+					<div class="flex items-center justify-center min-h-[1.25rem]">
+						{#if yesterdayLoading}
+							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saving")}</span>
+						{:else if yesterdaySaved}
+							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saved")}</span>
+						{:else}
+							<span>{$_("diary.saveYesterdayDiary")}</span>
+						{/if}
+					</div>
+				</Button>
+			{:else}
+				<Button type="button" variant={dayBeforeSaved ? "success" : "primary"} size="md" disabled={dayBeforeLoading || dayBeforeSaved} on:click={handleDayBeforeYesterdaySave}>
+					<div class="flex items-center justify-center min-h-[1.25rem]">
+						{#if dayBeforeLoading}
+							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saving")}</span>
+						{:else if dayBeforeSaved}
+							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+							</svg>
+							<span class="ml-1">{$_("diary.saved")}</span>
+						{:else}
+							<span>{$_("diary.saveDayBeforeYesterdayDiary")}</span>
+						{/if}
+					</div>
+				</Button>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Spacer for fixed button on mobile -->
+	<div class="h-32 sm:hidden"></div>
 </div>
 

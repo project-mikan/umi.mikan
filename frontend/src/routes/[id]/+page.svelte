@@ -2,6 +2,8 @@
 import { _, locale } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
+import { beforeNavigate } from "$app/navigation";
+import { onMount } from "svelte";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
 import SaveButton from "$lib/components/atoms/SaveButton.svelte";
@@ -64,6 +66,14 @@ let isToday = false;
 let isFutureDate = false;
 let isSummaryGenerating = false; // 要約生成中のフラグ
 let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
+
+// 未保存状態の管理
+let initialContent = data.entry?.content || "";
+let hasUnsavedChanges = false;
+let allowNavigation = false;
+
+// コンテンツの変更を監視して未保存状態を更新
+$: hasUnsavedChanges = content !== initialContent && !allowNavigation;
 
 // Check if user has LLM key configured
 $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
@@ -136,6 +146,10 @@ $: {
 	summary = data.dailySummary;
 	// ページ変更時に生成状態をリセット
 	isSummaryGenerating = false;
+	// ページ変更時に初期コンテンツをリセット
+	initialContent = data.entry?.content || "";
+	content = initialContent;
+	allowNavigation = false;
 }
 
 function handleSummaryUpdated(event: CustomEvent) {
@@ -200,12 +214,39 @@ function _cancelDelete() {
 }
 
 function _handleDelete() {
+	// 削除時は遷移を許可
+	allowNavigation = true;
 	const form = document.createElement("form");
 	form.method = "POST";
 	form.action = "?/delete";
 	document.body.appendChild(form);
 	form.submit();
 }
+
+// ページ遷移前の警告
+beforeNavigate((navigation) => {
+	if (hasUnsavedChanges && !allowNavigation) {
+		if (!confirm($_("diary.unsavedChangesWarning"))) {
+			navigation.cancel();
+		}
+	}
+});
+
+// ブラウザのページ離脱時の警告
+onMount(() => {
+	const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+		if (hasUnsavedChanges) {
+			e.preventDefault();
+			e.returnValue = "";
+		}
+	};
+
+	window.addEventListener("beforeunload", handleBeforeUnload);
+
+	return () => {
+		window.removeEventListener("beforeunload", handleBeforeUnload);
+	};
+});
 </script>
 
 <svelte:head>
@@ -277,7 +318,17 @@ function _handleDelete() {
 				bind:this={formElement}
 				method="POST"
 				action="?/save"
-use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
+use:enhance={createSubmitHandler(
+	(l) => loading = l,
+	(s) => {
+		saved = s;
+		if (s) {
+			// 保存成功時に初期コンテンツを更新
+			initialContent = content;
+			allowNavigation = true;
+		}
+	}
+)}
 				slot="form"
 			>
 				<input type="hidden" name="date" value={_formatDateStr(data.date)} />
@@ -332,6 +383,9 @@ use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 							</Button>
 						{/if}
 					</div>
+				</div>
+
+				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
 					<SaveButton {loading} {saved} />
 				</div>
 			</form>
@@ -339,6 +393,33 @@ use:enhance={createSubmitHandler((l) => loading = l, (s) => saved = s)}
 
 		<PastEntriesLinks pastEntries={data.pastEntries} />
 	</div>
+
+	<!-- Fixed Save Button for Mobile -->
+	<div class="fixed bottom-20 left-0 right-0 p-4 sm:hidden z-10 pointer-events-none">
+		<div class="max-w-4xl mx-auto flex justify-end pointer-events-auto">
+			<Button type="button" variant={saved ? "success" : "primary"} size="md" disabled={loading || saved} on:click={_handleSave}>
+				<div class="flex items-center justify-center min-h-[1.25rem]">
+					{#if loading}
+						<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+						</svg>
+						<span class="ml-1">{$_("diary.saving")}</span>
+					{:else if saved}
+						<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+							<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+						</svg>
+						<span class="ml-1">{$_("diary.saved")}</span>
+					{:else}
+						<span>{$_("diary.save")}</span>
+					{/if}
+				</div>
+			</Button>
+		</div>
+	</div>
+
+	<!-- Spacer for fixed button on mobile -->
+	<div class="h-32 sm:hidden"></div>
 </div>
 
 <Modal
