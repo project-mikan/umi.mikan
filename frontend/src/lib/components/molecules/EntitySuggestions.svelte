@@ -56,7 +56,7 @@ export function selectByIndex(index: number) {
 
 <style>
 	.entity-suggestions {
-		position: absolute;
+		position: fixed;
 		z-index: 1000;
 		background: white;
 		border: 1px solid #e5e7eb;
