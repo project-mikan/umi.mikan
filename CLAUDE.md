@@ -265,6 +265,9 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 5. **Backend**: Uses Go modules, standard Go formatting
 6. **DI Container**: Add new dependencies to `backend/container/container.go` provider functions
 7. **QA Testing**: After completing a feature, use Chrome MCP tools to perform QA testing on the frontend (http://localhost:2000)
+   - Test normal functionality and user interactions
+   - Perform a hard reload (Ctrl+Shift+R or Cmd+Shift+R) and verify that the behavior remains consistent
+   - Ensure PWA functionality works correctly after hard reload
 
 ## Key Files
 
