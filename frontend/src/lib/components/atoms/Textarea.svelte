@@ -702,31 +702,41 @@ function updateSuggestionPosition(_target: HTMLDivElement) {
 	const selection = window.getSelection();
 	if (!selection || selection.rangeCount === 0) return;
 
-	const range = selection.getRangeAt(0);
+	// rangeをcloneして元のrangeを保護
+	const range = selection.getRangeAt(0).cloneRange();
+	const rect = range.getBoundingClientRect();
 
-	// カーソル位置のビューポート座標を取得
-	// collapsed rangeの場合、getBoundingClientRect()が正しい位置を返さないことがあるため、
-	// 一時的なspan要素を挿入して位置を取得する
-	const tempSpan = document.createElement("span");
-	tempSpan.textContent = "\u200B"; // ゼロ幅スペース
-	range.insertNode(tempSpan);
+	// collapsed range（カーソル位置）でrectが有効でない場合のみ、span要素を使用
+	if (rect.width === 0 && rect.height === 0) {
+		// 一時的なspan要素を挿入して位置を取得
+		const tempSpan = document.createElement("span");
+		tempSpan.textContent = "\u200B"; // ゼロ幅スペース
+		range.insertNode(tempSpan);
 
-	const rect = tempSpan.getBoundingClientRect();
+		const spanRect = tempSpan.getBoundingClientRect();
 
-	// span要素を削除
-	tempSpan.remove();
+		// span要素を削除
+		tempSpan.remove();
 
-	// カーソル位置を復元
-	range.collapse(true);
-	selection.removeAllRanges();
-	selection.addRange(range);
+		// 元のカーソル位置を復元（cloneしたrangeなので元の選択範囲には影響なし）
+		// ただし、insertNode後にselectionが変わるため、元のrangeを復元
+		const originalRange = selection.getRangeAt(0);
+		selection.removeAllRanges();
+		selection.addRange(originalRange);
 
-	// position: fixedを使用するため、ビューポート座標をそのまま使用
-	// カーソルの下に表示（5px下）
-	suggestionPosition = {
-		top: rect.bottom + 5,
-		left: rect.left,
-	};
+		// position: fixedを使用するため、ビューポート座標をそのまま使用
+		// カーソルの下に表示（5px下）
+		suggestionPosition = {
+			top: spanRect.bottom + window.scrollY + 5,
+			left: spanRect.left + window.scrollX,
+		};
+	} else {
+		// rectが有効な場合はそのまま使用
+		suggestionPosition = {
+			top: rect.bottom + window.scrollY + 5,
+			left: rect.left + window.scrollX,
+		};
+	}
 }
 
 // 最も先頭一致する候補のインデックスを取得（フラット化されたリスト用）

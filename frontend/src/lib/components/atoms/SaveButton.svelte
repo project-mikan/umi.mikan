@@ -5,9 +5,17 @@ import Button from "./Button.svelte";
 export let loading = false;
 export let saved = false;
 export let size: "sm" | "md" | "lg" = "md";
+// カスタムラベル（未指定時はデフォルトのi18nキーを使用）
+export let label: string | null = null;
+// type="submit"か"button"かを選択可能にする
+export let type: "submit" | "button" = "submit";
 </script>
 
-<Button type="submit" variant={saved ? "success" : "primary"} {size} disabled={loading || saved} on:click>
+<!--
+  on:clickイベントをバブルアップ
+  親コンポーネントがtype="button"で独自のクリックハンドラを指定できるようにする
+-->
+<Button {type} variant={saved ? "success" : "primary"} {size} disabled={loading || saved} on:click>
 	<div class="flex items-center justify-center min-h-[1.25rem]">
 		{#if loading}
 			<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -21,7 +29,7 @@ export let size: "sm" | "md" | "lg" = "md";
 			</svg>
 			<span class="ml-1">{$_("diary.saved")}</span>
 		{:else}
-			<span>{$_("diary.save")}</span>
+			<span>{label !== null ? label : $_("diary.save")}</span>
 		{/if}
 	</div>
 </Button>

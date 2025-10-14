@@ -52,11 +52,45 @@ $: dayBeforeYesterdayCharacterCount = dayBeforeYesterdayContent
 	: 0;
 
 // 未保存状態の管理
-let initialTodayContent = data.today.entry?.content || "";
-let initialYesterdayContent = data.yesterday.entry?.content || "";
-let initialDayBeforeYesterdayContent =
-	data.dayBeforeYesterday.entry?.content || "";
+let initialTodayContent = "";
+let initialYesterdayContent = "";
+let initialDayBeforeYesterdayContent = "";
 let allowNavigation = false;
+
+// 前回のdataを保持して変更を検出
+let previousDataId = "";
+
+// データが変更された時に初期コンテンツをリセット
+// ページ遷移時のみ（dataのIDが変わった時のみ）実行
+$: {
+	// dataの一意性を判定するためのID（日付の組み合わせ）
+	const currentDataId = `${data.today.date.year}-${data.today.date.month}-${data.today.date.day}`;
+
+	// ページが変更された場合のみ初期化
+	if (currentDataId !== previousDataId) {
+		previousDataId = currentDataId;
+
+		// 初期コンテンツを設定
+		initialTodayContent = data.today.entry?.content || "";
+		initialYesterdayContent = data.yesterday.entry?.content || "";
+		initialDayBeforeYesterdayContent =
+			data.dayBeforeYesterday.entry?.content || "";
+
+		// コンテンツ変数を初期化（ユーザー入力を上書きしない）
+		if (todayContent !== initialTodayContent) {
+			todayContent = initialTodayContent;
+		}
+		if (yesterdayContent !== initialYesterdayContent) {
+			yesterdayContent = initialYesterdayContent;
+		}
+		if (dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent) {
+			dayBeforeYesterdayContent = initialDayBeforeYesterdayContent;
+		}
+
+		// 新しいページではallowNavigationをリセット
+		allowNavigation = false;
+	}
+}
 
 // 各日記の未保存状態を監視
 $: todayHasUnsavedChanges =
@@ -72,18 +106,6 @@ $: hasAnyUnsavedChanges =
 	todayHasUnsavedChanges ||
 	yesterdayHasUnsavedChanges ||
 	dayBeforeYesterdayHasUnsavedChanges;
-
-// データが変更された時に初期コンテンツをリセット
-$: {
-	initialTodayContent = data.today.entry?.content || "";
-	initialYesterdayContent = data.yesterday.entry?.content || "";
-	initialDayBeforeYesterdayContent =
-		data.dayBeforeYesterday.entry?.content || "";
-	todayContent = initialTodayContent;
-	yesterdayContent = initialYesterdayContent;
-	dayBeforeYesterdayContent = initialDayBeforeYesterdayContent;
-	allowNavigation = false;
-}
 
 function getMonthlyUrl(): string {
 	const now = new Date();
@@ -138,11 +160,14 @@ onMount(() => {
 		}
 	};
 
+	// スクロール位置判定の定数
+	const VIEWPORT_CENTER_DIVISOR = 2;
+
 	// スクロール位置を監視して、現在表示中のセクションを判定
-	const handleScroll = () => {
+	const updateActiveSection = () => {
 		const scrollY = window.scrollY;
 		const viewportHeight = window.innerHeight;
-		const viewportCenter = scrollY + viewportHeight / 2;
+		const viewportCenter = scrollY + viewportHeight / VIEWPORT_CENTER_DIVISOR;
 
 		// 各カードの位置を取得
 		const todayRect = todayCard?.getBoundingClientRect();
@@ -186,7 +211,8 @@ onMount(() => {
 		}> = [];
 
 		if (todayRect && todayRect.top < viewportHeight && todayRect.bottom > 0) {
-			const todayCenter = todayRect.top + scrollY + todayRect.height / 2;
+			const todayCenter =
+				todayRect.top + scrollY + todayRect.height / VIEWPORT_CENTER_DIVISOR;
 			const todayDistance = Math.abs(viewportCenter - todayCenter);
 			candidates.push({ section: "today", distance: todayDistance });
 		}
@@ -197,7 +223,9 @@ onMount(() => {
 			yesterdayRect.bottom > 0
 		) {
 			const yesterdayCenter =
-				yesterdayRect.top + scrollY + yesterdayRect.height / 2;
+				yesterdayRect.top +
+				scrollY +
+				yesterdayRect.height / VIEWPORT_CENTER_DIVISOR;
 			const yesterdayDistance = Math.abs(viewportCenter - yesterdayCenter);
 			candidates.push({ section: "yesterday", distance: yesterdayDistance });
 		}
@@ -210,7 +238,7 @@ onMount(() => {
 			const dayBeforeYesterdayCenter =
 				dayBeforeYesterdayRect.top +
 				scrollY +
-				dayBeforeYesterdayRect.height / 2;
+				dayBeforeYesterdayRect.height / VIEWPORT_CENTER_DIVISOR;
 			const dayBeforeYesterdayDistance = Math.abs(
 				viewportCenter - dayBeforeYesterdayCenter,
 			);
@@ -226,15 +254,25 @@ onMount(() => {
 		}
 	};
 
+	// debounce実装（100msの遅延）
+	let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+	const handleScroll = () => {
+		if (scrollTimeout) clearTimeout(scrollTimeout);
+		scrollTimeout = setTimeout(() => {
+			updateActiveSection();
+		}, 100);
+	};
+
 	window.addEventListener("beforeunload", handleBeforeUnload);
-	window.addEventListener("scroll", handleScroll);
+	window.addEventListener("scroll", handleScroll, { passive: true });
 
 	// 初期表示時に一度実行
-	handleScroll();
+	updateActiveSection();
 
 	return () => {
 		window.removeEventListener("beforeunload", handleBeforeUnload);
 		window.removeEventListener("scroll", handleScroll);
+		if (scrollTimeout) clearTimeout(scrollTimeout);
 	};
 });
 </script>
@@ -271,7 +309,7 @@ use:enhance={createSubmitHandler(
 		if (saved) {
 			// 保存成功時に初期コンテンツを更新
 			initialTodayContent = todayContent;
-			allowNavigation = true;
+			// 個別のフラグでallowNavigationを制御せず、hasUnsavedChangesの再計算に任せる
 		}
 	}
 )}
@@ -334,7 +372,6 @@ use:enhance={createSubmitHandler(
 		if (saved) {
 			// 保存成功時に初期コンテンツを更新
 			initialYesterdayContent = yesterdayContent;
-			allowNavigation = true;
 		}
 	}
 )}
@@ -397,7 +434,6 @@ use:enhance={createSubmitHandler(
 		if (saved) {
 			// 保存成功時に初期コンテンツを更新
 			initialDayBeforeYesterdayContent = dayBeforeYesterdayContent;
-			allowNavigation = true;
 		}
 	}
 )}
@@ -454,62 +490,32 @@ use:enhance={createSubmitHandler(
 	<div class="fixed bottom-20 left-0 right-0 p-4 sm:hidden z-10 pointer-events-none">
 		<div class="max-w-4xl mx-auto flex justify-end pointer-events-auto">
 			{#if activeSection === "today"}
-				<Button type="button" variant={todaySaved ? "success" : "primary"} size="md" disabled={todayLoading || todaySaved} on:click={handleSave}>
-					<div class="flex items-center justify-center min-h-[1.25rem]">
-						{#if todayLoading}
-							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-							</svg>
-							<span class="ml-1">{$_("diary.saving")}</span>
-						{:else if todaySaved}
-							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
-							</svg>
-							<span class="ml-1">{$_("diary.saved")}</span>
-						{:else}
-							<span>{$_("diary.saveTodayDiary")}</span>
-						{/if}
-					</div>
-				</Button>
+				<SaveButton
+					type="button"
+					loading={todayLoading}
+					saved={todaySaved}
+					size="md"
+					label={$_("diary.saveTodayDiary")}
+					on:click={handleSave}
+				/>
 			{:else if activeSection === "yesterday"}
-				<Button type="button" variant={yesterdaySaved ? "success" : "primary"} size="md" disabled={yesterdayLoading || yesterdaySaved} on:click={handleYesterdaySave}>
-					<div class="flex items-center justify-center min-h-[1.25rem]">
-						{#if yesterdayLoading}
-							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-							</svg>
-							<span class="ml-1">{$_("diary.saving")}</span>
-						{:else if yesterdaySaved}
-							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
-							</svg>
-							<span class="ml-1">{$_("diary.saved")}</span>
-						{:else}
-							<span>{$_("diary.saveYesterdayDiary")}</span>
-						{/if}
-					</div>
-				</Button>
+				<SaveButton
+					type="button"
+					loading={yesterdayLoading}
+					saved={yesterdaySaved}
+					size="md"
+					label={$_("diary.saveYesterdayDiary")}
+					on:click={handleYesterdaySave}
+				/>
 			{:else}
-				<Button type="button" variant={dayBeforeSaved ? "success" : "primary"} size="md" disabled={dayBeforeLoading || dayBeforeSaved} on:click={handleDayBeforeYesterdaySave}>
-					<div class="flex items-center justify-center min-h-[1.25rem]">
-						{#if dayBeforeLoading}
-							<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-							</svg>
-							<span class="ml-1">{$_("diary.saving")}</span>
-						{:else if dayBeforeSaved}
-							<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-								<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
-							</svg>
-							<span class="ml-1">{$_("diary.saved")}</span>
-						{:else}
-							<span>{$_("diary.saveDayBeforeYesterdayDiary")}</span>
-						{/if}
-					</div>
-				</Button>
+				<SaveButton
+					type="button"
+					loading={dayBeforeLoading}
+					saved={dayBeforeSaved}
+					size="md"
+					label={$_("diary.saveDayBeforeYesterdayDiary")}
+					on:click={handleDayBeforeYesterdaySave}
+				/>
 			{/if}
 		</div>
 	</div>
