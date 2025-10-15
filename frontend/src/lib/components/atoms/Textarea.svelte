@@ -1011,6 +1011,55 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 	// currentTriggerPosからcursorPosまでの文字列を選択されたテキストに置き換え
 	value = `${beforeTrigger}${textToInsert}${afterCursor}`;
 
+	// 置き換えによって変化した文字数を計算
+	// 元の文字列(currentTriggerPos～cursorPos)の長さ
+	const oldLength = cursorPos - currentTriggerPos;
+	// 新しい文字列の長さ
+	const newLength = textToInsert.length;
+	// 差分（正の場合は挿入、負の場合は削除）
+	const lengthDiff = newLength - oldLength;
+
+	// 既存のselectedEntitiesのpositionを調整
+	// 挿入位置(currentTriggerPos)より後ろにあるpositionを全て調整
+	selectedEntities = selectedEntities
+		.map((e) => {
+			const adjustedPositions = e.positions
+				.map((pos) => {
+					// 挿入位置より前のpositionはそのまま
+					if (pos.end <= currentTriggerPos) {
+						return pos;
+					}
+					// 挿入位置と重複するpositionは除外
+					// （置き換え対象のテキストと重複している場合）
+					if (
+						pos.start < currentTriggerPos + oldLength &&
+						pos.end > currentTriggerPos
+					) {
+						return null; // 除外
+					}
+					// 挿入位置より後ろのpositionは調整
+					if (pos.start >= currentTriggerPos + oldLength) {
+						return {
+							start: pos.start + lengthDiff,
+							end: pos.end + lengthDiff,
+						};
+					}
+					// その他（開始が挿入位置より前で、終了が挿入位置より後ろ）
+					// このケースは通常起こらないが、念のため調整
+					return {
+						start: pos.start,
+						end: pos.end + lengthDiff,
+					};
+				})
+				.filter((pos): pos is { start: number; end: number } => pos !== null);
+
+			return {
+				...e,
+				positions: adjustedPositions,
+			};
+		})
+		.filter((e) => e.positions.length > 0);
+
 	// 選択されたエンティティの位置情報を記録
 	const newPosition = {
 		start: currentTriggerPos,

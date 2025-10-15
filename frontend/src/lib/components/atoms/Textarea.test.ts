@@ -553,3 +553,322 @@ describe("Entity Highlighting Behavior", () => {
 		expect(savedContent).toBe("original"); // 変更されない
 	});
 });
+
+describe("Entity Position Adjustment on Insertion", () => {
+	// エンティティ挿入時に既存のエンティティ位置を調整するロジックをテスト
+
+	/**
+	 * エンティティ位置調整ロジックの実装
+	 * selectSuggestion関数内で使われるロジックを抽出してテスト
+	 */
+	function adjustEntityPositions(
+		selectedEntities: {
+			entityId: string;
+			positions: { start: number; end: number }[];
+		}[],
+		insertPos: number,
+		oldLength: number,
+		newLength: number,
+	): {
+		entityId: string;
+		positions: { start: number; end: number }[];
+	}[] {
+		const lengthDiff = newLength - oldLength;
+
+		return selectedEntities
+			.map((e) => {
+				const adjustedPositions = e.positions
+					.map((pos) => {
+						// 挿入位置より前のpositionはそのまま
+						if (pos.end <= insertPos) {
+							return pos;
+						}
+						// 挿入位置と重複するpositionは除外
+						if (pos.start < insertPos + oldLength && pos.end > insertPos) {
+							return null;
+						}
+						// 挿入位置より後ろのpositionは調整
+						if (pos.start >= insertPos + oldLength) {
+							return {
+								start: pos.start + lengthDiff,
+								end: pos.end + lengthDiff,
+							};
+						}
+						// その他（開始が挿入位置より前で、終了が挿入位置より後ろ）
+						return {
+							start: pos.start,
+							end: pos.end + lengthDiff,
+						};
+					})
+					.filter((pos): pos is { start: number; end: number } => pos !== null);
+
+				return {
+					...e,
+					positions: adjustedPositions,
+				};
+			})
+			.filter((e) => e.positions.length > 0);
+	}
+
+	it("前の行でエンティティを挿入した時、次の行のエンティティ位置が正しく調整される", () => {
+		// 初期状態:
+		// "natoriaaaaaほげ\nnatoria"
+		// positions: [{ start: 0, end: 6 }, { start: 18, end: 24 }]
+		//             ^natori^              ^natori^ (6文字)
+
+		const initialEntities = [
+			{
+				entityId: "natori-id",
+				positions: [
+					{ start: 0, end: 6 }, // "natori"aaaaaほげ
+					{ start: 18, end: 24 }, // natoriaaaaaほげ\n"natori"a
+				],
+			},
+		];
+
+		// 改行の直後(17文字目)に"sato"(4文字)を挿入
+		// 元の文字列: "natoriaaaaaほげ\n" + "natoria"
+		//                                ^ 17文字目
+		// 挿入後: "natoriaaaaaほげ\nsato" + "natoria"
+
+		const insertPos = 17; // 改行の直後
+		const oldLength = 0; // 置き換えではなく挿入なので0
+		const newLength = 4; // "sato"
+
+		const adjustedEntities = adjustEntityPositions(
+			initialEntities,
+			insertPos,
+			oldLength,
+			newLength,
+		);
+
+		// 期待される結果:
+		// positions[0] (0-6) は挿入位置より前なのでそのまま
+		// positions[1] (18-24) は挿入位置より後ろなので +4 調整
+		expect(adjustedEntities).toEqual([
+			{
+				entityId: "natori-id",
+				positions: [
+					{ start: 0, end: 6 }, // そのまま
+					{ start: 22, end: 28 }, // 18+4=22, 24+4=28
+				],
+			},
+		]);
+	});
+
+	it("エンティティ位置より前に挿入した場合、既存エンティティ位置はそのまま", () => {
+		const initialEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 10, end: 15 }],
+			},
+		];
+
+		// 5文字目に3文字挿入
+		const insertPos = 5;
+		const oldLength = 0;
+		const newLength = 3;
+
+		const adjustedEntities = adjustEntityPositions(
+			initialEntities,
+			insertPos,
+			oldLength,
+			newLength,
+		);
+
+		// 10-15は挿入位置(5)より後ろなので+3調整される
+		expect(adjustedEntities).toEqual([
+			{
+				entityId: "entity-1",
+				positions: [{ start: 13, end: 18 }],
+			},
+		]);
+	});
+
+	it("エンティティ位置より後ろに挿入した場合、既存エンティティ位置はそのまま", () => {
+		const initialEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 10, end: 15 }],
+			},
+		];
+
+		// 20文字目に3文字挿入
+		const insertPos = 20;
+		const oldLength = 0;
+		const newLength = 3;
+
+		const adjustedEntities = adjustEntityPositions(
+			initialEntities,
+			insertPos,
+			oldLength,
+			newLength,
+		);
+
+		// 10-15は挿入位置(20)より前なのでそのまま
+		expect(adjustedEntities).toEqual([
+			{
+				entityId: "entity-1",
+				positions: [{ start: 10, end: 15 }],
+			},
+		]);
+	});
+
+	it("エンティティ位置と重複する位置に挿入した場合、そのエンティティは除外される", () => {
+		const initialEntities = [
+			{
+				entityId: "entity-1",
+				positions: [
+					{ start: 5, end: 10 },
+					{ start: 20, end: 25 },
+				],
+			},
+		];
+
+		// 7-12の範囲を"newtext"(7文字)で置き換え
+		const insertPos = 7;
+		const oldLength = 5; // 7-12 = 5文字
+		const newLength = 7;
+
+		const adjustedEntities = adjustEntityPositions(
+			initialEntities,
+			insertPos,
+			oldLength,
+			newLength,
+		);
+
+		// 5-10は挿入範囲(7-12)と重複するので除外
+		// 20-25は挿入位置より後ろなので +2調整 (7-5=2)
+		expect(adjustedEntities).toEqual([
+			{
+				entityId: "entity-1",
+				positions: [{ start: 22, end: 27 }],
+			},
+		]);
+	});
+
+	it("複数エンティティの位置を同時に調整できる", () => {
+		const initialEntities = [
+			{
+				entityId: "entity-1",
+				positions: [{ start: 5, end: 10 }],
+			},
+			{
+				entityId: "entity-2",
+				positions: [{ start: 20, end: 25 }],
+			},
+			{
+				entityId: "entity-3",
+				positions: [{ start: 30, end: 35 }],
+			},
+		];
+
+		// 15文字目に5文字挿入
+		const insertPos = 15;
+		const oldLength = 0;
+		const newLength = 5;
+
+		const adjustedEntities = adjustEntityPositions(
+			initialEntities,
+			insertPos,
+			oldLength,
+			newLength,
+		);
+
+		// entity-1 (5-10)は挿入位置より前なのでそのまま
+		// entity-2 (20-25)は挿入位置より後ろなので+5調整
+		// entity-3 (30-35)は挿入位置より後ろなので+5調整
+		expect(adjustedEntities).toEqual([
+			{
+				entityId: "entity-1",
+				positions: [{ start: 5, end: 10 }],
+			},
+			{
+				entityId: "entity-2",
+				positions: [{ start: 25, end: 30 }],
+			},
+			{
+				entityId: "entity-3",
+				positions: [{ start: 35, end: 40 }],
+			},
+		]);
+	});
+
+	it("文字列を削除(oldLength > newLength)した場合も正しく調整される", () => {
+		const initialEntities = [
+			{
+				entityId: "entity-1",
+				positions: [
+					{ start: 5, end: 10 },
+					{ start: 20, end: 25 },
+				],
+			},
+		];
+
+		// 12-17の範囲(5文字)を"ab"(2文字)で置き換え
+		const insertPos = 12;
+		const oldLength = 5;
+		const newLength = 2;
+
+		const adjustedEntities = adjustEntityPositions(
+			initialEntities,
+			insertPos,
+			oldLength,
+			newLength,
+		);
+
+		// 5-10は挿入位置より前なのでそのまま
+		// 20-25は挿入位置より後ろなので-3調整 (2-5=-3)
+		expect(adjustedEntities).toEqual([
+			{
+				entityId: "entity-1",
+				positions: [
+					{ start: 5, end: 10 },
+					{ start: 17, end: 22 },
+				],
+			},
+		]);
+	});
+
+	it("同じエンティティの複数positionが正しく調整される", () => {
+		// バグ再現ケース:
+		// "natoriaaaaaほげ\nnatoria\nnatoriくん"
+		// positions: [{ start: 0, end: 6 }, { start: 18, end: 24 }, { start: 26, end: 32 }]
+		const initialEntities = [
+			{
+				entityId: "natori-id",
+				positions: [
+					{ start: 0, end: 6 }, // "natori"
+					{ start: 18, end: 24 }, // "natori"
+					{ start: 26, end: 32 }, // "natori"
+				],
+			},
+		];
+
+		// 改行の直後(17文字目)に"test"(4文字)を挿入
+		const insertPos = 17;
+		const oldLength = 0;
+		const newLength = 4;
+
+		const adjustedEntities = adjustEntityPositions(
+			initialEntities,
+			insertPos,
+			oldLength,
+			newLength,
+		);
+
+		// positions[0] (0-6) はそのまま
+		// positions[1] (18-24) は +4 調整
+		// positions[2] (26-32) は +4 調整
+		expect(adjustedEntities).toEqual([
+			{
+				entityId: "natori-id",
+				positions: [
+					{ start: 0, end: 6 },
+					{ start: 22, end: 28 },
+					{ start: 30, end: 36 },
+				],
+			},
+		]);
+	});
+});
