@@ -10,7 +10,7 @@ const currentMonth = currentDate.getMonth() + 1;
 <nav
 	class="quick-nav fixed z-50
 	md:hidden
-	bottom-4 left-1/2 -translate-x-1/2 flex-row w-max
+	bottom-4 left-0 right-0 mx-auto w-max
 	flex gap-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
 >
 	<a
