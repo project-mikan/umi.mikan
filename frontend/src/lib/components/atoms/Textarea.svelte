@@ -248,6 +248,7 @@ function restoreCursorPosition(targetPos: number) {
 	let currentPos = 0;
 	let targetNode: Node | null = null;
 	let targetOffset = 0;
+	let found = false;
 
 	function traverse(node: Node): boolean {
 		if (node.nodeType === Node.TEXT_NODE) {
@@ -271,28 +272,65 @@ function restoreCursorPosition(targetPos: number) {
 						return true;
 					}
 				}
-			}
-			for (const child of Array.from(node.childNodes)) {
-				if (traverse(child)) return true;
+			} else {
+				// <a>タグなどの要素ノードの子を再帰的に処理
+				for (const child of Array.from(node.childNodes)) {
+					if (traverse(child)) return true;
+				}
 			}
 		}
 		return false;
 	}
 
-	traverse(contentElement);
+	found = traverse(contentElement);
 
-	if (targetNode) {
+	if (found && targetNode) {
 		try {
 			const range = document.createRange();
-			// TypeScriptの型推論の問題を回避するため、Node型として明示的にキャスト
+			// Node型として明示的にキャスト
 			const node = targetNode as Node;
-			const textLength = node.textContent?.length || 0;
-			range.setStart(node, Math.min(targetOffset, textLength));
-			range.collapse(true);
+			// テキストノードの場合
+			if (node.nodeType === Node.TEXT_NODE) {
+				const textLength = node.textContent?.length || 0;
+				range.setStart(node, Math.min(targetOffset, textLength));
+				range.collapse(true);
+			} else {
+				// 要素ノードの場合（BRの親など）
+				range.setStart(node, targetOffset);
+				range.collapse(true);
+			}
 			selection.removeAllRanges();
 			selection.addRange(range);
 		} catch (e) {
-			// カーソル復元に失敗した場合は無視
+			console.error("Failed to restore cursor position:", e);
+			// カーソル復元に失敗した場合は末尾に配置
+			try {
+				const range = document.createRange();
+				range.selectNodeContents(contentElement);
+				range.collapse(false);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			} catch {
+				// 何もしない
+			}
+		}
+	} else {
+		// targetPosが見つからない場合、createRangeAtTextOffsetを使って再試行
+		try {
+			const range = createRangeAtTextOffset(contentElement, targetPos);
+			if (range) {
+				selection.removeAllRanges();
+				selection.addRange(range);
+			} else {
+				// それでも失敗した場合は末尾に配置
+				const fallbackRange = document.createRange();
+				fallbackRange.selectNodeContents(contentElement);
+				fallbackRange.collapse(false);
+				selection.removeAllRanges();
+				selection.addRange(fallbackRange);
+			}
+		} catch {
+			// 何もしない
 		}
 	}
 }
@@ -724,17 +762,18 @@ function updateSuggestionPosition(_target: HTMLDivElement) {
 		selection.removeAllRanges();
 		selection.addRange(originalRange);
 
-		// position: fixedを使用するため、ビューポート座標をそのまま使用
+		// position: fixedを使用するため、ビューポート座標をそのまま使用（スクロール量は不要）
 		// カーソルの下に表示（5px下）
 		suggestionPosition = {
-			top: spanRect.bottom + window.scrollY + 5,
-			left: spanRect.left + window.scrollX,
+			top: spanRect.bottom + 5,
+			left: spanRect.left,
 		};
 	} else {
 		// rectが有効な場合はそのまま使用
+		// position: fixedを使用するため、ビューポート座標をそのまま使用（スクロール量は不要）
 		suggestionPosition = {
-			top: rect.bottom + window.scrollY + 5,
-			left: rect.left + window.scrollX,
+			top: rect.bottom + 5,
+			left: rect.left,
 		};
 	}
 }
@@ -1018,6 +1057,10 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 	// 入力中フラグを下ろす
 	isTyping = false;
 
+	// IME入力中フラグもクリア（エンティティ確定時はIME確定と同等の扱い）
+	// スマホでのIME入力中にエンティティを確定した場合、IMEの未確定文字が重複しないようにする
+	isComposing = false;
+
 	// 次のティック（reactive statements実行後）まで待つ
 	await tick();
 
@@ -1026,6 +1069,9 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 	isSelectingEntity = false;
 
 	// contentEditableの内容を更新してフォーカスを戻す
+	// カーソル位置を設定（エンティティテキストの直後）
+	const newCursorPos = beforeTrigger.length + textToInsert.length;
+
 	setTimeout(() => {
 		// selectedEntitiesからエンティティハイライトを適用したHTMLを生成
 		const htmlWithEntities = generateHTMLFromSelectedEntities(
@@ -1033,75 +1079,36 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 			selectedEntities,
 		);
 		contentElement.innerHTML = htmlWithEntities;
-		contentElement.focus();
 
-		// カーソル位置を設定（エンティティテキストの直後）
-		const newCursorPos = beforeTrigger.length + textToInsert.length;
-
-		// エンティティリンクを含むHTMLからカーソル位置を設定
-		// createRangeAtTextOffsetを使用してプレーンテキスト位置からDOM位置を計算
-		const sel = window.getSelection();
-		if (sel) {
-			let currentTextPos = 0;
-			let targetNode: Node | null = null;
-			let targetOffset = 0;
-			let found = false;
-
-			// DOMツリーを走査してテキスト位置からノード位置を見つける
-			function findNodeAtPosition(node: Node): boolean {
-				if (node.nodeType === Node.TEXT_NODE) {
-					const textLength = node.textContent?.length || 0;
-					if (currentTextPos + textLength >= newCursorPos) {
-						targetNode = node;
-						targetOffset = newCursorPos - currentTextPos;
-						return true;
-					}
-					currentTextPos += textLength;
-				} else if (node.nodeType === Node.ELEMENT_NODE) {
-					if (node.nodeName === "BR") {
-						currentTextPos += 1;
-						if (currentTextPos >= newCursorPos) {
-							// BRの直後にカーソルを配置
-							targetNode = node.parentNode;
-							if (targetNode) {
-								targetOffset =
-									Array.from(targetNode.childNodes).indexOf(node as ChildNode) +
-									1;
-							}
-							return true;
-						}
-					} else {
-						// 子ノードを再帰的に処理
-						for (const child of Array.from(node.childNodes)) {
-							if (findNodeAtPosition(child)) {
-								return true;
-							}
-						}
+		// カーソル位置を復元してからフォーカス
+		// エンティティ確定後は必ずエンティティの直後にカーソルを配置する
+		try {
+			restoreCursorPosition(newCursorPos);
+		} catch (e) {
+			console.error("Failed to restore cursor after entity selection:", e);
+			// カーソル復元に失敗した場合は、エンティティの直後（newCursorPos）に配置を試みる
+			try {
+				const range = createRangeAtTextOffset(contentElement, newCursorPos);
+				if (range) {
+					const selection = window.getSelection();
+					if (selection) {
+						selection.removeAllRanges();
+						selection.addRange(range);
 					}
 				}
-				return false;
-			}
-
-			found = findNodeAtPosition(contentElement);
-
-			if (found && targetNode) {
-				try {
-					const range = document.createRange();
-					range.setStart(targetNode, targetOffset);
+			} catch {
+				// それでも失敗した場合は末尾に配置
+				const range = document.createRange();
+				const selection = window.getSelection();
+				if (contentElement.lastChild) {
+					range.setStartAfter(contentElement.lastChild);
 					range.collapse(true);
-					sel.removeAllRanges();
-					sel.addRange(range);
-				} catch (e) {
-					console.error("Failed to set cursor position:", e);
-					// フォールバック: 末尾にカーソルを配置
-					const range = document.createRange();
-					range.selectNodeContents(contentElement);
-					range.collapse(false);
-					sel.removeAllRanges();
-					sel.addRange(range);
+					selection?.removeAllRanges();
+					selection?.addRange(range);
 				}
 			}
 		}
+		contentElement.focus();
 	}, 0);
 }
 
@@ -1251,9 +1258,11 @@ function restoreCursorFromRange(range: Range) {
 // Update content when value changes externally
 // ただし、updateContentElement()が呼ばれる条件の場合はスキップ
 // （エンティティハイライトが適用される場合は、updateContentElement()に任せる）
+// また、エンティティ選択中（isSelectingEntity）の場合もスキップ
 $: if (
 	contentElement &&
 	htmlToPlainText(contentElement.innerHTML) !== value &&
+	!isSelectingEntity &&
 	!(
 		!isUpdatingFromValue &&
 		!isComposing &&
