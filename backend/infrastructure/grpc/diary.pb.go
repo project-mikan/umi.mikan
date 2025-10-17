@@ -1528,6 +1528,202 @@ func (x *GetDailySummaryResponse) GetSummary() *DailySummary {
 	return nil
 }
 
+// 直近トレンド分析取得リクエスト
+type GetLatestTrendRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLatestTrendRequest) Reset() {
+	*x = GetLatestTrendRequest{}
+	mi := &file_diary_diary_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLatestTrendRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLatestTrendRequest) ProtoMessage() {}
+
+func (x *GetLatestTrendRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_diary_diary_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLatestTrendRequest.ProtoReflect.Descriptor instead.
+func (*GetLatestTrendRequest) Descriptor() ([]byte, []int) {
+	return file_diary_diary_proto_rawDescGZIP(), []int{29}
+}
+
+// 直近トレンド分析取得レスポンス
+type GetLatestTrendResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Analysis      string                 `protobuf:"bytes,1,opt,name=analysis,proto3" json:"analysis,omitempty"`                          // トレンド分析結果テキスト（最大300字程度）
+	PeriodStart   string                 `protobuf:"bytes,2,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"` // 分析期間開始（ISO 8601形式）
+	PeriodEnd     string                 `protobuf:"bytes,3,opt,name=period_end,json=periodEnd,proto3" json:"period_end,omitempty"`       // 分析期間終了（ISO 8601形式）
+	GeneratedAt   string                 `protobuf:"bytes,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"` // 生成日時（ISO 8601形式）
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLatestTrendResponse) Reset() {
+	*x = GetLatestTrendResponse{}
+	mi := &file_diary_diary_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLatestTrendResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLatestTrendResponse) ProtoMessage() {}
+
+func (x *GetLatestTrendResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_diary_diary_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLatestTrendResponse.ProtoReflect.Descriptor instead.
+func (*GetLatestTrendResponse) Descriptor() ([]byte, []int) {
+	return file_diary_diary_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *GetLatestTrendResponse) GetAnalysis() string {
+	if x != nil {
+		return x.Analysis
+	}
+	return ""
+}
+
+func (x *GetLatestTrendResponse) GetPeriodStart() string {
+	if x != nil {
+		return x.PeriodStart
+	}
+	return ""
+}
+
+func (x *GetLatestTrendResponse) GetPeriodEnd() string {
+	if x != nil {
+		return x.PeriodEnd
+	}
+	return ""
+}
+
+func (x *GetLatestTrendResponse) GetGeneratedAt() string {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return ""
+}
+
+// 直近トレンド分析生成トリガーリクエスト（デバッグ用）
+type TriggerLatestTrendRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TriggerLatestTrendRequest) Reset() {
+	*x = TriggerLatestTrendRequest{}
+	mi := &file_diary_diary_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TriggerLatestTrendRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TriggerLatestTrendRequest) ProtoMessage() {}
+
+func (x *TriggerLatestTrendRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_diary_diary_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TriggerLatestTrendRequest.ProtoReflect.Descriptor instead.
+func (*TriggerLatestTrendRequest) Descriptor() ([]byte, []int) {
+	return file_diary_diary_proto_rawDescGZIP(), []int{31}
+}
+
+// 直近トレンド分析生成トリガーレスポンス（デバッグ用）
+type TriggerLatestTrendResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"` // 成功フラグ
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`  // メッセージ
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TriggerLatestTrendResponse) Reset() {
+	*x = TriggerLatestTrendResponse{}
+	mi := &file_diary_diary_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TriggerLatestTrendResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TriggerLatestTrendResponse) ProtoMessage() {}
+
+func (x *TriggerLatestTrendResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_diary_diary_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TriggerLatestTrendResponse.ProtoReflect.Descriptor instead.
+func (*TriggerLatestTrendResponse) Descriptor() ([]byte, []int) {
+	return file_diary_diary_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *TriggerLatestTrendResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *TriggerLatestTrendResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_diary_diary_proto protoreflect.FileDescriptor
 
 const file_diary_diary_proto_rawDesc = "" +
@@ -1630,7 +1826,18 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x04date\x18\x01 \x01(\v2\n" +
 	".diary.YMDR\x04date\"H\n" +
 	"\x17GetDailySummaryResponse\x12-\n" +
-	"\asummary\x18\x01 \x01(\v2\x13.diary.DailySummaryR\asummary2\xdf\a\n" +
+	"\asummary\x18\x01 \x01(\v2\x13.diary.DailySummaryR\asummary\"\x17\n" +
+	"\x15GetLatestTrendRequest\"\x99\x01\n" +
+	"\x16GetLatestTrendResponse\x12\x1a\n" +
+	"\banalysis\x18\x01 \x01(\tR\banalysis\x12!\n" +
+	"\fperiod_start\x18\x02 \x01(\tR\vperiodStart\x12\x1d\n" +
+	"\n" +
+	"period_end\x18\x03 \x01(\tR\tperiodEnd\x12!\n" +
+	"\fgenerated_at\x18\x04 \x01(\tR\vgeneratedAt\"\x1b\n" +
+	"\x19TriggerLatestTrendRequest\"P\n" +
+	"\x1aTriggerLatestTrendResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\x89\t\n" +
 	"\fDiaryService\x12S\n" +
 	"\x10CreateDiaryEntry\x12\x1e.diary.CreateDiaryEntryRequest\x1a\x1f.diary.CreateDiaryEntryResponse\x12S\n" +
 	"\x10UpdateDiaryEntry\x12\x1e.diary.UpdateDiaryEntryRequest\x1a\x1f.diary.UpdateDiaryEntryResponse\x12S\n" +
@@ -1642,7 +1849,9 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x16GenerateMonthlySummary\x12$.diary.GenerateMonthlySummaryRequest\x1a%.diary.GenerateMonthlySummaryResponse\x12V\n" +
 	"\x11GetMonthlySummary\x12\x1f.diary.GetMonthlySummaryRequest\x1a .diary.GetMonthlySummaryResponse\x12_\n" +
 	"\x14GenerateDailySummary\x12\".diary.GenerateDailySummaryRequest\x1a#.diary.GenerateDailySummaryResponse\x12P\n" +
-	"\x0fGetDailySummary\x12\x1d.diary.GetDailySummaryRequest\x1a\x1e.diary.GetDailySummaryResponseB@Z>github.com/project-mikan/umi.mikan/backend/infrastructure/grpcb\x06proto3"
+	"\x0fGetDailySummary\x12\x1d.diary.GetDailySummaryRequest\x1a\x1e.diary.GetDailySummaryResponse\x12M\n" +
+	"\x0eGetLatestTrend\x12\x1c.diary.GetLatestTrendRequest\x1a\x1d.diary.GetLatestTrendResponse\x12Y\n" +
+	"\x12TriggerLatestTrend\x12 .diary.TriggerLatestTrendRequest\x1a!.diary.TriggerLatestTrendResponseB@Z>github.com/project-mikan/umi.mikan/backend/infrastructure/grpcb\x06proto3"
 
 var (
 	file_diary_diary_proto_rawDescOnce sync.Once
@@ -1656,7 +1865,7 @@ func file_diary_diary_proto_rawDescGZIP() []byte {
 	return file_diary_diary_proto_rawDescData
 }
 
-var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_diary_diary_proto_goTypes = []any{
 	(*YMD)(nil),                            // 0: diary.YMD
 	(*YM)(nil),                             // 1: diary.YM
@@ -1687,13 +1896,17 @@ var file_diary_diary_proto_goTypes = []any{
 	(*GenerateDailySummaryResponse)(nil),   // 26: diary.GenerateDailySummaryResponse
 	(*GetDailySummaryRequest)(nil),         // 27: diary.GetDailySummaryRequest
 	(*GetDailySummaryResponse)(nil),        // 28: diary.GetDailySummaryResponse
-	(*Position)(nil),                       // 29: entity.Position
+	(*GetLatestTrendRequest)(nil),          // 29: diary.GetLatestTrendRequest
+	(*GetLatestTrendResponse)(nil),         // 30: diary.GetLatestTrendResponse
+	(*TriggerLatestTrendRequest)(nil),      // 31: diary.TriggerLatestTrendRequest
+	(*TriggerLatestTrendResponse)(nil),     // 32: diary.TriggerLatestTrendResponse
+	(*Position)(nil),                       // 33: entity.Position
 }
 var file_diary_diary_proto_depIdxs = []int32{
 	0,  // 0: diary.DiaryEntry.date:type_name -> diary.YMD
 	3,  // 1: diary.DiaryEntry.diary_entities:type_name -> diary.DiaryEntityOutput
-	29, // 2: diary.DiaryEntityOutput.positions:type_name -> entity.Position
-	29, // 3: diary.DiaryEntityInput.positions:type_name -> entity.Position
+	33, // 2: diary.DiaryEntityOutput.positions:type_name -> entity.Position
+	33, // 3: diary.DiaryEntityInput.positions:type_name -> entity.Position
 	0,  // 4: diary.CreateDiaryEntryRequest.date:type_name -> diary.YMD
 	4,  // 5: diary.CreateDiaryEntryRequest.diary_entities:type_name -> diary.DiaryEntityInput
 	2,  // 6: diary.CreateDiaryEntryResponse.entry:type_name -> diary.DiaryEntry
@@ -1727,19 +1940,23 @@ var file_diary_diary_proto_depIdxs = []int32{
 	22, // 34: diary.DiaryService.GetMonthlySummary:input_type -> diary.GetMonthlySummaryRequest
 	25, // 35: diary.DiaryService.GenerateDailySummary:input_type -> diary.GenerateDailySummaryRequest
 	27, // 36: diary.DiaryService.GetDailySummary:input_type -> diary.GetDailySummaryRequest
-	6,  // 37: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
-	16, // 38: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
-	18, // 39: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
-	14, // 40: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
-	12, // 41: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
-	13, // 42: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
-	11, // 43: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
-	21, // 44: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
-	23, // 45: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
-	26, // 46: diary.DiaryService.GenerateDailySummary:output_type -> diary.GenerateDailySummaryResponse
-	28, // 47: diary.DiaryService.GetDailySummary:output_type -> diary.GetDailySummaryResponse
-	37, // [37:48] is the sub-list for method output_type
-	26, // [26:37] is the sub-list for method input_type
+	29, // 37: diary.DiaryService.GetLatestTrend:input_type -> diary.GetLatestTrendRequest
+	31, // 38: diary.DiaryService.TriggerLatestTrend:input_type -> diary.TriggerLatestTrendRequest
+	6,  // 39: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
+	16, // 40: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
+	18, // 41: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
+	14, // 42: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
+	12, // 43: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
+	13, // 44: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
+	11, // 45: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
+	21, // 46: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
+	23, // 47: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
+	26, // 48: diary.DiaryService.GenerateDailySummary:output_type -> diary.GenerateDailySummaryResponse
+	28, // 49: diary.DiaryService.GetDailySummary:output_type -> diary.GetDailySummaryResponse
+	30, // 50: diary.DiaryService.GetLatestTrend:output_type -> diary.GetLatestTrendResponse
+	32, // 51: diary.DiaryService.TriggerLatestTrend:output_type -> diary.TriggerLatestTrendResponse
+	39, // [39:52] is the sub-list for method output_type
+	26, // [26:39] is the sub-list for method input_type
 	26, // [26:26] is the sub-list for extension type_name
 	26, // [26:26] is the sub-list for extension extendee
 	0,  // [0:26] is the sub-list for field type_name
@@ -1757,7 +1974,7 @@ func file_diary_diary_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_diary_diary_proto_rawDesc), len(file_diary_diary_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   29,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

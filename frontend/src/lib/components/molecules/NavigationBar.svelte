@@ -1,6 +1,7 @@
 <script lang="ts">
 import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
+import { dev } from "$app/environment";
 import Button from "../atoms/Button.svelte";
 import LanguageSelector from "../atoms/LanguageSelector.svelte";
 import DarkModeToggle from "../atoms/DarkModeToggle.svelte";
@@ -72,6 +73,17 @@ const currentMonth = currentDate.getMonth() + 1;
 							</svg>
 							{$_("navigation.settings")}
 						</a>
+						{#if dev}
+							<a
+								href="/debug"
+								class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 dark:text-gray-200 dark:hover:text-red-400 transition-colors"
+							>
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+								</svg>
+								{$_("navigation.debug")}
+							</a>
+						{/if}
 					</div>
 				</div>
 				<div class="flex items-center space-x-4">

@@ -108,3 +108,36 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 
 	return "", fmt.Errorf("unexpected content type")
 }
+
+func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent string) (string, error) {
+	prompt := fmt.Sprintf(`以下は過去1週間の日記です。最近の傾向(体調、気分、活動、考え方など)を300字程度で分析してください。
+
+要件：
+- Markdownは非対応
+- 客観的かつ簡潔に記述
+- 特に注目すべき変化や傾向を強調
+- 最大300字程度
+
+日記の内容:
+%s
+
+`, diaryContent)
+
+	contents := genai.Text(prompt)
+
+	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate content: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+		return "", fmt.Errorf("no content generated")
+	}
+
+	// The response parts contain the generated text
+	if textPart := resp.Candidates[0].Content.Parts[0]; textPart != nil {
+		return textPart.Text, nil
+	}
+
+	return "", fmt.Errorf("unexpected content type")
+}

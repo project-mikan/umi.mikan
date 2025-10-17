@@ -182,6 +182,7 @@ func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logge
 	// ジョブを追加
 	scheduler.AddJob(NewDailySummaryJob(app.SchedulerConfig.DailySummaryInterval))
 	scheduler.AddJob(NewMonthlySummaryJob(app.SchedulerConfig.MonthlySummaryInterval))
+	scheduler.AddJob(NewLatestTrendJob(app.SchedulerConfig.LatestTrendInterval))
 
 	logger.Info("Scheduler is running...")
 
@@ -499,6 +500,136 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 		queuedMessagesCounter.WithLabelValues("monthly_summary").Inc()
 		s.logger.WithFields(map[string]any{"user_id": userID, "year": ym.Year, "month": ym.Month}).Debug("Queued monthly summary generation")
 	}
+
+	return nil
+}
+
+// LatestTrendJob handles latest trend analysis generation
+type LatestTrendJob struct {
+	interval time.Duration
+}
+
+func NewLatestTrendJob(interval time.Duration) *LatestTrendJob {
+	return &LatestTrendJob{interval: interval}
+}
+
+func (j *LatestTrendJob) Name() string {
+	return "LatestTrendGeneration"
+}
+
+func (j *LatestTrendJob) Interval() time.Duration {
+	return j.interval
+}
+
+func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
+	s.logger.Info("Checking for latest trend analysis generation...")
+
+	// 現在時刻（UTC）を取得
+	now := time.Now().UTC()
+
+	// 日本時間の4時かどうかをチェック（UTC 19:00 = JST 04:00）
+	// ただし、実際の運用では毎日1回だけ実行されるべきなので、
+	// 4:00〜4:05の間に実行された場合のみ処理する
+	jstHour := (now.Hour() + 9) % 24 // UTC to JST conversion
+	if jstHour != 4 {
+		s.logger.Debug("Not the scheduled time for latest trend generation (JST 04:00)")
+		return nil
+	}
+
+	// 1. auto_latest_trend_enabled が true のユーザーを取得
+	usersQuery := `
+		SELECT user_id
+		FROM user_llms
+		WHERE auto_latest_trend_enabled = true
+	`
+
+	rows, err := s.db.QueryContext(ctx, usersQuery)
+	if err != nil {
+		return fmt.Errorf("failed to query users with auto latest trend enabled: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			s.logger.WithError(err).Error("Failed to close rows")
+		}
+	}()
+
+	var userIDs []string
+	for rows.Next() {
+		var userID string
+		if err := rows.Scan(&userID); err != nil {
+			return fmt.Errorf("failed to scan user ID: %w", err)
+		}
+		userIDs = append(userIDs, userID)
+	}
+
+	if len(userIDs) == 0 {
+		s.logger.Info("No users with auto latest trend enabled")
+		return nil
+	}
+
+	s.logger.WithField("count", len(userIDs)).Info("Found users with auto latest trend enabled")
+	usersWithAutoSummaryGauge.WithLabelValues("latest_trend").Set(float64(len(userIDs)))
+
+	// 2. 直近7日間の期間を計算（今日を除く）
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	periodEnd := today.AddDate(0, 0, -1).Add(23*time.Hour + 59*time.Minute + 59*time.Second)                      // 昨日の23:59:59
+	periodStart := periodEnd.AddDate(0, 0, -6).Add(-23*time.Hour - 59*time.Minute - 59*time.Second + time.Second) // 7日前の00:00:00
+
+	// 3. 各ユーザーについて、対象期間に日記があるかチェックし、メッセージをキューイング
+	for _, userID := range userIDs {
+		if err := j.processUserLatestTrend(ctx, s, userID, periodStart, periodEnd); err != nil {
+			s.logger.WithError(err).WithField("user_id", userID).Error("Error processing latest trend for user")
+			continue
+		}
+	}
+
+	return nil
+}
+
+func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Scheduler, userID string, periodStart, periodEnd time.Time) error {
+	// 対象期間に日記が2日以上存在するかチェック
+	var count int
+	checkQuery := `
+		SELECT COUNT(*) FROM diaries
+		WHERE user_id = $1
+		AND date >= $2 AND date <= $3
+	`
+	if err := s.db.QueryRowContext(ctx, checkQuery, userID, periodStart, periodEnd).Scan(&count); err != nil {
+		return fmt.Errorf("failed to check diary entries: %w", err)
+	}
+
+	if count < 2 {
+		s.logger.WithField("user_id", userID).Debug("Not enough diary entries for latest trend analysis (need at least 2 days)")
+		return nil
+	}
+
+	// Redis Pub/Sub経由でトレンド分析生成を依頼
+	message := map[string]any{
+		"type":         "latest_trend",
+		"user_id":      userID,
+		"period_start": periodStart.Format(time.RFC3339),
+		"period_end":   periodEnd.Format(time.RFC3339),
+	}
+
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		s.logger.WithError(err).WithField("user_id", userID).Error("Failed to marshal message")
+		return err
+	}
+
+	// Redisにメッセージを送信
+	publishCmd := s.redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
+	if err := s.redis.Do(ctx, publishCmd).Error(); err != nil {
+		s.logger.WithError(err).WithField("user_id", userID).Error("Failed to publish message")
+		return err
+	}
+
+	queuedMessagesCounter.WithLabelValues("latest_trend").Inc()
+	s.logger.WithFields(map[string]any{
+		"user_id":      userID,
+		"period_start": periodStart.Format("2006-01-02"),
+		"period_end":   periodEnd.Format("2006-01-02"),
+	}).Debug("Queued latest trend generation")
 
 	return nil
 }

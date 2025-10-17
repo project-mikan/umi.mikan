@@ -10,6 +10,7 @@ import SaveButton from "$lib/components/atoms/SaveButton.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
+import LatestTrendDisplay from "$lib/components/molecules/LatestTrendDisplay.svelte";
 import PWAInstallButton from "$lib/components/PWAInstallButton.svelte";
 import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
@@ -288,6 +289,10 @@ onMount(() => {
 
 	<div class="mb-8">
 		<TimeProgressBar />
+	</div>
+
+	<div class="mb-8">
+		<LatestTrendDisplay />
 	</div>
 
 	<div class="space-y-6">
