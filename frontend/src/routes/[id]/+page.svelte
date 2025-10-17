@@ -68,9 +68,11 @@ let isSummaryGenerating = false; // 要約生成中のフラグ
 let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
 
 // 未保存状態の管理
-let initialContent = data.entry?.content || "";
-let hasUnsavedChanges = false;
+let initialContent = "";
 let allowNavigation = false;
+
+// 前回のdataを保持して変更を検出
+let previousEntryId = "";
 
 // コンテンツの変更を監視して未保存状態を更新
 $: hasUnsavedChanges = content !== initialContent && !allowNavigation;
@@ -142,14 +144,31 @@ $: isSummaryOutdated = (() => {
 $: characterCount = content ? content.length : 0;
 
 // データが変更された時に要約状態を更新
+// ページ遷移時のみ（entryのIDが変わった時のみ）実行
 $: {
-	summary = data.dailySummary;
-	// ページ変更時に生成状態をリセット
-	isSummaryGenerating = false;
-	// ページ変更時に初期コンテンツをリセット
-	initialContent = data.entry?.content || "";
-	content = initialContent;
-	allowNavigation = false;
+	// entryの一意性を判定するためのID
+	const currentEntryId =
+		data.entry?.id || `${data.date.year}-${data.date.month}-${data.date.day}`;
+
+	// ページが変更された場合のみ初期化
+	if (currentEntryId !== previousEntryId) {
+		previousEntryId = currentEntryId;
+
+		// 要約とコンテンツを更新
+		summary = data.dailySummary;
+		isSummaryGenerating = false;
+
+		// 初期コンテンツを設定
+		initialContent = data.entry?.content || "";
+
+		// コンテンツ変数を初期化（ユーザー入力を上書きしない）
+		if (content !== initialContent) {
+			content = initialContent;
+		}
+
+		// 新しいページではallowNavigationをリセット
+		allowNavigation = false;
+	}
 }
 
 function handleSummaryUpdated(event: CustomEvent) {
@@ -325,7 +344,7 @@ use:enhance={createSubmitHandler(
 		if (s) {
 			// 保存成功時に初期コンテンツを更新
 			initialContent = content;
-			allowNavigation = true;
+			// hasUnsavedChangesの再計算に任せる
 		}
 	}
 )}
@@ -397,24 +416,13 @@ use:enhance={createSubmitHandler(
 	<!-- Fixed Save Button for Mobile -->
 	<div class="fixed bottom-20 left-0 right-0 p-4 sm:hidden z-10 pointer-events-none">
 		<div class="max-w-4xl mx-auto flex justify-end pointer-events-auto">
-			<Button type="button" variant={saved ? "success" : "primary"} size="md" disabled={loading || saved} on:click={_handleSave}>
-				<div class="flex items-center justify-center min-h-[1.25rem]">
-					{#if loading}
-						<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-						</svg>
-						<span class="ml-1">{$_("diary.saving")}</span>
-					{:else if saved}
-						<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-							<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
-						</svg>
-						<span class="ml-1">{$_("diary.saved")}</span>
-					{:else}
-						<span>{$_("diary.save")}</span>
-					{/if}
-				</div>
-			</Button>
+			<SaveButton
+				type="button"
+				{loading}
+				{saved}
+				size="md"
+				on:click={_handleSave}
+			/>
 		</div>
 	</div>
 

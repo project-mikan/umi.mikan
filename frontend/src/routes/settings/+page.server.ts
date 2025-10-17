@@ -8,17 +8,18 @@ import {
 	deleteAccount,
 	updateAutoSummarySettings,
 } from "$lib/server/auth-api";
+import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies }) => {
-	const accessToken = cookies.get("accessToken");
+	const authResult = await ensureValidAccessToken(cookies);
 
-	if (!accessToken) {
+	if (!authResult.isAuthenticated || !authResult.accessToken) {
 		throw redirect(302, "/login");
 	}
 
 	try {
-		const userInfo = await getUserInfo({ accessToken });
+		const userInfo = await getUserInfo({ accessToken: authResult.accessToken });
 		return {
 			user: {
 				name: userInfo.name,
