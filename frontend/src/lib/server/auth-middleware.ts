@@ -1,6 +1,10 @@
 import type { Cookies } from "@sveltejs/kit";
 import { refreshAccessToken } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
+import {
+	ACCESS_TOKEN_COOKIE_OPTIONS,
+	REFRESH_TOKEN_COOKIE_OPTIONS,
+} from "$lib/utils/cookie-utils";
 
 export interface AuthResult {
 	accessToken: string | null;
@@ -23,22 +27,18 @@ export async function ensureValidAccessToken(
 			const response = await refreshAccessToken(refreshToken);
 
 			// Update cookies with new tokens
-			cookies.set("accessToken", response.accessToken, {
-				path: "/",
-				httpOnly: true,
-				secure: false,
-				sameSite: "strict",
-				maxAge: 60 * 15, // 15 minutes
-			});
+			cookies.set(
+				"accessToken",
+				response.accessToken,
+				ACCESS_TOKEN_COOKIE_OPTIONS,
+			);
 
 			if (response.refreshToken) {
-				cookies.set("refreshToken", response.refreshToken, {
-					path: "/",
-					httpOnly: true,
-					secure: false,
-					sameSite: "strict",
-					maxAge: 60 * 60 * 24 * 30, // 30 days
-				});
+				cookies.set(
+					"refreshToken",
+					response.refreshToken,
+					REFRESH_TOKEN_COOKIE_OPTIONS,
+				);
 			}
 
 			accessToken = response.accessToken;

@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import { error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import { create } from "@bufbuild/protobuf";
 import { createClient } from "@connectrpc/connect";
 import { createGrpcTransport } from "@connectrpc/connect-node";
@@ -7,11 +7,13 @@ import {
 	UserService,
 	GetPubSubMetricsRequestSchema,
 } from "$lib/grpc/user/user_pb";
+import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 
 export const load: PageServerLoad = async ({ cookies }) => {
-	const accessToken = cookies.get("accessToken");
-	if (!accessToken) {
-		throw error(401, "Authentication required");
+	const authResult = await ensureValidAccessToken(cookies);
+
+	if (!authResult.isAuthenticated || !authResult.accessToken) {
+		throw redirect(302, "/login");
 	}
 
 	try {
@@ -23,7 +25,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 
 		const request = create(GetPubSubMetricsRequestSchema, {});
 		const response = await client.getPubSubMetrics(request, {
-			headers: { authorization: `Bearer ${accessToken}` },
+			headers: { authorization: `Bearer ${authResult.accessToken}` },
 		});
 
 		return {

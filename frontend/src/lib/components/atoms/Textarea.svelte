@@ -345,27 +345,40 @@ function htmlToPlainText(html: string): string {
 	const tempDiv = document.createElement("div");
 	tempDiv.innerHTML = html;
 
-	// Convert common HTML elements to plain text
-	// Replace <br> tags with newlines
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<br\s*\/?>/gi, "\n");
+	// <br>タグを実際の改行文字に変換するため、各<br>をテキストノードで置き換え
+	const brElements = tempDiv.querySelectorAll("br");
+	for (const br of Array.from(brElements)) {
+		const newline = document.createTextNode("\n");
+		br.parentNode?.replaceChild(newline, br);
+	}
 
-	// Replace <p> tags with newlines (Google Keep uses these)
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/p>/gi, "\n");
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<p[^>]*>/gi, "");
+	// <p>タグと<div>タグの処理
+	const pElements = tempDiv.querySelectorAll("p");
+	for (const p of Array.from(pElements)) {
+		const newline = document.createTextNode("\n");
+		if (p.nextSibling) {
+			p.parentNode?.insertBefore(newline, p.nextSibling);
+		}
+	}
 
-	// Replace <div> tags with newlines
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/div>/gi, "\n");
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<div[^>]*>/gi, "");
+	const divElements = tempDiv.querySelectorAll("div");
+	for (const div of Array.from(divElements)) {
+		const newline = document.createTextNode("\n");
+		if (div.nextSibling) {
+			div.parentNode?.insertBefore(newline, div.nextSibling);
+		}
+	}
 
-	// Replace list items with newlines and bullets
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<li[^>]*>/gi, "• ");
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(/<\/li>/gi, "\n");
-
-	// Remove other common HTML tags while preserving content
-	tempDiv.innerHTML = tempDiv.innerHTML.replace(
-		/<\/?(?:ul|ol|strong|b|em|i|u|span|font)[^>]*>/gi,
-		"",
-	);
+	// <li>タグの処理
+	const liElements = tempDiv.querySelectorAll("li");
+	for (const li of Array.from(liElements)) {
+		const bullet = document.createTextNode("• ");
+		li.insertBefore(bullet, li.firstChild);
+		const newline = document.createTextNode("\n");
+		if (li.nextSibling) {
+			li.parentNode?.insertBefore(newline, li.nextSibling);
+		}
+	}
 
 	// Get the plain text content
 	let plainText = tempDiv.textContent || tempDiv.innerText || "";
@@ -967,7 +980,46 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 	// エンティティ選択中フラグを立てる（reactive statementからの上書きを防ぐ）
 	isSelectingEntity = true;
 
-	// contentElementの最新の内容からvalueを更新
+	// DOM上の既存エンティティリンクからselectedEntitiesを再構築
+	// _handleInputを経由せずに直接呼ばれる場合、DOM上のリンクとselectedEntitiesが同期していないため
+	const links = contentElement.querySelectorAll("a[href*='/entity/']");
+	const reconstructedEntities: {
+		entityId: string;
+		positions: { start: number; end: number }[];
+	}[] = [];
+
+	for (const link of Array.from(links)) {
+		const href = link.getAttribute("href");
+		if (!href?.includes("/entity/")) continue;
+
+		const entityId = href.split("/entity/")[1];
+		if (!entityId) continue;
+
+		// リンクのテキスト位置を取得
+		const linkStartOffset = getTextOffset(contentElement, link, 0);
+		const linkText = link.textContent || "";
+		const linkEndOffset = linkStartOffset + linkText.length;
+
+		// 既存のエンティティに追加、または新規作成
+		const existing = reconstructedEntities.find((e) => e.entityId === entityId);
+		if (existing) {
+			existing.positions.push({ start: linkStartOffset, end: linkEndOffset });
+		} else {
+			reconstructedEntities.push({
+				entityId,
+				positions: [{ start: linkStartOffset, end: linkEndOffset }],
+			});
+		}
+
+		// リンクをプレーンテキストに置き換え
+		const textNode = document.createTextNode(linkText);
+		link.parentNode?.replaceChild(textNode, link);
+	}
+
+	// reconstructedEntitiesは後で使用するため、ここでは変数に保持するだけ
+	// selectedEntitiesの更新は、新しいエンティティのposition調整と追加が完了してから行う
+
+	// contentElementの最新の内容からvalueを更新（この時点でリンクは全て削除済み）
 	value = htmlToPlainText(contentElement.innerHTML);
 
 	// valueのプレーンテキストから現在のカーソル位置を計算
@@ -1019,32 +1071,45 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 	// 差分（正の場合は挿入、負の場合は削除）
 	const lengthDiff = newLength - oldLength;
 
-	// 既存のselectedEntitiesのpositionを調整
+	// 再構築したentitiesのpositionを調整
 	// 挿入位置(currentTriggerPos)より後ろにあるpositionを全て調整
-	selectedEntities = selectedEntities
+	const adjustedEntities = reconstructedEntities
 		.map((e) => {
 			const adjustedPositions = e.positions
 				.map((pos) => {
-					// 挿入位置より前のpositionはそのまま
-					if (pos.end <= currentTriggerPos) {
+					// 置き換え範囲: currentTriggerPos ～ cursorPos
+					const replaceStart = currentTriggerPos;
+					const replaceEnd = cursorPos;
+
+					// 挿入位置より前のpositionはそのまま（置き換え範囲の前）
+					if (pos.end <= replaceStart) {
 						return pos;
 					}
-					// 挿入位置と重複するpositionは除外
-					// （置き換え対象のテキストと重複している場合）
+					// 置き換え範囲と完全に重複するpositionは除外
+					// （置き換え対象のエンティティそのもの）
+					if (pos.start >= replaceStart && pos.end <= replaceEnd) {
+						return null; // 除外
+					}
+					// 置き換え範囲とpositionが部分的に重複する場合も除外
+					// （テキストの一部が置き換えられる場合、そのエンティティは無効になる）
 					if (
-						pos.start < currentTriggerPos + oldLength &&
-						pos.end > currentTriggerPos
+						(pos.start < replaceStart &&
+							pos.end > replaceStart &&
+							pos.end <= replaceEnd) ||
+						(pos.start >= replaceStart &&
+							pos.start < replaceEnd &&
+							pos.end > replaceEnd)
 					) {
 						return null; // 除外
 					}
-					// 挿入位置より後ろのpositionは調整
-					if (pos.start >= currentTriggerPos + oldLength) {
+					// 置き換え範囲より後ろのpositionは調整
+					if (pos.start >= replaceEnd) {
 						return {
 							start: pos.start + lengthDiff,
 							end: pos.end + lengthDiff,
 						};
 					}
-					// その他（開始が挿入位置より前で、終了が挿入位置より後ろ）
+					// その他（開始が挿入位置より前で、終了が置き換え範囲より後ろ）
 					// このケースは通常起こらないが、念のため調整
 					return {
 						start: pos.start,
@@ -1066,15 +1131,15 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 		end: currentTriggerPos + textToInsert.length,
 	};
 
-	// 既存のselectedEntitiesから同じentityIdのものを探す
-	const existingEntityIndex = selectedEntities.findIndex(
+	// 調整済みのadjustedEntitiesから同じentityIdのものを探す
+	const existingEntityIndex = adjustedEntities.findIndex(
 		(e) => e.entityId === entity.id,
 	);
 
 	if (existingEntityIndex >= 0) {
 		// 既に存在する場合は、positionsに追加
 		// Svelteのreactivityのために新しい配列を作成
-		selectedEntities = selectedEntities.map((e, idx) =>
+		selectedEntities = adjustedEntities.map((e, idx) =>
 			idx === existingEntityIndex
 				? { ...e, positions: [...e.positions, newPosition] }
 				: e,
@@ -1082,7 +1147,7 @@ async function selectSuggestion(entity: Entity, selectedText?: string) {
 	} else {
 		// 新しいentityの場合は追加
 		selectedEntities = [
-			...selectedEntities,
+			...adjustedEntities,
 			{
 				entityId: entity.id,
 				positions: [newPosition],
@@ -1195,11 +1260,29 @@ function generateHTMLFromSelectedEntities(
 	// 開始位置でソート
 	segments.sort((a, b) => a.start - b.start);
 
+	// 重複・重なり合ったsegmentをフィルタリング
+	// lastIndexより前に開始するsegment、またはcontentの範囲外のsegmentはスキップ
+	const validSegments: HighlightSegment[] = [];
+	let lastEnd = 0;
+
+	for (const segment of segments) {
+		// segmentの開始位置がlastEnd以降で、contentの範囲内の場合のみ追加
+		if (
+			segment.start >= lastEnd &&
+			segment.start < content.length &&
+			segment.end <= content.length &&
+			segment.start < segment.end
+		) {
+			validSegments.push(segment);
+			lastEnd = segment.end;
+		}
+	}
+
 	// HTMLを構築
 	let result = "";
 	let lastIndex = 0;
 
-	for (const segment of segments) {
+	for (const segment of validSegments) {
 		// segment前のテキスト
 		if (lastIndex < segment.start) {
 			const text = content.substring(lastIndex, segment.start);
