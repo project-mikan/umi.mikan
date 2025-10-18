@@ -68,9 +68,18 @@ type Scheduler struct {
 	logger *logrus.Entry
 }
 
+// ScheduledJob インターフェース: 間隔ベースのジョブ用
 type ScheduledJob interface {
 	Name() string
 	Interval() time.Duration
+	Execute(ctx context.Context, s *Scheduler) error
+}
+
+// DailyScheduledJob インターフェース: 毎日特定時刻に実行するジョブ用
+type DailyScheduledJob interface {
+	Name() string
+	TargetHour() int   // 実行する時（0-23, JST）
+	TargetMinute() int // 実行する分（0-59, JST）
 	Execute(ctx context.Context, s *Scheduler) error
 }
 
@@ -133,6 +142,79 @@ func (s *Scheduler) Stop() {
 	s.cancel()
 }
 
+// AddDailyJob 毎日特定時刻に実行するジョブを追加
+func (s *Scheduler) AddDailyJob(job DailyScheduledJob) {
+	go func() {
+		// 毎分チェックする
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+
+		s.logger.WithFields(logrus.Fields{
+			"job_name":      job.Name(),
+			"target_hour":   job.TargetHour(),
+			"target_minute": job.TargetMinute(),
+		}).Info("Daily scheduled job started")
+
+		// 最後に実行した日付を記録（重複実行を防ぐ）
+		var lastExecutedDate string
+
+		for {
+			select {
+			case <-s.ctx.Done():
+				s.logger.WithField("job_name", job.Name()).Info("Daily scheduled job stopped")
+				return
+			case <-ticker.C:
+				// 現在時刻（JST）を取得
+				jst := time.FixedZone("Asia/Tokyo", 9*60*60)
+				now := time.Now().In(jst)
+
+				// 現在の時刻が目的の時刻でない場合はスキップ
+				if now.Hour() != job.TargetHour() || now.Minute() != job.TargetMinute() {
+					continue
+				}
+
+				// 今日の日付
+				currentDate := now.Format("2006-01-02")
+
+				// 今日既に実行済みの場合はスキップ
+				if lastExecutedDate == currentDate {
+					continue
+				}
+
+				s.logger.WithFields(logrus.Fields{
+					"job_name":     job.Name(),
+					"current_time": now.Format("2006-01-02 15:04:05"),
+					"target_hour":  job.TargetHour(),
+					"target_minute": job.TargetMinute(),
+				}).Info("Executing daily scheduled job")
+
+				// Metrics tracking
+				start := time.Now()
+				err := job.Execute(s.ctx, s)
+				duration := time.Since(start)
+
+				jobDuration.WithLabelValues(job.Name()).Observe(duration.Seconds())
+
+				if err != nil {
+					s.logger.WithError(err).WithFields(logrus.Fields{
+						"job_name": job.Name(),
+						"duration": duration,
+					}).Error("Error executing daily job")
+					jobExecutionCounter.WithLabelValues(job.Name(), "error").Inc()
+				} else {
+					// 実行成功時のみ日付を記録
+					lastExecutedDate = currentDate
+					s.logger.WithFields(logrus.Fields{
+						"job_name": job.Name(),
+						"duration": duration,
+					}).Info("Daily job executed successfully")
+					jobExecutionCounter.WithLabelValues(job.Name(), "success").Inc()
+				}
+			}
+		}
+	}()
+}
+
 func main() {
 	// Initialize structured logger
 	logger := logrus.WithFields(logrus.Fields{
@@ -183,7 +265,10 @@ func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logge
 	// ジョブを追加
 	scheduler.AddJob(NewDailySummaryJob(app.SchedulerConfig.DailySummaryInterval))
 	scheduler.AddJob(NewMonthlySummaryJob(app.SchedulerConfig.MonthlySummaryInterval))
-	scheduler.AddJob(NewLatestTrendJob(4)) // 毎日4時（JST）に実行
+	scheduler.AddDailyJob(NewLatestTrendJob(
+		app.SchedulerConfig.LatestTrendTargetHour,
+		app.SchedulerConfig.LatestTrendTargetMinute,
+	))
 
 	logger.Info("Scheduler is running...")
 
@@ -507,36 +592,31 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 
 // LatestTrendJob handles latest trend analysis generation
 type LatestTrendJob struct {
-	targetHour int // 実行する時刻（0-23）
+	targetHour   int // 実行する時（0-23）
+	targetMinute int // 実行する分（0-59）
 }
 
-func NewLatestTrendJob(targetHour int) *LatestTrendJob {
-	return &LatestTrendJob{targetHour: targetHour}
+func NewLatestTrendJob(targetHour, targetMinute int) *LatestTrendJob {
+	return &LatestTrendJob{
+		targetHour:   targetHour,
+		targetMinute: targetMinute,
+	}
 }
 
 func (j *LatestTrendJob) Name() string {
 	return "LatestTrendGeneration"
 }
 
-func (j *LatestTrendJob) Interval() time.Duration {
-	// 毎分チェックして、目的の時刻になったら実行する
-	return 1 * time.Minute
+func (j *LatestTrendJob) TargetHour() int {
+	return j.targetHour
+}
+
+func (j *LatestTrendJob) TargetMinute() int {
+	return j.targetMinute
 }
 
 func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
-	// 現在時刻（JSTに変換）を取得
-	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
-	now := time.Now().In(jst)
-
-	// 現在の時刻が目的の時刻でない場合はスキップ
-	if now.Hour() != j.targetHour {
-		return nil
-	}
-
-	s.logger.WithFields(logrus.Fields{
-		"current_time": now.Format("2006-01-02 15:04:05"),
-		"target_hour":  j.targetHour,
-	}).Info("Starting latest trend analysis generation (scheduled time)")
+	s.logger.Info("Starting latest trend analysis generation")
 
 	// 1. auto_latest_trend_enabled が true のユーザーを取得
 	usersQuery := `

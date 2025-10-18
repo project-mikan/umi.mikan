@@ -122,6 +122,8 @@ services:
       REDIS_PORT: 6379
       SCHEDULER_DAILY_INTERVAL: 5m
       SCHEDULER_MONTHLY_INTERVAL: 5m
+      SCHEDULER_LATEST_TREND_HOUR: 4
+      SCHEDULER_LATEST_TREND_MINUTE: 0
     ports:
       - "2006:8081" # metrics endpoint
     tty: true

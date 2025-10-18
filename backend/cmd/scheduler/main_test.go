@@ -33,20 +33,23 @@ func TestMonthlySummaryJob(t *testing.T) {
 
 func TestLatestTrendJob(t *testing.T) {
 	targetHour := 4
-	job := NewLatestTrendJob(targetHour)
+	targetMinute := 30
+	job := NewLatestTrendJob(targetHour, targetMinute)
 
 	if job.Name() != "LatestTrendGeneration" {
 		t.Errorf("expected job name 'LatestTrendGeneration', got '%s'", job.Name())
 	}
 
-	// Intervalは常に1分を返す
-	expectedInterval := 1 * time.Minute
-	if job.Interval() != expectedInterval {
-		t.Errorf("expected interval %v, got %v", expectedInterval, job.Interval())
+	// TargetHourが正しく設定されているか確認
+	if job.TargetHour() != targetHour {
+		t.Errorf("expected targetHour %d, got %d", targetHour, job.TargetHour())
 	}
 
-	// targetHourが正しく設定されているか確認
-	if job.targetHour != targetHour {
-		t.Errorf("expected targetHour %d, got %d", targetHour, job.targetHour)
+	// TargetMinuteが正しく設定されているか確認
+	if job.TargetMinute() != targetMinute {
+		t.Errorf("expected targetMinute %d, got %d", targetMinute, job.TargetMinute())
 	}
+
+	// DailyScheduledJobインターフェースを実装しているか確認
+	var _ DailyScheduledJob = job
 }

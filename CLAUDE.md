@@ -173,6 +173,9 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Database**: PostgreSQL with xo-generated models (separate test DB)
 - **Hot Reload**: Air tool for automatic backend reloading
 - **Async Processing**: Scheduler and Subscriber services with Redis Pub/Sub
+- **Scheduler Job Types**:
+  - **IntervalScheduledJob**: Periodic execution at fixed intervals (e.g., every 5 minutes)
+  - **DailyScheduledJob**: Daily execution at a specific hour (JST timezone)
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Grafana Alloy, and cAdvisor
 
@@ -365,19 +368,31 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 Environment variables for controlling scheduler behavior:
 
+**Interval-based Jobs (Periodic Execution):**
 - `SCHEDULER_DAILY_INTERVAL`: Interval for daily summary job execution (default: `5m`)
 - `SCHEDULER_MONTHLY_INTERVAL`: Interval for monthly summary job execution (default: `5m`)
 
-**Latest Trend Generation:**
-- Latest trend analysis is automatically generated **every day at 4:00 AM JST**
-- The scheduler checks every minute and executes only when the current hour is 4
-- No environment variable configuration needed for latest trend timing
+**Time-based Jobs (Daily Execution at Specific Time):**
+- `SCHEDULER_LATEST_TREND_HOUR`: Hour (0-23) for latest trend analysis (default: `4`)
+- `SCHEDULER_LATEST_TREND_MINUTE`: Minute (0-59) for latest trend analysis (default: `0`)
+
+The scheduler supports two types of job scheduling:
+1. **Interval-based**: Jobs that run periodically at fixed intervals
+2. **Time-based**: Jobs that run once per day at a specific time (JST timezone)
 
 Examples:
 
 ```bash
+# Interval-based jobs
 SCHEDULER_DAILY_INTERVAL=10m    # Run daily summaries every 10 minutes
 SCHEDULER_MONTHLY_INTERVAL=1h   # Run monthly summaries every hour
+
+# Time-based jobs
+SCHEDULER_LATEST_TREND_HOUR=4       # Run at 4:00 AM JST
+SCHEDULER_LATEST_TREND_MINUTE=0
+# Or run at 4:30 AM JST
+SCHEDULER_LATEST_TREND_HOUR=4
+SCHEDULER_LATEST_TREND_MINUTE=30
 ```
 
 ### Subscriber Configuration
