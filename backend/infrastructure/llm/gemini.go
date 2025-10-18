@@ -110,7 +110,7 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 }
 
 func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent string) (string, error) {
-	prompt := fmt.Sprintf(`以下は過去1週間の日記です。この期間の傾向を分析し、わかりやすく要約してください。
+	prompt := fmt.Sprintf(`以下は直近3日間の日記です。この短い期間の傾向を分析し、わかりやすく要約してください。
 
 【出力形式】
 以下の形式で出力してください（Markdownは使用しないでください）：
@@ -132,6 +132,7 @@ func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent str
 - 「##」「###」の見出しマーカーはそのまま出力してください
 - その他のMarkdown記法（太字、リンクなど）は使用しないでください
 - 具体的な日付や曜日は含めず、傾向のみを記述
+- 3日間という短期間なので、大きな傾向よりも最近の様子に注目してください
 - 客観的かつ優しい語り口で
 - 合計300-400字程度
 

@@ -250,14 +250,14 @@
 	"latestTrend": {
 		"title": "Latest Trend Analysis",
 		"titleWithName": "Recent {name}",
-		"description": "Analyze your trends from the past 7 days of diary entries",
+		"description": "Analyze your trends from the past 3 days of diary entries",
 		"period": "Analysis Period",
 		"generatedAt": "Generated At",
 		"noData": "No trend analysis data available",
 		"loading": "Loading analysis data...",
 		"error": "Failed to fetch trend analysis",
 		"analyzing": "Analyzing...",
-		"notEnoughData": "Not enough diary data for analysis (requires at least 2 diary entries from the past 7 days)",
+		"notEnoughData": "Not enough diary data for analysis (requires at least 2 diary entries from the past 3 days)",
 		"refresh": "Get latest analysis",
 		"lastUpdated": "Last Updated",
 		"settings": {
