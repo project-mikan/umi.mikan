@@ -17,7 +17,7 @@ let isLoading = true;
 let errorMessage = "";
 
 // トレンド分析データを取得
-async function fetchLatestTrend() {
+async function fetchLatestTrend(retryCount = 0) {
 	if (!browser) return;
 
 	isLoading = true;
@@ -35,15 +35,34 @@ async function fetchLatestTrend() {
 					generatedAt: result.generated_at,
 				};
 			} else {
+				// データが空の場合はnullにする
 				trendData = null;
 			}
 		} else if (response.status === 404) {
+			// 404の場合はデータが存在しない
 			trendData = null;
+		} else if (response.status >= 500 && retryCount < 2) {
+			// サーバーエラーの場合は最大2回リトライ
+			console.warn(`Server error, retrying... (${retryCount + 1}/2)`);
+			setTimeout(
+				() => fetchLatestTrend(retryCount + 1),
+				1000 * (retryCount + 1),
+			);
+			return;
 		} else {
 			errorMessage = $_("latestTrend.error");
 		}
 	} catch (error) {
 		console.error("Failed to fetch latest trend:", error);
+		if (retryCount < 2) {
+			// ネットワークエラーの場合も最大2回リトライ
+			console.warn(`Network error, retrying... (${retryCount + 1}/2)`);
+			setTimeout(
+				() => fetchLatestTrend(retryCount + 1),
+				1000 * (retryCount + 1),
+			);
+			return;
+		}
 		errorMessage = $_("latestTrend.error");
 	} finally {
 		isLoading = false;

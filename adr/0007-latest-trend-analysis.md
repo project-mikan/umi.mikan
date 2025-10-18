@@ -66,7 +66,7 @@ ALTER TABLE user_llms ADD COLUMN auto_latest_trend_enabled BOOLEAN NOT NULL DEFA
 }
 ```
 
-TTL: 2日間(172800秒)
+TTL: 25時間(90000秒) - 毎日4時に更新されるため、次回更新までの余裕を確保
 
 ### API設計
 

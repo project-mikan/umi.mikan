@@ -16,9 +16,12 @@ async function triggerLatestTrend() {
 	messageType = "";
 
 	try {
-		const response = await authenticatedFetch("/api/diary/trigger-latest-trend", {
-			method: "POST",
-		});
+		const response = await authenticatedFetch(
+			"/api/diary/trigger-latest-trend",
+			{
+				method: "POST",
+			},
+		);
 
 		if (response.ok) {
 			const result = await response.json();

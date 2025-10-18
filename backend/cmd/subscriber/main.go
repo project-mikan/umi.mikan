@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
@@ -637,7 +638,7 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFacto
 			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
 
-	logger.WithError(err).Error("Successfully generated monthly summary using Gemini API")
+	logger.Info("Successfully generated monthly summary using Gemini API")
 	return summary
 }
 
@@ -724,12 +725,13 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 		diaryEntries = append(diaryEntries, fmt.Sprintf("[%s]\n%s", date, content))
 	}
 
-	if len(diaryEntries) < 2 {
+	if len(diaryEntries) < constants.MinDiaryEntriesForTrend {
 		logger.WithFields(logrus.Fields{
-			"user_id":      userID,
-			"entry_count":  len(diaryEntries),
-		}).Info("Not enough diary entries for latest trend analysis (need at least 2 days)")
-		return fmt.Errorf("not enough diary entries (found %d, need at least 2)", len(diaryEntries))
+			"user_id":       userID,
+			"entry_count":   len(diaryEntries),
+			"required_days": constants.MinDiaryEntriesForTrend,
+		}).Info("Not enough diary entries for latest trend analysis")
+		return fmt.Errorf("not enough diary entries (found %d, need at least %d)", len(diaryEntries), constants.MinDiaryEntriesForTrend)
 	}
 
 	// 4. LLMでトレンド分析生成
@@ -737,7 +739,8 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 		strings.Join(diaryEntries, "\n\n"))
 	trendAnalysis := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
 
-	// 5. Redisに保存（TTL: 2日）
+	// 5. Redisに保存（TTL: 25時間）
+	// 毎日4時に更新されるため、25時間のTTLで次回更新までの余裕を確保
 	trendData := map[string]interface{}{
 		"user_id":      userID,
 		"analysis":     trendAnalysis,
@@ -752,7 +755,7 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	}
 
 	trendKey := fmt.Sprintf("latest_trend:%s", userID)
-	setCmd := redisClient.B().Set().Key(trendKey).Value(string(trendDataJSON)).Ex(172800 * time.Second).Build() // 2日間
+	setCmd := redisClient.B().Set().Key(trendKey).Value(string(trendDataJSON)).Ex(25 * time.Hour).Build() // 25時間
 	if err := redisClient.Do(ctx, setCmd).Error(); err != nil {
 		return fmt.Errorf("failed to save trend data to Redis: %w", err)
 	}

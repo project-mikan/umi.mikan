@@ -30,3 +30,16 @@ func TestMonthlySummaryJob(t *testing.T) {
 		t.Errorf("expected interval %v, got %v", interval, job.Interval())
 	}
 }
+
+func TestLatestTrendJob(t *testing.T) {
+	interval := 24 * time.Hour
+	job := NewLatestTrendJob(interval)
+
+	if job.Name() != "LatestTrendGeneration" {
+		t.Errorf("expected job name 'LatestTrendGeneration', got '%s'", job.Name())
+	}
+
+	if job.Interval() != interval {
+		t.Errorf("expected interval %v, got %v", interval, job.Interval())
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
@@ -527,15 +528,6 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 	// 現在時刻（UTC）を取得
 	now := time.Now().UTC()
 
-	// 日本時間の4時かどうかをチェック（UTC 19:00 = JST 04:00）
-	// ただし、実際の運用では毎日1回だけ実行されるべきなので、
-	// 4:00〜4:05の間に実行された場合のみ処理する
-	jstHour := (now.Hour() + 9) % 24 // UTC to JST conversion
-	if jstHour != 4 {
-		s.logger.Debug("Not the scheduled time for latest trend generation (JST 04:00)")
-		return nil
-	}
-
 	// 1. auto_latest_trend_enabled が true のユーザーを取得
 	usersQuery := `
 		SELECT user_id
@@ -587,7 +579,7 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 }
 
 func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Scheduler, userID string, periodStart, periodEnd time.Time) error {
-	// 対象期間に日記が2日以上存在するかチェック
+	// 対象期間に日記が最小必要数以上存在するかチェック
 	var count int
 	checkQuery := `
 		SELECT COUNT(*) FROM diaries
@@ -598,8 +590,12 @@ func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Schedule
 		return fmt.Errorf("failed to check diary entries: %w", err)
 	}
 
-	if count < 2 {
-		s.logger.WithField("user_id", userID).Debug("Not enough diary entries for latest trend analysis (need at least 2 days)")
+	if count < constants.MinDiaryEntriesForTrend {
+		s.logger.WithFields(map[string]any{
+			"user_id":       userID,
+			"entry_count":   count,
+			"required_days": constants.MinDiaryEntriesForTrend,
+		}).Debug("Not enough diary entries for latest trend analysis")
 		return nil
 	}
 
