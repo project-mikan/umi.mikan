@@ -1027,11 +1027,13 @@ func (x *GetPubSubMetricsResponse) GetSummary() *MetricsSummary {
 // 1時間ごとのメトリクス
 type HourlyMetrics struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
-	Timestamp                 int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"` // Unix timestamp of the hour
-	DailySummariesProcessed   int32                  `protobuf:"varint,2,opt,name=daily_summaries_processed,json=dailySummariesProcessed,proto3" json:"daily_summaries_processed,omitempty"`
-	MonthlySummariesProcessed int32                  `protobuf:"varint,3,opt,name=monthly_summaries_processed,json=monthlySummariesProcessed,proto3" json:"monthly_summaries_processed,omitempty"`
-	DailySummariesFailed      int32                  `protobuf:"varint,4,opt,name=daily_summaries_failed,json=dailySummariesFailed,proto3" json:"daily_summaries_failed,omitempty"`
-	MonthlySummariesFailed    int32                  `protobuf:"varint,5,opt,name=monthly_summaries_failed,json=monthlySummariesFailed,proto3" json:"monthly_summaries_failed,omitempty"`
+	Timestamp                 int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                                                    // 該当時間のUnixタイムスタンプ
+	DailySummariesProcessed   int32                  `protobuf:"varint,2,opt,name=daily_summaries_processed,json=dailySummariesProcessed,proto3" json:"daily_summaries_processed,omitempty"`       // 処理された日次要約数
+	MonthlySummariesProcessed int32                  `protobuf:"varint,3,opt,name=monthly_summaries_processed,json=monthlySummariesProcessed,proto3" json:"monthly_summaries_processed,omitempty"` // 処理された月次要約数
+	DailySummariesFailed      int32                  `protobuf:"varint,4,opt,name=daily_summaries_failed,json=dailySummariesFailed,proto3" json:"daily_summaries_failed,omitempty"`                // 失敗した日次要約数
+	MonthlySummariesFailed    int32                  `protobuf:"varint,5,opt,name=monthly_summaries_failed,json=monthlySummariesFailed,proto3" json:"monthly_summaries_failed,omitempty"`          // 失敗した月次要約数
+	LatestTrendsProcessed     int32                  `protobuf:"varint,6,opt,name=latest_trends_processed,json=latestTrendsProcessed,proto3" json:"latest_trends_processed,omitempty"`             // 処理されたトレンド分析数
+	LatestTrendsFailed        int32                  `protobuf:"varint,7,opt,name=latest_trends_failed,json=latestTrendsFailed,proto3" json:"latest_trends_failed,omitempty"`                      // 失敗したトレンド分析数
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -1101,12 +1103,26 @@ func (x *HourlyMetrics) GetMonthlySummariesFailed() int32 {
 	return 0
 }
 
+func (x *HourlyMetrics) GetLatestTrendsProcessed() int32 {
+	if x != nil {
+		return x.LatestTrendsProcessed
+	}
+	return 0
+}
+
+func (x *HourlyMetrics) GetLatestTrendsFailed() int32 {
+	if x != nil {
+		return x.LatestTrendsFailed
+	}
+	return 0
+}
+
 // 処理中のタスク
 type ProcessingTask struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TaskType      string                 `protobuf:"bytes,1,opt,name=task_type,json=taskType,proto3" json:"task_type,omitempty"`     // "daily_summary" or "monthly_summary"
-	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`                             // YYYY-MM-DD for daily, YYYY-MM for monthly
-	StartedAt     int64                  `protobuf:"varint,3,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"` // Unix timestamp
+	TaskType      string                 `protobuf:"bytes,1,opt,name=task_type,json=taskType,proto3" json:"task_type,omitempty"`     // タスク種別: "daily_summary" (日次要約), "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
+	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`                             // 日付: 日次はYYYY-MM-DD形式, 月次はYYYY-MM形式, トレンドは期間説明
+	StartedAt     int64                  `protobuf:"varint,3,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"` // タスク開始時刻 (Unixタイムスタンプ)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1165,12 +1181,14 @@ func (x *ProcessingTask) GetStartedAt() int64 {
 // メトリクス統計情報
 type MetricsSummary struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
-	TotalDailySummaries       int32                  `protobuf:"varint,1,opt,name=total_daily_summaries,json=totalDailySummaries,proto3" json:"total_daily_summaries,omitempty"`
-	TotalMonthlySummaries     int32                  `protobuf:"varint,2,opt,name=total_monthly_summaries,json=totalMonthlySummaries,proto3" json:"total_monthly_summaries,omitempty"`
-	PendingDailySummaries     int32                  `protobuf:"varint,3,opt,name=pending_daily_summaries,json=pendingDailySummaries,proto3" json:"pending_daily_summaries,omitempty"`
-	PendingMonthlySummaries   int32                  `protobuf:"varint,4,opt,name=pending_monthly_summaries,json=pendingMonthlySummaries,proto3" json:"pending_monthly_summaries,omitempty"`
-	AutoSummaryDailyEnabled   bool                   `protobuf:"varint,5,opt,name=auto_summary_daily_enabled,json=autoSummaryDailyEnabled,proto3" json:"auto_summary_daily_enabled,omitempty"`
-	AutoSummaryMonthlyEnabled bool                   `protobuf:"varint,6,opt,name=auto_summary_monthly_enabled,json=autoSummaryMonthlyEnabled,proto3" json:"auto_summary_monthly_enabled,omitempty"`
+	TotalDailySummaries       int32                  `protobuf:"varint,1,opt,name=total_daily_summaries,json=totalDailySummaries,proto3" json:"total_daily_summaries,omitempty"`                     // 総日次要約数
+	TotalMonthlySummaries     int32                  `protobuf:"varint,2,opt,name=total_monthly_summaries,json=totalMonthlySummaries,proto3" json:"total_monthly_summaries,omitempty"`               // 総月次要約数
+	PendingDailySummaries     int32                  `protobuf:"varint,3,opt,name=pending_daily_summaries,json=pendingDailySummaries,proto3" json:"pending_daily_summaries,omitempty"`               // 未作成の日次要約数
+	PendingMonthlySummaries   int32                  `protobuf:"varint,4,opt,name=pending_monthly_summaries,json=pendingMonthlySummaries,proto3" json:"pending_monthly_summaries,omitempty"`         // 未作成の月次要約数
+	AutoSummaryDailyEnabled   bool                   `protobuf:"varint,5,opt,name=auto_summary_daily_enabled,json=autoSummaryDailyEnabled,proto3" json:"auto_summary_daily_enabled,omitempty"`       // 日次要約の自動生成が有効か
+	AutoSummaryMonthlyEnabled bool                   `protobuf:"varint,6,opt,name=auto_summary_monthly_enabled,json=autoSummaryMonthlyEnabled,proto3" json:"auto_summary_monthly_enabled,omitempty"` // 月次要約の自動生成が有効か
+	AutoLatestTrendEnabled    bool                   `protobuf:"varint,7,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"`          // トレンド分析の自動生成が有効か
+	LatestTrendGeneratedAt    string                 `protobuf:"bytes,8,opt,name=latest_trend_generated_at,json=latestTrendGeneratedAt,proto3" json:"latest_trend_generated_at,omitempty"`           // 最後にトレンド分析が生成された日時 (ISO 8601形式)
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -1247,6 +1265,20 @@ func (x *MetricsSummary) GetAutoSummaryMonthlyEnabled() bool {
 	return false
 }
 
+func (x *MetricsSummary) GetAutoLatestTrendEnabled() bool {
+	if x != nil {
+		return x.AutoLatestTrendEnabled
+	}
+	return false
+}
+
+func (x *MetricsSummary) GetLatestTrendGeneratedAt() string {
+	if x != nil {
+		return x.LatestTrendGeneratedAt
+	}
+	return ""
+}
+
 var File_user_user_proto protoreflect.FileDescriptor
 
 const file_user_user_proto_rawDesc = "" +
@@ -1308,25 +1340,29 @@ const file_user_user_proto_rawDesc = "" +
 	"\x18GetPubSubMetricsResponse\x12:\n" +
 	"\x0ehourly_metrics\x18\x01 \x03(\v2\x13.user.HourlyMetricsR\rhourlyMetrics\x12?\n" +
 	"\x10processing_tasks\x18\x02 \x03(\v2\x14.user.ProcessingTaskR\x0fprocessingTasks\x12.\n" +
-	"\asummary\x18\x03 \x01(\v2\x14.user.MetricsSummaryR\asummary\"\x99\x02\n" +
+	"\asummary\x18\x03 \x01(\v2\x14.user.MetricsSummaryR\asummary\"\x83\x03\n" +
 	"\rHourlyMetrics\x12\x1c\n" +
 	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12:\n" +
 	"\x19daily_summaries_processed\x18\x02 \x01(\x05R\x17dailySummariesProcessed\x12>\n" +
 	"\x1bmonthly_summaries_processed\x18\x03 \x01(\x05R\x19monthlySummariesProcessed\x124\n" +
 	"\x16daily_summaries_failed\x18\x04 \x01(\x05R\x14dailySummariesFailed\x128\n" +
-	"\x18monthly_summaries_failed\x18\x05 \x01(\x05R\x16monthlySummariesFailed\"`\n" +
+	"\x18monthly_summaries_failed\x18\x05 \x01(\x05R\x16monthlySummariesFailed\x126\n" +
+	"\x17latest_trends_processed\x18\x06 \x01(\x05R\x15latestTrendsProcessed\x120\n" +
+	"\x14latest_trends_failed\x18\a \x01(\x05R\x12latestTrendsFailed\"`\n" +
 	"\x0eProcessingTask\x12\x1b\n" +
 	"\ttask_type\x18\x01 \x01(\tR\btaskType\x12\x12\n" +
 	"\x04date\x18\x02 \x01(\tR\x04date\x12\x1d\n" +
 	"\n" +
-	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\xee\x02\n" +
+	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\xe4\x03\n" +
 	"\x0eMetricsSummary\x122\n" +
 	"\x15total_daily_summaries\x18\x01 \x01(\x05R\x13totalDailySummaries\x126\n" +
 	"\x17total_monthly_summaries\x18\x02 \x01(\x05R\x15totalMonthlySummaries\x126\n" +
 	"\x17pending_daily_summaries\x18\x03 \x01(\x05R\x15pendingDailySummaries\x12:\n" +
 	"\x19pending_monthly_summaries\x18\x04 \x01(\x05R\x17pendingMonthlySummaries\x12;\n" +
 	"\x1aauto_summary_daily_enabled\x18\x05 \x01(\bR\x17autoSummaryDailyEnabled\x12?\n" +
-	"\x1cauto_summary_monthly_enabled\x18\x06 \x01(\bR\x19autoSummaryMonthlyEnabled2\xe9\x05\n" +
+	"\x1cauto_summary_monthly_enabled\x18\x06 \x01(\bR\x19autoSummaryMonthlyEnabled\x129\n" +
+	"\x19auto_latest_trend_enabled\x18\a \x01(\bR\x16autoLatestTrendEnabled\x129\n" +
+	"\x19latest_trend_generated_at\x18\b \x01(\tR\x16latestTrendGeneratedAt2\xe9\x05\n" +
 	"\vUserService\x12K\n" +
 	"\x0eUpdateUserName\x12\x1b.user.UpdateUserNameRequest\x1a\x1c.user.UpdateUserNameResponse\x12K\n" +
 	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12E\n" +

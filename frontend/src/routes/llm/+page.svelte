@@ -16,10 +16,14 @@ function formatProcessingTask(task: {
 	date: string;
 	startedAt: number;
 }) {
-	const type =
-		task.taskType === "daily_summary"
-			? $_("llm.metrics.dailySummary")
-			: $_("llm.metrics.monthlySummary");
+	let type = "";
+	if (task.taskType === "daily_summary") {
+		type = $_("llm.metrics.dailySummary");
+	} else if (task.taskType === "monthly_summary") {
+		type = $_("llm.metrics.monthlySummary");
+	} else if (task.taskType === "latest_trend") {
+		type = $_("llm.metrics.latestTrend");
+	}
 	const startedAt = new Date(task.startedAt * 1000).toLocaleTimeString();
 	return `${type} (${task.date}) - ${$_("llm.metrics.startedAt")} ${startedAt}`;
 }
@@ -83,7 +87,7 @@ $: summaryCards = [
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 			{$_("llm.metrics.autoSummarySettings")}
 		</h3>
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 			<div class="flex items-center justify-between">
 				<span class="text-gray-700 dark:text-gray-300">
 					{$_("llm.metrics.dailyAutoSummary")}
@@ -108,8 +112,37 @@ $: summaryCards = [
 					{metrics.summary.autoSummaryMonthlyEnabled ? $_("common.enabled") : $_("common.disabled")}
 				</span>
 			</div>
+			<div class="flex items-center justify-between">
+				<span class="text-gray-700 dark:text-gray-300">
+					{$_("llm.metrics.latestTrendAutoGeneration")}
+				</span>
+				<span class="px-2 py-1 rounded-full text-xs font-medium {
+					metrics.summary.autoLatestTrendEnabled
+						? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+						: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+				}">
+					{metrics.summary.autoLatestTrendEnabled ? $_("common.enabled") : $_("common.disabled")}
+				</span>
+			</div>
 		</div>
 	</Card>
+
+	<!-- トレンド生成状況 -->
+	{#if metrics.summary.latestTrendGeneratedAt}
+		<Card>
+			<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+				{$_("llm.metrics.latestTrendStatus")}
+			</h3>
+			<div class="flex items-center justify-between">
+				<span class="text-gray-700 dark:text-gray-300">
+					{$_("llm.metrics.lastGeneratedAt")}
+				</span>
+				<span class="text-sm text-gray-600 dark:text-gray-400">
+					{new Date(metrics.summary.latestTrendGeneratedAt).toLocaleString($locale || "ja")}
+				</span>
+			</div>
+		</Card>
+	{/if}
 
 	<!-- 処理中タスク -->
 	{#if metrics.processingTasks.length > 0}

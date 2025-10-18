@@ -21,9 +21,10 @@ type RedisConfig struct {
 }
 
 type SchedulerConfig struct {
-	DailySummaryInterval   time.Duration
-	MonthlySummaryInterval time.Duration
-	LatestTrendInterval    time.Duration
+	DailySummaryInterval    time.Duration
+	MonthlySummaryInterval  time.Duration
+	LatestTrendTargetHour   int
+	LatestTrendTargetMinute int
 }
 
 type SubscriberConfig struct {
@@ -127,9 +128,14 @@ func LoadSchedulerConfig() (*SchedulerConfig, error) {
 		monthlyIntervalStr = "5m" // Default to 5 minutes
 	}
 
-	latestTrendIntervalStr := os.Getenv("SCHEDULER_LATEST_TREND_INTERVAL")
-	if latestTrendIntervalStr == "" {
-		latestTrendIntervalStr = "5m" // Default to 5 minutes
+	latestTrendHourStr := os.Getenv("SCHEDULER_LATEST_TREND_HOUR")
+	if latestTrendHourStr == "" {
+		latestTrendHourStr = "4" // Default to 4 AM
+	}
+
+	latestTrendMinuteStr := os.Getenv("SCHEDULER_LATEST_TREND_MINUTE")
+	if latestTrendMinuteStr == "" {
+		latestTrendMinuteStr = "0" // Default to 0 minutes
 	}
 
 	dailyInterval, err := time.ParseDuration(dailyIntervalStr)
@@ -142,15 +148,27 @@ func LoadSchedulerConfig() (*SchedulerConfig, error) {
 		return nil, fmt.Errorf("invalid SCHEDULER_MONTHLY_INTERVAL format: %w", err)
 	}
 
-	latestTrendInterval, err := time.ParseDuration(latestTrendIntervalStr)
+	latestTrendHour, err := strconv.Atoi(latestTrendHourStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid SCHEDULER_LATEST_TREND_INTERVAL format: %w", err)
+		return nil, fmt.Errorf("invalid SCHEDULER_LATEST_TREND_HOUR format: %w", err)
+	}
+	if latestTrendHour < 0 || latestTrendHour > 23 {
+		return nil, fmt.Errorf("SCHEDULER_LATEST_TREND_HOUR must be between 0 and 23, got %d", latestTrendHour)
+	}
+
+	latestTrendMinute, err := strconv.Atoi(latestTrendMinuteStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SCHEDULER_LATEST_TREND_MINUTE format: %w", err)
+	}
+	if latestTrendMinute < 0 || latestTrendMinute > 59 {
+		return nil, fmt.Errorf("SCHEDULER_LATEST_TREND_MINUTE must be between 0 and 59, got %d", latestTrendMinute)
 	}
 
 	return &SchedulerConfig{
-		DailySummaryInterval:   dailyInterval,
-		MonthlySummaryInterval: monthlyInterval,
-		LatestTrendInterval:    latestTrendInterval,
+		DailySummaryInterval:    dailyInterval,
+		MonthlySummaryInterval:  monthlyInterval,
+		LatestTrendTargetHour:   latestTrendHour,
+		LatestTrendTargetMinute: latestTrendMinute,
 	}, nil
 }
 
