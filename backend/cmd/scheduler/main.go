@@ -562,10 +562,10 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 	s.logger.WithField("count", len(userIDs)).Info("Found users with auto latest trend enabled")
 	usersWithAutoSummaryGauge.WithLabelValues("latest_trend").Set(float64(len(userIDs)))
 
-	// 2. 直近7日間の期間を計算（今日を除く）
+	// 2. 直近3日間の期間を計算（今日を除く）
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	periodEnd := today.AddDate(0, 0, -1).Add(23*time.Hour + 59*time.Minute + 59*time.Second)                      // 昨日の23:59:59
-	periodStart := periodEnd.AddDate(0, 0, -6).Add(-23*time.Hour - 59*time.Minute - 59*time.Second + time.Second) // 7日前の00:00:00
+	periodEnd := today.AddDate(0, 0, -1)   // 昨日（1日前）
+	periodStart := today.AddDate(0, 0, -3) // 3日前
 
 	// 3. 各ユーザーについて、対象期間に日記があるかチェックし、メッセージをキューイング
 	for _, userID := range userIDs {

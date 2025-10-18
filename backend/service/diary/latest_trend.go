@@ -99,8 +99,8 @@ func (s *DiaryEntry) TriggerLatestTrend(
 	// 直近3日間の期間を計算（今日を除く）
 	now := time.Now().UTC()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	periodEnd := today.AddDate(0, 0, -1).Add(23*time.Hour + 59*time.Minute + 59*time.Second)                      // 昨日の23:59:59
-	periodStart := periodEnd.AddDate(0, 0, -2).Add(-23*time.Hour - 59*time.Minute - 59*time.Second + time.Second) // 3日前の00:00:00
+	periodEnd := today.AddDate(0, 0, -1)   // 昨日（1日前）
+	periodStart := today.AddDate(0, 0, -3) // 3日前
 
 	// 対象期間の日記エントリが存在するかチェック
 	var count int

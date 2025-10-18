@@ -3,6 +3,7 @@ import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
 import { beforeNavigate } from "$app/navigation";
+import { page } from "$app/stores";
 import { onMount } from "svelte";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
@@ -291,9 +292,11 @@ onMount(() => {
 		<TimeProgressBar />
 	</div>
 
-	<div class="mb-8">
-		<LatestTrendDisplay userName={data.userName} />
-	</div>
+	{#if $page.data.autoLatestTrendEnabled}
+		<div class="mb-8">
+			<LatestTrendDisplay userName={$page.data.userName} />
+		</div>
+	{/if}
 
 	<div class="space-y-6">
 		<div bind:this={todayCard}>

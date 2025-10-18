@@ -48,10 +48,14 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 
 	// ユーザー情報を取得
 	let userName: string | null = null;
+	let autoLatestTrendEnabled = false;
 	if (isAuthenticated && accessToken) {
 		try {
 			const userInfo = await getUserInfo({ accessToken });
 			userName = userInfo.name;
+			// LLMキー情報から autoLatestTrendEnabled を取得（Gemini provider=1のみ）
+			const geminiKey = userInfo.llmKeys?.find((key) => key.llmProvider === 1);
+			autoLatestTrendEnabled = geminiKey?.autoLatestTrendEnabled || false;
 		} catch (error) {
 			console.error("Failed to get user info:", error);
 		}
@@ -62,5 +66,6 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 		path: url.pathname,
 		csrfToken,
 		userName,
+		autoLatestTrendEnabled,
 	};
 };
