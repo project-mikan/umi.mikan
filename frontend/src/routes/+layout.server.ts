@@ -1,4 +1,4 @@
-import { refreshAccessToken } from "$lib/server/auth-api";
+import { refreshAccessToken, getUserInfo } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
 import {
 	ACCESS_TOKEN_COOKIE_OPTIONS,
@@ -46,9 +46,26 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 		csrfToken = setCSRFToken(cookies);
 	}
 
+	// ユーザー情報を取得
+	let userName: string | null = null;
+	let autoLatestTrendEnabled = false;
+	if (isAuthenticated && accessToken) {
+		try {
+			const userInfo = await getUserInfo({ accessToken });
+			userName = userInfo.name;
+			// LLMキー情報から autoLatestTrendEnabled を取得（Gemini provider=1のみ）
+			const geminiKey = userInfo.llmKeys?.find((key) => key.llmProvider === 1);
+			autoLatestTrendEnabled = geminiKey?.autoLatestTrendEnabled || false;
+		} catch (error) {
+			console.error("Failed to get user info:", error);
+		}
+	}
+
 	return {
 		isAuthenticated,
 		path: url.pathname,
 		csrfToken,
+		userName,
+		autoLatestTrendEnabled,
 	};
 };

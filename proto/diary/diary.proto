@@ -127,6 +127,29 @@ service DiaryService {
   // エラー:
   //   - NotFound: サマリーが存在しない
   rpc GetDailySummary(GetDailySummaryRequest) returns (GetDailySummaryResponse);
+
+  // GetLatestTrend は直近1週間の日記のトレンド分析を取得します。
+  // Redisに保存された分析結果を返します。
+  //
+  // 例:
+  //   request: {}
+  //   response: { analysis: "最近は...", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
+  //
+  // エラー:
+  //   - NotFound: トレンド分析が存在しない
+  rpc GetLatestTrend(GetLatestTrendRequest) returns (GetLatestTrendResponse);
+
+  // TriggerLatestTrend はトレンド分析の生成を手動でトリガーします（デバッグ用）。
+  // 非production環境でのみ使用可能です。
+  //
+  // 例:
+  //   request: {}
+  //   response: { success: true, message: "トレンド分析の生成をキューに追加しました" }
+  //
+  // エラー:
+  //   - PermissionDenied: production環境では使用不可
+  //   - NotFound: LLMキーが設定されていない
+  rpc TriggerLatestTrend(TriggerLatestTrendRequest) returns (TriggerLatestTrendResponse);
 }
 
 message YMD {
@@ -291,4 +314,28 @@ message GetDailySummaryRequest {
 // 日ごとのサマリー取得レスポンス
 message GetDailySummaryResponse {
   DailySummary summary = 1;
+}
+
+// 直近トレンド分析取得リクエスト
+message GetLatestTrendRequest {
+  // user_id は認証情報から取得
+}
+
+// 直近トレンド分析取得レスポンス
+message GetLatestTrendResponse {
+  string analysis = 1; // トレンド分析結果テキスト（最大300字程度）
+  string period_start = 2; // 分析期間開始（ISO 8601形式）
+  string period_end = 3; // 分析期間終了（ISO 8601形式）
+  string generated_at = 4; // 生成日時（ISO 8601形式）
+}
+
+// 直近トレンド分析生成トリガーリクエスト（デバッグ用）
+message TriggerLatestTrendRequest {
+  // user_id は認証情報から取得
+}
+
+// 直近トレンド分析生成トリガーレスポンス（デバッグ用）
+message TriggerLatestTrendResponse {
+  bool success = 1; // 成功フラグ
+  string message = 2; // メッセージ
 }

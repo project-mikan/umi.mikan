@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
@@ -88,6 +89,13 @@ type MonthlySummaryGenerationMessage struct {
 	UserID string `json:"user_id"`
 	Year   int    `json:"year"`
 	Month  int    `json:"month"`
+}
+
+type LatestTrendGenerationMessage struct {
+	Type        string `json:"type"`
+	UserID      string `json:"user_id"`
+	PeriodStart string `json:"period_start"` // ISO 8601 format
+	PeriodEnd   string `json:"period_end"`   // ISO 8601 format
 }
 
 func main() {
@@ -340,6 +348,20 @@ func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Cli
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "error").Inc()
 		} else {
 			messagesProcessedCounter.WithLabelValues("monthly_summary", "success").Inc()
+		}
+		return err
+	case "latest_trend":
+		processingDuration.WithLabelValues("latest_trend").Observe(time.Since(start).Seconds())
+		var message LatestTrendGenerationMessage
+		if unmarshalErr := json.Unmarshal([]byte(payload), &message); unmarshalErr != nil {
+			messagesProcessedCounter.WithLabelValues("latest_trend", "error").Inc()
+			return fmt.Errorf("failed to unmarshal latest trend message: %w", unmarshalErr)
+		}
+		err = generateLatestTrend(ctx, db, redisClient, llmFactory, lockService, message.UserID, message.PeriodStart, message.PeriodEnd, logger)
+		if err != nil {
+			messagesProcessedCounter.WithLabelValues("latest_trend", "error").Inc()
+		} else {
+			messagesProcessedCounter.WithLabelValues("latest_trend", "success").Inc()
 		}
 		return err
 	default:
@@ -616,6 +638,167 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFacto
 			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
 	}
 
-	logger.WithError(err).Error("Successfully generated monthly summary using Gemini API")
+	logger.Info("Successfully generated monthly summary using Gemini API")
 	return summary
+}
+
+func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, periodStartStr, periodEndStr string, logger *logrus.Entry) error {
+	logger.WithFields(logrus.Fields{
+		"user_id":      userID,
+		"period_start": periodStartStr,
+		"period_end":   periodEndStr,
+	}).Info("Generating latest trend analysis")
+
+	// 1. 分散ロックを取得
+	lockKey := fmt.Sprintf("trend_lock:latest:%s", userID)
+	distributedLock := lockService.NewDistributedLock(lockKey, 5*time.Minute)
+
+	locked, err := distributedLock.TryLock(ctx)
+	if err != nil {
+		lockOperationsCounter.WithLabelValues("acquire", "error", "latest_trend").Inc()
+		return fmt.Errorf("failed to acquire lock: %w", err)
+	}
+
+	if !locked {
+		// Lock already held by another process, skip processing
+		lockOperationsCounter.WithLabelValues("acquire", "failed", "latest_trend").Inc()
+		logger.WithFields(logrus.Fields{
+			"user_id": userID,
+		}).Info("Latest trend is already being processed by another instance, skipping")
+		return nil
+	}
+
+	lockOperationsCounter.WithLabelValues("acquire", "success", "latest_trend").Inc()
+	logger.WithFields(logrus.Fields{
+		"user_id": userID,
+	}).Debug("Acquired lock for latest trend generation")
+
+	// Ensure lock is released when function exits
+	defer func() {
+		if unlockErr := distributedLock.Unlock(ctx); unlockErr != nil {
+			lockOperationsCounter.WithLabelValues("release", "error", "latest_trend").Inc()
+			logger.WithError(unlockErr).WithFields(logrus.Fields{
+				"user_id": userID,
+			}).Error("Failed to release lock")
+		} else {
+			lockOperationsCounter.WithLabelValues("release", "success", "latest_trend").Inc()
+			logger.WithFields(logrus.Fields{
+				"user_id": userID,
+			}).Debug("Released lock for latest trend generation")
+		}
+	}()
+
+	// 2. 期間をパース
+	periodStart, err := time.Parse(time.RFC3339, periodStartStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse period_start: %w", err)
+	}
+	periodEnd, err := time.Parse(time.RFC3339, periodEndStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse period_end: %w", err)
+	}
+
+	// 3. 指定期間の日記エントリーを取得
+	query := `
+		SELECT date, content
+		FROM diaries
+		WHERE user_id = $1 AND date >= $2 AND date <= $3
+		ORDER BY date
+	`
+
+	rows, err := db.QueryContext(ctx, query, userID, periodStart, periodEnd)
+	if err != nil {
+		return fmt.Errorf("failed to get diary entries: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.WithError(err).Error("Failed to close rows")
+		}
+	}()
+
+	var diaryEntries []string
+	for rows.Next() {
+		var date, content string
+		if err := rows.Scan(&date, &content); err != nil {
+			return fmt.Errorf("failed to scan diary entry: %w", err)
+		}
+		diaryEntries = append(diaryEntries, fmt.Sprintf("[%s]\n%s", date, content))
+	}
+
+	if len(diaryEntries) < constants.MinDiaryEntriesForTrend {
+		logger.WithFields(logrus.Fields{
+			"user_id":       userID,
+			"entry_count":   len(diaryEntries),
+			"required_days": constants.MinDiaryEntriesForTrend,
+		}).Info("Not enough diary entries for latest trend analysis")
+		return fmt.Errorf("not enough diary entries (found %d, need at least %d)", len(diaryEntries), constants.MinDiaryEntriesForTrend)
+	}
+
+	// 4. LLMでトレンド分析生成
+	combinedDiaryEntries := fmt.Sprintf("Diary entries from %s to %s:\n\n%s", periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02"),
+		strings.Join(diaryEntries, "\n\n"))
+	trendAnalysis := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+
+	// 5. Redisに保存（TTL: 25時間）
+	// 毎日4時に更新されるため、25時間のTTLで次回更新までの余裕を確保
+	trendData := map[string]interface{}{
+		"user_id":      userID,
+		"analysis":     trendAnalysis,
+		"period_start": periodStartStr,
+		"period_end":   periodEndStr,
+		"generated_at": time.Now().Format(time.RFC3339),
+	}
+
+	trendDataJSON, err := json.Marshal(trendData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal trend data: %w", err)
+	}
+
+	trendKey := fmt.Sprintf("latest_trend:%s", userID)
+	setCmd := redisClient.B().Set().Key(trendKey).Value(string(trendDataJSON)).Ex(25 * time.Hour).Build() // 25時間
+	if err := redisClient.Do(ctx, setCmd).Error(); err != nil {
+		return fmt.Errorf("failed to save trend data to Redis: %w", err)
+	}
+
+	summariesGeneratedCounter.WithLabelValues("latest_trend").Inc()
+	logger.WithFields(logrus.Fields{
+		"user_id": userID,
+	}).Info("Successfully generated and saved latest trend analysis")
+	return nil
+}
+
+func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) string {
+	// ユーザーのGemini API keyをuser_llmsテーブルから取得
+	var apiKey string
+	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
+	if err != nil {
+		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
+		return fmt.Sprintf("Latest trend analysis based on diary entries (total length: %d characters) - Generated at %s",
+			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+	}
+
+	// Gemini クライアント作成
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	if err != nil {
+		logger.WithError(err).Error("Failed to create Gemini client")
+		return fmt.Sprintf("Latest trend analysis based on diary entries (total length: %d characters) - Generated at %s",
+			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+	}
+	defer func() {
+		if closeErr := geminiClient.Close(); closeErr != nil {
+			logger.WithError(closeErr).Error("Failed to close Gemini client")
+		}
+	}()
+
+	// トレンド分析生成
+	analysis, err := geminiClient.GenerateLatestTrend(ctx, combinedEntries)
+	if err != nil {
+		logger.WithError(err).Error("Failed to generate latest trend analysis")
+		return fmt.Sprintf("Latest trend analysis based on diary entries (total length: %d characters) - Generated at %s",
+			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+	}
+
+	logger.Info("Successfully generated latest trend analysis using Gemini API")
+	return analysis
 }

@@ -253,6 +253,7 @@ export interface UpdateAutoSummarySettingsParams {
 	llmProvider: number;
 	autoSummaryDaily: boolean;
 	autoSummaryMonthly: boolean;
+	autoLatestTrendEnabled: boolean;
 	accessToken: string;
 }
 
@@ -274,6 +275,7 @@ export async function updateAutoSummarySettings(
 		llmProvider: params.llmProvider,
 		autoSummaryDaily: params.autoSummaryDaily,
 		autoSummaryMonthly: params.autoSummaryMonthly,
+		autoLatestTrendEnabled: params.autoLatestTrendEnabled,
 	});
 
 	const response = await userClient.updateAutoSummarySettings(request);

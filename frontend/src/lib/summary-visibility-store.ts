@@ -4,11 +4,13 @@ import { browser } from "$app/environment";
 export interface SummaryVisibilityState {
 	daily: boolean;
 	monthly: boolean;
+	latestTrend: boolean;
 }
 
 const DEFAULT_STATE: SummaryVisibilityState = {
 	daily: true,
 	monthly: true,
+	latestTrend: true,
 };
 
 function createSummaryVisibilityStore() {
@@ -57,6 +59,14 @@ function createSummaryVisibilityStore() {
 		});
 	}
 
+	function toggleLatestTrend() {
+		update((state) => {
+			const newState = { ...state, latestTrend: !state.latestTrend };
+			saveToLocalStorage(newState);
+			return newState;
+		});
+	}
+
 	function init() {
 		if (!isInitialized) {
 			set(loadFromLocalStorage());
@@ -68,6 +78,7 @@ function createSummaryVisibilityStore() {
 		subscribe,
 		toggleDaily,
 		toggleMonthly,
+		toggleLatestTrend,
 		init,
 		// テスト用のリセット機能
 		_reset: () => {

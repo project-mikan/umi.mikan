@@ -3,6 +3,7 @@ import { _ } from "svelte-i18n";
 import { enhance } from "$app/forms";
 import { goto } from "$app/navigation";
 import { beforeNavigate } from "$app/navigation";
+import { page } from "$app/stores";
 import { onMount } from "svelte";
 import "$lib/i18n";
 import Button from "$lib/components/atoms/Button.svelte";
@@ -10,6 +11,7 @@ import SaveButton from "$lib/components/atoms/SaveButton.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
+import LatestTrendDisplay from "$lib/components/molecules/LatestTrendDisplay.svelte";
 import PWAInstallButton from "$lib/components/PWAInstallButton.svelte";
 import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
@@ -289,6 +291,12 @@ onMount(() => {
 	<div class="mb-8">
 		<TimeProgressBar />
 	</div>
+
+	{#if $page.data.autoLatestTrendEnabled}
+		<div class="mb-8">
+			<LatestTrendDisplay userName={$page.data.userName} />
+		</div>
+	{/if}
 
 	<div class="space-y-6">
 		<div bind:this={todayCard}>

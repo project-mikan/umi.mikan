@@ -42,6 +42,7 @@ describe("summaryVisibility store", () => {
 
 		expect(state.daily).toBe(true);
 		expect(state.monthly).toBe(true);
+		expect(state.latestTrend).toBe(true);
 	});
 
 	it("should only initialize once", () => {
@@ -112,7 +113,7 @@ describe("summaryVisibility store", () => {
 		expect(state.monthly).toBe(true); // monthly は変わらない
 		expect(localStorageMock.setItem).toHaveBeenCalledWith(
 			"summary-visibility",
-			JSON.stringify({ daily: false, monthly: true }),
+			JSON.stringify({ daily: false, monthly: true, latestTrend: true }),
 		);
 
 		// もう一度トグル
@@ -122,7 +123,7 @@ describe("summaryVisibility store", () => {
 		expect(state.daily).toBe(true);
 		expect(localStorageMock.setItem).toHaveBeenCalledWith(
 			"summary-visibility",
-			JSON.stringify({ daily: true, monthly: true }),
+			JSON.stringify({ daily: true, monthly: true, latestTrend: true }),
 		);
 	});
 
@@ -141,7 +142,7 @@ describe("summaryVisibility store", () => {
 		expect(state.daily).toBe(true); // daily は変わらない
 		expect(localStorageMock.setItem).toHaveBeenCalledWith(
 			"summary-visibility",
-			JSON.stringify({ daily: true, monthly: false }),
+			JSON.stringify({ daily: true, monthly: false, latestTrend: true }),
 		);
 
 		// もう一度トグル
@@ -151,7 +152,7 @@ describe("summaryVisibility store", () => {
 		expect(state.monthly).toBe(true);
 		expect(localStorageMock.setItem).toHaveBeenCalledWith(
 			"summary-visibility",
-			JSON.stringify({ daily: true, monthly: true }),
+			JSON.stringify({ daily: true, monthly: true, latestTrend: true }),
 		);
 	});
 

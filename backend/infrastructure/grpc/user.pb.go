@@ -432,13 +432,14 @@ func (x *GetUserInfoResponse) GetLlmKeys() []*LLMKeyInfo {
 
 // LLMキー情報
 type LLMKeyInfo struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider        int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
-	Key                string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	AutoSummaryDaily   bool                   `protobuf:"varint,3,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`       // 日毎の自動要約生成
-	AutoSummaryMonthly bool                   `protobuf:"varint,4,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"` // 月毎の自動要約生成
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
+	Key                    string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	AutoSummaryDaily       bool                   `protobuf:"varint,3,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
+	AutoSummaryMonthly     bool                   `protobuf:"varint,4,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
+	AutoLatestTrendEnabled bool                   `protobuf:"varint,5,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *LLMKeyInfo) Reset() {
@@ -495,6 +496,13 @@ func (x *LLMKeyInfo) GetAutoSummaryDaily() bool {
 func (x *LLMKeyInfo) GetAutoSummaryMonthly() bool {
 	if x != nil {
 		return x.AutoSummaryMonthly
+	}
+	return false
+}
+
+func (x *LLMKeyInfo) GetAutoLatestTrendEnabled() bool {
+	if x != nil {
+		return x.AutoLatestTrendEnabled
 	}
 	return false
 }
@@ -689,12 +697,13 @@ func (x *DeleteAccountResponse) GetMessage() string {
 
 // 自動要約設定更新用のリクエスト
 type UpdateAutoSummarySettingsRequest struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider        int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"`                        // 1:Gemini
-	AutoSummaryDaily   bool                   `protobuf:"varint,2,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`       // 日毎の自動要約生成
-	AutoSummaryMonthly bool                   `protobuf:"varint,3,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"` // 月毎の自動要約生成
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"`                                      // 1:Gemini
+	AutoSummaryDaily       bool                   `protobuf:"varint,2,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
+	AutoSummaryMonthly     bool                   `protobuf:"varint,3,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
+	AutoLatestTrendEnabled bool                   `protobuf:"varint,4,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *UpdateAutoSummarySettingsRequest) Reset() {
@@ -744,6 +753,13 @@ func (x *UpdateAutoSummarySettingsRequest) GetAutoSummaryDaily() bool {
 func (x *UpdateAutoSummarySettingsRequest) GetAutoSummaryMonthly() bool {
 	if x != nil {
 		return x.AutoSummaryMonthly
+	}
+	return false
+}
+
+func (x *UpdateAutoSummarySettingsRequest) GetAutoLatestTrendEnabled() bool {
+	if x != nil {
+		return x.AutoLatestTrendEnabled
 	}
 	return false
 }
@@ -848,11 +864,12 @@ func (x *GetAutoSummarySettingsRequest) GetLlmProvider() int32 {
 
 // 自動要約設定取得用のレスポンス
 type GetAutoSummarySettingsResponse struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	AutoSummaryDaily   bool                   `protobuf:"varint,1,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`       // 日毎の自動要約生成
-	AutoSummaryMonthly bool                   `protobuf:"varint,2,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"` // 月毎の自動要約生成
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	AutoSummaryDaily       bool                   `protobuf:"varint,1,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
+	AutoSummaryMonthly     bool                   `protobuf:"varint,2,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
+	AutoLatestTrendEnabled bool                   `protobuf:"varint,3,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *GetAutoSummarySettingsResponse) Reset() {
@@ -895,6 +912,13 @@ func (x *GetAutoSummarySettingsResponse) GetAutoSummaryDaily() bool {
 func (x *GetAutoSummarySettingsResponse) GetAutoSummaryMonthly() bool {
 	if x != nil {
 		return x.AutoSummaryMonthly
+	}
+	return false
+}
+
+func (x *GetAutoSummarySettingsResponse) GetAutoLatestTrendEnabled() bool {
+	if x != nil {
+		return x.AutoLatestTrendEnabled
 	}
 	return false
 }
@@ -1249,13 +1273,14 @@ const file_user_user_proto_rawDesc = "" +
 	"\x13GetUserInfoResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12+\n" +
-	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\xa1\x01\n" +
+	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\xdc\x01\n" +
 	"\n" +
 	"LLMKeyInfo\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\x12,\n" +
 	"\x12auto_summary_daily\x18\x03 \x01(\bR\x10autoSummaryDaily\x120\n" +
-	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\"8\n" +
+	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\x129\n" +
+	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\"8\n" +
 	"\x13DeleteLLMKeyRequest\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"J\n" +
 	"\x14DeleteLLMKeyResponse\x12\x18\n" +
@@ -1264,19 +1289,21 @@ const file_user_user_proto_rawDesc = "" +
 	"\x14DeleteAccountRequest\"K\n" +
 	"\x15DeleteAccountResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\xa5\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xe0\x01\n" +
 	" UpdateAutoSummarySettingsRequest\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12,\n" +
 	"\x12auto_summary_daily\x18\x02 \x01(\bR\x10autoSummaryDaily\x120\n" +
-	"\x14auto_summary_monthly\x18\x03 \x01(\bR\x12autoSummaryMonthly\"W\n" +
+	"\x14auto_summary_monthly\x18\x03 \x01(\bR\x12autoSummaryMonthly\x129\n" +
+	"\x19auto_latest_trend_enabled\x18\x04 \x01(\bR\x16autoLatestTrendEnabled\"W\n" +
 	"!UpdateAutoSummarySettingsResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"B\n" +
 	"\x1dGetAutoSummarySettingsRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\x80\x01\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xbb\x01\n" +
 	"\x1eGetAutoSummarySettingsResponse\x12,\n" +
 	"\x12auto_summary_daily\x18\x01 \x01(\bR\x10autoSummaryDaily\x120\n" +
-	"\x14auto_summary_monthly\x18\x02 \x01(\bR\x12autoSummaryMonthly\"\x19\n" +
+	"\x14auto_summary_monthly\x18\x02 \x01(\bR\x12autoSummaryMonthly\x129\n" +
+	"\x19auto_latest_trend_enabled\x18\x03 \x01(\bR\x16autoLatestTrendEnabled\"\x19\n" +
 	"\x17GetPubSubMetricsRequest\"\xc7\x01\n" +
 	"\x18GetPubSubMetricsResponse\x12:\n" +
 	"\x0ehourly_metrics\x18\x01 \x03(\v2\x13.user.HourlyMetricsR\rhourlyMetrics\x12?\n" +

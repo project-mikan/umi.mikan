@@ -30,6 +30,8 @@ const (
 	DiaryService_GetMonthlySummary_FullMethodName      = "/diary.DiaryService/GetMonthlySummary"
 	DiaryService_GenerateDailySummary_FullMethodName   = "/diary.DiaryService/GenerateDailySummary"
 	DiaryService_GetDailySummary_FullMethodName        = "/diary.DiaryService/GetDailySummary"
+	DiaryService_GetLatestTrend_FullMethodName         = "/diary.DiaryService/GetLatestTrend"
+	DiaryService_TriggerLatestTrend_FullMethodName     = "/diary.DiaryService/TriggerLatestTrend"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -157,6 +159,29 @@ type DiaryServiceClient interface {
 	// エラー:
 	//   - NotFound: サマリーが存在しない
 	GetDailySummary(ctx context.Context, in *GetDailySummaryRequest, opts ...grpc.CallOption) (*GetDailySummaryResponse, error)
+	// GetLatestTrend は直近1週間の日記のトレンド分析を取得します。
+	// Redisに保存された分析結果を返します。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { analysis: "最近は...", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
+	//
+	// エラー:
+	//   - NotFound: トレンド分析が存在しない
+	GetLatestTrend(ctx context.Context, in *GetLatestTrendRequest, opts ...grpc.CallOption) (*GetLatestTrendResponse, error)
+	// TriggerLatestTrend はトレンド分析の生成を手動でトリガーします（デバッグ用）。
+	// 非production環境でのみ使用可能です。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { success: true, message: "トレンド分析の生成をキューに追加しました" }
+	//
+	// エラー:
+	//   - PermissionDenied: production環境では使用不可
+	//   - NotFound: LLMキーが設定されていない
+	TriggerLatestTrend(ctx context.Context, in *TriggerLatestTrendRequest, opts ...grpc.CallOption) (*TriggerLatestTrendResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -271,6 +296,26 @@ func (c *diaryServiceClient) GetDailySummary(ctx context.Context, in *GetDailySu
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDailySummaryResponse)
 	err := c.cc.Invoke(ctx, DiaryService_GetDailySummary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) GetLatestTrend(ctx context.Context, in *GetLatestTrendRequest, opts ...grpc.CallOption) (*GetLatestTrendResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetLatestTrendResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetLatestTrend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) TriggerLatestTrend(ctx context.Context, in *TriggerLatestTrendRequest, opts ...grpc.CallOption) (*TriggerLatestTrendResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TriggerLatestTrendResponse)
+	err := c.cc.Invoke(ctx, DiaryService_TriggerLatestTrend_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -402,6 +447,29 @@ type DiaryServiceServer interface {
 	// エラー:
 	//   - NotFound: サマリーが存在しない
 	GetDailySummary(context.Context, *GetDailySummaryRequest) (*GetDailySummaryResponse, error)
+	// GetLatestTrend は直近1週間の日記のトレンド分析を取得します。
+	// Redisに保存された分析結果を返します。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { analysis: "最近は...", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
+	//
+	// エラー:
+	//   - NotFound: トレンド分析が存在しない
+	GetLatestTrend(context.Context, *GetLatestTrendRequest) (*GetLatestTrendResponse, error)
+	// TriggerLatestTrend はトレンド分析の生成を手動でトリガーします（デバッグ用）。
+	// 非production環境でのみ使用可能です。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { success: true, message: "トレンド分析の生成をキューに追加しました" }
+	//
+	// エラー:
+	//   - PermissionDenied: production環境では使用不可
+	//   - NotFound: LLMキーが設定されていない
+	TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -444,6 +512,12 @@ func (UnimplementedDiaryServiceServer) GenerateDailySummary(context.Context, *Ge
 }
 func (UnimplementedDiaryServiceServer) GetDailySummary(context.Context, *GetDailySummaryRequest) (*GetDailySummaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDailySummary not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetLatestTrend(context.Context, *GetLatestTrendRequest) (*GetLatestTrendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestTrend not implemented")
+}
+func (UnimplementedDiaryServiceServer) TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TriggerLatestTrend not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -664,6 +738,42 @@ func _DiaryService_GetDailySummary_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_GetLatestTrend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLatestTrendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetLatestTrend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetLatestTrend_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetLatestTrend(ctx, req.(*GetLatestTrendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_TriggerLatestTrend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TriggerLatestTrendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).TriggerLatestTrend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_TriggerLatestTrend_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).TriggerLatestTrend(ctx, req.(*TriggerLatestTrendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiaryService_ServiceDesc is the grpc.ServiceDesc for DiaryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -714,6 +824,14 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDailySummary",
 			Handler:    _DiaryService_GetDailySummary_Handler,
+		},
+		{
+			MethodName: "GetLatestTrend",
+			Handler:    _DiaryService_GetLatestTrend_Handler,
+		},
+		{
+			MethodName: "TriggerLatestTrend",
+			Handler:    _DiaryService_TriggerLatestTrend_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

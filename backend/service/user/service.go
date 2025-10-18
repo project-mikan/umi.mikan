@@ -277,10 +277,11 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, 1)
 	if err == nil && userLLM != nil {
 		llmKeys = append(llmKeys, &g.LLMKeyInfo{
-			LlmProvider:        int32(userLLM.LlmProvider),
-			Key:                userLLM.Key,
-			AutoSummaryDaily:   userLLM.AutoSummaryDaily,
-			AutoSummaryMonthly: userLLM.AutoSummaryMonthly,
+			LlmProvider:            int32(userLLM.LlmProvider),
+			Key:                    userLLM.Key,
+			AutoSummaryDaily:       userLLM.AutoSummaryDaily,
+			AutoSummaryMonthly:     userLLM.AutoSummaryMonthly,
+			AutoLatestTrendEnabled: userLLM.AutoLatestTrendEnabled,
 		})
 	}
 
@@ -463,6 +464,7 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 	// 自動要約設定を更新
 	userLLMDB.AutoSummaryDaily = req.GetAutoSummaryDaily()
 	userLLMDB.AutoSummaryMonthly = req.GetAutoSummaryMonthly()
+	userLLMDB.AutoLatestTrendEnabled = req.GetAutoLatestTrendEnabled()
 	userLLMDB.UpdatedAt = time.Now().Unix()
 
 	if err := userLLMDB.Update(ctx, s.DB); err != nil {
@@ -482,8 +484,9 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	// プロバイダーの検証
 	if req.GetLlmProvider() < 0 {
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:   false,
-			AutoSummaryMonthly: false,
+			AutoSummaryDaily:       false,
+			AutoSummaryMonthly:     false,
+			AutoLatestTrendEnabled: false,
 		}, nil
 	}
 
@@ -491,16 +494,18 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:   false,
-			AutoSummaryMonthly: false,
+			AutoSummaryDaily:       false,
+			AutoSummaryMonthly:     false,
+			AutoLatestTrendEnabled: false,
 		}, nil
 	}
 
 	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:   false,
-			AutoSummaryMonthly: false,
+			AutoSummaryDaily:       false,
+			AutoSummaryMonthly:     false,
+			AutoLatestTrendEnabled: false,
 		}, nil
 	}
 
@@ -509,14 +514,16 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	if err != nil {
 		// 設定が存在しない場合はデフォルト値を返す
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:   false,
-			AutoSummaryMonthly: false,
+			AutoSummaryDaily:       false,
+			AutoSummaryMonthly:     false,
+			AutoLatestTrendEnabled: false,
 		}, nil
 	}
 
 	return &g.GetAutoSummarySettingsResponse{
-		AutoSummaryDaily:   userLLMDB.AutoSummaryDaily,
-		AutoSummaryMonthly: userLLMDB.AutoSummaryMonthly,
+		AutoSummaryDaily:       userLLMDB.AutoSummaryDaily,
+		AutoSummaryMonthly:     userLLMDB.AutoSummaryMonthly,
+		AutoLatestTrendEnabled: userLLMDB.AutoLatestTrendEnabled,
 	}, nil
 }
 

@@ -157,6 +157,7 @@ message LLMKeyInfo {
   string key = 2;
   bool auto_summary_daily = 3; // 日毎の自動要約生成
   bool auto_summary_monthly = 4; // 月毎の自動要約生成
+  bool auto_latest_trend_enabled = 5; // 直近トレンド分析の自動生成
 }
 
 // LLMキー削除用のリクエスト
@@ -186,6 +187,7 @@ message UpdateAutoSummarySettingsRequest {
   int32 llm_provider = 1; // 1:Gemini
   bool auto_summary_daily = 2; // 日毎の自動要約生成
   bool auto_summary_monthly = 3; // 月毎の自動要約生成
+  bool auto_latest_trend_enabled = 4; // 直近トレンド分析の自動生成
 }
 
 // 自動要約設定更新用のレスポンス
@@ -203,6 +205,7 @@ message GetAutoSummarySettingsRequest {
 message GetAutoSummarySettingsResponse {
   bool auto_summary_daily = 1; // 日毎の自動要約生成
   bool auto_summary_monthly = 2; // 月毎の自動要約生成
+  bool auto_latest_trend_enabled = 3; // 直近トレンド分析の自動生成
 }
 
 // Pub/Subメトリクス取得用のリクエスト
