@@ -36,6 +36,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
 					monthlySummariesProcessed: metric.monthlySummariesProcessed,
 					dailySummariesFailed: metric.dailySummariesFailed,
 					monthlySummariesFailed: metric.monthlySummariesFailed,
+					latestTrendsProcessed: metric.latestTrendsProcessed,
+					latestTrendsFailed: metric.latestTrendsFailed,
 				})),
 				processingTasks: (response.processingTasks || []).map((task) => ({
 					taskType: task.taskType,
@@ -51,6 +53,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
 							autoSummaryDailyEnabled: response.summary.autoSummaryDailyEnabled,
 							autoSummaryMonthlyEnabled:
 								response.summary.autoSummaryMonthlyEnabled,
+							autoLatestTrendEnabled: response.summary.autoLatestTrendEnabled,
+							latestTrendGeneratedAt: response.summary.latestTrendGeneratedAt,
 						}
 					: {
 							totalDailySummaries: 0,
@@ -59,6 +63,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
 							pendingMonthlySummaries: 0,
 							autoSummaryDailyEnabled: false,
 							autoSummaryMonthlyEnabled: false,
+							autoLatestTrendEnabled: false,
+							latestTrendGeneratedAt: "",
 						},
 			},
 		};

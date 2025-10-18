@@ -183,7 +183,7 @@ func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logge
 	// ジョブを追加
 	scheduler.AddJob(NewDailySummaryJob(app.SchedulerConfig.DailySummaryInterval))
 	scheduler.AddJob(NewMonthlySummaryJob(app.SchedulerConfig.MonthlySummaryInterval))
-	scheduler.AddJob(NewLatestTrendJob(app.SchedulerConfig.LatestTrendInterval))
+	scheduler.AddJob(NewLatestTrendJob(4)) // 毎日4時（JST）に実行
 
 	logger.Info("Scheduler is running...")
 
@@ -507,11 +507,11 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 
 // LatestTrendJob handles latest trend analysis generation
 type LatestTrendJob struct {
-	interval time.Duration
+	targetHour int // 実行する時刻（0-23）
 }
 
-func NewLatestTrendJob(interval time.Duration) *LatestTrendJob {
-	return &LatestTrendJob{interval: interval}
+func NewLatestTrendJob(targetHour int) *LatestTrendJob {
+	return &LatestTrendJob{targetHour: targetHour}
 }
 
 func (j *LatestTrendJob) Name() string {
@@ -519,14 +519,24 @@ func (j *LatestTrendJob) Name() string {
 }
 
 func (j *LatestTrendJob) Interval() time.Duration {
-	return j.interval
+	// 毎分チェックして、目的の時刻になったら実行する
+	return 1 * time.Minute
 }
 
 func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
-	s.logger.Info("Checking for latest trend analysis generation...")
+	// 現在時刻（JSTに変換）を取得
+	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
+	now := time.Now().In(jst)
 
-	// 現在時刻（UTC）を取得
-	now := time.Now().UTC()
+	// 現在の時刻が目的の時刻でない場合はスキップ
+	if now.Hour() != j.targetHour {
+		return nil
+	}
+
+	s.logger.WithFields(logrus.Fields{
+		"current_time": now.Format("2006-01-02 15:04:05"),
+		"target_hour":  j.targetHour,
+	}).Info("Starting latest trend analysis generation (scheduled time)")
 
 	// 1. auto_latest_trend_enabled が true のユーザーを取得
 	usersQuery := `
@@ -563,7 +573,8 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 	usersWithAutoSummaryGauge.WithLabelValues("latest_trend").Set(float64(len(userIDs)))
 
 	// 2. 直近3日間の期間を計算（今日を除く）
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	nowUTC := time.Now().UTC()
+	today := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
 	periodEnd := today.AddDate(0, 0, -1)   // 昨日（1日前）
 	periodStart := today.AddDate(0, 0, -3) // 3日前
 

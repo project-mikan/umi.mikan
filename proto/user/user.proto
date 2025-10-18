@@ -230,12 +230,14 @@ message HourlyMetrics {
   int32 monthly_summaries_processed = 3;
   int32 daily_summaries_failed = 4;
   int32 monthly_summaries_failed = 5;
+  int32 latest_trends_processed = 6;
+  int32 latest_trends_failed = 7;
 }
 
 // 処理中のタスク
 message ProcessingTask {
-  string task_type = 1; // "daily_summary" or "monthly_summary"
-  string date = 2; // YYYY-MM-DD for daily, YYYY-MM for monthly
+  string task_type = 1; // "daily_summary", "monthly_summary", or "latest_trend"
+  string date = 2; // YYYY-MM-DD for daily, YYYY-MM for monthly, period for latest_trend
   int64 started_at = 3; // Unix timestamp
 }
 
@@ -247,4 +249,6 @@ message MetricsSummary {
   int32 pending_monthly_summaries = 4;
   bool auto_summary_daily_enabled = 5;
   bool auto_summary_monthly_enabled = 6;
+  bool auto_latest_trend_enabled = 7;
+  string latest_trend_generated_at = 8; // 最後に生成された日時 (ISO 8601形式)
 }

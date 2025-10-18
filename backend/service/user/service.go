@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -566,6 +567,8 @@ func (s *UserEntry) GetPubSubMetrics(ctx context.Context, req *g.GetPubSubMetric
 
 func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*g.HourlyMetrics, error) {
 	// 過去24時間のデータを1時間ごとに集約
+	// 注: トレンド生成は現状Redisのみに保存されるため、hourly_metricsでは0になる
+	// 将来的にトレンド生成履歴をDBに保存する場合は、ここにクエリを追加する
 	query := `
 		WITH hours AS (
 			SELECT generate_series(
@@ -627,6 +630,8 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 			MonthlySummariesProcessed: monthlyProcessed,
 			DailySummariesFailed:      0, // TODO: 失敗ログを記録する仕組みを追加後に実装
 			MonthlySummariesFailed:    0, // TODO: 失敗ログを記録する仕組みを追加後に実装
+			LatestTrendsProcessed:     0, // トレンド生成履歴はDBに保存されていないため0
+			LatestTrendsFailed:        0, // トレンド生成履歴はDBに保存されていないため0
 		})
 	}
 
@@ -674,6 +679,18 @@ func (s *UserEntry) getProcessingTasks(ctx context.Context, userID string) ([]*g
 				})
 			}
 		}
+	}
+
+	// トレンド分析タスクの検索
+	trendPattern := fmt.Sprintf("task:latest_trend:%s", userID)
+	trendCmd := s.RedisClient.B().Exists().Key(trendPattern).Build()
+	exists, err := s.RedisClient.Do(ctx, trendCmd).AsInt64()
+	if err == nil && exists > 0 {
+		tasks = append(tasks, &g.ProcessingTask{
+			TaskType:  "latest_trend",
+			Date:      "直近3日",
+			StartedAt: time.Now().Add(-time.Minute * 5).Unix(), // 推定値
+		})
 	}
 
 	return tasks, nil
@@ -734,15 +751,34 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 	}
 
 	// 自動要約設定を取得
-	var autoDaily, autoMonthly bool
-	autoQuery := `SELECT auto_summary_daily, auto_summary_monthly FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	if err := s.DB.(*sql.DB).QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly); err != nil {
+	var autoDaily, autoMonthly, autoLatestTrend bool
+	autoQuery := `SELECT auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	if err := s.DB.(*sql.DB).QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly, &autoLatestTrend); err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
 		}
 		// 設定が存在しない場合はfalse
 		autoDaily = false
 		autoMonthly = false
+		autoLatestTrend = false
+	}
+
+	// 最新トレンド生成日時をRedisから取得
+	var latestTrendGeneratedAt string
+	trendKey := fmt.Sprintf("latest_trend:%s", userID)
+	getCmd := s.RedisClient.B().Get().Key(trendKey).Build()
+	result := s.RedisClient.Do(ctx, getCmd)
+	if result.Error() == nil {
+		trendDataStr, err := result.ToString()
+		if err == nil {
+			// JSONをパース
+			var trendData struct {
+				GeneratedAt string `json:"generated_at"`
+			}
+			if err := json.Unmarshal([]byte(trendDataStr), &trendData); err == nil {
+				latestTrendGeneratedAt = trendData.GeneratedAt
+			}
+		}
 	}
 
 	return &g.MetricsSummary{
@@ -752,5 +788,7 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		PendingMonthlySummaries:   pendingMonthly,
 		AutoSummaryDailyEnabled:   autoDaily,
 		AutoSummaryMonthlyEnabled: autoMonthly,
+		AutoLatestTrendEnabled:    autoLatestTrend,
+		LatestTrendGeneratedAt:    latestTrendGeneratedAt,
 	}, nil
 }

@@ -368,6 +368,11 @@ Environment variables for controlling scheduler behavior:
 - `SCHEDULER_DAILY_INTERVAL`: Interval for daily summary job execution (default: `5m`)
 - `SCHEDULER_MONTHLY_INTERVAL`: Interval for monthly summary job execution (default: `5m`)
 
+**Latest Trend Generation:**
+- Latest trend analysis is automatically generated **every day at 4:00 AM JST**
+- The scheduler checks every minute and executes only when the current hour is 4
+- No environment variable configuration needed for latest trend timing
+
 Examples:
 
 ```bash
