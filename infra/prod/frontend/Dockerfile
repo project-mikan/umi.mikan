@@ -46,7 +46,8 @@ RUN npm install -g pnpm@latest
 COPY --from=builder /frontend/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # 本番依存関係のみをインストール（devDependenciesを除外）
-RUN pnpm install --prod --frozen-lockfile
+# --ignore-scriptsを使用してprepareスクリプトをスキップ（ビルド済み成果物を使用するため不要）
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 
 
