@@ -548,38 +548,50 @@ export const GetPubSubMetricsResponseSchema: GenMessage<GetPubSubMetricsResponse
  */
 export type HourlyMetrics = Message<"user.HourlyMetrics"> & {
 	/**
-	 * Unix timestamp of the hour
+	 * 該当時間のUnixタイムスタンプ
 	 *
 	 * @generated from field: int64 timestamp = 1;
 	 */
 	timestamp: bigint;
 
 	/**
+	 * 処理された日次要約数
+	 *
 	 * @generated from field: int32 daily_summaries_processed = 2;
 	 */
 	dailySummariesProcessed: number;
 
 	/**
+	 * 処理された月次要約数
+	 *
 	 * @generated from field: int32 monthly_summaries_processed = 3;
 	 */
 	monthlySummariesProcessed: number;
 
 	/**
+	 * 失敗した日次要約数
+	 *
 	 * @generated from field: int32 daily_summaries_failed = 4;
 	 */
 	dailySummariesFailed: number;
 
 	/**
+	 * 失敗した月次要約数
+	 *
 	 * @generated from field: int32 monthly_summaries_failed = 5;
 	 */
 	monthlySummariesFailed: number;
 
 	/**
+	 * 処理されたトレンド分析数
+	 *
 	 * @generated from field: int32 latest_trends_processed = 6;
 	 */
 	latestTrendsProcessed: number;
 
 	/**
+	 * 失敗したトレンド分析数
+	 *
 	 * @generated from field: int32 latest_trends_failed = 7;
 	 */
 	latestTrendsFailed: number;
@@ -600,21 +612,21 @@ export const HourlyMetricsSchema: GenMessage<HourlyMetrics> =
  */
 export type ProcessingTask = Message<"user.ProcessingTask"> & {
 	/**
-	 * "daily_summary", "monthly_summary", or "latest_trend"
+	 * タスク種別: "daily_summary" (日次要約), "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
 	 *
 	 * @generated from field: string task_type = 1;
 	 */
 	taskType: string;
 
 	/**
-	 * YYYY-MM-DD for daily, YYYY-MM for monthly, period for latest_trend
+	 * 日付: 日次はYYYY-MM-DD形式, 月次はYYYY-MM形式, トレンドは期間説明
 	 *
 	 * @generated from field: string date = 2;
 	 */
 	date: string;
 
 	/**
-	 * Unix timestamp
+	 * タスク開始時刻 (Unixタイムスタンプ)
 	 *
 	 * @generated from field: int64 started_at = 3;
 	 */
@@ -636,42 +648,56 @@ export const ProcessingTaskSchema: GenMessage<ProcessingTask> =
  */
 export type MetricsSummary = Message<"user.MetricsSummary"> & {
 	/**
+	 * 総日次要約数
+	 *
 	 * @generated from field: int32 total_daily_summaries = 1;
 	 */
 	totalDailySummaries: number;
 
 	/**
+	 * 総月次要約数
+	 *
 	 * @generated from field: int32 total_monthly_summaries = 2;
 	 */
 	totalMonthlySummaries: number;
 
 	/**
+	 * 未作成の日次要約数
+	 *
 	 * @generated from field: int32 pending_daily_summaries = 3;
 	 */
 	pendingDailySummaries: number;
 
 	/**
+	 * 未作成の月次要約数
+	 *
 	 * @generated from field: int32 pending_monthly_summaries = 4;
 	 */
 	pendingMonthlySummaries: number;
 
 	/**
+	 * 日次要約の自動生成が有効か
+	 *
 	 * @generated from field: bool auto_summary_daily_enabled = 5;
 	 */
 	autoSummaryDailyEnabled: boolean;
 
 	/**
+	 * 月次要約の自動生成が有効か
+	 *
 	 * @generated from field: bool auto_summary_monthly_enabled = 6;
 	 */
 	autoSummaryMonthlyEnabled: boolean;
 
 	/**
+	 * トレンド分析の自動生成が有効か
+	 *
 	 * @generated from field: bool auto_latest_trend_enabled = 7;
 	 */
 	autoLatestTrendEnabled: boolean;
 
 	/**
-	 * 最後に生成された日時 (ISO 8601形式)
+	 * 最後にトレンド分析が生成された日時 (ISO 8601形式)
 	 *
 	 * @generated from field: string latest_trend_generated_at = 8;
 	 */
