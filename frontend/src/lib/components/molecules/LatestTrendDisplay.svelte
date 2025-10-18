@@ -3,6 +3,7 @@ import { _, locale } from "svelte-i18n";
 import { browser } from "$app/environment";
 import { onMount } from "svelte";
 import { authenticatedFetch } from "$lib/auth-client";
+import { summaryVisibility } from "$lib/summary-visibility-store";
 import "$lib/i18n";
 
 interface LatestTrendData {
@@ -18,6 +19,13 @@ let trendData: LatestTrendData | null = null;
 let isLoading = true;
 let errorMessage = "";
 
+// ストアから表示状態を取得
+$: showTrend = $summaryVisibility.latestTrend;
+
+function toggleTrend() {
+	summaryVisibility.toggleLatestTrend();
+}
+
 // トレンド分析データを取得
 async function fetchLatestTrend(retryCount = 0) {
 	if (!browser) return;
@@ -29,15 +37,41 @@ async function fetchLatestTrend(retryCount = 0) {
 		const response = await authenticatedFetch("/api/diary/latest-trend");
 		if (response.ok) {
 			const result = await response.json();
-			if (result.analysis) {
-				trendData = {
-					analysis: result.analysis,
-					periodStart: result.periodStart,
-					periodEnd: result.periodEnd,
-					generatedAt: result.generatedAt,
-				};
+
+			// データのバリデーション
+			if (
+				result.analysis &&
+				typeof result.analysis === "string" &&
+				result.periodStart &&
+				result.periodEnd &&
+				result.generatedAt
+			) {
+				// 日付の妥当性チェック
+				const startDate = new Date(result.periodStart);
+				const endDate = new Date(result.periodEnd);
+				const generatedDate = new Date(result.generatedAt);
+
+				if (
+					!Number.isNaN(startDate.getTime()) &&
+					!Number.isNaN(endDate.getTime()) &&
+					!Number.isNaN(generatedDate.getTime())
+				) {
+					// 分析テキストの長さ制限（500文字）
+					const sanitizedAnalysis = result.analysis.substring(0, 500);
+
+					trendData = {
+						analysis: sanitizedAnalysis,
+						periodStart: result.periodStart,
+						periodEnd: result.periodEnd,
+						generatedAt: result.generatedAt,
+					};
+				} else {
+					// 日付が不正な場合
+					console.warn("Invalid date format in latest trend data");
+					trendData = null;
+				}
 			} else {
-				// データが空の場合はnullにする
+				// データが空または不正な場合はnullにする
 				trendData = null;
 			}
 		} else if (response.status === 404) {
@@ -104,6 +138,7 @@ function formatAnalysis(text: string): string {
 }
 
 onMount(() => {
+	summaryVisibility.init();
 	fetchLatestTrend();
 });
 </script>
@@ -118,6 +153,23 @@ onMount(() => {
 				{$_("latestTrend.description")}
 			</p>
 		</div>
+		{#if trendData && showTrend}
+			<button
+				type="button"
+				on:click|preventDefault|stopPropagation={toggleTrend}
+				class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
+			>
+				{$_("latestTrend.hide")}
+			</button>
+		{:else if trendData}
+			<button
+				type="button"
+				on:click|preventDefault|stopPropagation={toggleTrend}
+				class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
+			>
+				{$_("latestTrend.view")}
+			</button>
+		{/if}
 	</div>
 
 	{#if isLoading}
@@ -129,7 +181,7 @@ onMount(() => {
 		<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
 			<p class="text-red-800 dark:text-red-200">{errorMessage}</p>
 		</div>
-	{:else if trendData}
+	{:else if trendData && showTrend}
 		<div class="space-y-4">
 			<!-- 分析期間 -->
 			<div class="text-sm text-gray-600 dark:text-gray-400">
@@ -149,7 +201,7 @@ onMount(() => {
 				{$_("latestTrend.generatedAt")}: {new Date(trendData.generatedAt).toLocaleString($locale || "en")}
 			</div>
 		</div>
-	{:else}
+	{:else if !trendData}
 		<div class="text-center py-8">
 			<p class="text-gray-500 dark:text-gray-400">
 				{$_("latestTrend.noData")}

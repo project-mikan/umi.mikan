@@ -579,6 +579,16 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 }
 
 func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Scheduler, userID string, periodStart, periodEnd time.Time) error {
+	// 古いRedisキーを明示的に削除（新しいデータ生成前にクリーンアップ）
+	trendKey := fmt.Sprintf("latest_trend:%s", userID)
+	delCmd := s.redis.B().Del().Key(trendKey).Build()
+	if err := s.redis.Do(ctx, delCmd).Error(); err != nil {
+		s.logger.WithError(err).WithField("user_id", userID).Warn("Failed to delete old trend key (continuing anyway)")
+		// エラーがあっても処理は継続
+	} else {
+		s.logger.WithField("user_id", userID).Debug("Deleted old trend key")
+	}
+
 	// 対象期間に日記が最小必要数以上存在するかチェック
 	var count int
 	checkQuery := `
