@@ -110,15 +110,32 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 }
 
 func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent string) (string, error) {
-	prompt := fmt.Sprintf(`以下は過去1週間の日記です。最近の傾向(体調、気分、活動、考え方など)を300字程度で分析してください。
+	prompt := fmt.Sprintf(`以下は過去1週間の日記です。この期間の傾向を分析し、わかりやすく要約してください。
 
-要件：
-- Markdownは非対応
-- 客観的かつ簡潔に記述
-- 特に注目すべき変化や傾向を強調
-- 最大300字程度
+【出力形式】
+以下の形式で出力してください（Markdownは使用しないでください）：
 
-日記の内容:
+## 最近のあなた
+
+<1行で全体的な様子を簡潔に表現>
+
+### 体調・気分
+<体調や気分の傾向を2-3文で>
+
+### 活動・行動
+<よくしていた活動や行動パターンを2-3文で>
+
+### 気になること
+<特筆すべき変化や注目すべき点を1-2文で>
+
+【要件】
+- 「##」「###」の見出しマーカーはそのまま出力してください
+- その他のMarkdown記法（太字、リンクなど）は使用しないでください
+- 具体的な日付や曜日は含めず、傾向のみを記述
+- 客観的かつ優しい語り口で
+- 合計300-400字程度
+
+【日記の内容】
 %s
 
 `, diaryContent)

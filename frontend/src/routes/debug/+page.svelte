@@ -25,16 +25,16 @@ async function triggerLatestTrend() {
 
 		if (response.ok) {
 			const result = await response.json();
-			message = result.message || "トレンド分析の生成をキューに追加しました";
+			message = result.message || $_("debug.latestTrend.successMessage");
 			messageType = "success";
 		} else {
 			const errorData = await response.json().catch(() => ({}));
-			message = errorData.message || "トレンド分析の生成に失敗しました";
+			message = errorData.message || $_("debug.latestTrend.errorMessage");
 			messageType = "error";
 		}
 	} catch (error) {
 		console.error("Failed to trigger latest trend:", error);
-		message = "トレンド分析の生成に失敗しました";
+		message = $_("debug.latestTrend.errorMessage");
 		messageType = "error";
 	} finally {
 		isTriggering = false;
@@ -51,17 +51,17 @@ async function triggerLatestTrend() {
 			{$_("navigation.debug")}
 		</h1>
 		<p class="text-red-600 dark:text-red-400 text-sm font-medium">
-			開発環境専用ページ
+			{$_("debug.pageTitle")}
 		</p>
 	</div>
 
 	<!-- 直近トレンド分析トリガー -->
 	<Card>
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-			直近トレンド分析 手動トリガー
+			{$_("debug.latestTrend.title")}
 		</h3>
 		<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-			過去7日間の日記から直近トレンド分析を即座に生成します。
+			{$_("debug.latestTrend.description")}
 		</p>
 
 		<button
@@ -70,7 +70,7 @@ async function triggerLatestTrend() {
 			disabled={isTriggering}
 			class="bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
 		>
-			{isTriggering ? "生成中..." : "トレンド分析を生成"}
+			{isTriggering ? $_("debug.latestTrend.buttonGenerating") : $_("debug.latestTrend.button")}
 		</button>
 
 		{#if message}
@@ -87,10 +87,10 @@ async function triggerLatestTrend() {
 	<!-- 説明 -->
 	<Card>
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-			このページについて
+			{$_("debug.about.title")}
 		</h3>
 		<p class="text-sm text-gray-600 dark:text-gray-400">
-			このページは開発環境でのみ表示されます。本番環境では表示されません。
+			{$_("debug.about.description")}
 		</p>
 	</Card>
 </div>

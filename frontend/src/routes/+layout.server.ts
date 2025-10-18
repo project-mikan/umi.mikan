@@ -1,4 +1,4 @@
-import { refreshAccessToken } from "$lib/server/auth-api";
+import { refreshAccessToken, getUserInfo } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
 import {
 	ACCESS_TOKEN_COOKIE_OPTIONS,
@@ -46,9 +46,21 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
 		csrfToken = setCSRFToken(cookies);
 	}
 
+	// ユーザー情報を取得
+	let userName: string | null = null;
+	if (isAuthenticated && accessToken) {
+		try {
+			const userInfo = await getUserInfo({ accessToken });
+			userName = userInfo.name;
+		} catch (error) {
+			console.error("Failed to get user info:", error);
+		}
+	}
+
 	return {
 		isAuthenticated,
 		path: url.pathname,
 		csrfToken,
+		userName,
 	};
 };

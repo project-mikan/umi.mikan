@@ -18,10 +18,14 @@ import {
 	type GetDiaryEntriesByMonthResponse,
 	GetDiaryEntryRequestSchema,
 	type GetDiaryEntryResponse,
+	GetLatestTrendRequestSchema,
+	type GetLatestTrendResponse,
 	GetMonthlySummaryRequestSchema,
 	type GetMonthlySummaryResponse,
 	SearchDiaryEntriesRequestSchema,
 	type SearchDiaryEntriesResponse,
+	TriggerLatestTrendRequestSchema,
+	type TriggerLatestTrendResponse,
 	UpdateDiaryEntryRequestSchema,
 	type UpdateDiaryEntryResponse,
 	type YM,
@@ -240,4 +244,34 @@ export async function getDailySummary(
 	});
 
 	return await client.getDailySummary(request);
+}
+
+export interface GetLatestTrendParams {
+	accessToken: string;
+}
+
+export interface TriggerLatestTrendParams {
+	accessToken: string;
+}
+
+export async function getLatestTrend(
+	params: GetLatestTrendParams,
+): Promise<GetLatestTrendResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(GetLatestTrendRequestSchema, {});
+
+	return await client.getLatestTrend(request);
+}
+
+export async function triggerLatestTrend(
+	params: TriggerLatestTrendParams,
+): Promise<TriggerLatestTrendResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(TriggerLatestTrendRequestSchema, {});
+
+	return await client.triggerLatestTrend(request);
 }

@@ -292,7 +292,7 @@ onMount(() => {
 	</div>
 
 	<div class="mb-8">
-		<LatestTrendDisplay />
+		<LatestTrendDisplay userName={data.userName} />
 	</div>
 
 	<div class="space-y-6">

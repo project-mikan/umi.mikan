@@ -116,7 +116,7 @@ func (s *DiaryEntry) TriggerLatestTrend(
 	if count == 0 {
 		return &g.TriggerLatestTrendResponse{
 			Success: false,
-			Message: "No diary entries found for the analysis period",
+			Message: "分析期間の日記エントリが見つかりませんでした",
 		}, nil
 	}
 
@@ -141,6 +141,6 @@ func (s *DiaryEntry) TriggerLatestTrend(
 
 	return &g.TriggerLatestTrendResponse{
 		Success: true,
-		Message: "Latest trend analysis generation has been queued",
+		Message: "トレンド分析の生成をキューに追加しました",
 	}, nil
 }
