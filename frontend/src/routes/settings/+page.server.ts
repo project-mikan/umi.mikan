@@ -263,6 +263,7 @@ export const actions: Actions = {
 		const llmProvider = parseInt(data.get("llmProvider") as string, 10);
 		const autoSummaryDaily = data.get("autoSummaryDaily") === "on";
 		const autoSummaryMonthly = data.get("autoSummaryMonthly") === "on";
+		const autoLatestTrendEnabled = data.get("autoLatestTrendEnabled") === "on";
 
 		if (Number.isNaN(llmProvider) || llmProvider < 0) {
 			return fail(400, {
@@ -276,6 +277,7 @@ export const actions: Actions = {
 				llmProvider,
 				autoSummaryDaily,
 				autoSummaryMonthly,
+				autoLatestTrendEnabled,
 				accessToken,
 			});
 
