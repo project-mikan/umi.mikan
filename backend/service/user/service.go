@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -682,14 +683,25 @@ func (s *UserEntry) getProcessingTasks(ctx context.Context, userID string) ([]*g
 	}
 
 	// トレンド分析タスクの検索
-	trendPattern := fmt.Sprintf("task:latest_trend:%s", userID)
-	trendCmd := s.RedisClient.B().Exists().Key(trendPattern).Build()
-	exists, err := s.RedisClient.Do(ctx, trendCmd).AsInt64()
+	trendTaskKey := fmt.Sprintf("task:latest_trend:%s", userID)
+	trendTaskCmd := s.RedisClient.B().Exists().Key(trendTaskKey).Build()
+	exists, err := s.RedisClient.Do(ctx, trendTaskCmd).AsInt64()
 	if err == nil && exists > 0 {
+		// Redisからタスクの開始時刻を取得
+		getCmd := s.RedisClient.B().Get().Key(trendTaskKey).Build()
+		startTimeStr, err := s.RedisClient.Do(ctx, getCmd).ToString()
+		var startedAt int64
+		if err == nil {
+			startedAt, _ = strconv.ParseInt(startTimeStr, 10, 64)
+		} else {
+			// フォールバック: 取得できない場合は5分前を推定値として使用
+			startedAt = time.Now().Add(-time.Minute * 5).Unix()
+		}
+
 		tasks = append(tasks, &g.ProcessingTask{
 			TaskType:  "latest_trend",
 			Date:      "直近3日",
-			StartedAt: time.Now().Add(-time.Minute * 5).Unix(), // 推定値
+			StartedAt: startedAt,
 		})
 	}
 
@@ -768,9 +780,10 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 	trendKey := fmt.Sprintf("latest_trend:%s", userID)
 	getCmd := s.RedisClient.B().Get().Key(trendKey).Build()
 	result := s.RedisClient.Do(ctx, getCmd)
+
+	// エラーハンドリングを改善（goto文の代わりに早期リターンパターンを使用）
 	if result.Error() == nil {
-		trendDataStr, err := result.ToString()
-		if err == nil {
+		if trendDataStr, err := result.ToString(); err == nil {
 			// JSONをパース
 			var trendData struct {
 				GeneratedAt string `json:"generated_at"`

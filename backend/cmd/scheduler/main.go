@@ -165,7 +165,11 @@ func (s *Scheduler) AddDailyJob(job DailyScheduledJob) {
 				return
 			case <-ticker.C:
 				// 現在時刻（JST）を取得
-				jst := time.FixedZone("Asia/Tokyo", 9*60*60)
+				jst, err := time.LoadLocation("Asia/Tokyo")
+				if err != nil {
+					s.logger.WithError(err).Warn("Failed to load Asia/Tokyo location, using fixed offset")
+					jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+				}
 				now := time.Now().In(jst)
 
 				// 現在の時刻が目的の時刻でない場合はスキップ
@@ -182,21 +186,21 @@ func (s *Scheduler) AddDailyJob(job DailyScheduledJob) {
 				}
 
 				s.logger.WithFields(logrus.Fields{
-					"job_name":     job.Name(),
-					"current_time": now.Format("2006-01-02 15:04:05"),
-					"target_hour":  job.TargetHour(),
+					"job_name":      job.Name(),
+					"current_time":  now.Format("2006-01-02 15:04:05"),
+					"target_hour":   job.TargetHour(),
 					"target_minute": job.TargetMinute(),
 				}).Info("Executing daily scheduled job")
 
 				// Metrics tracking
 				start := time.Now()
-				err := job.Execute(s.ctx, s)
+				execErr := job.Execute(s.ctx, s)
 				duration := time.Since(start)
 
 				jobDuration.WithLabelValues(job.Name()).Observe(duration.Seconds())
 
-				if err != nil {
-					s.logger.WithError(err).WithFields(logrus.Fields{
+				if execErr != nil {
+					s.logger.WithError(execErr).WithFields(logrus.Fields{
 						"job_name": job.Name(),
 						"duration": duration,
 					}).Error("Error executing daily job")
@@ -678,6 +682,15 @@ func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Schedule
 		// エラーがあっても処理は継続
 	} else {
 		s.logger.WithField("user_id", userID).Debug("Deleted old trend key")
+	}
+
+	// タスク開始時刻をRedisに記録
+	taskKey := fmt.Sprintf("task:latest_trend:%s", userID)
+	startTime := time.Now().Unix()
+	setCmd := s.redis.B().Set().Key(taskKey).Value(fmt.Sprintf("%d", startTime)).Ex(time.Hour).Build()
+	if err := s.redis.Do(ctx, setCmd).Error(); err != nil {
+		s.logger.WithError(err).WithField("user_id", userID).Warn("Failed to record task start time")
+		// エラーがあっても処理は継続
 	}
 
 	// 対象期間に日記が最小必要数以上存在するかチェック

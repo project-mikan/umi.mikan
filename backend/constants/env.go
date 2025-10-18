@@ -21,10 +21,10 @@ type RedisConfig struct {
 }
 
 type SchedulerConfig struct {
-	DailySummaryInterval      time.Duration
-	MonthlySummaryInterval    time.Duration
-	LatestTrendTargetHour     int
-	LatestTrendTargetMinute   int
+	DailySummaryInterval    time.Duration
+	MonthlySummaryInterval  time.Duration
+	LatestTrendTargetHour   int
+	LatestTrendTargetMinute int
 }
 
 type SubscriberConfig struct {

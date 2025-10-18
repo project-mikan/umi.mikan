@@ -225,30 +225,30 @@ message GetPubSubMetricsResponse {
 
 // 1時間ごとのメトリクス
 message HourlyMetrics {
-  int64 timestamp = 1; // Unix timestamp of the hour
-  int32 daily_summaries_processed = 2;
-  int32 monthly_summaries_processed = 3;
-  int32 daily_summaries_failed = 4;
-  int32 monthly_summaries_failed = 5;
-  int32 latest_trends_processed = 6;
-  int32 latest_trends_failed = 7;
+  int64 timestamp = 1; // 該当時間のUnixタイムスタンプ
+  int32 daily_summaries_processed = 2; // 処理された日次要約数
+  int32 monthly_summaries_processed = 3; // 処理された月次要約数
+  int32 daily_summaries_failed = 4; // 失敗した日次要約数
+  int32 monthly_summaries_failed = 5; // 失敗した月次要約数
+  int32 latest_trends_processed = 6; // 処理されたトレンド分析数
+  int32 latest_trends_failed = 7; // 失敗したトレンド分析数
 }
 
 // 処理中のタスク
 message ProcessingTask {
-  string task_type = 1; // "daily_summary", "monthly_summary", or "latest_trend"
-  string date = 2; // YYYY-MM-DD for daily, YYYY-MM for monthly, period for latest_trend
-  int64 started_at = 3; // Unix timestamp
+  string task_type = 1; // タスク種別: "daily_summary" (日次要約), "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
+  string date = 2; // 日付: 日次はYYYY-MM-DD形式, 月次はYYYY-MM形式, トレンドは期間説明
+  int64 started_at = 3; // タスク開始時刻 (Unixタイムスタンプ)
 }
 
 // メトリクス統計情報
 message MetricsSummary {
-  int32 total_daily_summaries = 1;
-  int32 total_monthly_summaries = 2;
-  int32 pending_daily_summaries = 3;
-  int32 pending_monthly_summaries = 4;
-  bool auto_summary_daily_enabled = 5;
-  bool auto_summary_monthly_enabled = 6;
-  bool auto_latest_trend_enabled = 7;
-  string latest_trend_generated_at = 8; // 最後に生成された日時 (ISO 8601形式)
+  int32 total_daily_summaries = 1; // 総日次要約数
+  int32 total_monthly_summaries = 2; // 総月次要約数
+  int32 pending_daily_summaries = 3; // 未作成の日次要約数
+  int32 pending_monthly_summaries = 4; // 未作成の月次要約数
+  bool auto_summary_daily_enabled = 5; // 日次要約の自動生成が有効か
+  bool auto_summary_monthly_enabled = 6; // 月次要約の自動生成が有効か
+  bool auto_latest_trend_enabled = 7; // トレンド分析の自動生成が有効か
+  string latest_trend_generated_at = 8; // 最後にトレンド分析が生成された日時 (ISO 8601形式)
 }
