@@ -11,7 +11,9 @@ import SaveButton from "$lib/components/atoms/SaveButton.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
+import RecentDiaryStreak from "$lib/components/molecules/RecentDiaryStreak.svelte";
 import LatestTrendDisplay from "$lib/components/molecules/LatestTrendDisplay.svelte";
+import CollapsibleSection from "$lib/components/molecules/CollapsibleSection.svelte";
 import PWAInstallButton from "$lib/components/PWAInstallButton.svelte";
 import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
@@ -108,6 +110,9 @@ $: hasAnyUnsavedChanges =
 	todayHasUnsavedChanges ||
 	yesterdayHasUnsavedChanges ||
 	dayBeforeYesterdayHasUnsavedChanges;
+
+// トグルセクションの開閉状態
+let sideInfoOpen = false;
 
 function getMonthlyUrl(): string {
 	const now = new Date();
@@ -284,20 +289,12 @@ onMount(() => {
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+	<!-- 見出し -->
 	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
 	</div>
 
-	<div class="mb-8">
-		<TimeProgressBar />
-	</div>
-
-	{#if $page.data.autoLatestTrendEnabled}
-		<div class="mb-8">
-			<LatestTrendDisplay userName={$page.data.userName} />
-		</div>
-	{/if}
-
+	<!-- メインコンテンツ: 日記カード -->
 	<div class="space-y-6">
 		<div bind:this={todayCard}>
 		<DiaryCard
@@ -360,6 +357,24 @@ use:enhance={createSubmitHandler(
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
+
+		<!-- トグル可能なセクション: さいきん -->
+		<div>
+			<CollapsibleSection title={$_("collapsibleSections.sideInfo")} bind:isOpen={sideInfoOpen}>
+				<div class="space-y-4">
+					<!-- 進捗バー -->
+					<TimeProgressBar />
+
+					<!-- 直近7日 -->
+					<RecentDiaryStreak recentDays={data.recentDays} />
+
+					<!-- トレンド分析 -->
+					{#if $page.data.autoLatestTrendEnabled}
+						<LatestTrendDisplay userName={$page.data.userName} />
+					{/if}
+				</div>
+			</CollapsibleSection>
 		</div>
 
 		<div bind:this={yesterdayCard}>

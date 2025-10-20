@@ -7,7 +7,10 @@ import { summaryVisibility } from "$lib/summary-visibility-store";
 import "$lib/i18n";
 
 interface LatestTrendData {
-	analysis: string;
+	overallSummary: string;
+	healthMood: string;
+	activities: string;
+	concerns: string;
 	periodStart: string;
 	periodEnd: string;
 	generatedAt: string;
@@ -40,8 +43,14 @@ async function fetchLatestTrend(retryCount = 0) {
 
 			// データのバリデーション
 			if (
-				result.analysis &&
-				typeof result.analysis === "string" &&
+				result.overallSummary &&
+				typeof result.overallSummary === "string" &&
+				result.healthMood &&
+				typeof result.healthMood === "string" &&
+				result.activities &&
+				typeof result.activities === "string" &&
+				result.concerns &&
+				typeof result.concerns === "string" &&
 				result.periodStart &&
 				result.periodEnd &&
 				result.generatedAt
@@ -56,11 +65,11 @@ async function fetchLatestTrend(retryCount = 0) {
 					!Number.isNaN(endDate.getTime()) &&
 					!Number.isNaN(generatedDate.getTime())
 				) {
-					// 分析テキストの長さ制限（500文字）
-					const sanitizedAnalysis = result.analysis.substring(0, 500);
-
 					trendData = {
-						analysis: sanitizedAnalysis,
+						overallSummary: result.overallSummary,
+						healthMood: result.healthMood,
+						activities: result.activities,
+						concerns: result.concerns,
 						periodStart: result.periodStart,
 						periodEnd: result.periodEnd,
 						generatedAt: result.generatedAt,
@@ -121,22 +130,6 @@ function formatPeriod(start: string, end: string): string {
 	}
 }
 
-// 分析テキストをHTML形式に変換（見出しマーカーをスタイリング）
-function formatAnalysis(text: string): string {
-	if (!text) return "";
-
-	return text
-		.replace(
-			/^## (.+)$/gm,
-			'<h2 class="text-lg font-bold text-gray-900 dark:text-white mt-4 mb-2">$1</h2>',
-		)
-		.replace(
-			/^### (.+)$/gm,
-			'<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mt-3 mb-1">$1</h3>',
-		)
-		.replace(/\n/g, "<br>");
-}
-
 onMount(() => {
 	summaryVisibility.init();
 	fetchLatestTrend();
@@ -189,11 +182,44 @@ onMount(() => {
 				{formatPeriod(trendData.periodStart, trendData.periodEnd)}
 			</div>
 
-			<!-- 分析内容 -->
-			<div class="prose dark:prose-invert max-w-none">
-				<div class="text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-700/50 rounded-md p-4 auto-phrase-target">
-					{@html formatAnalysis(trendData.analysis)}
-				</div>
+			<!-- 全体的な様子 -->
+			<div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+				<h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+					{$_("latestTrend.overallSummary")}
+				</h2>
+				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
+					{trendData.overallSummary}
+				</p>
+			</div>
+
+			<!-- 体調・気分 -->
+			<div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+				<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
+					{$_("latestTrend.healthMood")}
+				</h3>
+				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
+					{trendData.healthMood}
+				</p>
+			</div>
+
+			<!-- 活動・行動 -->
+			<div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+				<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
+					{$_("latestTrend.activities")}
+				</h3>
+				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
+					{trendData.activities}
+				</p>
+			</div>
+
+			<!-- 気になること -->
+			<div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
+				<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
+					{$_("latestTrend.concerns")}
+				</h3>
+				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
+					{trendData.concerns}
+				</p>
 			</div>
 
 			<!-- 生成日時 -->

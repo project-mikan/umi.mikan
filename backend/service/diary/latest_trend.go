@@ -25,11 +25,14 @@ type LatestTrendGenerationMessage struct {
 
 // LatestTrendData はRedisに保存するトレンド分析データ
 type LatestTrendData struct {
-	UserID      string `json:"user_id"`
-	Analysis    string `json:"analysis"`
-	PeriodStart string `json:"period_start"`
-	PeriodEnd   string `json:"period_end"`
-	GeneratedAt string `json:"generated_at"`
+	UserID         string `json:"user_id"`
+	OverallSummary string `json:"overall_summary"` // 全体的な様子（1行）
+	HealthMood     string `json:"health_mood"`     // 体調・気分の傾向（2-3文）
+	Activities     string `json:"activities"`      // 活動・行動パターン（2-3文）
+	Concerns       string `json:"concerns"`        // 気になること（1-2文）
+	PeriodStart    string `json:"period_start"`
+	PeriodEnd      string `json:"period_end"`
+	GeneratedAt    string `json:"generated_at"`
 }
 
 // GetLatestTrend は直近1週間の日記のトレンド分析を取得します
@@ -63,10 +66,13 @@ func (s *DiaryEntry) GetLatestTrend(
 	}
 
 	return &g.GetLatestTrendResponse{
-		Analysis:    trendData.Analysis,
-		PeriodStart: trendData.PeriodStart,
-		PeriodEnd:   trendData.PeriodEnd,
-		GeneratedAt: trendData.GeneratedAt,
+		OverallSummary: trendData.OverallSummary,
+		HealthMood:     trendData.HealthMood,
+		Activities:     trendData.Activities,
+		Concerns:       trendData.Concerns,
+		PeriodStart:    trendData.PeriodStart,
+		PeriodEnd:      trendData.PeriodEnd,
+		GeneratedAt:    trendData.GeneratedAt,
 	}, nil
 }
 

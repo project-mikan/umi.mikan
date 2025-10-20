@@ -438,7 +438,10 @@ func generateDailySummary(ctx context.Context, db database.DB, redisClient rueid
 	}
 
 	// 2. LLMで要約生成
-	summary := generateSummaryWithLLM(ctx, db, llmFactory, userID, diaryContent, logger)
+	summary, err := generateSummaryWithLLM(ctx, db, llmFactory, userID, diaryContent, logger)
+	if err != nil {
+		return fmt.Errorf("failed to generate summary with LLM: %w", err)
+	}
 
 	// 3. diary_summary_daysに保存
 	insertQuery := `
@@ -546,7 +549,10 @@ func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rue
 	// 2. LLMで月次要約生成
 	combinedDiaryEntries := fmt.Sprintf("Diary entries for %d/%d:\n\n%s", year, month,
 		strings.Join(diaryEntries, "\n\n"))
-	monthlySummary := generateMonthlySummaryWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+	monthlySummary, err := generateMonthlySummaryWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+	if err != nil {
+		return fmt.Errorf("failed to generate monthly summary with LLM: %w", err)
+	}
 
 	// 3. diary_summary_monthsに保存
 	insertQuery := `
@@ -570,23 +576,21 @@ func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rue
 	return nil
 }
 
-func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) string {
+func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
 	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
 	if err != nil {
 		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
-			len(content), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
 	}
 
 	// Gemini クライアント作成
 	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
-		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
-			len(content), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to create Gemini client: %w", err)
 	}
 	defer func() {
 		if closeErr := geminiClient.Close(); closeErr != nil {
@@ -598,31 +602,28 @@ func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory cont
 	summary, err := geminiClient.GenerateDailySummary(ctx, content)
 	if err != nil {
 		logger.WithError(err).Error("Failed to generate daily summary")
-		return fmt.Sprintf("Daily summary of diary entry (length: %d characters) - Generated at %s",
-			len(content), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to generate daily summary: %w", err)
 	}
 
-	logger.WithError(err).Error("Successfully generated daily summary using Gemini API")
-	return summary
+	logger.Info("Successfully generated daily summary using Gemini API")
+	return summary, nil
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) string {
+func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
 	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
 	if err != nil {
 		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
-			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
 	}
 
 	// Gemini クライアント作成
 	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
-		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
-			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to create Gemini client: %w", err)
 	}
 	defer func() {
 		if closeErr := geminiClient.Close(); closeErr != nil {
@@ -634,12 +635,11 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFacto
 	summary, err := geminiClient.GenerateSummary(ctx, combinedEntries)
 	if err != nil {
 		logger.WithError(err).Error("Failed to generate monthly summary")
-		return fmt.Sprintf("Monthly summary based on diary entries (total length: %d characters) - Generated at %s",
-			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to generate monthly summary: %w", err)
 	}
 
 	logger.Info("Successfully generated monthly summary using Gemini API")
-	return summary
+	return summary, nil
 }
 
 func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, periodStartStr, periodEndStr string, logger *logrus.Entry) error {
@@ -737,16 +737,34 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	// 4. LLMでトレンド分析生成
 	combinedDiaryEntries := fmt.Sprintf("Diary entries from %s to %s:\n\n%s", periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02"),
 		strings.Join(diaryEntries, "\n\n"))
-	trendAnalysis := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+	trendAnalysisJSON, err := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+	if err != nil {
+		return fmt.Errorf("failed to generate latest trend with LLM: %w", err)
+	}
 
-	// 5. Redisに保存（TTL: 25時間）
+	// 5. JSON形式のレスポンスをパース
+	var analysisData struct {
+		OverallSummary string `json:"overall_summary"`
+		HealthMood     string `json:"health_mood"`
+		Activities     string `json:"activities"`
+		Concerns       string `json:"concerns"`
+	}
+	if err := json.Unmarshal([]byte(trendAnalysisJSON), &analysisData); err != nil {
+		logger.WithError(err).Error("Failed to parse trend analysis JSON")
+		return fmt.Errorf("failed to parse trend analysis JSON: %w", err)
+	}
+
+	// 6. Redisに保存（TTL: 25時間）
 	// 毎日4時に更新されるため、25時間のTTLで次回更新までの余裕を確保
 	trendData := map[string]interface{}{
-		"user_id":      userID,
-		"analysis":     trendAnalysis,
-		"period_start": periodStartStr,
-		"period_end":   periodEndStr,
-		"generated_at": time.Now().Format(time.RFC3339),
+		"user_id":         userID,
+		"overall_summary": analysisData.OverallSummary,
+		"health_mood":     analysisData.HealthMood,
+		"activities":      analysisData.Activities,
+		"concerns":        analysisData.Concerns,
+		"period_start":    periodStartStr,
+		"period_end":      periodEndStr,
+		"generated_at":    time.Now().Format(time.RFC3339),
 	}
 
 	trendDataJSON, err := json.Marshal(trendData)
@@ -767,23 +785,21 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	return nil
 }
 
-func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) string {
+func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
 	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
 	if err != nil {
 		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return fmt.Sprintf("Latest trend analysis based on diary entries (total length: %d characters) - Generated at %s",
-			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
 	}
 
 	// Gemini クライアント作成
 	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
-		return fmt.Sprintf("Latest trend analysis based on diary entries (total length: %d characters) - Generated at %s",
-			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to create Gemini client: %w", err)
 	}
 	defer func() {
 		if closeErr := geminiClient.Close(); closeErr != nil {
@@ -795,10 +811,9 @@ func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory 
 	analysis, err := geminiClient.GenerateLatestTrend(ctx, combinedEntries)
 	if err != nil {
 		logger.WithError(err).Error("Failed to generate latest trend analysis")
-		return fmt.Sprintf("Latest trend analysis based on diary entries (total length: %d characters) - Generated at %s",
-			len(combinedEntries), time.Now().Format("2006-01-02 15:04:05"))
+		return "", fmt.Errorf("failed to generate latest trend analysis: %w", err)
 	}
 
 	logger.Info("Successfully generated latest trend analysis using Gemini API")
-	return analysis
+	return analysis, nil
 }
