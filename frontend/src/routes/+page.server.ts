@@ -28,6 +28,9 @@ export const load: PageServerLoad = async ({
 		throw redirect(302, "/login");
 	}
 
+	// TypeScript型アサーション: ここではaccessTokenは必ず存在する
+	const accessToken: string = authResult.accessToken;
+
 	try {
 		const now = new Date();
 		const today = createYMD(
@@ -52,19 +55,55 @@ export const load: PageServerLoad = async ({
 			dayBeforeYesterday.getDate(),
 		);
 
-		// 3日分の日記を並行して取得
-		const [todayResult, yesterdayResult, dayBeforeYesterdayResult] =
-			await Promise.allSettled([
-				getDiaryEntry({ date: today, accessToken: authResult.accessToken }),
-				getDiaryEntry({
-					date: yesterdayYMD,
-					accessToken: authResult.accessToken,
-				}),
-				getDiaryEntry({
-					date: dayBeforeYesterdayYMD,
-					accessToken: authResult.accessToken,
-				}),
-			]);
+		// 直近7日分の日付情報を生成（古い日付から新しい日付の順）
+		const recentDays = Array.from({ length: 7 }, (_, i) => {
+			const date = new Date(now);
+			date.setDate(date.getDate() - (6 - i)); // 6日前から今日まで
+			const dayOfWeekArray = [
+				"Sunday",
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday",
+				"Saturday",
+			] as const;
+			return {
+				date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`,
+				ymd: createYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
+				dayOfWeek: dayOfWeekArray[date.getDay()],
+				dayOfMonth: date.getDate(),
+			};
+		});
+
+		// 3日分の日記と直近7日分の日記を並行して取得
+		const [
+			todayResult,
+			yesterdayResult,
+			dayBeforeYesterdayResult,
+			...recentDaysResults
+		] = await Promise.allSettled([
+			getDiaryEntry({ date: today, accessToken }),
+			getDiaryEntry({
+				date: yesterdayYMD,
+				accessToken,
+			}),
+			getDiaryEntry({
+				date: dayBeforeYesterdayYMD,
+				accessToken,
+			}),
+			...recentDays.map((day) => getDiaryEntry({ date: day.ymd, accessToken })),
+		]);
+
+		// 直近7日分のデータを整形
+		const recentDaysWithEntry = recentDays.map((day, index) => ({
+			date: day.date,
+			hasEntry:
+				recentDaysResults[index]?.status === "fulfilled" &&
+				recentDaysResults[index].value.entry !== null,
+			dayOfWeek: day.dayOfWeek,
+			dayOfMonth: day.dayOfMonth,
+		}));
 
 		return {
 			today: {
@@ -86,10 +125,33 @@ export const load: PageServerLoad = async ({
 						? dayBeforeYesterdayResult.value.entry
 						: null,
 			},
+			recentDays: recentDaysWithEntry,
 		};
 	} catch (err) {
 		console.error("Failed to load diary entries:", err);
 		const now = new Date();
+
+		// エラー時も直近7日分のデータ構造を返す（古い日付から新しい日付の順）
+		const recentDays = Array.from({ length: 7 }, (_, i) => {
+			const date = new Date(now);
+			date.setDate(date.getDate() - (6 - i)); // 6日前から今日まで
+			const dayOfWeekArray = [
+				"Sunday",
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday",
+				"Saturday",
+			] as const;
+			return {
+				date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`,
+				hasEntry: false,
+				dayOfWeek: dayOfWeekArray[date.getDay()],
+				dayOfMonth: date.getDate(),
+			};
+		});
+
 		return {
 			today: {
 				date: createYMD(now.getFullYear(), now.getMonth() + 1, now.getDate()),
@@ -111,6 +173,7 @@ export const load: PageServerLoad = async ({
 				),
 				entry: null,
 			},
+			recentDays,
 		};
 	}
 };

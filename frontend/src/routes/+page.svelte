@@ -11,7 +11,9 @@ import SaveButton from "$lib/components/atoms/SaveButton.svelte";
 import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 import FormField from "$lib/components/molecules/FormField.svelte";
 import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
+import RecentDiaryStreak from "$lib/components/molecules/RecentDiaryStreak.svelte";
 import LatestTrendDisplay from "$lib/components/molecules/LatestTrendDisplay.svelte";
+import CollapsibleSection from "$lib/components/molecules/CollapsibleSection.svelte";
 import PWAInstallButton from "$lib/components/PWAInstallButton.svelte";
 import { createSubmitHandler } from "$lib/utils/form-utils";
 import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
@@ -108,6 +110,9 @@ $: hasAnyUnsavedChanges =
 	todayHasUnsavedChanges ||
 	yesterdayHasUnsavedChanges ||
 	dayBeforeYesterdayHasUnsavedChanges;
+
+// トグルセクションの開閉状態
+let sideInfoOpen = false;
 
 function getMonthlyUrl(): string {
 	const now = new Date();
@@ -283,39 +288,14 @@ onMount(() => {
 	<title>{title}</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	<!-- スマホ表示用の見出し -->
-	<div class="flex justify-between items-center mb-8 lg:hidden">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+	<!-- 見出し -->
+	<div class="flex justify-between items-center mb-8">
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
 	</div>
 
-	<!-- スマホ表示用の進捗バー -->
-	<div class="mb-8 lg:hidden">
-		<TimeProgressBar />
-	</div>
-
-	{#if $page.data.autoLatestTrendEnabled}
-		<!-- スマホ表示用のトレンド -->
-		<div class="lg:hidden mb-8">
-			<LatestTrendDisplay userName={$page.data.userName} />
-		</div>
-	{/if}
-
-	<!-- 3カラムレイアウト: PC画面では左進捗、中央日記、右トレンド -->
-	<div class="lg:grid lg:grid-cols-12 lg:gap-6">
-		<!-- 左サイドバー: 進捗グラフ（PC表示のみ） -->
-		<div class="hidden lg:block lg:col-span-3">
-			<div class="sticky top-8">
-				<TimeProgressBar />
-			</div>
-		</div>
-
-		<!-- メインコンテンツ: 日記カード -->
-		<div class="lg:col-span-6 space-y-6">
-			<!-- PC表示用の見出し -->
-			<div class="hidden lg:flex justify-between items-center mb-8">
-				<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
-			</div>
+	<!-- メインコンテンツ: 日記カード -->
+	<div class="space-y-6">
 		<div bind:this={todayCard}>
 		<DiaryCard
 			title={$_("diary.today")}
@@ -377,6 +357,24 @@ use:enhance={createSubmitHandler(
 				</div>
 			</form>
 		</DiaryCard>
+		</div>
+
+		<!-- トグル可能なセクション: さいきん -->
+		<div>
+			<CollapsibleSection title={$_("collapsibleSections.sideInfo")} bind:isOpen={sideInfoOpen}>
+				<div class="space-y-4">
+					<!-- 進捗バー -->
+					<TimeProgressBar />
+
+					<!-- 直近7日 -->
+					<RecentDiaryStreak recentDays={data.recentDays} />
+
+					<!-- トレンド分析 -->
+					{#if $page.data.autoLatestTrendEnabled}
+						<LatestTrendDisplay userName={$page.data.userName} />
+					{/if}
+				</div>
+			</CollapsibleSection>
 		</div>
 
 		<div bind:this={yesterdayCard}>
@@ -506,16 +504,6 @@ use:enhance={createSubmitHandler(
 			</form>
 		</DiaryCard>
 		</div>
-	</div>
-
-		<!-- 右サイドバー: トレンド表示（PC表示のみ） -->
-		{#if $page.data.autoLatestTrendEnabled}
-			<div class="hidden lg:block lg:col-span-3">
-				<div class="sticky top-8">
-					<LatestTrendDisplay userName={$page.data.userName} />
-				</div>
-			</div>
-		{/if}
 	</div>
 
 	<!-- PWA Install Button -->
