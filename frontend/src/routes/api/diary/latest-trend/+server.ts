@@ -16,7 +16,10 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		});
 
 		return json({
-			analysis: trendResponse.analysis,
+			overallSummary: trendResponse.overallSummary,
+			healthMood: trendResponse.healthMood,
+			activities: trendResponse.activities,
+			concerns: trendResponse.concerns,
 			periodStart: trendResponse.periodStart,
 			periodEnd: trendResponse.periodEnd,
 			generatedAt: trendResponse.generatedAt,

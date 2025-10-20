@@ -283,22 +283,39 @@ onMount(() => {
 	<title>{title}</title>
 </svelte:head>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	<div class="flex justify-between items-center mb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+	<!-- スマホ表示用の見出し -->
+	<div class="flex justify-between items-center mb-8 lg:hidden">
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
 	</div>
 
-	<div class="mb-8">
+	<!-- スマホ表示用の進捗バー -->
+	<div class="mb-8 lg:hidden">
 		<TimeProgressBar />
 	</div>
 
 	{#if $page.data.autoLatestTrendEnabled}
-		<div class="mb-8">
+		<!-- スマホ表示用のトレンド -->
+		<div class="lg:hidden mb-8">
 			<LatestTrendDisplay userName={$page.data.userName} />
 		</div>
 	{/if}
 
-	<div class="space-y-6">
+	<!-- 3カラムレイアウト: PC画面では左進捗、中央日記、右トレンド -->
+	<div class="lg:grid lg:grid-cols-12 lg:gap-6">
+		<!-- 左サイドバー: 進捗グラフ（PC表示のみ） -->
+		<div class="hidden lg:block lg:col-span-3">
+			<div class="sticky top-8">
+				<TimeProgressBar />
+			</div>
+		</div>
+
+		<!-- メインコンテンツ: 日記カード -->
+		<div class="lg:col-span-6 space-y-6">
+			<!-- PC表示用の見出し -->
+			<div class="hidden lg:flex justify-between items-center mb-8">
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
+			</div>
 		<div bind:this={todayCard}>
 		<DiaryCard
 			title={$_("diary.today")}
@@ -489,6 +506,16 @@ use:enhance={createSubmitHandler(
 			</form>
 		</DiaryCard>
 		</div>
+	</div>
+
+		<!-- 右サイドバー: トレンド表示（PC表示のみ） -->
+		{#if $page.data.autoLatestTrendEnabled}
+			<div class="hidden lg:block lg:col-span-3">
+				<div class="sticky top-8">
+					<LatestTrendDisplay userName={$page.data.userName} />
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- PWA Install Button -->

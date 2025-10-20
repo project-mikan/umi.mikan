@@ -1567,13 +1567,16 @@ func (*GetLatestTrendRequest) Descriptor() ([]byte, []int) {
 
 // 直近トレンド分析取得レスポンス
 type GetLatestTrendResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Analysis      string                 `protobuf:"bytes,1,opt,name=analysis,proto3" json:"analysis,omitempty"`                          // トレンド分析結果テキスト（最大300字程度）
-	PeriodStart   string                 `protobuf:"bytes,2,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"` // 分析期間開始（ISO 8601形式）
-	PeriodEnd     string                 `protobuf:"bytes,3,opt,name=period_end,json=periodEnd,proto3" json:"period_end,omitempty"`       // 分析期間終了（ISO 8601形式）
-	GeneratedAt   string                 `protobuf:"bytes,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"` // 生成日時（ISO 8601形式）
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	OverallSummary string                 `protobuf:"bytes,1,opt,name=overall_summary,json=overallSummary,proto3" json:"overall_summary,omitempty"` // 全体的な様子（1行）
+	HealthMood     string                 `protobuf:"bytes,2,opt,name=health_mood,json=healthMood,proto3" json:"health_mood,omitempty"`             // 体調・気分の傾向（2-3文）
+	Activities     string                 `protobuf:"bytes,3,opt,name=activities,proto3" json:"activities,omitempty"`                               // 活動・行動パターン（2-3文）
+	Concerns       string                 `protobuf:"bytes,4,opt,name=concerns,proto3" json:"concerns,omitempty"`                                   // 気になること（1-2文）
+	PeriodStart    string                 `protobuf:"bytes,5,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"`          // 分析期間開始（ISO 8601形式）
+	PeriodEnd      string                 `protobuf:"bytes,6,opt,name=period_end,json=periodEnd,proto3" json:"period_end,omitempty"`                // 分析期間終了（ISO 8601形式）
+	GeneratedAt    string                 `protobuf:"bytes,7,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`          // 生成日時（ISO 8601形式）
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *GetLatestTrendResponse) Reset() {
@@ -1606,9 +1609,30 @@ func (*GetLatestTrendResponse) Descriptor() ([]byte, []int) {
 	return file_diary_diary_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *GetLatestTrendResponse) GetAnalysis() string {
+func (x *GetLatestTrendResponse) GetOverallSummary() string {
 	if x != nil {
-		return x.Analysis
+		return x.OverallSummary
+	}
+	return ""
+}
+
+func (x *GetLatestTrendResponse) GetHealthMood() string {
+	if x != nil {
+		return x.HealthMood
+	}
+	return ""
+}
+
+func (x *GetLatestTrendResponse) GetActivities() string {
+	if x != nil {
+		return x.Activities
+	}
+	return ""
+}
+
+func (x *GetLatestTrendResponse) GetConcerns() string {
+	if x != nil {
+		return x.Concerns
 	}
 	return ""
 }
@@ -1827,13 +1851,19 @@ const file_diary_diary_proto_rawDesc = "" +
 	".diary.YMDR\x04date\"H\n" +
 	"\x17GetDailySummaryResponse\x12-\n" +
 	"\asummary\x18\x01 \x01(\v2\x13.diary.DailySummaryR\asummary\"\x17\n" +
-	"\x15GetLatestTrendRequest\"\x99\x01\n" +
-	"\x16GetLatestTrendResponse\x12\x1a\n" +
-	"\banalysis\x18\x01 \x01(\tR\banalysis\x12!\n" +
-	"\fperiod_start\x18\x02 \x01(\tR\vperiodStart\x12\x1d\n" +
+	"\x15GetLatestTrendRequest\"\x83\x02\n" +
+	"\x16GetLatestTrendResponse\x12'\n" +
+	"\x0foverall_summary\x18\x01 \x01(\tR\x0eoverallSummary\x12\x1f\n" +
+	"\vhealth_mood\x18\x02 \x01(\tR\n" +
+	"healthMood\x12\x1e\n" +
 	"\n" +
-	"period_end\x18\x03 \x01(\tR\tperiodEnd\x12!\n" +
-	"\fgenerated_at\x18\x04 \x01(\tR\vgeneratedAt\"\x1b\n" +
+	"activities\x18\x03 \x01(\tR\n" +
+	"activities\x12\x1a\n" +
+	"\bconcerns\x18\x04 \x01(\tR\bconcerns\x12!\n" +
+	"\fperiod_start\x18\x05 \x01(\tR\vperiodStart\x12\x1d\n" +
+	"\n" +
+	"period_end\x18\x06 \x01(\tR\tperiodEnd\x12!\n" +
+	"\fgenerated_at\x18\a \x01(\tR\vgeneratedAt\"\x1b\n" +
 	"\x19TriggerLatestTrendRequest\"P\n" +
 	"\x1aTriggerLatestTrendResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +

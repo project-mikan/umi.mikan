@@ -737,19 +737,34 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	// 4. LLMでトレンド分析生成
 	combinedDiaryEntries := fmt.Sprintf("Diary entries from %s to %s:\n\n%s", periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02"),
 		strings.Join(diaryEntries, "\n\n"))
-	trendAnalysis, err := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+	trendAnalysisJSON, err := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
 	if err != nil {
 		return fmt.Errorf("failed to generate latest trend with LLM: %w", err)
 	}
 
-	// 5. Redisに保存（TTL: 25時間）
+	// 5. JSON形式のレスポンスをパース
+	var analysisData struct {
+		OverallSummary string `json:"overall_summary"`
+		HealthMood     string `json:"health_mood"`
+		Activities     string `json:"activities"`
+		Concerns       string `json:"concerns"`
+	}
+	if err := json.Unmarshal([]byte(trendAnalysisJSON), &analysisData); err != nil {
+		logger.WithError(err).Error("Failed to parse trend analysis JSON")
+		return fmt.Errorf("failed to parse trend analysis JSON: %w", err)
+	}
+
+	// 6. Redisに保存（TTL: 25時間）
 	// 毎日4時に更新されるため、25時間のTTLで次回更新までの余裕を確保
 	trendData := map[string]interface{}{
-		"user_id":      userID,
-		"analysis":     trendAnalysis,
-		"period_start": periodStartStr,
-		"period_end":   periodEndStr,
-		"generated_at": time.Now().Format(time.RFC3339),
+		"user_id":         userID,
+		"overall_summary": analysisData.OverallSummary,
+		"health_mood":     analysisData.HealthMood,
+		"activities":      analysisData.Activities,
+		"concerns":        analysisData.Concerns,
+		"period_start":    periodStartStr,
+		"period_end":      periodEndStr,
+		"generated_at":    time.Now().Format(time.RFC3339),
 	}
 
 	trendDataJSON, err := json.Marshal(trendData)
