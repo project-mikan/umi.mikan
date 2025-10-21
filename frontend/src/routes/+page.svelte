@@ -111,8 +111,21 @@ $: hasAnyUnsavedChanges =
 	yesterdayHasUnsavedChanges ||
 	dayBeforeYesterdayHasUnsavedChanges;
 
-// トグルセクションの開閉状態
+// トグルセクションの開閉状態（localStorageから復元）
 let sideInfoOpen = false;
+
+// localStorageから開閉状態を復元
+if (typeof window !== "undefined") {
+	const stored = localStorage.getItem("sideInfoOpen");
+	if (stored !== null) {
+		sideInfoOpen = stored === "true";
+	}
+}
+
+// 開閉状態が変更されたらlocalStorageに保存
+$: if (typeof window !== "undefined") {
+	localStorage.setItem("sideInfoOpen", String(sideInfoOpen));
+}
 
 function getMonthlyUrl(): string {
 	const now = new Date();

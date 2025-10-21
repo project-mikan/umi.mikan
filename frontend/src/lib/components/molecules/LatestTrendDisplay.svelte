@@ -131,7 +131,7 @@ function formatPeriod(start: string, end: string): string {
 }
 
 onMount(() => {
-	summaryVisibility.init();
+	// summaryVisibility.init()は+layout.svelteで既に呼ばれているため不要
 	fetchLatestTrend();
 });
 </script>
