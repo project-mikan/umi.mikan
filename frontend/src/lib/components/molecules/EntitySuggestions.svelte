@@ -39,6 +39,8 @@ export function selectByIndex(index: number) {
 						on:click={() => handleSelect(suggestion.entity, suggestion.text)}
 						on:keydown={(e) => {
 							if (e.key === 'Enter') {
+								e.preventDefault();
+								e.stopPropagation();
 								handleSelect(suggestion.entity, suggestion.text);
 							}
 						}}

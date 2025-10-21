@@ -124,6 +124,7 @@ function handleKeyDown(event: KeyboardEvent) {
 		selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
 	} else if (event.key === "Enter" && selectedSuggestionIndex >= 0) {
 		event.preventDefault();
+		event.stopPropagation();
 		const selected = flatSuggestions[selectedSuggestionIndex];
 		selectSuggestion(selected.entity, selected.text);
 	} else if (event.key === "Escape") {
