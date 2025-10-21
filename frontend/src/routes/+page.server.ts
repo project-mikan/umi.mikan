@@ -32,33 +32,40 @@ export const load: PageServerLoad = async ({
 	const accessToken: string = authResult.accessToken;
 
 	try {
-		const now = new Date();
+		// クライアントのタイムゾーンオフセットを取得（Cookieから）
+		const tzOffset = cookies.get("tz_offset");
+		const offsetMinutes = tzOffset ? Number.parseInt(tzOffset, 10) : 0;
+
+		// UTCの現在時刻を取得し、クライアントのタイムゾーンに変換
+		const nowUTC = new Date();
+		const now = new Date(nowUTC.getTime() - offsetMinutes * 60 * 1000);
+
 		const today = createYMD(
-			now.getFullYear(),
-			now.getMonth() + 1,
-			now.getDate(),
+			now.getUTCFullYear(),
+			now.getUTCMonth() + 1,
+			now.getUTCDate(),
 		);
 
 		const yesterday = new Date(now);
-		yesterday.setDate(yesterday.getDate() - 1);
+		yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 		const yesterdayYMD = createYMD(
-			yesterday.getFullYear(),
-			yesterday.getMonth() + 1,
-			yesterday.getDate(),
+			yesterday.getUTCFullYear(),
+			yesterday.getUTCMonth() + 1,
+			yesterday.getUTCDate(),
 		);
 
 		const dayBeforeYesterday = new Date(now);
-		dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 2);
+		dayBeforeYesterday.setUTCDate(dayBeforeYesterday.getUTCDate() - 2);
 		const dayBeforeYesterdayYMD = createYMD(
-			dayBeforeYesterday.getFullYear(),
-			dayBeforeYesterday.getMonth() + 1,
-			dayBeforeYesterday.getDate(),
+			dayBeforeYesterday.getUTCFullYear(),
+			dayBeforeYesterday.getUTCMonth() + 1,
+			dayBeforeYesterday.getUTCDate(),
 		);
 
 		// 直近7日分の日付情報を生成（古い日付から新しい日付の順）
 		const recentDays = Array.from({ length: 7 }, (_, i) => {
 			const date = new Date(now);
-			date.setDate(date.getDate() - (6 - i)); // 6日前から今日まで
+			date.setUTCDate(date.getUTCDate() - (7 - i - 1)); // 6日前から今日まで(i=0で6日前、i=6で今日)
 			const dayOfWeekArray = [
 				"Sunday",
 				"Monday",
@@ -69,10 +76,14 @@ export const load: PageServerLoad = async ({
 				"Saturday",
 			] as const;
 			return {
-				date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`,
-				ymd: createYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
-				dayOfWeek: dayOfWeekArray[date.getDay()],
-				dayOfMonth: date.getDate(),
+				date: `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`,
+				ymd: createYMD(
+					date.getUTCFullYear(),
+					date.getUTCMonth() + 1,
+					date.getUTCDate(),
+				),
+				dayOfWeek: dayOfWeekArray[date.getUTCDay()],
+				dayOfMonth: date.getUTCDate(),
 			};
 		});
 
@@ -129,12 +140,18 @@ export const load: PageServerLoad = async ({
 		};
 	} catch (err) {
 		console.error("Failed to load diary entries:", err);
-		const now = new Date();
+		// クライアントのタイムゾーンオフセットを取得（Cookieから）
+		const tzOffset = cookies.get("tz_offset");
+		const offsetMinutes = tzOffset ? Number.parseInt(tzOffset, 10) : 0;
+
+		// UTCの現在時刻を取得し、クライアントのタイムゾーンに変換
+		const nowUTC = new Date();
+		const now = new Date(nowUTC.getTime() - offsetMinutes * 60 * 1000);
 
 		// エラー時も直近7日分のデータ構造を返す（古い日付から新しい日付の順）
 		const recentDays = Array.from({ length: 7 }, (_, i) => {
 			const date = new Date(now);
-			date.setDate(date.getDate() - (6 - i)); // 6日前から今日まで
+			date.setUTCDate(date.getUTCDate() - (7 - i - 1)); // 6日前から今日まで(i=0で6日前、i=6で今日)
 			const dayOfWeekArray = [
 				"Sunday",
 				"Monday",
@@ -145,31 +162,35 @@ export const load: PageServerLoad = async ({
 				"Saturday",
 			] as const;
 			return {
-				date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`,
+				date: `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`,
 				hasEntry: false,
-				dayOfWeek: dayOfWeekArray[date.getDay()],
-				dayOfMonth: date.getDate(),
+				dayOfWeek: dayOfWeekArray[date.getUTCDay()],
+				dayOfMonth: date.getUTCDate(),
 			};
 		});
 
 		return {
 			today: {
-				date: createYMD(now.getFullYear(), now.getMonth() + 1, now.getDate()),
+				date: createYMD(
+					now.getUTCFullYear(),
+					now.getUTCMonth() + 1,
+					now.getUTCDate(),
+				),
 				entry: null,
 			},
 			yesterday: {
 				date: createYMD(
-					now.getFullYear(),
-					now.getMonth() + 1,
-					now.getDate() - 1,
+					now.getUTCFullYear(),
+					now.getUTCMonth() + 1,
+					now.getUTCDate() - 1,
 				),
 				entry: null,
 			},
 			dayBeforeYesterday: {
 				date: createYMD(
-					now.getFullYear(),
-					now.getMonth() + 1,
-					now.getDate() - 2,
+					now.getUTCFullYear(),
+					now.getUTCMonth() + 1,
+					now.getUTCDate() - 2,
 				),
 				entry: null,
 			},

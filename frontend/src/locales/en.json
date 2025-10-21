@@ -237,7 +237,14 @@
 			"wednesday": "Wed",
 			"thursday": "Thu",
 			"friday": "Fri",
-			"saturday": "Sat"
+			"saturday": "Sat",
+			"Sunday": "Sun",
+			"Monday": "Mon",
+			"Tuesday": "Tue",
+			"Wednesday": "Wed",
+			"Thursday": "Thu",
+			"Friday": "Fri",
+			"Saturday": "Sat"
 		},
 		"format": {
 			"yearMonthDay": "{month}/{day}/{year}",
