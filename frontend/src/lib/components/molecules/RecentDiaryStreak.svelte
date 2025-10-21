@@ -19,16 +19,11 @@ function navigateToDiary(dateStr: string) {
 
 // 曜日の短縮表記
 function getWeekdayShort(dayOfWeek: string): string {
-	const map: Record<string, string> = {
-		Monday: "月",
-		Tuesday: "火",
-		Wednesday: "水",
-		Thursday: "木",
-		Friday: "金",
-		Saturday: "土",
-		Sunday: "日",
-	};
-	return map[dayOfWeek] || dayOfWeek.substring(0, 1);
+	// i18n対応: date.dayOfWeek.[曜日名]のキーを使用
+	const key = `date.dayOfWeek.${dayOfWeek}`;
+	return $_(`date.dayOfWeek.${dayOfWeek}`, {
+		default: dayOfWeek.substring(0, 1),
+	});
 }
 </script>
 

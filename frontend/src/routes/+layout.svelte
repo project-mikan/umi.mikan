@@ -47,6 +47,11 @@ function handleFocus() {
 }
 
 onMount(() => {
+	// タイムゾーンオフセットをCookieに保存（分単位、負の値はUTCより進んでいる）
+	const timezoneOffset = new Date().getTimezoneOffset();
+	// biome-ignore lint/suspicious/noDocumentCookie: サーバーにタイムゾーン情報を送信するために必要
+	document.cookie = `tz_offset=${timezoneOffset}; path=/; max-age=31536000`; // 1年間有効
+
 	// ストアを初期化（アプリケーション全体で一度だけ）
 	summaryVisibility.init();
 
