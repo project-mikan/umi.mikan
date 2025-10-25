@@ -1,56 +1,56 @@
 <script lang="ts">
-import { _, locale } from "svelte-i18n";
-import "$lib/i18n";
-import Head from "$lib/components/atoms/Head.svelte";
-import Card from "$lib/components/atoms/Card.svelte";
-import PubSubMetricsChart from "$lib/components/molecules/PubSubMetricsChart.svelte";
-import type { PageData } from "./$types";
+	import { _, locale } from "svelte-i18n";
+	import "$lib/i18n";
+	import Head from "$lib/components/atoms/Head.svelte";
+	import Card from "$lib/components/atoms/Card.svelte";
+	import PubSubMetricsChart from "$lib/components/molecules/PubSubMetricsChart.svelte";
+	import type { PageData } from "./$types";
 
-export let data: PageData;
+	export let data: PageData;
 
-$: ({ metrics } = data);
+	$: ({ metrics } = data);
 
-// 処理中タスクの表示用フォーマット
-function formatProcessingTask(task: {
-	taskType: string;
-	date: string;
-	startedAt: number;
-}) {
-	let type = "";
-	if (task.taskType === "daily_summary") {
-		type = $_("llm.metrics.dailySummary");
-	} else if (task.taskType === "monthly_summary") {
-		type = $_("llm.metrics.monthlySummary");
-	} else if (task.taskType === "latest_trend") {
-		type = $_("llm.metrics.latestTrend");
+	// 処理中タスクの表示用フォーマット
+	function formatProcessingTask(task: {
+		taskType: string;
+		date: string;
+		startedAt: number;
+	}) {
+		let type = "";
+		if (task.taskType === "daily_summary") {
+			type = $_("llm.metrics.dailySummary");
+		} else if (task.taskType === "monthly_summary") {
+			type = $_("llm.metrics.monthlySummary");
+		} else if (task.taskType === "latest_trend") {
+			type = $_("llm.metrics.latestTrend");
+		}
+		const startedAt = new Date(task.startedAt * 1000).toLocaleTimeString();
+		return `${type} (${task.date}) - ${$_("llm.metrics.startedAt")} ${startedAt}`;
 	}
-	const startedAt = new Date(task.startedAt * 1000).toLocaleTimeString();
-	return `${type} (${task.date}) - ${$_("llm.metrics.startedAt")} ${startedAt}`;
-}
 
-// 統計情報のカード用データ
-$: summaryCards = [
-	{
-		title: $_("llm.metrics.totalDailySummaries"),
-		value: metrics.summary.totalDailySummaries,
-		color: "text-green-600 dark:text-green-400",
-	},
-	{
-		title: $_("llm.metrics.totalMonthlySummaries"),
-		value: metrics.summary.totalMonthlySummaries,
-		color: "text-blue-600 dark:text-blue-400",
-	},
-	{
-		title: $_("llm.metrics.pendingDailySummaries"),
-		value: metrics.summary.pendingDailySummaries,
-		color: "text-yellow-600 dark:text-yellow-400",
-	},
-	{
-		title: $_("llm.metrics.pendingMonthlySummaries"),
-		value: metrics.summary.pendingMonthlySummaries,
-		color: "text-orange-600 dark:text-orange-400",
-	},
-];
+	// 統計情報のカード用データ
+	$: summaryCards = [
+		{
+			title: $_("llm.metrics.totalDailySummaries"),
+			value: metrics.summary.totalDailySummaries,
+			color: "text-green-600 dark:text-green-400",
+		},
+		{
+			title: $_("llm.metrics.totalMonthlySummaries"),
+			value: metrics.summary.totalMonthlySummaries,
+			color: "text-blue-600 dark:text-blue-400",
+		},
+		{
+			title: $_("llm.metrics.pendingDailySummaries"),
+			value: metrics.summary.pendingDailySummaries,
+			color: "text-yellow-600 dark:text-yellow-400",
+		},
+		{
+			title: $_("llm.metrics.pendingMonthlySummaries"),
+			value: metrics.summary.pendingMonthlySummaries,
+			color: "text-orange-600 dark:text-orange-400",
+		},
+	];
 </script>
 
 <Head title={$_("llm.title")} />

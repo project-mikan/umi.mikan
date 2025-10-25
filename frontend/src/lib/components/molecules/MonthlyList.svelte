@@ -1,16 +1,16 @@
 <script lang="ts">
-import { _, locale } from "svelte-i18n";
-import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+	import { _, locale } from "svelte-i18n";
+	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 
-export let daysInMonth: number;
-export let currentYear: number;
-export let currentMonth: number;
-export let entryMap: Map<number, DiaryEntry>;
-export let onNavigateToEntry: (day: number) => void;
+	export let daysInMonth: number;
+	export let currentYear: number;
+	export let currentMonth: number;
+	export let entryMap: Map<number, DiaryEntry>;
+	export let onNavigateToEntry: (day: number) => void;
 
-function formatContentWithLineBreaks(content: string): string {
-	return content.replace(/\n/g, "<br>");
-}
+	function formatContentWithLineBreaks(content: string): string {
+		return content.replace(/\n/g, "<br>");
+	}
 </script>
 
 <div class="space-y-3">

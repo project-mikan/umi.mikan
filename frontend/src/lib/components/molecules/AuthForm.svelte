@@ -1,42 +1,42 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { enhance } from "$app/forms";
-import { page } from "$app/stores";
-import Alert from "../atoms/Alert.svelte";
-import Button from "../atoms/Button.svelte";
-import Link from "../atoms/Link.svelte";
-import FormField from "./FormField.svelte";
+	import { _ } from "svelte-i18n";
+	import { enhance } from "$app/forms";
+	import { page } from "$app/stores";
+	import Alert from "../atoms/Alert.svelte";
+	import Button from "../atoms/Button.svelte";
+	import Link from "../atoms/Link.svelte";
+	import FormField from "./FormField.svelte";
 
-export let title: string;
-export let submitText: string;
-export let loadingText: string;
-export let linkText: string;
-export let linkHref: string;
-export let showNameField = false;
-export let showRegisterKeyField = false;
-export let error: string | undefined = undefined;
-export let isRateLimited = false;
+	export let title: string;
+	export let submitText: string;
+	export let loadingText: string;
+	export let linkText: string;
+	export let linkHref: string;
+	export let showNameField = false;
+	export let showRegisterKeyField = false;
+	export let error: string | undefined = undefined;
+	export let isRateLimited = false;
 
-let loading = false;
-let email = "";
-let password = "";
-let name = "";
-let registerKey = "";
-let validationError = "";
+	let loading = false;
+	let email = "";
+	let password = "";
+	let name = "";
+	let registerKey = "";
+	let validationError = "";
 
-$: csrfToken = $page.data.csrfToken;
+	$: csrfToken = $page.data.csrfToken;
 
-// クライアント側の検証
-function validateForm(): boolean {
-	validationError = "";
+	// クライアント側の検証
+	function validateForm(): boolean {
+		validationError = "";
 
-	if (showRegisterKeyField && !registerKey.trim()) {
-		validationError = $_("auth.register.registerKeyRequired");
-		return false;
+		if (showRegisterKeyField && !registerKey.trim()) {
+			validationError = $_("auth.register.registerKeyRequired");
+			return false;
+		}
+
+		return true;
 	}
-
-	return true;
-}
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">

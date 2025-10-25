@@ -1,14 +1,14 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import Button from "./Button.svelte";
+	import { _ } from "svelte-i18n";
+	import Button from "./Button.svelte";
 
-export let loading = false;
-export let saved = false;
-export let size: "sm" | "md" | "lg" = "md";
-// カスタムラベル（未指定時はデフォルトのi18nキーを使用）
-export let label: string | null = null;
-// type="submit"か"button"かを選択可能にする
-export let type: "submit" | "button" = "submit";
+	export let loading = false;
+	export let saved = false;
+	export let size: "sm" | "md" | "lg" = "md";
+	// カスタムラベル（未指定時はデフォルトのi18nキーを使用）
+	export let label: string | null = null;
+	// type="submit"か"button"かを選択可能にする
+	export let type: "submit" | "button" = "submit";
 </script>
 
 <!--

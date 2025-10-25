@@ -1,72 +1,72 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
 
-export let activeSection = "";
-export let isOpen = false;
-export let onToggle: () => void;
+	export let activeSection = "";
+	export let isOpen = false;
+	export let onToggle: () => void;
 
-interface NavItem {
-	id: string;
-	title: string;
-	children?: NavItem[];
-}
+	interface NavItem {
+		id: string;
+		title: string;
+		children?: NavItem[];
+	}
 
-let isScrolling = false;
-let scrollTimeout: ReturnType<typeof setTimeout>;
+	let isScrolling = false;
+	let scrollTimeout: ReturnType<typeof setTimeout>;
 
-$: navItems = [
-	{
-		id: "user-settings",
-		title: $_("settings.nav.userSettings"),
-		children: [
-			{ id: "username", title: $_("settings.username.title") },
-			{ id: "password", title: $_("settings.password.title") },
-		],
-	},
-	{
-		id: "llm-settings",
-		title: $_("settings.nav.llmSettings"),
-		children: [
-			{ id: "llm-token", title: $_("settings.llmToken.title") },
-			{ id: "auto-summary", title: $_("settings.autoSummary.title") },
-			{ id: "llm-status", title: $_("settings.llmStatus.title") },
-		],
-	},
-	{
-		id: "danger-zone",
-		title: $_("settings.nav.dangerZone"),
-		children: [
-			{ id: "delete-account", title: $_("settings.deleteAccount.title") },
-		],
-	},
-];
+	$: navItems = [
+		{
+			id: "user-settings",
+			title: $_("settings.nav.userSettings"),
+			children: [
+				{ id: "username", title: $_("settings.username.title") },
+				{ id: "password", title: $_("settings.password.title") },
+			],
+		},
+		{
+			id: "llm-settings",
+			title: $_("settings.nav.llmSettings"),
+			children: [
+				{ id: "llm-token", title: $_("settings.llmToken.title") },
+				{ id: "auto-summary", title: $_("settings.autoSummary.title") },
+				{ id: "llm-status", title: $_("settings.llmStatus.title") },
+			],
+		},
+		{
+			id: "danger-zone",
+			title: $_("settings.nav.dangerZone"),
+			children: [
+				{ id: "delete-account", title: $_("settings.deleteAccount.title") },
+			],
+		},
+	];
 
-function scrollToSection(sectionId: string) {
-	const element = document.getElementById(sectionId);
-	if (element) {
-		// Mark as scrolling to prevent intersection observer conflicts
-		isScrolling = true;
-		activeSection = sectionId; // Set immediately for better UX
+	function scrollToSection(sectionId: string) {
+		const element = document.getElementById(sectionId);
+		if (element) {
+			// Mark as scrolling to prevent intersection observer conflicts
+			isScrolling = true;
+			activeSection = sectionId; // Set immediately for better UX
 
-		// Clear any existing timeout
-		if (scrollTimeout) {
-			clearTimeout(scrollTimeout);
-		}
+			// Clear any existing timeout
+			if (scrollTimeout) {
+				clearTimeout(scrollTimeout);
+			}
 
-		element.scrollIntoView({ behavior: "smooth", block: "start" });
+			element.scrollIntoView({ behavior: "smooth", block: "start" });
 
-		// Reset scrolling flag after scroll completes
-		scrollTimeout = setTimeout(() => {
-			isScrolling = false;
-		}, 1000);
+			// Reset scrolling flag after scroll completes
+			scrollTimeout = setTimeout(() => {
+				isScrolling = false;
+			}, 1000);
 
-		// Close mobile menu after navigation
-		if (onToggle && window.innerWidth < 768) {
-			onToggle();
+			// Close mobile menu after navigation
+			if (onToggle && window.innerWidth < 768) {
+				onToggle();
+			}
 		}
 	}
-}
 </script>
 
 <!-- Mobile Navigation Overlay -->

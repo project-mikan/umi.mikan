@@ -1,9 +1,9 @@
 <script lang="ts">
-export let htmlFor = "";
-export let required = false;
-export let srOnly = false;
+	export let htmlFor = "";
+	export let required = false;
+	export let srOnly = false;
 
-$: classes = `${srOnly ? "sr-only" : "block text-sm font-medium text-gray-700 dark:text-gray-300"}`;
+	$: classes = `${srOnly ? "sr-only" : "block text-sm font-medium text-gray-700 dark:text-gray-300"}`;
 </script>
 
 <label for={htmlFor} class={classes}>

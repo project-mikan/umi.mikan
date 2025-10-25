@@ -1,43 +1,46 @@
 <script lang="ts">
-import { _, locale } from "svelte-i18n";
-import "$lib/i18n";
-import BaseModal from "./BaseModal.svelte";
+	import { _, locale } from "svelte-i18n";
+	import "$lib/i18n";
+	import BaseModal from "./BaseModal.svelte";
 
-export let isOpen = false;
-export let currentYear: number;
-export let currentMonth: number;
-export let onSelect: (year: number, month: number) => void;
-export let onCancel: () => void;
+	export let isOpen = false;
+	export let currentYear: number;
+	export let currentMonth: number;
+	export let onSelect: (year: number, month: number) => void;
+	export let onCancel: () => void;
 
-let selectedYear = currentYear;
-let selectedMonth = currentMonth;
+	let selectedYear = currentYear;
+	let selectedMonth = currentMonth;
 
-$: {
-	selectedYear = currentYear;
-	selectedMonth = currentMonth;
-}
+	$: {
+		selectedYear = currentYear;
+		selectedMonth = currentMonth;
+	}
 
-function handleConfirm() {
-	onSelect(selectedYear, selectedMonth);
-}
+	function handleConfirm() {
+		onSelect(selectedYear, selectedMonth);
+	}
 
-function handleCancel() {
-	onCancel();
-}
+	function handleCancel() {
+		onCancel();
+	}
 
-const currentDate = new Date();
-const minYear = 1900;
-$: maxYear = currentDate.getFullYear();
+	const currentDate = new Date();
+	const minYear = 1900;
+	$: maxYear = currentDate.getFullYear();
 
-$: years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
+	$: years = Array.from(
+		{ length: maxYear - minYear + 1 },
+		(_, i) => maxYear - i,
+	);
 
-$: months = Array.from({ length: 12 }, (_, i) => {
-	const date = new Date(2000, i, 1);
-	return {
-		value: i + 1,
-		label: date.toLocaleDateString($locale || "en", { month: "long" }),
-	};
-});
+	$: months = Array.from({ length: 12 }, (_, i) => {
+		const date = new Date(2000, i, 1);
+		return {
+			value: i + 1,
+			label: date.toLocaleDateString($locale || "en", { month: "long" }),
+		};
+	});
 </script>
 
 <BaseModal {isOpen} onBackdropClick={handleCancel} maxWidth="max-w-lg">

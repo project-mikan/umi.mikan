@@ -1,271 +1,271 @@
 <script lang="ts">
-import { _, locale } from "svelte-i18n";
-import { enhance } from "$app/forms";
-import { goto } from "$app/navigation";
-import { beforeNavigate } from "$app/navigation";
-import { onMount } from "svelte";
-import "$lib/i18n";
-import Button from "$lib/components/atoms/Button.svelte";
-import SaveButton from "$lib/components/atoms/SaveButton.svelte";
-import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
-import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
-import FormField from "$lib/components/molecules/FormField.svelte";
-import Modal from "$lib/components/molecules/Modal.svelte";
-import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
-import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
-import { getDayOfWeekKey } from "$lib/utils/date-utils";
-import { createSubmitHandler } from "$lib/utils/form-utils";
-import type { ActionData, PageData } from "./$types";
+	import { _, locale } from "svelte-i18n";
+	import { enhance } from "$app/forms";
+	import { goto } from "$app/navigation";
+	import { beforeNavigate } from "$app/navigation";
+	import { onMount } from "svelte";
+	import "$lib/i18n";
+	import Button from "$lib/components/atoms/Button.svelte";
+	import SaveButton from "$lib/components/atoms/SaveButton.svelte";
+	import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
+	import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
+	import FormField from "$lib/components/molecules/FormField.svelte";
+	import Modal from "$lib/components/molecules/Modal.svelte";
+	import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
+	import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
+	import { getDayOfWeekKey } from "$lib/utils/date-utils";
+	import { createSubmitHandler } from "$lib/utils/form-utils";
+	import type { ActionData, PageData } from "./$types";
 
-export let data: PageData;
-export let form: ActionData;
+	export let data: PageData;
+	export let form: ActionData;
 
-// Reactive date formatting function
-$: _formatDate = (ymd: {
-	year: number;
-	month: number;
-	day: number;
-}): string => {
-	const dayOfWeekKey = getDayOfWeekKey(ymd);
-	const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
-	return $_("date.format.yearMonthDayWithDayOfWeek", {
+	// Reactive date formatting function
+	$: _formatDate = (ymd: {
+		year: number;
+		month: number;
+		day: number;
+	}): string => {
+		const dayOfWeekKey = getDayOfWeekKey(ymd);
+		const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
+		return $_("date.format.yearMonthDayWithDayOfWeek", {
+			values: {
+				year: ymd.year,
+				month: ymd.month,
+				day: ymd.day,
+				dayOfWeek: dayOfWeek,
+			},
+		});
+	};
+
+	$: title = $_("page.title.individual", {
 		values: {
-			year: ymd.year,
-			month: ymd.month,
-			day: ymd.day,
-			dayOfWeek: dayOfWeek,
+			date: _formatDate(data.date),
 		},
 	});
-};
 
-$: title = $_("page.title.individual", {
-	values: {
-		date: _formatDate(data.date),
-	},
-});
+	$: content = data.entry?.content || "";
+	let formElement: HTMLFormElement;
+	let _showDeleteConfirm = false;
+	let loading = false;
+	let saved = false;
+	let selectedEntities: {
+		entityId: string;
+		positions: { start: number; end: number }[];
+	}[] = [];
+	let summary: {
+		id: string;
+		diaryId: string;
+		date: { year: number; month: number; day: number };
+		summary: string;
+		createdAt: number;
+		updatedAt: number;
+	} | null = data.dailySummary;
+	let summaryError: string | null = null;
+	let isToday = false;
+	let isFutureDate = false;
+	let isSummaryGenerating = false; // 要約生成中のフラグ
+	let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
 
-$: content = data.entry?.content || "";
-let formElement: HTMLFormElement;
-let _showDeleteConfirm = false;
-let loading = false;
-let saved = false;
-let selectedEntities: {
-	entityId: string;
-	positions: { start: number; end: number }[];
-}[] = [];
-let summary: {
-	id: string;
-	diaryId: string;
-	date: { year: number; month: number; day: number };
-	summary: string;
-	createdAt: number;
-	updatedAt: number;
-} | null = data.dailySummary;
-let summaryError: string | null = null;
-let isToday = false;
-let isFutureDate = false;
-let isSummaryGenerating = false; // 要約生成中のフラグ
-let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
+	// 未保存状態の管理
+	let initialContent = "";
+	let allowNavigation = false;
 
-// 未保存状態の管理
-let initialContent = "";
-let allowNavigation = false;
+	// 前回のdataを保持して変更を検出
+	let previousEntryId = "";
 
-// 前回のdataを保持して変更を検出
-let previousEntryId = "";
+	// コンテンツの変更を監視して未保存状態を更新
+	$: hasUnsavedChanges = content !== initialContent && !allowNavigation;
 
-// コンテンツの変更を監視して未保存状態を更新
-$: hasUnsavedChanges = content !== initialContent && !allowNavigation;
+	// Check if user has LLM key configured
+	$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
+	$: hasLLMKey = !!existingLLMKey;
 
-// Check if user has LLM key configured
-$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
-$: hasLLMKey = !!existingLLMKey;
+	// 日付判定（当日・未来日）
+	$: {
+		const now = new Date();
+		const currentDate = new Date(
+			data.date.year,
+			data.date.month - 1,
+			data.date.day,
+		);
+		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-// 日付判定（当日・未来日）
-$: {
-	const now = new Date();
-	const currentDate = new Date(
-		data.date.year,
-		data.date.month - 1,
-		data.date.day,
-	);
-	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-	isToday = currentDate.getTime() === today.getTime();
-	isFutureDate = currentDate.getTime() > today.getTime();
-}
-$: autoSummaryDisabled = !existingLLMKey?.autoSummaryDaily;
-
-// 無効化メッセージを取得
-function getDisabledMessage(): string {
-	if (isFutureDate) {
-		return $_("diary.summaryNotAvailableFuture");
+		isToday = currentDate.getTime() === today.getTime();
+		isFutureDate = currentDate.getTime() > today.getTime();
 	}
-	if (isToday) {
-		return $_("diary.summaryNotAvailableToday");
+	$: autoSummaryDisabled = !existingLLMKey?.autoSummaryDaily;
+
+	// 無効化メッセージを取得
+	function getDisabledMessage(): string {
+		if (isFutureDate) {
+			return $_("diary.summaryNotAvailableFuture");
+		}
+		if (isToday) {
+			return $_("diary.summaryNotAvailableToday");
+		}
+		return "";
 	}
-	return "";
-}
 
-// Check if the diary date is not today (only allow summary generation for past entries)
-$: isNotToday = (() => {
-	if (!data.today) return false;
+	// Check if the diary date is not today (only allow summary generation for past entries)
+	$: isNotToday = (() => {
+		if (!data.today) return false;
 
-	return (
-		data.date.year < data.today.year ||
-		(data.date.year === data.today.year &&
-			data.date.month < data.today.month) ||
-		(data.date.year === data.today.year &&
-			data.date.month === data.today.month &&
-			data.date.day < data.today.day)
-	);
-})();
+		return (
+			data.date.year < data.today.year ||
+			(data.date.year === data.today.year &&
+				data.date.month < data.today.month) ||
+			(data.date.year === data.today.year &&
+				data.date.month === data.today.month &&
+				data.date.day < data.today.day)
+		);
+	})();
 
-// Check if summary is outdated (diary updatedAt > summary updatedAt)
-$: isSummaryOutdated = (() => {
-	if (!summary || !data.entry) return false;
+	// Check if summary is outdated (diary updatedAt > summary updatedAt)
+	$: isSummaryOutdated = (() => {
+		if (!summary || !data.entry) return false;
 
-	// 日記エントリは秒単位、サマリーはミリ秒単位なので統一
-	const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
-	const summaryUpdatedAt = Number(summary.updatedAt); // 既にミリ秒
+		// 日記エントリは秒単位、サマリーはミリ秒単位なので統一
+		const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
+		const summaryUpdatedAt = Number(summary.updatedAt); // 既にミリ秒
 
-	// 要約が最近更新された場合（5秒以内）は古くないとみなす
-	const now = Date.now();
-	const recentlyUpdated =
-		lastSummaryUpdateTime > 0 && now - lastSummaryUpdateTime < 5000;
+		// 要約が最近更新された場合（5秒以内）は古くないとみなす
+		const now = Date.now();
+		const recentlyUpdated =
+			lastSummaryUpdateTime > 0 && now - lastSummaryUpdateTime < 5000;
 
-	// 要約が日記よりも新しい場合、または最近更新された場合は古くない
-	const isOutdated = diaryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
+		// 要約が日記よりも新しい場合、または最近更新された場合は古くない
+		const isOutdated = diaryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
 
-	return isOutdated;
-})();
+		return isOutdated;
+	})();
 
-// Character count calculation
-$: characterCount = content ? content.length : 0;
+	// Character count calculation
+	$: characterCount = content ? content.length : 0;
 
-// データが変更された時に要約状態を更新
-// ページ遷移時のみ（entryのIDが変わった時のみ）実行
-$: {
-	// entryの一意性を判定するためのID
-	const currentEntryId =
-		data.entry?.id || `${data.date.year}-${data.date.month}-${data.date.day}`;
+	// データが変更された時に要約状態を更新
+	// ページ遷移時のみ（entryのIDが変わった時のみ）実行
+	$: {
+		// entryの一意性を判定するためのID
+		const currentEntryId =
+			data.entry?.id || `${data.date.year}-${data.date.month}-${data.date.day}`;
 
-	// ページが変更された場合のみ初期化
-	if (currentEntryId !== previousEntryId) {
-		previousEntryId = currentEntryId;
+		// ページが変更された場合のみ初期化
+		if (currentEntryId !== previousEntryId) {
+			previousEntryId = currentEntryId;
 
-		// 要約とコンテンツを更新
-		summary = data.dailySummary;
+			// 要約とコンテンツを更新
+			summary = data.dailySummary;
+			isSummaryGenerating = false;
+
+			// 初期コンテンツを設定
+			initialContent = data.entry?.content || "";
+
+			// コンテンツ変数を初期化（ユーザー入力を上書きしない）
+			if (content !== initialContent) {
+				content = initialContent;
+			}
+
+			// 新しいページではallowNavigationをリセット
+			allowNavigation = false;
+		}
+	}
+
+	function handleSummaryUpdated(event: CustomEvent) {
+		const newSummary = event.detail.summary;
+		const oldSummary = summary;
+
+		// 要約が実際に変更されたかどうかを確認
+		const actuallyUpdated =
+			!oldSummary ||
+			oldSummary.updatedAt !== newSummary.updatedAt ||
+			oldSummary.summary !== newSummary.summary;
+
+		summary = newSummary;
+
+		// 要約が実際に更新された場合のみ時刻を記録
+		if (actuallyUpdated) {
+			lastSummaryUpdateTime = Date.now();
+		}
+	}
+
+	function handleSummaryError(event: CustomEvent) {
+		summaryError = event.detail.message;
+	}
+
+	function handleGenerationStarted() {
+		isSummaryGenerating = true;
+		summaryError = null;
+	}
+
+	function handleGenerationCompleted() {
 		isSummaryGenerating = false;
-
-		// 初期コンテンツを設定
-		initialContent = data.entry?.content || "";
-
-		// コンテンツ変数を初期化（ユーザー入力を上書きしない）
-		if (content !== initialContent) {
-			content = initialContent;
-		}
-
-		// 新しいページではallowNavigationをリセット
-		allowNavigation = false;
 	}
-}
 
-function handleSummaryUpdated(event: CustomEvent) {
-	const newSummary = event.detail.summary;
-	const oldSummary = summary;
-
-	// 要約が実際に変更されたかどうかを確認
-	const actuallyUpdated =
-		!oldSummary ||
-		oldSummary.updatedAt !== newSummary.updatedAt ||
-		oldSummary.summary !== newSummary.summary;
-
-	summary = newSummary;
-
-	// 要約が実際に更新された場合のみ時刻を記録
-	if (actuallyUpdated) {
-		lastSummaryUpdateTime = Date.now();
+	function _formatDateStr(ymd: {
+		year: number;
+		month: number;
+		day: number;
+	}): string {
+		return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 	}
-}
 
-function handleSummaryError(event: CustomEvent) {
-	summaryError = event.detail.message;
-}
-
-function handleGenerationStarted() {
-	isSummaryGenerating = true;
-	summaryError = null;
-}
-
-function handleGenerationCompleted() {
-	isSummaryGenerating = false;
-}
-
-function _formatDateStr(ymd: {
-	year: number;
-	month: number;
-	day: number;
-}): string {
-	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
-}
-
-function _goBack() {
-	goto("/");
-}
-
-function _goToMonthly() {
-	const year = data.date.year;
-	const month = String(data.date.month).padStart(2, "0");
-	goto(`/monthly/${year}/${month}`);
-}
-
-function _handleSave() {
-	formElement?.requestSubmit();
-}
-
-function _confirmDelete() {
-	_showDeleteConfirm = true;
-}
-
-function _cancelDelete() {
-	_showDeleteConfirm = false;
-}
-
-function _handleDelete() {
-	// 削除時は遷移を許可
-	allowNavigation = true;
-	const form = document.createElement("form");
-	form.method = "POST";
-	form.action = "?/delete";
-	document.body.appendChild(form);
-	form.submit();
-}
-
-// ページ遷移前の警告
-beforeNavigate((navigation) => {
-	if (hasUnsavedChanges && !allowNavigation) {
-		if (!confirm($_("diary.unsavedChangesWarning"))) {
-			navigation.cancel();
-		}
+	function _goBack() {
+		goto("/");
 	}
-});
 
-// ブラウザのページ離脱時の警告
-onMount(() => {
-	const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-		if (hasUnsavedChanges) {
-			e.preventDefault();
-			e.returnValue = "";
+	function _goToMonthly() {
+		const year = data.date.year;
+		const month = String(data.date.month).padStart(2, "0");
+		goto(`/monthly/${year}/${month}`);
+	}
+
+	function _handleSave() {
+		formElement?.requestSubmit();
+	}
+
+	function _confirmDelete() {
+		_showDeleteConfirm = true;
+	}
+
+	function _cancelDelete() {
+		_showDeleteConfirm = false;
+	}
+
+	function _handleDelete() {
+		// 削除時は遷移を許可
+		allowNavigation = true;
+		const form = document.createElement("form");
+		form.method = "POST";
+		form.action = "?/delete";
+		document.body.appendChild(form);
+		form.submit();
+	}
+
+	// ページ遷移前の警告
+	beforeNavigate((navigation) => {
+		if (hasUnsavedChanges && !allowNavigation) {
+			if (!confirm($_("diary.unsavedChangesWarning"))) {
+				navigation.cancel();
+			}
 		}
-	};
+	});
 
-	window.addEventListener("beforeunload", handleBeforeUnload);
+	// ブラウザのページ離脱時の警告
+	onMount(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if (hasUnsavedChanges) {
+				e.preventDefault();
+				e.returnValue = "";
+			}
+		};
 
-	return () => {
-		window.removeEventListener("beforeunload", handleBeforeUnload);
-	};
-});
+		window.addEventListener("beforeunload", handleBeforeUnload);
+
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	});
 </script>
 
 <svelte:head>

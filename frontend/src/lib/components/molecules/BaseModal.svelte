@@ -1,35 +1,35 @@
 <script lang="ts">
-import { onMount } from "svelte";
+	import { onMount } from "svelte";
 
-export let isOpen = false;
-export let onBackdropClick: (() => void) | null = null;
-export let maxWidth = "max-w-lg";
+	export let isOpen = false;
+	export let onBackdropClick: (() => void) | null = null;
+	export let maxWidth = "max-w-lg";
 
-function _handleBackdropClick() {
-	if (onBackdropClick) {
-		onBackdropClick();
-	}
-}
-
-function _handleKeydown(event: KeyboardEvent) {
-	if (event.key === "Escape" && onBackdropClick) {
-		onBackdropClick();
-	}
-}
-
-onMount(() => {
-	const handleGlobalKeydown = (event: KeyboardEvent) => {
-		if (isOpen && event.key === "Escape" && onBackdropClick) {
+	function _handleBackdropClick() {
+		if (onBackdropClick) {
 			onBackdropClick();
 		}
-	};
+	}
 
-	document.addEventListener("keydown", handleGlobalKeydown);
+	function _handleKeydown(event: KeyboardEvent) {
+		if (event.key === "Escape" && onBackdropClick) {
+			onBackdropClick();
+		}
+	}
 
-	return () => {
-		document.removeEventListener("keydown", handleGlobalKeydown);
-	};
-});
+	onMount(() => {
+		const handleGlobalKeydown = (event: KeyboardEvent) => {
+			if (isOpen && event.key === "Escape" && onBackdropClick) {
+				onBackdropClick();
+			}
+		};
+
+		document.addEventListener("keydown", handleGlobalKeydown);
+
+		return () => {
+			document.removeEventListener("keydown", handleGlobalKeydown);
+		};
+	});
 </script>
 
 {#if isOpen}

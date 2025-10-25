@@ -1,59 +1,59 @@
 <script lang="ts">
-import { onMount } from "svelte";
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
+	import { onMount } from "svelte";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
 
-let showInstallButton = false;
-let installPrompt: BeforeInstallPromptEvent | null = null;
+	let showInstallButton = false;
+	let installPrompt: BeforeInstallPromptEvent | null = null;
 
-interface BeforeInstallPromptEvent extends Event {
-	prompt(): Promise<void>;
-	userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+	interface BeforeInstallPromptEvent extends Event {
+		prompt(): Promise<void>;
+		userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+	}
 
-onMount(() => {
-	// Listen for beforeinstallprompt event
-	window.addEventListener("beforeinstallprompt", (e) => {
-		e.preventDefault();
-		installPrompt = e as BeforeInstallPromptEvent;
-		showInstallButton = true;
-	});
-
-	// Hide button if app is already installed
-	window.addEventListener("appinstalled", () => {
-		showInstallButton = false;
-		installPrompt = null;
-	});
-
-	// For development/testing: show button if no install prompt is available
-	// In production, this will be overridden by the beforeinstallprompt event
-	setTimeout(() => {
-		if (!installPrompt) {
+	onMount(() => {
+		// Listen for beforeinstallprompt event
+		window.addEventListener("beforeinstallprompt", (e) => {
+			e.preventDefault();
+			installPrompt = e as BeforeInstallPromptEvent;
 			showInstallButton = true;
-		}
-	}, 1000);
-});
+		});
 
-async function handleInstall() {
-	if (!installPrompt) {
-		// Show manual installation instructions if no automatic prompt is available
-		alert($_("pwa.install.manualInstructions"));
-		return;
-	}
-
-	try {
-		await installPrompt.prompt();
-		const choiceResult = await installPrompt.userChoice;
-
-		if (choiceResult.outcome === "accepted") {
+		// Hide button if app is already installed
+		window.addEventListener("appinstalled", () => {
 			showInstallButton = false;
+			installPrompt = null;
+		});
+
+		// For development/testing: show button if no install prompt is available
+		// In production, this will be overridden by the beforeinstallprompt event
+		setTimeout(() => {
+			if (!installPrompt) {
+				showInstallButton = true;
+			}
+		}, 1000);
+	});
+
+	async function handleInstall() {
+		if (!installPrompt) {
+			// Show manual installation instructions if no automatic prompt is available
+			alert($_("pwa.install.manualInstructions"));
+			return;
 		}
 
-		installPrompt = null;
-	} catch (error) {
-		console.error("Install failed:", error);
+		try {
+			await installPrompt.prompt();
+			const choiceResult = await installPrompt.userChoice;
+
+			if (choiceResult.outcome === "accepted") {
+				showInstallButton = false;
+			}
+
+			installPrompt = null;
+		} catch (error) {
+			console.error("Install failed:", error);
+		}
 	}
-}
 </script>
 
 {#if showInstallButton}

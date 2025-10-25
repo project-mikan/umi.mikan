@@ -1,27 +1,27 @@
 <script lang="ts">
-import { locale } from "svelte-i18n";
-import { browser } from "$app/environment";
+	import { locale } from "svelte-i18n";
+	import { browser } from "$app/environment";
 
-let isOpen = false;
+	let isOpen = false;
 
-const languages = [
-	{ code: "en", label: "English" },
-	{ code: "ja", label: "日本語" },
-];
+	const languages = [
+		{ code: "en", label: "English" },
+		{ code: "ja", label: "日本語" },
+	];
 
-function toggleDropdown() {
-	isOpen = !isOpen;
-}
-
-function selectLanguage(langCode: string) {
-	if (browser) {
-		localStorage.setItem("locale", langCode);
-		location.reload();
+	function toggleDropdown() {
+		isOpen = !isOpen;
 	}
-}
 
-$: currentLanguage =
-	languages.find((lang) => lang.code === $locale) || languages[0];
+	function selectLanguage(langCode: string) {
+		if (browser) {
+			localStorage.setItem("locale", langCode);
+			location.reload();
+		}
+	}
+
+	$: currentLanguage =
+		languages.find((lang) => lang.code === $locale) || languages[0];
 </script>
 
 <svelte:window on:click={(e) => {

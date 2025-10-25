@@ -1,147 +1,147 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { goto } from "$app/navigation";
-import { enhance } from "$app/forms";
-import "$lib/i18n";
-import Modal from "$lib/components/molecules/Modal.svelte";
-import { EntityCategory } from "$lib/grpc/entity/entity_pb";
-import { notifyEntityUpdated } from "$lib/utils/entity-events";
-import type { ActionData, PageData } from "./$types";
+	import { _ } from "svelte-i18n";
+	import { goto } from "$app/navigation";
+	import { enhance } from "$app/forms";
+	import "$lib/i18n";
+	import Modal from "$lib/components/molecules/Modal.svelte";
+	import { EntityCategory } from "$lib/grpc/entity/entity_pb";
+	import { notifyEntityUpdated } from "$lib/utils/entity-events";
+	import type { ActionData, PageData } from "./$types";
 
-export let data: PageData;
-export let form: ActionData;
+	export let data: PageData;
+	export let form: ActionData;
 
-// ローディング状態
-let updateLoading = false;
-let deleteLoading = false;
-let createAliasLoading = false;
-let updateAliasLoading = false;
-let deleteAliasLoading = false;
+	// ローディング状態
+	let updateLoading = false;
+	let deleteLoading = false;
+	let createAliasLoading = false;
+	let updateAliasLoading = false;
+	let deleteAliasLoading = false;
 
-// モーダル状態
-let showDeleteConfirm = false;
-let showDeleteAliasConfirm = false;
-let selectedAliasId = "";
+	// モーダル状態
+	let showDeleteConfirm = false;
+	let showDeleteAliasConfirm = false;
+	let selectedAliasId = "";
 
-// エイリアス追加用
-let newAlias = "";
+	// エイリアス追加用
+	let newAlias = "";
 
-// エイリアス編集用
-let editingAliasId = "";
-let editingAliasValue = "";
+	// エイリアス編集用
+	let editingAliasId = "";
+	let editingAliasValue = "";
 
-// アクションメッセージの判定
-function isMessageForAction(actionName: string): boolean {
-	return form?.action === actionName;
-}
-
-/**
- * カテゴリ名を表示用に変換
- */
-function getCategoryLabel(category: EntityCategory): string {
-	switch (category) {
-		case EntityCategory.PEOPLE:
-			return $_("entity.list.category.people");
-		case EntityCategory.NO_CATEGORY:
-			return $_("entity.list.category.noCategory");
-		default:
-			return $_("entity.list.category.noCategory");
+	// アクションメッセージの判定
+	function isMessageForAction(actionName: string): boolean {
+		return form?.action === actionName;
 	}
-}
 
-/**
- * 日付フォーマット
- */
-function formatDate(dateStr: string): string {
-	const date = new Date(dateStr);
-	return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-}
+	/**
+	 * カテゴリ名を表示用に変換
+	 */
+	function getCategoryLabel(category: EntityCategory): string {
+		switch (category) {
+			case EntityCategory.PEOPLE:
+				return $_("entity.list.category.people");
+			case EntityCategory.NO_CATEGORY:
+				return $_("entity.list.category.noCategory");
+			default:
+				return $_("entity.list.category.noCategory");
+		}
+	}
 
-/**
- * 日記詳細ページへ遷移
- */
-function viewDiary(dateStr: string): void {
-	goto(`/${dateStr}`);
-}
+	/**
+	 * 日付フォーマット
+	 */
+	function formatDate(dateStr: string): string {
+		const date = new Date(dateStr);
+		return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+	}
 
-/**
- * エンティティ削除確認モーダルを表示
- */
-function confirmDelete(): void {
-	showDeleteConfirm = true;
-}
+	/**
+	 * 日記詳細ページへ遷移
+	 */
+	function viewDiary(dateStr: string): void {
+		goto(`/${dateStr}`);
+	}
 
-/**
- * エンティティ削除をキャンセル
- */
-function cancelDelete(): void {
-	showDeleteConfirm = false;
-}
+	/**
+	 * エンティティ削除確認モーダルを表示
+	 */
+	function confirmDelete(): void {
+		showDeleteConfirm = true;
+	}
 
-/**
- * エンティティ削除を実行
- */
-function handleDelete(): void {
-	showDeleteConfirm = false;
-	const form = document.createElement("form");
-	form.method = "POST";
-	form.action = "?/deleteEntity";
-	document.body.appendChild(form);
-	deleteLoading = true;
-	form.submit();
-}
+	/**
+	 * エンティティ削除をキャンセル
+	 */
+	function cancelDelete(): void {
+		showDeleteConfirm = false;
+	}
 
-/**
- * エイリアス削除確認モーダルを表示
- */
-function confirmDeleteAlias(aliasId: string): void {
-	selectedAliasId = aliasId;
-	showDeleteAliasConfirm = true;
-}
+	/**
+	 * エンティティ削除を実行
+	 */
+	function handleDelete(): void {
+		showDeleteConfirm = false;
+		const form = document.createElement("form");
+		form.method = "POST";
+		form.action = "?/deleteEntity";
+		document.body.appendChild(form);
+		deleteLoading = true;
+		form.submit();
+	}
 
-/**
- * エイリアス削除をキャンセル
- */
-function cancelDeleteAlias(): void {
-	showDeleteAliasConfirm = false;
-	selectedAliasId = "";
-}
+	/**
+	 * エイリアス削除確認モーダルを表示
+	 */
+	function confirmDeleteAlias(aliasId: string): void {
+		selectedAliasId = aliasId;
+		showDeleteAliasConfirm = true;
+	}
 
-/**
- * エイリアス削除を実行
- */
-function handleDeleteAlias(): void {
-	showDeleteAliasConfirm = false;
-	const form = document.createElement("form");
-	form.method = "POST";
-	form.action = "?/deleteAlias";
+	/**
+	 * エイリアス削除をキャンセル
+	 */
+	function cancelDeleteAlias(): void {
+		showDeleteAliasConfirm = false;
+		selectedAliasId = "";
+	}
 
-	const input = document.createElement("input");
-	input.type = "hidden";
-	input.name = "aliasId";
-	input.value = selectedAliasId;
-	form.appendChild(input);
+	/**
+	 * エイリアス削除を実行
+	 */
+	function handleDeleteAlias(): void {
+		showDeleteAliasConfirm = false;
+		const form = document.createElement("form");
+		form.method = "POST";
+		form.action = "?/deleteAlias";
 
-	document.body.appendChild(form);
-	deleteAliasLoading = true;
-	form.submit();
-}
+		const input = document.createElement("input");
+		input.type = "hidden";
+		input.name = "aliasId";
+		input.value = selectedAliasId;
+		form.appendChild(input);
 
-/**
- * エイリアス編集モードを開始
- */
-function startEditAlias(aliasId: string, currentAlias: string): void {
-	editingAliasId = aliasId;
-	editingAliasValue = currentAlias;
-}
+		document.body.appendChild(form);
+		deleteAliasLoading = true;
+		form.submit();
+	}
 
-/**
- * エイリアス編集をキャンセル
- */
-function cancelEditAlias(): void {
-	editingAliasId = "";
-	editingAliasValue = "";
-}
+	/**
+	 * エイリアス編集モードを開始
+	 */
+	function startEditAlias(aliasId: string, currentAlias: string): void {
+		editingAliasId = aliasId;
+		editingAliasValue = currentAlias;
+	}
+
+	/**
+	 * エイリアス編集をキャンセル
+	 */
+	function cancelEditAlias(): void {
+		editingAliasId = "";
+		editingAliasValue = "";
+	}
 </script>
 
 <svelte:head>

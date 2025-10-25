@@ -1,158 +1,158 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
-import { enhance } from "$app/forms";
-import { onMount } from "svelte";
-import Modal from "$lib/components/molecules/Modal.svelte";
-import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
-import type { ActionData, PageData } from "./$types";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
+	import { enhance } from "$app/forms";
+	import { onMount } from "svelte";
+	import Modal from "$lib/components/molecules/Modal.svelte";
+	import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
+	import type { ActionData, PageData } from "./$types";
 
-export let form: ActionData;
-export let data: PageData;
+	export let form: ActionData;
+	export let data: PageData;
 
-// Helper function to check if message belongs to specific action
-function isMessageForAction(actionName: string): boolean {
-	return form?.action === actionName;
-}
-
-let usernameLoading = false;
-let passwordLoading = false;
-let llmTokenLoading = false;
-let autoSummaryLoading = false;
-let deleteLLMKeyLoading = false;
-let deleteAccountLoading = false;
-
-// Modal states
-let showDeleteLLMTokenConfirm = false;
-let showDeleteAccountConfirm = false;
-
-// Password visibility toggles
-let showCurrentPassword = false;
-let showNewPassword = false;
-let showConfirmPassword = false;
-
-// Get existing LLM key for Gemini (provider 1)
-$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
-$: existingLLMToken = existingLLMKey?.key || "";
-
-// Local state for checkbox values
-let autoSummaryDaily = false;
-let autoSummaryMonthly = false;
-let autoLatestTrend = false;
-
-// Update local state when data changes
-$: {
-	if (existingLLMKey) {
-		autoSummaryDaily = existingLLMKey.autoSummaryDaily || false;
-		autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
-		autoLatestTrend = existingLLMKey.autoLatestTrendEnabled || false;
+	// Helper function to check if message belongs to specific action
+	function isMessageForAction(actionName: string): boolean {
+		return form?.action === actionName;
 	}
-}
 
-// Active section tracking
-let activeSection = "";
+	let usernameLoading = false;
+	let passwordLoading = false;
+	let llmTokenLoading = false;
+	let autoSummaryLoading = false;
+	let deleteLLMKeyLoading = false;
+	let deleteAccountLoading = false;
 
-// Mobile navigation state
-let isMobileNavOpen = false;
+	// Modal states
+	let showDeleteLLMTokenConfirm = false;
+	let showDeleteAccountConfirm = false;
 
-function toggleMobileNav() {
-	isMobileNavOpen = !isMobileNavOpen;
-}
+	// Password visibility toggles
+	let showCurrentPassword = false;
+	let showNewPassword = false;
+	let showConfirmPassword = false;
 
-// Intersection Observer for tracking active section
-onMount(() => {
-	let isUserScrolling = false;
-	let scrollTimeout: ReturnType<typeof setTimeout>;
+	// Get existing LLM key for Gemini (provider 1)
+	$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
+	$: existingLLMToken = existingLLMKey?.key || "";
 
-	// Listen for scroll events to detect user scrolling
-	const handleScroll = () => {
-		isUserScrolling = true;
-		if (scrollTimeout) {
-			clearTimeout(scrollTimeout);
+	// Local state for checkbox values
+	let autoSummaryDaily = false;
+	let autoSummaryMonthly = false;
+	let autoLatestTrend = false;
+
+	// Update local state when data changes
+	$: {
+		if (existingLLMKey) {
+			autoSummaryDaily = existingLLMKey.autoSummaryDaily || false;
+			autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
+			autoLatestTrend = existingLLMKey.autoLatestTrendEnabled || false;
 		}
-		scrollTimeout = setTimeout(() => {
-			isUserScrolling = false;
-		}, 150);
-	};
+	}
 
-	window.addEventListener("scroll", handleScroll);
+	// Active section tracking
+	let activeSection = "";
 
-	const observer = new IntersectionObserver(
-		(entries) => {
-			// Only update if not currently scrolling programmatically
-			if (!isUserScrolling) {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						activeSection = entry.target.id;
-					}
-				});
+	// Mobile navigation state
+	let isMobileNavOpen = false;
+
+	function toggleMobileNav() {
+		isMobileNavOpen = !isMobileNavOpen;
+	}
+
+	// Intersection Observer for tracking active section
+	onMount(() => {
+		let isUserScrolling = false;
+		let scrollTimeout: ReturnType<typeof setTimeout>;
+
+		// Listen for scroll events to detect user scrolling
+		const handleScroll = () => {
+			isUserScrolling = true;
+			if (scrollTimeout) {
+				clearTimeout(scrollTimeout);
 			}
-		},
-		{ threshold: 0.3, rootMargin: "-20% 0px -60% 0px" },
-	);
+			scrollTimeout = setTimeout(() => {
+				isUserScrolling = false;
+			}, 150);
+		};
 
-	const sections = document.querySelectorAll("section[id]");
-	for (const section of sections) {
-		observer.observe(section);
+		window.addEventListener("scroll", handleScroll);
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				// Only update if not currently scrolling programmatically
+				if (!isUserScrolling) {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							activeSection = entry.target.id;
+						}
+					});
+				}
+			},
+			{ threshold: 0.3, rootMargin: "-20% 0px -60% 0px" },
+		);
+
+		const sections = document.querySelectorAll("section[id]");
+		for (const section of sections) {
+			observer.observe(section);
+		}
+
+		return () => {
+			window.removeEventListener("scroll", handleScroll);
+			for (const section of sections) {
+				observer.unobserve(section);
+			}
+			if (scrollTimeout) {
+				clearTimeout(scrollTimeout);
+			}
+		};
+	});
+
+	// Modal helper functions
+	function confirmDeleteLLMToken() {
+		showDeleteLLMTokenConfirm = true;
 	}
 
-	return () => {
-		window.removeEventListener("scroll", handleScroll);
-		for (const section of sections) {
-			observer.unobserve(section);
-		}
-		if (scrollTimeout) {
-			clearTimeout(scrollTimeout);
-		}
-	};
-});
+	function cancelDeleteLLMToken() {
+		showDeleteLLMTokenConfirm = false;
+	}
 
-// Modal helper functions
-function confirmDeleteLLMToken() {
-	showDeleteLLMTokenConfirm = true;
-}
+	function handleDeleteLLMToken() {
+		showDeleteLLMTokenConfirm = false;
+		// Submit the delete form
+		const form = document.createElement("form");
+		form.method = "POST";
+		form.action = "?/deleteLLMKey";
 
-function cancelDeleteLLMToken() {
-	showDeleteLLMTokenConfirm = false;
-}
+		const input = document.createElement("input");
+		input.type = "hidden";
+		input.name = "llmProvider";
+		input.value = "1";
+		form.appendChild(input);
 
-function handleDeleteLLMToken() {
-	showDeleteLLMTokenConfirm = false;
-	// Submit the delete form
-	const form = document.createElement("form");
-	form.method = "POST";
-	form.action = "?/deleteLLMKey";
+		document.body.appendChild(form);
+		deleteLLMKeyLoading = true;
+		form.submit();
+	}
 
-	const input = document.createElement("input");
-	input.type = "hidden";
-	input.name = "llmProvider";
-	input.value = "1";
-	form.appendChild(input);
+	function confirmDeleteAccount() {
+		showDeleteAccountConfirm = true;
+	}
 
-	document.body.appendChild(form);
-	deleteLLMKeyLoading = true;
-	form.submit();
-}
+	function cancelDeleteAccount() {
+		showDeleteAccountConfirm = false;
+	}
 
-function confirmDeleteAccount() {
-	showDeleteAccountConfirm = true;
-}
+	function handleDeleteAccount() {
+		showDeleteAccountConfirm = false;
+		// Submit the delete form
+		const form = document.createElement("form");
+		form.method = "POST";
+		form.action = "?/deleteAccount";
 
-function cancelDeleteAccount() {
-	showDeleteAccountConfirm = false;
-}
-
-function handleDeleteAccount() {
-	showDeleteAccountConfirm = false;
-	// Submit the delete form
-	const form = document.createElement("form");
-	form.method = "POST";
-	form.action = "?/deleteAccount";
-
-	document.body.appendChild(form);
-	deleteAccountLoading = true;
-	form.submit();
-}
+		document.body.appendChild(form);
+		deleteAccountLoading = true;
+		form.submit();
+	}
 </script>
 
 <svelte:head>

@@ -1,18 +1,18 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { enhance } from "$app/forms";
-import { dev } from "$app/environment";
-import Button from "../atoms/Button.svelte";
-import LanguageSelector from "../atoms/LanguageSelector.svelte";
-import DarkModeToggle from "../atoms/DarkModeToggle.svelte";
-import BudouXToggle from "../atoms/BudouXToggle.svelte";
+	import { _ } from "svelte-i18n";
+	import { enhance } from "$app/forms";
+	import { dev } from "$app/environment";
+	import Button from "../atoms/Button.svelte";
+	import LanguageSelector from "../atoms/LanguageSelector.svelte";
+	import DarkModeToggle from "../atoms/DarkModeToggle.svelte";
+	import BudouXToggle from "../atoms/BudouXToggle.svelte";
 
-export let isAuthenticated = false;
-export let isAuthPage = false;
+	export let isAuthenticated = false;
+	export let isAuthPage = false;
 
-const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
-const currentMonth = currentDate.getMonth() + 1;
+	const currentDate = new Date();
+	const currentYear = currentDate.getFullYear();
+	const currentMonth = currentDate.getMonth() + 1;
 </script>
 
 {#if isAuthenticated && !isAuthPage}

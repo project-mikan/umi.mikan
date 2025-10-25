@@ -1,15 +1,15 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+	import { _ } from "svelte-i18n";
+	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 
-export let calendarDays: (number | null)[];
-export let entryMap: Map<number, DiaryEntry>;
-export let weekDays: string[];
-export let onNavigateToEntry: (day: number) => void;
+	export let calendarDays: (number | null)[];
+	export let entryMap: Map<number, DiaryEntry>;
+	export let weekDays: string[];
+	export let onNavigateToEntry: (day: number) => void;
 
-function formatContentWithLineBreaks(content: string): string {
-	return content.replace(/\n/g, "<br>");
-}
+	function formatContentWithLineBreaks(content: string): string {
+		return content.replace(/\n/g, "<br>");
+	}
 </script>
 
 <div class="bg-white dark:bg-gray-800 shadow dark:shadow-gray-900/20 rounded-lg overflow-hidden">

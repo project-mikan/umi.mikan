@@ -1,139 +1,139 @@
 <script lang="ts">
-import { _, locale } from "svelte-i18n";
-import { browser } from "$app/environment";
-import { onMount } from "svelte";
-import { authenticatedFetch } from "$lib/auth-client";
-import { summaryVisibility } from "$lib/summary-visibility-store";
-import "$lib/i18n";
+	import { _, locale } from "svelte-i18n";
+	import { browser } from "$app/environment";
+	import { onMount } from "svelte";
+	import { authenticatedFetch } from "$lib/auth-client";
+	import { summaryVisibility } from "$lib/summary-visibility-store";
+	import "$lib/i18n";
 
-interface LatestTrendData {
-	overallSummary: string;
-	healthMood: string;
-	activities: string;
-	concerns: string;
-	periodStart: string;
-	periodEnd: string;
-	generatedAt: string;
-}
+	interface LatestTrendData {
+		overallSummary: string;
+		healthMood: string;
+		activities: string;
+		concerns: string;
+		periodStart: string;
+		periodEnd: string;
+		generatedAt: string;
+	}
 
-export let userName: string | null = null;
+	export let userName: string | null = null;
 
-let trendData: LatestTrendData | null = null;
-let isLoading = true;
-let errorMessage = "";
+	let trendData: LatestTrendData | null = null;
+	let isLoading = true;
+	let errorMessage = "";
 
-// ストアから表示状態を取得
-$: showTrend = $summaryVisibility.latestTrend;
+	// ストアから表示状態を取得
+	$: showTrend = $summaryVisibility.latestTrend;
 
-function toggleTrend() {
-	summaryVisibility.toggleLatestTrend();
-}
+	function toggleTrend() {
+		summaryVisibility.toggleLatestTrend();
+	}
 
-// トレンド分析データを取得
-async function fetchLatestTrend(retryCount = 0) {
-	if (!browser) return;
+	// トレンド分析データを取得
+	async function fetchLatestTrend(retryCount = 0) {
+		if (!browser) return;
 
-	isLoading = true;
-	errorMessage = "";
+		isLoading = true;
+		errorMessage = "";
 
-	try {
-		const response = await authenticatedFetch("/api/diary/latest-trend");
-		if (response.ok) {
-			const result = await response.json();
+		try {
+			const response = await authenticatedFetch("/api/diary/latest-trend");
+			if (response.ok) {
+				const result = await response.json();
 
-			// データのバリデーション
-			if (
-				result.overallSummary &&
-				typeof result.overallSummary === "string" &&
-				result.healthMood &&
-				typeof result.healthMood === "string" &&
-				result.activities &&
-				typeof result.activities === "string" &&
-				result.concerns &&
-				typeof result.concerns === "string" &&
-				result.periodStart &&
-				result.periodEnd &&
-				result.generatedAt
-			) {
-				// 日付の妥当性チェック
-				const startDate = new Date(result.periodStart);
-				const endDate = new Date(result.periodEnd);
-				const generatedDate = new Date(result.generatedAt);
-
+				// データのバリデーション
 				if (
-					!Number.isNaN(startDate.getTime()) &&
-					!Number.isNaN(endDate.getTime()) &&
-					!Number.isNaN(generatedDate.getTime())
+					result.overallSummary &&
+					typeof result.overallSummary === "string" &&
+					result.healthMood &&
+					typeof result.healthMood === "string" &&
+					result.activities &&
+					typeof result.activities === "string" &&
+					result.concerns &&
+					typeof result.concerns === "string" &&
+					result.periodStart &&
+					result.periodEnd &&
+					result.generatedAt
 				) {
-					trendData = {
-						overallSummary: result.overallSummary,
-						healthMood: result.healthMood,
-						activities: result.activities,
-						concerns: result.concerns,
-						periodStart: result.periodStart,
-						periodEnd: result.periodEnd,
-						generatedAt: result.generatedAt,
-					};
+					// 日付の妥当性チェック
+					const startDate = new Date(result.periodStart);
+					const endDate = new Date(result.periodEnd);
+					const generatedDate = new Date(result.generatedAt);
+
+					if (
+						!Number.isNaN(startDate.getTime()) &&
+						!Number.isNaN(endDate.getTime()) &&
+						!Number.isNaN(generatedDate.getTime())
+					) {
+						trendData = {
+							overallSummary: result.overallSummary,
+							healthMood: result.healthMood,
+							activities: result.activities,
+							concerns: result.concerns,
+							periodStart: result.periodStart,
+							periodEnd: result.periodEnd,
+							generatedAt: result.generatedAt,
+						};
+					} else {
+						// 日付が不正な場合
+						console.warn("Invalid date format in latest trend data");
+						trendData = null;
+					}
 				} else {
-					// 日付が不正な場合
-					console.warn("Invalid date format in latest trend data");
+					// データが空または不正な場合はnullにする
 					trendData = null;
 				}
-			} else {
-				// データが空または不正な場合はnullにする
+			} else if (response.status === 404) {
+				// 404の場合はデータが存在しない
 				trendData = null;
+			} else if (response.status >= 500 && retryCount < 2) {
+				// サーバーエラーの場合は最大2回リトライ
+				console.warn(`Server error, retrying... (${retryCount + 1}/2)`);
+				setTimeout(
+					() => fetchLatestTrend(retryCount + 1),
+					1000 * (retryCount + 1),
+				);
+				return;
+			} else {
+				errorMessage = $_("latestTrend.error");
 			}
-		} else if (response.status === 404) {
-			// 404の場合はデータが存在しない
-			trendData = null;
-		} else if (response.status >= 500 && retryCount < 2) {
-			// サーバーエラーの場合は最大2回リトライ
-			console.warn(`Server error, retrying... (${retryCount + 1}/2)`);
-			setTimeout(
-				() => fetchLatestTrend(retryCount + 1),
-				1000 * (retryCount + 1),
-			);
-			return;
-		} else {
+		} catch (error) {
+			console.error("Failed to fetch latest trend:", error);
+			if (retryCount < 2) {
+				// ネットワークエラーの場合も最大2回リトライ
+				console.warn(`Network error, retrying... (${retryCount + 1}/2)`);
+				setTimeout(
+					() => fetchLatestTrend(retryCount + 1),
+					1000 * (retryCount + 1),
+				);
+				return;
+			}
 			errorMessage = $_("latestTrend.error");
+		} finally {
+			isLoading = false;
 		}
-	} catch (error) {
-		console.error("Failed to fetch latest trend:", error);
-		if (retryCount < 2) {
-			// ネットワークエラーの場合も最大2回リトライ
-			console.warn(`Network error, retrying... (${retryCount + 1}/2)`);
-			setTimeout(
-				() => fetchLatestTrend(retryCount + 1),
-				1000 * (retryCount + 1),
-			);
-			return;
+	}
+
+	// 期間の日本語表示を生成
+	function formatPeriod(start: string, end: string): string {
+		if (!start || !end) return "";
+
+		const startDate = new Date(start);
+		const endDate = new Date(end);
+
+		if ($locale === "ja") {
+			const startStr = `${startDate.getFullYear()}年${startDate.getMonth() + 1}月${startDate.getDate()}日`;
+			const endStr = `${endDate.getFullYear()}年${endDate.getMonth() + 1}月${endDate.getDate()}日`;
+			return `${startStr} 〜 ${endStr}`;
+		} else {
+			return `${startDate.toLocaleDateString($locale || "en")} - ${endDate.toLocaleDateString($locale || "en")}`;
 		}
-		errorMessage = $_("latestTrend.error");
-	} finally {
-		isLoading = false;
 	}
-}
 
-// 期間の日本語表示を生成
-function formatPeriod(start: string, end: string): string {
-	if (!start || !end) return "";
-
-	const startDate = new Date(start);
-	const endDate = new Date(end);
-
-	if ($locale === "ja") {
-		const startStr = `${startDate.getFullYear()}年${startDate.getMonth() + 1}月${startDate.getDate()}日`;
-		const endStr = `${endDate.getFullYear()}年${endDate.getMonth() + 1}月${endDate.getDate()}日`;
-		return `${startStr} 〜 ${endStr}`;
-	} else {
-		return `${startDate.toLocaleDateString($locale || "en")} - ${endDate.toLocaleDateString($locale || "en")}`;
-	}
-}
-
-onMount(() => {
-	// summaryVisibility.init()は+layout.svelteで既に呼ばれているため不要
-	fetchLatestTrend();
-});
+	onMount(() => {
+		// summaryVisibility.init()は+layout.svelteで既に呼ばれているため不要
+		fetchLatestTrend();
+	});
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">

@@ -1,52 +1,52 @@
 <script lang="ts">
-import { onMount } from "svelte";
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
-let pwaInfo: unknown = null;
+	import { onMount } from "svelte";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
+	let pwaInfo: unknown = null;
 
-let showUpdatePrompt = false;
-let updateServiceWorker: (() => Promise<void>) | null = null;
+	let showUpdatePrompt = false;
+	let updateServiceWorker: (() => Promise<void>) | null = null;
 
-onMount(async () => {
-	try {
-		// @ts-expect-error
-		const pwaModule = await import("virtual:pwa-info");
-		pwaInfo = pwaModule.pwaInfo;
-
-		if (pwaInfo) {
-			// @ts-expect-error
-			const { registerSW } = await import("virtual:pwa-register");
-
-			updateServiceWorker = registerSW({
-				immediate: true,
-				onNeedRefresh() {
-					showUpdatePrompt = true;
-				},
-				onOfflineReady() {
-					// PWA is ready for offline use
-				},
-			});
-		}
-	} catch (error) {
-		// PWA modules not available - this is expected in development
-	}
-});
-
-const handleUpdate = async () => {
-	if (updateServiceWorker) {
+	onMount(async () => {
 		try {
-			await updateServiceWorker();
-			showUpdatePrompt = false;
-			window.location.reload();
-		} catch (error) {
-			console.error("Failed to update service worker:", error);
-		}
-	}
-};
+			// @ts-expect-error
+			const pwaModule = await import("virtual:pwa-info");
+			pwaInfo = pwaModule.pwaInfo;
 
-const handleDismiss = () => {
-	showUpdatePrompt = false;
-};
+			if (pwaInfo) {
+				// @ts-expect-error
+				const { registerSW } = await import("virtual:pwa-register");
+
+				updateServiceWorker = registerSW({
+					immediate: true,
+					onNeedRefresh() {
+						showUpdatePrompt = true;
+					},
+					onOfflineReady() {
+						// PWA is ready for offline use
+					},
+				});
+			}
+		} catch (error) {
+			// PWA modules not available - this is expected in development
+		}
+	});
+
+	const handleUpdate = async () => {
+		if (updateServiceWorker) {
+			try {
+				await updateServiceWorker();
+				showUpdatePrompt = false;
+				window.location.reload();
+			} catch (error) {
+				console.error("Failed to update service worker:", error);
+			}
+		}
+	};
+
+	const handleDismiss = () => {
+		showUpdatePrompt = false;
+	};
 </script>
 
 {#if showUpdatePrompt}

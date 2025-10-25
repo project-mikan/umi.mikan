@@ -1,45 +1,45 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
-import { authenticatedFetch } from "$lib/auth-client";
-import Head from "$lib/components/atoms/Head.svelte";
-import Card from "$lib/components/atoms/Card.svelte";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
+	import { authenticatedFetch } from "$lib/auth-client";
+	import Head from "$lib/components/atoms/Head.svelte";
+	import Card from "$lib/components/atoms/Card.svelte";
 
-let isTriggering = false;
-let message = "";
-let messageType: "success" | "error" | "" = "";
+	let isTriggering = false;
+	let message = "";
+	let messageType: "success" | "error" | "" = "";
 
-// トレンド分析を手動トリガー
-async function triggerLatestTrend() {
-	isTriggering = true;
-	message = "";
-	messageType = "";
+	// トレンド分析を手動トリガー
+	async function triggerLatestTrend() {
+		isTriggering = true;
+		message = "";
+		messageType = "";
 
-	try {
-		const response = await authenticatedFetch(
-			"/api/diary/trigger-latest-trend",
-			{
-				method: "POST",
-			},
-		);
+		try {
+			const response = await authenticatedFetch(
+				"/api/diary/trigger-latest-trend",
+				{
+					method: "POST",
+				},
+			);
 
-		if (response.ok) {
-			const result = await response.json();
-			message = result.message || $_("debug.latestTrend.successMessage");
-			messageType = "success";
-		} else {
-			const errorData = await response.json().catch(() => ({}));
-			message = errorData.message || $_("debug.latestTrend.errorMessage");
+			if (response.ok) {
+				const result = await response.json();
+				message = result.message || $_("debug.latestTrend.successMessage");
+				messageType = "success";
+			} else {
+				const errorData = await response.json().catch(() => ({}));
+				message = errorData.message || $_("debug.latestTrend.errorMessage");
+				messageType = "error";
+			}
+		} catch (error) {
+			console.error("Failed to trigger latest trend:", error);
+			message = $_("debug.latestTrend.errorMessage");
 			messageType = "error";
+		} finally {
+			isTriggering = false;
 		}
-	} catch (error) {
-		console.error("Failed to trigger latest trend:", error);
-		message = $_("debug.latestTrend.errorMessage");
-		messageType = "error";
-	} finally {
-		isTriggering = false;
 	}
-}
 </script>
 
 <Head title="Debug - umi.mikan" />

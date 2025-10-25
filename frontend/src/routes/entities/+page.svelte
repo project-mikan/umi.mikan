@@ -1,32 +1,32 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { goto } from "$app/navigation";
-import "$lib/i18n";
-import { EntityCategory } from "$lib/grpc/entity/entity_pb";
-import type { PageData } from "./$types";
+	import { _ } from "svelte-i18n";
+	import { goto } from "$app/navigation";
+	import "$lib/i18n";
+	import { EntityCategory } from "$lib/grpc/entity/entity_pb";
+	import type { PageData } from "./$types";
 
-export let data: PageData;
+	export let data: PageData;
 
-/**
- * カテゴリ名を表示用に変換
- */
-function getCategoryLabel(category: EntityCategory): string {
-	switch (category) {
-		case EntityCategory.PEOPLE:
-			return $_("entity.list.category.people");
-		case EntityCategory.NO_CATEGORY:
-			return $_("entity.list.category.noCategory");
-		default:
-			return $_("entity.list.category.noCategory");
+	/**
+	 * カテゴリ名を表示用に変換
+	 */
+	function getCategoryLabel(category: EntityCategory): string {
+		switch (category) {
+			case EntityCategory.PEOPLE:
+				return $_("entity.list.category.people");
+			case EntityCategory.NO_CATEGORY:
+				return $_("entity.list.category.noCategory");
+			default:
+				return $_("entity.list.category.noCategory");
+		}
 	}
-}
 
-/**
- * エンティティ詳細ページへ遷移
- */
-function viewEntity(id: string): void {
-	goto(`/entity/${id}`);
-}
+	/**
+	 * エンティティ詳細ページへ遷移
+	 */
+	function viewEntity(id: string): void {
+		goto(`/entity/${id}`);
+	}
 </script>
 
 <svelte:head>

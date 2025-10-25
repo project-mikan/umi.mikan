@@ -1,53 +1,53 @@
 <script lang="ts">
-import { browser } from "$app/environment";
-import { onMount } from "svelte";
+	import { browser } from "$app/environment";
+	import { onMount } from "svelte";
 
-let isDarkMode = false;
+	let isDarkMode = false;
 
-// Initialize dark mode from localStorage or system preference
-onMount(() => {
-	if (browser) {
-		const stored = localStorage.getItem("darkMode");
-		if (stored !== null) {
-			isDarkMode = stored === "true";
-		} else {
-			// Use system preference
-			const systemDark = window.matchMedia(
-				"(prefers-color-scheme: dark)",
-			).matches;
-			isDarkMode = systemDark;
+	// Initialize dark mode from localStorage or system preference
+	onMount(() => {
+		if (browser) {
+			const stored = localStorage.getItem("darkMode");
+			if (stored !== null) {
+				isDarkMode = stored === "true";
+			} else {
+				// Use system preference
+				const systemDark = window.matchMedia(
+					"(prefers-color-scheme: dark)",
+				).matches;
+				isDarkMode = systemDark;
+			}
+			applyDarkMode();
+
+			// Listen to system color scheme changes
+			const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+			mediaQuery.addEventListener("change", (e) => {
+				// Only apply system preference if user hasn't set a manual preference
+				if (localStorage.getItem("darkMode") === null) {
+					isDarkMode = e.matches;
+					applyDarkMode();
+				}
+			});
+		}
+	});
+
+	function toggleDarkMode() {
+		isDarkMode = !isDarkMode;
+		if (browser) {
+			localStorage.setItem("darkMode", isDarkMode.toString());
 		}
 		applyDarkMode();
+	}
 
-		// Listen to system color scheme changes
-		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-		mediaQuery.addEventListener("change", (e) => {
-			// Only apply system preference if user hasn't set a manual preference
-			if (localStorage.getItem("darkMode") === null) {
-				isDarkMode = e.matches;
-				applyDarkMode();
+	function applyDarkMode() {
+		if (browser) {
+			if (isDarkMode) {
+				document.documentElement.classList.add("dark");
+			} else {
+				document.documentElement.classList.remove("dark");
 			}
-		});
-	}
-});
-
-function toggleDarkMode() {
-	isDarkMode = !isDarkMode;
-	if (browser) {
-		localStorage.setItem("darkMode", isDarkMode.toString());
-	}
-	applyDarkMode();
-}
-
-function applyDarkMode() {
-	if (browser) {
-		if (isDarkMode) {
-			document.documentElement.classList.add("dark");
-		} else {
-			document.documentElement.classList.remove("dark");
 		}
 	}
-}
 </script>
 
 <button

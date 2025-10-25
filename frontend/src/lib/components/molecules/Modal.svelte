@@ -1,42 +1,42 @@
 <script lang="ts">
-import Button from "../atoms/Button.svelte";
-import BaseModal from "./BaseModal.svelte";
+	import Button from "../atoms/Button.svelte";
+	import BaseModal from "./BaseModal.svelte";
 
-export let isOpen = false;
-export let title: string;
-export let confirmText: string;
-export let cancelText: string;
-export let variant: "danger" | "primary" = "primary";
-export let onConfirm: (() => void) | null = null;
-export let onCancel: (() => void) | null = null;
+	export let isOpen = false;
+	export let title: string;
+	export let confirmText: string;
+	export let cancelText: string;
+	export let variant: "danger" | "primary" = "primary";
+	export let onConfirm: (() => void) | null = null;
+	export let onCancel: (() => void) | null = null;
 
-const _iconPaths = {
-	danger:
-		"M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z",
-	primary: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-};
+	const _iconPaths = {
+		danger:
+			"M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z",
+		primary: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+	};
 
-const _iconColors = {
-	danger: "text-red-600",
-	primary: "text-blue-600",
-};
+	const _iconColors = {
+		danger: "text-red-600",
+		primary: "text-blue-600",
+	};
 
-const _iconBackgrounds = {
-	danger: "bg-red-100",
-	primary: "bg-blue-100",
-};
+	const _iconBackgrounds = {
+		danger: "bg-red-100",
+		primary: "bg-blue-100",
+	};
 
-function _handleConfirm() {
-	if (onConfirm) {
-		onConfirm();
+	function _handleConfirm() {
+		if (onConfirm) {
+			onConfirm();
+		}
 	}
-}
 
-function _handleCancel() {
-	if (onCancel) {
-		onCancel();
+	function _handleCancel() {
+		if (onCancel) {
+			onCancel();
+		}
 	}
-}
 </script>
 
 <BaseModal {isOpen} onBackdropClick={_handleCancel}>

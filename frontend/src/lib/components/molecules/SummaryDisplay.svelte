@@ -1,425 +1,425 @@
 <script lang="ts">
-import { _, locale } from "svelte-i18n";
-import { browser } from "$app/environment";
-import { onMount, onDestroy, createEventDispatcher } from "svelte";
-import { authenticatedFetch } from "$lib/auth-client";
-import { summaryVisibility } from "$lib/summary-visibility-store";
-import "$lib/i18n";
+	import { _, locale } from "svelte-i18n";
+	import { browser } from "$app/environment";
+	import { onMount, onDestroy, createEventDispatcher } from "svelte";
+	import { authenticatedFetch } from "$lib/auth-client";
+	import { summaryVisibility } from "$lib/summary-visibility-store";
+	import "$lib/i18n";
 
-interface Summary {
-	id: string;
-	summary: string;
-	createdAt: number;
-	updatedAt: number;
-}
+	interface Summary {
+		id: string;
+		summary: string;
+		createdAt: number;
+		updatedAt: number;
+	}
 
-export let type: "daily" | "monthly"; // 日次または月次
-export let summary: Summary | null = null;
-export let fetchUrl: string; // 要約取得用URL
-export let generateUrl: string; // 要約生成用URL
-export let generatePayload: Record<string, unknown> = {}; // 生成時に送信するペイロード
-export let isDisabled = false; // 生成ボタンを無効にするかどうか
-export let disabledMessage = ""; // 無効時のメッセージ
-export let hasLLMKey = true;
-export let isGenerating = false; // 親コンポーネントから生成状況を受け取る
-export let isSummaryOutdated = false; // 要約が古いかどうか
+	export let type: "daily" | "monthly"; // 日次または月次
+	export let summary: Summary | null = null;
+	export let fetchUrl: string; // 要約取得用URL
+	export let generateUrl: string; // 要約生成用URL
+	export let generatePayload: Record<string, unknown> = {}; // 生成時に送信するペイロード
+	export let isDisabled = false; // 生成ボタンを無効にするかどうか
+	export let disabledMessage = ""; // 無効時のメッセージ
+	export let hasLLMKey = true;
+	export let isGenerating = false; // 親コンポーネントから生成状況を受け取る
+	export let isSummaryOutdated = false; // 要約が古いかどうか
 
-// ストアから表示状態を取得
-$: showSummary =
-	type === "daily" ? $summaryVisibility.daily : $summaryVisibility.monthly;
+	// ストアから表示状態を取得
+	$: showSummary =
+		type === "daily" ? $summaryVisibility.daily : $summaryVisibility.monthly;
 
-const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher();
 
-let summaryStatus: "none" | "queued" | "processing" | "completed" = summary
-	? "completed"
-	: "none";
-let summaryGenerating = false;
-let isRegenerating = false; // 再生成かどうかのフラグ
-let pollingInterval: ReturnType<typeof setInterval> | null = null;
-let summaryJustUpdated = false;
+	let summaryStatus: "none" | "queued" | "processing" | "completed" = summary
+		? "completed"
+		: "none";
+	let summaryGenerating = false;
+	let isRegenerating = false; // 再生成かどうかのフラグ
+	let pollingInterval: ReturnType<typeof setInterval> | null = null;
+	let summaryJustUpdated = false;
 
-// ポーリング機能
-async function pollSummaryStatus(_isUpdate = false) {
-	if (!browser) return;
-	try {
-		const response = await authenticatedFetch(fetchUrl);
-		if (response.ok) {
-			const result = await response.json();
-			if (result.summary) {
-				const summaryText = result.summary.summary;
+	// ポーリング機能
+	async function pollSummaryStatus(_isUpdate = false) {
+		if (!browser) return;
+		try {
+			const response = await authenticatedFetch(fetchUrl);
+			if (response.ok) {
+				const result = await response.json();
+				if (result.summary) {
+					const summaryText = result.summary.summary;
 
-				// ステータスメッセージのチェック（まだ生成中かどうか判定）
-				if (
-					summaryText.includes("queued") ||
-					summaryText.includes("Please check back later") ||
-					summaryText.includes("generation has been queued") ||
-					summaryText.includes("generation is queued")
-				) {
-					// まだキューイング中
-					summaryStatus = "queued";
-					// "(Updating)"が含まれている場合のみ再生成として判定
-					if (!isRegenerating) {
-						isRegenerating = summaryText.includes("Updating");
-					}
-					// ポーリング継続
-				} else if (
-					summaryText.includes("processing") ||
-					summaryText.includes("Updating") ||
-					summaryText.includes("generating") ||
-					summaryText.includes("generation is processing")
-				) {
-					// まだ処理中
-					summaryStatus = "processing";
-					// "(Updating)" が含まれている場合のみ再生成として判定
-					if (!isRegenerating) {
-						isRegenerating = summaryText.includes("Updating");
-					}
+					// ステータスメッセージのチェック（まだ生成中かどうか判定）
+					if (
+						summaryText.includes("queued") ||
+						summaryText.includes("Please check back later") ||
+						summaryText.includes("generation has been queued") ||
+						summaryText.includes("generation is queued")
+					) {
+						// まだキューイング中
+						summaryStatus = "queued";
+						// "(Updating)"が含まれている場合のみ再生成として判定
+						if (!isRegenerating) {
+							isRegenerating = summaryText.includes("Updating");
+						}
+						// ポーリング継続
+					} else if (
+						summaryText.includes("processing") ||
+						summaryText.includes("Updating") ||
+						summaryText.includes("generating") ||
+						summaryText.includes("generation is processing")
+					) {
+						// まだ処理中
+						summaryStatus = "processing";
+						// "(Updating)" が含まれている場合のみ再生成として判定
+						if (!isRegenerating) {
+							isRegenerating = summaryText.includes("Updating");
+						}
 
-					// "(Updating)"が含まれている場合、元のまとめ内容を保持して処理中状態にする
-					if (summaryText.includes("(Updating)")) {
-						const cleanedSummary = {
-							...result.summary,
-							summary: summaryText.replace(/\s*\(Updating\)$/, ""),
-						};
-						summary = cleanedSummary;
-					}
-
-					// ポーリング継続
-				} else {
-					// 正常な要約が完成した
-					const newSummary = result.summary;
-					const oldSummary = summary;
-
-					// 要約が実際に更新されたかどうかを確認
-					// ポーリング時は初回取得(!oldSummary)をアニメーション対象外とする
-					const actuallyUpdated =
-						oldSummary &&
-						(oldSummary.updatedAt !== newSummary.updatedAt ||
-							oldSummary.summary !== newSummary.summary);
-
-					// 実際に更新された場合、または初回取得の場合のみsummaryを更新
-					if (actuallyUpdated || !summary) {
-						// "(Updating)"が含まれている場合は除去して元のまとめ内容を復元
-						let cleanedSummary = newSummary;
-						if (newSummary.summary.includes("(Updating)")) {
-							cleanedSummary = {
-								...newSummary,
-								summary: newSummary.summary.replace(/\s*\(Updating\)$/, ""),
+						// "(Updating)"が含まれている場合、元のまとめ内容を保持して処理中状態にする
+						if (summaryText.includes("(Updating)")) {
+							const cleanedSummary = {
+								...result.summary,
+								summary: summaryText.replace(/\s*\(Updating\)$/, ""),
 							};
+							summary = cleanedSummary;
 						}
 
-						summary = cleanedSummary;
-						summaryStatus = "completed";
-						summaryGenerating = false; // ポーリング完了時にローディング終了
-						clearPolling();
-
-						// 実際に更新された場合で、かつ再生成中の場合のみアニメーションを発火
-						if (actuallyUpdated && isRegenerating) {
-							triggerSummaryUpdateAnimation();
-						}
-						isRegenerating = false;
-
-						// 実際に更新された場合のみイベントを発火
-						if (actuallyUpdated) {
-							dispatch("summaryUpdated", { summary: cleanedSummary });
-						}
-						dispatch("generationCompleted");
+						// ポーリング継続
 					} else {
-						// 同じ内容の場合はポーリング継続
+						// 正常な要約が完成した
+						const newSummary = result.summary;
+						const oldSummary = summary;
+
+						// 要約が実際に更新されたかどうかを確認
+						// ポーリング時は初回取得(!oldSummary)をアニメーション対象外とする
+						const actuallyUpdated =
+							oldSummary &&
+							(oldSummary.updatedAt !== newSummary.updatedAt ||
+								oldSummary.summary !== newSummary.summary);
+
+						// 実際に更新された場合、または初回取得の場合のみsummaryを更新
+						if (actuallyUpdated || !summary) {
+							// "(Updating)"が含まれている場合は除去して元のまとめ内容を復元
+							let cleanedSummary = newSummary;
+							if (newSummary.summary.includes("(Updating)")) {
+								cleanedSummary = {
+									...newSummary,
+									summary: newSummary.summary.replace(/\s*\(Updating\)$/, ""),
+								};
+							}
+
+							summary = cleanedSummary;
+							summaryStatus = "completed";
+							summaryGenerating = false; // ポーリング完了時にローディング終了
+							clearPolling();
+
+							// 実際に更新された場合で、かつ再生成中の場合のみアニメーションを発火
+							if (actuallyUpdated && isRegenerating) {
+								triggerSummaryUpdateAnimation();
+							}
+							isRegenerating = false;
+
+							// 実際に更新された場合のみイベントを発火
+							if (actuallyUpdated) {
+								dispatch("summaryUpdated", { summary: cleanedSummary });
+							}
+							dispatch("generationCompleted");
+						} else {
+							// 同じ内容の場合はポーリング継続
+						}
 					}
 				}
 			}
+		} catch (error) {
+			console.error("Failed to poll summary status:", error);
 		}
-	} catch (error) {
-		console.error("Failed to poll summary status:", error);
 	}
-}
 
-function clearPolling() {
-	if (pollingInterval) {
-		clearInterval(pollingInterval);
-		pollingInterval = null;
+	function clearPolling() {
+		if (pollingInterval) {
+			clearInterval(pollingInterval);
+			pollingInterval = null;
+		}
 	}
-}
 
-// 要約更新時のアニメーション
-function triggerSummaryUpdateAnimation() {
-	summaryJustUpdated = true;
-	setTimeout(() => {
-		summaryJustUpdated = false;
-	}, 1500);
-}
+	// 要約更新時のアニメーション
+	function triggerSummaryUpdateAnimation() {
+		summaryJustUpdated = true;
+		setTimeout(() => {
+			summaryJustUpdated = false;
+		}, 1500);
+	}
 
-// 要約生成
-async function generateSummary() {
-	if (summaryGenerating || isDisabled) return;
+	// 要約生成
+	async function generateSummary() {
+		if (summaryGenerating || isDisabled) return;
 
-	isRegenerating = summary !== null; // 既に要約がある場合は再生成
-	summaryGenerating = true;
-	summaryStatus = "queued";
+		isRegenerating = summary !== null; // 既に要約がある場合は再生成
+		summaryGenerating = true;
+		summaryStatus = "queued";
 
-	// 生成開始をイベントで通知
-	dispatch("generationStarted");
+		// 生成開始をイベントで通知
+		dispatch("generationStarted");
 
-	try {
-		const response = await authenticatedFetch(generateUrl, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(generatePayload),
-		});
+		try {
+			const response = await authenticatedFetch(generateUrl, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(generatePayload),
+			});
 
-		if (response.ok) {
-			const result = await response.json();
-			if (result.summary?.summary) {
-				const summaryText = result.summary.summary;
+			if (response.ok) {
+				const result = await response.json();
+				if (result.summary?.summary) {
+					const summaryText = result.summary.summary;
 
-				// ステータスメッセージのチェック（要約として不完全な場合）
-				if (
-					summaryText.includes("queued") ||
-					summaryText.includes("Please check back later") ||
-					summaryText.includes("generation has been queued") ||
-					summaryText.includes("generation is queued")
-				) {
+					// ステータスメッセージのチェック（要約として不完全な場合）
+					if (
+						summaryText.includes("queued") ||
+						summaryText.includes("Please check back later") ||
+						summaryText.includes("generation has been queued") ||
+						summaryText.includes("generation is queued")
+					) {
+						summaryStatus = "queued";
+						startPolling(true);
+					} else if (
+						summaryText.includes("processing") ||
+						summaryText.includes("Updating") ||
+						summaryText.includes("generating") ||
+						summaryText.includes("generation is processing")
+					) {
+						summaryStatus = "processing";
+						startPolling(true);
+					} else {
+						// 正常な要約が完成
+						const newSummary = result.summary;
+						const oldSummary = summary;
+
+						// 要約が実際に更新されたかどうかを確認
+						// 要約生成時も初回取得(!oldSummary)を更新対象外とする
+						const actuallyUpdated =
+							oldSummary &&
+							(oldSummary.updatedAt !== newSummary.updatedAt ||
+								oldSummary.summary !== newSummary.summary);
+
+						// 実際に更新された場合、または初回取得の場合のみsummaryを更新
+						if (actuallyUpdated || !summary) {
+							// "(Updating)"が含まれている場合は除去して元のまとめ内容を復元
+							let cleanedSummary = newSummary;
+							if (newSummary.summary.includes("(Updating)")) {
+								cleanedSummary = {
+									...newSummary,
+									summary: newSummary.summary.replace(/\s*\(Updating\)$/, ""),
+								};
+							}
+
+							summary = cleanedSummary;
+							summaryStatus = "completed";
+							summaryGenerating = false;
+							isRegenerating = false;
+
+							// 実際に更新された場合のみイベントを発火
+							if (actuallyUpdated) {
+								dispatch("summaryUpdated", { summary: cleanedSummary });
+							}
+							dispatch("generationCompleted");
+						} else {
+							// 同じ内容の場合は状態を変更せずにポーリング継続
+							// 実際の新しい要約が生成されるまで待機
+						}
+					}
+				} else {
 					summaryStatus = "queued";
 					startPolling(true);
-				} else if (
-					summaryText.includes("processing") ||
-					summaryText.includes("Updating") ||
-					summaryText.includes("generating") ||
-					summaryText.includes("generation is processing")
-				) {
-					summaryStatus = "processing";
-					startPolling(true);
-				} else {
-					// 正常な要約が完成
-					const newSummary = result.summary;
-					const oldSummary = summary;
-
-					// 要約が実際に更新されたかどうかを確認
-					// 要約生成時も初回取得(!oldSummary)を更新対象外とする
-					const actuallyUpdated =
-						oldSummary &&
-						(oldSummary.updatedAt !== newSummary.updatedAt ||
-							oldSummary.summary !== newSummary.summary);
-
-					// 実際に更新された場合、または初回取得の場合のみsummaryを更新
-					if (actuallyUpdated || !summary) {
-						// "(Updating)"が含まれている場合は除去して元のまとめ内容を復元
-						let cleanedSummary = newSummary;
-						if (newSummary.summary.includes("(Updating)")) {
-							cleanedSummary = {
-								...newSummary,
-								summary: newSummary.summary.replace(/\s*\(Updating\)$/, ""),
-							};
-						}
-
-						summary = cleanedSummary;
-						summaryStatus = "completed";
-						summaryGenerating = false;
-						isRegenerating = false;
-
-						// 実際に更新された場合のみイベントを発火
-						if (actuallyUpdated) {
-							dispatch("summaryUpdated", { summary: cleanedSummary });
-						}
-						dispatch("generationCompleted");
-					} else {
-						// 同じ内容の場合は状態を変更せずにポーリング継続
-						// 実際の新しい要約が生成されるまで待機
-					}
 				}
 			} else {
-				summaryStatus = "queued";
-				startPolling(true);
+				const errorData = await response.json().catch(() => ({}));
+				handleError(errorData, response.status);
+				summaryGenerating = false;
+				isRegenerating = false;
+				dispatch("generationCompleted");
 			}
-		} else {
-			const errorData = await response.json().catch(() => ({}));
-			handleError(errorData, response.status);
+		} catch (error) {
+			console.error("Failed to generate summary:", error);
+			dispatch("error", {
+				message:
+					type === "daily"
+						? $_("diary.summaryGenerationFailed")
+						: $_("monthly.summary.error"),
+			});
+			summaryStatus = "none";
 			summaryGenerating = false;
 			isRegenerating = false;
 			dispatch("generationCompleted");
 		}
-	} catch (error) {
-		console.error("Failed to generate summary:", error);
-		dispatch("error", {
-			message:
+	}
+
+	function handleError(errorData: Record<string, unknown>, status: number) {
+		let errorMessage = "";
+
+		if (status === 404) {
+			errorMessage =
 				type === "daily"
 					? $_("diary.summaryGenerationFailed")
-					: $_("monthly.summary.error"),
-		});
-		summaryStatus = "none";
-		summaryGenerating = false;
-		isRegenerating = false;
-		dispatch("generationCompleted");
-	}
-}
-
-function handleError(errorData: Record<string, unknown>, status: number) {
-	let errorMessage = "";
-
-	if (status === 404) {
-		errorMessage =
-			type === "daily"
-				? $_("diary.summaryGenerationFailed")
-				: $_("monthly.summary.noEntries");
-	} else if (
-		status === 400 &&
-		typeof errorData.message === "string" &&
-		errorData.message.includes("API key")
-	) {
-		errorMessage =
-			type === "daily"
-				? $_("diary.summaryGenerationFailed")
-				: $_("monthly.summary.noApiKey");
-	} else if (
-		status === 400 &&
-		typeof errorData.message === "string" &&
-		errorData.message.includes("current month")
-	) {
-		errorMessage = $_("monthly.summary.currentMonthError");
-	} else {
-		errorMessage =
-			type === "daily"
-				? $_("diary.summaryGenerationFailed")
-				: $_("monthly.summary.error");
-	}
-
-	dispatch("error", { message: errorMessage });
-	summaryStatus = "none";
-}
-
-// 既存要約を取得
-async function fetchExistingSummary() {
-	if (!browser) return;
-
-	try {
-		const response = await authenticatedFetch(fetchUrl);
-		if (response.ok) {
-			const result = await response.json();
-			if (result.summary) {
-				const summaryText = result.summary.summary;
-
-				// ステータスメッセージのチェック（生成中かどうか判定）
-				if (
-					summaryText.includes("queued") ||
-					summaryText.includes("Please check back later") ||
-					summaryText.includes("generation has been queued") ||
-					summaryText.includes("generation is queued")
-				) {
-					summaryStatus = "queued";
-					summaryGenerating = true;
-					// "(Updating)"が含まれている場合のみ再生成として判定
-					isRegenerating = summaryText.includes("Updating");
-					startPolling(true);
-					dispatch("generationStarted");
-				} else if (
-					summaryText.includes("processing") ||
-					summaryText.includes("Updating") ||
-					summaryText.includes("generating") ||
-					summaryText.includes("generation is processing")
-				) {
-					summaryStatus = "processing";
-					summaryGenerating = true;
-					// "(Updating)" が含まれている場合のみ再生成として判定
-					isRegenerating = summaryText.includes("Updating");
-
-					// "(Updating)"が含まれている場合、元のまとめ内容を保持して処理中状態にする
-					if (summaryText.includes("(Updating)")) {
-						const cleanedSummary = {
-							...result.summary,
-							summary: summaryText.replace(/\s*\(Updating\)$/, ""),
-						};
-						summary = cleanedSummary;
-					}
-
-					startPolling(true);
-					dispatch("generationStarted");
-				} else {
-					// 正常な要約が存在
-					summary = result.summary;
-					summaryStatus = "completed";
-					summaryGenerating = false;
-					dispatch("summaryUpdated", { summary });
-				}
-			}
-		} else if (response.status !== 404) {
-			console.error("Failed to fetch summary:", response.status);
+					: $_("monthly.summary.noEntries");
+		} else if (
+			status === 400 &&
+			typeof errorData.message === "string" &&
+			errorData.message.includes("API key")
+		) {
+			errorMessage =
+				type === "daily"
+					? $_("diary.summaryGenerationFailed")
+					: $_("monthly.summary.noApiKey");
+		} else if (
+			status === 400 &&
+			typeof errorData.message === "string" &&
+			errorData.message.includes("current month")
+		) {
+			errorMessage = $_("monthly.summary.currentMonthError");
+		} else {
+			errorMessage =
+				type === "daily"
+					? $_("diary.summaryGenerationFailed")
+					: $_("monthly.summary.error");
 		}
-	} catch (error) {
-		console.error("Failed to fetch summary:", error);
-	}
-}
 
-// ポーリング開始
-function startPolling(isUpdate = false) {
-	clearPolling();
-	pollingInterval = setInterval(() => pollSummaryStatus(isUpdate), 3000);
-}
-
-function toggleSummary() {
-	if (type === "daily") {
-		summaryVisibility.toggleDaily();
-	} else {
-		summaryVisibility.toggleMonthly();
-	}
-}
-
-onMount(() => {
-	// コンポーネント初期化時に既存要約を取得（無効化されていない場合のみ）
-	if (!isDisabled) {
-		fetchExistingSummary();
-	}
-});
-
-onDestroy(() => {
-	clearPolling();
-});
-
-// プロパティ変更時の処理
-$: {
-	if (isGenerating) {
-		summaryGenerating = true;
-		summaryStatus = "processing";
-	} else if (summary) {
-		summaryGenerating = false;
-		summaryStatus = "completed";
-	} else {
-		summaryGenerating = false;
+		dispatch("error", { message: errorMessage });
 		summaryStatus = "none";
 	}
-}
 
-// fetchUrl または generatePayload が変更された時の処理（月変更時）
-let previousFetchUrl = "";
-let previousGeneratePayload = "";
+	// 既存要約を取得
+	async function fetchExistingSummary() {
+		if (!browser) return;
 
-$: {
-	const currentPayload = JSON.stringify(generatePayload);
-	if (
-		browser &&
-		previousFetchUrl &&
-		(fetchUrl !== previousFetchUrl ||
-			currentPayload !== previousGeneratePayload)
-	) {
-		// 状態をリセット
-		summary = null;
-		summaryStatus = "none";
-		summaryGenerating = false;
-		isRegenerating = false;
-		// showSummaryは無効化状態でも表示が必要なのでリセットしない
-		// showSummary = false;
+		try {
+			const response = await authenticatedFetch(fetchUrl);
+			if (response.ok) {
+				const result = await response.json();
+				if (result.summary) {
+					const summaryText = result.summary.summary;
+
+					// ステータスメッセージのチェック（生成中かどうか判定）
+					if (
+						summaryText.includes("queued") ||
+						summaryText.includes("Please check back later") ||
+						summaryText.includes("generation has been queued") ||
+						summaryText.includes("generation is queued")
+					) {
+						summaryStatus = "queued";
+						summaryGenerating = true;
+						// "(Updating)"が含まれている場合のみ再生成として判定
+						isRegenerating = summaryText.includes("Updating");
+						startPolling(true);
+						dispatch("generationStarted");
+					} else if (
+						summaryText.includes("processing") ||
+						summaryText.includes("Updating") ||
+						summaryText.includes("generating") ||
+						summaryText.includes("generation is processing")
+					) {
+						summaryStatus = "processing";
+						summaryGenerating = true;
+						// "(Updating)" が含まれている場合のみ再生成として判定
+						isRegenerating = summaryText.includes("Updating");
+
+						// "(Updating)"が含まれている場合、元のまとめ内容を保持して処理中状態にする
+						if (summaryText.includes("(Updating)")) {
+							const cleanedSummary = {
+								...result.summary,
+								summary: summaryText.replace(/\s*\(Updating\)$/, ""),
+							};
+							summary = cleanedSummary;
+						}
+
+						startPolling(true);
+						dispatch("generationStarted");
+					} else {
+						// 正常な要約が存在
+						summary = result.summary;
+						summaryStatus = "completed";
+						summaryGenerating = false;
+						dispatch("summaryUpdated", { summary });
+					}
+				}
+			} else if (response.status !== 404) {
+				console.error("Failed to fetch summary:", response.status);
+			}
+		} catch (error) {
+			console.error("Failed to fetch summary:", error);
+		}
+	}
+
+	// ポーリング開始
+	function startPolling(isUpdate = false) {
 		clearPolling();
+		pollingInterval = setInterval(() => pollSummaryStatus(isUpdate), 3000);
+	}
 
-		// 新しいURL/パラメータで要約を取得（無効化されていない場合のみ）
+	function toggleSummary() {
+		if (type === "daily") {
+			summaryVisibility.toggleDaily();
+		} else {
+			summaryVisibility.toggleMonthly();
+		}
+	}
+
+	onMount(() => {
+		// コンポーネント初期化時に既存要約を取得（無効化されていない場合のみ）
 		if (!isDisabled) {
 			fetchExistingSummary();
 		}
+	});
+
+	onDestroy(() => {
+		clearPolling();
+	});
+
+	// プロパティ変更時の処理
+	$: {
+		if (isGenerating) {
+			summaryGenerating = true;
+			summaryStatus = "processing";
+		} else if (summary) {
+			summaryGenerating = false;
+			summaryStatus = "completed";
+		} else {
+			summaryGenerating = false;
+			summaryStatus = "none";
+		}
 	}
 
-	// 前回の値を更新（初回も含む）
-	previousFetchUrl = fetchUrl;
-	previousGeneratePayload = currentPayload;
-}
+	// fetchUrl または generatePayload が変更された時の処理（月変更時）
+	let previousFetchUrl = "";
+	let previousGeneratePayload = "";
+
+	$: {
+		const currentPayload = JSON.stringify(generatePayload);
+		if (
+			browser &&
+			previousFetchUrl &&
+			(fetchUrl !== previousFetchUrl ||
+				currentPayload !== previousGeneratePayload)
+		) {
+			// 状態をリセット
+			summary = null;
+			summaryStatus = "none";
+			summaryGenerating = false;
+			isRegenerating = false;
+			// showSummaryは無効化状態でも表示が必要なのでリセットしない
+			// showSummary = false;
+			clearPolling();
+
+			// 新しいURL/パラメータで要約を取得（無効化されていない場合のみ）
+			if (!isDisabled) {
+				fetchExistingSummary();
+			}
+		}
+
+		// 前回の値を更新（初回も含む）
+		previousFetchUrl = fetchUrl;
+		previousGeneratePayload = currentPayload;
+	}
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
