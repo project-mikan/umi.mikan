@@ -15,7 +15,22 @@
 			"recommended": true
 		}
 	},
+	"css": {
+		"parser": {
+			"cssModules": false,
+			"tailwindDirectives": true
+		}
+	},
 	"overrides": [
+		{
+			"includes": ["src/app.css"],
+			"formatter": {
+				"enabled": false
+			},
+			"linter": {
+				"enabled": false
+			}
+		},
 		{
 			"includes": ["**/*.svelte"],
 			"linter": {
@@ -27,16 +42,6 @@
 					"correctness": {
 						"noUnusedImports": "off",
 						"noUnusedVariables": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["**/*.css"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noUnknownAtRules": "off"
 					}
 				}
 			}
