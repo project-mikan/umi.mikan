@@ -8,7 +8,7 @@
 		<!-- PWA Manifest (dynamic) -->
 		<script>
 			// Set dynamic manifest based on user language
-			(function() {
+			(() => {
 				const stored = localStorage.getItem('locale');
 				const browserLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
 				const lang = stored || browserLang;
@@ -35,12 +35,12 @@
 		<meta name="application-name" content="umi.mikan" />
 		<script>
 			// Initialize dark mode before page renders to prevent flash
-			(function() {
+			(() => {
 				const stored = localStorage.getItem('darkMode');
-				const isDarkMode = stored !== null 
-					? stored === 'true' 
+				const isDarkMode = stored !== null
+					? stored === 'true'
 					: window.matchMedia('(prefers-color-scheme: dark)').matches;
-				
+
 				if (isDarkMode) {
 					document.documentElement.classList.add('dark');
 				}
