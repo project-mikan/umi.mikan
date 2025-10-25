@@ -1,16 +1,16 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
-import AuthForm from "$lib/components/molecules/AuthForm.svelte";
-import type { ActionData } from "./$types";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
+	import AuthForm from "$lib/components/molecules/AuthForm.svelte";
+	import type { ActionData } from "./$types";
 
-// フォームデータに含まれる可能性のあるプロパティを定義
-interface FormDataWithRateLimit {
-	error?: string;
-	isRateLimited?: boolean;
-}
+	// フォームデータに含まれる可能性のあるプロパティを定義
+	interface FormDataWithRateLimit {
+		error?: string;
+		isRateLimited?: boolean;
+	}
 
-export let form: ActionData;
+	export let form: ActionData;
 </script>
 
 <AuthForm

@@ -1,10 +1,10 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
 
-const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
-const currentMonth = currentDate.getMonth() + 1;
+	const currentDate = new Date();
+	const currentYear = currentDate.getFullYear();
+	const currentMonth = currentDate.getMonth() + 1;
 </script>
 
 <nav

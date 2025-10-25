@@ -1,44 +1,48 @@
 <script lang="ts">
-import { onMount } from "svelte";
-import { _ } from "svelte-i18n";
-import { getDayInMilliseconds } from "$lib/utils/token-utils";
-import "$lib/i18n";
+	import { onMount } from "svelte";
+	import { _ } from "svelte-i18n";
+	import { getDayInMilliseconds } from "$lib/utils/token-utils";
+	import "$lib/i18n";
 
-let yearProgress = 0;
-let monthProgress = 0;
-let dayProgress = 0;
+	let yearProgress = 0;
+	let monthProgress = 0;
+	let dayProgress = 0;
 
-function calculateProgress() {
-	const now = new Date();
+	function calculateProgress() {
+		const now = new Date();
 
-	// 今年の経過日数
-	const startOfYear = new Date(now.getFullYear(), 0, 1);
-	const endOfYear = new Date(now.getFullYear(), 11, 31);
-	const yearTotal =
-		(endOfYear.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24) + 1;
-	const yearElapsed =
-		(now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24) + 1;
-	yearProgress = (yearElapsed / yearTotal) * 100;
+		// 今年の経過日数
+		const startOfYear = new Date(now.getFullYear(), 0, 1);
+		const endOfYear = new Date(now.getFullYear(), 11, 31);
+		const yearTotal =
+			(endOfYear.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24) + 1;
+		const yearElapsed =
+			(now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24) + 1;
+		yearProgress = (yearElapsed / yearTotal) * 100;
 
-	// 今月の経過日数
-	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-	const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-	const monthTotal = endOfMonth.getDate();
-	const monthElapsed = now.getDate();
-	monthProgress = (monthElapsed / monthTotal) * 100;
+		// 今月の経過日数
+		const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+		const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+		const monthTotal = endOfMonth.getDate();
+		const monthElapsed = now.getDate();
+		monthProgress = (monthElapsed / monthTotal) * 100;
 
-	// 今日の経過時間（時：分）
-	const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-	const dayElapsed = now.getTime() - startOfDay.getTime();
-	const dayTotal = getDayInMilliseconds();
-	dayProgress = (dayElapsed / dayTotal) * 100;
-}
+		// 今日の経過時間（時：分）
+		const startOfDay = new Date(
+			now.getFullYear(),
+			now.getMonth(),
+			now.getDate(),
+		);
+		const dayElapsed = now.getTime() - startOfDay.getTime();
+		const dayTotal = getDayInMilliseconds();
+		dayProgress = (dayElapsed / dayTotal) * 100;
+	}
 
-onMount(() => {
-	calculateProgress();
-	const interval = setInterval(calculateProgress, 60000);
-	return () => clearInterval(interval);
-});
+	onMount(() => {
+		calculateProgress();
+		const interval = setInterval(calculateProgress, 60000);
+		return () => clearInterval(interval);
+	});
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">

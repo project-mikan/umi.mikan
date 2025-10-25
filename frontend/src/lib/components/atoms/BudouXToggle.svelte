@@ -1,11 +1,11 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
-import { autoPhraseEnabled } from "$lib/auto-phrase-store";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
+	import { autoPhraseEnabled } from "$lib/auto-phrase-store";
 
-function toggleAutoPhrase() {
-	autoPhraseEnabled.toggle();
-}
+	function toggleAutoPhrase() {
+		autoPhraseEnabled.toggle();
+	}
 </script>
 
 <button

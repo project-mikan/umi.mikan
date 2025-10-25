@@ -1,20 +1,20 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-import Button from "../atoms/Button.svelte";
-import Card from "../atoms/Card.svelte";
-import { highlightEntities } from "$lib/utils/diary-entity-highlighter";
+	import { _ } from "svelte-i18n";
+	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+	import Button from "../atoms/Button.svelte";
+	import Card from "../atoms/Card.svelte";
+	import { highlightEntities } from "$lib/utils/diary-entity-highlighter";
 
-export let title: string;
-export let entry: DiaryEntry | null = null;
-export let showForm = false;
-export let onView: ((entry: DiaryEntry) => void) | null = null;
-export let href: string | null = null;
+	export let title: string;
+	export let entry: DiaryEntry | null = null;
+	export let showForm = false;
+	export let onView: ((entry: DiaryEntry) => void) | null = null;
+	export let href: string | null = null;
 
-// contentとdiaryEntitiesからハイライトされたHTMLを生成
-$: highlightedContent = entry
-	? highlightEntities(entry.content, entry.diaryEntities || [])
-	: "";
+	// contentとdiaryEntitiesからハイライトされたHTMLを生成
+	$: highlightedContent = entry
+		? highlightEntities(entry.content, entry.diaryEntities || [])
+		: "";
 </script>
 
 <Card padding="sm">

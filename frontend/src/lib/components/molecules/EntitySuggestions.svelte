@@ -1,28 +1,28 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
-import type { Entity, EntityAlias } from "$lib/grpc/entity/entity_pb";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
+	import type { Entity, EntityAlias } from "$lib/grpc/entity/entity_pb";
 
-// フラット化された候補リスト
-type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
+	// フラット化された候補リスト
+	type FlatSuggestion = { entity: Entity; text: string; isAlias: boolean };
 
-export let flatSuggestions: FlatSuggestion[] = [];
-export let selectedIndex = -1;
-export let onSelect: (entity: Entity, selectedText?: string) => void;
-export let position: { top: number; left: number } = { top: 0, left: 0 };
+	export let flatSuggestions: FlatSuggestion[] = [];
+	export let selectedIndex = -1;
+	export let onSelect: (entity: Entity, selectedText?: string) => void;
+	export let position: { top: number; left: number } = { top: 0, left: 0 };
 
-// 候補選択
-function handleSelect(entity: Entity, selectedText?: string) {
-	onSelect(entity, selectedText);
-}
-
-// キーボード操作のために外部から呼び出される
-export function selectByIndex(index: number) {
-	if (index >= 0 && index < flatSuggestions.length) {
-		const selected = flatSuggestions[index];
-		handleSelect(selected.entity, selected.text);
+	// 候補選択
+	function handleSelect(entity: Entity, selectedText?: string) {
+		onSelect(entity, selectedText);
 	}
-}
+
+	// キーボード操作のために外部から呼び出される
+	export function selectByIndex(index: number) {
+		if (index >= 0 && index < flatSuggestions.length) {
+			const selected = flatSuggestions[index];
+			handleSelect(selected.entity, selected.text);
+		}
+	}
 </script>
 
 {#if flatSuggestions.length > 0}

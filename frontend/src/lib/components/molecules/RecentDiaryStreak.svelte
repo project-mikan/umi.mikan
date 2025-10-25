@@ -1,30 +1,30 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { goto } from "$app/navigation";
-import "$lib/i18n";
+	import { _ } from "svelte-i18n";
+	import { goto } from "$app/navigation";
+	import "$lib/i18n";
 
-interface DayStatus {
-	date: string; // YYYY-MM-DD
-	hasEntry: boolean;
-	dayOfWeek: string;
-	dayOfMonth: number;
-}
+	interface DayStatus {
+		date: string; // YYYY-MM-DD
+		hasEntry: boolean;
+		dayOfWeek: string;
+		dayOfMonth: number;
+	}
 
-export let recentDays: DayStatus[] = [];
+	export let recentDays: DayStatus[] = [];
 
-// 日記ページに遷移
-function navigateToDiary(dateStr: string) {
-	goto(`/${dateStr}`);
-}
+	// 日記ページに遷移
+	function navigateToDiary(dateStr: string) {
+		goto(`/${dateStr}`);
+	}
 
-// 曜日の短縮表記
-function getWeekdayShort(dayOfWeek: string): string {
-	// i18n対応: date.dayOfWeek.[曜日名]のキーを使用
-	const key = `date.dayOfWeek.${dayOfWeek}`;
-	return $_(`date.dayOfWeek.${dayOfWeek}`, {
-		default: dayOfWeek.substring(0, 1),
-	});
-}
+	// 曜日の短縮表記
+	function getWeekdayShort(dayOfWeek: string): string {
+		// i18n対応: date.dayOfWeek.[曜日名]のキーを使用
+		const key = `date.dayOfWeek.${dayOfWeek}`;
+		return $_(`date.dayOfWeek.${dayOfWeek}`, {
+			default: dayOfWeek.substring(0, 1),
+		});
+	}
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">

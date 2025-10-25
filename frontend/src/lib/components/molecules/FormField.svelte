@@ -1,31 +1,31 @@
 <script lang="ts">
-import { createEventDispatcher } from "svelte";
-import Input from "../atoms/Input.svelte";
-import Label from "../atoms/Label.svelte";
-import Textarea from "../atoms/Textarea.svelte";
-import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
+	import { createEventDispatcher } from "svelte";
+	import Input from "../atoms/Input.svelte";
+	import Label from "../atoms/Label.svelte";
+	import Textarea from "../atoms/Textarea.svelte";
+	import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
 
-export let type: "input" | "textarea" = "input";
-export let inputType: "text" | "email" | "password" | "date" = "text";
-export let label: string;
-export let id: string;
-export let name: string;
-export let value = "";
-export let placeholder = "";
-export let required = false;
-export let disabled = false;
-export let autocomplete = "";
-export let rows = 4;
-export let srOnlyLabel = false;
-export let diaryEntities: DiaryEntityOutput[] = [];
+	export let type: "input" | "textarea" = "input";
+	export let inputType: "text" | "email" | "password" | "date" = "text";
+	export let label: string;
+	export let id: string;
+	export let name: string;
+	export let value = "";
+	export let placeholder = "";
+	export let required = false;
+	export let disabled = false;
+	export let autocomplete = "";
+	export let rows = 4;
+	export let srOnlyLabel = false;
+	export let diaryEntities: DiaryEntityOutput[] = [];
 
-// 明示的に選択されたエンティティの情報
-export let selectedEntities: {
-	entityId: string;
-	positions: { start: number; end: number }[];
-}[] = [];
+	// 明示的に選択されたエンティティの情報
+	export let selectedEntities: {
+		entityId: string;
+		positions: { start: number; end: number }[];
+	}[] = [];
 
-const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher();
 </script>
 
 <div class="mb-4">

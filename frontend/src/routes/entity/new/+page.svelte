@@ -1,15 +1,15 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { enhance } from "$app/forms";
-import "$lib/i18n";
-import { notifyEntityUpdated } from "$lib/utils/entity-events";
-import type { ActionData } from "./$types";
+	import { _ } from "svelte-i18n";
+	import { enhance } from "$app/forms";
+	import "$lib/i18n";
+	import { notifyEntityUpdated } from "$lib/utils/entity-events";
+	import type { ActionData } from "./$types";
 
-export let form: ActionData;
+	export let form: ActionData;
 
-let name = form?.name || "";
-let memo = form?.memo || "";
-let isSubmitting = false;
+	let name = form?.name || "";
+	let memo = form?.memo || "";
+	let isSubmitting = false;
 </script>
 
 <svelte:head>

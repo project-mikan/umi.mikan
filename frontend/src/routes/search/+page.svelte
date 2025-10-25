@@ -1,49 +1,49 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { goto } from "$app/navigation";
-import "$lib/i18n";
-import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-import type { PageData } from "./$types";
+	import { _ } from "svelte-i18n";
+	import { goto } from "$app/navigation";
+	import "$lib/i18n";
+	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+	import type { PageData } from "./$types";
 
-export let data: PageData;
+	export let data: PageData;
 
-let searchKeyword = data.keyword || "";
+	let searchKeyword = data.keyword || "";
 
-function _formatDate(ymd: {
-	year: number;
-	month: number;
-	day: number;
-}): string {
-	return `${ymd.year}年${ymd.month}月${ymd.day}日`;
-}
-
-function formatDateUrl(ymd: {
-	year: number;
-	month: number;
-	day: number;
-}): string {
-	return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
-}
-
-function _viewEntry(entry: DiaryEntry) {
-	const date = entry.date;
-	if (date) {
-		const dateStr = formatDateUrl(date);
-		goto(`/${dateStr}`);
+	function _formatDate(ymd: {
+		year: number;
+		month: number;
+		day: number;
+	}): string {
+		return `${ymd.year}年${ymd.month}月${ymd.day}日`;
 	}
-}
 
-function _handleSearch() {
-	if (searchKeyword.trim()) {
-		goto(`/search?q=${encodeURIComponent(searchKeyword.trim())}`);
+	function formatDateUrl(ymd: {
+		year: number;
+		month: number;
+		day: number;
+	}): string {
+		return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
 	}
-}
 
-function _handleKeydown(event: KeyboardEvent) {
-	if (event.key === "Enter") {
-		_handleSearch();
+	function _viewEntry(entry: DiaryEntry) {
+		const date = entry.date;
+		if (date) {
+			const dateStr = formatDateUrl(date);
+			goto(`/${dateStr}`);
+		}
 	}
-}
+
+	function _handleSearch() {
+		if (searchKeyword.trim()) {
+			goto(`/search?q=${encodeURIComponent(searchKeyword.trim())}`);
+		}
+	}
+
+	function _handleKeydown(event: KeyboardEvent) {
+		if (event.key === "Enter") {
+			_handleSearch();
+		}
+	}
 </script>
 
 <svelte:head>

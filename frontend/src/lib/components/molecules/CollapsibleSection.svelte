@@ -1,13 +1,13 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import "$lib/i18n";
+	import { _ } from "svelte-i18n";
+	import "$lib/i18n";
 
-export let title: string;
-export let isOpen = false;
+	export let title: string;
+	export let isOpen = false;
 
-function toggleSection() {
-	isOpen = !isOpen;
-}
+	function toggleSection() {
+		isOpen = !isOpen;
+	}
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-4">

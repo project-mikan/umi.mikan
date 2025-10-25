@@ -1,10 +1,10 @@
 <script lang="ts">
-import { _ } from "svelte-i18n";
-import { enhance } from "$app/forms";
-import Button from "../atoms/Button.svelte";
-import Link from "../atoms/Link.svelte";
+	import { _ } from "svelte-i18n";
+	import { enhance } from "$app/forms";
+	import Button from "../atoms/Button.svelte";
+	import Link from "../atoms/Link.svelte";
 
-export let isAuthenticated = false;
+	export let isAuthenticated = false;
 </script>
 
 {#if isAuthenticated}
