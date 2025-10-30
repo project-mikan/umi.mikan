@@ -13,3 +13,5 @@ backend/cmd/scheduler/scheduler
 backend/cmd/subscriber/subscriber
 backend/server
 backend/tmp-subscriber/
+
+documents/
