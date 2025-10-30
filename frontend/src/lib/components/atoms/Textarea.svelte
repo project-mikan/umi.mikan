@@ -484,7 +484,10 @@
 		// selectedEntitiesをDOMの実際の状態と同期
 		// DOMに存在するリンクからselectedEntitiesを再構築
 		const currentLinks = contentElement.querySelectorAll("a");
-		const newSelectedEntities = new Map<string, EntityPosition[]>();
+		const newSelectedEntities = new Map<
+			string,
+			{ start: number; end: number }[]
+		>();
 
 		for (const link of currentLinks) {
 			const href = link.getAttribute("href");
