@@ -24,6 +24,7 @@
 		findLongestMatch,
 		adjustPositions,
 		generateEntityHighlightHTML,
+		syncSelectedEntitiesFromDOM,
 	} from "$lib/utils/entity-completion";
 
 	export let value = "";
@@ -404,118 +405,20 @@
 			}
 		}
 
-		// 無効なリンクをDOMから削除し、selectedEntitiesからも削除
+		// 無効なリンクをDOMから削除
 		if (linksToRemove.length > 0) {
-			// 削除されたリンクのentityIdとpositionを記録
-			const removedPositions = new Map<string, Set<string>>();
-			const removedRanges: { start: number; end: number }[] = [];
-
 			for (const link of linksToRemove) {
-				const href = link.getAttribute("href");
-				if (href?.includes("/entity/")) {
-					const entityId = href.split("/entity/")[1];
-					if (entityId) {
-						const linkStartOffset = getTextOffset(contentElement, link, 0);
-						const linkText = link.textContent || "";
-						const linkEndOffset = linkStartOffset + linkText.length;
-						const posKey = `${linkStartOffset}-${linkEndOffset}`;
-
-						if (!removedPositions.has(entityId)) {
-							removedPositions.set(entityId, new Set());
-						}
-						removedPositions.get(entityId)?.add(posKey);
-
-						// 削除範囲を記録
-						removedRanges.push({ start: linkStartOffset, end: linkEndOffset });
-					}
-				}
-
-				// DOMから削除
+				// DOMから削除（テキストノードに置き換え）
 				const textNode = document.createTextNode(link.textContent || "");
 				link.parentNode?.replaceChild(textNode, link);
-			}
-
-			// selectedEntitiesから削除されたpositionを除外
-			selectedEntities = selectedEntities
-				.map((se) => {
-					const removed = removedPositions.get(se.entityId);
-					if (!removed) return se;
-
-					const filteredPositions = se.positions.filter((pos) => {
-						const posKey = `${pos.start}-${pos.end}`;
-						return !removed.has(posKey);
-					});
-
-					return {
-						...se,
-						positions: filteredPositions,
-					};
-				})
-				.filter((se) => se.positions.length > 0);
-
-			// 削除範囲を開始位置でソート（前から順に適用）
-			removedRanges.sort((a, b) => a.start - b.start);
-
-			// 累積的な調整量を追跡
-			let cumulativeOffset = 0;
-
-			// 各削除範囲について、残りのエンティティのpositionを調整
-			for (const range of removedRanges) {
-				// このrangeの位置を累積オフセットで調整
-				const adjustedStart = range.start + cumulativeOffset;
-				const adjustedEnd = range.end + cumulativeOffset;
-				const lengthDiff = adjustedStart - adjustedEnd; // 負の値（削除された文字数）
-
-				selectedEntities = selectedEntities.map((se) => ({
-					...se,
-					positions: adjustPositions(
-						se.positions,
-						adjustedStart,
-						adjustedEnd,
-						lengthDiff,
-					),
-				}));
-
-				// 累積オフセットを更新
-				cumulativeOffset += lengthDiff;
 			}
 		}
 
 		// selectedEntitiesをDOMの実際の状態と同期
-		// DOMに存在するリンクからselectedEntitiesを再構築
-		const currentLinks = contentElement.querySelectorAll("a");
-		const newSelectedEntities = new Map<
-			string,
-			{ start: number; end: number }[]
-		>();
-
-		for (const link of currentLinks) {
-			const href = link.getAttribute("href");
-			if (!href?.includes("/entity/")) continue;
-
-			const entityId = href.split("/entity/")[1];
-			if (!entityId) continue;
-
-			const linkStartOffset = getTextOffset(contentElement, link, 0);
-			const linkText = link.textContent || "";
-			const linkEndOffset = linkStartOffset + linkText.length;
-
-			if (!newSelectedEntities.has(entityId)) {
-				newSelectedEntities.set(entityId, []);
-			}
-
-			newSelectedEntities.get(entityId)?.push({
-				start: linkStartOffset,
-				end: linkEndOffset,
-			});
-		}
-
-		// newSelectedEntitiesからselectedEntitiesを更新
-		selectedEntities = Array.from(newSelectedEntities.entries()).map(
-			([entityId, positions]) => ({
-				entityId,
-				positions,
-			}),
+		// DOMを信頼できる唯一の情報源として扱い、そこから再構築する
+		selectedEntities = syncSelectedEntitiesFromDOM(
+			contentElement,
+			getTextOffset,
 		);
 
 		// IME入力中は候補検索をスキップ（DOM操作を最小限にしてIMEの動作を安定させる）

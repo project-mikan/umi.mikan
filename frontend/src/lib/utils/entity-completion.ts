@@ -4,6 +4,12 @@
 
 import type { Entity } from "$lib/grpc/entity/entity_pb";
 
+/**
+ * エンティティ検索の最小文字数
+ * これより短い文字列ではエンティティ候補を表示しない
+ */
+const MIN_ENTITY_SEARCH_LENGTH = 2;
+
 export interface FlatSuggestion {
 	entity: Entity;
 	text: string;
@@ -110,13 +116,14 @@ export function findLongestMatch(
 	allFlatEntities: FlatSuggestion[],
 	cursorPos: number,
 ): { word: string; startPos: number } | null {
-	// 後方から2文字以上の部分文字列を試す
-	for (let len = searchText.length; len >= 2; len--) {
+	// 後方からMIN_ENTITY_SEARCH_LENGTH文字以上の部分文字列を試す
+	for (let len = searchText.length; len >= MIN_ENTITY_SEARCH_LENGTH; len--) {
 		const substring = searchText.substring(searchText.length - len);
+		const lowerSubstring = substring.toLowerCase();
 
 		// このsubstringで始まるエンティティがあるかチェック
 		const hasMatch = allFlatEntities.some((flat) =>
-			flat.text.toLowerCase().startsWith(substring.toLowerCase()),
+			flat.text.toLowerCase().startsWith(lowerSubstring),
 		);
 
 		if (hasMatch) {
@@ -257,6 +264,46 @@ export function generateEntityHighlightHTML(
 	}
 
 	return result;
+}
+
+/**
+ * DOMからselectedEntitiesを再構築
+ * @param contentElement contenteditable要素
+ * @param getTextOffsetFn テキストオフセット取得関数
+ * @returns 再構築されたselectedEntities
+ */
+export function syncSelectedEntitiesFromDOM(
+	contentElement: HTMLElement,
+	getTextOffsetFn: (root: Node, node: Node, offset: number) => number,
+): SelectedEntity[] {
+	const currentLinks = contentElement.querySelectorAll("a");
+	const entitiesMap = new Map<string, EntityPosition[]>();
+
+	for (const link of currentLinks) {
+		const href = link.getAttribute("href");
+		if (!href?.includes("/entity/")) continue;
+
+		const entityId = href.split("/entity/")[1];
+		if (!entityId) continue;
+
+		const linkStartOffset = getTextOffsetFn(contentElement, link, 0);
+		const linkText = link.textContent || "";
+		const linkEndOffset = linkStartOffset + linkText.length;
+
+		if (!entitiesMap.has(entityId)) {
+			entitiesMap.set(entityId, []);
+		}
+
+		entitiesMap.get(entityId)?.push({
+			start: linkStartOffset,
+			end: linkEndOffset,
+		});
+	}
+
+	return Array.from(entitiesMap.entries()).map(([entityId, positions]) => ({
+		entityId,
+		positions,
+	}));
 }
 
 function escapeHtml(text: string): string {

@@ -197,8 +197,12 @@ export function restoreCursorPosition(
 			}
 			selection.removeAllRanges();
 			selection.addRange(range);
-		} catch (e) {
-			console.error("Failed to restore cursor position:", e);
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				console.error("Failed to restore cursor position:", error.message);
+			} else {
+				console.error("Failed to restore cursor position:", error);
+			}
 			fallbackToEnd(contentElement, selection);
 		}
 	} else {
@@ -211,7 +215,12 @@ export function restoreCursorPosition(
 			} else {
 				fallbackToEnd(contentElement, selection);
 			}
-		} catch {
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				console.error("Failed to create range at text offset:", error.message);
+			} else {
+				console.error("Failed to create range at text offset:", error);
+			}
 			fallbackToEnd(contentElement, selection);
 		}
 	}
@@ -227,8 +236,11 @@ function fallbackToEnd(contentElement: HTMLDivElement, selection: Selection) {
 		range.collapse(false);
 		selection.removeAllRanges();
 		selection.addRange(range);
-	} catch {
-		// 何もしない
+	} catch (error: unknown) {
+		// カーソル復元の最終手段が失敗した場合は何もしない
+		if (error instanceof Error) {
+			console.error("Failed to fallback to end:", error.message);
+		}
 	}
 }
 
