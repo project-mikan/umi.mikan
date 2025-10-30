@@ -1,4 +1,4 @@
-FROM golang:1.25.1
+FROM golang:1.25.3
 WORKDIR /backend
 
 # protoc と protoc-gen-go プラグインのインストール
