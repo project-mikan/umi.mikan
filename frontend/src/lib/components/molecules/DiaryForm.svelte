@@ -3,6 +3,7 @@
 	import "$lib/i18n";
 	import { enhance } from "$app/forms";
 	import { goto } from "$app/navigation";
+	import { tick } from "svelte";
 	import Alert from "../atoms/Alert.svelte";
 	import Button from "../atoms/Button.svelte";
 	import FormField from "./FormField.svelte";
@@ -135,7 +136,7 @@
 	}
 
 	// 候補選択
-	function selectSuggestion(entity: Entity, selectedText?: string) {
+	async function selectSuggestion(entity: Entity, selectedText?: string) {
 		if (currentTriggerPos === -1) return;
 
 		const textToInsert = selectedText || entity.name;
@@ -147,14 +148,16 @@
 
 		showSuggestions = false;
 		selectedSuggestionIndex = -1;
-		currentTriggerPos = -1;
 
-		// フォーカスを戻す
-		setTimeout(() => {
-			textarea.focus();
-			const newCursorPos = beforeTrigger.length + textToInsert.length + 2; // @ + text + space
-			textarea.setSelectionRange(newCursorPos, newCursorPos);
-		}, 0);
+		// Svelteの更新サイクルが完了するのを待つ
+		await tick();
+
+		// カーソル位置を設定してフォーカスを戻す
+		const newCursorPos = beforeTrigger.length + textToInsert.length + 2; // @ + text + space
+		textarea.focus();
+		textarea.setSelectionRange(newCursorPos, newCursorPos);
+
+		currentTriggerPos = -1;
 	}
 </script>
 
