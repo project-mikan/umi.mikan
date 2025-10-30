@@ -684,29 +684,52 @@
 				// Delete any selected content first
 				range.deleteContents();
 
+				// カーソルの直前のノードをチェック
+				// 直前のノードがBRタグの場合、連続改行とみなす
+				let previousNode = range.startContainer;
+				if (
+					previousNode.nodeType === Node.TEXT_NODE &&
+					range.startOffset === 0
+				) {
+					// テキストノードの先頭にいる場合、前の兄弟ノードをチェック
+					previousNode = previousNode.previousSibling as Node;
+				} else if (previousNode.nodeType === Node.ELEMENT_NODE) {
+					// 要素ノード内にいる場合、startOffsetで指定された位置の直前の子ノードをチェック
+					const children = previousNode.childNodes;
+					if (range.startOffset > 0 && range.startOffset <= children.length) {
+						previousNode = children[range.startOffset - 1];
+					}
+				}
+
+				const isPreviousNodeBR = previousNode && previousNode.nodeName === "BR";
+
 				// Insert the br element
 				range.insertNode(br);
 
 				// contentEditableの末尾での改行を処理するために、
 				// <br>の後ろに意味のあるコンテンツ（テキストやエンティティリンクなど）が存在するかチェック
 				// 末尾の場合のみ、もう一つ<br>を挿入してカーソルが次の行に表示されるようにする
+				// ただし、直前のノードがBRタグの場合（連続改行）は、1つのbrのみを挿入
 				function hasContentAfterNode(node: Node): boolean {
 					let current: Node | null = node.nextSibling;
 					while (current) {
-						// テキストノードで空白以外のテキストがある場合
+						// テキストノードの場合
 						if (current.nodeType === Node.TEXT_NODE) {
 							const text = current.textContent || "";
+							// 空白以外のテキストがある場合はコンテンツありとみなす
 							if (text.trim().length > 0) {
 								return true;
 							}
+							// 空白のみの場合は次のノードをチェック
 						}
-						// 要素ノード（<a>タグなどのエンティティリンク）がある場合
+						// 要素ノードの場合
 						else if (current.nodeType === Node.ELEMENT_NODE) {
 							const element = current as Element;
-							// BRタグは無視（既存の改行）
+							// BRタグ以外の要素があればコンテンツありとみなす
 							if (element.nodeName !== "BR") {
 								return true;
 							}
+							// BRタグの場合は次のノードをチェック（連続するBRタグを全て無視）
 						}
 						current = current.nextSibling;
 					}
@@ -719,13 +742,17 @@
 
 				const isAtEnd = !hasContentAfterNode(br);
 
-				if (isAtEnd) {
+				// 直前のノードがBRタグでない かつ 末尾の場合のみ、2つ目の<br>を挿入
+				if (!isPreviousNodeBR && isAtEnd) {
 					// 末尾の場合のみ2つ目の<br>を挿入
 					const afterBr = document.createElement("br");
 
-					// Create a new range after the first br element
+					// カーソルを最初の<br>の直後に配置してから2つ目の<br>を挿入
 					const newRange = document.createRange();
 					newRange.setStartAfter(br);
+					newRange.collapse(true);
+
+					// 2つ目の<br>を挿入
 					newRange.insertNode(afterBr);
 
 					// カーソルを2つの<br>の間に配置
@@ -737,7 +764,7 @@
 					selection.removeAllRanges();
 					selection.addRange(newRange);
 				} else {
-					// 末尾でない場合は1つの<br>のみで、カーソルをその直後に配置
+					// 連続改行の場合、または末尾でない場合は1つの<br>のみで、カーソルをその直後に配置
 					const newRange = document.createRange();
 					newRange.setStartAfter(br);
 					newRange.collapse(true);
