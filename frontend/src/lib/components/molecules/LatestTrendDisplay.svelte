@@ -8,9 +8,9 @@
 
 	interface LatestTrendData {
 		health: string; // "bad", "slight", "normal", "good"
-		healthReason: string; // 理由（10文字以内）
+		healthReason: string; // 比較|具体的理由（20文字以内）
 		mood: string; // "bad", "slight", "normal", "good"
-		moodReason: string; // 理由（10文字以内）
+		moodReason: string; // 比較|具体的理由（20文字以内）
 		activities: string;
 		periodStart: string;
 		periodEnd: string;
