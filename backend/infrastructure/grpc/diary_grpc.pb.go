@@ -159,13 +159,13 @@ type DiaryServiceClient interface {
 	// エラー:
 	//   - NotFound: サマリーが存在しない
 	GetDailySummary(ctx context.Context, in *GetDailySummaryRequest, opts ...grpc.CallOption) (*GetDailySummaryResponse, error)
-	// GetLatestTrend は直近3日間の日記のトレンド分析を取得します。
+	// GetLatestTrend は直近の日記のトレンド分析を取得します（前日を中心に最大1週間程度を参考）。
 	// Redisに保存された分析結果を返します。
 	//
 	// 例:
 	//
 	//	request: {}
-	//	response: { overall_summary: "...", health_mood: "...", activities: "...", concerns: "...", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
+	//	response: { health: "good", mood: "normal", activities: "- 運動\n  - 朝のランニング\n- 仕事\n  - プロジェクトミーティング", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
 	//
 	// エラー:
 	//   - NotFound: トレンド分析が存在しない
@@ -447,13 +447,13 @@ type DiaryServiceServer interface {
 	// エラー:
 	//   - NotFound: サマリーが存在しない
 	GetDailySummary(context.Context, *GetDailySummaryRequest) (*GetDailySummaryResponse, error)
-	// GetLatestTrend は直近3日間の日記のトレンド分析を取得します。
+	// GetLatestTrend は直近の日記のトレンド分析を取得します（前日を中心に最大1週間程度を参考）。
 	// Redisに保存された分析結果を返します。
 	//
 	// 例:
 	//
 	//	request: {}
-	//	response: { overall_summary: "...", health_mood: "...", activities: "...", concerns: "...", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
+	//	response: { health: "good", mood: "normal", activities: "- 運動\n  - 朝のランニング\n- 仕事\n  - プロジェクトミーティング", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
 	//
 	// エラー:
 	//   - NotFound: トレンド分析が存在しない

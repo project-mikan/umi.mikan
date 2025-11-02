@@ -744,10 +744,11 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 
 	// 5. JSON形式のレスポンスをパース
 	var analysisData struct {
-		OverallSummary string `json:"overall_summary"`
-		HealthMood     string `json:"health_mood"`
-		Activities     string `json:"activities"`
-		Concerns       string `json:"concerns"`
+		Health       string `json:"health"`
+		HealthReason string `json:"health_reason"`
+		Mood         string `json:"mood"`
+		MoodReason   string `json:"mood_reason"`
+		Activities   string `json:"activities"`
 	}
 	if err := json.Unmarshal([]byte(trendAnalysisJSON), &analysisData); err != nil {
 		logger.WithError(err).Error("Failed to parse trend analysis JSON")
@@ -757,14 +758,15 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	// 6. Redisに保存（TTL: 25時間）
 	// 毎日4時に更新されるため、25時間のTTLで次回更新までの余裕を確保
 	trendData := map[string]interface{}{
-		"user_id":         userID,
-		"overall_summary": analysisData.OverallSummary,
-		"health_mood":     analysisData.HealthMood,
-		"activities":      analysisData.Activities,
-		"concerns":        analysisData.Concerns,
-		"period_start":    periodStartStr,
-		"period_end":      periodEndStr,
-		"generated_at":    time.Now().Format(time.RFC3339),
+		"user_id":       userID,
+		"health":        analysisData.Health,
+		"health_reason": analysisData.HealthReason,
+		"mood":          analysisData.Mood,
+		"mood_reason":   analysisData.MoodReason,
+		"activities":    analysisData.Activities,
+		"period_start":  periodStartStr,
+		"period_end":    periodEndStr,
+		"generated_at":  time.Now().Format(time.RFC3339),
 	}
 
 	trendDataJSON, err := json.Marshal(trendData)

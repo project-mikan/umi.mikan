@@ -25,14 +25,15 @@ type LatestTrendGenerationMessage struct {
 
 // LatestTrendData はRedisに保存するトレンド分析データ
 type LatestTrendData struct {
-	UserID         string `json:"user_id"`
-	OverallSummary string `json:"overall_summary"` // 全体的な様子（1行）
-	HealthMood     string `json:"health_mood"`     // 体調・気分の傾向（2-3文）
-	Activities     string `json:"activities"`      // 活動・行動パターン（2-3文）
-	Concerns       string `json:"concerns"`        // 気になること（1-2文）
-	PeriodStart    string `json:"period_start"`
-	PeriodEnd      string `json:"period_end"`
-	GeneratedAt    string `json:"generated_at"`
+	UserID       string `json:"user_id"`
+	Health       string `json:"health"`        // 体調: "bad", "slight", "normal", "good"
+	HealthReason string `json:"health_reason"` // 体調の理由（10文字以内）
+	Mood         string `json:"mood"`          // 気分: "bad", "slight", "normal", "good"
+	MoodReason   string `json:"mood_reason"`   // 気分の理由（10文字以内）
+	Activities   string `json:"activities"`    // 活動・行動（箇条書き・階層構造のテキスト）
+	PeriodStart  string `json:"period_start"`
+	PeriodEnd    string `json:"period_end"`
+	GeneratedAt  string `json:"generated_at"`
 }
 
 // GetLatestTrend は直近1週間の日記のトレンド分析を取得します
@@ -66,13 +67,14 @@ func (s *DiaryEntry) GetLatestTrend(
 	}
 
 	return &g.GetLatestTrendResponse{
-		OverallSummary: trendData.OverallSummary,
-		HealthMood:     trendData.HealthMood,
-		Activities:     trendData.Activities,
-		Concerns:       trendData.Concerns,
-		PeriodStart:    trendData.PeriodStart,
-		PeriodEnd:      trendData.PeriodEnd,
-		GeneratedAt:    trendData.GeneratedAt,
+		Health:       trendData.Health,
+		HealthReason: trendData.HealthReason,
+		Mood:         trendData.Mood,
+		MoodReason:   trendData.MoodReason,
+		Activities:   trendData.Activities,
+		PeriodStart:  trendData.PeriodStart,
+		PeriodEnd:    trendData.PeriodEnd,
+		GeneratedAt:  trendData.GeneratedAt,
 	}, nil
 }
 
@@ -102,11 +104,11 @@ func (s *DiaryEntry) TriggerLatestTrend(
 		return nil, status.Error(codes.NotFound, "Gemini API key not configured")
 	}
 
-	// 直近3日間の期間を計算（今日を除く）
+	// 直近1週間程度の期間を計算（今日を除く、前日を中心に参考）
 	now := time.Now().UTC()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	periodEnd := today.AddDate(0, 0, -1)   // 昨日（1日前）
-	periodStart := today.AddDate(0, 0, -3) // 3日前
+	periodStart := today.AddDate(0, 0, -7) // 7日前
 
 	// 対象期間の日記エントリが存在するかチェック
 	var count int
