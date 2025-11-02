@@ -7,10 +7,11 @@
 	import "$lib/i18n";
 
 	interface LatestTrendData {
-		overallSummary: string;
-		healthMood: string;
+		health: string; // "bad", "slight", "normal", "good"
+		healthReason: string; // 比較|具体的理由（20文字以内）
+		mood: string; // "bad", "slight", "normal", "good"
+		moodReason: string; // 比較|具体的理由（20文字以内）
 		activities: string;
-		concerns: string;
 		periodStart: string;
 		periodEnd: string;
 		generatedAt: string;
@@ -43,14 +44,16 @@
 
 				// データのバリデーション
 				if (
-					result.overallSummary &&
-					typeof result.overallSummary === "string" &&
-					result.healthMood &&
-					typeof result.healthMood === "string" &&
+					result.health &&
+					typeof result.health === "string" &&
+					result.healthReason &&
+					typeof result.healthReason === "string" &&
+					result.mood &&
+					typeof result.mood === "string" &&
+					result.moodReason &&
+					typeof result.moodReason === "string" &&
 					result.activities &&
 					typeof result.activities === "string" &&
-					result.concerns &&
-					typeof result.concerns === "string" &&
 					result.periodStart &&
 					result.periodEnd &&
 					result.generatedAt
@@ -66,10 +69,11 @@
 						!Number.isNaN(generatedDate.getTime())
 					) {
 						trendData = {
-							overallSummary: result.overallSummary,
-							healthMood: result.healthMood,
+							health: result.health,
+							healthReason: result.healthReason,
+							mood: result.mood,
+							moodReason: result.moodReason,
 							activities: result.activities,
-							concerns: result.concerns,
 							periodStart: result.periodStart,
 							periodEnd: result.periodEnd,
 							generatedAt: result.generatedAt,
@@ -130,6 +134,77 @@
 		}
 	}
 
+	// 体調・気分のレベルに応じた色を取得
+	function getLevelColor(level: string): {
+		bgClass: string;
+		textClass: string;
+		dotClass: string;
+	} {
+		switch (level) {
+			case "bad":
+				return {
+					bgClass: "bg-red-50 dark:bg-red-900/20",
+					textClass: "text-red-800 dark:text-red-200",
+					dotClass: "bg-red-500",
+				};
+			case "slight":
+				return {
+					bgClass: "bg-yellow-50 dark:bg-yellow-900/20",
+					textClass: "text-yellow-800 dark:text-yellow-200",
+					dotClass: "bg-yellow-500",
+				};
+			case "normal":
+				return {
+					bgClass: "bg-blue-50 dark:bg-blue-900/20",
+					textClass: "text-blue-800 dark:text-blue-200",
+					dotClass: "bg-blue-500",
+				};
+			case "good":
+				return {
+					bgClass: "bg-green-50 dark:bg-green-900/20",
+					textClass: "text-green-800 dark:text-green-200",
+					dotClass: "bg-green-500",
+				};
+			default:
+				return {
+					bgClass: "bg-gray-50 dark:bg-gray-900/20",
+					textClass: "text-gray-800 dark:text-gray-200",
+					dotClass: "bg-gray-500",
+				};
+		}
+	}
+
+	// 活動・行動のテキストを箇条書きに変換
+	interface ActivityItem {
+		text: string;
+		level: number; // 0: トップレベル, 1: ネストレベル1, 2: ネストレベル2
+	}
+
+	function formatActivities(activities: string): ActivityItem[] {
+		// まず改行で分割を試みる
+		let lines = activities.split("\n").filter((line) => line.trim() !== "");
+
+		// 改行がない、または1行しかない場合は「- 」で分割
+		if (lines.length <= 1 && activities.includes("- ")) {
+			// 「- 」で分割（最初の文字が「-」の場合は除外）
+			const parts = activities.split(/(?=\s*-\s)/);
+			lines = parts.filter((part) => part.trim() !== "");
+		}
+
+		return lines.map((line) => {
+			// インデントレベルを計算（2スペースごとに1レベル）
+			const match = line.match(/^(\s*)-\s*(.+)$/);
+			if (match) {
+				const indent = match[1].length;
+				const text = match[2].trim();
+				const level = Math.floor(indent / 2);
+				return { text, level };
+			}
+			// ハイフンがない場合はトップレベルとして扱う
+			return { text: line.trim(), level: 0 };
+		});
+	}
+
 	onMount(() => {
 		// summaryVisibility.init()は+layout.svelteで既に呼ばれているため不要
 		fetchLatestTrend();
@@ -182,44 +257,50 @@
 				{formatPeriod(trendData.periodStart, trendData.periodEnd)}
 			</div>
 
-			<!-- 全体的な様子 -->
-			<div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-				<h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
-					{$_("latestTrend.overallSummary")}
-				</h2>
-				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
-					{trendData.overallSummary}
-				</p>
-			</div>
-
 			<!-- 体調・気分 -->
-			<div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-				<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
-					{$_("latestTrend.healthMood")}
-				</h3>
-				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
-					{trendData.healthMood}
-				</p>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<!-- 体調 -->
+				<div class="rounded-lg p-4 {getLevelColor(trendData.health).bgClass}">
+					<div class="flex items-center gap-2 mb-2">
+						<div class="w-3 h-3 rounded-full {getLevelColor(trendData.health).dotClass}"></div>
+						<h3 class="text-base font-semibold {getLevelColor(trendData.health).textClass}">
+							{$_("latestTrend.health")}
+						</h3>
+					</div>
+					<p class="text-sm {getLevelColor(trendData.health).textClass}">
+						{$_(`latestTrend.healthLevel.${trendData.health}`)}({trendData.healthReason})
+					</p>
+				</div>
+
+				<!-- 気分 -->
+				<div class="rounded-lg p-4 {getLevelColor(trendData.mood).bgClass}">
+					<div class="flex items-center gap-2 mb-2">
+						<div class="w-3 h-3 rounded-full {getLevelColor(trendData.mood).dotClass}"></div>
+						<h3 class="text-base font-semibold {getLevelColor(trendData.mood).textClass}">
+							{$_("latestTrend.mood")}
+						</h3>
+					</div>
+					<p class="text-sm {getLevelColor(trendData.mood).textClass}">
+						{$_(`latestTrend.moodLevel.${trendData.mood}`)}({trendData.moodReason})
+					</p>
+				</div>
 			</div>
 
 			<!-- 活動・行動 -->
 			<div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-				<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
+				<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">
 					{$_("latestTrend.activities")}
 				</h3>
-				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
-					{trendData.activities}
-				</p>
-			</div>
-
-			<!-- 気になること -->
-			<div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
-				<h3 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">
-					{$_("latestTrend.concerns")}
-				</h3>
-				<p class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target">
-					{trendData.concerns}
-				</p>
+				<ul class="text-gray-700 dark:text-gray-300 leading-relaxed auto-phrase-target list-disc list-inside space-y-1">
+					{#each formatActivities(trendData.activities) as item}
+						<li
+							class="ml-{item.level * 4}"
+							style="margin-left: {item.level * 1.5}rem;"
+						>
+							{item.text}
+						</li>
+					{/each}
+				</ul>
 			</div>
 
 			<!-- 生成日時 -->

@@ -111,32 +111,90 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 
 // LatestTrendAnalysis はトレンド分析のJSON構造体
 type LatestTrendAnalysis struct {
-	OverallSummary string `json:"overall_summary"` // 全体的な様子（1行）
-	HealthMood     string `json:"health_mood"`     // 体調・気分の傾向（2-3文）
-	Activities     string `json:"activities"`      // 活動・行動パターン（2-3文）
-	Concerns       string `json:"concerns"`        // 気になること（1-2文）
+	Health       string `json:"health"`        // 体調: "bad", "slight", "normal", "good"
+	HealthReason string `json:"health_reason"` // 体調の理由（10文字以内）
+	Mood         string `json:"mood"`          // 気分: "bad", "slight", "normal", "good"
+	MoodReason   string `json:"mood_reason"`   // 気分の理由（10文字以内）
+	Activities   string `json:"activities"`    // 活動・行動（箇条書き・階層構造のテキスト）
 }
 
 func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent string) (string, error) {
-	prompt := fmt.Sprintf(`以下は直近3日間の日記です。この短い期間の傾向を分析し、わかりやすく要約してください。
+	prompt := fmt.Sprintf(`以下は複数日分の日記です。**前日（最も新しい日）を最も重視**し、それ以前の日記は参考程度に使用して、傾向を分析してください。
+
+【重要な分析方針】
+- **前日（昨日）と前々日（一昨日）を比較**してください
+- 体調と気分は、一昨日と比べてどうだったかという視点で評価してください
+- 理由フィールドには、**一昨日との比較**と**具体的な理由**の両方を含めてください
+- 理由のフォーマット: 「比較|具体的理由」（例: 前日より穏やか|仕事成果あり）
 
 【出力形式】
 以下のJSON形式で出力してください：
 
 {
-  "overall_summary": "<1行で全体的な様子を簡潔に表現>",
-  "health_mood": "<体調や気分の傾向を2-3文で>",
-  "activities": "<よくしていた活動や行動パターンを2-3文で>",
-  "concerns": "<特筆すべき変化や注目すべき点を1-2文で>"
+  "health": "<昨日の体調を4段階で評価: bad / slight / normal / good>",
+  "health_reason": "<比較|具体的理由 の形式で20文字以内（例: 前日より改善|よく休めた）>",
+  "mood": "<昨日の気分を4段階で評価: bad / slight / normal / good>",
+  "mood_reason": "<比較|具体的理由 の形式で20文字以内（例: 前日より穏やか|仕事成果あり）>",
+  "activities": "<活動・行動を箇条書き・階層構造で記述>"
 }
+
+【評価基準】
+health（昨日の体調）:
+- bad: 体調が悪い、不調、病気、疲労が激しい
+- slight: やや体調が悪い、少し疲れている
+- normal: 普通、特に問題なし
+- good: 体調が良い、元気、健康
+- **一昨日と比較して評価してください**
+
+health_reason（体調の理由）:
+- **必ず20文字以内**で記述してください
+- **フォーマット**: 「比較|具体的理由」
+- **比較**: 一昨日との比較を簡潔に表現（例: 前日より改善、前日より悪化、前日と同様）
+- **具体的理由**: なぜそうなったかの理由（例: よく休めた、疲労蓄積、運動した）
+- 例: 「前日より改善|よく休めた」「前日より悪化|睡眠不足」「前日と同様|通常通り」
+
+mood（昨日の気分）:
+- bad: 気分が悪い、落ち込んでいる、ストレスが多い
+- slight: やや気分が悪い、少し憂鬱
+- normal: 普通、特に問題なし
+- good: 気分が良い、前向き、充実している
+- **一昨日と比較して評価してください**
+
+mood_reason（気分の理由）:
+- **必ず20文字以内**で記述してください
+- **フォーマット**: 「比較|具体的理由」
+- **比較**: 一昨日との比較を簡潔に表現（例: 前日より穏やか、前日より低下、前日と同様）
+- **具体的理由**: なぜそうなったかの理由（例: 仕事成果あり、ストレス増、楽しい出来事）
+- 例: 「前日より穏やか|仕事成果あり」「前日より低下|締切接近」「前日と同様|通常通り」
+
+activities（活動・行動）:
+- **必ず改行区切りの箇条書き**で記述してください
+- 各項目は改行（\n）で区切り、行頭に「- 」を付けてください
+- 階層構造の場合は、ネストレベルごとに半角スペース2つのインデントを追加
+- 出力例（改行あり）:
+  - 運動
+    - 朝のランニング
+    - ストレッチ
+  - 仕事
+    - プロジェクトミーティング
+- **重要**: 各項目の間には必ず改行（\n）を入れてください
+- **重要**: 「- 項目1- 項目2」のように連結しないでください
+- Markdownは使用しないでください
 
 【要件】
 - 必ずJSON形式で出力してください
 - Markdownは使用しないでください
 - 具体的な日付や曜日は含めず、傾向のみを記述
-- 3日間という短期間なので、大きな傾向よりも最近の様子に注目してください
+- **前日（昨日）を最も重視**し、最近の様子に注目してください
+- **前日（昨日）と前々日（一昨日）を比較**して評価してください
 - 客観的かつ優しい語り口で
 - 各フィールドは空文字列にせず、必ず内容を記述してください
+- health と mood は必ず "bad", "slight", "normal", "good" のいずれか1つを選んでください
+- health_reason と mood_reason は**必ず20文字以内**で記述してください
+- **health_reason と mood_reason は「比較|具体的理由」の形式で記述してください**
+- **比較部分**: 一昨日との比較を含めてください（例: 前日より改善、前日と同様）
+- **具体的理由部分**: なぜそうなったかの理由を含めてください（例: よく休めた、仕事成果あり）
+- **activities フィールドは必ず改行区切り**で記述してください（連結禁止）
 
 【日記の内容】
 %s
@@ -149,24 +207,28 @@ func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent str
 	schema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
-			"overall_summary": {
+			"health": {
 				Type:        genai.TypeString,
-				Description: "全体的な様子を1行で簡潔に表現",
+				Description: "体調を4段階で評価: bad, slight, normal, good",
 			},
-			"health_mood": {
+			"health_reason": {
 				Type:        genai.TypeString,
-				Description: "体調や気分の傾向を2-3文で",
+				Description: "体調の理由を10文字以内で簡潔に",
+			},
+			"mood": {
+				Type:        genai.TypeString,
+				Description: "気分を4段階で評価: bad, slight, normal, good",
+			},
+			"mood_reason": {
+				Type:        genai.TypeString,
+				Description: "気分の理由を10文字以内で簡潔に",
 			},
 			"activities": {
 				Type:        genai.TypeString,
-				Description: "よくしていた活動や行動パターンを2-3文で",
-			},
-			"concerns": {
-				Type:        genai.TypeString,
-				Description: "特筆すべき変化や注目すべき点を1-2文で",
+				Description: "活動・行動を箇条書き・階層構造で記述",
 			},
 		},
-		Required: []string{"overall_summary", "health_mood", "activities", "concerns"},
+		Required: []string{"health", "health_reason", "mood", "mood_reason", "activities"},
 	}
 
 	config := &genai.GenerateContentConfig{

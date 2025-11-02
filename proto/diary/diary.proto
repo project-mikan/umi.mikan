@@ -128,12 +128,12 @@ service DiaryService {
   //   - NotFound: サマリーが存在しない
   rpc GetDailySummary(GetDailySummaryRequest) returns (GetDailySummaryResponse);
 
-  // GetLatestTrend は直近3日間の日記のトレンド分析を取得します。
+  // GetLatestTrend は直近の日記のトレンド分析を取得します（前日を中心に最大1週間程度を参考）。
   // Redisに保存された分析結果を返します。
   //
   // 例:
   //   request: {}
-  //   response: { overall_summary: "...", health_mood: "...", activities: "...", concerns: "...", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
+  //   response: { health: "good", mood: "normal", activities: "- 運動\n  - 朝のランニング\n- 仕事\n  - プロジェクトミーティング", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
   //
   // エラー:
   //   - NotFound: トレンド分析が存在しない
@@ -323,13 +323,14 @@ message GetLatestTrendRequest {
 
 // 直近トレンド分析取得レスポンス
 message GetLatestTrendResponse {
-  string overall_summary = 1; // 全体的な様子（1行）
-  string health_mood = 2; // 体調・気分の傾向（2-3文）
-  string activities = 3; // 活動・行動パターン（2-3文）
-  string concerns = 4; // 気になること（1-2文）
-  string period_start = 5; // 分析期間開始（ISO 8601形式）
-  string period_end = 6; // 分析期間終了（ISO 8601形式）
-  string generated_at = 7; // 生成日時（ISO 8601形式）
+  string health = 1; // 体調: "bad" (悪い), "slight" (やや悪い), "normal" (普通), "good" (良い)
+  string health_reason = 2; // 体調の理由（10文字以内）
+  string mood = 3; // 気分: "bad" (悪い), "slight" (やや悪い), "normal" (普通), "good" (良い)
+  string mood_reason = 4; // 気分の理由（10文字以内）
+  string activities = 5; // 活動・行動（箇条書き・階層構造のテキスト）
+  string period_start = 6; // 分析期間開始（ISO 8601形式）
+  string period_end = 7; // 分析期間終了（ISO 8601形式）
+  string generated_at = 8; // 生成日時（ISO 8601形式）
 }
 
 // 直近トレンド分析生成トリガーリクエスト（デバッグ用）
