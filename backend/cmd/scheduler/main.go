@@ -657,10 +657,18 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 	usersWithAutoSummaryGauge.WithLabelValues("latest_trend").Set(float64(len(userIDs)))
 
 	// 2. 直近1週間程度の期間を計算（今日を除く、前日を中心に参考）
-	nowUTC := time.Now().UTC()
-	today := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
-	periodEnd := today.AddDate(0, 0, -1)   // 昨日（1日前）
-	periodStart := today.AddDate(0, 0, -7) // 7日前
+	// JST時刻を基準にして「昨日」を計算（AM4時実行時、その前日が昨日）
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		s.logger.WithError(err).Warn("Failed to load Asia/Tokyo location, using fixed offset")
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := time.Now().In(jst)
+	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, jst)
+	// UTC時刻に変換して期間を設定
+	todayUTC := todayJST.UTC()
+	periodEnd := todayUTC.AddDate(0, 0, -1)   // 昨日（JST基準での前日）
+	periodStart := todayUTC.AddDate(0, 0, -7) // 7日前
 
 	// 3. 各ユーザーについて、対象期間に日記があるかチェックし、メッセージをキューイング
 	for _, userID := range userIDs {
