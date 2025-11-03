@@ -105,10 +105,17 @@ func (s *DiaryEntry) TriggerLatestTrend(
 	}
 
 	// 直近1週間程度の期間を計算（今日を除く、前日を中心に参考）
-	now := time.Now().UTC()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	periodEnd := today.AddDate(0, 0, -1)   // 昨日（1日前）
-	periodStart := today.AddDate(0, 0, -7) // 7日前
+	// JST時刻を基準にして「昨日」を計算（実行時刻の前日が昨日）
+	jst, jstErr := time.LoadLocation("Asia/Tokyo")
+	if jstErr != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := time.Now().In(jst)
+	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, jst)
+	// UTC時刻に変換して期間を設定
+	todayUTC := todayJST.UTC()
+	periodEnd := todayUTC.AddDate(0, 0, -1)   // 昨日（JST基準での前日）
+	periodStart := todayUTC.AddDate(0, 0, -7) // 7日前
 
 	// 対象期間の日記エントリが存在するかチェック
 	var count int
