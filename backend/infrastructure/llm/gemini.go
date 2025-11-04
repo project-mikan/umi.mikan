@@ -118,10 +118,11 @@ type LatestTrendAnalysis struct {
 	Activities   string `json:"activities"`    // 活動・行動（箇条書き・階層構造のテキスト）
 }
 
-func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent string) (string, error) {
+func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent string, yesterday string) (string, error) {
 	prompt := fmt.Sprintf(`以下は複数日分の日記です。**前日（最も新しい日）を最も重視**し、それ以前の日記は参考程度に使用して、傾向を分析してください。
 
 【重要な分析方針】
+- **昨日の日付は%sです**
 - **前日（昨日）と前々日（一昨日）を比較**してください
 - 体調と気分は、一昨日と比べてどうだったかという視点で評価してください
 - 理由フィールドには、**一昨日との比較**と**具体的な理由**の両方を含めてください
@@ -199,7 +200,7 @@ activities（活動・行動）:
 【日記の内容】
 %s
 
-`, diaryContent)
+`, yesterday, diaryContent)
 
 	contents := genai.Text(prompt)
 
