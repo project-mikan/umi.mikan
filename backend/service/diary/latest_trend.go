@@ -104,7 +104,7 @@ func (s *DiaryEntry) TriggerLatestTrend(
 		return nil, status.Error(codes.NotFound, "Gemini API key not configured")
 	}
 
-	// 直近1週間程度の期間を計算（今日を除く、前日を中心に参考）
+	// 直近3日間の期間を計算（今日を除く）
 	// JST時刻を基準にして「昨日」を計算（実行時刻の前日が昨日）
 	jst, jstErr := time.LoadLocation("Asia/Tokyo")
 	if jstErr != nil {
@@ -115,7 +115,7 @@ func (s *DiaryEntry) TriggerLatestTrend(
 	// UTC時刻に変換して期間を設定
 	todayUTC := todayJST.UTC()
 	periodEnd := todayUTC.AddDate(0, 0, -1)   // 昨日（JST基準での前日）
-	periodStart := todayUTC.AddDate(0, 0, -7) // 7日前
+	periodStart := todayUTC.AddDate(0, 0, -3) // 3日前
 
 	// 対象期間の日記エントリが存在するかチェック
 	var count int

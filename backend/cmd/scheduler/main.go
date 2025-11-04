@@ -656,19 +656,8 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 	s.logger.WithField("count", len(userIDs)).Info("Found users with auto latest trend enabled")
 	usersWithAutoSummaryGauge.WithLabelValues("latest_trend").Set(float64(len(userIDs)))
 
-	// 2. 直近1週間程度の期間を計算（今日を除く、前日を中心に参考）
-	// JST時刻を基準にして「昨日」を計算（AM4時実行時、その前日が昨日）
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		s.logger.WithError(err).Warn("Failed to load Asia/Tokyo location, using fixed offset")
-		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
-	}
-	nowJST := time.Now().In(jst)
-	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, jst)
-	// UTC時刻に変換して期間を設定
-	todayUTC := todayJST.UTC()
-	periodEnd := todayUTC.AddDate(0, 0, -1)   // 昨日（JST基準での前日）
-	periodStart := todayUTC.AddDate(0, 0, -7) // 7日前
+	// 2. 直近3日間の期間を計算（今日を除く）
+	periodStart, periodEnd := calculateTrendPeriod(time.Now())
 
 	// 3. 各ユーザーについて、対象期間に日記があるかチェックし、メッセージをキューイング
 	for _, userID := range userIDs {
@@ -679,6 +668,23 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 	}
 
 	return nil
+}
+
+// calculateTrendPeriod は、指定された時刻を基準にトレンド分析対象期間を計算します
+// 日記のdate列は日本時間ベースの日付をUTCで保存しているため、
+// JST時刻を基準にして「今日」「昨日」を計算し、UTCに変換してDB検索に使用
+func calculateTrendPeriod(now time.Time) (periodStart, periodEnd time.Time) {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := now.In(jst)
+	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, jst)
+	// 日本時間の日付をUTCに変換してDB検索用の期間を設定
+	todayUTC := todayJST.UTC()
+	periodEnd = todayUTC.AddDate(0, 0, -1)   // 日本時間の昨日
+	periodStart = todayUTC.AddDate(0, 0, -3) // 日本時間の3日前
+	return periodStart, periodEnd
 }
 
 func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Scheduler, userID string, periodStart, periodEnd time.Time) error {

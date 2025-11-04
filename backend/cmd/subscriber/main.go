@@ -735,9 +735,16 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	}
 
 	// 4. LLMでトレンド分析生成
+	// 日本時間ベースで昨日の日付を取得
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		logger.WithError(err).Warn("Failed to load Asia/Tokyo location, using fixed offset")
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	periodEndJST := periodEnd.In(jst)
 	combinedDiaryEntries := fmt.Sprintf("Diary entries from %s to %s:\n\n%s", periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02"),
 		strings.Join(diaryEntries, "\n\n"))
-	trendAnalysisJSON, err := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+	trendAnalysisJSON, err := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, periodEndJST, logger)
 	if err != nil {
 		return fmt.Errorf("failed to generate latest trend with LLM: %w", err)
 	}
@@ -787,7 +794,7 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	return nil
 }
 
-func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
+func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -810,7 +817,8 @@ func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory 
 	}()
 
 	// トレンド分析生成
-	analysis, err := geminiClient.GenerateLatestTrend(ctx, combinedEntries)
+	yesterdayStr := yesterday.Format("2006-01-02")
+	analysis, err := geminiClient.GenerateLatestTrend(ctx, combinedEntries, yesterdayStr)
 	if err != nil {
 		logger.WithError(err).Error("Failed to generate latest trend analysis")
 		return "", fmt.Errorf("failed to generate latest trend analysis: %w", err)
