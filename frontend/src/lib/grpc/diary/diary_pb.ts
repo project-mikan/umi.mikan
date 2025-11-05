@@ -22,7 +22,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_diary_diary: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0inQEKCkRpYXJ5RW50cnkSCgoCaWQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRBIPCgdjb250ZW50GAMgASgJEhIKCmNyZWF0ZWRfYXQYBCABKAMSEgoKdXBkYXRlZF9hdBgFIAEoAxIwCg5kaWFyeV9lbnRpdGllcxgGIAMoCzIYLmRpYXJ5LkRpYXJ5RW50aXR5T3V0cHV0IksKEURpYXJ5RW50aXR5T3V0cHV0EhEKCWVudGl0eV9pZBgBIAEoCRIjCglwb3NpdGlvbnMYAiADKAsyEC5lbnRpdHkuUG9zaXRpb24iSgoQRGlhcnlFbnRpdHlJbnB1dBIRCgllbnRpdHlfaWQYASABKAkSIwoJcG9zaXRpb25zGAIgAygLMhAuZW50aXR5LlBvc2l0aW9uInUKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRBIvCg5kaWFyeV9lbnRpdGllcxgDIAMoCzIXLmRpYXJ5LkRpYXJ5RW50aXR5SW5wdXQiPAoYQ3JlYXRlRGlhcnlFbnRyeVJlc3BvbnNlEiAKBWVudHJ5GAEgASgLMhEuZGlhcnkuRGlhcnlFbnRyeSIwChRHZXREaWFyeUVudHJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIjMKFkdldERpYXJ5RW50cmllc1JlcXVlc3QSGQoFZGF0ZXMYASADKAsyCi5kaWFyeS5ZTUQiOQodR2V0RGlhcnlFbnRyaWVzQnlNb250aFJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSIsChlTZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0Eg8KB2tleXdvcmQYASABKAkiWgoaU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USGAoQc2VhcmNoZWRfa2V5d29yZBgBIAEoCRIiCgdlbnRyaWVzGAIgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI9ChdHZXREaWFyeUVudHJpZXNSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSJECh5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVzcG9uc2USIgoHZW50cmllcxgBIAMoCzIRLmRpYXJ5LkRpYXJ5RW50cnkiOQoVR2V0RGlhcnlFbnRyeVJlc3BvbnNlEiAKBWVudHJ5GAEgASgLMhEuZGlhcnkuRGlhcnlFbnRyeSKQAQoXVXBkYXRlRGlhcnlFbnRyeVJlcXVlc3QSCgoCaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDwoHY29udGVudBgDIAEoCRIYCgRkYXRlGAQgASgLMgouZGlhcnkuWU1EEi8KDmRpYXJ5X2VudGl0aWVzGAUgAygLMhcuZGlhcnkuRGlhcnlFbnRpdHlJbnB1dCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIm8KDk1vbnRobHlTdW1tYXJ5EgoKAmlkGAEgASgJEhgKBW1vbnRoGAIgASgLMgkuZGlhcnkuWU0SDwoHc3VtbWFyeRgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5In8KDERhaWx5U3VtbWFyeRIKCgJpZBgBIAEoCRIQCghkaWFyeV9pZBgCIAEoCRIYCgRkYXRlGAMgASgLMgouZGlhcnkuWU1EEg8KB3N1bW1hcnkYBCABKAkSEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiFwoVR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0IrYBChZHZXRMYXRlc3RUcmVuZFJlc3BvbnNlEg4KBmhlYWx0aBgBIAEoCRIVCg1oZWFsdGhfcmVhc29uGAIgASgJEgwKBG1vb2QYAyABKAkSEwoLbW9vZF9yZWFzb24YBCABKAkSEgoKYWN0aXZpdGllcxgFIAEoCRIUCgxwZXJpb2Rfc3RhcnQYBiABKAkSEgoKcGVyaW9kX2VuZBgHIAEoCRIUCgxnZW5lcmF0ZWRfYXQYCCABKAkiGwoZVHJpZ2dlckxhdGVzdFRyZW5kUmVxdWVzdCI+ChpUcmlnZ2VyTGF0ZXN0VHJlbmRSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkyiQkKDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlEk0KDkdldExhdGVzdFRyZW5kEhwuZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Gh0uZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXNwb25zZRJZChJUcmlnZ2VyTGF0ZXN0VHJlbmQSIC5kaWFyeS5UcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0GiEuZGlhcnkuVHJpZ2dlckxhdGVzdFRyZW5kUmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
+		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0inQEKCkRpYXJ5RW50cnkSCgoCaWQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRBIPCgdjb250ZW50GAMgASgJEhIKCmNyZWF0ZWRfYXQYBCABKAMSEgoKdXBkYXRlZF9hdBgFIAEoAxIwCg5kaWFyeV9lbnRpdGllcxgGIAMoCzIYLmRpYXJ5LkRpYXJ5RW50aXR5T3V0cHV0IksKEURpYXJ5RW50aXR5T3V0cHV0EhEKCWVudGl0eV9pZBgBIAEoCRIjCglwb3NpdGlvbnMYAiADKAsyEC5lbnRpdHkuUG9zaXRpb24iSgoQRGlhcnlFbnRpdHlJbnB1dBIRCgllbnRpdHlfaWQYASABKAkSIwoJcG9zaXRpb25zGAIgAygLMhAuZW50aXR5LlBvc2l0aW9uInUKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRBIvCg5kaWFyeV9lbnRpdGllcxgDIAMoCzIXLmRpYXJ5LkRpYXJ5RW50aXR5SW5wdXQiPAoYQ3JlYXRlRGlhcnlFbnRyeVJlc3BvbnNlEiAKBWVudHJ5GAEgASgLMhEuZGlhcnkuRGlhcnlFbnRyeSIwChRHZXREaWFyeUVudHJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIjMKFkdldERpYXJ5RW50cmllc1JlcXVlc3QSGQoFZGF0ZXMYASADKAsyCi5kaWFyeS5ZTUQiOQodR2V0RGlhcnlFbnRyaWVzQnlNb250aFJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSIsChlTZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0Eg8KB2tleXdvcmQYASABKAkiWgoaU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USGAoQc2VhcmNoZWRfa2V5d29yZBgBIAEoCRIiCgdlbnRyaWVzGAIgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI9ChdHZXREaWFyeUVudHJpZXNSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSJECh5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVzcG9uc2USIgoHZW50cmllcxgBIAMoCzIRLmRpYXJ5LkRpYXJ5RW50cnkiOQoVR2V0RGlhcnlFbnRyeVJlc3BvbnNlEiAKBWVudHJ5GAEgASgLMhEuZGlhcnkuRGlhcnlFbnRyeSKQAQoXVXBkYXRlRGlhcnlFbnRyeVJlcXVlc3QSCgoCaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDwoHY29udGVudBgDIAEoCRIYCgRkYXRlGAQgASgLMgouZGlhcnkuWU1EEi8KDmRpYXJ5X2VudGl0aWVzGAUgAygLMhcuZGlhcnkuRGlhcnlFbnRpdHlJbnB1dCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIm8KDk1vbnRobHlTdW1tYXJ5EgoKAmlkGAEgASgJEhgKBW1vbnRoGAIgASgLMgkuZGlhcnkuWU0SDwoHc3VtbWFyeRgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5In8KDERhaWx5U3VtbWFyeRIKCgJpZBgBIAEoCRIQCghkaWFyeV9pZBgCIAEoCRIYCgRkYXRlGAMgASgLMgouZGlhcnkuWU1EEg8KB3N1bW1hcnkYBCABKAkSEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiFwoVR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0IrYBChZHZXRMYXRlc3RUcmVuZFJlc3BvbnNlEg4KBmhlYWx0aBgBIAEoCRIVCg1oZWFsdGhfcmVhc29uGAIgASgJEgwKBG1vb2QYAyABKAkSEwoLbW9vZF9yZWFzb24YBCABKAkSEgoKYWN0aXZpdGllcxgFIAEoCRIUCgxwZXJpb2Rfc3RhcnQYBiABKAkSEgoKcGVyaW9kX2VuZBgHIAEoCRIUCgxnZW5lcmF0ZWRfYXQYCCABKAkiGwoZVHJpZ2dlckxhdGVzdFRyZW5kUmVxdWVzdCI+ChpUcmlnZ2VyTGF0ZXN0VHJlbmRSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiMAocVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJACh1UcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXNwb25zZRIOCgZxdWV1ZWQYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIsChhHZXREaWFyeUhpZ2hsaWdodFJlcXVlc3QSEAoIZGlhcnlfaWQYASABKAkiOgoOSGlnaGxpZ2h0UmFuZ2USDQoFc3RhcnQYASABKAUSCwoDZW5kGAIgASgFEgwKBHRleHQYAyABKAkibgoZR2V0RGlhcnlIaWdobGlnaHRSZXNwb25zZRIpCgpoaWdobGlnaHRzGAEgAygLMhUuZGlhcnkuSGlnaGxpZ2h0UmFuZ2USEgoKY3JlYXRlZF9hdBgCIAEoAxISCgp1cGRhdGVkX2F0GAMgASgDIi8KG0RlbGV0ZURpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSIvChxEZWxldGVEaWFyeUhpZ2hsaWdodFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgypgsKDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlEk0KDkdldExhdGVzdFRyZW5kEhwuZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Gh0uZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXNwb25zZRJZChJUcmlnZ2VyTGF0ZXN0VHJlbmQSIC5kaWFyeS5UcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0GiEuZGlhcnkuVHJpZ2dlckxhdGVzdFRyZW5kUmVzcG9uc2USYgoVVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0EiMuZGlhcnkuVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0UmVxdWVzdBokLmRpYXJ5LlRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlc3BvbnNlElYKEUdldERpYXJ5SGlnaGxpZ2h0Eh8uZGlhcnkuR2V0RGlhcnlIaWdobGlnaHRSZXF1ZXN0GiAuZGlhcnkuR2V0RGlhcnlIaWdobGlnaHRSZXNwb25zZRJfChREZWxldGVEaWFyeUhpZ2hsaWdodBIiLmRpYXJ5LkRlbGV0ZURpYXJ5SGlnaGxpZ2h0UmVxdWVzdBojLmRpYXJ5LkRlbGV0ZURpYXJ5SGlnaGxpZ2h0UmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
 		[file_entity_entity],
 	);
 
@@ -907,6 +907,201 @@ export const TriggerLatestTrendResponseSchema: GenMessage<TriggerLatestTrendResp
 	messageDesc(file_diary_diary, 32);
 
 /**
+ * 日記ハイライト生成トリガーリクエスト
+ *
+ * @generated from message diary.TriggerDiaryHighlightRequest
+ */
+export type TriggerDiaryHighlightRequest =
+	Message<"diary.TriggerDiaryHighlightRequest"> & {
+		/**
+		 * 日記ID
+		 *
+		 * @generated from field: string diary_id = 1;
+		 */
+		diaryId: string;
+	};
+
+/**
+ * Describes the message diary.TriggerDiaryHighlightRequest.
+ * Use `create(TriggerDiaryHighlightRequestSchema)` to create a new message.
+ */
+export const TriggerDiaryHighlightRequestSchema: GenMessage<TriggerDiaryHighlightRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 33);
+
+/**
+ * 日記ハイライト生成トリガーレスポンス
+ *
+ * @generated from message diary.TriggerDiaryHighlightResponse
+ */
+export type TriggerDiaryHighlightResponse =
+	Message<"diary.TriggerDiaryHighlightResponse"> & {
+		/**
+		 * キューイング成功/失敗
+		 *
+		 * @generated from field: bool queued = 1;
+		 */
+		queued: boolean;
+
+		/**
+		 * メッセージ
+		 *
+		 * @generated from field: string message = 2;
+		 */
+		message: string;
+	};
+
+/**
+ * Describes the message diary.TriggerDiaryHighlightResponse.
+ * Use `create(TriggerDiaryHighlightResponseSchema)` to create a new message.
+ */
+export const TriggerDiaryHighlightResponseSchema: GenMessage<TriggerDiaryHighlightResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 34);
+
+/**
+ * 日記ハイライト取得リクエスト
+ *
+ * @generated from message diary.GetDiaryHighlightRequest
+ */
+export type GetDiaryHighlightRequest =
+	Message<"diary.GetDiaryHighlightRequest"> & {
+		/**
+		 * 日記ID
+		 *
+		 * @generated from field: string diary_id = 1;
+		 */
+		diaryId: string;
+	};
+
+/**
+ * Describes the message diary.GetDiaryHighlightRequest.
+ * Use `create(GetDiaryHighlightRequestSchema)` to create a new message.
+ */
+export const GetDiaryHighlightRequestSchema: GenMessage<GetDiaryHighlightRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 35);
+
+/**
+ * ハイライト範囲
+ *
+ * @generated from message diary.HighlightRange
+ */
+export type HighlightRange = Message<"diary.HighlightRange"> & {
+	/**
+	 * ハイライト開始位置（文字数）
+	 *
+	 * @generated from field: int32 start = 1;
+	 */
+	start: number;
+
+	/**
+	 * ハイライト終了位置（文字数）
+	 *
+	 * @generated from field: int32 end = 2;
+	 */
+	end: number;
+
+	/**
+	 * ハイライト対象のテキスト
+	 *
+	 * @generated from field: string text = 3;
+	 */
+	text: string;
+};
+
+/**
+ * Describes the message diary.HighlightRange.
+ * Use `create(HighlightRangeSchema)` to create a new message.
+ */
+export const HighlightRangeSchema: GenMessage<HighlightRange> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 36);
+
+/**
+ * 日記ハイライト取得レスポンス
+ *
+ * @generated from message diary.GetDiaryHighlightResponse
+ */
+export type GetDiaryHighlightResponse =
+	Message<"diary.GetDiaryHighlightResponse"> & {
+		/**
+		 * ハイライトリスト
+		 *
+		 * @generated from field: repeated diary.HighlightRange highlights = 1;
+		 */
+		highlights: HighlightRange[];
+
+		/**
+		 * 作成日時（Unix timestamp）
+		 *
+		 * @generated from field: int64 created_at = 2;
+		 */
+		createdAt: bigint;
+
+		/**
+		 * 更新日時（Unix timestamp）
+		 *
+		 * @generated from field: int64 updated_at = 3;
+		 */
+		updatedAt: bigint;
+	};
+
+/**
+ * Describes the message diary.GetDiaryHighlightResponse.
+ * Use `create(GetDiaryHighlightResponseSchema)` to create a new message.
+ */
+export const GetDiaryHighlightResponseSchema: GenMessage<GetDiaryHighlightResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 37);
+
+/**
+ * 日記ハイライト削除リクエスト
+ *
+ * @generated from message diary.DeleteDiaryHighlightRequest
+ */
+export type DeleteDiaryHighlightRequest =
+	Message<"diary.DeleteDiaryHighlightRequest"> & {
+		/**
+		 * 日記ID
+		 *
+		 * @generated from field: string diary_id = 1;
+		 */
+		diaryId: string;
+	};
+
+/**
+ * Describes the message diary.DeleteDiaryHighlightRequest.
+ * Use `create(DeleteDiaryHighlightRequestSchema)` to create a new message.
+ */
+export const DeleteDiaryHighlightRequestSchema: GenMessage<DeleteDiaryHighlightRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 38);
+
+/**
+ * 日記ハイライト削除レスポンス
+ *
+ * @generated from message diary.DeleteDiaryHighlightResponse
+ */
+export type DeleteDiaryHighlightResponse =
+	Message<"diary.DeleteDiaryHighlightResponse"> & {
+		/**
+		 * 削除成功/失敗
+		 *
+		 * @generated from field: bool success = 1;
+		 */
+		success: boolean;
+	};
+
+/**
+ * Describes the message diary.DeleteDiaryHighlightResponse.
+ * Use `create(DeleteDiaryHighlightResponseSchema)` to create a new message.
+ */
+export const DeleteDiaryHighlightResponseSchema: GenMessage<DeleteDiaryHighlightResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 39);
+
+/**
  * DiaryService は日記エントリの作成・読み取り・更新・削除（CRUD）と
  * AI要約生成機能を提供するサービスです。
  * エンティティとの紐付けにより、固有名詞のハイライト表示や検索が可能です。
@@ -1145,5 +1340,61 @@ export const DiaryService: GenService<{
 		methodKind: "unary";
 		input: typeof TriggerLatestTrendRequestSchema;
 		output: typeof TriggerLatestTrendResponseSchema;
+	};
+	/**
+	 * TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
+	 * Redis Pub/Subを通じてSubscriberが処理を実行します。
+	 *
+	 * 例:
+	 *   request: { diary_id: "uuid" }
+	 *   response: { queued: true, message: "ハイライト生成をキューに追加しました" }
+	 *
+	 * エラー:
+	 *   - NotFound: 日記エントリが見つからない、またはLLMキーが設定されていない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	 *
+	 * @generated from rpc diary.DiaryService.TriggerDiaryHighlight
+	 */
+	triggerDiaryHighlight: {
+		methodKind: "unary";
+		input: typeof TriggerDiaryHighlightRequestSchema;
+		output: typeof TriggerDiaryHighlightResponseSchema;
+	};
+	/**
+	 * GetDiaryHighlight は日記エントリのハイライト情報を取得します。
+	 * 日記が更新された場合、古いハイライトは無効として扱われます。
+	 *
+	 * 例:
+	 *   request: { diary_id: "uuid" }
+	 *   response: { highlights: [{ start: 0, end: 25, text: "..." }], created_at: 1234567890, updated_at: 1234567890 }
+	 *
+	 * エラー:
+	 *   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	 *
+	 * @generated from rpc diary.DiaryService.GetDiaryHighlight
+	 */
+	getDiaryHighlight: {
+		methodKind: "unary";
+		input: typeof GetDiaryHighlightRequestSchema;
+		output: typeof GetDiaryHighlightResponseSchema;
+	};
+	/**
+	 * DeleteDiaryHighlight は日記エントリのハイライトを削除します。
+	 *
+	 * 例:
+	 *   request: { diary_id: "uuid" }
+	 *   response: { success: true }
+	 *
+	 * エラー:
+	 *   - NotFound: ハイライトが存在しない
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	 *
+	 * @generated from rpc diary.DiaryService.DeleteDiaryHighlight
+	 */
+	deleteDiaryHighlight: {
+		methodKind: "unary";
+		input: typeof DeleteDiaryHighlightRequestSchema;
+		output: typeof DeleteDiaryHighlightResponseSchema;
 	};
 }> = /*@__PURE__*/ serviceDesc(file_diary_diary, 0);

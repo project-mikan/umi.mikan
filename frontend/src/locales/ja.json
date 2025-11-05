@@ -227,7 +227,20 @@
 		"nineYearsAgo": "9年前",
 		"tenYearsAgo": "10年前",
 		"noPastEntry": "日記がありません",
-		"noPastEntries": "過去の同じ日の日記はありません"
+		"noPastEntries": "過去の同じ日の日記はありません",
+		"highlight": {
+			"generate": "ハイライト生成",
+			"regenerate": "ハイライト再生成",
+			"generating": "ハイライト生成中...",
+			"delete": "ハイライト削除",
+			"deleting": "ハイライト削除中...",
+			"label": "重要な部分",
+			"notAvailable": "ハイライトはまだ生成されていません",
+			"outdated": "日記が更新されています。最新のハイライトにする場合は再生成してください",
+			"generationFailed": "ハイライトの生成に失敗しました",
+			"statusQueued": "ハイライトの生成をキューに追加しました。しばらくお待ちください",
+			"statusProcessing": "ハイライトを生成中です。しばらくお待ちください"
+		}
 	},
 	"date": {
 		"dayOfWeek": {

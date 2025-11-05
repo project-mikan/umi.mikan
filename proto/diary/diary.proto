@@ -150,6 +150,41 @@ service DiaryService {
   //   - PermissionDenied: production環境では使用不可
   //   - NotFound: LLMキーが設定されていない
   rpc TriggerLatestTrend(TriggerLatestTrendRequest) returns (TriggerLatestTrendResponse);
+
+  // TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
+  // Redis Pub/Subを通じてSubscriberが処理を実行します。
+  //
+  // 例:
+  //   request: { diary_id: "uuid" }
+  //   response: { queued: true, message: "ハイライト生成をキューに追加しました" }
+  //
+  // エラー:
+  //   - NotFound: 日記エントリが見つからない、またはLLMキーが設定されていない
+  //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+  rpc TriggerDiaryHighlight(TriggerDiaryHighlightRequest) returns (TriggerDiaryHighlightResponse);
+
+  // GetDiaryHighlight は日記エントリのハイライト情報を取得します。
+  // 日記が更新された場合、古いハイライトは無効として扱われます。
+  //
+  // 例:
+  //   request: { diary_id: "uuid" }
+  //   response: { highlights: [{ start: 0, end: 25, text: "..." }], created_at: 1234567890, updated_at: 1234567890 }
+  //
+  // エラー:
+  //   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
+  //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+  rpc GetDiaryHighlight(GetDiaryHighlightRequest) returns (GetDiaryHighlightResponse);
+
+  // DeleteDiaryHighlight は日記エントリのハイライトを削除します。
+  //
+  // 例:
+  //   request: { diary_id: "uuid" }
+  //   response: { success: true }
+  //
+  // エラー:
+  //   - NotFound: ハイライトが存在しない
+  //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+  rpc DeleteDiaryHighlight(DeleteDiaryHighlightRequest) returns (DeleteDiaryHighlightResponse);
 }
 
 message YMD {
@@ -342,4 +377,47 @@ message TriggerLatestTrendRequest {
 message TriggerLatestTrendResponse {
   bool success = 1; // 成功フラグ
   string message = 2; // メッセージ
+}
+
+// 日記ハイライト生成トリガーリクエスト
+message TriggerDiaryHighlightRequest {
+  string diary_id = 1; // 日記ID
+  // user_id は認証情報から取得
+}
+
+// 日記ハイライト生成トリガーレスポンス
+message TriggerDiaryHighlightResponse {
+  bool queued = 1; // キューイング成功/失敗
+  string message = 2; // メッセージ
+}
+
+// 日記ハイライト取得リクエスト
+message GetDiaryHighlightRequest {
+  string diary_id = 1; // 日記ID
+  // user_id は認証情報から取得
+}
+
+// ハイライト範囲
+message HighlightRange {
+  int32 start = 1; // ハイライト開始位置（文字数）
+  int32 end = 2; // ハイライト終了位置（文字数）
+  string text = 3; // ハイライト対象のテキスト
+}
+
+// 日記ハイライト取得レスポンス
+message GetDiaryHighlightResponse {
+  repeated HighlightRange highlights = 1; // ハイライトリスト
+  int64 created_at = 2; // 作成日時（Unix timestamp）
+  int64 updated_at = 3; // 更新日時（Unix timestamp）
+}
+
+// 日記ハイライト削除リクエスト
+message DeleteDiaryHighlightRequest {
+  string diary_id = 1; // 日記ID
+  // user_id は認証情報から取得
+}
+
+// 日記ハイライト削除レスポンス
+message DeleteDiaryHighlightResponse {
+  bool success = 1; // 削除成功/失敗
 }

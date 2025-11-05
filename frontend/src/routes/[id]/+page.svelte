@@ -10,6 +10,7 @@
 	import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 	import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
 	import FormField from "$lib/components/molecules/FormField.svelte";
+	import HighlightDisplay from "$lib/components/molecules/HighlightDisplay.svelte";
 	import Modal from "$lib/components/molecules/Modal.svelte";
 	import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
 	import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
@@ -66,6 +67,7 @@
 	let isFutureDate = false;
 	let isSummaryGenerating = false; // 要約生成中のフラグ
 	let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
+	let isHighlightOutdated = false; // ハイライトが古いかどうか
 
 	// 未保存状態の管理
 	let initialContent = "";
@@ -202,6 +204,17 @@
 		isSummaryGenerating = false;
 	}
 
+	function handleHighlightUpdated(event: CustomEvent) {
+		const newHighlight = event.detail.highlight;
+		// ハイライトが更新されたら古くないとマーク
+		isHighlightOutdated = false;
+	}
+
+	function handleHighlightDeleted() {
+		// ハイライトが削除されたら古いフラグもリセット
+		isHighlightOutdated = false;
+	}
+
 	function _formatDateStr(ymd: {
 		year: number;
 		month: number;
@@ -309,6 +322,19 @@
 				on:error={handleSummaryError}
 				on:generationStarted={handleGenerationStarted}
 				on:generationCompleted={handleGenerationCompleted}
+			/>
+		{/if}
+
+		<!-- Highlight display area -->
+		{#if data.entry && characterCount >= 100}
+			<HighlightDisplay
+				diaryId={data.entry.id}
+				content={data.entry.content}
+				{hasLLMKey}
+				{isHighlightOutdated}
+				diaryUpdatedAt={Number(data.entry.updatedAt)}
+				on:highlightUpdated={handleHighlightUpdated}
+				on:highlightDeleted={handleHighlightDeleted}
 			/>
 		{/if}
 
