@@ -119,6 +119,8 @@
 	}
 
 	// 期間の日本語表示を生成
+	// バックエンドから返される日付はUTC 00:00:00形式（JST日付をUTCとして表現）なので、
+	// タイムゾーンに関係なく正しく表示するためにgetUTC*メソッドを使用
 	function formatPeriod(start: string, end: string): string {
 		if (!start || !end) return "";
 
@@ -126,11 +128,18 @@
 		const endDate = new Date(end);
 
 		if ($locale === "ja") {
-			const startStr = `${startDate.getFullYear()}年${startDate.getMonth() + 1}月${startDate.getDate()}日`;
-			const endStr = `${endDate.getFullYear()}年${endDate.getMonth() + 1}月${endDate.getDate()}日`;
+			const startStr = `${startDate.getUTCFullYear()}年${startDate.getUTCMonth() + 1}月${startDate.getUTCDate()}日`;
+			const endStr = `${endDate.getUTCFullYear()}年${endDate.getUTCMonth() + 1}月${endDate.getUTCDate()}日`;
 			return `${startStr} 〜 ${endStr}`;
 		} else {
-			return `${startDate.toLocaleDateString($locale || "en")} - ${endDate.toLocaleDateString($locale || "en")}`;
+			// 英語の場合もUTC日付として表示
+			const options: Intl.DateTimeFormatOptions = {
+				year: "numeric",
+				month: "long",
+				day: "numeric",
+				timeZone: "UTC",
+			};
+			return `${startDate.toLocaleDateString($locale || "en", options)} - ${endDate.toLocaleDateString($locale || "en", options)}`;
 		}
 	}
 

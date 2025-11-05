@@ -671,8 +671,8 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 }
 
 // calculateTrendPeriod は、指定された時刻を基準にトレンド分析対象期間を計算します
-// 日記のdate列は日本時間ベースの日付をUTCで保存しているため、
-// JST時刻を基準にして「今日」「昨日」を計算し、UTCに変換してDB検索に使用
+// 日記のdate列は日本時間ベースの日付をUTC 00:00:00として保存しているため、
+// JST時刻を基準にして「昨日」「3日前」の日付を計算し、UTC 00:00:00として表現してDB検索に使用
 func calculateTrendPeriod(now time.Time) (periodStart, periodEnd time.Time) {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
@@ -680,10 +680,15 @@ func calculateTrendPeriod(now time.Time) (periodStart, periodEnd time.Time) {
 	}
 	nowJST := now.In(jst)
 	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, jst)
-	// 日本時間の日付をUTCに変換してDB検索用の期間を設定
-	todayUTC := todayJST.UTC()
-	periodEnd = todayUTC.AddDate(0, 0, -1)   // 日本時間の昨日
-	periodStart = todayUTC.AddDate(0, 0, -3) // 日本時間の3日前
+
+	// 昨日と3日前のJST日付を計算
+	yesterdayJST := todayJST.AddDate(0, 0, -1)
+	threeDaysAgoJST := todayJST.AddDate(0, 0, -3)
+
+	// JSTの日付をUTC 00:00:00として表現（diariesテーブルの保存形式に合わせる）
+	periodEnd = time.Date(yesterdayJST.Year(), yesterdayJST.Month(), yesterdayJST.Day(), 0, 0, 0, 0, time.UTC)
+	periodStart = time.Date(threeDaysAgoJST.Year(), threeDaysAgoJST.Month(), threeDaysAgoJST.Day(), 0, 0, 0, 0, time.UTC)
+
 	return periodStart, periodEnd
 }
 
