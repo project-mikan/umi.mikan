@@ -105,17 +105,21 @@ func (s *DiaryEntry) TriggerLatestTrend(
 	}
 
 	// 直近3日間の期間を計算（今日を除く）
-	// JST時刻を基準にして「昨日」を計算（実行時刻の前日が昨日）
+	// JST時刻を基準にして「昨日」「3日前」を計算
 	jst, jstErr := time.LoadLocation("Asia/Tokyo")
 	if jstErr != nil {
 		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
 	}
 	nowJST := time.Now().In(jst)
 	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, jst)
-	// UTC時刻に変換して期間を設定
-	todayUTC := todayJST.UTC()
-	periodEnd := todayUTC.AddDate(0, 0, -1)   // 昨日（JST基準での前日）
-	periodStart := todayUTC.AddDate(0, 0, -3) // 3日前
+
+	// 昨日と3日前のJST日付を計算
+	yesterdayJST := todayJST.AddDate(0, 0, -1)
+	threeDaysAgoJST := todayJST.AddDate(0, 0, -3)
+
+	// JSTの日付をUTC 00:00:00として表現（diariesテーブルの保存形式に合わせる）
+	periodEnd := time.Date(yesterdayJST.Year(), yesterdayJST.Month(), yesterdayJST.Day(), 0, 0, 0, 0, time.UTC)
+	periodStart := time.Date(threeDaysAgoJST.Year(), threeDaysAgoJST.Month(), threeDaysAgoJST.Day(), 0, 0, 0, 0, time.UTC)
 
 	// 対象期間の日記エントリが存在するかチェック
 	var count int
