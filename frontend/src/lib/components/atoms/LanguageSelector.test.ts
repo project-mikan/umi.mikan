@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Mock } from "vitest";
 
 describe("LanguageSelector Component Logic", () => {
 	let localStorageItems: Record<string, string> = {};
-	let mockLocaleSet: ReturnType<typeof vi.fn>;
-	let mockAddEventListener: ReturnType<typeof vi.fn>;
-	let mockRemoveEventListener: ReturnType<typeof vi.fn>;
+	let mockLocaleSet: Mock;
+	let mockAddEventListener: Mock;
+	let mockRemoveEventListener: Mock;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
