@@ -1122,8 +1122,8 @@ func (s *DiaryEntry) GetDiaryHighlight(
 	}
 
 	// 日記が更新された場合、ハイライトは無効
-	// diary.UpdatedAt: int64 (Unix timestamp), highlight.CreatedAt: time.Time
-	if diary.UpdatedAt > highlight.CreatedAt.Unix() {
+	// diary.UpdatedAt: int64 (Unix timestamp), highlight.UpdatedAt: time.Time
+	if diary.UpdatedAt > highlight.UpdatedAt.Unix() {
 		return nil, status.Error(codes.NotFound, "Highlight is outdated (diary has been updated)")
 	}
 

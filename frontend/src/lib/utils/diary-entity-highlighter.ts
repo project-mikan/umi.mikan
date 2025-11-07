@@ -122,3 +122,116 @@ function escapeHtml(text: string): string {
 		.replace(/"/g, "&quot;")
 		.replace(/'/g, "&#039;");
 }
+
+/**
+ * ハイライト情報の型定義
+ */
+export interface DiaryHighlight {
+	start: number;
+	end: number;
+	text: string;
+}
+
+/**
+ * 日記のcontentに、entityとhighlightの両方をハイライトしたHTMLを生成
+ */
+export function highlightEntitiesAndHighlights(
+	content: string,
+	diaryEntities: DiaryEntityOutput[],
+	diaryHighlights: DiaryHighlight[],
+): string {
+	// 全てのハイライト対象を収集
+	interface HighlightSegment {
+		start: number;
+		end: number;
+		type: "entity" | "highlight";
+		entityId?: string;
+	}
+
+	const segments: HighlightSegment[] = [];
+
+	// エンティティセグメントを追加
+	if (diaryEntities && diaryEntities.length > 0) {
+		for (const diaryEntity of diaryEntities) {
+			for (const position of diaryEntity.positions) {
+				segments.push({
+					start: position.start,
+					end: position.end,
+					type: "entity",
+					entityId: diaryEntity.entityId,
+				});
+			}
+		}
+	}
+
+	// ハイライトセグメントを追加
+	if (diaryHighlights && diaryHighlights.length > 0) {
+		for (const highlight of diaryHighlights) {
+			segments.push({
+				start: highlight.start,
+				end: highlight.end,
+				type: "highlight",
+			});
+		}
+	}
+
+	// セグメントがない場合はプレーンテキスト
+	if (segments.length === 0) {
+		return escapeHtml(content).replace(/\n/g, "<br>");
+	}
+
+	// 開始位置でソート
+	segments.sort((a, b) => a.start - b.start);
+
+	// 重複するセグメントを処理（エンティティを優先）
+	const mergedSegments: HighlightSegment[] = [];
+	for (const segment of segments) {
+		// 既存のセグメントと重複するかチェック
+		const overlapping = mergedSegments.find(
+			(s) =>
+				(segment.start >= s.start && segment.start < s.end) ||
+				(segment.end > s.start && segment.end <= s.end) ||
+				(segment.start <= s.start && segment.end >= s.end),
+		);
+
+		if (!overlapping) {
+			mergedSegments.push(segment);
+		} else if (segment.type === "entity" && overlapping.type === "highlight") {
+			// エンティティを優先
+			const index = mergedSegments.indexOf(overlapping);
+			mergedSegments[index] = segment;
+		}
+	}
+
+	// HTMLを構築
+	let result = "";
+	let lastIndex = 0;
+
+	for (const segment of mergedSegments) {
+		// segment前のテキスト
+		if (lastIndex < segment.start) {
+			const text = content.substring(lastIndex, segment.start);
+			result += escapeHtml(text).replace(/\n/g, "<br>");
+		}
+
+		// segmentのテキスト
+		const segmentText = content.substring(segment.start, segment.end);
+		if (segment.type === "entity" && segment.entityId) {
+			// エンティティ（青色リンク）
+			result += `<a href="/entity/${segment.entityId}" class="text-blue-600 dark:text-blue-400 hover:underline">${escapeHtml(segmentText)}</a>`;
+		} else if (segment.type === "highlight") {
+			// ハイライト（黄色背景）
+			result += `<mark class="bg-yellow-300 dark:bg-yellow-600 px-1 rounded font-medium">${escapeHtml(segmentText)}</mark>`;
+		}
+
+		lastIndex = segment.end;
+	}
+
+	// 残りのテキスト
+	if (lastIndex < content.length) {
+		const text = content.substring(lastIndex);
+		result += escapeHtml(text).replace(/\n/g, "<br>");
+	}
+
+	return result;
+}

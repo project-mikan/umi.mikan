@@ -930,7 +930,7 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 		updated_at = EXCLUDED.updated_at
 	`
 
-	now := time.Now().Unix()
+	now := time.Now()
 	highlightID := uuid.New()
 
 	// highlightsをJSONBに変換

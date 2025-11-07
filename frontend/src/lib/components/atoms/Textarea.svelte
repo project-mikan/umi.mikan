@@ -5,7 +5,9 @@
 	import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
 	import {
 		highlightEntities,
+		highlightEntitiesAndHighlights,
 		validateDiaryEntities,
+		type DiaryHighlight,
 	} from "$lib/utils/diary-entity-highlighter";
 	import {
 		getTextOffset,
@@ -35,6 +37,7 @@
 	export let name = "";
 	export let rows = 4;
 	export let diaryEntities: DiaryEntityOutput[] = [];
+	export let diaryHighlights: DiaryHighlight[] = [];
 
 	// 明示的に選択されたエンティティの情報を格納
 	export let selectedEntities: SelectedEntity[] = [];
@@ -136,6 +139,13 @@
 		savedContent = value;
 	}
 
+	// diaryHighlightsが変更されたときもsavedContentを更新
+	let previousDiaryHighlights: DiaryHighlight[] = [];
+	$: if (diaryHighlights !== previousDiaryHighlights) {
+		previousDiaryHighlights = diaryHighlights;
+		savedContent = value;
+	}
+
 	// エンティティハイライトを適用したHTMLを生成
 	// 入力中でない場合のみエンティティハイライトを表示
 	// また、現在のvalueが保存されたコンテンツと一致する場合のみハイライトを適用
@@ -145,8 +155,11 @@
 			return value.replace(/\n/g, "<br>");
 		}
 
-		// diaryEntitiesがない場合もプレーンテキスト
-		if (!diaryEntities || diaryEntities.length === 0) {
+		// diaryEntitiesとdiaryHighlightsの両方がない場合はプレーンテキスト
+		if (
+			(!diaryEntities || diaryEntities.length === 0) &&
+			(!diaryHighlights || diaryHighlights.length === 0)
+		) {
 			return value.replace(/\n/g, "<br>");
 		}
 
@@ -163,6 +176,16 @@
 			diaryEntities,
 			allEntities,
 		);
+
+		// diaryHighlightsがある場合は、エンティティとハイライトの両方を適用
+		if (diaryHighlights && diaryHighlights.length > 0) {
+			return highlightEntitiesAndHighlights(
+				value,
+				validatedEntities,
+				diaryHighlights,
+			);
+		}
+
 		return highlightEntities(value, validatedEntities);
 	})();
 
@@ -219,6 +242,18 @@
 		diaryEntities &&
 		diaryEntities.length > 0 &&
 		value === savedContent
+	) {
+		updateContentElement();
+	}
+
+	// diaryHighlightsが外部から変更されたときもコンテンツを更新
+	$: if (
+		contentElement &&
+		!isUpdatingFromValue &&
+		!isComposing &&
+		!isTyping &&
+		diaryHighlights &&
+		diaryHighlights.length > 0
 	) {
 		updateContentElement();
 	}

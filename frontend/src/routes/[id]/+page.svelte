@@ -69,6 +69,19 @@
 	let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
 	let isHighlightOutdated = false; // ハイライトが古いかどうか
 
+	// ハイライトデータ
+	interface Highlight {
+		start: number;
+		end: number;
+		text: string;
+	}
+	interface HighlightData {
+		highlights: Highlight[];
+		createdAt: number;
+		updatedAt: number;
+	}
+	let highlightData: HighlightData | null = null;
+
 	// 未保存状態の管理
 	let initialContent = "";
 	let allowNavigation = false;
@@ -206,12 +219,14 @@
 
 	function handleHighlightUpdated(event: CustomEvent) {
 		const newHighlight = event.detail.highlight;
+		highlightData = newHighlight;
 		// ハイライトが更新されたら古くないとマーク
 		isHighlightOutdated = false;
 	}
 
 	function handleHighlightDeleted() {
 		// ハイライトが削除されたら古いフラグもリセット
+		highlightData = null;
 		isHighlightOutdated = false;
 	}
 
@@ -325,19 +340,6 @@
 			/>
 		{/if}
 
-		<!-- Highlight display area -->
-		{#if data.entry && characterCount >= 100}
-			<HighlightDisplay
-				diaryId={data.entry.id}
-				content={data.entry.content}
-				{hasLLMKey}
-				{isHighlightOutdated}
-				diaryUpdatedAt={Number(data.entry.updatedAt)}
-				on:highlightUpdated={handleHighlightUpdated}
-				on:highlightDeleted={handleHighlightDeleted}
-			/>
-		{/if}
-
 		<!-- Summary error display -->
 		{#if summaryError}
 			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 auto-phrase-target">
@@ -381,6 +383,19 @@ use:enhance={createSubmitHandler(
 					<input type="hidden" name="id" value={data.entry.id} />
 				{/if}
 				<input type="hidden" name="selectedEntities" value={JSON.stringify(selectedEntities)} />
+
+				<!-- Highlight controls -->
+				{#if data.entry && characterCount >= 100}
+					<HighlightDisplay
+						diaryId={data.entry.id}
+						{hasLLMKey}
+						{isHighlightOutdated}
+						diaryUpdatedAt={Number(data.entry.updatedAt)}
+						on:highlightUpdated={handleHighlightUpdated}
+						on:highlightDeleted={handleHighlightDeleted}
+					/>
+				{/if}
+
 				<FormField
 					type="textarea"
 					label=""
@@ -389,10 +404,12 @@ use:enhance={createSubmitHandler(
 					placeholder={$_("diary.placeholder")}
 					rows={8}
 					diaryEntities={data.entry?.diaryEntities || []}
+					diaryHighlights={highlightData?.highlights || []}
 					bind:value={content}
 					bind:selectedEntities
 					on:save={_handleSave}
 				/>
+
 				{#if form?.error}
 					<div class="mt-2 text-sm text-red-600 dark:text-red-400">
 						{form.error}
