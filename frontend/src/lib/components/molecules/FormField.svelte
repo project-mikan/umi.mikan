@@ -4,7 +4,7 @@
 	import Label from "../atoms/Label.svelte";
 	import Textarea from "../atoms/Textarea.svelte";
 	import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
-	import type { DiaryHighlight } from "$lib/utils/diary-entity-highlighter";
+	import type { DiaryHighlight } from "$lib/types/highlight";
 
 	export let type: "input" | "textarea" = "input";
 	export let inputType: "text" | "email" | "password" | "date" = "text";

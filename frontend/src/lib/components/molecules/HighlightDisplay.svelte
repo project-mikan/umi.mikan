@@ -5,18 +5,7 @@
 	import { authenticatedFetch } from "$lib/auth-client";
 	import "$lib/i18n";
 	import Button from "$lib/components/atoms/Button.svelte";
-
-	interface Highlight {
-		start: number;
-		end: number;
-		text: string;
-	}
-
-	interface HighlightData {
-		highlights: Highlight[];
-		createdAt: number;
-		updatedAt: number;
-	}
+	import type { HighlightData } from "$lib/types/highlight";
 
 	export let diaryId: string;
 	export let hasLLMKey = true;
@@ -26,15 +15,47 @@
 	const dispatch = createEventDispatcher();
 
 	let highlightData: HighlightData | null = null;
-	let highlightStatus: "none" | "queued" | "processing" | "completed" = "none";
+	let highlightStatus:
+		| "none"
+		| "queued"
+		| "processing"
+		| "completed"
+		| "error" = "none";
 	let highlightGenerating = false;
 	let isRegenerating = false;
 	let pollingInterval: ReturnType<typeof setInterval> | null = null;
 	let highlightVisible = true; // ハイライトの表示・非表示状態
+	let pollingAttempts = 0; // ポーリング試行回数
+	let errorMessage = ""; // エラーメッセージ
+
+	const MAX_POLLING_ATTEMPTS = 20; // 最大20回（60秒）
+	const POLLING_INTERVAL = 3000; // 3秒間隔
+
+	// ポーリング停止とリセット
+	function stopPolling() {
+		if (pollingInterval) {
+			clearInterval(pollingInterval);
+			pollingInterval = null;
+		}
+		pollingAttempts = 0;
+	}
 
 	// ハイライトのポーリング機能
 	async function pollHighlightStatus() {
 		if (!browser) return;
+
+		pollingAttempts++;
+
+		// タイムアウトチェック
+		if (pollingAttempts > MAX_POLLING_ATTEMPTS) {
+			stopPolling();
+			highlightStatus = "error";
+			highlightGenerating = false;
+			isRegenerating = false;
+			errorMessage = $_("diary.highlight.timeout");
+			return;
+		}
+
 		try {
 			const response = await authenticatedFetch(
 				`/api/diary/highlight/${diaryId}`,
@@ -46,21 +67,32 @@
 					highlightStatus = "completed";
 					highlightGenerating = false;
 					isRegenerating = false;
+					errorMessage = "";
 
 					// ポーリング停止
-					if (pollingInterval) {
-						clearInterval(pollingInterval);
-						pollingInterval = null;
-					}
+					stopPolling();
 
 					// 親コンポーネントに通知
 					dispatch("highlightUpdated", { highlight: result });
 				}
 			} else if (response.status === 404) {
 				// ハイライトがまだ存在しない（生成中の可能性）
+				// 次のポーリングを待つ
+			} else {
+				// その他のエラー
+				stopPolling();
+				highlightStatus = "error";
+				highlightGenerating = false;
+				isRegenerating = false;
+				errorMessage = $_("diary.highlight.generationFailed");
 			}
 		} catch (err) {
 			console.error("Failed to poll highlight status:", err);
+			stopPolling();
+			highlightStatus = "error";
+			highlightGenerating = false;
+			isRegenerating = false;
+			errorMessage = $_("diary.highlight.generationFailed");
 		}
 	}
 
@@ -71,6 +103,7 @@
 		highlightGenerating = true;
 		highlightStatus = highlightData ? "processing" : "queued";
 		isRegenerating = !!highlightData;
+		errorMessage = "";
 
 		try {
 			const response = await authenticatedFetch(
@@ -91,22 +124,50 @@
 				console.log("Highlight generation triggered:", result);
 
 				// ポーリング開始
-				if (pollingInterval) {
-					clearInterval(pollingInterval);
-				}
-				pollingInterval = setInterval(pollHighlightStatus, 3000);
+				stopPolling(); // 既存のポーリングをクリア
+				pollingAttempts = 0;
+				pollingInterval = setInterval(pollHighlightStatus, POLLING_INTERVAL);
 			} else {
 				const error = await response.json();
 				console.error("Failed to trigger highlight generation:", error);
 				highlightGenerating = false;
-				highlightStatus = highlightData ? "completed" : "none";
+				highlightStatus = "error";
 				isRegenerating = false;
+				errorMessage = error.message || $_("diary.highlight.generationFailed");
 			}
 		} catch (err) {
 			console.error("Error triggering highlight generation:", err);
 			highlightGenerating = false;
-			highlightStatus = highlightData ? "completed" : "none";
+			highlightStatus = "error";
 			isRegenerating = false;
+			errorMessage = $_("diary.highlight.generationFailed");
+		}
+	}
+
+	// ハイライト削除
+	async function deleteHighlight() {
+		if (!browser) return;
+
+		try {
+			const response = await authenticatedFetch(
+				`/api/diary/highlight/${diaryId}`,
+				{
+					method: "DELETE",
+				},
+			);
+
+			if (response.ok) {
+				highlightData = null;
+				highlightStatus = "none";
+				errorMessage = "";
+				dispatch("highlightDeleted");
+			} else {
+				console.error("Failed to delete highlight");
+				errorMessage = $_("diary.highlight.deleteFailed");
+			}
+		} catch (err) {
+			console.error("Error deleting highlight:", err);
+			errorMessage = $_("diary.highlight.deleteFailed");
 		}
 	}
 
@@ -144,9 +205,7 @@
 	});
 
 	onDestroy(() => {
-		if (pollingInterval) {
-			clearInterval(pollingInterval);
-		}
+		stopPolling();
 	});
 
 	$: buttonLabel = isRegenerating
@@ -156,41 +215,56 @@
 </script>
 
 {#if hasLLMKey}
-	<div class="flex flex-wrap gap-2 items-center my-4">
-		{#if isHighlightOutdated && highlightData}
-			<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
-				⚠️ {$_("diary.highlight.outdated")}
-			</span>
-		{/if}
-		
-		{#if highlightStatus === "queued"}
-			<span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-				{$_("diary.highlight.statusQueued")}
-			</span>
-		{:else if highlightStatus === "processing"}
-			<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
-				{$_("diary.highlight.statusProcessing")}
-			</span>
-		{/if}
+	<div class="flex flex-col gap-2 my-4">
+		<div class="flex flex-wrap gap-2 items-center">
+			{#if isHighlightOutdated && highlightData}
+				<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
+					⚠️ {$_("diary.highlight.outdated")}
+				</span>
+			{/if}
 
-		<Button
-			variant="secondary"
-			size="sm"
-			on:click={generateHighlight}
-			disabled={highlightGenerating}
-		>
-			{highlightGenerating ? buttonLoadingLabel : buttonLabel}
-		</Button>
+			{#if highlightStatus === "queued"}
+				<span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+					{$_("diary.highlight.statusQueued")}
+				</span>
+			{:else if highlightStatus === "processing"}
+				<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
+					{$_("diary.highlight.statusProcessing")}
+				</span>
+			{:else if highlightStatus === "error" && errorMessage}
+				<span class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+					❌ {errorMessage}
+				</span>
+			{/if}
 
-		{#if highlightData}
 			<Button
-				variant={highlightVisible ? "secondary" : "primary"}
+				variant="secondary"
 				size="sm"
-				on:click={toggleHighlightVisibility}
+				on:click={generateHighlight}
 				disabled={highlightGenerating}
 			>
-				{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
+				{highlightGenerating ? buttonLoadingLabel : buttonLabel}
 			</Button>
-		{/if}
+
+			{#if highlightData}
+				<Button
+					variant={highlightVisible ? "secondary" : "primary"}
+					size="sm"
+					on:click={toggleHighlightVisibility}
+					disabled={highlightGenerating}
+				>
+					{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
+				</Button>
+
+				<Button
+					variant="danger"
+					size="sm"
+					on:click={deleteHighlight}
+					disabled={highlightGenerating}
+				>
+					{$_("diary.highlight.delete")}
+				</Button>
+			{/if}
+		</div>
 	</div>
 {/if}

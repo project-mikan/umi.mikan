@@ -1,5 +1,6 @@
 import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
 import type { Entity } from "$lib/grpc/entity/entity_pb";
+import type { DiaryHighlight } from "$lib/types/highlight";
 
 /**
  * diaryEntitiesから無効なエンティティ（テキストが名前やエイリアスと一致しないもの）を除外
@@ -121,15 +122,6 @@ function escapeHtml(text: string): string {
 		.replace(/>/g, "&gt;")
 		.replace(/"/g, "&quot;")
 		.replace(/'/g, "&#039;");
-}
-
-/**
- * ハイライト情報の型定義
- */
-export interface DiaryHighlight {
-	start: number;
-	end: number;
-	text: string;
 }
 
 /**

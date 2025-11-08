@@ -1035,6 +1035,11 @@ func (s *DiaryEntry) TriggerDiaryHighlight(
 		return nil, status.Error(codes.PermissionDenied, "Access denied")
 	}
 
+	// 文字数チェック（最小500文字）
+	if len([]rune(diary.Content)) < 500 {
+		return nil, status.Error(codes.FailedPrecondition, "Content too short for highlight generation (minimum 500 characters)")
+	}
+
 	// ユーザーのLLMキーが設定されているかチェック
 	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
 	if err != nil {
@@ -1121,11 +1126,9 @@ func (s *DiaryEntry) GetDiaryHighlight(
 		return nil, status.Error(codes.NotFound, "Highlight not found")
 	}
 
-	// 日記が更新された場合、ハイライトは無効
-	// diary.UpdatedAt: int64 (Unix timestamp), highlight.UpdatedAt: time.Time
-	if diary.UpdatedAt > highlight.UpdatedAt.Unix() {
-		return nil, status.Error(codes.NotFound, "Highlight is outdated (diary has been updated)")
-	}
+	// 注: 日記が更新された場合でもハイライトは返す
+	// フロントエンドで diary.UpdatedAt と highlight.UpdatedAt を比較して古いかどうかを判断する
+	// これにより、ユーザーは古いハイライトを確認しつつ再生成を選択できる
 
 	// JSONBからハイライト情報を取得
 	var highlightsRaw []map[string]interface{}

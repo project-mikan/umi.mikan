@@ -234,12 +234,14 @@
 			"generating": "Generating highlights...",
 			"delete": "Delete Highlights",
 			"deleting": "Deleting highlights...",
+			"deleteFailed": "Failed to delete highlights",
 			"show": "Show Highlights",
 			"hide": "Hide Highlights",
 			"label": "Important Parts",
 			"notAvailable": "Highlights have not been generated yet",
 			"outdated": "The diary has been updated. Please regenerate to get the latest highlights",
 			"generationFailed": "Failed to generate highlights",
+			"timeout": "Highlight generation timed out. Please try again",
 			"statusQueued": "Highlight generation has been queued. Please wait",
 			"statusProcessing": "Generating highlights. Please wait"
 		}

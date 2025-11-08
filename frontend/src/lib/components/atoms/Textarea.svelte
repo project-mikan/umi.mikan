@@ -7,8 +7,8 @@
 		highlightEntities,
 		highlightEntitiesAndHighlights,
 		validateDiaryEntities,
-		type DiaryHighlight,
 	} from "$lib/utils/diary-entity-highlighter";
+	import type { DiaryHighlight } from "$lib/types/highlight";
 	import {
 		getTextOffset,
 		restoreCursorPosition,
