@@ -234,6 +234,8 @@
 			"generating": "Generating highlights...",
 			"delete": "Delete Highlights",
 			"deleting": "Deleting highlights...",
+			"show": "Show Highlights",
+			"hide": "Hide Highlights",
 			"label": "Important Parts",
 			"notAvailable": "Highlights have not been generated yet",
 			"outdated": "The diary has been updated. Please regenerate to get the latest highlights",

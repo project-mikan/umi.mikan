@@ -247,14 +247,11 @@
 	}
 
 	// diaryHighlightsが外部から変更されたときもコンテンツを更新
-	$: if (
-		contentElement &&
-		!isUpdatingFromValue &&
-		!isComposing &&
-		!isTyping &&
-		diaryHighlights &&
-		diaryHighlights.length > 0
-	) {
+	// 空配列の場合もハイライトを消すために更新が必要
+	// diaryHighlightsの配列参照が変わったら必ず更新
+	$: if (contentElement && !isUpdatingFromValue && !isComposing && !isTyping) {
+		// diaryHighlightsへの依存を明示的に追加
+		void diaryHighlights;
 		updateContentElement();
 	}
 

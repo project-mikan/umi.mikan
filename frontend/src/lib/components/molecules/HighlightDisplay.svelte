@@ -30,6 +30,7 @@
 	let highlightGenerating = false;
 	let isRegenerating = false;
 	let pollingInterval: ReturnType<typeof setInterval> | null = null;
+	let highlightVisible = true; // ハイライトの表示・非表示状態
 
 	// ハイライトのポーリング機能
 	async function pollHighlightStatus() {
@@ -109,28 +110,11 @@
 		}
 	}
 
-	// ハイライト削除
-	async function deleteHighlight() {
-		if (!browser) return;
-
-		try {
-			const response = await authenticatedFetch(
-				`/api/diary/highlight/${diaryId}`,
-				{
-					method: "DELETE",
-				},
-			);
-
-			if (response.ok) {
-				highlightData = null;
-				highlightStatus = "none";
-				dispatch("highlightDeleted");
-			} else {
-				console.error("Failed to delete highlight");
-			}
-		} catch (err) {
-			console.error("Error deleting highlight:", err);
-		}
+	// ハイライトの表示・非表示を切り替え
+	function toggleHighlightVisibility() {
+		highlightVisible = !highlightVisible;
+		// 親コンポーネントに表示状態を通知
+		dispatch("highlightVisibilityChanged", { visible: highlightVisible });
 	}
 
 	// 初回読み込み時にハイライトを取得
@@ -200,12 +184,12 @@
 
 		{#if highlightData}
 			<Button
-				variant="danger"
+				variant={highlightVisible ? "secondary" : "primary"}
 				size="sm"
-				on:click={deleteHighlight}
+				on:click={toggleHighlightVisibility}
 				disabled={highlightGenerating}
 			>
-				{$_("diary.highlight.delete")}
+				{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
 			</Button>
 		{/if}
 	</div>

@@ -81,6 +81,12 @@
 		updatedAt: number;
 	}
 	let highlightData: HighlightData | null = null;
+	let highlightVisible = true; // ハイライトの表示・非表示状態
+
+	// Textareaに渡すハイライトデータ（表示・非表示を反映）
+	// 配列の参照を毎回変更してTextareaのリアクティビティを確実にトリガー
+	$: displayedHighlights =
+		highlightVisible && highlightData ? [...highlightData.highlights] : [];
 
 	// 未保存状態の管理
 	let initialContent = "";
@@ -224,10 +230,9 @@
 		isHighlightOutdated = false;
 	}
 
-	function handleHighlightDeleted() {
-		// ハイライトが削除されたら古いフラグもリセット
-		highlightData = null;
-		isHighlightOutdated = false;
+	function handleHighlightVisibilityChanged(event: CustomEvent) {
+		// ハイライトの表示・非表示状態を更新
+		highlightVisible = event.detail.visible;
 	}
 
 	function _formatDateStr(ymd: {
@@ -392,7 +397,7 @@ use:enhance={createSubmitHandler(
 						{isHighlightOutdated}
 						diaryUpdatedAt={Number(data.entry.updatedAt)}
 						on:highlightUpdated={handleHighlightUpdated}
-						on:highlightDeleted={handleHighlightDeleted}
+						on:highlightVisibilityChanged={handleHighlightVisibilityChanged}
 					/>
 				{/if}
 
@@ -404,7 +409,7 @@ use:enhance={createSubmitHandler(
 					placeholder={$_("diary.placeholder")}
 					rows={8}
 					diaryEntities={data.entry?.diaryEntities || []}
-					diaryHighlights={highlightData?.highlights || []}
+					diaryHighlights={displayedHighlights}
 					bind:value={content}
 					bind:selectedEntities
 					on:save={_handleSave}
