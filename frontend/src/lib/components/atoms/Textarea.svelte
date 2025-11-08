@@ -140,10 +140,21 @@
 	}
 
 	// diaryHighlightsが変更されたときもsavedContentを更新
-	let previousDiaryHighlights: DiaryHighlight[] = [];
-	$: if (diaryHighlights !== previousDiaryHighlights) {
-		previousDiaryHighlights = diaryHighlights;
-		savedContent = value;
+	// 配列の内容をシリアライズして比較（参照比較では毎回新しい配列なので不十分）
+	let previousDiaryHighlightsKey = "";
+	$: {
+		// valueとdiaryHighlightsへの依存を明示（初期化タイミングを確実にする）
+		void value;
+
+		// diaryHighlightsの内容をキーに変換（長さ + 最初の要素の情報）
+		const currentKey = diaryHighlights
+			? `${diaryHighlights.length}-${diaryHighlights[0]?.start ?? ""}-${diaryHighlights[0]?.end ?? ""}`
+			: "empty";
+
+		if (currentKey !== previousDiaryHighlightsKey) {
+			previousDiaryHighlightsKey = currentKey;
+			savedContent = value;
+		}
 	}
 
 	// エンティティハイライトを適用したHTMLを生成
@@ -191,6 +202,11 @@
 
 	// captureフェーズでTabキーをキャプチャするためのリスナー
 	onMount(async () => {
+		// savedContentを確実に初期化（SSR時のリアクティビティの問題を回避）
+		if (!savedContent) {
+			savedContent = value;
+		}
+
 		// 全エンティティデータを事前取得
 		await _loadAllEntities();
 
@@ -248,11 +264,19 @@
 
 	// diaryHighlightsが外部から変更されたときもコンテンツを更新
 	// 空配列の場合もハイライトを消すために更新が必要
-	// diaryHighlightsの配列参照が変わったら必ず更新
-	$: if (contentElement && !isUpdatingFromValue && !isComposing && !isTyping) {
-		// diaryHighlightsへの依存を明示的に追加
-		void diaryHighlights;
-		updateContentElement();
+	// 配列の長さを監視して変更を確実に検知
+	let previousHighlightsLength = -1;
+	$: {
+		// contentElementが存在する場合のみ処理
+		if (contentElement && !isUpdatingFromValue && !isComposing && !isTyping) {
+			// diaryHighlightsの長さを取得（nullまたはundefinedの場合は0）
+			const currentLength = diaryHighlights ? diaryHighlights.length : 0;
+			// 長さが変わった場合のみ更新（初回は-1から0以上に変わるので必ず更新される）
+			if (currentLength !== previousHighlightsLength) {
+				previousHighlightsLength = currentLength;
+				updateContentElement();
+			}
+		}
 	}
 
 	function updateContentElement() {
