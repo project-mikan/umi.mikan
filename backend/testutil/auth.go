@@ -102,6 +102,20 @@ func GenerateTestTokens(t *testing.T, userID uuid.UUID) *model.TokenDetails {
 	return tokens
 }
 
+// CreateTestUserLLM creates a test LLM configuration for a user
+func CreateTestUserLLM(t *testing.T, db *sql.DB, userID uuid.UUID, apiKey string) {
+	currentTime := time.Now().Unix()
+
+	// LLM provider: 1 = Gemini
+	_, err := db.Exec(
+		"INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+		userID, 1, apiKey, true, true, true, currentTime, currentTime,
+	)
+	if err != nil {
+		t.Fatalf("Failed to create test user LLM: %v", err)
+	}
+}
+
 // generateUniqueEmail creates a unique email address for testing
 func generateUniqueEmail(t *testing.T, baseEmail string) string {
 	testID := fmt.Sprintf("%s-%d-%d", t.Name(), os.Getpid(), time.Now().UnixNano())

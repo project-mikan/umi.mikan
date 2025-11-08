@@ -390,7 +390,7 @@ use:enhance={createSubmitHandler(
 				<input type="hidden" name="selectedEntities" value={JSON.stringify(selectedEntities)} />
 
 				<!-- Highlight controls -->
-				{#if data.entry && characterCount >= 100}
+				{#if data.entry && characterCount >= 500}
 					<HighlightDisplay
 						diaryId={data.entry.id}
 						{hasLLMKey}

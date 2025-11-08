@@ -210,7 +210,7 @@ export function highlightEntitiesAndHighlights(
 		const segmentText = content.substring(segment.start, segment.end);
 		if (segment.type === "entity" && segment.entityId) {
 			// エンティティ（青色リンク）
-			result += `<a href="/entity/${segment.entityId}" class="text-blue-600 dark:text-blue-400 hover:underline">${escapeHtml(segmentText)}</a>`;
+			result += `<a href="/entity/${escapeHtml(segment.entityId)}" class="text-blue-600 dark:text-blue-400 hover:underline">${escapeHtml(segmentText)}</a>`;
 		} else if (segment.type === "highlight") {
 			// ハイライト（黄色背景）
 			result += `<mark class="bg-yellow-300 dark:bg-yellow-600 px-1 rounded font-medium">${escapeHtml(segmentText)}</mark>`;

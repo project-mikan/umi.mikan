@@ -243,7 +243,9 @@
 			"generationFailed": "ハイライトの生成に失敗しました",
 			"timeout": "ハイライト生成がタイムアウトしました。再度お試しください",
 			"statusQueued": "ハイライトの生成をキューに追加しました。しばらくお待ちください",
-			"statusProcessing": "ハイライトを生成中です。しばらくお待ちください"
+			"statusProcessing": "ハイライトを生成中です。しばらくお待ちください",
+			"contentTooShort": "ハイライト生成には最低500文字必要です",
+			"apiKeyNotConfigured": "Gemini APIキーが設定されていません。設定ページから登録してください"
 		}
 	},
 	"date": {

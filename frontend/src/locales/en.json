@@ -243,7 +243,9 @@
 			"generationFailed": "Failed to generate highlights",
 			"timeout": "Highlight generation timed out. Please try again",
 			"statusQueued": "Highlight generation has been queued. Please wait",
-			"statusProcessing": "Generating highlights. Please wait"
+			"statusProcessing": "Generating highlights. Please wait",
+			"contentTooShort": "At least 500 characters are required for highlight generation",
+			"apiKeyNotConfigured": "Gemini API key is not configured. Please register it in the settings page"
 		}
 	},
 	"date": {
