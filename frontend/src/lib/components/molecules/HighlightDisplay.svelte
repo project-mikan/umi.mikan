@@ -144,33 +144,6 @@
 		}
 	}
 
-	// ハイライト削除
-	async function deleteHighlight() {
-		if (!browser) return;
-
-		try {
-			const response = await authenticatedFetch(
-				`/api/diary/highlight/${diaryId}`,
-				{
-					method: "DELETE",
-				},
-			);
-
-			if (response.ok) {
-				highlightData = null;
-				highlightStatus = "none";
-				errorMessage = "";
-				dispatch("highlightDeleted");
-			} else {
-				console.error("Failed to delete highlight");
-				errorMessage = $_("diary.highlight.deleteFailed");
-			}
-		} catch (err) {
-			console.error("Error deleting highlight:", err);
-			errorMessage = $_("diary.highlight.deleteFailed");
-		}
-	}
-
 	// ハイライトの表示・非表示を切り替え
 	function toggleHighlightVisibility() {
 		highlightVisible = !highlightVisible;
@@ -254,15 +227,6 @@
 					disabled={highlightGenerating}
 				>
 					{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
-				</Button>
-
-				<Button
-					variant="danger"
-					size="sm"
-					on:click={deleteHighlight}
-					disabled={highlightGenerating}
-				>
-					{$_("diary.highlight.delete")}
 				</Button>
 			{/if}
 		</div>

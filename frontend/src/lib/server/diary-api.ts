@@ -36,8 +36,6 @@ import {
 	type TriggerDiaryHighlightResponse,
 	GetDiaryHighlightRequestSchema,
 	type GetDiaryHighlightResponse,
-	DeleteDiaryHighlightRequestSchema,
-	type DeleteDiaryHighlightResponse,
 } from "$lib/grpc/diary/diary_pb";
 
 function createAuthenticatedTransport(accessToken: string) {
@@ -292,11 +290,6 @@ export interface GetDiaryHighlightParams {
 	accessToken: string;
 }
 
-export interface DeleteDiaryHighlightParams {
-	diaryId: string;
-	accessToken: string;
-}
-
 export async function triggerDiaryHighlight(
 	params: TriggerDiaryHighlightParams,
 ): Promise<TriggerDiaryHighlightResponse> {
@@ -321,17 +314,4 @@ export async function getDiaryHighlight(
 	});
 
 	return await client.getDiaryHighlight(request);
-}
-
-export async function deleteDiaryHighlight(
-	params: DeleteDiaryHighlightParams,
-): Promise<DeleteDiaryHighlightResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
-	const request = create(DeleteDiaryHighlightRequestSchema, {
-		diaryId: params.diaryId,
-	});
-
-	return await client.deleteDiaryHighlight(request);
 }

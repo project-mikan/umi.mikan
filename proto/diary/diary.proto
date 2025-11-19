@@ -174,17 +174,6 @@ service DiaryService {
   //   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
   //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
   rpc GetDiaryHighlight(GetDiaryHighlightRequest) returns (GetDiaryHighlightResponse);
-
-  // DeleteDiaryHighlight は日記エントリのハイライトを削除します。
-  //
-  // 例:
-  //   request: { diary_id: "uuid" }
-  //   response: { success: true }
-  //
-  // エラー:
-  //   - NotFound: ハイライトが存在しない
-  //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-  rpc DeleteDiaryHighlight(DeleteDiaryHighlightRequest) returns (DeleteDiaryHighlightResponse);
 }
 
 message YMD {
@@ -409,15 +398,4 @@ message GetDiaryHighlightResponse {
   repeated HighlightRange highlights = 1; // ハイライトリスト
   int64 created_at = 2; // 作成日時（Unix timestamp）
   int64 updated_at = 3; // 更新日時（Unix timestamp）
-}
-
-// 日記ハイライト削除リクエスト
-message DeleteDiaryHighlightRequest {
-  string diary_id = 1; // 日記ID
-  // user_id は認証情報から取得
-}
-
-// 日記ハイライト削除レスポンス
-message DeleteDiaryHighlightResponse {
-  bool success = 1; // 削除成功/失敗
 }

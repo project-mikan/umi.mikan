@@ -34,7 +34,6 @@ const (
 	DiaryService_TriggerLatestTrend_FullMethodName     = "/diary.DiaryService/TriggerLatestTrend"
 	DiaryService_TriggerDiaryHighlight_FullMethodName  = "/diary.DiaryService/TriggerDiaryHighlight"
 	DiaryService_GetDiaryHighlight_FullMethodName      = "/diary.DiaryService/GetDiaryHighlight"
-	DiaryService_DeleteDiaryHighlight_FullMethodName   = "/diary.DiaryService/DeleteDiaryHighlight"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -209,17 +208,6 @@ type DiaryServiceClient interface {
 	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryHighlight(ctx context.Context, in *GetDiaryHighlightRequest, opts ...grpc.CallOption) (*GetDiaryHighlightResponse, error)
-	// DeleteDiaryHighlight は日記エントリのハイライトを削除します。
-	//
-	// 例:
-	//
-	//	request: { diary_id: "uuid" }
-	//	response: { success: true }
-	//
-	// エラー:
-	//   - NotFound: ハイライトが存在しない
-	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	DeleteDiaryHighlight(ctx context.Context, in *DeleteDiaryHighlightRequest, opts ...grpc.CallOption) (*DeleteDiaryHighlightResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -374,16 +362,6 @@ func (c *diaryServiceClient) GetDiaryHighlight(ctx context.Context, in *GetDiary
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDiaryHighlightResponse)
 	err := c.cc.Invoke(ctx, DiaryService_GetDiaryHighlight_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *diaryServiceClient) DeleteDiaryHighlight(ctx context.Context, in *DeleteDiaryHighlightRequest, opts ...grpc.CallOption) (*DeleteDiaryHighlightResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteDiaryHighlightResponse)
-	err := c.cc.Invoke(ctx, DiaryService_DeleteDiaryHighlight_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -562,17 +540,6 @@ type DiaryServiceServer interface {
 	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error)
-	// DeleteDiaryHighlight は日記エントリのハイライトを削除します。
-	//
-	// 例:
-	//
-	//	request: { diary_id: "uuid" }
-	//	response: { success: true }
-	//
-	// エラー:
-	//   - NotFound: ハイライトが存在しない
-	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	DeleteDiaryHighlight(context.Context, *DeleteDiaryHighlightRequest) (*DeleteDiaryHighlightResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -627,9 +594,6 @@ func (UnimplementedDiaryServiceServer) TriggerDiaryHighlight(context.Context, *T
 }
 func (UnimplementedDiaryServiceServer) GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDiaryHighlight not implemented")
-}
-func (UnimplementedDiaryServiceServer) DeleteDiaryHighlight(context.Context, *DeleteDiaryHighlightRequest) (*DeleteDiaryHighlightResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteDiaryHighlight not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -922,24 +886,6 @@ func _DiaryService_GetDiaryHighlight_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DiaryService_DeleteDiaryHighlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDiaryHighlightRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DiaryServiceServer).DeleteDiaryHighlight(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DiaryService_DeleteDiaryHighlight_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiaryServiceServer).DeleteDiaryHighlight(ctx, req.(*DeleteDiaryHighlightRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // DiaryService_ServiceDesc is the grpc.ServiceDesc for DiaryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1006,10 +952,6 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDiaryHighlight",
 			Handler:    _DiaryService_GetDiaryHighlight_Handler,
-		},
-		{
-			MethodName: "DeleteDiaryHighlight",
-			Handler:    _DiaryService_DeleteDiaryHighlight_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
