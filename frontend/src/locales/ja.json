@@ -229,6 +229,7 @@
 		"noPastEntry": "日記がありません",
 		"noPastEntries": "過去の同じ日の日記はありません",
 		"highlight": {
+			"title": "ハイライト",
 			"generate": "ハイライト生成",
 			"regenerate": "ハイライト再生成",
 			"generating": "ハイライト生成中...",

@@ -28,7 +28,7 @@
 	let pollingAttempts = 0; // ポーリング試行回数
 	let errorMessage = ""; // エラーメッセージ
 
-	const MAX_POLLING_ATTEMPTS = 20; // 最大20回（60秒）
+	const MAX_POLLING_ATTEMPTS = 40; // 最大40回（120秒）
 	const POLLING_INTERVAL = 3000; // 3秒間隔
 
 	// ポーリング停止とリセット
@@ -189,6 +189,11 @@
 
 {#if hasLLMKey}
 	<div class="flex flex-col gap-2 my-4">
+		<div class="flex items-center justify-between mb-2">
+			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+				{$_("diary.highlight.title")}
+			</h2>
+		</div>
 		<div class="flex flex-wrap gap-2 items-center">
 			{#if isHighlightOutdated && highlightData}
 				<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">

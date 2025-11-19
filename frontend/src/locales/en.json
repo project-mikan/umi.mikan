@@ -229,6 +229,7 @@
 		"noPastEntry": "No entry",
 		"noPastEntries": "No past entries on this day",
 		"highlight": {
+			"title": "Highlights",
 			"generate": "Generate Highlights",
 			"regenerate": "Regenerate Highlights",
 			"generating": "Generating highlights...",
