@@ -47,7 +47,6 @@ services:
 
   postgres:
     image: postgres:17
-    restart: always
     environment:
       TZ: Asia/Tokyo
       POSTGRES_USER: "postgres"
@@ -61,7 +60,6 @@ services:
 
   postgres_test:
     image: postgres:17
-    restart: always
     environment:
       TZ: Asia/Tokyo
       POSTGRES_USER: "postgres"
@@ -75,7 +73,6 @@ services:
 
   redis:
     image: redis:8-alpine
-    restart: always
     ports:
       - "2004:6379"
     command: redis-server --appendonly yes
@@ -133,7 +130,6 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    restart: always
     ports:
       - "2007:9090"
     volumes:
@@ -152,7 +148,6 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    restart: always
     ports:
       - "2008:3000"
     environment:
@@ -167,7 +162,6 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
-    restart: always
     ports:
       - "2009:8080"
     volumes:
@@ -182,7 +176,6 @@ services:
 
   loki:
     image: grafana/loki:latest
-    restart: always
     ports:
       - "2010:3100"
     volumes:
@@ -193,7 +186,6 @@ services:
 
   alloy:
     image: grafana/alloy:latest
-    restart: always
     ports:
       - "2011:12345"
     volumes:

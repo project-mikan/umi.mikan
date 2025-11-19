@@ -115,7 +115,7 @@ type LatestTrendAnalysis struct {
 	HealthReason string `json:"health_reason"` // 体調の理由（10文字以内）
 	Mood         string `json:"mood"`          // 気分: "bad", "slight", "normal", "good"
 	MoodReason   string `json:"mood_reason"`   // 気分の理由（10文字以内）
-	Activities   string `json:"activities"`    // 活動・行動（箇条書き・階層構造のテキスト）
+	Activities   string `json:"activities"`    // 活動・行動（最も重要な2-3つを箇条書きで、改行区切り）
 }
 
 func (g *GeminiClient) GenerateLatestTrend(ctx context.Context, diaryContent string, yesterday string) (string, error) {
@@ -169,17 +169,13 @@ mood_reason（気分の理由）:
 - 例: 「前日より穏やか|仕事成果あり」「前日より低下|締切接近」「前日と同様|通常通り」
 
 activities（活動・行動）:
-- **必ず改行区切りの箇条書き**で記述してください
-- 各項目は改行（\n）で区切り、行頭に「- 」を付けてください
-- 階層構造の場合は、ネストレベルごとに半角スペース2つのインデントを追加
-- 出力例（改行あり）:
-  - 運動
-    - 朝のランニング
-    - ストレッチ
-  - 仕事
-    - プロジェクトミーティング
-- **重要**: 各項目の間には必ず改行（\n）を入れてください
-- **重要**: 「- 項目1- 項目2」のように連結しないでください
+- **最も重要な活動を2-3つだけ選んで**記述してください
+- すべての活動を列挙するのではなく、特に印象的だった活動や重要な活動のみを厳選してください
+- 各活動は改行コード（\n）で区切り、行頭に「- 」を付けてください
+- JSONの文字列として、改行コードは「\n」（バックスラッシュ+n）を使用してください
+- 出力例: "- 朝のランニング\n- プロジェクトミーティング\n- 友人との食事"
+- **重要**: 2-3項目に収まるように、簡潔に重要な活動だけを記述してください
+- **重要**: 階層構造は使用せず、フラットな箇条書きのみとしてください
 - Markdownは使用しないでください
 
 【要件】
@@ -195,7 +191,8 @@ activities（活動・行動）:
 - **health_reason と mood_reason は「比較|具体的理由」の形式で記述してください**
 - **比較部分**: 一昨日との比較を含めてください（例: 前日より改善、前日と同様）
 - **具体的理由部分**: なぜそうなったかの理由を含めてください（例: よく休めた、仕事成果あり）
-- **activities フィールドは必ず改行区切り**で記述してください（連結禁止）
+- **activities フィールドは最も重要な2-3つの活動のみを選んで記述してください**
+- **activities は改行コード「\n」で区切り、階層構造を使わずフラットな箇条書きとしてください**
 
 【日記の内容】
 %s
@@ -226,7 +223,7 @@ activities（活動・行動）:
 			},
 			"activities": {
 				Type:        genai.TypeString,
-				Description: "活動・行動を箇条書き・階層構造で記述",
+				Description: "最も重要な2-3つの活動を箇条書きで記述（改行区切り、階層構造なし）",
 			},
 		},
 		Required: []string{"health", "health_reason", "mood", "mood_reason", "activities"},
