@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _, locale } from "svelte-i18n";
 	import { enhance } from "$app/forms";
-	import { goto } from "$app/navigation";
+	import { goto, invalidateAll } from "$app/navigation";
 	import { beforeNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 	import "$lib/i18n";
@@ -161,6 +161,28 @@
 		return isOutdated;
 	})();
 
+	// Check if highlight is outdated (diary updatedAt > highlight updatedAt)
+	$: {
+		if (!highlightData || !data.entry) {
+			isHighlightOutdated = false;
+		} else {
+			// 日記エントリは秒単位、ハイライトはミリ秒単位なので統一
+			const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
+			const highlightUpdatedAt = Number(highlightData.updatedAt); // 既にミリ秒
+
+			// ハイライトが日記よりも古い場合
+			const isOutdated = diaryUpdatedAt > highlightUpdatedAt;
+
+			// 古くなった場合は非表示にする
+			if (isOutdated && !isHighlightOutdated) {
+				isHighlightOutdated = true;
+				highlightVisible = false;
+			} else if (!isOutdated) {
+				isHighlightOutdated = false;
+			}
+		}
+	}
+
 	// Character count calculation
 	$: characterCount = content ? content.length : 0;
 
@@ -226,8 +248,9 @@
 	function handleHighlightUpdated(event: CustomEvent) {
 		const newHighlight = event.detail.highlight;
 		highlightData = newHighlight;
-		// ハイライトが更新されたら古くないとマーク
+		// ハイライトが更新されたら古くないとマークして表示する
 		isHighlightOutdated = false;
+		highlightVisible = true;
 	}
 
 	function handleHighlightVisibilityChanged(event: CustomEvent) {
@@ -372,12 +395,15 @@
 				action="?/save"
 use:enhance={createSubmitHandler(
 	(l) => loading = l,
-	(s) => {
+	async (s) => {
 		saved = s;
 		if (s) {
+			// 保存成功時にページデータを再読み込み（updatedAtを更新）
+			await invalidateAll();
 			// 保存成功時に初期コンテンツを更新
 			initialContent = content;
 			// hasUnsavedChangesの再計算に任せる
+			// ハイライトの古い/新しいの判定はリアクティブステートメントに任せる
 		}
 	}
 )}
