@@ -181,7 +181,7 @@
 		stopPolling();
 	});
 
-	$: buttonLabel = isRegenerating
+	$: buttonLabel = highlightData
 		? $_("diary.highlight.regenerate")
 		: $_("diary.highlight.generate");
 	$: buttonLoadingLabel = $_("diary.highlight.generating");
