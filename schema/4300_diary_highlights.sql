@@ -1,7 +1,7 @@
 -- diary_highlights テーブル
 -- 日記エントリのLLM生成ハイライト情報を格納
 CREATE TABLE diary_highlights (
-    id UUID PRIMARY KEY NOT NULL,
+    id UUID PRIMARY KEY,
     diary_id UUID NOT NULL REFERENCES diaries(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     highlights JSONB NOT NULL, -- ハイライト情報の配列 [{"start": 0, "end": 25, "text": "..."}]
