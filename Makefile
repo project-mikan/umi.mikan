@@ -52,7 +52,7 @@ db-apply:
 		--from-dsn "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" \
 		--to-dir /schema \
 		--disable-plan-validation \
-		--allow-hazards DELETES_DATA
+		--allow-hazards DELETES_DATA,INDEX_DROPPED
 
 f-log:
 	docker compose logs -f frontend
