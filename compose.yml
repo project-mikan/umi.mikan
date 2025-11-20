@@ -24,6 +24,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REGISTER_KEY: "usuyuki" # 新規登録を制限する場合はコメントを外して設定
+      TASK_TIMEOUT_SECONDS: 600 # タスクステータスの有効期限(秒)
     tty: true
     ports:
       - 2001:8080

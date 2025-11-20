@@ -227,7 +227,24 @@
 		"nineYearsAgo": "9 years ago",
 		"tenYearsAgo": "10 years ago",
 		"noPastEntry": "No entry",
-		"noPastEntries": "No past entries on this day"
+		"noPastEntries": "No past entries on this day",
+		"highlight": {
+			"title": "Highlights",
+			"generate": "Generate Highlights",
+			"regenerate": "Regenerate Highlights",
+			"generating": "Generating highlights...",
+			"show": "Show Highlights",
+			"hide": "Hide Highlights",
+			"label": "Important Parts",
+			"notAvailable": "Highlights have not been generated yet",
+			"outdated": "The diary has been updated. Please regenerate to get the latest highlights",
+			"generationFailed": "Failed to generate highlights",
+			"timeout": "Highlight generation timed out. Please try again",
+			"statusQueued": "Highlight generation has been queued. Please wait",
+			"statusProcessing": "Generating highlights. Please wait",
+			"contentTooShort": "At least 500 characters are required for highlight generation",
+			"apiKeyNotConfigured": "Gemini API key is not configured. Please register it in the settings page"
+		}
 	},
 	"date": {
 		"dayOfWeek": {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _, locale } from "svelte-i18n";
 	import { enhance } from "$app/forms";
-	import { goto } from "$app/navigation";
+	import { goto, invalidateAll } from "$app/navigation";
 	import { beforeNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 	import "$lib/i18n";
@@ -10,11 +10,13 @@
 	import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
 	import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
 	import FormField from "$lib/components/molecules/FormField.svelte";
+	import HighlightDisplay from "$lib/components/molecules/HighlightDisplay.svelte";
 	import Modal from "$lib/components/molecules/Modal.svelte";
 	import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
 	import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
 	import { getDayOfWeekKey } from "$lib/utils/date-utils";
 	import { createSubmitHandler } from "$lib/utils/form-utils";
+	import type { HighlightData } from "$lib/types/highlight";
 	import type { ActionData, PageData } from "./$types";
 
 	export let data: PageData;
@@ -66,6 +68,16 @@
 	let isFutureDate = false;
 	let isSummaryGenerating = false; // 要約生成中のフラグ
 	let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
+	let isHighlightOutdated = false; // ハイライトが古いかどうか
+
+	// ハイライトデータ
+	let highlightData: HighlightData | null = null;
+	let highlightVisible = true; // ハイライトの表示・非表示状態
+
+	// Textareaに渡すハイライトデータ（表示・非表示を反映）
+	// 配列の参照を毎回変更してTextareaのリアクティビティを確実にトリガー
+	$: displayedHighlights =
+		highlightVisible && highlightData ? [...highlightData.highlights] : [];
 
 	// 未保存状態の管理
 	let initialContent = "";
@@ -140,6 +152,28 @@
 		return isOutdated;
 	})();
 
+	// Check if highlight is outdated (diary updatedAt > highlight updatedAt)
+	$: {
+		if (!highlightData || !data.entry) {
+			isHighlightOutdated = false;
+		} else {
+			// 日記エントリは秒単位、ハイライトはミリ秒単位なので統一
+			const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
+			const highlightUpdatedAt = Number(highlightData.updatedAt); // 既にミリ秒
+
+			// ハイライトが日記よりも古い場合
+			const isOutdated = diaryUpdatedAt > highlightUpdatedAt;
+
+			// 古くなった場合は非表示にする
+			if (isOutdated && !isHighlightOutdated) {
+				isHighlightOutdated = true;
+				highlightVisible = false;
+			} else if (!isOutdated) {
+				isHighlightOutdated = false;
+			}
+		}
+	}
+
 	// Character count calculation
 	$: characterCount = content ? content.length : 0;
 
@@ -200,6 +234,19 @@
 
 	function handleGenerationCompleted() {
 		isSummaryGenerating = false;
+	}
+
+	function handleHighlightUpdated(event: CustomEvent) {
+		const newHighlight = event.detail.highlight;
+		highlightData = newHighlight;
+		// ハイライトが更新されたら古くないとマークして表示する
+		isHighlightOutdated = false;
+		highlightVisible = true;
+	}
+
+	function handleHighlightVisibilityChanged(event: CustomEvent) {
+		// ハイライトの表示・非表示状態を更新
+		highlightVisible = event.detail.visible;
 	}
 
 	function _formatDateStr(ymd: {
@@ -339,12 +386,15 @@
 				action="?/save"
 use:enhance={createSubmitHandler(
 	(l) => loading = l,
-	(s) => {
+	async (s) => {
 		saved = s;
 		if (s) {
+			// 保存成功時にページデータを再読み込み（updatedAtを更新）
+			await invalidateAll();
 			// 保存成功時に初期コンテンツを更新
 			initialContent = content;
 			// hasUnsavedChangesの再計算に任せる
+			// ハイライトの古い/新しいの判定はリアクティブステートメントに任せる
 		}
 	}
 )}
@@ -355,6 +405,19 @@ use:enhance={createSubmitHandler(
 					<input type="hidden" name="id" value={data.entry.id} />
 				{/if}
 				<input type="hidden" name="selectedEntities" value={JSON.stringify(selectedEntities)} />
+
+				<!-- Highlight controls -->
+				{#if data.entry && characterCount >= 500}
+					<HighlightDisplay
+						diaryId={data.entry.id}
+						{hasLLMKey}
+						{isHighlightOutdated}
+						diaryUpdatedAt={Number(data.entry.updatedAt)}
+						on:highlightUpdated={handleHighlightUpdated}
+						on:highlightVisibilityChanged={handleHighlightVisibilityChanged}
+					/>
+				{/if}
+
 				<FormField
 					type="textarea"
 					label=""
@@ -363,10 +426,12 @@ use:enhance={createSubmitHandler(
 					placeholder={$_("diary.placeholder")}
 					rows={8}
 					diaryEntities={data.entry?.diaryEntities || []}
+					diaryHighlights={displayedHighlights}
 					bind:value={content}
 					bind:selectedEntities
 					on:save={_handleSave}
 				/>
+
 				{#if form?.error}
 					<div class="mt-2 text-sm text-red-600 dark:text-red-400">
 						{form.error}

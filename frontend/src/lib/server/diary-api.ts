@@ -32,6 +32,10 @@ import {
 	type YMD,
 	YMDSchema,
 	YMSchema,
+	TriggerDiaryHighlightRequestSchema,
+	type TriggerDiaryHighlightResponse,
+	GetDiaryHighlightRequestSchema,
+	type GetDiaryHighlightResponse,
 } from "$lib/grpc/diary/diary_pb";
 
 function createAuthenticatedTransport(accessToken: string) {
@@ -274,4 +278,40 @@ export async function triggerLatestTrend(
 	const request = create(TriggerLatestTrendRequestSchema, {});
 
 	return await client.triggerLatestTrend(request);
+}
+
+export interface TriggerDiaryHighlightParams {
+	diaryId: string;
+	accessToken: string;
+}
+
+export interface GetDiaryHighlightParams {
+	diaryId: string;
+	accessToken: string;
+}
+
+export async function triggerDiaryHighlight(
+	params: TriggerDiaryHighlightParams,
+): Promise<TriggerDiaryHighlightResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(TriggerDiaryHighlightRequestSchema, {
+		diaryId: params.diaryId,
+	});
+
+	return await client.triggerDiaryHighlight(request);
+}
+
+export async function getDiaryHighlight(
+	params: GetDiaryHighlightParams,
+): Promise<GetDiaryHighlightResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(GetDiaryHighlightRequestSchema, {
+		diaryId: params.diaryId,
+	});
+
+	return await client.getDiaryHighlight(request);
 }

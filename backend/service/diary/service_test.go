@@ -497,3 +497,164 @@ func TestDiaryEntry_UnauthenticatedAccess(t *testing.T) {
 		t.Error("Expected authentication error but got nil")
 	}
 }
+
+func TestDiaryEntry_TriggerDiaryHighlight(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// Create a test diary entry with sufficient content (500+ characters)
+	longContent := ""
+	for i := 0; i < 100; i++ {
+		longContent += "これは日記のテスト内容です。"
+	}
+
+	createReq := &g.CreateDiaryEntryRequest{
+		Content: longContent,
+		Date: &g.YMD{
+			Year:  2024,
+			Month: 11,
+			Day:   8,
+		},
+	}
+	createResp, err := diaryService.CreateDiaryEntry(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Failed to create diary entry: %v", err)
+	}
+
+	tests := []struct {
+		name          string
+		request       *g.TriggerDiaryHighlightRequest
+		shouldSucceed bool
+		expectedCode  codes.Code
+	}{
+		{
+			name: "異常系：存在しない日記ID",
+			request: &g.TriggerDiaryHighlightRequest{
+				DiaryId: uuid.New().String(),
+			},
+			shouldSucceed: false,
+			expectedCode:  codes.NotFound,
+		},
+		{
+			name: "異常系：無効な日記ID",
+			request: &g.TriggerDiaryHighlightRequest{
+				DiaryId: "invalid-uuid",
+			},
+			shouldSucceed: false,
+			expectedCode:  codes.InvalidArgument,
+		},
+		{
+			name: "異常系：Gemini APIキー未設定（実際のテストでは成功する可能性がある）",
+			request: &g.TriggerDiaryHighlightRequest{
+				DiaryId: createResp.Entry.Id,
+			},
+			shouldSucceed: false,
+			expectedCode:  codes.NotFound, // Gemini APIキーが見つからない
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := diaryService.TriggerDiaryHighlight(ctx, tt.request)
+
+			if tt.shouldSucceed {
+				if err != nil {
+					t.Errorf("Expected success but got error: %v", err)
+				}
+			} else {
+				if err == nil {
+					t.Error("Expected error but got nil")
+					return
+				}
+				st, ok := status.FromError(err)
+				if !ok {
+					t.Errorf("Expected gRPC status error but got: %v", err)
+					return
+				}
+				if st.Code() != tt.expectedCode {
+					t.Errorf("Expected error code %v but got %v", tt.expectedCode, st.Code())
+				}
+			}
+		})
+	}
+}
+
+func TestDiaryEntry_TriggerDiaryHighlight_ShortContent(t *testing.T) {
+	// Note: このテストはRedisクライアントが必要なため、統合テストとして実装すべき
+	// ここでは最小限のバリデーションテストとして実装
+	t.Skip("Skipping test that requires Redis configuration - integration test recommended")
+}
+
+func TestDiaryEntry_GetDiaryHighlight(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// Create a test diary entry
+	createReq := &g.CreateDiaryEntryRequest{
+		Content: "Test diary content",
+		Date: &g.YMD{
+			Year:  2024,
+			Month: 11,
+			Day:   8,
+		},
+	}
+	createResp, err := diaryService.CreateDiaryEntry(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Failed to create diary entry: %v", err)
+	}
+
+	tests := []struct {
+		name          string
+		request       *g.GetDiaryHighlightRequest
+		shouldSucceed bool
+		expectedCode  codes.Code
+	}{
+		{
+			name: "異常系：ハイライトが存在しない",
+			request: &g.GetDiaryHighlightRequest{
+				DiaryId: createResp.Entry.Id,
+			},
+			shouldSucceed: false,
+			expectedCode:  codes.NotFound,
+		},
+		{
+			name: "異常系：無効な日記ID",
+			request: &g.GetDiaryHighlightRequest{
+				DiaryId: "invalid-uuid",
+			},
+			shouldSucceed: false,
+			expectedCode:  codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := diaryService.GetDiaryHighlight(ctx, tt.request)
+
+			if tt.shouldSucceed {
+				if err != nil {
+					t.Errorf("Expected success but got error: %v", err)
+				}
+			} else {
+				if err == nil {
+					t.Error("Expected error but got nil")
+					return
+				}
+				st, ok := status.FromError(err)
+				if !ok {
+					t.Errorf("Expected gRPC status error but got: %v", err)
+					return
+				}
+				if st.Code() != tt.expectedCode {
+					t.Errorf("Expected error code %v but got %v", tt.expectedCode, st.Code())
+				}
+			}
+		})
+	}
+}

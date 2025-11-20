@@ -227,7 +227,24 @@
 		"nineYearsAgo": "9年前",
 		"tenYearsAgo": "10年前",
 		"noPastEntry": "日記がありません",
-		"noPastEntries": "過去の同じ日の日記はありません"
+		"noPastEntries": "過去の同じ日の日記はありません",
+		"highlight": {
+			"title": "ハイライト",
+			"generate": "ハイライト生成",
+			"regenerate": "ハイライト再生成",
+			"generating": "ハイライト生成中...",
+			"show": "ハイライト表示",
+			"hide": "ハイライト非表示",
+			"label": "重要な部分",
+			"notAvailable": "ハイライトはまだ生成されていません",
+			"outdated": "日記が更新されています。最新のハイライトにする場合は再生成してください",
+			"generationFailed": "ハイライトの生成に失敗しました",
+			"timeout": "ハイライト生成がタイムアウトしました。再度お試しください",
+			"statusQueued": "ハイライトの生成をキューに追加しました。しばらくお待ちください",
+			"statusProcessing": "ハイライトを生成中です。しばらくお待ちください",
+			"contentTooShort": "ハイライト生成には最低500文字必要です",
+			"apiKeyNotConfigured": "Gemini APIキーが設定されていません。設定ページから登録してください"
+		}
 	},
 	"date": {
 		"dayOfWeek": {

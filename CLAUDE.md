@@ -198,6 +198,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **user_llms**: LLM provider settings and auto-summary preferences
 - **diary_summary_days**: AI-generated daily summaries
 - **diary_summary_months**: AI-generated monthly summaries
+- **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)
 - **Migrations**: Numbered SQL files in /schema directory
 
 ### Async Processing Architecture
@@ -218,7 +219,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 - **Redis Pub/Sub**: Message queue with `diary_events` channel
   - JSON message format with type-based routing
-  - Message types: `daily_summary`, `monthly_summary`
+  - Message types: `daily_summary`, `monthly_summary`, `latest_trend`, `diary_highlight`
   - Uses rueidis client for high performance
 
 - **Subscriber**: `backend/cmd/subscriber` - Async message processor
@@ -293,6 +294,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `adr/`: Architecture Decision Records
   - `0004-pubsub.md`: Redis Pub/Sub implementation details
   - `0005-scheduler.md`: Scheduler system architecture
+  - `0008-diary-highlight.md`: Diary highlight generation with LLM
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
   - `loki/loki-config.yml`: Loki log aggregation configuration

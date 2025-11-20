@@ -5,8 +5,10 @@
 	import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
 	import {
 		highlightEntities,
+		highlightEntitiesAndHighlights,
 		validateDiaryEntities,
 	} from "$lib/utils/diary-entity-highlighter";
+	import type { DiaryHighlight } from "$lib/types/highlight";
 	import {
 		getTextOffset,
 		restoreCursorPosition,
@@ -35,6 +37,7 @@
 	export let name = "";
 	export let rows = 4;
 	export let diaryEntities: DiaryEntityOutput[] = [];
+	export let diaryHighlights: DiaryHighlight[] = [];
 
 	// 明示的に選択されたエンティティの情報を格納
 	export let selectedEntities: SelectedEntity[] = [];
@@ -136,6 +139,24 @@
 		savedContent = value;
 	}
 
+	// diaryHighlightsが変更されたときもsavedContentを更新
+	// 配列の内容をシリアライズして比較（参照比較では毎回新しい配列なので不十分）
+	let previousDiaryHighlightsKey = "";
+	$: {
+		// valueとdiaryHighlightsへの依存を明示（初期化タイミングを確実にする）
+		void value;
+
+		// diaryHighlightsの内容をキーに変換（長さ + 最初の要素の情報）
+		const currentKey = diaryHighlights
+			? `${diaryHighlights.length}-${diaryHighlights[0]?.start ?? ""}-${diaryHighlights[0]?.end ?? ""}`
+			: "empty";
+
+		if (currentKey !== previousDiaryHighlightsKey) {
+			previousDiaryHighlightsKey = currentKey;
+			savedContent = value;
+		}
+	}
+
 	// エンティティハイライトを適用したHTMLを生成
 	// 入力中でない場合のみエンティティハイライトを表示
 	// また、現在のvalueが保存されたコンテンツと一致する場合のみハイライトを適用
@@ -145,8 +166,11 @@
 			return value.replace(/\n/g, "<br>");
 		}
 
-		// diaryEntitiesがない場合もプレーンテキスト
-		if (!diaryEntities || diaryEntities.length === 0) {
+		// diaryEntitiesとdiaryHighlightsの両方がない場合はプレーンテキスト
+		if (
+			(!diaryEntities || diaryEntities.length === 0) &&
+			(!diaryHighlights || diaryHighlights.length === 0)
+		) {
 			return value.replace(/\n/g, "<br>");
 		}
 
@@ -163,11 +187,26 @@
 			diaryEntities,
 			allEntities,
 		);
+
+		// diaryHighlightsがある場合は、エンティティとハイライトの両方を適用
+		if (diaryHighlights && diaryHighlights.length > 0) {
+			return highlightEntitiesAndHighlights(
+				value,
+				validatedEntities,
+				diaryHighlights,
+			);
+		}
+
 		return highlightEntities(value, validatedEntities);
 	})();
 
 	// captureフェーズでTabキーをキャプチャするためのリスナー
 	onMount(async () => {
+		// savedContentを確実に初期化（SSR時のリアクティビティの問題を回避）
+		if (!savedContent) {
+			savedContent = value;
+		}
+
 		// 全エンティティデータを事前取得
 		await _loadAllEntities();
 
@@ -221,6 +260,23 @@
 		value === savedContent
 	) {
 		updateContentElement();
+	}
+
+	// diaryHighlightsが外部から変更されたときもコンテンツを更新
+	// 空配列の場合もハイライトを消すために更新が必要
+	// 配列の長さを監視して変更を確実に検知
+	let previousHighlightsLength = -1;
+	$: {
+		// contentElementが存在する場合のみ処理
+		if (contentElement && !isUpdatingFromValue && !isComposing && !isTyping) {
+			// diaryHighlightsの長さを取得（nullまたはundefinedの場合は0）
+			const currentLength = diaryHighlights ? diaryHighlights.length : 0;
+			// 長さが変わった場合のみ更新（初回は-1から0以上に変わるので必ず更新される）
+			if (currentLength !== previousHighlightsLength) {
+				previousHighlightsLength = currentLength;
+				updateContentElement();
+			}
+		}
 	}
 
 	function updateContentElement() {

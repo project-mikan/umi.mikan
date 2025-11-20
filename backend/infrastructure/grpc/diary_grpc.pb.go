@@ -32,6 +32,8 @@ const (
 	DiaryService_GetDailySummary_FullMethodName        = "/diary.DiaryService/GetDailySummary"
 	DiaryService_GetLatestTrend_FullMethodName         = "/diary.DiaryService/GetLatestTrend"
 	DiaryService_TriggerLatestTrend_FullMethodName     = "/diary.DiaryService/TriggerLatestTrend"
+	DiaryService_TriggerDiaryHighlight_FullMethodName  = "/diary.DiaryService/TriggerDiaryHighlight"
+	DiaryService_GetDiaryHighlight_FullMethodName      = "/diary.DiaryService/GetDiaryHighlight"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -182,6 +184,30 @@ type DiaryServiceClient interface {
 	//   - PermissionDenied: production環境では使用不可
 	//   - NotFound: LLMキーが設定されていない
 	TriggerLatestTrend(ctx context.Context, in *TriggerLatestTrendRequest, opts ...grpc.CallOption) (*TriggerLatestTrendResponse, error)
+	// TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
+	// Redis Pub/Subを通じてSubscriberが処理を実行します。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { queued: true, message: "ハイライト生成をキューに追加しました" }
+	//
+	// エラー:
+	//   - NotFound: 日記エントリが見つからない、またはLLMキーが設定されていない
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	TriggerDiaryHighlight(ctx context.Context, in *TriggerDiaryHighlightRequest, opts ...grpc.CallOption) (*TriggerDiaryHighlightResponse, error)
+	// GetDiaryHighlight は日記エントリのハイライト情報を取得します。
+	// 日記が更新された場合、古いハイライトは無効として扱われます。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { highlights: [{ start: 0, end: 25, text: "..." }], created_at: 1234567890, updated_at: 1234567890 }
+	//
+	// エラー:
+	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	GetDiaryHighlight(ctx context.Context, in *GetDiaryHighlightRequest, opts ...grpc.CallOption) (*GetDiaryHighlightResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -316,6 +342,26 @@ func (c *diaryServiceClient) TriggerLatestTrend(ctx context.Context, in *Trigger
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TriggerLatestTrendResponse)
 	err := c.cc.Invoke(ctx, DiaryService_TriggerLatestTrend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) TriggerDiaryHighlight(ctx context.Context, in *TriggerDiaryHighlightRequest, opts ...grpc.CallOption) (*TriggerDiaryHighlightResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TriggerDiaryHighlightResponse)
+	err := c.cc.Invoke(ctx, DiaryService_TriggerDiaryHighlight_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) GetDiaryHighlight(ctx context.Context, in *GetDiaryHighlightRequest, opts ...grpc.CallOption) (*GetDiaryHighlightResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDiaryHighlightResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetDiaryHighlight_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -470,6 +516,30 @@ type DiaryServiceServer interface {
 	//   - PermissionDenied: production環境では使用不可
 	//   - NotFound: LLMキーが設定されていない
 	TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error)
+	// TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
+	// Redis Pub/Subを通じてSubscriberが処理を実行します。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { queued: true, message: "ハイライト生成をキューに追加しました" }
+	//
+	// エラー:
+	//   - NotFound: 日記エントリが見つからない、またはLLMキーが設定されていない
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	TriggerDiaryHighlight(context.Context, *TriggerDiaryHighlightRequest) (*TriggerDiaryHighlightResponse, error)
+	// GetDiaryHighlight は日記エントリのハイライト情報を取得します。
+	// 日記が更新された場合、古いハイライトは無効として扱われます。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { highlights: [{ start: 0, end: 25, text: "..." }], created_at: 1234567890, updated_at: 1234567890 }
+	//
+	// エラー:
+	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -518,6 +588,12 @@ func (UnimplementedDiaryServiceServer) GetLatestTrend(context.Context, *GetLates
 }
 func (UnimplementedDiaryServiceServer) TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TriggerLatestTrend not implemented")
+}
+func (UnimplementedDiaryServiceServer) TriggerDiaryHighlight(context.Context, *TriggerDiaryHighlightRequest) (*TriggerDiaryHighlightResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TriggerDiaryHighlight not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiaryHighlight not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -774,6 +850,42 @@ func _DiaryService_TriggerLatestTrend_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_TriggerDiaryHighlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TriggerDiaryHighlightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).TriggerDiaryHighlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_TriggerDiaryHighlight_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).TriggerDiaryHighlight(ctx, req.(*TriggerDiaryHighlightRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_GetDiaryHighlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiaryHighlightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetDiaryHighlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetDiaryHighlight_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetDiaryHighlight(ctx, req.(*GetDiaryHighlightRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiaryService_ServiceDesc is the grpc.ServiceDesc for DiaryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -832,6 +944,14 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TriggerLatestTrend",
 			Handler:    _DiaryService_TriggerLatestTrend_Handler,
+		},
+		{
+			MethodName: "TriggerDiaryHighlight",
+			Handler:    _DiaryService_TriggerDiaryHighlight_Handler,
+		},
+		{
+			MethodName: "GetDiaryHighlight",
+			Handler:    _DiaryService_GetDiaryHighlight_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

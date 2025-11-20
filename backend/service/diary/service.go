@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,6 +36,25 @@ type MonthlySummaryGenerationMessage struct {
 	UserID string `json:"user_id"`
 	Year   int    `json:"year"`
 	Month  int    `json:"month"`
+}
+
+type DiaryHighlightGenerationMessage struct {
+	Type    string `json:"type"`
+	UserID  string `json:"user_id"`
+	DiaryID string `json:"diary_id"`
+}
+
+// getTaskTimeout 環境変数からタスクタイムアウトを取得(デフォルト600秒)
+func getTaskTimeout() int {
+	timeoutStr := os.Getenv("TASK_TIMEOUT_SECONDS")
+	if timeoutStr == "" {
+		return 600 // デフォルト10分
+	}
+	timeout, err := strconv.Atoi(timeoutStr)
+	if err != nil || timeout <= 0 {
+		return 600 // パースエラー時もデフォルト
+	}
+	return timeout
 }
 
 // タスクの状態を管理するヘルパー関数
@@ -607,8 +628,9 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		}
 	}
 
-	// タスクを「キューに追加済み」としてマーク（10分の有効期限）
-	if err := s.setTaskStatus(ctx, taskKey, "queued", 600); err != nil {
+	// タスクを「キューに追加済み」としてマーク
+	timeout := getTaskTimeout()
+	if err := s.setTaskStatus(ctx, taskKey, "queued", timeout); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to set task status")
 	}
 
@@ -811,8 +833,9 @@ func (s *DiaryEntry) GenerateDailySummary(
 		}
 	}
 
-	// タスクを「キューに追加済み」としてマーク（10分の有効期限）
-	if err := s.setTaskStatus(ctx, taskKey, "queued", 600); err != nil {
+	// タスクを「キューに追加済み」としてマーク
+	timeout := getTaskTimeout()
+	if err := s.setTaskStatus(ctx, taskKey, "queued", timeout); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to set task status")
 	}
 
@@ -996,4 +1019,161 @@ func (s *DiaryEntry) deleteDiaryEntities(ctx context.Context, tx *sql.Tx, diaryI
 	query := "DELETE FROM diary_entities WHERE diary_id = $1"
 	_, err := tx.ExecContext(ctx, query, diaryID)
 	return err
+}
+
+// TriggerDiaryHighlight 日記エントリのハイライト生成を非同期でトリガー
+func (s *DiaryEntry) TriggerDiaryHighlight(
+	ctx context.Context,
+	req *g.TriggerDiaryHighlightRequest,
+) (*g.TriggerDiaryHighlightResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// 日記IDをパース
+	diaryID, err := uuid.Parse(req.DiaryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid diary ID")
+	}
+
+	// 日記を取得
+	diary, err := database.DiaryByID(ctx, s.DB, diaryID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Diary entry not found")
+	}
+
+	// 日記の所有者確認
+	if diary.UserID != userID {
+		return nil, status.Error(codes.PermissionDenied, "Access denied")
+	}
+
+	// 文字数チェック（最小500文字）
+	if len([]rune(diary.Content)) < 500 {
+		return nil, status.Error(codes.FailedPrecondition, "Content too short for highlight generation (minimum 500 characters)")
+	}
+
+	// ユーザーのLLMキーが設定されているかチェック
+	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Gemini API key not configured")
+	}
+
+	// タスクキーを生成
+	taskKey := fmt.Sprintf("task:diary_highlight:%s:%s", userID.String(), diaryID.String())
+
+	// 既にタスクが実行中かチェック
+	taskStatus, err := s.getTaskStatus(ctx, taskKey)
+	if err == nil && (taskStatus == "queued" || taskStatus == "processing") {
+		return &g.TriggerDiaryHighlightResponse{
+			Queued:  true,
+			Message: fmt.Sprintf("Highlight generation is already %s", taskStatus),
+		}, nil
+	}
+
+	// タスクを「キューに追加済み」としてマーク
+	timeout := getTaskTimeout()
+	if err := s.setTaskStatus(ctx, taskKey, "queued", timeout); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to set task status")
+	}
+
+	// Redis Pub/Sub経由でハイライト生成を依頼
+	message := DiaryHighlightGenerationMessage{
+		Type:    "diary_highlight",
+		UserID:  userID.String(),
+		DiaryID: diaryID.String(),
+	}
+
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to create highlight generation request")
+	}
+
+	// Redisにメッセージを送信
+	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
+	if err := s.Redis.Do(ctx, publishCmd).Error(); err != nil {
+		// タスクステータスをクリア
+		_ = s.deleteTaskStatus(ctx, taskKey)
+		return nil, status.Error(codes.Internal, "Failed to queue highlight generation")
+	}
+
+	return &g.TriggerDiaryHighlightResponse{
+		Queued:  true,
+		Message: "Highlight generation has been queued",
+	}, nil
+}
+
+// GetDiaryHighlight 日記エントリのハイライト情報を取得
+func (s *DiaryEntry) GetDiaryHighlight(
+	ctx context.Context,
+	req *g.GetDiaryHighlightRequest,
+) (*g.GetDiaryHighlightResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// 日記IDをパース
+	diaryID, err := uuid.Parse(req.DiaryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid diary ID")
+	}
+
+	// 日記を取得
+	diary, err := database.DiaryByID(ctx, s.DB, diaryID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Diary entry not found")
+	}
+
+	// 日記の所有者確認
+	if diary.UserID != userID {
+		return nil, status.Error(codes.PermissionDenied, "Access denied")
+	}
+
+	// ハイライトを取得
+	highlight, err := database.DiaryHighlightByDiaryID(ctx, s.DB, diaryID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Highlight not found")
+	}
+
+	// 注: 日記が更新された場合でもハイライトは返す
+	// フロントエンドで diary.UpdatedAt と highlight.UpdatedAt を比較して古いかどうかを判断する
+	// これにより、ユーザーは古いハイライトを確認しつつ再生成を選択できる
+
+	// JSONBからハイライト情報を取得
+	var highlightsRaw []map[string]interface{}
+	if err := json.Unmarshal(highlight.Highlights, &highlightsRaw); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to parse highlights")
+	}
+
+	// gRPCレスポンス形式に変換
+	highlights := make([]*g.HighlightRange, 0, len(highlightsRaw))
+	for _, h := range highlightsRaw {
+		start, ok1 := h["start"].(float64)
+		end, ok2 := h["end"].(float64)
+		text, ok3 := h["text"].(string)
+		if !ok1 || !ok2 || !ok3 {
+			continue
+		}
+
+		highlights = append(highlights, &g.HighlightRange{
+			Start: int32(start),
+			End:   int32(end),
+			Text:  text,
+		})
+	}
+
+	return &g.GetDiaryHighlightResponse{
+		Highlights: highlights,
+		CreatedAt:  highlight.CreatedAt.Unix(),
+		UpdatedAt:  highlight.UpdatedAt.Unix(),
+	}, nil
 }

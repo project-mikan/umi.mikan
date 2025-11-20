@@ -250,3 +250,87 @@ activities（活動・行動）:
 
 	return "", fmt.Errorf("unexpected content type")
 }
+
+func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent string) (string, error) {
+	prompt := fmt.Sprintf(`以下の日記の内容を読んで、特に重要だと思う部分を1~3箇所抽出してください。
+
+【抽出基準】
+- 感情が強く表れている部分
+- 印象的な出来事やエピソード
+- 日記の中で特に伝えたい内容
+- 重要な決断や気づき
+
+【重要な注意事項】
+- **start** は元の日記テキストにおける文字開始位置（0から始まる）
+- **end** は元の日記テキストにおける文字終了位置
+- **text** は抽出した実際のテキスト（元の日記から完全に一致する文字列）
+- start と end は必ず元の日記テキストの正確な位置を指定してください
+- 改行や空白も含めて、元のテキストと完全に一致するように抽出してください
+- 1つのハイライトは最低10文字、最大200文字程度
+- 文の途中で切らず、意味のある単位で抽出
+
+以下のJSON形式で出力してください：
+[
+  {
+    "start": 0,
+    "end": 25,
+    "text": "実際に抽出したテキスト"
+  },
+  {
+    "start": 50,
+    "end": 100,
+    "text": "実際に抽出したテキスト"
+  }
+]
+
+日記の内容:
+%s
+
+`, diaryContent)
+
+	contents := genai.Text(prompt)
+
+	// JSON出力を強制するためのスキーマを設定
+	schema := &genai.Schema{
+		Type: genai.TypeArray,
+		Items: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
+				"start": {
+					Type:        genai.TypeInteger,
+					Description: "ハイライト開始位置（0から始まる文字位置）",
+				},
+				"end": {
+					Type:        genai.TypeInteger,
+					Description: "ハイライト終了位置（文字位置）",
+				},
+				"text": {
+					Type:        genai.TypeString,
+					Description: "抽出した実際のテキスト",
+				},
+			},
+			Required: []string{"start", "end", "text"},
+		},
+	}
+
+	config := &genai.GenerateContentConfig{
+		ResponseMIMEType: "application/json",
+		ResponseSchema:   schema,
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, config)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate content: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+		return "", fmt.Errorf("no content generated")
+	}
+
+	// The response parts contain the generated text
+	if textPart := resp.Candidates[0].Content.Parts[0]; textPart != nil {
+		return textPart.Text, nil
+	}
+
+	return "", fmt.Errorf("unexpected content type")
+}
