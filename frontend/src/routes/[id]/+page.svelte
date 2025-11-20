@@ -16,6 +16,7 @@
 	import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
 	import { getDayOfWeekKey } from "$lib/utils/date-utils";
 	import { createSubmitHandler } from "$lib/utils/form-utils";
+	import type { HighlightData } from "$lib/types/highlight";
 	import type { ActionData, PageData } from "./$types";
 
 	export let data: PageData;
@@ -70,16 +71,6 @@
 	let isHighlightOutdated = false; // ハイライトが古いかどうか
 
 	// ハイライトデータ
-	interface Highlight {
-		start: number;
-		end: number;
-		text: string;
-	}
-	interface HighlightData {
-		highlights: Highlight[];
-		createdAt: number;
-		updatedAt: number;
-	}
 	let highlightData: HighlightData | null = null;
 	let highlightVisible = true; // ハイライトの表示・非表示状態
 

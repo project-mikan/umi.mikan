@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -21,6 +22,19 @@ import (
 	"github.com/redis/rueidis"
 	"github.com/sirupsen/logrus"
 )
+
+// getTaskTimeout 環境変数からタスクタイムアウトを取得(デフォルト600秒)
+func getTaskTimeout() int {
+	timeoutStr := os.Getenv("TASK_TIMEOUT_SECONDS")
+	if timeoutStr == "" {
+		return 600 // デフォルト10分
+	}
+	timeout, err := strconv.Atoi(timeoutStr)
+	if err != nil || timeout <= 0 {
+		return 600 // パースエラー時もデフォルト
+	}
+	return timeout
+}
 
 var (
 	// Prometheus metrics
@@ -882,7 +896,8 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 
 	// タスクステータスを「処理中」に更新
 	taskKey := fmt.Sprintf("task:diary_highlight:%s:%s", userID, diaryID)
-	setCmd := redisClient.B().Set().Key(taskKey).Value("processing").Ex(600 * time.Second).Build()
+	timeout := time.Duration(getTaskTimeout()) * time.Second
+	setCmd := redisClient.B().Set().Key(taskKey).Value("processing").Ex(timeout).Build()
 	redisClient.Do(ctx, setCmd)
 
 	// Ensure lock is released when function exits
@@ -921,6 +936,55 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 		return fmt.Errorf("failed to generate highlight with LLM: %w", err)
 	}
 
+	// 3.1. ハイライトの位置情報をバリデーション
+	contentLength := len([]rune(diaryContent))
+	validHighlights := make([]map[string]interface{}, 0, len(highlights))
+	for _, h := range highlights {
+		// startとendを取得
+		startFloat, ok1 := h["start"].(float64)
+		endFloat, ok2 := h["end"].(float64)
+		text, ok3 := h["text"].(string)
+
+		if !ok1 || !ok2 || !ok3 {
+			logger.WithFields(logrus.Fields{
+				"highlight": h,
+			}).Warn("Invalid highlight format, skipping")
+			continue
+		}
+
+		start := int(startFloat)
+		end := int(endFloat)
+
+		// 位置情報の妥当性チェック
+		if start < 0 || end > contentLength || start >= end {
+			logger.WithFields(logrus.Fields{
+				"start":          start,
+				"end":            end,
+				"content_length": contentLength,
+			}).Warn("Invalid highlight position, skipping")
+			continue
+		}
+
+		// 実際のテキストと一致するかチェック
+		actualText := string([]rune(diaryContent)[start:end])
+		if actualText != text {
+			logger.WithFields(logrus.Fields{
+				"expected": text,
+				"actual":   actualText,
+				"start":    start,
+				"end":      end,
+			}).Warn("Highlight text mismatch, skipping")
+			continue
+		}
+
+		validHighlights = append(validHighlights, h)
+	}
+
+	// 有効なハイライトが1つもない場合はエラー
+	if len(validHighlights) == 0 {
+		return fmt.Errorf("no valid highlights generated")
+	}
+
 	// 4. diary_highlightsに保存
 	insertQuery := `
 		INSERT INTO diary_highlights (id, diary_id, user_id, highlights, created_at, updated_at)
@@ -933,8 +997,8 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 	now := time.Now()
 	highlightID := uuid.New()
 
-	// highlightsをJSONBに変換
-	highlightsJSON, err := json.Marshal(highlights)
+	// validHighlightsをJSONBに変換
+	highlightsJSON, err := json.Marshal(validHighlights)
 	if err != nil {
 		return fmt.Errorf("failed to marshal highlights: %w", err)
 	}
@@ -984,8 +1048,18 @@ func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFacto
 	// JSON文字列をパース
 	var highlights []map[string]interface{}
 	if err := json.Unmarshal([]byte(highlightsJSON), &highlights); err != nil {
-		logger.WithError(err).Error("Failed to parse highlights JSON")
-		return nil, fmt.Errorf("failed to parse highlights JSON: %w", err)
+		logger.WithError(err).WithField("response", highlightsJSON).Error("Failed to parse highlights JSON")
+		return nil, fmt.Errorf("failed to parse highlights JSON (response: %s): %w", highlightsJSON, err)
+	}
+
+	// ハイライトの数が妥当かチェック(1~5個)
+	if len(highlights) == 0 {
+		logger.Warn("LLM returned empty highlights array")
+		return nil, fmt.Errorf("LLM returned empty highlights array")
+	}
+	if len(highlights) > 5 {
+		logger.WithField("count", len(highlights)).Warn("LLM returned too many highlights, trimming to 5")
+		highlights = highlights[:5]
 	}
 
 	logger.Info("Successfully generated highlights using Gemini API")

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,6 +42,19 @@ type DiaryHighlightGenerationMessage struct {
 	Type    string `json:"type"`
 	UserID  string `json:"user_id"`
 	DiaryID string `json:"diary_id"`
+}
+
+// getTaskTimeout 環境変数からタスクタイムアウトを取得(デフォルト600秒)
+func getTaskTimeout() int {
+	timeoutStr := os.Getenv("TASK_TIMEOUT_SECONDS")
+	if timeoutStr == "" {
+		return 600 // デフォルト10分
+	}
+	timeout, err := strconv.Atoi(timeoutStr)
+	if err != nil || timeout <= 0 {
+		return 600 // パースエラー時もデフォルト
+	}
+	return timeout
 }
 
 // タスクの状態を管理するヘルパー関数
@@ -613,8 +628,9 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		}
 	}
 
-	// タスクを「キューに追加済み」としてマーク（10分の有効期限）
-	if err := s.setTaskStatus(ctx, taskKey, "queued", 600); err != nil {
+	// タスクを「キューに追加済み」としてマーク
+	timeout := getTaskTimeout()
+	if err := s.setTaskStatus(ctx, taskKey, "queued", timeout); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to set task status")
 	}
 
@@ -817,8 +833,9 @@ func (s *DiaryEntry) GenerateDailySummary(
 		}
 	}
 
-	// タスクを「キューに追加済み」としてマーク（10分の有効期限）
-	if err := s.setTaskStatus(ctx, taskKey, "queued", 600); err != nil {
+	// タスクを「キューに追加済み」としてマーク
+	timeout := getTaskTimeout()
+	if err := s.setTaskStatus(ctx, taskKey, "queued", timeout); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to set task status")
 	}
 
@@ -1058,8 +1075,9 @@ func (s *DiaryEntry) TriggerDiaryHighlight(
 		}, nil
 	}
 
-	// タスクを「キューに追加済み」としてマーク（10分の有効期限）
-	if err := s.setTaskStatus(ctx, taskKey, "queued", 600); err != nil {
+	// タスクを「キューに追加済み」としてマーク
+	timeout := getTaskTimeout()
+	if err := s.setTaskStatus(ctx, taskKey, "queued", timeout); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to set task status")
 	}
 
