@@ -9,6 +9,3 @@ CREATE TABLE diary_highlights (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(diary_id)
 );
-
--- diary_id で検索するためのインデックス
-CREATE INDEX idx_diary_highlights_diary_id ON diary_highlights(diary_id);
