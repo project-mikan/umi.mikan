@@ -28,7 +28,7 @@ tidy:
 xo:
 	# db-initを別で実行することでDBを更新できる
 	rm -rf backend/infrastructure/database/*.xo.go
-	docker compose exec backend go tool xo schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
+	docker compose exec backend go tool dbtpl schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
 go-mod-tidy:
 	docker compose exec backend go mod tidy
 # airを使うので不要↓
@@ -52,7 +52,7 @@ db-apply:
 		--from-dsn "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" \
 		--to-dir /schema \
 		--disable-plan-validation \
-		--allow-hazards DELETES_DATA
+		--allow-hazards DELETES_DATA,INDEX_DROPPED
 
 f-log:
 	docker compose logs -f frontend
