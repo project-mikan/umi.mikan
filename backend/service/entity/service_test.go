@@ -865,3 +865,133 @@ func TestSearchEntities(t *testing.T) {
 		})
 	}
 }
+
+// TestValidateEntityName はエンティティ名バリデーションをテスト
+func TestValidateEntityName(t *testing.T) {
+	tests := []struct {
+		name        string
+		entityName  string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常系: 有効なエンティティ名",
+			entityName:  "テストエンティティ",
+			expectError: false,
+		},
+		{
+			name:        "正常系: 英数字のエンティティ名",
+			entityName:  "TestEntity123",
+			expectError: false,
+		},
+		{
+			name:        "異常系: 空のエンティティ名",
+			entityName:  "",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 255文字を超えるエンティティ名",
+			entityName:  string(make([]byte, 256)),
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 制御文字を含むエンティティ名",
+			entityName:  "test\x00entity",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 前方に空白があるエンティティ名",
+			entityName:  " テストエンティティ",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 後方に空白があるエンティティ名",
+			entityName:  "テストエンティティ ",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateEntityName(tt.entityName)
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestValidateAlias はエイリアスバリデーションをテスト
+func TestValidateAlias(t *testing.T) {
+	tests := []struct {
+		name        string
+		alias       string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常系: 有効なエイリアス",
+			alias:       "テストエイリアス",
+			expectError: false,
+		},
+		{
+			name:        "正常系: 英数字のエイリアス",
+			alias:       "TestAlias123",
+			expectError: false,
+		},
+		{
+			name:        "異常系: 空のエイリアス",
+			alias:       "",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 255文字を超えるエイリアス",
+			alias:       string(make([]byte, 256)),
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 制御文字を含むエイリアス",
+			alias:       "test\x00alias",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 前方に空白があるエイリアス",
+			alias:       " テストエイリアス",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 後方に空白があるエイリアス",
+			alias:       "テストエイリアス ",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateAlias(tt.alias)
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}

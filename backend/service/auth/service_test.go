@@ -579,3 +579,53 @@ func TestGetUserAgent(t *testing.T) {
 		})
 	}
 }
+
+func TestGetClientIdentifier(t *testing.T) {
+	authService := &AuthEntry{}
+
+	tests := []struct {
+		name     string
+		setupCtx func() context.Context
+		expected string
+	}{
+		{
+			name: "IPとUser-Agent両方がある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"x-forwarded-for": "192.168.1.1",
+					"user-agent":      "Mozilla/5.0",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "192.168.1.1:Mozilla/5.0",
+		},
+		{
+			name: "X-Real-IPとgrpcgateway-user-agentがある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"x-real-ip":               "192.168.1.2",
+					"grpcgateway-user-agent": "gRPC-Gateway/1.0",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "192.168.1.2:gRPC-Gateway/1.0",
+		},
+		{
+			name: "ヘッダーがない場合",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			expected: "unknown:unknown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setupCtx()
+			result := authService.getClientIdentifier(ctx)
+			if result != tt.expected {
+				t.Errorf("expected %s, got %s", tt.expected, result)
+			}
+		})
+	}
+}
