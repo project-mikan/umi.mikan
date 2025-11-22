@@ -68,27 +68,9 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
 
-      - name: Run tests
-        working-directory: ./backend
-        run: go test -v ./...
-        env:
-          DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
-          JWT_SECRET: test-secret-for-ci
-          TEST_DB_HOST: localhost
-          TEST_DB_USER: postgres
-          TEST_DB_PASSWORD: dev-pass
-          TEST_DB_NAME: umi_mikan
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASS: dev-pass
-          DB_NAME: umi_mikan
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-
       - name: Run tests with coverage
         working-directory: ./backend
-        run: go test -coverprofile=coverage.out ./...
+        run: go test -v -coverprofile=coverage.out ./...
         env:
           DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
           JWT_SECRET: test-secret-for-ci
