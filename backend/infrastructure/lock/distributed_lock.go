@@ -50,12 +50,20 @@ func (dl *DistributedLock) TryLock(ctx context.Context) (bool, error) {
 	result := dl.client.Do(ctx, cmd)
 
 	if result.Error() != nil {
+		// Redis Nilエラーの場合、キーが既に存在することを意味する
+		if rueidis.IsRedisNil(result.Error()) {
+			return false, nil
+		}
 		return false, fmt.Errorf("failed to acquire lock: %w", result.Error())
 	}
 
 	// If the result is "OK", lock was acquired
 	response, err := result.ToString()
 	if err != nil {
+		// ToStringでエラーが発生した場合、nilレスポンスの可能性がある
+		if rueidis.IsRedisNil(err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("failed to parse lock result: %w", err)
 	}
 
