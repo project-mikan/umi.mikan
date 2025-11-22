@@ -658,3 +658,102 @@ func TestDiaryEntry_GetDiaryHighlight(t *testing.T) {
 		})
 	}
 }
+
+func TestDiaryEntry_SearchDiaryEntries(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// テスト用の日記エントリを複数作成
+	testEntries := []struct {
+		content string
+		date    *g.YMD
+	}{
+		{
+			content: "今日は天気が良かった",
+			date: &g.YMD{
+				Year:  2024,
+				Month: 1,
+				Day:   15,
+			},
+		},
+		{
+			content: "雨の日は気分が沈む",
+			date: &g.YMD{
+				Year:  2024,
+				Month: 1,
+				Day:   16,
+			},
+		},
+		{
+			content: "今日は友達と会った",
+			date: &g.YMD{
+				Year:  2024,
+				Month: 1,
+				Day:   17,
+			},
+		},
+	}
+
+	for _, entry := range testEntries {
+		createReq := &g.CreateDiaryEntryRequest{
+			Content: entry.content,
+			Date:    entry.date,
+		}
+		_, err := diaryService.CreateDiaryEntry(ctx, createReq)
+		if err != nil {
+			t.Fatalf("Failed to create diary entry: %v", err)
+		}
+	}
+
+	tests := []struct {
+		name             string
+		keyword          string
+		expectedMinCount int
+	}{
+		{
+			name:             "正常系：今日で検索",
+			keyword:          "今日",
+			expectedMinCount: 2,
+		},
+		{
+			name:             "正常系：天気で検索",
+			keyword:          "天気",
+			expectedMinCount: 1,
+		},
+		{
+			name:             "正常系：存在しないキーワードで検索",
+			keyword:          "存在しない",
+			expectedMinCount: 0,
+		},
+		{
+			name:             "正常系：空のキーワードで検索",
+			keyword:          "",
+			expectedMinCount: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			searchReq := &g.SearchDiaryEntriesRequest{
+				Keyword: tt.keyword,
+			}
+			response, err := diaryService.SearchDiaryEntries(ctx, searchReq)
+
+			if err != nil {
+				t.Fatalf("Expected success but got error: %v", err)
+			}
+			if response == nil {
+				t.Fatal("Expected response but got nil")
+			}
+			if response.SearchedKeyword != tt.keyword {
+				t.Errorf("Expected searched keyword '%s' but got '%s'", tt.keyword, response.SearchedKeyword)
+			}
+			if len(response.Entries) < tt.expectedMinCount {
+				t.Errorf("Expected at least %d entries but got %d", tt.expectedMinCount, len(response.Entries))
+			}
+		})
+	}
+}
