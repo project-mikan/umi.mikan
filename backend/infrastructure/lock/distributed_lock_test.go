@@ -3,6 +3,7 @@ package lock
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -12,8 +13,19 @@ import (
 
 // setupRedisClient はテスト用のRedisクライアントをセットアップ
 func setupRedisClient(t *testing.T) rueidis.Client {
+	// 環境変数からRedisのアドレスを取得（デフォルトはredis:6379）
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "redis"
+	}
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		redisPort = "6379"
+	}
+	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort)
+
 	client, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{"redis:6379"},
+		InitAddress: []string{redisAddr},
 	})
 	if err != nil {
 		t.Fatalf("failed to create Redis client: %v", err)
