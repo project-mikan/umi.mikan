@@ -42,9 +42,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: "backend/go.mod"
+          cache: false
 
       - name: Cache Go modules
         uses: actions/cache@v4
+        continue-on-error: true
         with:
           path: |
             ~/.cache/go-build
