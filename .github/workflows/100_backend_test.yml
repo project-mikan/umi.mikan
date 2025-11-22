@@ -55,9 +55,10 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./backend
-        run: |
-          go mod download
-          go install github.com/mfridman/tparse
+        run: go mod download
+
+      - name: Install tparse
+        run: go install github.com/mfridman/tparse@latest
 
       - name: Initialize database
         run: |
