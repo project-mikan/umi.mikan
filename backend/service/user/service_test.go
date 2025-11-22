@@ -251,7 +251,7 @@ func TestGetUserInfo(t *testing.T) {
 	userID := uuid.New()
 	user := &database.User{
 		ID:        userID,
-		Email:     "test@example.com",
+		Email:     fmt.Sprintf("test-%s@example.com", userID.String()),
 		Name:      "テストユーザー",
 		CreatedAt: time.Now().Unix(),
 		UpdatedAt: time.Now().Unix(),
@@ -519,6 +519,65 @@ func TestGetAutoSummarySettings(t *testing.T) {
 			assert.Equal(t, tt.expectedAutoDaily, resp.AutoSummaryDaily)
 			assert.Equal(t, tt.expectedAutoMonthly, resp.AutoSummaryMonthly)
 			assert.Equal(t, tt.expectedAutoLatestTrend, resp.AutoLatestTrendEnabled)
+		})
+	}
+}
+
+func TestDeleteAccount(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &UserEntry{DB: db}
+
+	// テスト用ユーザーを作成
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-%s@example.com", userID.String()),
+		Name:      "テストユーザー",
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	// パスワード認証を作成
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+	auth := &database.UserPasswordAuthe{
+		UserID:         userID,
+		PasswordHashed: string(hashedPassword),
+		CreatedAt:      time.Now().Unix(),
+		UpdatedAt:      time.Now().Unix(),
+	}
+	require.NoError(t, auth.Insert(context.Background(), db))
+
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	tests := []struct {
+		name            string
+		expectSuccess   bool
+		expectedMessage string
+	}{
+		{
+			name:            "正常なアカウント削除",
+			expectSuccess:   true,
+			expectedMessage: "accountDeleteSuccess",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &g.DeleteAccountRequest{}
+
+			resp, err := service.DeleteAccount(ctx, req)
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectSuccess, resp.Success)
+			assert.Equal(t, tt.expectedMessage, resp.Message)
+
+			// ユーザーが削除されたことを確認
+			_, err = database.UserByID(context.Background(), db, userID)
+			assert.Error(t, err)
 		})
 	}
 }
