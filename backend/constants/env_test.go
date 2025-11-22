@@ -4,6 +4,9 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLoadSchedulerConfig(t *testing.T) {
@@ -401,6 +404,283 @@ func TestLoadRateLimitConfig(t *testing.T) {
 			if config.RegisterWindow != tt.expectedRegisterWindow {
 				t.Errorf("expected register window %v, got %v", tt.expectedRegisterWindow, config.RegisterWindow)
 			}
+		})
+	}
+}
+
+func TestLoadEnv(t *testing.T) {
+	tests := []struct {
+		name        string
+		envName     string
+		envValue    string
+		setValue    bool
+		expectError bool
+	}{
+		{
+			name:        "正常系：環境変数が設定されている",
+			envName:     "TEST_ENV_VAR",
+			envValue:    "test-value",
+			setValue:    true,
+			expectError: false,
+		},
+		{
+			name:        "異常系：環境変数が設定されていない",
+			envName:     "UNSET_ENV_VAR",
+			setValue:    false,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			if tt.setValue {
+				_ = os.Setenv(tt.envName, tt.envValue)
+			} else {
+				_ = os.Unsetenv(tt.envName)
+			}
+
+			// Test
+			value, err := LoadEnv(tt.envName)
+
+			if tt.expectError {
+				require.Error(t, err)
+				assert.Empty(t, value)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.envValue, value)
+			}
+
+			// Cleanup
+			_ = os.Unsetenv(tt.envName)
+		})
+	}
+}
+
+func TestLoadPort(t *testing.T) {
+	tests := []struct {
+		name        string
+		portValue   string
+		setValue    bool
+		expected    int
+		expectError bool
+	}{
+		{
+			name:        "正常系：有効なポート番号",
+			portValue:   "8080",
+			setValue:    true,
+			expected:    8080,
+			expectError: false,
+		},
+		{
+			name:        "異常系：環境変数が設定されていない",
+			setValue:    false,
+			expectError: true,
+		},
+		{
+			name:        "異常系：無効なポート番号",
+			portValue:   "invalid",
+			setValue:    true,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			if tt.setValue {
+				_ = os.Setenv("PORT", tt.portValue)
+			} else {
+				_ = os.Unsetenv("PORT")
+			}
+
+			// Test
+			port, err := LoadPort()
+
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, port)
+			}
+
+			// Cleanup
+			_ = os.Unsetenv("PORT")
+		})
+	}
+}
+
+func TestLoadJWTSecret(t *testing.T) {
+	tests := []struct {
+		name        string
+		secretValue string
+		setValue    bool
+		expectError bool
+	}{
+		{
+			name:        "正常系：JWT秘密鍵が設定されている",
+			secretValue: "my-secret-key",
+			setValue:    true,
+			expectError: false,
+		},
+		{
+			name:        "異常系：JWT秘密鍵が設定されていない",
+			setValue:    false,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			if tt.setValue {
+				_ = os.Setenv("JWT_SECRET", tt.secretValue)
+			} else {
+				_ = os.Unsetenv("JWT_SECRET")
+			}
+
+			// Test
+			secret, err := LoadJWTSecret()
+
+			if tt.expectError {
+				require.Error(t, err)
+				assert.Empty(t, secret)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.secretValue, secret)
+			}
+
+			// Cleanup
+			_ = os.Unsetenv("JWT_SECRET")
+		})
+	}
+}
+
+func TestLoadDBConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupEnv    func()
+		expectError bool
+	}{
+		{
+			name: "正常系：すべての環境変数が設定されている",
+			setupEnv: func() {
+				_ = os.Setenv("DB_HOST", "localhost")
+				_ = os.Setenv("DB_PORT", "5432")
+				_ = os.Setenv("DB_USER", "testuser")
+				_ = os.Setenv("DB_PASS", "testpass")
+				_ = os.Setenv("DB_NAME", "testdb")
+			},
+			expectError: false,
+		},
+		{
+			name: "異常系：DB_HOSTが設定されていない",
+			setupEnv: func() {
+				_ = os.Unsetenv("DB_HOST")
+				_ = os.Setenv("DB_PORT", "5432")
+				_ = os.Setenv("DB_USER", "testuser")
+				_ = os.Setenv("DB_PASS", "testpass")
+				_ = os.Setenv("DB_NAME", "testdb")
+			},
+			expectError: true,
+		},
+		{
+			name: "異常系：DB_PORTが無効",
+			setupEnv: func() {
+				_ = os.Setenv("DB_HOST", "localhost")
+				_ = os.Setenv("DB_PORT", "invalid")
+				_ = os.Setenv("DB_USER", "testuser")
+				_ = os.Setenv("DB_PASS", "testpass")
+				_ = os.Setenv("DB_NAME", "testdb")
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			tt.setupEnv()
+
+			// Test
+			config, err := LoadDBConfig()
+
+			if tt.expectError {
+				require.Error(t, err)
+				assert.Nil(t, config)
+			} else {
+				require.NoError(t, err)
+				assert.NotNil(t, config)
+				assert.Equal(t, "localhost", config.Host)
+				assert.Equal(t, 5432, config.Port)
+				assert.Equal(t, "testuser", config.User)
+				assert.Equal(t, "testpass", config.Password)
+				assert.Equal(t, "testdb", config.DBName)
+			}
+
+			// Cleanup
+			_ = os.Unsetenv("DB_HOST")
+			_ = os.Unsetenv("DB_PORT")
+			_ = os.Unsetenv("DB_USER")
+			_ = os.Unsetenv("DB_PASS")
+			_ = os.Unsetenv("DB_NAME")
+		})
+	}
+}
+
+func TestLoadRedisConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupEnv    func()
+		expectError bool
+	}{
+		{
+			name: "正常系：すべての環境変数が設定されている",
+			setupEnv: func() {
+				_ = os.Setenv("REDIS_HOST", "localhost")
+				_ = os.Setenv("REDIS_PORT", "6379")
+			},
+			expectError: false,
+		},
+		{
+			name: "異常系：REDIS_HOSTが設定されていない",
+			setupEnv: func() {
+				_ = os.Unsetenv("REDIS_HOST")
+				_ = os.Setenv("REDIS_PORT", "6379")
+			},
+			expectError: true,
+		},
+		{
+			name: "異常系：REDIS_PORTが無効",
+			setupEnv: func() {
+				_ = os.Setenv("REDIS_HOST", "localhost")
+				_ = os.Setenv("REDIS_PORT", "invalid")
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			tt.setupEnv()
+
+			// Test
+			config, err := LoadRedisConfig()
+
+			if tt.expectError {
+				require.Error(t, err)
+				assert.Nil(t, config)
+			} else {
+				require.NoError(t, err)
+				assert.NotNil(t, config)
+				assert.Equal(t, "localhost", config.Host)
+				assert.Equal(t, 6379, config.Port)
+			}
+
+			// Cleanup
+			_ = os.Unsetenv("REDIS_HOST")
+			_ = os.Unsetenv("REDIS_PORT")
 		})
 	}
 }
