@@ -98,49 +98,15 @@ jobs:
           echo "# 🧪 Backend Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # tparseでテスト結果をパースしてサマリーに追加
-          echo "## 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          # tparseでテスト結果をMarkdownテーブルとして表示
           cat test-results.json | tparse -format markdown >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # カバレッジサマリーを生成
           if [ -f coverage.out ]; then
-            echo "## 📈 Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo "## 📈 Coverage" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             COVERAGE=$(go tool cover -func=coverage.out | tail -1 | awk '{print $3}')
-            echo "**Total Coverage: $COVERAGE**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-
-            # パッケージ別カバレッジ
-            echo "## 📦 Package Coverage" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| Package | Coverage |" >> $GITHUB_STEP_SUMMARY
-            echo "|---------|----------|" >> $GITHUB_STEP_SUMMARY
-            go tool cover -func=coverage.out | grep -v "total:" | awk -F'/' '
-              /github.com\/project-mikan\/umi.mikan\/backend\/(domain|service|middleware|infrastructure|constants|container)\// {
-                # ファイル名とカバレッジを抽出
-                split($0, parts, ":")
-                file_and_func = parts[1]
-                coverage = $NF
-
-                # パッケージパスを抽出
-                n = split(file_and_func, path_parts, "/")
-                if (n >= 2) {
-                  pkg = path_parts[n-1] "/" path_parts[n]
-                  gsub(/\.go$/, "", pkg)
-
-                  # パッケージごとに集計（最後の値を使用）
-                  packages[pkg] = coverage
-                }
-              }
-              END {
-                for (pkg in packages) {
-                  printf "| `%s` | %s |\n", pkg, packages[pkg]
-                }
-              }
-            ' | sort -u >> $GITHUB_STEP_SUMMARY
+            echo "**Total: $COVERAGE**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
