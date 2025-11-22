@@ -70,7 +70,7 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: ./backend
-        run: go test -v -coverprofile=coverage.out ./...
+        run: go test -v -coverprofile=coverage.out -json ./... > test-results.json
         env:
           DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
           JWT_SECRET: test-secret-for-ci
@@ -86,9 +86,64 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./backend/coverage.out
-          flags: backend
-          name: backend-coverage
+      - name: Generate test summary
+        if: always()
+        working-directory: ./backend
+        run: |
+          echo "# 🧪 Backend Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # テスト結果のサマリーを生成
+          TOTAL_TESTS=$(cat test-results.json | jq -r 'select(.Action == "pass" or .Action == "fail") | select(.Test != null)' | wc -l)
+          PASSED_TESTS=$(cat test-results.json | jq -r 'select(.Action == "pass") | select(.Test != null)' | wc -l)
+          FAILED_TESTS=$(cat test-results.json | jq -r 'select(.Action == "fail") | select(.Test != null)' | wc -l)
+          SKIPPED_TESTS=$(cat test-results.json | jq -r 'select(.Action == "skip") | select(.Test != null)' | wc -l)
+
+          echo "## 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | $PASSED_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | $FAILED_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏭️ Skipped | $SKIPPED_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 Total | $TOTAL_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # カバレッジサマリーを生成
+          if [ -f coverage.out ]; then
+            echo "## 📈 Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            go tool cover -func=coverage.out | tail -1 >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # パッケージ別カバレッジ
+            echo "## 📦 Package Coverage" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Package | Coverage |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|----------|" >> $GITHUB_STEP_SUMMARY
+
+            go tool cover -func=coverage.out | grep -E "github.com/project-mikan/umi.mikan/backend/(domain|service|middleware|infrastructure|constants|container)/" | \
+              awk '{package=$1; coverage=$3} END {for (p in packages) print p, packages[p]}' | \
+              awk -F'/' '{
+                pkg = $(NF-1) "/" $NF
+                gsub(/:[0-9]+$/, "", pkg)
+                packages[pkg] = $NF
+              }
+              END {
+                for (pkg in packages) {
+                  printf "| `%s` | %s |\n", pkg, packages[pkg]
+                }
+              }' | sort >> $GITHUB_STEP_SUMMARY || echo "| - | - |" >> $GITHUB_STEP_SUMMARY
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # 失敗したテストの詳細
+          if [ $FAILED_TESTS -gt 0 ]; then
+            echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat test-results.json | jq -r 'select(.Action == "fail") | select(.Test != null) | "- `" + .Package + "`: " + .Test' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
