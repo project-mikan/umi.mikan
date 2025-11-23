@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/google/uuid"
@@ -753,6 +754,58 @@ func TestDiaryEntry_SearchDiaryEntries(t *testing.T) {
 			}
 			if len(response.Entries) < tt.expectedMinCount {
 				t.Errorf("Expected at least %d entries but got %d", tt.expectedMinCount, len(response.Entries))
+			}
+		})
+	}
+}
+
+// TestGetTaskTimeout は環境変数からタスクタイムアウトを取得する関数をテスト
+func TestGetTaskTimeout(t *testing.T) {
+	tests := []struct {
+		name     string
+		envValue string
+		expected int
+	}{
+		{
+			name:     "環境変数が設定されていない場合はデフォルト値",
+			envValue: "",
+			expected: 600,
+		},
+		{
+			name:     "有効な値が設定されている場合",
+			envValue: "300",
+			expected: 300,
+		},
+		{
+			name:     "無効な値（非数値）が設定されている場合はデフォルト値",
+			envValue: "invalid",
+			expected: 600,
+		},
+		{
+			name:     "無効な値（ゼロ）が設定されている場合はデフォルト値",
+			envValue: "0",
+			expected: 600,
+		},
+		{
+			name:     "無効な値（負の数）が設定されている場合はデフォルト値",
+			envValue: "-100",
+			expected: 600,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// 環境変数を設定
+			if tt.envValue != "" {
+				os.Setenv("TASK_TIMEOUT_SECONDS", tt.envValue)
+			} else {
+				os.Unsetenv("TASK_TIMEOUT_SECONDS")
+			}
+			defer os.Unsetenv("TASK_TIMEOUT_SECONDS")
+
+			result := getTaskTimeout()
+			if result != tt.expected {
+				t.Errorf("expected %d, got %d", tt.expected, result)
 			}
 		})
 	}

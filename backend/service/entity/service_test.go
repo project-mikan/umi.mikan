@@ -995,3 +995,25 @@ func TestValidateAlias(t *testing.T) {
 		})
 	}
 }
+
+// TestGetSQLDB はgetSQLDBヘルパー関数をテスト
+func TestGetSQLDB(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	t.Run("初回呼び出しで型アサーションが実行される", func(t *testing.T) {
+		result := service.getSQLDB()
+		assert.NotNil(t, result)
+		assert.Equal(t, db, result)
+	})
+
+	t.Run("2回目以降はキャッシュされた値が返される", func(t *testing.T) {
+		// 1回目
+		result1 := service.getSQLDB()
+		// 2回目
+		result2 := service.getSQLDB()
+		assert.Equal(t, result1, result2)
+	})
+}
