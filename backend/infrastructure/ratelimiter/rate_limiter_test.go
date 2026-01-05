@@ -219,5 +219,64 @@ func TestRedisRateLimiter_SlidingWindow(t *testing.T) {
 	assert.Equal(t, limit-1, remaining, "ウィンドウ期間後の残り回数が正しいべき")
 }
 
+func TestRegisterAttemptLimiter_CheckAttempt(t *testing.T) {
+	redisClient, cleanup := setupTestRedis(t)
+	defer cleanup()
+
+	rateLimiter := NewRedisRateLimiter(redisClient)
+	registerLimiter := NewRegisterAttemptLimiter(rateLimiter, 3, time.Minute)
+	ctx := context.Background()
+
+	identifier := "test_register_user"
+
+	// 制限内の登録試行
+	for i := 0; i < 3; i++ {
+		allowed, remaining, _, err := registerLimiter.CheckAttempt(ctx, identifier)
+		require.NoError(t, err)
+		assert.True(t, allowed, "制限内であれば許可されるべき")
+		assert.Equal(t, 3-i-1, remaining, "残り回数が正しく計算されるべき")
+	}
+
+	// 制限を超える登録試行
+	allowed, remaining, resetTime, err := registerLimiter.CheckAttempt(ctx, identifier)
+	require.NoError(t, err)
+	assert.False(t, allowed, "制限を超えた場合は許可されないべき")
+	assert.Equal(t, 0, remaining, "制限を超えた場合は残り回数は0であるべき")
+	assert.True(t, resetTime > 0, "リセット時間が設定されているべき")
+}
+
+func TestRegisterAttemptLimiter_ResetAttempts(t *testing.T) {
+	redisClient, cleanup := setupTestRedis(t)
+	defer cleanup()
+
+	rateLimiter := NewRedisRateLimiter(redisClient)
+	registerLimiter := NewRegisterAttemptLimiter(rateLimiter, 2, time.Minute)
+	ctx := context.Background()
+
+	identifier := "test_register_user_reset"
+
+	// 制限まで使い切る
+	for i := 0; i < 2; i++ {
+		allowed, _, _, err := registerLimiter.CheckAttempt(ctx, identifier)
+		require.NoError(t, err)
+		assert.True(t, allowed)
+	}
+
+	// 制限を超えることを確認
+	allowed, _, _, err := registerLimiter.CheckAttempt(ctx, identifier)
+	require.NoError(t, err)
+	assert.False(t, allowed)
+
+	// リセットを実行
+	err = registerLimiter.ResetAttempts(ctx, identifier)
+	require.NoError(t, err)
+
+	// リセット後は再度許可されることを確認
+	allowed, remaining, _, err := registerLimiter.CheckAttempt(ctx, identifier)
+	require.NoError(t, err)
+	assert.True(t, allowed, "リセット後は許可されるべき")
+	assert.Equal(t, 1, remaining, "リセット後の残り回数が正しいべき")
+}
+
 // NOTE: Redis接続失敗テストは統合テストレベルで行う方が適切
 // 単体テストでは正常なRedis接続を前提とした機能テストに集中する

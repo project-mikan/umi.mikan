@@ -465,3 +465,555 @@ func TestGetAllAliasesByUserID(t *testing.T) {
 		assert.Empty(t, aliasMap)
 	})
 }
+
+func TestUpdateEntity(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	// テスト用ユーザーを作成
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-%s@example.com", userID.String()),
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	// コンテキストにユーザーIDを設定
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	// テスト用エンティティを作成
+	entity := &database.Entity{
+		ID:         uuid.New(),
+		UserID:     userID,
+		Name:       "更新前の名前",
+		CategoryID: 1,
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
+	}
+	require.NoError(t, entity.Insert(context.Background(), db))
+
+	tests := []struct {
+		name        string
+		entityID    string
+		updateName  string
+		category    g.EntityCategory
+		memo        string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常にエンティティを更新できる",
+			entityID:    entity.ID.String(),
+			updateName:  "更新後の名前",
+			category:    g.EntityCategory_PEOPLE,
+			memo:        "更新後のメモ",
+			expectError: false,
+		},
+		{
+			name:        "無効なエンティティIDの場合エラー",
+			entityID:    "invalid-uuid",
+			updateName:  "更新名",
+			category:    g.EntityCategory_PEOPLE,
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &g.UpdateEntityRequest{
+				Id:       tt.entityID,
+				Name:     tt.updateName,
+				Category: tt.category,
+				Memo:     tt.memo,
+			}
+
+			resp, err := service.UpdateEntity(ctx, req)
+
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.updateName, resp.Entity.Name)
+				assert.Equal(t, tt.category, resp.Entity.Category)
+				assert.Equal(t, tt.memo, resp.Entity.Memo)
+			}
+		})
+	}
+}
+
+func TestGetEntity(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	// テスト用ユーザーを作成
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-%s@example.com", userID.String()),
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	// コンテキストにユーザーIDを設定
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	// テスト用エンティティを作成
+	entity := &database.Entity{
+		ID:         uuid.New(),
+		UserID:     userID,
+		Name:       "テストエンティティ",
+		CategoryID: 1,
+		Memo:       sql.NullString{String: "テストメモ", Valid: true},
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
+	}
+	require.NoError(t, entity.Insert(context.Background(), db))
+
+	tests := []struct {
+		name        string
+		entityID    string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常にエンティティを取得できる",
+			entityID:    entity.ID.String(),
+			expectError: false,
+		},
+		{
+			name:        "無効なエンティティIDの場合エラー",
+			entityID:    "invalid-uuid",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &g.GetEntityRequest{
+				Id: tt.entityID,
+			}
+
+			resp, err := service.GetEntity(ctx, req)
+
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, entity.Name, resp.Entity.Name)
+				assert.Equal(t, entity.Memo.String, resp.Entity.Memo)
+			}
+		})
+	}
+}
+
+func TestUpdateEntityAlias(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	// テスト用ユーザーを作成
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-%s@example.com", userID.String()),
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	// コンテキストにユーザーIDを設定
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	// テスト用エンティティを作成
+	entity := &database.Entity{
+		ID:         uuid.New(),
+		UserID:     userID,
+		Name:       "エンティティ",
+		CategoryID: 1,
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
+	}
+	require.NoError(t, entity.Insert(context.Background(), db))
+
+	// テスト用エイリアスを作成
+	alias := &database.EntityAlias{
+		ID:        uuid.New(),
+		EntityID:  entity.ID,
+		Alias:     "旧エイリアス",
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, alias.Insert(context.Background(), db))
+
+	tests := []struct {
+		name        string
+		aliasID     string
+		newAlias    string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常にエイリアスを更新できる",
+			aliasID:     alias.ID.String(),
+			newAlias:    "新エイリアス",
+			expectError: false,
+		},
+		{
+			name:        "無効なエイリアスIDの場合エラー",
+			aliasID:     "invalid-uuid",
+			newAlias:    "新エイリアス",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &g.UpdateEntityAliasRequest{
+				Id:    tt.aliasID,
+				Alias: tt.newAlias,
+			}
+
+			resp, err := service.UpdateEntityAlias(ctx, req)
+
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.newAlias, resp.Alias.Alias)
+			}
+		})
+	}
+}
+
+func TestDeleteEntityAlias(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	// テスト用ユーザーを作成
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-%s@example.com", userID.String()),
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	// コンテキストにユーザーIDを設定
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	// テスト用エンティティを作成
+	entity := &database.Entity{
+		ID:         uuid.New(),
+		UserID:     userID,
+		Name:       "エンティティ",
+		CategoryID: 1,
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
+	}
+	require.NoError(t, entity.Insert(context.Background(), db))
+
+	// テスト用エイリアスを作成
+	alias := &database.EntityAlias{
+		ID:        uuid.New(),
+		EntityID:  entity.ID,
+		Alias:     "削除対象エイリアス",
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, alias.Insert(context.Background(), db))
+
+	tests := []struct {
+		name        string
+		aliasID     string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常にエイリアスを削除できる",
+			aliasID:     alias.ID.String(),
+			expectError: false,
+		},
+		{
+			name:        "無効なエイリアスIDの場合エラー",
+			aliasID:     "invalid-uuid",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &g.DeleteEntityAliasRequest{
+				Id: tt.aliasID,
+			}
+
+			resp, err := service.DeleteEntityAlias(ctx, req)
+
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+				assert.True(t, resp.Success)
+			}
+		})
+	}
+}
+
+func TestSearchEntities(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	// テスト用ユーザーを作成
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-%s@example.com", userID.String()),
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	// コンテキストにユーザーIDを設定
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	// テスト用エンティティを作成
+	entities := []struct {
+		name     string
+		category int
+	}{
+		{"田中太郎", 1},
+		{"鈴木花子", 1},
+		{"東京", 2},
+	}
+
+	for _, e := range entities {
+		entity := &database.Entity{
+			ID:         uuid.New(),
+			UserID:     userID,
+			Name:       e.name,
+			CategoryID: e.category,
+			CreatedAt:  time.Now().Unix(),
+			UpdatedAt:  time.Now().Unix(),
+		}
+		require.NoError(t, entity.Insert(context.Background(), db))
+	}
+
+	tests := []struct {
+		name             string
+		keyword          string
+		category         g.EntityCategory
+		expectedMinCount int
+	}{
+		{
+			name:             "名前で検索できる",
+			keyword:          "田中",
+			category:         g.EntityCategory_NO_CATEGORY,
+			expectedMinCount: 1,
+		},
+		{
+			name:             "カテゴリーで絞り込める",
+			keyword:          "",
+			category:         g.EntityCategory_PEOPLE,
+			expectedMinCount: 2,
+		},
+		{
+			name:             "存在しないキーワードで検索",
+			keyword:          "存在しない",
+			category:         g.EntityCategory_NO_CATEGORY,
+			expectedMinCount: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &g.SearchEntitiesRequest{
+				Query: tt.keyword,
+			}
+
+			resp, err := service.SearchEntities(ctx, req)
+
+			require.NoError(t, err)
+			assert.GreaterOrEqual(t, len(resp.Entities), tt.expectedMinCount)
+		})
+	}
+}
+
+// TestValidateEntityName はエンティティ名バリデーションをテスト
+func TestValidateEntityName(t *testing.T) {
+	tests := []struct {
+		name        string
+		entityName  string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常系: 有効なエンティティ名",
+			entityName:  "テストエンティティ",
+			expectError: false,
+		},
+		{
+			name:        "正常系: 英数字のエンティティ名",
+			entityName:  "TestEntity123",
+			expectError: false,
+		},
+		{
+			name:        "異常系: 空のエンティティ名",
+			entityName:  "",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 255文字を超えるエンティティ名",
+			entityName:  string(make([]byte, 256)),
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 制御文字を含むエンティティ名",
+			entityName:  "test\x00entity",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 前方に空白があるエンティティ名",
+			entityName:  " テストエンティティ",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 後方に空白があるエンティティ名",
+			entityName:  "テストエンティティ ",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateEntityName(tt.entityName)
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestValidateAlias はエイリアスバリデーションをテスト
+func TestValidateAlias(t *testing.T) {
+	tests := []struct {
+		name        string
+		alias       string
+		expectError bool
+		errorCode   codes.Code
+	}{
+		{
+			name:        "正常系: 有効なエイリアス",
+			alias:       "テストエイリアス",
+			expectError: false,
+		},
+		{
+			name:        "正常系: 英数字のエイリアス",
+			alias:       "TestAlias123",
+			expectError: false,
+		},
+		{
+			name:        "異常系: 空のエイリアス",
+			alias:       "",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 255文字を超えるエイリアス",
+			alias:       string(make([]byte, 256)),
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 制御文字を含むエイリアス",
+			alias:       "test\x00alias",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 前方に空白があるエイリアス",
+			alias:       " テストエイリアス",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+		{
+			name:        "異常系: 後方に空白があるエイリアス",
+			alias:       "テストエイリアス ",
+			expectError: true,
+			errorCode:   codes.InvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateAlias(tt.alias)
+			if tt.expectError {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tt.errorCode, st.Code())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestGetSQLDB はgetSQLDBヘルパー関数をテスト
+func TestGetSQLDB(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	t.Run("初回呼び出しで型アサーションが実行される", func(t *testing.T) {
+		result := service.getSQLDB()
+		assert.NotNil(t, result)
+		assert.Equal(t, db, result)
+	})
+
+	t.Run("2回目以降はキャッシュされた値が返される", func(t *testing.T) {
+		// 1回目
+		result1 := service.getSQLDB()
+		// 2回目
+		result2 := service.getSQLDB()
+		assert.Equal(t, result1, result2)
+	})
+}

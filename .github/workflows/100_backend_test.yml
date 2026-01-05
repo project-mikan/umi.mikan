@@ -42,20 +42,25 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: "backend/go.mod"
+          cache: false
 
       - name: Cache Go modules
         uses: actions/cache@v4
+        continue-on-error: true
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
       - name: Install dependencies
         working-directory: ./backend
         run: go mod download
+
+      - name: Install tparse
+        run: go install github.com/mfridman/tparse@latest
 
       - name: Initialize database
         run: |
@@ -68,27 +73,11 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
 
-      - name: Run tests
-        working-directory: ./backend
-        run: go test -v ./...
-        env:
-          DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
-          JWT_SECRET: test-secret-for-ci
-          TEST_DB_HOST: localhost
-          TEST_DB_USER: postgres
-          TEST_DB_PASSWORD: dev-pass
-          TEST_DB_NAME: umi_mikan
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASS: dev-pass
-          DB_NAME: umi_mikan
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-
       - name: Run tests with coverage
         working-directory: ./backend
-        run: go test -coverprofile=coverage.out ./...
+        run: |
+          set -o pipefail
+          go test -v -coverprofile=coverage.out -json ./... 2>&1 | tee test-results.json | tparse -all -notests
         env:
           DATABASE_URL: postgres://postgres:dev-pass@localhost:5432/umi_mikan?sslmode=disable
           JWT_SECRET: test-secret-for-ci
@@ -104,9 +93,22 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./backend/coverage.out
-          flags: backend
-          name: backend-coverage
+      - name: Generate test summary
+        if: always()
+        working-directory: ./backend
+        run: |
+          echo "# 🧪 Backend Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # tparseでテスト結果をMarkdownテーブルとして表示
+          cat test-results.json | tparse -format markdown >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # カバレッジサマリーを生成
+          if [ -f coverage.out ]; then
+            echo "## 📈 Coverage" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            COVERAGE=$(go tool cover -func=coverage.out | tail -1 | awk '{print $3}')
+            echo "**Total: $COVERAGE**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
