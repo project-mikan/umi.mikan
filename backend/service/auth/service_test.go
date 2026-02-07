@@ -11,6 +11,7 @@ import (
 
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
+	"google.golang.org/grpc/metadata"
 )
 
 func setupTestDB(t *testing.T) *sql.DB {
@@ -478,6 +479,152 @@ func TestAuthEntry_RegisterByPasswordWithRegisterKey(t *testing.T) {
 				if tt.expectedError != "" && !containsString(err.Error(), tt.expectedError) {
 					t.Errorf("Expected error containing '%s' but got '%s'", tt.expectedError, err.Error())
 				}
+			}
+		})
+	}
+}
+
+func TestGetClientIP(t *testing.T) {
+	authService := &AuthEntry{}
+
+	tests := []struct {
+		name     string
+		setupCtx func() context.Context
+		expected string
+	}{
+		{
+			name: "X-Forwarded-Forヘッダーがある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"x-forwarded-for": "192.168.1.1, 10.0.0.1",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "192.168.1.1",
+		},
+		{
+			name: "X-Real-IPヘッダーがある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"x-real-ip": "192.168.1.2",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "192.168.1.2",
+		},
+		{
+			name: "ヘッダーがない場合",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			expected: "unknown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setupCtx()
+			result := authService.getClientIP(ctx)
+			if result != tt.expected {
+				t.Errorf("expected %s, got %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestGetUserAgent(t *testing.T) {
+	authService := &AuthEntry{}
+
+	tests := []struct {
+		name     string
+		setupCtx func() context.Context
+		expected string
+	}{
+		{
+			name: "User-Agentヘッダーがある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"user-agent": "Mozilla/5.0",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "Mozilla/5.0",
+		},
+		{
+			name: "grpcgateway-user-agentヘッダーがある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"grpcgateway-user-agent": "gRPC-Gateway/1.0",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "gRPC-Gateway/1.0",
+		},
+		{
+			name: "ヘッダーがない場合",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			expected: "unknown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setupCtx()
+			result := authService.getUserAgent(ctx)
+			if result != tt.expected {
+				t.Errorf("expected %s, got %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestGetClientIdentifier(t *testing.T) {
+	authService := &AuthEntry{}
+
+	tests := []struct {
+		name     string
+		setupCtx func() context.Context
+		expected string
+	}{
+		{
+			name: "IPとUser-Agent両方がある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"x-forwarded-for": "192.168.1.1",
+					"user-agent":      "Mozilla/5.0",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "192.168.1.1:Mozilla/5.0",
+		},
+		{
+			name: "X-Real-IPとgrpcgateway-user-agentがある場合",
+			setupCtx: func() context.Context {
+				md := metadata.New(map[string]string{
+					"x-real-ip":               "192.168.1.2",
+					"grpcgateway-user-agent": "gRPC-Gateway/1.0",
+				})
+				return metadata.NewIncomingContext(context.Background(), md)
+			},
+			expected: "192.168.1.2:gRPC-Gateway/1.0",
+		},
+		{
+			name: "ヘッダーがない場合",
+			setupCtx: func() context.Context {
+				return context.Background()
+			},
+			expected: "unknown:unknown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setupCtx()
+			result := authService.getClientIdentifier(ctx)
+			if result != tt.expected {
+				t.Errorf("expected %s, got %s", tt.expected, result)
 			}
 		})
 	}
