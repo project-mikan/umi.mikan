@@ -37,10 +37,9 @@ export function translateErrorMessage(error: unknown): string {
 				// レート制限の場合のみリセット時間を表示
 				return "アクセス制限中です。しばらく時間をおいて再試行してください。";
 			case Code.Unauthenticated:
-				// 認証失敗の詳細は明かさない
-				return "ログインに失敗しました。入力内容を確認してください。";
 			case Code.NotFound:
-				// 具体的にユーザーが見つからないことは明かさない
+			case Code.Unknown:
+				// 認証失敗の詳細は明かさない（ユーザー存在の有無を含む）
 				return "ログインに失敗しました。入力内容を確認してください。";
 			case Code.AlreadyExists:
 				return "このメールアドレスは既に登録されています。";
@@ -67,6 +66,7 @@ export function getErrorSeverity(error: unknown): "info" | "warning" | "error" {
 			case Code.ResourceExhausted:
 			case Code.Unauthenticated:
 			case Code.NotFound:
+			case Code.Unknown:
 			case Code.AlreadyExists:
 			case Code.InvalidArgument:
 				return "warning";

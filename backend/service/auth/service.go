@@ -61,16 +61,16 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 
 	passwordAuth, err := request.ValidateRegisterByPasswordRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("validation error: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "validation error: %v", err)
 	}
 
 	// --- 既存ユーザーの確認 ---
 	existingUser, err := database.UserByEmail(ctx, s.DB, passwordAuth.Email)
 	if err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("failed to check existing user: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to check existing user: %v", err)
 	}
 	if existingUser != nil {
-		return nil, fmt.Errorf("user with email %s already exists", passwordAuth.Email)
+		return nil, status.Errorf(codes.AlreadyExists, "user with this email already exists")
 	}
 
 	// --- 登録 ---
@@ -88,13 +88,13 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "failed to register user: %v", err)
 	}
 
 	// --- JWTトークンの生成 ---
 	token, err := model.GenerateAuthTokens(user.ID.String())
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate auth tokens: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to generate auth tokens: %v", err)
 	}
 
 	return token.ConvertAuthResponse(), nil
@@ -174,32 +174,33 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 	}
 	passwordAuth, err := request.ValidateLoginByPasswordRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("validation error: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "validation error: %v", err)
 	}
 
 	// --- ユーザーの取得 ---
 	userDB, err := database.UserByEmail(ctx, s.DB, passwordAuth.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			// セキュリティ: ユーザーの存在を漏らさないため、パスワード不一致と同じエラーを返す
+			return nil, status.Errorf(codes.Unauthenticated, "invalid email or password")
 		}
-		return nil, fmt.Errorf("failed to get user by email: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to get user by email: %v", err)
 	}
 
 	// --- パスワードの検証 ---
 	passwordAuthDB, err := database.UserPasswordAutheByUserID(ctx, s.DB, userDB.ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get password auth: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to get password auth: %v", err)
 	}
 	// bcryptを使って平文パスワードとハッシュを比較
 	if err := request.VerifyPassword(passwordAuth.Password, passwordAuthDB.PasswordHashed); err != nil {
-		return nil, fmt.Errorf("password does not match")
+		return nil, status.Errorf(codes.Unauthenticated, "invalid email or password")
 	}
 
 	// --- JWTトークンの生成 ---
 	token, err := model.GenerateAuthTokens(userDB.ID.String())
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate auth tokens: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to generate auth tokens: %v", err)
 	}
 
 	// ログイン成功時はレート制限をリセット
@@ -213,7 +214,7 @@ func (s *AuthEntry) LoginByPassword(ctx context.Context, req *g.LoginByPasswordR
 func (s *AuthEntry) RefreshAccessToken(ctx context.Context, req *g.RefreshAccessTokenRequest) (*g.AuthResponse, error) {
 	userID, err := request.ValidateRefreshTokenRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("validation error: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "validation error: %v", err)
 	}
 
 	// --- ユーザーの取得 ---
@@ -221,18 +222,18 @@ func (s *AuthEntry) RefreshAccessToken(ctx context.Context, req *g.RefreshAccess
 	userDB, err := database.UserByID(ctx, s.DB, uuid.MustParse(userID))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			return nil, status.Errorf(codes.Unauthenticated, "user not found")
 		}
-		return nil, fmt.Errorf("failed to get user by ID: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to get user by ID: %v", err)
 	}
 	if userDB == nil {
-		return nil, fmt.Errorf("user not found")
+		return nil, status.Errorf(codes.Unauthenticated, "user not found")
 	}
 
 	// --- AccessTokenだけ再生成 ---
 	newToken, err := model.GenerateAccessToken(userDB.ID.String())
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate new auth tokens: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to generate new auth tokens: %v", err)
 	}
 
 	return newToken.ConvertAuthResponse(), nil
