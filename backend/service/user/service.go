@@ -16,6 +16,8 @@ import (
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/redis/rueidis"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserEntry struct {
@@ -267,9 +269,9 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 	userDB, err := database.UserByID(ctx, s.DB, parsedUserID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
 	// LLMキーを取得（存在する場合）

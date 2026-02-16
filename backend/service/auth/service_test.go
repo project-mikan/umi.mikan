@@ -165,7 +165,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 				Password: "validPassword123",
 			},
 			shouldSucceed: false,
-			expectedError: "user not found",
+			expectedError: "invalid email or password",
 		},
 		{
 			name: "異常系：無効なパスワード",
@@ -174,7 +174,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 				Password: "wrongPassword",
 			},
 			shouldSucceed: false,
-			expectedError: "password does not match",
+			expectedError: "invalid email or password",
 		},
 		{
 			name: "異常系：空のメールアドレス",
