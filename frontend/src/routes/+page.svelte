@@ -169,11 +169,42 @@
 		}
 	});
 
-	// スクロール位置に基づいて表示する保存ボタンを決定
+	// 表示する保存ボタンを決定（フォーカスまたはスクロール位置に基づく）
 	let activeSection: "today" | "yesterday" | "dayBeforeYesterday" = "today";
 	let todayCard: HTMLElement;
 	let yesterdayCard: HTMLElement;
 	let dayBeforeYesterdayCard: HTMLElement;
+
+	// フォーカスベースのセクション検出（モバイルキーボード対応）
+	let focusedSection: "today" | "yesterday" | "dayBeforeYesterday" | null =
+		null;
+
+	function handleFocusIn(
+		section: "today" | "yesterday" | "dayBeforeYesterday",
+	) {
+		focusedSection = section;
+		activeSection = section;
+	}
+
+	function handleFocusOut() {
+		// フォーカスが別のセクションに移る場合があるので、少し遅延してリセット
+		setTimeout(() => {
+			// フォーカスがどのカードにも無い場合のみスクロールベースに戻す
+			const activeEl = document.activeElement;
+			if (
+				activeEl &&
+				(todayCard?.contains(activeEl) ||
+					yesterdayCard?.contains(activeEl) ||
+					dayBeforeYesterdayCard?.contains(activeEl))
+			) {
+				return;
+			}
+			focusedSection = null;
+		}, 100);
+	}
+
+	// モバイルキーボード表示時の保存ボタン位置調整
+	let saveButtonBottom = "5rem"; // デフォルト: bottom-20 (QuickNavigationの上)
 
 	// ブラウザのページ離脱時の警告
 	onMount(() => {
@@ -184,11 +215,41 @@
 			}
 		};
 
+		// visualViewport APIを使ってキーボード表示を検出し、保存ボタンの位置を調整
+		const updateSaveButtonPosition = () => {
+			if (!window.visualViewport) return;
+			const viewport = window.visualViewport;
+			// キーボードが表示されている場合: layoutViewportの高さとvisualViewportの高さの差
+			const keyboardHeight = window.innerHeight - viewport.height;
+			const KEYBOARD_THRESHOLD = 100;
+			if (keyboardHeight > KEYBOARD_THRESHOLD) {
+				// キーボードが表示されている: キーボードの上に配置
+				saveButtonBottom = `${keyboardHeight + 8}px`;
+			} else {
+				// キーボード非表示: QuickNavigationの上に配置
+				saveButtonBottom = "5rem";
+			}
+		};
+
+		if (window.visualViewport) {
+			window.visualViewport.addEventListener(
+				"resize",
+				updateSaveButtonPosition,
+			);
+			window.visualViewport.addEventListener(
+				"scroll",
+				updateSaveButtonPosition,
+			);
+		}
+
 		// スクロール位置判定の定数
 		const VIEWPORT_CENTER_DIVISOR = 2;
 
 		// スクロール位置を監視して、現在表示中のセクションを判定
 		const updateActiveSection = () => {
+			// テキストエリアにフォーカスがある場合はスクロールベースの更新をスキップ
+			if (focusedSection) return;
+
 			const scrollY = window.scrollY;
 			const viewportHeight = window.innerHeight;
 			const viewportCenter = scrollY + viewportHeight / VIEWPORT_CENTER_DIVISOR;
@@ -297,6 +358,16 @@
 			window.removeEventListener("beforeunload", handleBeforeUnload);
 			window.removeEventListener("scroll", handleScroll);
 			if (scrollTimeout) clearTimeout(scrollTimeout);
+			if (window.visualViewport) {
+				window.visualViewport.removeEventListener(
+					"resize",
+					updateSaveButtonPosition,
+				);
+				window.visualViewport.removeEventListener(
+					"scroll",
+					updateSaveButtonPosition,
+				);
+			}
 		};
 	});
 </script>
@@ -313,7 +384,8 @@
 
 	<!-- メインコンテンツ: 日記カード -->
 	<div class="space-y-6">
-		<div bind:this={todayCard}>
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div bind:this={todayCard} on:focusin={() => handleFocusIn("today")} on:focusout={handleFocusOut}>
 		<DiaryCard
 			title={$_("diary.today")}
 			entry={data.today.entry}
@@ -394,7 +466,8 @@ use:enhance={createSubmitHandler(
 			</CollapsibleSection>
 		</div>
 
-		<div bind:this={yesterdayCard}>
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div bind:this={yesterdayCard} on:focusin={() => handleFocusIn("yesterday")} on:focusout={handleFocusOut}>
 		<DiaryCard
 			title={$_("diary.yesterday")}
 			entry={data.yesterday.entry}
@@ -456,7 +529,8 @@ use:enhance={createSubmitHandler(
 		</DiaryCard>
 		</div>
 
-		<div bind:this={dayBeforeYesterdayCard}>
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div bind:this={dayBeforeYesterdayCard} on:focusin={() => handleFocusIn("dayBeforeYesterday")} on:focusout={handleFocusOut}>
 		<DiaryCard
 			title={$_("diary.dayBeforeYesterday")}
 			entry={data.dayBeforeYesterday.entry}
@@ -527,7 +601,7 @@ use:enhance={createSubmitHandler(
 	<PWAInstallButton />
 
 	<!-- Fixed Save Button for Mobile (shows only the active section) -->
-	<div class="fixed bottom-20 left-0 right-0 p-4 sm:hidden z-10 pointer-events-none">
+	<div class="fixed left-0 right-0 p-4 sm:hidden z-10 pointer-events-none transition-[bottom] duration-150" style="bottom: {saveButtonBottom}">
 		<div class="max-w-4xl mx-auto flex justify-end pointer-events-auto">
 			{#if activeSection === "today"}
 				<SaveButton

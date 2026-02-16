@@ -298,6 +298,9 @@
 		}
 	});
 
+	// モバイルキーボード表示時の保存ボタン位置調整
+	let saveButtonBottom = "5rem"; // デフォルト: bottom-20 (QuickNavigationの上)
+
 	// ブラウザのページ離脱時の警告
 	onMount(() => {
 		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -307,10 +310,44 @@
 			}
 		};
 
+		// visualViewport APIを使ってキーボード表示を検出し、保存ボタンの位置を調整
+		const updateSaveButtonPosition = () => {
+			if (!window.visualViewport) return;
+			const viewport = window.visualViewport;
+			const keyboardHeight = window.innerHeight - viewport.height;
+			const KEYBOARD_THRESHOLD = 100;
+			if (keyboardHeight > KEYBOARD_THRESHOLD) {
+				saveButtonBottom = `${keyboardHeight + 8}px`;
+			} else {
+				saveButtonBottom = "5rem";
+			}
+		};
+
+		if (window.visualViewport) {
+			window.visualViewport.addEventListener(
+				"resize",
+				updateSaveButtonPosition,
+			);
+			window.visualViewport.addEventListener(
+				"scroll",
+				updateSaveButtonPosition,
+			);
+		}
+
 		window.addEventListener("beforeunload", handleBeforeUnload);
 
 		return () => {
 			window.removeEventListener("beforeunload", handleBeforeUnload);
+			if (window.visualViewport) {
+				window.visualViewport.removeEventListener(
+					"resize",
+					updateSaveButtonPosition,
+				);
+				window.visualViewport.removeEventListener(
+					"scroll",
+					updateSaveButtonPosition,
+				);
+			}
 		};
 	});
 </script>
@@ -479,7 +516,7 @@ use:enhance={createSubmitHandler(
 	</div>
 
 	<!-- Fixed Save Button for Mobile -->
-	<div class="fixed bottom-20 left-0 right-0 p-4 sm:hidden z-10 pointer-events-none">
+	<div class="fixed left-0 right-0 p-4 sm:hidden z-10 pointer-events-none transition-[bottom] duration-150" style="bottom: {saveButtonBottom}">
 		<div class="max-w-4xl mx-auto flex justify-end pointer-events-auto">
 			<SaveButton
 				type="button"
