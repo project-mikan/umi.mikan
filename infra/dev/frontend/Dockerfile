@@ -1,4 +1,4 @@
-FROM node:22-bullseye-slim
+FROM node:22.22.0-bookworm-slim
 RUN npm install -g corepack@latest
 RUN corepack enable
 RUN pnpm config set store-dir ${PNPM_HOME}/store
