@@ -48,6 +48,7 @@
 			bind:value
 			bind:selectedEntities
 			on:save={() => dispatch('save')}
+			on:autosave={() => dispatch('autosave')}
 		/>
 	{:else}
 		<Input

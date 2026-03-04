@@ -467,6 +467,7 @@ use:enhance={createSubmitHandler(
 					bind:value={content}
 					bind:selectedEntities
 					on:save={_handleSave}
+					on:autosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
 				/>
 
 				{#if form?.error}

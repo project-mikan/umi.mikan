@@ -848,6 +848,13 @@
 		}
 	}
 
+	// フォーカスが外れた時の自動保存
+	function _handleBlur() {
+		// エンティティ候補表示中またはIME入力中は自動保存しない
+		if (showSuggestions || isComposing) return;
+		dispatch("autosave");
+	}
+
 	// 候補選択
 	async function selectSuggestion(entity: Entity, selectedText?: string) {
 		if (currentTriggerPos === -1) return;
@@ -1151,6 +1158,7 @@
 		class="{classes} auto-phrase-target"
 		style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
 		on:input={_handleInput}
+		on:blur={_handleBlur}
 		on:compositionstart={() => { isComposing = true; }}
 		on:compositionupdate={_handleInput}
 		on:compositionend={(event) => {
