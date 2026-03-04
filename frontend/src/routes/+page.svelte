@@ -429,6 +429,7 @@ use:enhance={createSubmitHandler(
 					bind:value={todayContent}
 					bind:selectedEntities={todaySelectedEntities}
 					on:save={handleSave}
+					on:autosave={() => { if (todayHasUnsavedChanges && !todayLoading) handleSave(); }}
 				/>
 
 				<!-- Character count display -->
@@ -510,6 +511,7 @@ use:enhance={createSubmitHandler(
 					bind:value={yesterdayContent}
 					bind:selectedEntities={yesterdaySelectedEntities}
 					on:save={handleYesterdaySave}
+					on:autosave={() => { if (yesterdayHasUnsavedChanges && !yesterdayLoading) handleYesterdaySave(); }}
 				/>
 
 				<!-- Character count display -->
@@ -577,6 +579,7 @@ use:enhance={createSubmitHandler(
 					bind:value={dayBeforeYesterdayContent}
 					bind:selectedEntities={dayBeforeYesterdaySelectedEntities}
 					on:save={handleDayBeforeYesterdaySave}
+					on:autosave={() => { if (dayBeforeYesterdayHasUnsavedChanges && !dayBeforeLoading) handleDayBeforeYesterdaySave(); }}
 				/>
 
 				<!-- Character count display -->
