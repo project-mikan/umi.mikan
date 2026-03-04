@@ -3,7 +3,7 @@ module github.com/project-mikan/umi.mikan/backend
 go 1.25.3
 
 require (
-	github.com/alicebob/miniredis/v2 v2.36.1
+	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.11.2
@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/dig v1.19.0
 	golang.org/x/crypto v0.48.0
-	google.golang.org/genai v1.47.0
+	google.golang.org/genai v1.48.0
 	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
 )
