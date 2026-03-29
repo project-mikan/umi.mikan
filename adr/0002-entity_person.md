@@ -1,5 +1,10 @@
 # entityにおける人物機能
 
+> **[廃止] PR #303 にて、entityと日記の紐付け機能（diary_entities、エンティティハイライト、候補出し）を廃止しました。**
+> 現在はentityの管理（CRUD）のみが残っています。以下の内容は廃止前の設計記録として保持しています。
+>
+> **[今後の予定]** entity機能（entitiesテーブル・entity_aliasesテーブル）は、今後のAI機能などで活用する予定です。
+
 ## 概要
 
 - 日記において固有名詞の存在は極めて重要
@@ -14,8 +19,8 @@
   - entityが抽象で人物はその一部
 - entity_aliasesテーブルではentityの別名を登録
   - usuyuki, うすゆきなど表記ゆれに対応
-- diary_entitiesでdiariesの日記のどこに登場するかを紐づける
-  - diariesの更新時にdiary_entitiesも同時に更新する
+- ~~diary_entitiesでdiariesの日記のどこに登場するかを紐づける~~ **[廃止: PR #303]**
+  - ~~diariesの更新時にdiary_entitiesも同時に更新する~~
 
 #### diaryとentityの紐づけ検討
 
@@ -46,6 +51,8 @@ jsonカラムを作り位置とentityの対応付けを記録
 - 1:人物(people)
 
 ## フロントエンド
+
+> **以下のフロントエンド機能はPR #303にて廃止されました。**
 
 ### エンティティハイライト表示
 
