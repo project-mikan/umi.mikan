@@ -51,10 +51,6 @@
 	let _showDeleteConfirm = false;
 	let loading = false;
 	let saved = false;
-	let selectedEntities: {
-		entityId: string;
-		positions: { start: number; end: number }[];
-	}[] = [];
 	let summary: {
 		id: string;
 		diaryId: string;
@@ -441,8 +437,6 @@ use:enhance={createSubmitHandler(
 				{#if data.entry}
 					<input type="hidden" name="id" value={data.entry.id} />
 				{/if}
-				<input type="hidden" name="selectedEntities" value={JSON.stringify(selectedEntities)} />
-
 				<!-- Highlight controls -->
 				{#if data.entry && characterCount >= 500}
 					<HighlightDisplay
@@ -462,10 +456,8 @@ use:enhance={createSubmitHandler(
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
-					diaryEntities={data.entry?.diaryEntities || []}
 					diaryHighlights={displayedHighlights}
 					bind:value={content}
-					bind:selectedEntities
 					on:save={_handleSave}
 					on:autosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
 				/>

@@ -4,8 +4,6 @@
 	import type { DateInfo } from "$lib/utils/date-utils";
 	import { formatDateToId } from "$lib/utils/date-utils";
 	import Link from "../atoms/Link.svelte";
-	import { highlightEntities } from "$lib/utils/diary-entity-highlighter";
-
 	export let pastEntries: {
 		oneWeekAgo: { date: DateInfo; entry: DiaryEntry | null };
 		oneMonthAgo: { date: DateInfo; entry: DiaryEntry | null };
@@ -110,8 +108,7 @@
 		const truncated =
 			firstLine.length > 30 ? `${firstLine.substring(0, 30)}...` : firstLine;
 
-		// エンティティハイライトを適用
-		return highlightEntities(truncated, entry.diaryEntities || []);
+		return truncated;
 	}
 </script>
 

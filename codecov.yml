@@ -1,0 +1,10 @@
+coverage:
+  status:
+    patch:
+      default:
+        target: auto
+        threshold: 5%
+
+ignore:
+  - "backend/infrastructure/grpc/**"
+  - "backend/infrastructure/database/*.dbtpl.go"

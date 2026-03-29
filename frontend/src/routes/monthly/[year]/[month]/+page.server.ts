@@ -34,7 +34,6 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 				...entry,
 				createdAt: Number(entry.createdAt),
 				updatedAt: Number(entry.updatedAt),
-				diaryEntities: entry.diaryEntities || [],
 			})),
 		};
 

@@ -38,20 +38,6 @@
 	];
 	let [todaySaved, yesterdaySaved, dayBeforeSaved] = [false, false, false];
 
-	// 明示的に選択されたエンティティの情報
-	let todaySelectedEntities: {
-		entityId: string;
-		positions: { start: number; end: number }[];
-	}[] = [];
-	let yesterdaySelectedEntities: {
-		entityId: string;
-		positions: { start: number; end: number }[];
-	}[] = [];
-	let dayBeforeYesterdaySelectedEntities: {
-		entityId: string;
-		positions: { start: number; end: number }[];
-	}[] = [];
-
 	// Character count calculations
 	$: todayCharacterCount = todayContent ? todayContent.length : 0;
 	$: yesterdayCharacterCount = yesterdayContent ? yesterdayContent.length : 0;
@@ -417,7 +403,6 @@ use:enhance={createSubmitHandler(
 				{#if data.today.entry}
 					<input type="hidden" name="id" value={data.today.entry.id} />
 				{/if}
-				<input type="hidden" name="selectedEntities" value={JSON.stringify(todaySelectedEntities)} />
 				<FormField
 					type="textarea"
 					label=""
@@ -425,9 +410,7 @@ use:enhance={createSubmitHandler(
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
-					diaryEntities={data.today.entry?.diaryEntities || []}
 					bind:value={todayContent}
-					bind:selectedEntities={todaySelectedEntities}
 					on:save={handleSave}
 					on:autosave={() => { if (todayHasUnsavedChanges && !todayLoading) handleSave(); }}
 				/>
@@ -499,7 +482,6 @@ use:enhance={createSubmitHandler(
 				{#if data.yesterday.entry}
 					<input type="hidden" name="id" value={data.yesterday.entry.id} />
 				{/if}
-				<input type="hidden" name="selectedEntities" value={JSON.stringify(yesterdaySelectedEntities)} />
 				<FormField
 					type="textarea"
 					label=""
@@ -507,9 +489,7 @@ use:enhance={createSubmitHandler(
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
-					diaryEntities={data.yesterday.entry?.diaryEntities || []}
 					bind:value={yesterdayContent}
-					bind:selectedEntities={yesterdaySelectedEntities}
 					on:save={handleYesterdaySave}
 					on:autosave={() => { if (yesterdayHasUnsavedChanges && !yesterdayLoading) handleYesterdaySave(); }}
 				/>
@@ -567,7 +547,6 @@ use:enhance={createSubmitHandler(
 						value={data.dayBeforeYesterday.entry.id}
 					/>
 				{/if}
-				<input type="hidden" name="selectedEntities" value={JSON.stringify(dayBeforeYesterdaySelectedEntities)} />
 				<FormField
 					type="textarea"
 					label=""
@@ -575,9 +554,7 @@ use:enhance={createSubmitHandler(
 					name="content"
 					placeholder={$_("diary.placeholder")}
 					rows={8}
-					diaryEntities={data.dayBeforeYesterday.entry?.diaryEntities || []}
 					bind:value={dayBeforeYesterdayContent}
-					bind:selectedEntities={dayBeforeYesterdaySelectedEntities}
 					on:save={handleDayBeforeYesterdaySave}
 					on:autosave={() => { if (dayBeforeYesterdayHasUnsavedChanges && !dayBeforeLoading) handleDayBeforeYesterdaySave(); }}
 				/>

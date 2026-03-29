@@ -50,21 +50,6 @@
 	}
 
 	/**
-	 * 日付フォーマット
-	 */
-	function formatDate(dateStr: string): string {
-		const date = new Date(dateStr);
-		return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-	}
-
-	/**
-	 * 日記詳細ページへ遷移
-	 */
-	function viewDiary(dateStr: string): void {
-		goto(`/${dateStr}`);
-	}
-
-	/**
 	 * エンティティ削除確認モーダルを表示
 	 */
 	function confirmDelete(): void {
@@ -398,42 +383,7 @@
 			{/if}
 		</div>
 
-		<!-- 紐づく日記 -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-				{$_("entity.detail.linkedDiaries")}
-			</h2>
-
-			{#if data.diaries && data.diaries.length > 0}
-				<div class="space-y-4">
-					{#each data.diaries as diary}
-						<div
-							class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
-							on:click={() => viewDiary(diary.date)}
-							on:keydown={(e) => e.key === "Enter" && viewDiary(diary.date)}
-							role="button"
-							tabindex="0"
-						>
-							<div class="flex justify-between items-start mb-2">
-								<h3 class="font-semibold text-blue-600 dark:text-blue-400">
-									{formatDate(diary.date)}
-								</h3>
-							</div>
-							<p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 auto-phrase-target">
-								{diary.content.length > 150
-									? diary.content.substring(0, 150) + "..."
-									: diary.content}
-							</p>
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<p class="text-gray-500 dark:text-gray-400 text-sm">
-					{$_("entity.detail.noDiaries")}
-				</p>
-			{/if}
-		</div>
-	{/if}
+		{/if}
 </div>
 
 <!-- エンティティ削除確認モーダル -->
@@ -466,12 +416,3 @@
 	</p>
 </Modal>
 
-<style>
-	.line-clamp-2 {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-</style>

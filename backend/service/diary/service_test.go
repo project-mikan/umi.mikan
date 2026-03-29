@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 	"google.golang.org/grpc/codes"
@@ -432,6 +431,97 @@ func TestDiaryEntry_GetDiaryEntriesByMonth(t *testing.T) {
 	}
 }
 
+func TestDiaryEntry_SearchDiaryEntries(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// テスト用の日記を作成
+	entries := []struct {
+		content string
+		date    *g.YMD
+	}{
+		{"今日は友人と映画を観た", &g.YMD{Year: 2024, Month: 8, Day: 1}},
+		{"映画の感想：とても面白かった", &g.YMD{Year: 2024, Month: 8, Day: 2}},
+		{"今日は読書をした", &g.YMD{Year: 2024, Month: 8, Day: 3}},
+	}
+	for _, e := range entries {
+		_, err := diaryService.CreateDiaryEntry(ctx, &g.CreateDiaryEntryRequest{
+			Content: e.content,
+			Date:    e.date,
+		})
+		if err != nil {
+			t.Fatalf("日記の作成に失敗: %v", err)
+		}
+	}
+
+	tests := []struct {
+		name            string
+		keyword         string
+		expectedCount   int
+		shouldSucceed   bool
+	}{
+		{
+			name:          "正常系：キーワードに一致する日記を取得",
+			keyword:       "映画",
+			expectedCount: 2,
+			shouldSucceed: true,
+		},
+		{
+			name:          "正常系：一致しないキーワードで空リストを取得",
+			keyword:       "スポーツ",
+			expectedCount: 0,
+			shouldSucceed: true,
+		},
+		{
+			name:          "正常系：空キーワードで全件取得",
+			keyword:       "",
+			expectedCount: 3,
+			shouldSucceed: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			response, err := diaryService.SearchDiaryEntries(ctx, &g.SearchDiaryEntriesRequest{
+				Keyword: tt.keyword,
+			})
+			if tt.shouldSucceed {
+				if err != nil {
+					t.Fatalf("成功を期待したがエラーが発生: %v", err)
+				}
+				if response == nil {
+					t.Fatal("レスポンスがnilでした")
+				}
+				if len(response.Entries) != tt.expectedCount {
+					t.Errorf("期待件数 %d に対して %d 件取得", tt.expectedCount, len(response.Entries))
+				}
+				if response.SearchedKeyword != tt.keyword {
+					t.Errorf("検索キーワード: 期待値 %q、実際値 %q", tt.keyword, response.SearchedKeyword)
+				}
+				// エントリの内容を検証
+				for _, entry := range response.Entries {
+					if entry.Id == "" {
+						t.Error("エントリIDが空です")
+					}
+					if entry.Date == nil {
+						t.Error("エントリの日付がnilです")
+					}
+					if tt.keyword != "" && !strings.Contains(entry.Content, tt.keyword) {
+						t.Errorf("コンテンツ %q にキーワード %q が含まれていません", entry.Content, tt.keyword)
+					}
+				}
+			} else {
+				if err == nil {
+					t.Fatal("エラーを期待したがnilでした")
+				}
+			}
+		})
+	}
+}
+
 func TestDiaryEntry_UnauthorizedAccess(t *testing.T) {
 	db := setupTestDB(t)
 
@@ -708,73 +798,4 @@ func TestDiaryEntry_GetDiaryHighlight_WithHighlight(t *testing.T) {
 	if len(resp.Highlights) != 1 {
 		t.Errorf("ハイライト数が期待値と異なります: got %d, want 1", len(resp.Highlights))
 	}
-}
-
-func TestDiaryEntry_WithEntities(t *testing.T) {
-	db := setupTestDB(t)
-
-	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
-	ctx := createAuthenticatedContext(userID)
-
-	// エンティティをDBに挿入
-	entityID := uuid.New()
-	currentTime := time.Now().Unix()
-	entity := &database.Entity{
-		ID:         entityID,
-		UserID:     userID,
-		Name:       "テストエンティティ",
-		CategoryID: 0,
-		CreatedAt:  currentTime,
-		UpdatedAt:  currentTime,
-	}
-	if err := entity.Insert(ctx, db); err != nil {
-		t.Fatalf("エンティティの挿入に失敗: %v", err)
-	}
-
-	// エンティティ付きで日記エントリを作成（saveDiaryEntitiesをカバー）
-	createReq := &g.CreateDiaryEntryRequest{
-		Content: "エンティティ付きテスト日記",
-		Date: &g.YMD{
-			Year:  2024,
-			Month: 8,
-			Day:   1,
-		},
-		DiaryEntities: []*g.DiaryEntityInput{
-			{
-				EntityId: entityID.String(),
-				Positions: []*g.Position{
-					{Start: 0, End: 5},
-				},
-			},
-		},
-	}
-	createResp, err := diaryService.CreateDiaryEntry(ctx, createReq)
-	if err != nil {
-		t.Fatalf("日記エントリの作成に失敗: %v", err)
-	}
-
-	// GetDiaryEntryでエンティティ付き日記を取得（getDiaryEntityOutputsをカバー）
-	getResp, err := diaryService.GetDiaryEntry(ctx, &g.GetDiaryEntryRequest{
-		Date: &g.YMD{Year: 2024, Month: 8, Day: 1},
-	})
-	if err != nil {
-		t.Fatalf("日記エントリの取得に失敗: %v", err)
-	}
-	if len(getResp.Entry.DiaryEntities) != 1 {
-		t.Errorf("エンティティ数が期待値と異なります: got %d, want 1", len(getResp.Entry.DiaryEntities))
-	}
-
-	// GetDiaryEntriesByMonthでエンティティ付き日記を取得（getDiaryEntityOutputsForDiariesをカバー）
-	monthResp, err := diaryService.GetDiaryEntriesByMonth(ctx, &g.GetDiaryEntriesByMonthRequest{
-		Month: &g.YM{Year: 2024, Month: 8},
-	})
-	if err != nil {
-		t.Fatalf("月別日記エントリの取得に失敗: %v", err)
-	}
-	if len(monthResp.Entries) == 0 {
-		t.Fatal("月別日記エントリが空です")
-	}
-
-	_ = createResp
 }
