@@ -364,6 +364,12 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Type safety**: Ensure all variables, function parameters, and return values have explicit types
 - **Generated types**: Use the auto-generated gRPC types from `frontend/src/lib/grpc/`
 
+### Codecov / Test Coverage Guidelines
+
+- **Auto-generated files are excluded from coverage**: `backend/infrastructure/grpc/**` is excluded via `codecov.yml` at the project root. Do not add coverage for generated files.
+- **New backend functions require tests**: When adding new functions to backend services, always add corresponding test cases to maintain patch coverage.
+- **Coverage configuration**: `codecov.yml` at project root controls coverage settings and ignored paths.
+
 ## Configuration Options
 
 ### Scheduler Configuration
