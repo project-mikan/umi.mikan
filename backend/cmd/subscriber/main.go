@@ -798,7 +798,7 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 
 	// 6. Redisに保存（TTL: 25時間）
 	// 毎日4時に更新されるため、25時間のTTLで次回更新までの余裕を確保
-	trendData := map[string]interface{}{
+	trendData := map[string]any{
 		"user_id":       userID,
 		"health":        analysisData.Health,
 		"health_reason": analysisData.HealthReason,
@@ -938,7 +938,7 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 
 	// 3.1. ハイライトの位置情報をバリデーション
 	contentLength := len([]rune(diaryContent))
-	validHighlights := make([]map[string]interface{}, 0, len(highlights))
+	validHighlights := make([]map[string]any, 0, len(highlights))
 	for _, h := range highlights {
 		// startとendを取得
 		startFloat, ok1 := h["start"].(float64)
@@ -1016,7 +1016,7 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 	return nil
 }
 
-func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]interface{}, error) {
+func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -1046,7 +1046,7 @@ func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFacto
 	}
 
 	// JSON文字列をパース
-	var highlights []map[string]interface{}
+	var highlights []map[string]any
 	if err := json.Unmarshal([]byte(highlightsJSON), &highlights); err != nil {
 		logger.WithError(err).WithField("response", highlightsJSON).Error("Failed to parse highlights JSON")
 		return nil, fmt.Errorf("failed to parse highlights JSON (response: %s): %w", highlightsJSON, err)

@@ -141,7 +141,7 @@ func (s *DiaryEntry) getDiaryEntityOutputs(ctx context.Context, diaryID uuid.UUI
 	diaryEntityOutputs := make([]*g.DiaryEntityOutput, 0, len(diaryEntities))
 	for _, de := range diaryEntities {
 		// positionsをJSONからデコード（alias_idを含む）
-		var positionsRaw []map[string]interface{}
+		var positionsRaw []map[string]any
 		if err := json.Unmarshal(de.Positions, &positionsRaw); err != nil {
 			return nil, err
 		}
@@ -199,7 +199,7 @@ func (s *DiaryEntry) getDiaryEntityOutputsForDiaries(ctx context.Context, diaryI
 		}
 
 		// positionsをJSONからデコード
-		var positionsRaw []map[string]interface{}
+		var positionsRaw []map[string]any
 		if err := json.Unmarshal(de.Positions, &positionsRaw); err != nil {
 			return nil, err
 		}
@@ -979,9 +979,9 @@ func (s *DiaryEntry) saveDiaryEntities(ctx context.Context, tx *sql.Tx, diaryID 
 		}
 
 		// positionsをJSONBに変換（alias_idも含む）
-		positions := make([]map[string]interface{}, 0, len(entity.Positions))
+		positions := make([]map[string]any, 0, len(entity.Positions))
 		for _, pos := range entity.Positions {
-			posMap := map[string]interface{}{
+			posMap := map[string]any{
 				"start": pos.Start,
 				"end":   pos.End,
 			}
@@ -1149,7 +1149,7 @@ func (s *DiaryEntry) GetDiaryHighlight(
 	// これにより、ユーザーは古いハイライトを確認しつつ再生成を選択できる
 
 	// JSONBからハイライト情報を取得
-	var highlightsRaw []map[string]interface{}
+	var highlightsRaw []map[string]any
 	if err := json.Unmarshal(highlight.Highlights, &highlightsRaw); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to parse highlights")
 	}

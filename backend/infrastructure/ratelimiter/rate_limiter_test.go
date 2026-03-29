@@ -105,7 +105,7 @@ func TestRedisRateLimiter_Reset(t *testing.T) {
 	window := time.Minute
 
 	// 制限まで使い切る
-	for i := 0; i < limit; i++ {
+	for range limit {
 		allowed, _, _, err := rateLimiter.IsAllowed(ctx, key, limit, window)
 		require.NoError(t, err)
 		assert.True(t, allowed, "制限内であれば許可されるべき")
@@ -138,7 +138,7 @@ func TestLoginAttemptLimiter_CheckAttempt(t *testing.T) {
 	identifier := "test_user"
 
 	// 制限内のログイン試行
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		allowed, remaining, _, err := loginLimiter.CheckAttempt(ctx, identifier)
 		require.NoError(t, err)
 		assert.True(t, allowed, "制限内であれば許可されるべき")
@@ -164,7 +164,7 @@ func TestLoginAttemptLimiter_ResetAttempts(t *testing.T) {
 	identifier := "test_user_reset"
 
 	// 制限まで使い切る
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		allowed, _, _, err := loginLimiter.CheckAttempt(ctx, identifier)
 		require.NoError(t, err)
 		assert.True(t, allowed)
@@ -198,7 +198,7 @@ func TestRedisRateLimiter_SlidingWindow(t *testing.T) {
 	window := 2 * time.Second
 
 	// 制限まで使い切る
-	for i := 0; i < limit; i++ {
+	for range limit {
 		allowed, _, _, err := rateLimiter.IsAllowed(ctx, key, limit, window)
 		require.NoError(t, err)
 		assert.True(t, allowed)

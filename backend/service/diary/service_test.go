@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -506,13 +507,13 @@ func TestDiaryEntry_TriggerDiaryHighlight(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// Create a test diary entry with sufficient content (500+ characters)
-	longContent := ""
-	for i := 0; i < 100; i++ {
-		longContent += "これは日記のテスト内容です。"
+	var longContent strings.Builder
+	for range 100 {
+		longContent.WriteString("これは日記のテスト内容です。")
 	}
 
 	createReq := &g.CreateDiaryEntryRequest{
-		Content: longContent,
+		Content: longContent.String(),
 		Date: &g.YMD{
 			Year:  2024,
 			Month: 11,
