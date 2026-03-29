@@ -32,6 +32,16 @@ jobs:
         working-directory: ./backend
         run: go mod download
 
+      - name: go fix (modernize check)
+        working-directory: ./backend
+        run: |
+          go fix ./...
+          if ! git diff --quiet .; then
+            echo "go fix がモダナイズの機会を検出しました。ローカルで 'make b-format' を実行して修正してください:"
+            git diff .
+            exit 1
+          fi
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:

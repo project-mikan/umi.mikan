@@ -1,5 +1,8 @@
 version: "2"
 linters:
+  enable:
+    - intrange
+    - exptostd
   exclusions:
     rules:
       # dbtplの自動生成も除外
