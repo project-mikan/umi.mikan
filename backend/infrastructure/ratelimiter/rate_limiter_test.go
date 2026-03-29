@@ -69,7 +69,7 @@ func TestRedisRateLimiter_IsAllowed(t *testing.T) {
 			var lastAllowed bool
 			var lastRemaining int
 
-			for i := 0; i < tt.attempts; i++ {
+			for range tt.attempts {
 				allowed, remaining, resetTime, err := rateLimiter.IsAllowed(ctx, tt.key, tt.limit, tt.window)
 				require.NoError(t, err)
 
