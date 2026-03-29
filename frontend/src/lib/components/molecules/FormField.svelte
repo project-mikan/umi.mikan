@@ -3,7 +3,6 @@
 	import Input from "../atoms/Input.svelte";
 	import Label from "../atoms/Label.svelte";
 	import Textarea from "../atoms/Textarea.svelte";
-	import type { DiaryEntityOutput } from "$lib/grpc/diary/diary_pb";
 	import type { DiaryHighlight } from "$lib/types/highlight";
 
 	export let type: "input" | "textarea" = "input";
@@ -18,14 +17,7 @@
 	export let autocomplete = "";
 	export let rows = 4;
 	export let srOnlyLabel = false;
-	export let diaryEntities: DiaryEntityOutput[] = [];
 	export let diaryHighlights: DiaryHighlight[] = [];
-
-	// 明示的に選択されたエンティティの情報
-	export let selectedEntities: {
-		entityId: string;
-		positions: { start: number; end: number }[];
-	}[] = [];
 
 	const dispatch = createEventDispatcher();
 </script>
@@ -34,7 +26,7 @@
 	<Label htmlFor={id} {required} srOnly={srOnlyLabel}>
 		{label}
 	</Label>
-	
+
 	{#if type === 'textarea'}
 		<Textarea
 			{id}
@@ -43,10 +35,8 @@
 			{required}
 			{disabled}
 			{rows}
-			{diaryEntities}
 			{diaryHighlights}
 			bind:value
-			bind:selectedEntities
 			on:save={() => dispatch('save')}
 			on:autosave={() => dispatch('autosave')}
 		/>

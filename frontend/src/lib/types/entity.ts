@@ -58,33 +58,3 @@ export interface Entity {
 	createdAt: number;
 	updatedAt: number;
 }
-
-/**
- * DiaryEntityの出力形式
- */
-export interface DiaryEntityOutput {
-	entityId: string;
-	positions: EntityPosition[];
-	usedText: string;
-}
-
-/**
- * DiaryEntityの入力形式
- */
-export interface DiaryEntityInput {
-	entityId: string;
-	positions: EntityPosition[];
-	usedText: string;
-}
-
-/**
- * Entityを含む日記情報
- */
-export interface DiaryWithEntity {
-	id: string;
-	content: string;
-	date: string; // YYYY-MM-DD形式
-	positions: EntityPosition[];
-	createdAt: number;
-	updatedAt: number;
-}

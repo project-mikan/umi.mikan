@@ -12,8 +12,6 @@ import {
 	type DeleteEntityResponse,
 	type EntityCategory,
 	EntityService,
-	GetDiariesByEntityRequestSchema,
-	type GetDiariesByEntityResponse,
 	GetEntityRequestSchema,
 	type GetEntityResponse,
 	ListEntitiesRequestSchema,
@@ -86,11 +84,6 @@ export interface UpdateEntityAliasParams {
 
 export interface DeleteEntityAliasParams {
 	id: string;
-	accessToken: string;
-}
-
-export interface GetDiariesByEntityParams {
-	entityId: string;
 	accessToken: string;
 }
 
@@ -233,22 +226,6 @@ export async function deleteEntityAlias(
 	});
 
 	return await client.deleteEntityAlias(request);
-}
-
-/**
- * エンティティに紐づく日記を取得
- */
-export async function getDiariesByEntity(
-	params: GetDiariesByEntityParams,
-): Promise<GetDiariesByEntityResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(EntityService, transport);
-
-	const request = create(GetDiariesByEntityRequestSchema, {
-		entityId: params.entityId,
-	});
-
-	return await client.getDiariesByEntity(request);
 }
 
 /**

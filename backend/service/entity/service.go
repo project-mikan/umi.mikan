@@ -3,8 +3,6 @@ package entity
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
-	"log"
 	"strings"
 	"time"
 
@@ -797,101 +795,5 @@ func (s *EntityEntry) SearchEntities(
 
 	return &g.SearchEntitiesResponse{
 		Entities: protoEntities,
-	}, nil
-}
-
-// GetDiariesByEntity エンティティに紐づく日記を取得する
-func (s *EntityEntry) GetDiariesByEntity(
-	ctx context.Context,
-	message *g.GetDiariesByEntityRequest,
-) (*g.GetDiariesByEntityResponse, error) {
-	userIDStr, err := middleware.GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, err
-	}
-
-	entityID, err := uuid.Parse(message.EntityId)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid entity ID")
-	}
-
-	// エンティティの所有者確認
-	entity, err := database.EntityByID(ctx, s.DB, entityID)
-	if err != nil {
-		return nil, err
-	}
-	if entity.UserID != userID {
-		return nil, status.Errorf(codes.PermissionDenied, "not authorized to view this entity")
-	}
-
-	// エンティティに紐づく日記を日付降順で取得（JOINで一括取得してN+1問題を回避）
-	query := `
-		SELECT de.id, de.diary_id, de.entity_id, de.positions, de.created_at, de.updated_at,
-		       d.id, d.content, d.date, d.created_at, d.updated_at
-		FROM diary_entities de
-		INNER JOIN diaries d ON de.diary_id = d.id
-		WHERE de.entity_id = $1
-		ORDER BY d.date DESC
-	`
-	rows, err := s.getSQLDB().QueryContext(ctx, query, entityID)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = rows.Close()
-	}()
-
-	protoDiaries := make([]*g.DiaryWithEntity, 0)
-	for rows.Next() {
-		var de database.DiaryEntity
-		var diary database.Diary
-
-		// diary_entitiesとdiariesの両方をスキャン
-		if err := rows.Scan(
-			&de.ID, &de.DiaryID, &de.EntityID, &de.Positions, &de.CreatedAt, &de.UpdatedAt,
-			&diary.ID, &diary.Content, &diary.Date, &diary.CreatedAt, &diary.UpdatedAt,
-		); err != nil {
-			log.Printf("failed to scan diary_entity row: %v", err)
-			continue
-		}
-
-		// positionsをJSONBから[]Positionに変換
-		var positions []struct {
-			Start uint32 `json:"start"`
-			End   uint32 `json:"end"`
-		}
-		if err := json.Unmarshal(de.Positions, &positions); err != nil {
-			log.Printf("failed to parse positions for diary_entity %s: %v", de.ID, err)
-			return nil, status.Errorf(codes.Internal, "failed to parse positions")
-		}
-
-		protoPositions := make([]*g.Position, 0, len(positions))
-		for _, pos := range positions {
-			protoPositions = append(protoPositions, &g.Position{
-				Start: pos.Start,
-				End:   pos.End,
-			})
-		}
-
-		protoDiaries = append(protoDiaries, &g.DiaryWithEntity{
-			Id:        diary.ID.String(),
-			Content:   diary.Content,
-			Date:      diary.Date.Format("2006-01-02"),
-			Positions: protoPositions,
-			CreatedAt: diary.CreatedAt,
-			UpdatedAt: diary.UpdatedAt,
-		})
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return &g.GetDiariesByEntityResponse{
-		Diaries: protoDiaries,
 	}, nil
 }

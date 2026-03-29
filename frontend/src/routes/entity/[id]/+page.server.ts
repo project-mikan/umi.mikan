@@ -6,7 +6,6 @@ import {
 	createEntityAlias,
 	updateEntityAlias,
 	deleteEntityAlias,
-	getDiariesByEntity,
 } from "$lib/server/entity-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { EntityCategory } from "$lib/grpc/entity/entity_pb";
@@ -29,14 +28,9 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			accessToken: authResult.accessToken,
 		});
 
-		const diariesResponse = await getDiariesByEntity({
-			entityId: params.id,
-			accessToken: authResult.accessToken,
-		});
-
 		return {
 			entity: entityResponse.entity,
-			diaries: diariesResponse.diaries,
+			diaries: [],
 		};
 	} catch (err) {
 		console.error("Failed to load entity:", err);

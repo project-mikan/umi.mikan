@@ -2,20 +2,16 @@ syntax = "proto3";
 
 package diary;
 
-import "entity/entity.proto";
-
 option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
 
 // DiaryService は日記エントリの作成・読み取り・更新・削除（CRUD）と
 // AI要約生成機能を提供するサービスです。
-// エンティティとの紐付けにより、固有名詞のハイライト表示や検索が可能です。
 service DiaryService {
   // CreateDiaryEntry は新しい日記エントリを作成します。
   // 1日1エントリの制約があり、同じ日付に複数のエントリは作成できません。
-  // エンティティとの紐付け（diary_entities）もトランザクション内で同時に作成されます。
   //
   // 例:
-  //   request: { content: "今日は友人と会った", date: { year: 2025, month: 10, day: 9 }, diary_entities: [...] }
+  //   request: { content: "今日は友人と会った", date: { year: 2025, month: 10, day: 9 } }
   //   response: { entry: { id: "uuid", content: "...", ... } }
   //
   // エラー:
@@ -24,10 +20,9 @@ service DiaryService {
   rpc CreateDiaryEntry(CreateDiaryEntryRequest) returns (CreateDiaryEntryResponse);
 
   // UpdateDiaryEntry は既存の日記エントリを更新します。
-  // エンティティとの紐付けも同時に更新されます（既存の紐付けは全て削除され、新しい紐付けが作成されます）。
   //
   // 例:
-  //   request: { id: "uuid", content: "更新された内容", date: { year: 2025, month: 10, day: 9 }, diary_entities: [...] }
+  //   request: { id: "uuid", content: "更新された内容", date: { year: 2025, month: 10, day: 9 } }
   //   response: { entry: { id: "uuid", content: "更新された内容", ... } }
   //
   // エラー:
@@ -36,7 +31,6 @@ service DiaryService {
   rpc UpdateDiaryEntry(UpdateDiaryEntryRequest) returns (UpdateDiaryEntryResponse);
 
   // DeleteDiaryEntry は日記エントリを削除します。
-  // 関連するエンティティとの紐付け（diary_entities）もカスケード削除されます。
   //
   // エラー:
   //   - NotFound: 日記エントリが見つからない
@@ -44,11 +38,10 @@ service DiaryService {
   rpc DeleteDiaryEntry(DeleteDiaryEntryRequest) returns (DeleteDiaryEntryResponse);
 
   // GetDiaryEntry は指定された日付の日記エントリを取得します。
-  // エンティティとの紐付け情報も含まれます。
   //
   // 例:
   //   request: { date: { year: 2025, month: 10, day: 9 } }
-  //   response: { entry: { id: "uuid", content: "...", diary_entities: [...] } }
+  //   response: { entry: { id: "uuid", content: "...", ... } }
   //
   // エラー:
   //   - NotFound: 指定された日付の日記が存在しない
@@ -193,26 +186,12 @@ message DiaryEntry {
   string content = 3; // 内容
   int64 created_at = 4; // 作成日時（Unix timestamp）
   int64 updated_at = 5; // 更新日時（Unix timestamp）
-  repeated DiaryEntityOutput diary_entities = 6; // エンティティと位置情報のリスト
-}
-
-// エンティティ出力（取得時）
-message DiaryEntityOutput {
-  string entity_id = 1;
-  repeated entity.Position positions = 2; // 位置情報（alias_idを含む）
-}
-
-// エンティティと位置情報
-message DiaryEntityInput {
-  string entity_id = 1;
-  repeated entity.Position positions = 2; // 位置情報（alias_idを含む）
 }
 
 // 新しい日記エントリを作成するためのリクエスト
 message CreateDiaryEntryRequest {
   string content = 1;
   YMD date = 2;
-  repeated DiaryEntityInput diary_entities = 3; // エンティティと位置情報のリスト
 }
 
 // 日記エントリを作成した結果を返すレスポンス
@@ -263,7 +242,6 @@ message UpdateDiaryEntryRequest {
   string title = 2;
   string content = 3;
   YMD date = 4;
-  repeated DiaryEntityInput diary_entities = 5; // エンティティと位置情報のリスト
 }
 
 // 更新された日記エントリを返すレスポンス

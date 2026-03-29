@@ -7,7 +7,6 @@
 	import { authenticatedFetch } from "$lib/auth-client";
 	import type {
 		DiaryEntry,
-		DiaryEntityOutput,
 		GetDiaryEntriesByMonthResponse,
 		YMD,
 	} from "$lib/grpc/diary/diary_pb";
@@ -34,7 +33,6 @@
 		content: string;
 		createdAt: number;
 		updatedAt: number;
-		diaryEntities?: DiaryEntityOutput[];
 	}
 
 	interface SerializedGetDiaryEntriesByMonthResponse {
@@ -297,7 +295,7 @@
 			for (const entry of entries.entries) {
 				if (entry?.date) {
 					// シリアライズされたエントリをDiaryEntry形式に変換
-					const compatibleEntry: DiaryEntry = {
+					const compatibleEntry = {
 						id: entry.id,
 						content: entry.content,
 						createdAt: BigInt(entry.createdAt),
@@ -308,9 +306,8 @@
 							day: entry.date.day,
 							$typeName: "diary.YMD" as const,
 						} as YMD,
-						diaryEntities: entry.diaryEntities || [],
 						$typeName: "diary.DiaryEntry" as const,
-					};
+					} as DiaryEntry;
 					map.set(entry.date.day, compatibleEntry);
 				}
 			}

@@ -28,7 +28,6 @@ service EntityService {
   rpc UpdateEntity(UpdateEntityRequest) returns (UpdateEntityResponse);
 
   // DeleteEntity はエンティティとそれに紐づくエイリアスを削除します。
-  // 日記との紐付け(diary_entities)もカスケード削除されます。
   //
   // エラー:
   //   - NotFound: エンティティが見つからない
@@ -54,7 +53,6 @@ service EntityService {
   rpc ListEntities(ListEntitiesRequest) returns (ListEntitiesResponse);
 
   // CreateEntityAlias はエンティティにエイリアス（別名）を追加します。
-  // エイリアスは日記入力時の補完候補として使用されます。
   //
   // 例:
   //   request: { entity_id: "uuid", alias: "太郎" }
@@ -91,18 +89,6 @@ service EntityService {
   //
   // 空文字列を指定すると全件取得されます。
   rpc SearchEntities(SearchEntitiesRequest) returns (SearchEntitiesResponse);
-
-  // GetDiariesByEntity は指定されたエンティティが登場する日記の一覧を取得します。
-  // 各日記でのエンティティの登場位置も含まれます。
-  //
-  // 例:
-  //   request: { entity_id: "uuid" }
-  //   response: { diaries: [{ content: "...", positions: [{ start: 0, end: 4 }], ... }] }
-  //
-  // エラー:
-  //   - NotFound: エンティティが見つからない
-  //   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
-  rpc GetDiariesByEntity(GetDiariesByEntityRequest) returns (GetDiariesByEntityResponse);
 }
 
 // エンティティのカテゴリー
@@ -136,16 +122,6 @@ message EntityAlias {
   string alias = 3;
   int64 created_at = 4;
   int64 updated_at = 5;
-}
-
-// 日記とエンティティの紐付け
-message DiaryEntity {
-  string id = 1;
-  string diary_id = 2;
-  string entity_id = 3;
-  repeated Position positions = 4; // 日記本文中での登場位置
-  int64 created_at = 5;
-  int64 updated_at = 6;
 }
 
 // エンティティ作成リクエスト
@@ -244,24 +220,4 @@ message SearchEntitiesRequest {
 // エンティティ検索レスポンス
 message SearchEntitiesResponse {
   repeated Entity entities = 1;
-}
-
-// エンティティに紐づく日記取得リクエスト
-message GetDiariesByEntityRequest {
-  string entity_id = 1;
-}
-
-// エンティティに紐づく日記取得レスポンス
-message GetDiariesByEntityResponse {
-  repeated DiaryWithEntity diaries = 1;
-}
-
-// 日記とエンティティ情報
-message DiaryWithEntity {
-  string id = 1;
-  string content = 2;
-  string date = 3; // YYYY-MM-DD形式
-  repeated Position positions = 4; // この日記でのエンティティの登場位置
-  int64 created_at = 5;
-  int64 updated_at = 6;
 }
