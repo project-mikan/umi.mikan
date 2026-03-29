@@ -366,7 +366,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 ### Codecov / Test Coverage Guidelines
 
-- **Auto-generated files are excluded from coverage**: `backend/infrastructure/grpc/**` is excluded via `codecov.yml` at the project root. Do not add coverage for generated files.
+- **Auto-generated files are excluded from coverage**: `backend/infrastructure/grpc/**` and `backend/infrastructure/database/*.dbtpl.go` are excluded via `codecov.yml` at the project root. Do not add coverage for generated files.
 - **New backend functions require tests**: When adding new functions to backend services, always add corresponding test cases to maintain patch coverage.
 - **Coverage configuration**: `codecov.yml` at project root controls coverage settings and ignored paths.
 
