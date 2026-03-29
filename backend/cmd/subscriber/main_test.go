@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/project-mikan/umi.mikan/backend/testutil"
 	"github.com/sirupsen/logrus"
 )
 
@@ -75,5 +76,45 @@ func TestProcessMessage_InvalidJSON(t *testing.T) {
 	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
 	if err == nil {
 		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}
+
+func TestProcessMessage_LatestTrend_InvalidJSON(t *testing.T) {
+	ctx := context.Background()
+	logger := logrus.NewEntry(logrus.New())
+
+	// latestTrendメッセージのJSONが不正な場合はエラーを返すことを確認
+	payload := `{"type": "latest_trend", invalid_json}`
+
+	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
+	if err == nil {
+		t.Fatal("不正なJSONに対してエラーが期待されますが、nilが返りました")
+	}
+}
+
+func TestProcessMessage_DiaryHighlight_InvalidJSON(t *testing.T) {
+	ctx := context.Background()
+	logger := logrus.NewEntry(logrus.New())
+
+	// diaryHighlightメッセージのJSONが不正な場合はエラーを返すことを確認
+	payload := `{"type": "diary_highlight", invalid_json}`
+
+	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
+	if err == nil {
+		t.Fatal("不正なJSONに対してエラーが期待されますが、nilが返りました")
+	}
+}
+
+func TestGenerateDiaryHighlightWithLLM_NoLLMConfig(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "subscriber-highlight-test@example.com", "Subscriber Test User")
+	ctx := context.Background()
+	logger := logrus.NewEntry(logrus.New())
+
+	// LLM設定なしのユーザーでgenerateDiaryHighlightWithLLMを呼び出すと、
+	// user_llmsテーブルにレコードがないためエラーが返ることを確認
+	_, err := generateDiaryHighlightWithLLM(ctx, db, nil, userID.String(), "テストコンテンツ", logger)
+	if err == nil {
+		t.Fatal("LLM設定なしの場合はエラーが期待されますが、nilが返りました")
 	}
 }

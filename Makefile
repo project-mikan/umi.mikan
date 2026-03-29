@@ -15,6 +15,7 @@ f-lint:
 # バックエンド
 b-format:
 	docker compose exec backend go fmt ./...
+	docker compose exec backend go fix ./...
 	docker compose exec backend go tool golangci-lint run --fix
 b-lint:
 	make b-format

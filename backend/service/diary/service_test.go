@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 	"google.golang.org/grpc/codes"
@@ -506,13 +509,13 @@ func TestDiaryEntry_TriggerDiaryHighlight(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// Create a test diary entry with sufficient content (500+ characters)
-	longContent := ""
-	for i := 0; i < 100; i++ {
-		longContent += "これは日記のテスト内容です。"
+	var longContent strings.Builder
+	for range 100 {
+		longContent.WriteString("これは日記のテスト内容です。")
 	}
 
 	createReq := &g.CreateDiaryEntryRequest{
-		Content: longContent,
+		Content: longContent.String(),
 		Date: &g.YMD{
 			Year:  2024,
 			Month: 11,
@@ -657,4 +660,121 @@ func TestDiaryEntry_GetDiaryHighlight(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDiaryEntry_GetDiaryHighlight_WithHighlight(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// 日記エントリを作成
+	createReq := &g.CreateDiaryEntryRequest{
+		Content: "ハイライトテスト用日記",
+		Date: &g.YMD{
+			Year:  2024,
+			Month: 7,
+			Day:   1,
+		},
+	}
+	createResp, err := diaryService.CreateDiaryEntry(ctx, createReq)
+	if err != nil {
+		t.Fatalf("日記エントリの作成に失敗: %v", err)
+	}
+	diaryID := createResp.Entry.Id
+
+	// diary_highlightsテーブルにハイライトを直接挿入
+	highlights := `[{"start":0,"end":5,"text":"ハイライト"}]`
+	now := time.Now()
+	_, err = db.Exec(
+		"INSERT INTO diary_highlights (id, diary_id, user_id, highlights, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
+		uuid.New(), diaryID, userID, highlights, now, now,
+	)
+	if err != nil {
+		t.Fatalf("ハイライトの挿入に失敗: %v", err)
+	}
+
+	// 正常系：ハイライトが存在する場合
+	resp, err := diaryService.GetDiaryHighlight(ctx, &g.GetDiaryHighlightRequest{
+		DiaryId: diaryID,
+	})
+	if err != nil {
+		t.Fatalf("GetDiaryHighlightが失敗: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("レスポンスがnilです")
+	}
+	if len(resp.Highlights) != 1 {
+		t.Errorf("ハイライト数が期待値と異なります: got %d, want 1", len(resp.Highlights))
+	}
+}
+
+func TestDiaryEntry_WithEntities(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// エンティティをDBに挿入
+	entityID := uuid.New()
+	currentTime := time.Now().Unix()
+	entity := &database.Entity{
+		ID:         entityID,
+		UserID:     userID,
+		Name:       "テストエンティティ",
+		CategoryID: 0,
+		CreatedAt:  currentTime,
+		UpdatedAt:  currentTime,
+	}
+	if err := entity.Insert(ctx, db); err != nil {
+		t.Fatalf("エンティティの挿入に失敗: %v", err)
+	}
+
+	// エンティティ付きで日記エントリを作成（saveDiaryEntitiesをカバー）
+	createReq := &g.CreateDiaryEntryRequest{
+		Content: "エンティティ付きテスト日記",
+		Date: &g.YMD{
+			Year:  2024,
+			Month: 8,
+			Day:   1,
+		},
+		DiaryEntities: []*g.DiaryEntityInput{
+			{
+				EntityId: entityID.String(),
+				Positions: []*g.Position{
+					{Start: 0, End: 5},
+				},
+			},
+		},
+	}
+	createResp, err := diaryService.CreateDiaryEntry(ctx, createReq)
+	if err != nil {
+		t.Fatalf("日記エントリの作成に失敗: %v", err)
+	}
+
+	// GetDiaryEntryでエンティティ付き日記を取得（getDiaryEntityOutputsをカバー）
+	getResp, err := diaryService.GetDiaryEntry(ctx, &g.GetDiaryEntryRequest{
+		Date: &g.YMD{Year: 2024, Month: 8, Day: 1},
+	})
+	if err != nil {
+		t.Fatalf("日記エントリの取得に失敗: %v", err)
+	}
+	if len(getResp.Entry.DiaryEntities) != 1 {
+		t.Errorf("エンティティ数が期待値と異なります: got %d, want 1", len(getResp.Entry.DiaryEntities))
+	}
+
+	// GetDiaryEntriesByMonthでエンティティ付き日記を取得（getDiaryEntityOutputsForDiariesをカバー）
+	monthResp, err := diaryService.GetDiaryEntriesByMonth(ctx, &g.GetDiaryEntriesByMonthRequest{
+		Month: &g.YM{Year: 2024, Month: 8},
+	})
+	if err != nil {
+		t.Fatalf("月別日記エントリの取得に失敗: %v", err)
+	}
+	if len(monthResp.Entries) == 0 {
+		t.Fatal("月別日記エントリが空です")
+	}
+
+	_ = createResp
 }
