@@ -118,6 +118,12 @@ type DiaryHighlightGenerationMessage struct {
 	DiaryID string `json:"diary_id"`
 }
 
+type DiaryEmbeddingMessage struct {
+	Type    string `json:"type"`
+	UserID  string `json:"user_id"`
+	DiaryID string `json:"diary_id"`
+}
+
 func main() {
 	// Initialize structured logger
 	logger := logrus.WithFields(logrus.Fields{
@@ -396,6 +402,20 @@ func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Cli
 			messagesProcessedCounter.WithLabelValues("diary_highlight", "error").Inc()
 		} else {
 			messagesProcessedCounter.WithLabelValues("diary_highlight", "success").Inc()
+		}
+		return err
+	case "diary_embedding":
+		processingDuration.WithLabelValues("diary_embedding").Observe(time.Since(start).Seconds())
+		var message DiaryEmbeddingMessage
+		if unmarshalErr := json.Unmarshal([]byte(payload), &message); unmarshalErr != nil {
+			messagesProcessedCounter.WithLabelValues("diary_embedding", "error").Inc()
+			return fmt.Errorf("failed to unmarshal diary embedding message: %w", unmarshalErr)
+		}
+		err = generateDiaryEmbedding(ctx, db, llmFactory, message.UserID, message.DiaryID, logger)
+		if err != nil {
+			messagesProcessedCounter.WithLabelValues("diary_embedding", "error").Inc()
+		} else {
+			messagesProcessedCounter.WithLabelValues("diary_embedding", "success").Inc()
 		}
 		return err
 	default:
@@ -1064,4 +1084,80 @@ func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFacto
 
 	logger.Info("Successfully generated highlights using Gemini API")
 	return highlights, nil
+}
+
+func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, diaryID string, logger *logrus.Entry) error {
+	logger.WithFields(logrus.Fields{
+		"user_id":  userID,
+		"diary_id": diaryID,
+	}).Info("Generating diary embedding")
+
+	// 1. ユーザーのAPIキーと意味的検索の有効化を確認（未設定/無効の場合はスキップ）
+	var apiKey string
+	var semanticSearchEnabled bool
+	apiKeyQuery := `SELECT key, semantic_search_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	err := db.QueryRowContext(ctx, apiKeyQuery, userID).Scan(&apiKey, &semanticSearchEnabled)
+	if err != nil {
+		// APIキー未設定はスキップ（エラーではない）
+		logger.WithFields(logrus.Fields{
+			"user_id":  userID,
+			"diary_id": diaryID,
+		}).Info("User has no Gemini API key, skipping diary embedding generation")
+		return nil
+	}
+	if !semanticSearchEnabled {
+		// 意味的検索が無効ならスキップ
+		logger.WithFields(logrus.Fields{
+			"user_id":  userID,
+			"diary_id": diaryID,
+		}).Debug("Semantic search not enabled for user, skipping diary embedding generation")
+		return nil
+	}
+
+	// 2. 日記のタイトル（content先頭）と本文を取得
+	var diaryContent string
+	contentQuery := `SELECT content FROM diaries WHERE id = $1 AND user_id = $2`
+	err = db.QueryRowContext(ctx, contentQuery, diaryID, userID).Scan(&diaryContent)
+	if err != nil {
+		return fmt.Errorf("failed to get diary content: %w", err)
+	}
+
+	// 3. Gemini クライアント作成
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	if err != nil {
+		return fmt.Errorf("failed to create Gemini client: %w", err)
+	}
+	defer func() {
+		if closeErr := geminiClient.Close(); closeErr != nil {
+			logger.WithError(closeErr).Error("Failed to close Gemini client")
+		}
+	}()
+
+	// 4. 埋め込みベクトルを生成（ドキュメント用タスクタイプ）
+	embedding, err := geminiClient.GenerateEmbedding(ctx, diaryContent, true)
+	if err != nil {
+		return fmt.Errorf("failed to generate embedding: %w", err)
+	}
+
+	// 5. UUIDをパース
+	diaryUUID, err := uuid.Parse(diaryID)
+	if err != nil {
+		return fmt.Errorf("failed to parse diary_id: %w", err)
+	}
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return fmt.Errorf("failed to parse user_id: %w", err)
+	}
+
+	// 6. diary_embeddingsテーブルにUPSERT
+	if err := database.UpsertDiaryEmbedding(ctx, db, diaryUUID, userUUID, embedding, "text-embedding-004"); err != nil {
+		return fmt.Errorf("failed to upsert diary embedding: %w", err)
+	}
+
+	summariesGeneratedCounter.WithLabelValues("diary_embedding").Inc()
+	logger.WithFields(logrus.Fields{
+		"user_id":  userID,
+		"diary_id": diaryID,
+	}).Info("Successfully generated and saved diary embedding")
+	return nil
 }

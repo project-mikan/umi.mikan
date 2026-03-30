@@ -164,6 +164,13 @@ func (f *geminiClientFactory) CreateGeminiClient(ctx context.Context, apiKey str
 	return llm.NewGeminiClient(ctx, apiKey)
 }
 
+// diaryLLMFactory は diary.LLMFactory を実装するアダプタ
+type diaryLLMFactory struct{}
+
+func (f *diaryLLMFactory) CreateGeminiClient(ctx context.Context, apiKey string) (diary.GeminiEmbedder, error) {
+	return llm.NewGeminiClient(ctx, apiKey)
+}
+
 // LockService provides distributed locking functionality
 type LockService interface {
 	NewDistributedLock(key string, duration time.Duration) lock.DistributedLockInterface
@@ -308,7 +315,11 @@ func NewAuthService(db database.DB, loginLimiter *ratelimiter.LoginAttemptLimite
 
 // NewDiaryService creates a diary service
 func NewDiaryService(db database.DB, redis rueidis.Client) *diary.DiaryEntry {
-	return &diary.DiaryEntry{DB: db, Redis: redis}
+	return &diary.DiaryEntry{
+		DB:         db,
+		Redis:      redis,
+		LLMFactory: &diaryLLMFactory{},
+	}
 }
 
 // NewEntityService creates an entity service

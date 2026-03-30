@@ -92,6 +92,8 @@
 			"description": "Automatically generate summaries for diary entries over 1000 characters.",
 			"dailyLabel": "Enable daily auto summary",
 			"monthlyLabel": "Enable monthly auto summary",
+			"semanticSearchLabel": "Enable natural language search (semantic search)",
+			"semanticSearchDescription": "Analyzes diary content with AI to enable meaning and context-based search. An index is automatically generated when a diary entry is saved.",
 			"save": "Save settings"
 		},
 		"deleteToken": {
@@ -330,15 +332,26 @@
 	"search": {
 		"title": "Diary search",
 		"placeholder": "Enter search keywords...",
+		"placeholderSemantic": "Search in natural language (e.g., food I ate last summer)",
 		"button": "Search",
+		"modeKeyword": "Keyword search",
+		"modeSemantic": "Semantic search",
+		"semanticDescription": "Search by meaning and context using Gemini AI (API key required)",
 		"results": "search results for",
+		"semanticResults": "semantic search results for",
 		"resultCount": "results",
+		"similarity": "Relevance",
 		"noResults": "No search results found.",
 		"noResultsHint": "Try searching with different keywords.",
+		"semanticNoResultsHint": "Try different wording or use keyword search.",
 		"searching": "Searching...",
 		"enterKeyword": "Enter search keywords to search.",
 		"backToList": "Back to diary list",
-		"expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}"
+		"expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}",
+		"error": {
+			"searchFailed": "Search failed.",
+			"semanticSearchFailed": "Semantic search failed. Please check if your Gemini API key is configured."
+		}
 	},
 	"monthly": {
 		"thisMonth": "This month",

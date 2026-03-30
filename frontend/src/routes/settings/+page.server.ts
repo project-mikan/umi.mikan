@@ -264,6 +264,7 @@ export const actions: Actions = {
 		const autoSummaryDaily = data.get("autoSummaryDaily") === "on";
 		const autoSummaryMonthly = data.get("autoSummaryMonthly") === "on";
 		const autoLatestTrendEnabled = data.get("autoLatestTrendEnabled") === "on";
+		const semanticSearchEnabled = data.get("semanticSearchEnabled") === "on";
 
 		if (Number.isNaN(llmProvider) || llmProvider < 0) {
 			return fail(400, {
@@ -278,6 +279,7 @@ export const actions: Actions = {
 				autoSummaryDaily,
 				autoSummaryMonthly,
 				autoLatestTrendEnabled,
+				semanticSearchEnabled,
 				accessToken,
 			});
 

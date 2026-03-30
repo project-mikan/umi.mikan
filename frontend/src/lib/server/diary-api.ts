@@ -23,6 +23,8 @@ import {
 	type GetMonthlySummaryResponse,
 	SearchDiaryEntriesRequestSchema,
 	type SearchDiaryEntriesResponse,
+	SearchDiaryEntriesSemanticRequestSchema,
+	type SearchDiaryEntriesSemanticResponse,
 	TriggerLatestTrendRequestSchema,
 	type TriggerLatestTrendResponse,
 	UpdateDiaryEntryRequestSchema,
@@ -309,4 +311,24 @@ export async function getDiaryHighlight(
 	});
 
 	return await client.getDiaryHighlight(request);
+}
+
+export interface SearchDiaryEntriesSemanticParams {
+	query: string;
+	limit?: number;
+	accessToken: string;
+}
+
+export async function searchDiaryEntriesSemantic(
+	params: SearchDiaryEntriesSemanticParams,
+): Promise<SearchDiaryEntriesSemanticResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+
+	const request = create(SearchDiaryEntriesSemanticRequestSchema, {
+		query: params.query,
+		limit: params.limit ?? 10,
+	});
+
+	return await client.searchDiaryEntriesSemantic(request);
 }

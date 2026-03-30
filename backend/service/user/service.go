@@ -286,6 +286,7 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 			AutoSummaryDaily:       userLLM.AutoSummaryDaily,
 			AutoSummaryMonthly:     userLLM.AutoSummaryMonthly,
 			AutoLatestTrendEnabled: userLLM.AutoLatestTrendEnabled,
+			SemanticSearchEnabled:  userLLM.SemanticSearchEnabled,
 		})
 	}
 
@@ -469,6 +470,7 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 	userLLMDB.AutoSummaryDaily = req.GetAutoSummaryDaily()
 	userLLMDB.AutoSummaryMonthly = req.GetAutoSummaryMonthly()
 	userLLMDB.AutoLatestTrendEnabled = req.GetAutoLatestTrendEnabled()
+	userLLMDB.SemanticSearchEnabled = req.GetSemanticSearchEnabled()
 	userLLMDB.UpdatedAt = time.Now().Unix()
 
 	if err := userLLMDB.Update(ctx, s.DB); err != nil {
@@ -528,6 +530,7 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 		AutoSummaryDaily:       userLLMDB.AutoSummaryDaily,
 		AutoSummaryMonthly:     userLLMDB.AutoSummaryMonthly,
 		AutoLatestTrendEnabled: userLLMDB.AutoLatestTrendEnabled,
+		SemanticSearchEnabled:  userLLMDB.SemanticSearchEnabled,
 	}, nil
 }
 

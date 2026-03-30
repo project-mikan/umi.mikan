@@ -92,6 +92,8 @@
 			"description": "1000文字以上の日記に対して自動でまとめを生成する設定です。",
 			"dailyLabel": "日毎の自動まとめを有効にする",
 			"monthlyLabel": "月毎の自動まとめを有効にする",
+			"semanticSearchLabel": "自然言語検索（意味的検索）を有効にする",
+			"semanticSearchDescription": "日記の内容をAIで解析し、意味・文脈に基づいた検索を可能にします。日記の保存時に自動でインデックスが生成されます。",
 			"save": "設定を保存"
 		},
 		"deleteToken": {
@@ -330,15 +332,26 @@
 	"search": {
 		"title": "日記検索",
 		"placeholder": "検索キーワードを入力...",
+		"placeholderSemantic": "自然な言葉で検索（例：去年の夏に食べたもの）",
 		"button": "検索",
+		"modeKeyword": "キーワード検索",
+		"modeSemantic": "意味的検索",
+		"semanticDescription": "Gemini AIを使って意味・文脈で検索します（APIキー設定が必要）",
 		"results": "の検索結果",
+		"semanticResults": "の意味的検索結果",
 		"resultCount": "件",
+		"similarity": "一致度",
 		"noResults": "検索結果が見つかりませんでした。",
 		"noResultsHint": "別のキーワードで検索してみてください。",
+		"semanticNoResultsHint": "別の表現で検索するか、キーワード検索をお試しください。",
 		"searching": "検索中...",
 		"enterKeyword": "検索キーワードを入力して検索してください。",
 		"backToList": "日記一覧に戻る",
-		"expandedKeywordsNote": "エンティティに紐づく {keywords} でも検索しました"
+		"expandedKeywordsNote": "エンティティに紐づく {keywords} でも検索しました",
+		"error": {
+			"searchFailed": "検索に失敗しました。",
+			"semanticSearchFailed": "意味的検索に失敗しました。Gemini APIキーが設定されているか確認してください。"
+		}
 	},
 	"monthly": {
 		"thisMonth": "今月",

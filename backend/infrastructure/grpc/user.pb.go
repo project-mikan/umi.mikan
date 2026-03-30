@@ -438,6 +438,7 @@ type LLMKeyInfo struct {
 	AutoSummaryDaily       bool                   `protobuf:"varint,3,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,4,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,5,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	SemanticSearchEnabled  bool                   `protobuf:"varint,6,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -503,6 +504,13 @@ func (x *LLMKeyInfo) GetAutoSummaryMonthly() bool {
 func (x *LLMKeyInfo) GetAutoLatestTrendEnabled() bool {
 	if x != nil {
 		return x.AutoLatestTrendEnabled
+	}
+	return false
+}
+
+func (x *LLMKeyInfo) GetSemanticSearchEnabled() bool {
+	if x != nil {
+		return x.SemanticSearchEnabled
 	}
 	return false
 }
@@ -702,6 +710,7 @@ type UpdateAutoSummarySettingsRequest struct {
 	AutoSummaryDaily       bool                   `protobuf:"varint,2,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,3,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,4,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	SemanticSearchEnabled  bool                   `protobuf:"varint,5,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -760,6 +769,13 @@ func (x *UpdateAutoSummarySettingsRequest) GetAutoSummaryMonthly() bool {
 func (x *UpdateAutoSummarySettingsRequest) GetAutoLatestTrendEnabled() bool {
 	if x != nil {
 		return x.AutoLatestTrendEnabled
+	}
+	return false
+}
+
+func (x *UpdateAutoSummarySettingsRequest) GetSemanticSearchEnabled() bool {
+	if x != nil {
+		return x.SemanticSearchEnabled
 	}
 	return false
 }
@@ -868,6 +884,7 @@ type GetAutoSummarySettingsResponse struct {
 	AutoSummaryDaily       bool                   `protobuf:"varint,1,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,2,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,3,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	SemanticSearchEnabled  bool                   `protobuf:"varint,4,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -919,6 +936,13 @@ func (x *GetAutoSummarySettingsResponse) GetAutoSummaryMonthly() bool {
 func (x *GetAutoSummarySettingsResponse) GetAutoLatestTrendEnabled() bool {
 	if x != nil {
 		return x.AutoLatestTrendEnabled
+	}
+	return false
+}
+
+func (x *GetAutoSummarySettingsResponse) GetSemanticSearchEnabled() bool {
+	if x != nil {
+		return x.SemanticSearchEnabled
 	}
 	return false
 }
@@ -1305,14 +1329,15 @@ const file_user_user_proto_rawDesc = "" +
 	"\x13GetUserInfoResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12+\n" +
-	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\xdc\x01\n" +
+	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\x94\x02\n" +
 	"\n" +
 	"LLMKeyInfo\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\x12,\n" +
 	"\x12auto_summary_daily\x18\x03 \x01(\bR\x10autoSummaryDaily\x120\n" +
 	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\x129\n" +
-	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\"8\n" +
+	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
+	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabled\"8\n" +
 	"\x13DeleteLLMKeyRequest\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"J\n" +
 	"\x14DeleteLLMKeyResponse\x12\x18\n" +
@@ -1321,21 +1346,23 @@ const file_user_user_proto_rawDesc = "" +
 	"\x14DeleteAccountRequest\"K\n" +
 	"\x15DeleteAccountResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\xe0\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x98\x02\n" +
 	" UpdateAutoSummarySettingsRequest\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12,\n" +
 	"\x12auto_summary_daily\x18\x02 \x01(\bR\x10autoSummaryDaily\x120\n" +
 	"\x14auto_summary_monthly\x18\x03 \x01(\bR\x12autoSummaryMonthly\x129\n" +
-	"\x19auto_latest_trend_enabled\x18\x04 \x01(\bR\x16autoLatestTrendEnabled\"W\n" +
+	"\x19auto_latest_trend_enabled\x18\x04 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
+	"\x17semantic_search_enabled\x18\x05 \x01(\bR\x15semanticSearchEnabled\"W\n" +
 	"!UpdateAutoSummarySettingsResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"B\n" +
 	"\x1dGetAutoSummarySettingsRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xbb\x01\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xf3\x01\n" +
 	"\x1eGetAutoSummarySettingsResponse\x12,\n" +
 	"\x12auto_summary_daily\x18\x01 \x01(\bR\x10autoSummaryDaily\x120\n" +
 	"\x14auto_summary_monthly\x18\x02 \x01(\bR\x12autoSummaryMonthly\x129\n" +
-	"\x19auto_latest_trend_enabled\x18\x03 \x01(\bR\x16autoLatestTrendEnabled\"\x19\n" +
+	"\x19auto_latest_trend_enabled\x18\x03 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
+	"\x17semantic_search_enabled\x18\x04 \x01(\bR\x15semanticSearchEnabled\"\x19\n" +
 	"\x17GetPubSubMetricsRequest\"\xc7\x01\n" +
 	"\x18GetPubSubMetricsResponse\x12:\n" +
 	"\x0ehourly_metrics\x18\x01 \x03(\v2\x13.user.HourlyMetricsR\rhourlyMetrics\x12?\n" +

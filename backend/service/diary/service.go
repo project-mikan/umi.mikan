@@ -18,10 +18,22 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// LLMFactory はLLMクライアントを作成するファクトリインターフェース
+type LLMFactory interface {
+	CreateGeminiClient(ctx context.Context, apiKey string) (GeminiEmbedder, error)
+}
+
+// GeminiEmbedder はGemini埋め込みAPIクライアントのインターフェース
+type GeminiEmbedder interface {
+	GenerateEmbedding(ctx context.Context, text string, isDocument bool) ([]float32, error)
+	Close() error
+}
+
 type DiaryEntry struct {
 	g.UnimplementedDiaryServiceServer
-	DB    database.DB
-	Redis rueidis.Client
+	DB         database.DB
+	Redis      rueidis.Client
+	LLMFactory LLMFactory
 }
 
 type SummaryGenerationMessage struct {
@@ -38,6 +50,12 @@ type MonthlySummaryGenerationMessage struct {
 }
 
 type DiaryHighlightGenerationMessage struct {
+	Type    string `json:"type"`
+	UserID  string `json:"user_id"`
+	DiaryID string `json:"diary_id"`
+}
+
+type DiaryEmbeddingMessage struct {
 	Type    string `json:"type"`
 	UserID  string `json:"user_id"`
 	DiaryID string `json:"diary_id"`
@@ -113,6 +131,9 @@ func (s *DiaryEntry) CreateDiaryEntry(
 	if err != nil {
 		return nil, err
 	}
+
+	// 非同期で埋め込みベクトルを生成（Redis Pub/Sub経由）
+	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String())
 
 	return &g.CreateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -294,6 +315,9 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 	if err != nil {
 		return nil, err
 	}
+
+	// 非同期で埋め込みベクトルを再生成（Redis Pub/Sub経由）
+	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String())
 
 	return &g.UpdateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -964,4 +988,120 @@ func (s *DiaryEntry) GetDiaryHighlight(
 		CreatedAt:  highlight.CreatedAt.Unix(),
 		UpdatedAt:  highlight.UpdatedAt.Unix(),
 	}, nil
+}
+
+// publishDiaryEmbeddingMessage は日記の埋め込みベクトル生成をRedis Pub/Sub経由でキューに追加する
+// エラーはログに記録するのみで、レスポンスには影響しない
+func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, diaryID string) {
+	if s.Redis == nil {
+		return
+	}
+	message := DiaryEmbeddingMessage{
+		Type:    "diary_embedding",
+		UserID:  userID,
+		DiaryID: diaryID,
+	}
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return
+	}
+	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
+	// エラーはログには出せないが、埋め込み生成の失敗は非クリティカル
+	_ = s.Redis.Do(ctx, publishCmd).Error()
+}
+
+// SearchDiaryEntriesSemantic 自然言語クエリで日記を意味的に検索する
+func (s *DiaryEntry) SearchDiaryEntriesSemantic(
+	ctx context.Context,
+	req *g.SearchDiaryEntriesSemanticRequest,
+) (*g.SearchDiaryEntriesSemanticResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// クエリ検証
+	if req.Query == "" {
+		return nil, status.Error(codes.InvalidArgument, "Query is required")
+	}
+
+	// ユーザーのAPIキーと設定を取得
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Gemini API key not found")
+	}
+
+	// 意味的検索が有効化されているか確認
+	if !userLLM.SemanticSearchEnabled {
+		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
+	}
+
+	// LLMファクトリーの確認
+	if s.LLMFactory == nil {
+		return nil, status.Error(codes.Internal, "LLM factory not configured")
+	}
+
+	// Geminiクライアント作成
+	geminiClient, err := s.LLMFactory.CreateGeminiClient(ctx, userLLM.Key)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to create Gemini client")
+	}
+	defer func() {
+		_ = geminiClient.Close()
+	}()
+
+	// クエリをベクトル化（クエリ用タスクタイプ）
+	queryEmbedding, err := geminiClient.GenerateEmbedding(ctx, req.Query, false)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to generate query embedding: %v", err)
+	}
+
+	// 検索件数を決定
+	limit := int(req.Limit)
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	// pgvectorでコサイン類似度ANN検索
+	const similarityThreshold = 0.5
+	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, s.DB, userID, queryEmbedding, limit, similarityThreshold)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to search diary entries: %v", err)
+	}
+
+	// 結果を変換
+	results := make([]*g.SemanticSearchResult, 0, len(searchResults))
+	for _, sr := range searchResults {
+		snippet := generateSnippet(sr.Content, 200)
+		results = append(results, &g.SemanticSearchResult{
+			DiaryId: sr.DiaryID.String(),
+			Date: &g.YMD{
+				Year:  uint32(sr.Date.Year()),
+				Month: uint32(sr.Date.Month()),
+				Day:   uint32(sr.Date.Day()),
+			},
+			Snippet:    snippet,
+			Similarity: float32(sr.Similarity),
+		})
+	}
+
+	return &g.SearchDiaryEntriesSemanticResponse{
+		Results: results,
+	}, nil
+}
+
+// generateSnippet はコンテンツから最大maxLen文字のスニペットを生成する
+func generateSnippet(content string, maxLen int) string {
+	runes := []rune(content)
+	if len(runes) <= maxLen {
+		return content
+	}
+	return string(runes[:maxLen]) + "..."
 }

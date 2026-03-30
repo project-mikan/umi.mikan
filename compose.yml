@@ -47,7 +47,7 @@ services:
       - ./proto:/proto # 内部で解決できるようにマウント
 
   postgres:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     environment:
       TZ: Asia/Tokyo
       POSTGRES_USER: "postgres"
@@ -60,7 +60,7 @@ services:
       - ./schema:/docker-entrypoint-initdb.d
 
   postgres_test:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     environment:
       TZ: Asia/Tokyo
       POSTGRES_USER: "postgres"

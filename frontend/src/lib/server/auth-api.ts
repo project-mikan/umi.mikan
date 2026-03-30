@@ -254,6 +254,7 @@ export interface UpdateAutoSummarySettingsParams {
 	autoSummaryDaily: boolean;
 	autoSummaryMonthly: boolean;
 	autoLatestTrendEnabled: boolean;
+	semanticSearchEnabled: boolean;
 	accessToken: string;
 }
 
@@ -276,6 +277,7 @@ export async function updateAutoSummarySettings(
 		autoSummaryDaily: params.autoSummaryDaily,
 		autoSummaryMonthly: params.autoSummaryMonthly,
 		autoLatestTrendEnabled: params.autoLatestTrendEnabled,
+		semanticSearchEnabled: params.semanticSearchEnabled,
 	});
 
 	const response = await userClient.updateAutoSummarySettings(request);

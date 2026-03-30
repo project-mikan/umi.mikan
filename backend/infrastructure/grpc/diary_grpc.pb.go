@@ -19,21 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DiaryService_CreateDiaryEntry_FullMethodName       = "/diary.DiaryService/CreateDiaryEntry"
-	DiaryService_UpdateDiaryEntry_FullMethodName       = "/diary.DiaryService/UpdateDiaryEntry"
-	DiaryService_DeleteDiaryEntry_FullMethodName       = "/diary.DiaryService/DeleteDiaryEntry"
-	DiaryService_GetDiaryEntry_FullMethodName          = "/diary.DiaryService/GetDiaryEntry"
-	DiaryService_GetDiaryEntries_FullMethodName        = "/diary.DiaryService/GetDiaryEntries"
-	DiaryService_GetDiaryEntriesByMonth_FullMethodName = "/diary.DiaryService/GetDiaryEntriesByMonth"
-	DiaryService_SearchDiaryEntries_FullMethodName     = "/diary.DiaryService/SearchDiaryEntries"
-	DiaryService_GenerateMonthlySummary_FullMethodName = "/diary.DiaryService/GenerateMonthlySummary"
-	DiaryService_GetMonthlySummary_FullMethodName      = "/diary.DiaryService/GetMonthlySummary"
-	DiaryService_GenerateDailySummary_FullMethodName   = "/diary.DiaryService/GenerateDailySummary"
-	DiaryService_GetDailySummary_FullMethodName        = "/diary.DiaryService/GetDailySummary"
-	DiaryService_GetLatestTrend_FullMethodName         = "/diary.DiaryService/GetLatestTrend"
-	DiaryService_TriggerLatestTrend_FullMethodName     = "/diary.DiaryService/TriggerLatestTrend"
-	DiaryService_TriggerDiaryHighlight_FullMethodName  = "/diary.DiaryService/TriggerDiaryHighlight"
-	DiaryService_GetDiaryHighlight_FullMethodName      = "/diary.DiaryService/GetDiaryHighlight"
+	DiaryService_CreateDiaryEntry_FullMethodName           = "/diary.DiaryService/CreateDiaryEntry"
+	DiaryService_UpdateDiaryEntry_FullMethodName           = "/diary.DiaryService/UpdateDiaryEntry"
+	DiaryService_DeleteDiaryEntry_FullMethodName           = "/diary.DiaryService/DeleteDiaryEntry"
+	DiaryService_GetDiaryEntry_FullMethodName              = "/diary.DiaryService/GetDiaryEntry"
+	DiaryService_GetDiaryEntries_FullMethodName            = "/diary.DiaryService/GetDiaryEntries"
+	DiaryService_GetDiaryEntriesByMonth_FullMethodName     = "/diary.DiaryService/GetDiaryEntriesByMonth"
+	DiaryService_SearchDiaryEntries_FullMethodName         = "/diary.DiaryService/SearchDiaryEntries"
+	DiaryService_GenerateMonthlySummary_FullMethodName     = "/diary.DiaryService/GenerateMonthlySummary"
+	DiaryService_GetMonthlySummary_FullMethodName          = "/diary.DiaryService/GetMonthlySummary"
+	DiaryService_GenerateDailySummary_FullMethodName       = "/diary.DiaryService/GenerateDailySummary"
+	DiaryService_GetDailySummary_FullMethodName            = "/diary.DiaryService/GetDailySummary"
+	DiaryService_GetLatestTrend_FullMethodName             = "/diary.DiaryService/GetLatestTrend"
+	DiaryService_TriggerLatestTrend_FullMethodName         = "/diary.DiaryService/TriggerLatestTrend"
+	DiaryService_SearchDiaryEntriesSemantic_FullMethodName = "/diary.DiaryService/SearchDiaryEntriesSemantic"
+	DiaryService_TriggerDiaryHighlight_FullMethodName      = "/diary.DiaryService/TriggerDiaryHighlight"
+	DiaryService_GetDiaryHighlight_FullMethodName          = "/diary.DiaryService/GetDiaryHighlight"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -179,6 +180,18 @@ type DiaryServiceClient interface {
 	//   - PermissionDenied: production環境では使用不可
 	//   - NotFound: LLMキーが設定されていない
 	TriggerLatestTrend(ctx context.Context, in *TriggerLatestTrendRequest, opts ...grpc.CallOption) (*TriggerLatestTrendResponse, error)
+	// SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+	// Gemini Embedding APIを使用してベクトル類似度検索を行います。
+	//
+	// 例:
+	//
+	//	request: { query: "去年の夏に食べたもの", limit: 10 }
+	//	response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
+	//   - InvalidArgument: クエリが空
+	SearchDiaryEntriesSemantic(ctx context.Context, in *SearchDiaryEntriesSemanticRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesSemanticResponse, error)
 	// TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
 	// Redis Pub/Subを通じてSubscriberが処理を実行します。
 	//
@@ -337,6 +350,16 @@ func (c *diaryServiceClient) TriggerLatestTrend(ctx context.Context, in *Trigger
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TriggerLatestTrendResponse)
 	err := c.cc.Invoke(ctx, DiaryService_TriggerLatestTrend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) SearchDiaryEntriesSemantic(ctx context.Context, in *SearchDiaryEntriesSemanticRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesSemanticResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchDiaryEntriesSemanticResponse)
+	err := c.cc.Invoke(ctx, DiaryService_SearchDiaryEntriesSemantic_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -506,6 +529,18 @@ type DiaryServiceServer interface {
 	//   - PermissionDenied: production環境では使用不可
 	//   - NotFound: LLMキーが設定されていない
 	TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error)
+	// SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+	// Gemini Embedding APIを使用してベクトル類似度検索を行います。
+	//
+	// 例:
+	//
+	//	request: { query: "去年の夏に食べたもの", limit: 10 }
+	//	response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
+	//   - InvalidArgument: クエリが空
+	SearchDiaryEntriesSemantic(context.Context, *SearchDiaryEntriesSemanticRequest) (*SearchDiaryEntriesSemanticResponse, error)
 	// TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
 	// Redis Pub/Subを通じてSubscriberが処理を実行します。
 	//
@@ -578,6 +613,9 @@ func (UnimplementedDiaryServiceServer) GetLatestTrend(context.Context, *GetLates
 }
 func (UnimplementedDiaryServiceServer) TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method TriggerLatestTrend not implemented")
+}
+func (UnimplementedDiaryServiceServer) SearchDiaryEntriesSemantic(context.Context, *SearchDiaryEntriesSemanticRequest) (*SearchDiaryEntriesSemanticResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchDiaryEntriesSemantic not implemented")
 }
 func (UnimplementedDiaryServiceServer) TriggerDiaryHighlight(context.Context, *TriggerDiaryHighlightRequest) (*TriggerDiaryHighlightResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method TriggerDiaryHighlight not implemented")
@@ -840,6 +878,24 @@ func _DiaryService_TriggerLatestTrend_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_SearchDiaryEntriesSemantic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchDiaryEntriesSemanticRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).SearchDiaryEntriesSemantic(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_SearchDiaryEntriesSemantic_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).SearchDiaryEntriesSemantic(ctx, req.(*SearchDiaryEntriesSemanticRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DiaryService_TriggerDiaryHighlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TriggerDiaryHighlightRequest)
 	if err := dec(in); err != nil {
@@ -934,6 +990,10 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TriggerLatestTrend",
 			Handler:    _DiaryService_TriggerLatestTrend_Handler,
+		},
+		{
+			MethodName: "SearchDiaryEntriesSemantic",
+			Handler:    _DiaryService_SearchDiaryEntriesSemantic_Handler,
 		},
 		{
 			MethodName: "TriggerDiaryHighlight",

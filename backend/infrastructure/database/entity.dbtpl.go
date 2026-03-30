@@ -13,11 +13,11 @@ import (
 type Entity struct {
 	ID         uuid.UUID      `json:"id"`          // id
 	UserID     uuid.UUID      `json:"user_id"`     // user_id
+	Name       string         `json:"name"`        // name
+	CategoryID int            `json:"category_id"` // category_id
+	Memo       sql.NullString `json:"memo"`        // memo
 	CreatedAt  int64          `json:"created_at"`  // created_at
 	UpdatedAt  int64          `json:"updated_at"`  // updated_at
-	CategoryID int            `json:"category_id"` // category_id
-	Name       string         `json:"name"`        // name
-	Memo       sql.NullString `json:"memo"`        // memo
 	// xo fields
 	_exists, _deleted bool
 }
@@ -43,13 +43,13 @@ func (e *Entity) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.entities (` +
-		`id, user_id, created_at, updated_at, category_id, name, memo` +
+		`id, user_id, name, category_id, memo, created_at, updated_at` +
 		`) VALUES (` +
 		`$1, $2, $3, $4, $5, $6, $7` +
 		`)`
 	// run
-	logf(sqlstr, e.ID, e.UserID, e.CreatedAt, e.UpdatedAt, e.CategoryID, e.Name, e.Memo)
-	if _, err := db.ExecContext(ctx, sqlstr, e.ID, e.UserID, e.CreatedAt, e.UpdatedAt, e.CategoryID, e.Name, e.Memo); err != nil {
+	logf(sqlstr, e.ID, e.UserID, e.Name, e.CategoryID, e.Memo, e.CreatedAt, e.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, e.ID, e.UserID, e.Name, e.CategoryID, e.Memo, e.CreatedAt, e.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -67,11 +67,11 @@ func (e *Entity) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.entities SET ` +
-		`user_id = $1, created_at = $2, updated_at = $3, category_id = $4, name = $5, memo = $6 ` +
+		`user_id = $1, name = $2, category_id = $3, memo = $4, created_at = $5, updated_at = $6 ` +
 		`WHERE id = $7`
 	// run
-	logf(sqlstr, e.UserID, e.CreatedAt, e.UpdatedAt, e.CategoryID, e.Name, e.Memo, e.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, e.UserID, e.CreatedAt, e.UpdatedAt, e.CategoryID, e.Name, e.Memo, e.ID); err != nil {
+	logf(sqlstr, e.UserID, e.Name, e.CategoryID, e.Memo, e.CreatedAt, e.UpdatedAt, e.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, e.UserID, e.Name, e.CategoryID, e.Memo, e.CreatedAt, e.UpdatedAt, e.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -93,16 +93,16 @@ func (e *Entity) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.entities (` +
-		`id, user_id, created_at, updated_at, category_id, name, memo` +
+		`id, user_id, name, category_id, memo, created_at, updated_at` +
 		`) VALUES (` +
 		`$1, $2, $3, $4, $5, $6, $7` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`user_id = EXCLUDED.user_id, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, category_id = EXCLUDED.category_id, name = EXCLUDED.name, memo = EXCLUDED.memo `
+		`user_id = EXCLUDED.user_id, name = EXCLUDED.name, category_id = EXCLUDED.category_id, memo = EXCLUDED.memo, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
 	// run
-	logf(sqlstr, e.ID, e.UserID, e.CreatedAt, e.UpdatedAt, e.CategoryID, e.Name, e.Memo)
-	if _, err := db.ExecContext(ctx, sqlstr, e.ID, e.UserID, e.CreatedAt, e.UpdatedAt, e.CategoryID, e.Name, e.Memo); err != nil {
+	logf(sqlstr, e.ID, e.UserID, e.Name, e.CategoryID, e.Memo, e.CreatedAt, e.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, e.ID, e.UserID, e.Name, e.CategoryID, e.Memo, e.CreatedAt, e.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -137,7 +137,7 @@ func (e *Entity) Delete(ctx context.Context, db DB) error {
 func EntityByID(ctx context.Context, db DB, id uuid.UUID) (*Entity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, created_at, updated_at, category_id, name, memo ` +
+		`id, user_id, name, category_id, memo, created_at, updated_at ` +
 		`FROM public.entities ` +
 		`WHERE id = $1`
 	// run
@@ -145,7 +145,7 @@ func EntityByID(ctx context.Context, db DB, id uuid.UUID) (*Entity, error) {
 	e := Entity{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&e.ID, &e.UserID, &e.CreatedAt, &e.UpdatedAt, &e.CategoryID, &e.Name, &e.Memo); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&e.ID, &e.UserID, &e.Name, &e.CategoryID, &e.Memo, &e.CreatedAt, &e.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &e, nil
@@ -157,7 +157,7 @@ func EntityByID(ctx context.Context, db DB, id uuid.UUID) (*Entity, error) {
 func EntityByUserIDName(ctx context.Context, db DB, userID uuid.UUID, name string) (*Entity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, created_at, updated_at, category_id, name, memo ` +
+		`id, user_id, name, category_id, memo, created_at, updated_at ` +
 		`FROM public.entities ` +
 		`WHERE user_id = $1 AND name = $2`
 	// run
@@ -165,7 +165,7 @@ func EntityByUserIDName(ctx context.Context, db DB, userID uuid.UUID, name strin
 	e := Entity{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID, name).Scan(&e.ID, &e.UserID, &e.CreatedAt, &e.UpdatedAt, &e.CategoryID, &e.Name, &e.Memo); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID, name).Scan(&e.ID, &e.UserID, &e.Name, &e.CategoryID, &e.Memo, &e.CreatedAt, &e.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &e, nil
@@ -177,7 +177,7 @@ func EntityByUserIDName(ctx context.Context, db DB, userID uuid.UUID, name strin
 func EntitiesByCategoryID(ctx context.Context, db DB, categoryID int) ([]*Entity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, created_at, updated_at, category_id, name, memo ` +
+		`id, user_id, name, category_id, memo, created_at, updated_at ` +
 		`FROM public.entities ` +
 		`WHERE category_id = $1`
 	// run
@@ -194,7 +194,7 @@ func EntitiesByCategoryID(ctx context.Context, db DB, categoryID int) ([]*Entity
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&e.ID, &e.UserID, &e.CreatedAt, &e.UpdatedAt, &e.CategoryID, &e.Name, &e.Memo); err != nil {
+		if err := rows.Scan(&e.ID, &e.UserID, &e.Name, &e.CategoryID, &e.Memo, &e.CreatedAt, &e.UpdatedAt); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &e)
@@ -211,7 +211,7 @@ func EntitiesByCategoryID(ctx context.Context, db DB, categoryID int) ([]*Entity
 func EntitiesByUserID(ctx context.Context, db DB, userID uuid.UUID) ([]*Entity, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, created_at, updated_at, category_id, name, memo ` +
+		`id, user_id, name, category_id, memo, created_at, updated_at ` +
 		`FROM public.entities ` +
 		`WHERE user_id = $1`
 	// run
@@ -228,7 +228,7 @@ func EntitiesByUserID(ctx context.Context, db DB, userID uuid.UUID) ([]*Entity, 
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&e.ID, &e.UserID, &e.CreatedAt, &e.UpdatedAt, &e.CategoryID, &e.Name, &e.Memo); err != nil {
+		if err := rows.Scan(&e.ID, &e.UserID, &e.Name, &e.CategoryID, &e.Memo, &e.CreatedAt, &e.UpdatedAt); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &e)

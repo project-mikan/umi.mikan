@@ -12,9 +12,9 @@ import (
 type EntityAlias struct {
 	ID        uuid.UUID `json:"id"`         // id
 	EntityID  uuid.UUID `json:"entity_id"`  // entity_id
+	Alias     string    `json:"alias"`      // alias
 	CreatedAt int64     `json:"created_at"` // created_at
 	UpdatedAt int64     `json:"updated_at"` // updated_at
-	Alias     string    `json:"alias"`      // alias
 	// xo fields
 	_exists, _deleted bool
 }
@@ -40,13 +40,13 @@ func (ea *EntityAlias) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.entity_aliases (` +
-		`id, entity_id, created_at, updated_at, alias` +
+		`id, entity_id, alias, created_at, updated_at` +
 		`) VALUES (` +
 		`$1, $2, $3, $4, $5` +
 		`)`
 	// run
-	logf(sqlstr, ea.ID, ea.EntityID, ea.CreatedAt, ea.UpdatedAt, ea.Alias)
-	if _, err := db.ExecContext(ctx, sqlstr, ea.ID, ea.EntityID, ea.CreatedAt, ea.UpdatedAt, ea.Alias); err != nil {
+	logf(sqlstr, ea.ID, ea.EntityID, ea.Alias, ea.CreatedAt, ea.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, ea.ID, ea.EntityID, ea.Alias, ea.CreatedAt, ea.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -64,11 +64,11 @@ func (ea *EntityAlias) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.entity_aliases SET ` +
-		`entity_id = $1, created_at = $2, updated_at = $3, alias = $4 ` +
+		`entity_id = $1, alias = $2, created_at = $3, updated_at = $4 ` +
 		`WHERE id = $5`
 	// run
-	logf(sqlstr, ea.EntityID, ea.CreatedAt, ea.UpdatedAt, ea.Alias, ea.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, ea.EntityID, ea.CreatedAt, ea.UpdatedAt, ea.Alias, ea.ID); err != nil {
+	logf(sqlstr, ea.EntityID, ea.Alias, ea.CreatedAt, ea.UpdatedAt, ea.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, ea.EntityID, ea.Alias, ea.CreatedAt, ea.UpdatedAt, ea.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -90,16 +90,16 @@ func (ea *EntityAlias) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.entity_aliases (` +
-		`id, entity_id, created_at, updated_at, alias` +
+		`id, entity_id, alias, created_at, updated_at` +
 		`) VALUES (` +
 		`$1, $2, $3, $4, $5` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`entity_id = EXCLUDED.entity_id, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, alias = EXCLUDED.alias `
+		`entity_id = EXCLUDED.entity_id, alias = EXCLUDED.alias, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
 	// run
-	logf(sqlstr, ea.ID, ea.EntityID, ea.CreatedAt, ea.UpdatedAt, ea.Alias)
-	if _, err := db.ExecContext(ctx, sqlstr, ea.ID, ea.EntityID, ea.CreatedAt, ea.UpdatedAt, ea.Alias); err != nil {
+	logf(sqlstr, ea.ID, ea.EntityID, ea.Alias, ea.CreatedAt, ea.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, ea.ID, ea.EntityID, ea.Alias, ea.CreatedAt, ea.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -134,7 +134,7 @@ func (ea *EntityAlias) Delete(ctx context.Context, db DB) error {
 func EntityAliasByEntityIDAlias(ctx context.Context, db DB, entityID uuid.UUID, alias string) (*EntityAlias, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, entity_id, created_at, updated_at, alias ` +
+		`id, entity_id, alias, created_at, updated_at ` +
 		`FROM public.entity_aliases ` +
 		`WHERE entity_id = $1 AND alias = $2`
 	// run
@@ -142,7 +142,7 @@ func EntityAliasByEntityIDAlias(ctx context.Context, db DB, entityID uuid.UUID, 
 	ea := EntityAlias{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, entityID, alias).Scan(&ea.ID, &ea.EntityID, &ea.CreatedAt, &ea.UpdatedAt, &ea.Alias); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, entityID, alias).Scan(&ea.ID, &ea.EntityID, &ea.Alias, &ea.CreatedAt, &ea.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &ea, nil
@@ -154,7 +154,7 @@ func EntityAliasByEntityIDAlias(ctx context.Context, db DB, entityID uuid.UUID, 
 func EntityAliasByID(ctx context.Context, db DB, id uuid.UUID) (*EntityAlias, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, entity_id, created_at, updated_at, alias ` +
+		`id, entity_id, alias, created_at, updated_at ` +
 		`FROM public.entity_aliases ` +
 		`WHERE id = $1`
 	// run
@@ -162,7 +162,7 @@ func EntityAliasByID(ctx context.Context, db DB, id uuid.UUID) (*EntityAlias, er
 	ea := EntityAlias{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&ea.ID, &ea.EntityID, &ea.CreatedAt, &ea.UpdatedAt, &ea.Alias); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&ea.ID, &ea.EntityID, &ea.Alias, &ea.CreatedAt, &ea.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &ea, nil
@@ -174,7 +174,7 @@ func EntityAliasByID(ctx context.Context, db DB, id uuid.UUID) (*EntityAlias, er
 func EntityAliasesByAlias(ctx context.Context, db DB, alias string) ([]*EntityAlias, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, entity_id, created_at, updated_at, alias ` +
+		`id, entity_id, alias, created_at, updated_at ` +
 		`FROM public.entity_aliases ` +
 		`WHERE alias = $1`
 	// run
@@ -191,7 +191,7 @@ func EntityAliasesByAlias(ctx context.Context, db DB, alias string) ([]*EntityAl
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&ea.ID, &ea.EntityID, &ea.CreatedAt, &ea.UpdatedAt, &ea.Alias); err != nil {
+		if err := rows.Scan(&ea.ID, &ea.EntityID, &ea.Alias, &ea.CreatedAt, &ea.UpdatedAt); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &ea)
@@ -208,7 +208,7 @@ func EntityAliasesByAlias(ctx context.Context, db DB, alias string) ([]*EntityAl
 func EntityAliasesByEntityID(ctx context.Context, db DB, entityID uuid.UUID) ([]*EntityAlias, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, entity_id, created_at, updated_at, alias ` +
+		`id, entity_id, alias, created_at, updated_at ` +
 		`FROM public.entity_aliases ` +
 		`WHERE entity_id = $1`
 	// run
@@ -225,7 +225,7 @@ func EntityAliasesByEntityID(ctx context.Context, db DB, entityID uuid.UUID) ([]
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&ea.ID, &ea.EntityID, &ea.CreatedAt, &ea.UpdatedAt, &ea.Alias); err != nil {
+		if err := rows.Scan(&ea.ID, &ea.EntityID, &ea.Alias, &ea.CreatedAt, &ea.UpdatedAt); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &ea)

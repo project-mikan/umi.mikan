@@ -1,7 +1,7 @@
 # ADR 0009: 自然言語による日記検索機能
 
 ## ステータス
-Proposed
+Accepted
 
 ## コンテキスト
 
@@ -278,32 +278,32 @@ diary_embedding_api_errors_total{provider="gemini",error_type="..."}
 
 ### データベース
 
-- [ ] pgvector拡張の有効化（マイグレーション）
-- [ ] `diary_embeddings` テーブル作成
-- [ ] ivfflatインデックス作成
-- [ ] xoコード生成
+- [x] pgvector拡張の有効化（schema/5000_diary_embeddings.sql）
+- [x] `diary_embeddings` テーブル作成
+- [x] ivfflatインデックス作成
+- [ ] xoコード生成（vectorカラム非対応のためカスタムクエリで実装）
 
 ### バックエンド
 
-- [ ] `SearchDiaryEntriesSemantic` RPC実装
-- [ ] Gemini Embedding APIクライアント実装
-- [ ] Subscriber: `DiaryEmbeddingHandler` 実装
-- [ ] スニペット生成ロジック実装
+- [x] `SearchDiaryEntriesSemantic` RPC実装
+- [x] Gemini Embedding APIクライアント実装（`GenerateEmbedding`メソッド）
+- [x] Subscriber: `DiaryEmbeddingHandler` 実装
+- [x] スニペット生成ロジック実装（先頭200文字）
 - [ ] 既存日記のバックフィルスクリプト作成
-- [ ] Prometheus メトリクス追加
+- [x] Prometheus メトリクス追加（`diary_embedding`カウンター）
 - [ ] テスト作成
 
 ### フロントエンド
 
-- [ ] 意味的検索トグル追加
-- [ ] 検索結果カードコンポーネント更新（スニペット・スコア表示）
+- [x] 意味的検索トグル追加（キーワード/意味的切り替えボタン）
+- [x] 検索結果カードコンポーネント更新（スニペット・スコア表示）
 - [ ] ローディング状態の実装
-- [ ] i18n対応（ja.json, en.json）
-- [ ] エラーハンドリング実装
+- [x] i18n対応（ja.json, en.json）
+- [x] エラーハンドリング実装
 
 ### インフラ
 
-- [ ] compose.yml: pgvector対応のPostgreSQLイメージへ変更
+- [x] compose.yml: pgvector対応のPostgreSQLイメージへ変更（`pgvector/pgvector:pg17`）
 - [ ] Grafana ダッシュボード更新
 
 ### ドキュメント

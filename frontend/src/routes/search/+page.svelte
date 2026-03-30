@@ -3,6 +3,7 @@
 	import { goto } from "$app/navigation";
 	import "$lib/i18n";
 	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+	import type { SemanticSearchResult } from "$lib/grpc/diary/diary_pb";
 	import type { PageData } from "./$types";
 
 	type TextSegment = { text: string; isMatch: boolean };
@@ -10,6 +11,11 @@
 	export let data: PageData;
 
 	let searchKeyword = data.keyword || "";
+	// 意味的検索が無効の場合はキーワードモードにフォールバック
+	let searchMode: "keyword" | "semantic" =
+		data.semanticSearchEnabled && data.mode === "semantic"
+			? "semantic"
+			: "keyword";
 
 	function _formatDate(ymd: {
 		year: number;
@@ -35,9 +41,19 @@
 		}
 	}
 
+	function _viewSemanticEntry(result: SemanticSearchResult) {
+		const date = result.date;
+		if (date) {
+			const dateStr = formatDateUrl(date);
+			goto(`/${dateStr}`);
+		}
+	}
+
 	function _handleSearch() {
 		if (searchKeyword.trim()) {
-			goto(`/search?q=${encodeURIComponent(searchKeyword.trim())}`);
+			goto(
+				`/search?q=${encodeURIComponent(searchKeyword.trim())}&mode=${searchMode}`,
+			);
 		}
 	}
 
@@ -124,6 +140,10 @@
 
 		return segments;
 	}
+
+	function _formatSimilarity(similarity: number): string {
+		return `${Math.round(similarity * 100)}%`;
+	}
 </script>
 
 <svelte:head>
@@ -135,30 +155,63 @@
 
 	<!-- 検索フォーム -->
 	<div class="mb-8">
+		<!-- 検索モード切り替えトグル（意味的検索が有効な場合のみ表示） -->
+		{#if data.semanticSearchEnabled}
+			<div class="flex gap-2 mb-3">
+				<button
+					on:click={() => { searchMode = 'keyword'; }}
+					class="px-4 py-1.5 text-sm rounded-full transition-colors {searchMode === 'keyword'
+						? 'bg-blue-600 dark:bg-blue-500 text-white'
+						: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
+				>
+					{$_('search.modeKeyword')}
+				</button>
+				<button
+					on:click={() => { searchMode = 'semantic'; }}
+					class="px-4 py-1.5 text-sm rounded-full transition-colors {searchMode === 'semantic'
+						? 'bg-purple-600 dark:bg-purple-500 text-white'
+						: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
+				>
+					{$_('search.modeSemantic')}
+				</button>
+			</div>
+		{/if}
+
 		<div class="flex gap-4">
 			<input
 				type="text"
 				bind:value={searchKeyword}
 				on:keydown={_handleKeydown}
-				placeholder={$_('search.placeholder')}
-				class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				placeholder={searchMode === 'semantic' ? $_('search.placeholderSemantic') : $_('search.placeholder')}
+				class="flex-1 px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:border-transparent {searchMode === 'semantic'
+					? 'border-purple-300 dark:border-purple-600 focus:ring-purple-500'
+					: 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'}"
 			/>
 			<button
 				on:click={_handleSearch}
-				class="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				class="px-6 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 {searchMode === 'semantic'
+					? 'bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 focus:ring-purple-500'
+					: 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:ring-blue-500'}"
 			>
 				{$_('search.button')}
 			</button>
 		</div>
+
+		{#if searchMode === 'semantic'}
+			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+				{$_('search.semanticDescription')}
+			</p>
+		{/if}
 	</div>
 
-	<!-- 検索結果 -->
+	<!-- エラー表示 -->
 	{#if data.error}
 		<div class="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-4">
-			{data.error}
+			{$_(`search.error.${data.error}`) || data.error}
 		</div>
 	{/if}
 
+	<!-- キーワード検索結果 -->
 	{#if data.searchResults}
 		<div class="mb-4">
 			<p class="text-gray-600 dark:text-gray-400">
@@ -221,6 +274,46 @@
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">{$_('search.noResultsHint')}</p>
 			</div>
 		{/if}
+
+	<!-- 意味的検索結果 -->
+	{:else if data.semanticResults}
+		<div class="mb-4">
+			<p class="text-gray-600 dark:text-gray-400">
+				「{data.keyword}」{$_('search.semanticResults')}: {data.semanticResults.results.length}{$_('search.resultCount')}
+			</p>
+		</div>
+
+		{#if data.semanticResults.results.length > 0}
+			<div class="grid gap-4">
+				{#each data.semanticResults.results as result}
+					<div
+						class="bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800 rounded-lg p-6 shadow-sm dark:shadow-gray-900/20 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow cursor-pointer"
+						on:click={() => _viewSemanticEntry(result)}
+						on:keydown={(e) => e.key === 'Enter' && _viewSemanticEntry(result)}
+						role="button"
+						tabindex="0"
+					>
+						<div class="flex justify-between items-start mb-2">
+							<h3 class="text-lg font-semibold text-purple-600 dark:text-purple-400">
+								{result.date ? _formatDate(result.date) : $_('diary.dateUnknown')}
+							</h3>
+							<span class="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+								{$_('search.similarity')}: {_formatSimilarity(result.similarity)}
+							</span>
+						</div>
+						<div class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap auto-phrase-target">
+							<p class="line-clamp-3">{result.snippet}</p>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<div class="text-center py-8 text-gray-500 dark:text-gray-400">
+				<p>{$_('search.noResults')}</p>
+				<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">{$_('search.semanticNoResultsHint')}</p>
+			</div>
+		{/if}
+
 	{:else if data.keyword}
 		<div class="text-center py-8 text-gray-500 dark:text-gray-400">
 			<p>{$_('search.searching')}</p>

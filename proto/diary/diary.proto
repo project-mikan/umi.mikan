@@ -144,6 +144,18 @@ service DiaryService {
   //   - NotFound: LLMキーが設定されていない
   rpc TriggerLatestTrend(TriggerLatestTrendRequest) returns (TriggerLatestTrendResponse);
 
+  // SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+  // Gemini Embedding APIを使用してベクトル類似度検索を行います。
+  //
+  // 例:
+  //   request: { query: "去年の夏に食べたもの", limit: 10 }
+  //   response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+  //
+  // エラー:
+  //   - NotFound: LLMキーが設定されていない
+  //   - InvalidArgument: クエリが空
+  rpc SearchDiaryEntriesSemantic(SearchDiaryEntriesSemanticRequest) returns (SearchDiaryEntriesSemanticResponse);
+
   // TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
   // Redis Pub/Subを通じてSubscriberが処理を実行します。
   //
@@ -345,6 +357,26 @@ message TriggerLatestTrendRequest {
 message TriggerLatestTrendResponse {
   bool success = 1; // 成功フラグ
   string message = 2; // メッセージ
+}
+
+// 意味的検索リクエスト
+message SearchDiaryEntriesSemanticRequest {
+  string query = 1;  // 自然言語クエリ
+  int32 limit = 2;   // 上位何件返すか (default: 10, max: 50)
+  // user_id は認証情報から取得
+}
+
+// 意味的検索の1件分の結果
+message SemanticSearchResult {
+  string diary_id = 1;
+  YMD date = 2;
+  string snippet = 3;     // クエリに関連する抜粋（最大200文字）
+  float similarity = 4;   // コサイン類似度スコア (0.0〜1.0)
+}
+
+// 意味的検索レスポンス
+message SearchDiaryEntriesSemanticResponse {
+  repeated SemanticSearchResult results = 1;
 }
 
 // 日記ハイライト生成トリガーリクエスト

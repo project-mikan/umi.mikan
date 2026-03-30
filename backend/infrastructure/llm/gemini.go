@@ -251,6 +251,32 @@ activities（活動・行動）:
 	return "", fmt.Errorf("unexpected content type")
 }
 
+// GenerateEmbedding はテキストのベクトル埋め込みを生成する
+// isDocument=true の場合はドキュメント用、false の場合はクエリ用のタスクタイプを使用
+func (g *GeminiClient) GenerateEmbedding(ctx context.Context, text string, isDocument bool) ([]float32, error) {
+	// TaskTypeは文字列: "RETRIEVAL_DOCUMENT" または "RETRIEVAL_QUERY"
+	taskType := "RETRIEVAL_QUERY"
+	if isDocument {
+		taskType = "RETRIEVAL_DOCUMENT"
+	}
+
+	config := &genai.EmbedContentConfig{
+		TaskType: taskType,
+	}
+
+	// genai.Text() は []*Content を返す
+	result, err := g.client.Models.EmbedContent(ctx, "text-embedding-004", genai.Text(text), config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate embedding: %w", err)
+	}
+
+	if len(result.Embeddings) == 0 {
+		return nil, fmt.Errorf("no embeddings returned")
+	}
+
+	return result.Embeddings[0].Values, nil
+}
+
 func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent string) (string, error) {
 	prompt := fmt.Sprintf(`以下の日記の内容を読んで、特に重要だと思う部分を1~3箇所抽出してください。
 

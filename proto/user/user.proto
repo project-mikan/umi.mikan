@@ -158,6 +158,7 @@ message LLMKeyInfo {
   bool auto_summary_daily = 3; // 日毎の自動要約生成
   bool auto_summary_monthly = 4; // 月毎の自動要約生成
   bool auto_latest_trend_enabled = 5; // 直近トレンド分析の自動生成
+  bool semantic_search_enabled = 6; // 意味的検索（RAG）機能の有効化
 }
 
 // LLMキー削除用のリクエスト
@@ -188,6 +189,7 @@ message UpdateAutoSummarySettingsRequest {
   bool auto_summary_daily = 2; // 日毎の自動要約生成
   bool auto_summary_monthly = 3; // 月毎の自動要約生成
   bool auto_latest_trend_enabled = 4; // 直近トレンド分析の自動生成
+  bool semantic_search_enabled = 5; // 意味的検索（RAG）機能の有効化
 }
 
 // 自動要約設定更新用のレスポンス
@@ -206,6 +208,7 @@ message GetAutoSummarySettingsResponse {
   bool auto_summary_daily = 1; // 日毎の自動要約生成
   bool auto_summary_monthly = 2; // 月毎の自動要約生成
   bool auto_latest_trend_enabled = 3; // 直近トレンド分析の自動生成
+  bool semantic_search_enabled = 4; // 意味的検索（RAG）機能の有効化
 }
 
 // Pub/Subメトリクス取得用のリクエスト

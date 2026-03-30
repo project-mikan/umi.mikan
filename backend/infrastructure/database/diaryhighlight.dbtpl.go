@@ -170,40 +170,6 @@ func DiaryHighlightByID(ctx context.Context, db DB, id uuid.UUID) (*DiaryHighlig
 	return &dh, nil
 }
 
-// DiaryHighlightsByDiaryID retrieves a row from 'public.diary_highlights' as a [DiaryHighlight].
-//
-// Generated from index 'idx_diary_highlights_diary_id'.
-func DiaryHighlightsByDiaryID(ctx context.Context, db DB, diaryID uuid.UUID) ([]*DiaryHighlight, error) {
-	// query
-	const sqlstr = `SELECT ` +
-		`id, diary_id, user_id, highlights, created_at, updated_at ` +
-		`FROM public.diary_highlights ` +
-		`WHERE diary_id = $1`
-	// run
-	logf(sqlstr, diaryID)
-	rows, err := db.QueryContext(ctx, sqlstr, diaryID)
-	if err != nil {
-		return nil, logerror(err)
-	}
-	defer rows.Close()
-	// process
-	var res []*DiaryHighlight
-	for rows.Next() {
-		dh := DiaryHighlight{
-			_exists: true,
-		}
-		// scan
-		if err := rows.Scan(&dh.ID, &dh.DiaryID, &dh.UserID, &dh.Highlights, &dh.CreatedAt, &dh.UpdatedAt); err != nil {
-			return nil, logerror(err)
-		}
-		res = append(res, &dh)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, logerror(err)
-	}
-	return res, nil
-}
-
 // Diary returns the Diary associated with the [DiaryHighlight]'s (DiaryID).
 //
 // Generated from foreign key 'diary_highlights_diary_id_fkey'.
