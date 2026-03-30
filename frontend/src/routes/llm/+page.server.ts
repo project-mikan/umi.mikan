@@ -55,6 +55,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 								response.summary.autoSummaryMonthlyEnabled,
 							autoLatestTrendEnabled: response.summary.autoLatestTrendEnabled,
 							latestTrendGeneratedAt: response.summary.latestTrendGeneratedAt,
+							semanticSearchEnabled: response.summary.semanticSearchEnabled,
+							totalEmbeddings: response.summary.totalEmbeddings,
+							pendingEmbeddings: response.summary.pendingEmbeddings,
 						}
 					: {
 							totalDailySummaries: 0,
@@ -65,6 +68,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 							autoSummaryMonthlyEnabled: false,
 							autoLatestTrendEnabled: false,
 							latestTrendGeneratedAt: "",
+							semanticSearchEnabled: false,
+							totalEmbeddings: 0,
+							pendingEmbeddings: 0,
 						},
 			},
 		};

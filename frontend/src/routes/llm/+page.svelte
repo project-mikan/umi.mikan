@@ -51,6 +51,20 @@
 			color: "text-orange-600 dark:text-orange-400",
 		},
 	];
+
+	// RAGカード用データ
+	$: ragCards = [
+		{
+			title: $_("llm.metrics.totalEmbeddings"),
+			value: metrics.summary.totalEmbeddings,
+			color: "text-purple-600 dark:text-purple-400",
+		},
+		{
+			title: $_("llm.metrics.pendingEmbeddings"),
+			value: metrics.summary.pendingEmbeddings,
+			color: "text-pink-600 dark:text-pink-400",
+		},
+	];
 </script>
 
 <Head title={$_("llm.title")} />
@@ -125,6 +139,45 @@
 				</span>
 			</div>
 		</div>
+	</Card>
+
+	<!-- RAG（自然言語検索）処理状況 -->
+	<Card>
+		<div class="flex items-center justify-between mb-4">
+			<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+				{$_("llm.metrics.ragTitle")}
+			</h3>
+			<span class="px-2 py-1 rounded-full text-xs font-medium {
+				metrics.summary.semanticSearchEnabled
+					? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+					: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+			}">
+				{metrics.summary.semanticSearchEnabled ? $_("common.enabled") : $_("common.disabled")}
+			</span>
+		</div>
+		{#if metrics.summary.semanticSearchEnabled}
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+				{#each ragCards as card}
+					<div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+						<div class="text-2xl font-bold {card.color}">
+							{card.value}
+						</div>
+						<div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+							{card.title}
+						</div>
+					</div>
+				{/each}
+			</div>
+			{#if metrics.summary.pendingEmbeddings > 0}
+				<p class="text-xs text-gray-500 dark:text-gray-400 auto-phrase-target">
+					{$_("llm.metrics.ragPendingNote")}
+				</p>
+			{/if}
+		{:else}
+			<p class="text-sm text-gray-500 dark:text-gray-400 auto-phrase-target">
+				{$_("llm.metrics.ragDisabledNote")}
+			</p>
+		{/if}
 	</Card>
 
 	<!-- トレンド生成状況 -->

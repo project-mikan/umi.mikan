@@ -600,14 +600,25 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 			WHERE user_id = $1
 			AND created_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '24 hours')
 			GROUP BY date_trunc('hour', to_timestamp(created_at))
+		),
+		diary_embeddings AS (
+			SELECT
+				date_trunc('hour', created_at) as hour,
+				COUNT(*) as created_count
+			FROM diary_embeddings
+			WHERE user_id = $1
+			AND created_at >= NOW() - INTERVAL '24 hours'
+			GROUP BY date_trunc('hour', created_at)
 		)
 		SELECT
 			h.hour,
 			COALESCE(ds.created_count, 0) as daily_summaries_processed,
-			COALESCE(ms.created_count, 0) as monthly_summaries_processed
+			COALESCE(ms.created_count, 0) as monthly_summaries_processed,
+			COALESCE(de.created_count, 0) as diary_embeddings_processed
 		FROM hours h
 		LEFT JOIN daily_summaries ds ON h.hour = ds.hour
 		LEFT JOIN monthly_summaries ms ON h.hour = ms.hour
+		LEFT JOIN diary_embeddings de ON h.hour = de.hour
 		ORDER BY h.hour
 	`
 
@@ -624,9 +635,9 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 	var metrics []*g.HourlyMetrics
 	for rows.Next() {
 		var hour time.Time
-		var dailyProcessed, monthlyProcessed int32
+		var dailyProcessed, monthlyProcessed, embeddingsProcessed int32
 
-		if err := rows.Scan(&hour, &dailyProcessed, &monthlyProcessed); err != nil {
+		if err := rows.Scan(&hour, &dailyProcessed, &monthlyProcessed, &embeddingsProcessed); err != nil {
 			return nil, err
 		}
 
@@ -638,6 +649,8 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 			MonthlySummariesFailed:    0, // TODO: 失敗ログを記録する仕組みを追加後に実装
 			LatestTrendsProcessed:     0, // トレンド生成履歴はDBに保存されていないため0
 			LatestTrendsFailed:        0, // トレンド生成履歴はDBに保存されていないため0
+			DiaryEmbeddingsProcessed:  embeddingsProcessed,
+			DiaryEmbeddingsFailed:     0, // TODO: 失敗ログを記録する仕組みを追加後に実装
 		})
 	}
 
@@ -767,10 +780,10 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		return nil, err
 	}
 
-	// 自動要約設定を取得
-	var autoDaily, autoMonthly, autoLatestTrend bool
-	autoQuery := `SELECT auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	if err := s.DB.(*sql.DB).QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly, &autoLatestTrend); err != nil {
+	// 自動要約設定とRAG設定を取得
+	var autoDaily, autoMonthly, autoLatestTrend, semanticSearchEnabled bool
+	autoQuery := `SELECT auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	if err := s.DB.(*sql.DB).QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly, &autoLatestTrend, &semanticSearchEnabled); err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
 		}
@@ -778,6 +791,28 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		autoDaily = false
 		autoMonthly = false
 		autoLatestTrend = false
+		semanticSearchEnabled = false
+	}
+
+	// embedding統計を取得
+	var totalEmbeddings int32
+	embeddingCountQuery := `SELECT COUNT(*) FROM diary_embeddings WHERE user_id = $1`
+	if err := s.DB.(*sql.DB).QueryRow(embeddingCountQuery, userID).Scan(&totalEmbeddings); err != nil {
+		return nil, err
+	}
+
+	// embedding未生成の日記数を取得
+	var pendingEmbeddings int32
+	pendingEmbeddingsQuery := `
+		SELECT COUNT(*)
+		FROM diaries d
+		WHERE d.user_id = $1
+		  AND NOT EXISTS (
+		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
+		  )
+	`
+	if err := s.DB.(*sql.DB).QueryRow(pendingEmbeddingsQuery, userID).Scan(&pendingEmbeddings); err != nil {
+		return nil, err
 	}
 
 	// 最新トレンド生成日時をRedisから取得
@@ -808,5 +843,8 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		AutoSummaryMonthlyEnabled: autoMonthly,
 		AutoLatestTrendEnabled:    autoLatestTrend,
 		LatestTrendGeneratedAt:    latestTrendGeneratedAt,
+		SemanticSearchEnabled:     semanticSearchEnabled,
+		TotalEmbeddings:           totalEmbeddings,
+		PendingEmbeddings:         pendingEmbeddings,
 	}, nil
 }
