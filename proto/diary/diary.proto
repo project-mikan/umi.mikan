@@ -179,6 +179,23 @@ service DiaryService {
   //   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
   //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
   rpc GetDiaryHighlight(GetDiaryHighlightRequest) returns (GetDiaryHighlightResponse);
+
+  // RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+  // 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+  //
+  // エラー:
+  //   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+  rpc RegenerateAllEmbeddings(RegenerateAllEmbeddingsRequest) returns (RegenerateAllEmbeddingsResponse);
+
+  // GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+  //
+  // 例:
+  //   request: { diary_id: "uuid" }
+  //   response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+  //
+  // エラー:
+  //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+  rpc GetDiaryEmbeddingStatus(GetDiaryEmbeddingStatusRequest) returns (GetDiaryEmbeddingStatusResponse);
 }
 
 message YMD {
@@ -409,4 +426,28 @@ message GetDiaryHighlightResponse {
   repeated HighlightRange highlights = 1; // ハイライトリスト
   int64 created_at = 2; // 作成日時（Unix timestamp）
   int64 updated_at = 3; // 更新日時（Unix timestamp）
+}
+
+// 全日記のembedding再生成リクエスト
+message RegenerateAllEmbeddingsRequest {
+  // 空のリクエスト（認証はヘッダーから）
+}
+
+// 全日記のembedding再生成レスポンス
+message RegenerateAllEmbeddingsResponse {
+  bool success = 1;
+  int32 queued_count = 2; // キューに追加した日記数
+}
+
+// 日記のRAGインデックス状態取得リクエスト
+message GetDiaryEmbeddingStatusRequest {
+  string diary_id = 1; // 日記ID
+}
+
+// 日記のRAGインデックス状態取得レスポンス
+message GetDiaryEmbeddingStatusResponse {
+  bool indexed = 1;           // インデックス済みかどうか
+  string model_version = 2;   // 使用したモデルバージョン
+  int64 created_at = 3;       // 埋め込み作成日時（Unix timestamp）
+  int64 updated_at = 4;       // 埋め込み更新日時（Unix timestamp）
 }

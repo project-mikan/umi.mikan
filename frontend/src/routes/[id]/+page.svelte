@@ -483,6 +483,30 @@ use:enhance={createSubmitHandler(
 					{/if}
 				</div>
 
+				<!-- RAGインデックス状態 -->
+				{#if data.semanticSearchEnabled && data.entry}
+					<div class="mt-2 flex items-center gap-2 text-xs">
+						{#if data.embeddingStatus?.indexed}
+							<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+								<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+								</svg>
+								{$_("diary.embedding.indexed")}
+							</span>
+							<span class="text-gray-400 dark:text-gray-500">
+								{$_("diary.embedding.indexedAt")}: {new Date(data.embeddingStatus.updatedAt * 1000).toLocaleString()}
+							</span>
+						{:else}
+							<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+								<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+								</svg>
+								{$_("diary.embedding.notIndexed")}
+							</span>
+						{/if}
+					</div>
+				{/if}
+
 
 				<div class="flex justify-between">
 					<div>

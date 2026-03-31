@@ -1097,6 +1097,117 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}, nil
 }
 
+// RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加する
+func (s *DiaryEntry) RegenerateAllEmbeddings(
+	ctx context.Context,
+	_ *g.RegenerateAllEmbeddingsRequest,
+) (*g.RegenerateAllEmbeddingsResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザーのAPIキーと設定を取得
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Gemini API key not found")
+	}
+
+	// 意味的検索が有効化されているか確認
+	if !userLLM.SemanticSearchEnabled {
+		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
+	}
+
+	if s.Redis == nil {
+		return nil, status.Error(codes.Internal, "Redis not configured")
+	}
+
+	// embedding未生成の日記ID一覧を取得
+	query := `
+		SELECT d.id
+		FROM diaries d
+		WHERE d.user_id = $1
+		  AND NOT EXISTS (
+		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
+		  )
+		ORDER BY d.date DESC
+	`
+	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			fmt.Printf("Failed to close rows: %v\n", closeErr)
+		}
+	}()
+
+	// 各日記のembedding生成メッセージをキューに追加
+	var count int32
+	for rows.Next() {
+		var diaryID string
+		if err := rows.Scan(&diaryID); err != nil {
+			continue
+		}
+		s.publishDiaryEmbeddingMessage(ctx, userIDStr, diaryID)
+		count++
+	}
+
+	return &g.RegenerateAllEmbeddingsResponse{
+		Success:     true,
+		QueuedCount: count,
+	}, nil
+}
+
+// GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
+func (s *DiaryEntry) GetDiaryEmbeddingStatus(
+	ctx context.Context,
+	req *g.GetDiaryEmbeddingStatusRequest,
+) (*g.GetDiaryEmbeddingStatusResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	diaryID, err := uuid.Parse(req.DiaryId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid diary ID")
+	}
+
+	// 日記が存在し、このユーザーのものかを確認
+	diary, err := database.DiaryByID(ctx, s.DB, diaryID)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Diary not found")
+	}
+	if diary.UserID != userID {
+		return nil, status.Errorf(codes.PermissionDenied, "Permission denied")
+	}
+
+	embeddingStatus, err := database.GetDiaryEmbeddingStatus(ctx, s.DB, diaryID, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get embedding status: %v", err)
+	}
+
+	resp := &g.GetDiaryEmbeddingStatusResponse{
+		Indexed: embeddingStatus.Indexed,
+	}
+	if embeddingStatus.Indexed {
+		resp.ModelVersion = embeddingStatus.ModelVersion
+		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
+		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
+	}
+
+	return resp, nil
+}
+
 // generateSnippet はコンテンツから最大maxLen文字のスニペットを生成する
 func generateSnippet(content string, maxLen int) string {
 	runes := []rune(content)

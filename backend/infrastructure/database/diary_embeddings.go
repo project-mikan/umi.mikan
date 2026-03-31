@@ -2,6 +2,8 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,6 +17,40 @@ type DiaryEmbeddingSearchResult struct {
 	Date       time.Time
 	Content    string
 	Similarity float64
+}
+
+// DiaryEmbeddingStatus は日記のRAGインデックス状態を表す
+type DiaryEmbeddingStatus struct {
+	Indexed      bool
+	ModelVersion string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+// GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
+func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UUID) (*DiaryEmbeddingStatus, error) {
+	query := `
+		SELECT model_version, created_at, updated_at
+		FROM diary_embeddings
+		WHERE diary_id = $1 AND user_id = $2
+	`
+
+	var modelVersion string
+	var createdAt, updatedAt time.Time
+	err := db.QueryRowContext(ctx, query, diaryID, userID).Scan(&modelVersion, &createdAt, &updatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &DiaryEmbeddingStatus{Indexed: false}, nil
+		}
+		return nil, fmt.Errorf("failed to get diary embedding status: %w", err)
+	}
+
+	return &DiaryEmbeddingStatus{
+		Indexed:      true,
+		ModelVersion: modelVersion,
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
+	}, nil
 }
 
 // embeddingToSQL はfloat32スライスをpgvector形式の文字列に変換する

@@ -246,6 +246,12 @@
 			"statusProcessing": "ハイライトを生成中です。しばらくお待ちください",
 			"contentTooShort": "ハイライト生成には最低500文字必要です",
 			"apiKeyNotConfigured": "Gemini APIキーが設定されていません。設定ページから登録してください"
+		},
+		"embedding": {
+			"indexed": "意味的検索：インデックス済み",
+			"notIndexed": "意味的検索：未インデックス",
+			"indexedAt": "インデックス日時",
+			"modelVersion": "モデル"
 		}
 	},
 	"date": {
@@ -447,6 +453,9 @@
 			"totalEmbeddings": "生成済みembedding数",
 			"pendingEmbeddings": "未生成embedding数",
 			"ragPendingNote": "未生成の日記は、次回保存時に自動でインデックスが生成されます。",
+			"ragRegenerateButton": "未生成の日記を一括インデックス",
+			"ragRegenerateSuccess": "{count}件の日記をキューに追加しました。バックグラウンドで順次インデックスが生成されます。",
+			"ragRegenerateFailed": "インデックス生成のキュー追加に失敗しました。",
 			"ragDisabledNote": "設定ページでGemini APIキーを登録し、自然言語検索を有効にするとここに状況が表示されます。",
 			"aboutTitle": "LLM処理について",
 			"aboutDescription": "このページでは、AI（Gemini）による自動まとめ処理の状況を確認できます。",

@@ -246,6 +246,12 @@
 			"statusProcessing": "Generating highlights. Please wait",
 			"contentTooShort": "At least 500 characters are required for highlight generation",
 			"apiKeyNotConfigured": "Gemini API key is not configured. Please register it in the settings page"
+		},
+		"embedding": {
+			"indexed": "Semantic search: Indexed",
+			"notIndexed": "Semantic search: Not indexed",
+			"indexedAt": "Indexed at",
+			"modelVersion": "Model"
 		}
 	},
 	"date": {
@@ -447,6 +453,9 @@
 			"totalEmbeddings": "Generated embeddings",
 			"pendingEmbeddings": "Pending embeddings",
 			"ragPendingNote": "Pending diary entries will be indexed automatically the next time they are saved.",
+			"ragRegenerateButton": "Index all pending entries",
+			"ragRegenerateSuccess": "Queued {count} entries. Indexes will be generated in the background.",
+			"ragRegenerateFailed": "Failed to queue index generation.",
 			"ragDisabledNote": "Register a Gemini API key in settings and enable natural language search to see the status here.",
 			"aboutTitle": "About LLM Processing",
 			"aboutDescription": "This page shows the status of automated summary processing by AI (Gemini).",

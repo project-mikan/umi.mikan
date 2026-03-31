@@ -6,6 +6,7 @@ import {
 	getDailySummary,
 	getDiaryEntry,
 	updateDiaryEntry,
+	getDiaryEmbeddingStatus,
 } from "$lib/server/diary-api";
 import { unixToMilliseconds } from "$lib/utils/token-utils";
 import { getUserInfo } from "$lib/server/auth-api";
@@ -91,6 +92,34 @@ export const load: PageServerLoad = async ({
 			dailySummary = null;
 		}
 
+		// RAGインデックス状態を取得（日記が存在しかつ意味的検索が有効な場合）
+		const semanticSearchEnabled =
+			userInfo.llmKeys?.find((k) => k.llmProvider === 1)
+				?.semanticSearchEnabled ?? false;
+		let embeddingStatus: {
+			indexed: boolean;
+			modelVersion: string;
+			createdAt: number;
+			updatedAt: number;
+		} | null = null;
+		if (response.entry && semanticSearchEnabled) {
+			try {
+				const statusResponse = await getDiaryEmbeddingStatus({
+					diaryId: response.entry.id,
+					accessToken: authResult.accessToken,
+				});
+				embeddingStatus = {
+					indexed: statusResponse.indexed,
+					modelVersion: statusResponse.modelVersion,
+					createdAt: Number(statusResponse.createdAt),
+					updatedAt: Number(statusResponse.updatedAt),
+				};
+			} catch (_embeddingErr) {
+				// 取得失敗は無視
+				embeddingStatus = null;
+			}
+		}
+
 		// 過去の日記を並行して取得
 		const pastDatesArray = [
 			pastDates.oneWeekAgo,
@@ -168,6 +197,8 @@ export const load: PageServerLoad = async ({
 			},
 			dailySummary,
 			today: todayYMD,
+			semanticSearchEnabled,
+			embeddingStatus,
 		};
 	} catch (err) {
 		if (err instanceof Response) {
@@ -257,6 +288,8 @@ export const load: PageServerLoad = async ({
 				},
 				dailySummary: null,
 				today: todayYMD,
+				semanticSearchEnabled: false,
+				embeddingStatus: null,
 			};
 		}
 

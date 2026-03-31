@@ -35,6 +35,8 @@ const (
 	DiaryService_SearchDiaryEntriesSemantic_FullMethodName = "/diary.DiaryService/SearchDiaryEntriesSemantic"
 	DiaryService_TriggerDiaryHighlight_FullMethodName      = "/diary.DiaryService/TriggerDiaryHighlight"
 	DiaryService_GetDiaryHighlight_FullMethodName          = "/diary.DiaryService/GetDiaryHighlight"
+	DiaryService_RegenerateAllEmbeddings_FullMethodName    = "/diary.DiaryService/RegenerateAllEmbeddings"
+	DiaryService_GetDiaryEmbeddingStatus_FullMethodName    = "/diary.DiaryService/GetDiaryEmbeddingStatus"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -216,6 +218,22 @@ type DiaryServiceClient interface {
 	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryHighlight(ctx context.Context, in *GetDiaryHighlightRequest, opts ...grpc.CallOption) (*GetDiaryHighlightResponse, error)
+	// RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+	// 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+	//
+	// エラー:
+	//   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+	RegenerateAllEmbeddings(ctx context.Context, in *RegenerateAllEmbeddingsRequest, opts ...grpc.CallOption) (*RegenerateAllEmbeddingsResponse, error)
+	// GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+	//
+	// エラー:
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	GetDiaryEmbeddingStatus(ctx context.Context, in *GetDiaryEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetDiaryEmbeddingStatusResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -380,6 +398,26 @@ func (c *diaryServiceClient) GetDiaryHighlight(ctx context.Context, in *GetDiary
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDiaryHighlightResponse)
 	err := c.cc.Invoke(ctx, DiaryService_GetDiaryHighlight_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) RegenerateAllEmbeddings(ctx context.Context, in *RegenerateAllEmbeddingsRequest, opts ...grpc.CallOption) (*RegenerateAllEmbeddingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegenerateAllEmbeddingsResponse)
+	err := c.cc.Invoke(ctx, DiaryService_RegenerateAllEmbeddings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) GetDiaryEmbeddingStatus(ctx context.Context, in *GetDiaryEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetDiaryEmbeddingStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDiaryEmbeddingStatusResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetDiaryEmbeddingStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -565,6 +603,22 @@ type DiaryServiceServer interface {
 	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error)
+	// RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+	// 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+	//
+	// エラー:
+	//   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+	RegenerateAllEmbeddings(context.Context, *RegenerateAllEmbeddingsRequest) (*RegenerateAllEmbeddingsResponse, error)
+	// GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+	//
+	// エラー:
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	GetDiaryEmbeddingStatus(context.Context, *GetDiaryEmbeddingStatusRequest) (*GetDiaryEmbeddingStatusResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -622,6 +676,12 @@ func (UnimplementedDiaryServiceServer) TriggerDiaryHighlight(context.Context, *T
 }
 func (UnimplementedDiaryServiceServer) GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDiaryHighlight not implemented")
+}
+func (UnimplementedDiaryServiceServer) RegenerateAllEmbeddings(context.Context, *RegenerateAllEmbeddingsRequest) (*RegenerateAllEmbeddingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RegenerateAllEmbeddings not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetDiaryEmbeddingStatus(context.Context, *GetDiaryEmbeddingStatusRequest) (*GetDiaryEmbeddingStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDiaryEmbeddingStatus not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -932,6 +992,42 @@ func _DiaryService_GetDiaryHighlight_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_RegenerateAllEmbeddings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegenerateAllEmbeddingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).RegenerateAllEmbeddings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_RegenerateAllEmbeddings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).RegenerateAllEmbeddings(ctx, req.(*RegenerateAllEmbeddingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_GetDiaryEmbeddingStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiaryEmbeddingStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetDiaryEmbeddingStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetDiaryEmbeddingStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetDiaryEmbeddingStatus(ctx, req.(*GetDiaryEmbeddingStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiaryService_ServiceDesc is the grpc.ServiceDesc for DiaryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1002,6 +1098,14 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDiaryHighlight",
 			Handler:    _DiaryService_GetDiaryHighlight_Handler,
+		},
+		{
+			MethodName: "RegenerateAllEmbeddings",
+			Handler:    _DiaryService_RegenerateAllEmbeddings_Handler,
+		},
+		{
+			MethodName: "GetDiaryEmbeddingStatus",
+			Handler:    _DiaryService_GetDiaryEmbeddingStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

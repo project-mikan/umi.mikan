@@ -37,6 +37,10 @@ import {
 	type TriggerDiaryHighlightResponse,
 	GetDiaryHighlightRequestSchema,
 	type GetDiaryHighlightResponse,
+	RegenerateAllEmbeddingsRequestSchema,
+	type RegenerateAllEmbeddingsResponse,
+	GetDiaryEmbeddingStatusRequestSchema,
+	type GetDiaryEmbeddingStatusResponse,
 } from "$lib/grpc/diary/diary_pb";
 
 function createAuthenticatedTransport(accessToken: string) {
@@ -331,4 +335,33 @@ export async function searchDiaryEntriesSemantic(
 	});
 
 	return await client.searchDiaryEntriesSemantic(request);
+}
+
+export interface RegenerateAllEmbeddingsParams {
+	accessToken: string;
+}
+
+export async function regenerateAllEmbeddings(
+	params: RegenerateAllEmbeddingsParams,
+): Promise<RegenerateAllEmbeddingsResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+	const request = create(RegenerateAllEmbeddingsRequestSchema, {});
+	return await client.regenerateAllEmbeddings(request);
+}
+
+export interface GetDiaryEmbeddingStatusParams {
+	diaryId: string;
+	accessToken: string;
+}
+
+export async function getDiaryEmbeddingStatus(
+	params: GetDiaryEmbeddingStatusParams,
+): Promise<GetDiaryEmbeddingStatusResponse> {
+	const transport = createAuthenticatedTransport(params.accessToken);
+	const client = createClient(DiaryService, transport);
+	const request = create(GetDiaryEmbeddingStatusRequestSchema, {
+		diaryId: params.diaryId,
+	});
+	return await client.getDiaryEmbeddingStatus(request);
 }

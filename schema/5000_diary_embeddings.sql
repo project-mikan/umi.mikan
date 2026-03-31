@@ -14,8 +14,8 @@ CREATE TABLE diary_embeddings (
     UNIQUE(diary_id)
 );
 
--- コサイン類似度でのANN検索インデックス
+-- コサイン類似度でのANN検索インデックス（HNSWはivfflatより行数制限がなく安定）
 CREATE INDEX idx_diary_embeddings_embedding ON diary_embeddings
-    USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+    USING hnsw (embedding vector_cosine_ops);
 
 CREATE INDEX idx_diary_embeddings_user_id ON diary_embeddings(user_id);
