@@ -8,6 +8,7 @@ import {
 	deleteAccount,
 	updateAutoSummarySettings,
 } from "$lib/server/auth-api";
+import { regenerateAllEmbeddings } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -308,6 +309,33 @@ export const actions: Actions = {
 			return fail(500, {
 				error: "updateFailed",
 				action: "updateAutoSummarySettings",
+			});
+		}
+	},
+
+	regenerateAllEmbeddings: async ({ cookies }) => {
+		const authResult = await ensureValidAccessToken(cookies);
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
+			return fail(401, {
+				error: "unauthorized",
+				action: "regenerateAllEmbeddings",
+			});
+		}
+
+		try {
+			const response = await regenerateAllEmbeddings({
+				accessToken: authResult.accessToken,
+			});
+			return {
+				success: true,
+				queuedCount: response.queuedCount,
+				action: "regenerateAllEmbeddings",
+			};
+		} catch (err) {
+			console.error("Failed to regenerate embeddings:", err);
+			return fail(500, {
+				error: "regenerateFailed",
+				action: "regenerateAllEmbeddings",
 			});
 		}
 	},

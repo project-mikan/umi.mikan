@@ -21,6 +21,7 @@
 	let autoSummaryLoading = false;
 	let deleteLLMKeyLoading = false;
 	let deleteAccountLoading = false;
+	let regenerateEmbeddingsLoading = false;
 
 	// Modal states
 	let showDeleteLLMTokenConfirm = false;
@@ -598,7 +599,44 @@
 							{$_(`settings.messages.${form.message}`) || form.message}
 						</div>
 					{/if}
+					</form>
+					<!-- 一括インデックス生成（formネスト回避のため外側に配置） -->
+					{#if semanticSearchEnabled}
+						<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+							<p class="text-sm text-gray-700 dark:text-gray-300 mb-2 auto-phrase-target">
+								{$_("settings.autoSummary.regenerateEmbeddingsDescription")}
+							</p>
+							<form
+								method="POST"
+								action="?/regenerateAllEmbeddings"
+								use:enhance={() => {
+									regenerateEmbeddingsLoading = true;
+									return async ({ update }) => {
+										regenerateEmbeddingsLoading = false;
+										await update();
+									};
+								}}
+							>
+								<button
+									type="submit"
+									disabled={regenerateEmbeddingsLoading}
+									class="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+								>
+									{regenerateEmbeddingsLoading ? $_("common.loading") : $_("settings.autoSummary.regenerateEmbeddingsButton")}
+								</button>
 							</form>
+							{#if form?.success && isMessageForAction("regenerateAllEmbeddings")}
+								<p class="mt-2 text-sm text-green-600 dark:text-green-400 auto-phrase-target">
+									{$_("settings.autoSummary.regenerateEmbeddingsSuccess", { values: { count: form.queuedCount } })}
+								</p>
+							{/if}
+							{#if form?.error && isMessageForAction("regenerateAllEmbeddings")}
+								<p class="mt-2 text-sm text-red-600 dark:text-red-400 auto-phrase-target">
+									{$_("settings.autoSummary.regenerateEmbeddingsFailed")}
+								</p>
+							{/if}
+						</div>
+					{/if}
 						</section>
 					{/if}
 
