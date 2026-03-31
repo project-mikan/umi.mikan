@@ -1150,7 +1150,7 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 	}
 
 	// 6. diary_embeddingsテーブルにUPSERT
-	if err := database.UpsertDiaryEmbedding(ctx, db, diaryUUID, userUUID, embedding, "text-embedding-004"); err != nil {
+	if err := database.UpsertDiaryEmbedding(ctx, db, diaryUUID, userUUID, embedding, "gemini-embedding-001"); err != nil {
 		return fmt.Errorf("failed to upsert diary embedding: %w", err)
 	}
 

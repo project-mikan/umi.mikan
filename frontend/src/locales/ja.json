@@ -255,6 +255,7 @@
 			"indexed": "意味的検索：インデックス済み",
 			"notIndexed": "意味的検索：未インデックス",
 			"indexedAt": "インデックス日時",
+			"updatedAt": "最終更新日時",
 			"modelVersion": "モデル"
 		}
 	},

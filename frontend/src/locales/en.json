@@ -255,6 +255,7 @@
 			"indexed": "Semantic search: Indexed",
 			"notIndexed": "Semantic search: Not indexed",
 			"indexedAt": "Indexed at",
+			"updatedAt": "Last updated at",
 			"modelVersion": "Model"
 		}
 	},

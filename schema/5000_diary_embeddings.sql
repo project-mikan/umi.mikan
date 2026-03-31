@@ -7,8 +7,8 @@ CREATE TABLE diary_embeddings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     diary_id UUID NOT NULL REFERENCES diaries(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    embedding vector(1536) NOT NULL, -- Gemini text-embedding-004 の次元数
-    model_version TEXT NOT NULL DEFAULT 'text-embedding-004',
+    embedding vector(1536) NOT NULL, -- Gemini gemini-embedding-001 の次元数（MRL切り詰め）
+    model_version TEXT NOT NULL DEFAULT 'gemini-embedding-001',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(diary_id)

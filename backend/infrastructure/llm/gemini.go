@@ -260,12 +260,15 @@ func (g *GeminiClient) GenerateEmbedding(ctx context.Context, text string, isDoc
 		taskType = "RETRIEVAL_DOCUMENT"
 	}
 
+	// MRLにより1536次元に切り詰め（HNSWインデックスの上限2000次元に対応）
+	outputDim := int32(1536)
 	config := &genai.EmbedContentConfig{
-		TaskType: taskType,
+		TaskType:             taskType,
+		OutputDimensionality: &outputDim,
 	}
 
 	// genai.Text() は []*Content を返す
-	result, err := g.client.Models.EmbedContent(ctx, "text-embedding-004", genai.Text(text), config)
+	result, err := g.client.Models.EmbedContent(ctx, "gemini-embedding-001", genai.Text(text), config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate embedding: %w", err)
 	}
