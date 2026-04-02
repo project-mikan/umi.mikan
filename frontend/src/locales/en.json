@@ -452,6 +452,8 @@
 			"processedCount": "Processed Count",
 			"dailySummaries": "Daily Summaries",
 			"monthlySummaries": "Monthly Summaries",
+			"diaryEmbeddings": "Embedding Generation",
+			"semanticSearches": "Semantic Searches",
 			"dailySummary": "Daily Summary",
 			"monthlySummary": "Monthly Summary",
 			"latestTrend": "Trend Analysis",

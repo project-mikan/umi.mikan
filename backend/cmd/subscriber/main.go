@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -1114,10 +1115,11 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 		return nil
 	}
 
-	// 2. 日記のタイトル（content先頭）と本文を取得
+	// 2. 日記の本文と日付を取得
 	var diaryContent string
-	contentQuery := `SELECT content FROM diaries WHERE id = $1 AND user_id = $2`
-	err = db.QueryRowContext(ctx, contentQuery, diaryID, userID).Scan(&diaryContent)
+	var diaryDate time.Time
+	contentQuery := `SELECT content, date FROM diaries WHERE id = $1 AND user_id = $2`
+	err = db.QueryRowContext(ctx, contentQuery, diaryID, userID).Scan(&diaryContent, &diaryDate)
 	if err != nil {
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
@@ -1133,8 +1135,12 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 		}
 	}()
 
+	// マークダウン記法を除去してノイズを低減し、日付情報を先頭に付与して時間的クエリの精度を向上させる
+	cleanContent := stripMarkdown(diaryContent)
+	enrichedContent := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), cleanContent)
+
 	// 4. 埋め込みベクトルを生成（ドキュメント用タスクタイプ）
-	embedding, err := geminiClient.GenerateEmbedding(ctx, diaryContent, true)
+	embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedContent, true)
 	if err != nil {
 		return fmt.Errorf("failed to generate embedding: %w", err)
 	}
@@ -1160,4 +1166,32 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 		"diary_id": diaryID,
 	}).Info("Successfully generated and saved diary embedding")
 	return nil
+}
+
+// stripMarkdown はマークダウン記法をプレーンテキストに変換する
+// 記号ノイズを除去して埋め込みベクトルの意味的品質を向上させる
+func stripMarkdown(text string) string {
+	// コードブロック（内容は保持）
+	text = regexp.MustCompile("(?s)```[a-z]*\n?(.*?)```").ReplaceAllString(text, "$1")
+	// インラインコード（内容は保持）
+	text = regexp.MustCompile("`([^`]+)`").ReplaceAllString(text, "$1")
+	// 見出し記号を除去
+	text = regexp.MustCompile(`(?m)^#{1,6}\s+`).ReplaceAllString(text, "")
+	// 太字・斜体（内容は保持）
+	text = regexp.MustCompile(`\*{1,3}([^*\n]+)\*{1,3}`).ReplaceAllString(text, "$1")
+	text = regexp.MustCompile(`_{1,3}([^_\n]+)_{1,3}`).ReplaceAllString(text, "$1")
+	// 画像を除去
+	text = regexp.MustCompile(`!\[[^\]]*\]\([^\)]+\)`).ReplaceAllString(text, "")
+	// リンク（テキスト部分を保持）
+	text = regexp.MustCompile(`\[([^\]]+)\]\([^\)]+\)`).ReplaceAllString(text, "$1")
+	// リスト記号を除去
+	text = regexp.MustCompile(`(?m)^[\s]*[-*+]\s+`).ReplaceAllString(text, "")
+	text = regexp.MustCompile(`(?m)^[\s]*\d+\.\s+`).ReplaceAllString(text, "")
+	// 引用記号を除去
+	text = regexp.MustCompile(`(?m)^>\s*`).ReplaceAllString(text, "")
+	// 水平線を除去
+	text = regexp.MustCompile(`(?m)^[-*_]{3,}\s*$`).ReplaceAllString(text, "")
+	// 余分な空白行を整理
+	text = regexp.MustCompile(`\n{3,}`).ReplaceAllString(text, "\n\n")
+	return strings.TrimSpace(text)
 }

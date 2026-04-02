@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -1069,11 +1070,51 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		limit = 50
 	}
 
-	// pgvectorでコサイン類似度ANN検索
-	const similarityThreshold = 0.5
-	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, s.DB, userID, queryEmbedding, limit, similarityThreshold)
+	// トランザクションを開始して ef_search を設定（同一コネクションを保証するため）
+	sqlDB := s.DB.(*sql.DB)
+	tx, err := sqlDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to begin transaction: %v", err)
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	// HNSWの検索精度を向上させる（デフォルト40→100で再現率を大幅改善）
+	if _, err := tx.ExecContext(ctx, "SET LOCAL hnsw.ef_search = 100"); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to set hnsw.ef_search: %v", err)
+	}
+
+	// pgvectorでコサイン類似度ANN検索（閾値を0.3に下げて関連日記のヒット率を向上）
+	const similarityThreshold = 0.3
+	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, tx, userID, queryEmbedding, limit, similarityThreshold)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to search diary entries: %v", err)
+	}
+
+	// ハイブリッド検索: キーワード LIKE 検索で補完（ベクトル検索が拾えない固有名詞・専門語をカバー）
+	vectorIDs := make(map[uuid.UUID]bool, len(searchResults))
+	for _, sr := range searchResults {
+		vectorIDs[sr.DiaryID] = true
+	}
+	keywordResults, _ := database.DiariesByUserIDAndContent(ctx, tx, userID.String(), req.Query)
+	for _, d := range keywordResults {
+		if !vectorIDs[d.ID] {
+			searchResults = append(searchResults, &database.DiaryEmbeddingSearchResult{
+				DiaryID:    d.ID,
+				Date:       d.Date,
+				Content:    d.Content,
+				Similarity: similarityThreshold, // キーワードヒット分には閾値スコアを付与
+			})
+		}
+	}
+
+	// 意味的検索のAIリクエストを記録（メトリクス集計用、エラーは無視）
+	if _, logErr := s.DB.(*sql.DB).ExecContext(ctx,
+		"INSERT INTO semantic_search_logs (user_id) VALUES ($1)",
+		userID,
+	); logErr != nil {
+		log.Printf("Failed to log semantic search request: %v", logErr)
 	}
 
 	// 結果を変換

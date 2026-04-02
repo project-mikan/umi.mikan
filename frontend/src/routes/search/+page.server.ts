@@ -16,81 +16,40 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 		throw redirect(302, "/login");
 	}
 
-	// ユーザーの意味的検索設定を取得
-	let semanticSearchEnabled = false;
-	try {
-		const userInfo = await getUserInfo({ accessToken: authResult.accessToken });
-		const geminiKey = userInfo.llmKeys?.find((k) => k.llmProvider === 1);
-		semanticSearchEnabled = geminiKey?.semanticSearchEnabled ?? false;
-	} catch {
-		// ユーザー情報取得失敗時はデフォルト無効
-	}
+	// getUserInfo と検索クエリを並列で発火（キーワードがある場合）
+	const userInfoPromise = getUserInfo({ accessToken: authResult.accessToken }).catch(
+		() => null,
+	);
 
-	if (!keyword) {
-		return {
-			searchResults: null,
-			semanticResults: null,
-			keyword: "",
-			expandedKeywords: [] as string[],
-			mode,
-			semanticSearchEnabled,
-		};
-	}
+	const searchPromise =
+		keyword && mode === "semantic"
+			? searchDiaryEntriesSemantic({
+					query: keyword,
+					limit: 10,
+					accessToken: authResult.accessToken,
+				}).catch(() => null)
+			: keyword
+				? searchDiaryEntries({
+						keyword,
+						accessToken: authResult.accessToken,
+					}).catch(() => null)
+				: Promise.resolve(null);
 
-	if (mode === "semantic") {
-		try {
-			const searchResponse = await searchDiaryEntriesSemantic({
-				query: keyword,
-				limit: 10,
-				accessToken: authResult.accessToken,
-			});
+	const [userInfo, searchResponse] = await Promise.all([userInfoPromise, searchPromise]);
 
-			return {
-				searchResults: null,
-				semanticResults: searchResponse,
-				keyword,
-				mode,
-				semanticSearchEnabled,
-			};
-		} catch (err) {
-			console.error("Semantic search error:", err);
-			return {
-				searchResults: null,
-				semanticResults: null,
-				keyword,
-				mode,
-				semanticSearchEnabled,
-				error: "semanticSearchFailed",
-			};
-		}
-	}
+	const geminiKey = userInfo?.llmKeys?.find((k) => k.llmProvider === 1);
+	const semanticSearchEnabled = geminiKey?.semanticSearchEnabled ?? false;
 
-	try {
-		const searchResponse = await searchDiaryEntries({
-			keyword: keyword,
-			accessToken: authResult.accessToken,
-		});
+	const keywordResponse = mode !== "semantic" ? searchResponse : null;
 
-		return {
-			searchResults: searchResponse,
-			semanticResults: null,
-			keyword,
-			expandedKeywords: searchResponse.expandedKeywords ?? [],
-			mode,
-			semanticSearchEnabled,
-		};
-	} catch (err) {
-		console.error("Search error:", err);
-		return {
-			searchResults: null,
-			semanticResults: null,
-			keyword,
-			expandedKeywords: [] as string[],
-			mode,
-			semanticSearchEnabled,
-			error: "searchFailed",
-		};
-	}
+	return {
+		searchResults: keywordResponse,
+		semanticResults: mode === "semantic" ? searchResponse : null,
+		keyword,
+		expandedKeywords: keywordResponse?.expandedKeywords ?? [],
+		mode,
+		semanticSearchEnabled,
+	};
 };
 
 export const actions: Actions = {

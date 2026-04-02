@@ -39,6 +39,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 					monthlySummariesFailed: metric.monthlySummariesFailed,
 					latestTrendsProcessed: metric.latestTrendsProcessed,
 					latestTrendsFailed: metric.latestTrendsFailed,
+					diaryEmbeddingsProcessed: metric.diaryEmbeddingsProcessed,
+					diaryEmbeddingsFailed: metric.diaryEmbeddingsFailed,
+					semanticSearchesProcessed: metric.semanticSearchesProcessed,
 				})),
 				processingTasks: (response.processingTasks || []).map((task) => ({
 					taskType: task.taskType,

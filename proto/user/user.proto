@@ -237,6 +237,7 @@ message HourlyMetrics {
   int32 latest_trends_failed = 7; // 失敗したトレンド分析数
   int32 diary_embeddings_processed = 8; // 処理されたembedding数
   int32 diary_embeddings_failed = 9; // 失敗したembedding数
+  int32 semantic_searches_processed = 10; // 意味的検索のAIリクエスト数
 }
 
 // 処理中のタスク

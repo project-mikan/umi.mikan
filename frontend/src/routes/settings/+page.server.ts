@@ -275,14 +275,18 @@ export const actions: Actions = {
 		}
 
 		try {
-			const response = await updateAutoSummarySettings({
-				llmProvider,
-				autoSummaryDaily,
-				autoSummaryMonthly,
-				autoLatestTrendEnabled,
-				semanticSearchEnabled,
-				accessToken,
-			});
+			// 設定更新とユーザー情報取得を並列実行（getUserInfo は更新結果に依存しないため）
+			const [response, userInfo] = await Promise.all([
+				updateAutoSummarySettings({
+					llmProvider,
+					autoSummaryDaily,
+					autoSummaryMonthly,
+					autoLatestTrendEnabled,
+					semanticSearchEnabled,
+					accessToken,
+				}),
+				getUserInfo({ accessToken }),
+			]);
 
 			if (!response.success) {
 				return fail(400, {
@@ -290,9 +294,6 @@ export const actions: Actions = {
 					action: "updateAutoSummarySettings",
 				});
 			}
-
-			// Get updated user info to refresh the form state
-			const userInfo = await getUserInfo({ accessToken });
 
 			return {
 				success: true,

@@ -92,7 +92,7 @@ func embeddingToSQL(v []float32) string {
 func UpsertDiaryEmbedding(ctx context.Context, db DB, diaryID, userID uuid.UUID, embedding []float32, modelVersion string) error {
 	query := `
 		INSERT INTO diary_embeddings (id, diary_id, user_id, embedding, model_version, created_at, updated_at)
-		VALUES ($1, $2, $3, $4::vector, $5, NOW(), NOW())
+		VALUES ($1, $2, $3, $4::halfvec, $5, NOW(), NOW())
 		ON CONFLICT (diary_id) DO UPDATE SET
 			embedding = EXCLUDED.embedding,
 			model_version = EXCLUDED.model_version,
@@ -123,12 +123,12 @@ func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID,
 			d.id,
 			d.date,
 			d.content,
-			1 - (e.embedding <=> $2::vector) AS similarity
+			1 - (e.embedding <=> $2::halfvec) AS similarity
 		FROM diary_embeddings e
 		JOIN diaries d ON d.id = e.diary_id
 		WHERE e.user_id = $1
-			AND 1 - (e.embedding <=> $2::vector) >= $3
-		ORDER BY e.embedding <=> $2::vector
+			AND 1 - (e.embedding <=> $2::halfvec) >= $3
+		ORDER BY e.embedding <=> $2::halfvec
 		LIMIT $4
 	`
 

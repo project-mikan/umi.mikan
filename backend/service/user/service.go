@@ -609,16 +609,27 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 			WHERE user_id = $1
 			AND created_at >= NOW() - INTERVAL '24 hours'
 			GROUP BY date_trunc('hour', created_at)
+		),
+		semantic_searches AS (
+			SELECT
+				date_trunc('hour', created_at) as hour,
+				COUNT(*) as created_count
+			FROM semantic_search_logs
+			WHERE user_id = $1
+			AND created_at >= NOW() - INTERVAL '24 hours'
+			GROUP BY date_trunc('hour', created_at)
 		)
 		SELECT
 			h.hour,
 			COALESCE(ds.created_count, 0) as daily_summaries_processed,
 			COALESCE(ms.created_count, 0) as monthly_summaries_processed,
-			COALESCE(de.created_count, 0) as diary_embeddings_processed
+			COALESCE(de.created_count, 0) as diary_embeddings_processed,
+			COALESCE(ss.created_count, 0) as semantic_searches_processed
 		FROM hours h
 		LEFT JOIN daily_summaries ds ON h.hour = ds.hour
 		LEFT JOIN monthly_summaries ms ON h.hour = ms.hour
 		LEFT JOIN diary_embeddings de ON h.hour = de.hour
+		LEFT JOIN semantic_searches ss ON h.hour = ss.hour
 		ORDER BY h.hour
 	`
 
@@ -635,9 +646,9 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 	var metrics []*g.HourlyMetrics
 	for rows.Next() {
 		var hour time.Time
-		var dailyProcessed, monthlyProcessed, embeddingsProcessed int32
+		var dailyProcessed, monthlyProcessed, embeddingsProcessed, semanticSearchesProcessed int32
 
-		if err := rows.Scan(&hour, &dailyProcessed, &monthlyProcessed, &embeddingsProcessed); err != nil {
+		if err := rows.Scan(&hour, &dailyProcessed, &monthlyProcessed, &embeddingsProcessed, &semanticSearchesProcessed); err != nil {
 			return nil, err
 		}
 
@@ -651,6 +662,7 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 			LatestTrendsFailed:        0, // トレンド生成履歴はDBに保存されていないため0
 			DiaryEmbeddingsProcessed:  embeddingsProcessed,
 			DiaryEmbeddingsFailed:     0, // TODO: 失敗ログを記録する仕組みを追加後に実装
+			SemanticSearchesProcessed: semanticSearchesProcessed,
 		})
 	}
 

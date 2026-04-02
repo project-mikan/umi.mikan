@@ -23,6 +23,9 @@
 		monthlySummariesProcessed: number;
 		dailySummariesFailed: number;
 		monthlySummariesFailed: number;
+		diaryEmbeddingsProcessed: number;
+		diaryEmbeddingsFailed: number;
+		semanticSearchesProcessed: number;
 	}>;
 
 	let chartCanvas: HTMLCanvasElement;
@@ -35,6 +38,8 @@
 		const monthlyProcessed: number[] = [];
 		const dailyFailed: number[] = [];
 		const monthlyFailed: number[] = [];
+		const embeddingsProcessed: number[] = [];
+		const semanticSearchesProcessed: number[] = [];
 
 		hourlyMetrics.forEach((metric) => {
 			const date = new Date(metric.timestamp * 1000);
@@ -45,6 +50,8 @@
 			monthlyProcessed.push(metric.monthlySummariesProcessed);
 			dailyFailed.push(metric.dailySummariesFailed);
 			monthlyFailed.push(metric.monthlySummariesFailed);
+			embeddingsProcessed.push(metric.diaryEmbeddingsProcessed);
+			semanticSearchesProcessed.push(metric.semanticSearchesProcessed);
 		});
 
 		return {
@@ -53,6 +60,8 @@
 			monthlyProcessed,
 			dailyFailed,
 			monthlyFailed,
+			embeddingsProcessed,
+			semanticSearchesProcessed,
 		};
 	})();
 
@@ -63,6 +72,8 @@
 		chart.data.labels = chartData.labels;
 		chart.data.datasets[0].data = chartData.dailyProcessed;
 		chart.data.datasets[1].data = chartData.monthlyProcessed;
+		chart.data.datasets[2].data = chartData.embeddingsProcessed;
+		chart.data.datasets[3].data = chartData.semanticSearchesProcessed;
 
 		// ラベルとタイトルを更新
 		if (chart.options.plugins?.title) {
@@ -84,6 +95,8 @@
 		}
 		chart.data.datasets[0].label = $_("llm.metrics.dailySummaries");
 		chart.data.datasets[1].label = $_("llm.metrics.monthlySummaries");
+		chart.data.datasets[2].label = $_("llm.metrics.diaryEmbeddings");
+		chart.data.datasets[3].label = $_("llm.metrics.semanticSearches");
 
 		chart.update();
 	}
@@ -162,6 +175,20 @@
 						data: chartData.monthlyProcessed,
 						backgroundColor: "rgba(59, 130, 246, 0.6)",
 						borderColor: "rgb(59, 130, 246)",
+						borderWidth: 1,
+					},
+					{
+						label: $_("llm.metrics.diaryEmbeddings"),
+						data: chartData.embeddingsProcessed,
+						backgroundColor: "rgba(168, 85, 247, 0.6)",
+						borderColor: "rgb(168, 85, 247)",
+						borderWidth: 1,
+					},
+					{
+						label: $_("llm.metrics.semanticSearches"),
+						data: chartData.semanticSearchesProcessed,
+						backgroundColor: "rgba(236, 72, 153, 0.6)",
+						borderColor: "rgb(236, 72, 153)",
 						borderWidth: 1,
 					},
 				],

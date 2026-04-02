@@ -452,6 +452,8 @@
 			"processedCount": "処理件数",
 			"dailySummaries": "日次まとめ",
 			"monthlySummaries": "月次まとめ",
+			"diaryEmbeddings": "embedding生成",
+			"semanticSearches": "意味的検索",
 			"dailySummary": "日次まとめ",
 			"monthlySummary": "月次まとめ",
 			"latestTrend": "トレンド分析",

@@ -260,8 +260,8 @@ func (g *GeminiClient) GenerateEmbedding(ctx context.Context, text string, isDoc
 		taskType = "RETRIEVAL_DOCUMENT"
 	}
 
-	// MRLにより1536次元に切り詰め（HNSWインデックスの上限2000次元に対応）
-	outputDim := int32(1536)
+	// gemini-embedding-001 のネイティブ次元（MRL削減なし）で最高精度を得る
+	outputDim := int32(3072)
 	config := &genai.EmbedContentConfig{
 		TaskType:             taskType,
 		OutputDimensionality: &outputDim,

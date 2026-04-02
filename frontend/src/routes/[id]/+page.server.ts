@@ -55,249 +55,151 @@ export const load: PageServerLoad = async ({
 		day: Number.parseInt(day, 10),
 	});
 
-	try {
-		// メインの日記を取得、ユーザー情報を並行して取得
-		const [response, userInfo] = await Promise.all([
-			getDiaryEntry({
-				date,
-				accessToken: authResult.accessToken,
-			}),
-			getUserInfo({ accessToken: authResult.accessToken }),
+	const pastDatesArray = [
+		pastDates.oneWeekAgo,
+		pastDates.oneMonthAgo,
+		pastDates.twoMonthsAgo,
+		pastDates.sixMonthsAgo,
+		pastDates.oneYearAgo,
+		pastDates.twoYearsAgo,
+		pastDates.threeYearsAgo,
+		pastDates.fourYearsAgo,
+		pastDates.fiveYearsAgo,
+		pastDates.sixYearsAgo,
+		pastDates.sevenYearsAgo,
+		pastDates.eightYearsAgo,
+		pastDates.nineYearsAgo,
+		pastDates.tenYearsAgo,
+	];
+
+	const pastEntriesKeys = [
+		"oneWeekAgo",
+		"oneMonthAgo",
+		"twoMonthsAgo",
+		"sixMonthsAgo",
+		"oneYearAgo",
+		"twoYearsAgo",
+		"threeYearsAgo",
+		"fourYearsAgo",
+		"fiveYearsAgo",
+		"sixYearsAgo",
+		"sevenYearsAgo",
+		"eightYearsAgo",
+		"nineYearsAgo",
+		"tenYearsAgo",
+	] as const;
+
+	// 全プロミスを一斉発火（date は確定済みのため全て並列化可能）
+	// メインエントリの NOT_FOUND (code 2) は正常ケースなのでインラインで吸収する
+	const entryPromise = getDiaryEntry({
+		date,
+		accessToken: authResult.accessToken,
+	}).catch((err: unknown) => {
+		if (err && typeof err === "object" && "code" in err && err.code === 2) {
+			return { entry: null };
+		}
+		throw err;
+	});
+	const userInfoPromise = getUserInfo({ accessToken: authResult.accessToken });
+	const summaryPromise = getDailySummary({
+		date,
+		accessToken: authResult.accessToken,
+	}).catch(() => ({ summary: null }));
+	const pastEntryPromises = pastDatesArray.map((pastDate) =>
+		getDiaryEntry({
+			date: createYMD(pastDate.year, pastDate.month, pastDate.day),
+			accessToken: authResult.accessToken as string,
+		}).catch(() => ({ entry: null })),
+	);
+
+	// 全リクエストを並列で待機（4回のシリアル round-trip → 1回に削減）
+	const [[entryResponse, userInfo, summaryResponse], pastEntriesResults] =
+		await Promise.all([
+			Promise.all([entryPromise, userInfoPromise, summaryPromise]),
+			Promise.all(pastEntryPromises),
 		]);
 
-		// 要約を取得を試行（存在しない場合はnull）
-		let dailySummary = null;
+	// 要約を整形
+	let dailySummary = null;
+	if (summaryResponse.summary) {
+		dailySummary = {
+			id: summaryResponse.summary.id,
+			diaryId: summaryResponse.summary.diaryId,
+			date: {
+				year: summaryResponse.summary.date?.year || 0,
+				month: summaryResponse.summary.date?.month || 0,
+				day: summaryResponse.summary.date?.day || 0,
+			},
+			summary: summaryResponse.summary.summary,
+			createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
+			updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
+		};
+	}
+
+	// RAGインデックス状態を取得（entry.id が必要なため第2フェーズ）
+	const semanticSearchEnabled =
+		userInfo.llmKeys?.find((k) => k.llmProvider === 1)?.semanticSearchEnabled ??
+		false;
+	let embeddingStatus: {
+		indexed: boolean;
+		modelVersion: string;
+		createdAt: number;
+		updatedAt: number;
+		embeddingValues: number[];
+	} | null = null;
+	if (entryResponse.entry && semanticSearchEnabled) {
 		try {
-			const summaryResponse = await getDailySummary({
-				date,
+			const statusResponse = await getDiaryEmbeddingStatus({
+				diaryId: entryResponse.entry.id,
 				accessToken: authResult.accessToken,
 			});
-
-			if (summaryResponse.summary) {
-				dailySummary = {
-					id: summaryResponse.summary.id,
-					diaryId: summaryResponse.summary.diaryId,
-					date: {
-						year: summaryResponse.summary.date?.year || 0,
-						month: summaryResponse.summary.date?.month || 0,
-						day: summaryResponse.summary.date?.day || 0,
-					},
-					summary: summaryResponse.summary.summary,
-					createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
-					updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
-				};
-			}
-		} catch (_summaryErr) {
-			// 要約が見つからない場合は無視
-			dailySummary = null;
+			embeddingStatus = {
+				indexed: statusResponse.indexed,
+				modelVersion: statusResponse.modelVersion,
+				createdAt: Number(statusResponse.createdAt),
+				updatedAt: Number(statusResponse.updatedAt),
+				embeddingValues: statusResponse.embeddingValues,
+			};
+		} catch (_embeddingErr) {
+			embeddingStatus = null;
 		}
+	}
 
-		// RAGインデックス状態を取得（日記が存在しかつ意味的検索が有効な場合）
-		const semanticSearchEnabled =
-			userInfo.llmKeys?.find((k) => k.llmProvider === 1)
-				?.semanticSearchEnabled ?? false;
-		let embeddingStatus: {
-			indexed: boolean;
-			modelVersion: string;
-			createdAt: number;
-			updatedAt: number;
-			embeddingValues: number[];
-		} | null = null;
-		if (response.entry && semanticSearchEnabled) {
-			try {
-				const statusResponse = await getDiaryEmbeddingStatus({
-					diaryId: response.entry.id,
-					accessToken: authResult.accessToken,
-				});
-				embeddingStatus = {
-					indexed: statusResponse.indexed,
-					modelVersion: statusResponse.modelVersion,
-					createdAt: Number(statusResponse.createdAt),
-					updatedAt: Number(statusResponse.updatedAt),
-					embeddingValues: statusResponse.embeddingValues,
-				};
-			} catch (_embeddingErr) {
-				// 取得失敗は無視
-				embeddingStatus = null;
-			}
-		}
+	// 過去日記を整形
+	const pastEntriesObject = pastEntriesKeys.reduce(
+		(acc, key, index) => {
+			acc[key] = {
+				date: pastDatesArray[index],
+				entry: pastEntriesResults[index].entry || null,
+			};
+			return acc;
+		},
+		{} as Record<
+			(typeof pastEntriesKeys)[number],
+			{ date: (typeof pastDatesArray)[number]; entry: DiaryEntry | null }
+		>,
+	);
 
-		// 過去の日記を並行して取得
-		const pastDatesArray = [
-			pastDates.oneWeekAgo,
-			pastDates.oneMonthAgo,
-			pastDates.twoMonthsAgo,
-			pastDates.sixMonthsAgo,
-			pastDates.oneYearAgo,
-			pastDates.twoYearsAgo,
-			pastDates.threeYearsAgo,
-			pastDates.fourYearsAgo,
-			pastDates.fiveYearsAgo,
-			pastDates.sixYearsAgo,
-			pastDates.sevenYearsAgo,
-			pastDates.eightYearsAgo,
-			pastDates.nineYearsAgo,
-			pastDates.tenYearsAgo,
-		];
+	const today = new Date();
 
-		const pastEntriesPromises = pastDatesArray.map((pastDate) =>
-			getDiaryEntry({
-				date: createYMD(pastDate.year, pastDate.month, pastDate.day),
-				accessToken: authResult.accessToken as string,
-			}).catch(() => ({ entry: null })),
-		);
-
-		const pastEntriesResults = await Promise.all(pastEntriesPromises);
-
-		// Return the entry if it exists, or null if it doesn't (allowing creation)
-		const pastEntriesKeys = [
-			"oneWeekAgo",
-			"oneMonthAgo",
-			"twoMonthsAgo",
-			"sixMonthsAgo",
-			"oneYearAgo",
-			"twoYearsAgo",
-			"threeYearsAgo",
-			"fourYearsAgo",
-			"fiveYearsAgo",
-			"sixYearsAgo",
-			"sevenYearsAgo",
-			"eightYearsAgo",
-			"nineYearsAgo",
-			"tenYearsAgo",
-		] as const;
-
-		const pastEntriesObject = pastEntriesKeys.reduce(
-			(acc, key, index) => {
-				acc[key] = {
-					date: pastDatesArray[index],
-					entry: pastEntriesResults[index].entry || null,
-				};
-				return acc;
-			},
-			{} as Record<
-				(typeof pastEntriesKeys)[number],
-				{ date: (typeof pastDatesArray)[number]; entry: DiaryEntry | null }
-			>,
-		);
-
-		const today = new Date();
-		const todayYMD = {
+	return {
+		entry: entryResponse.entry || null,
+		date,
+		pastEntries: pastEntriesObject,
+		user: {
+			name: userInfo.name,
+			email: userInfo.email,
+			llmKeys: userInfo.llmKeys || [],
+		},
+		dailySummary,
+		today: {
 			year: today.getFullYear(),
 			month: today.getMonth() + 1,
 			day: today.getDate(),
-		};
-
-		return {
-			entry: response.entry || null,
-			date,
-			pastEntries: pastEntriesObject,
-			user: {
-				name: userInfo.name,
-				email: userInfo.email,
-				llmKeys: userInfo.llmKeys || [],
-			},
-			dailySummary,
-			today: todayYMD,
-			semanticSearchEnabled,
-			embeddingStatus,
-		};
-	} catch (err) {
-		if (err instanceof Response) {
-			throw err;
-		}
-
-		// Handle gRPC NOT_FOUND error (code 2) - this is normal when no diary entry exists
-		if (err && typeof err === "object" && "code" in err && err.code === 2) {
-			// ユーザー情報を取得
-			const userInfo = await getUserInfo({
-				accessToken: authResult.accessToken,
-			});
-
-			// 過去の日記も取得（エラーでもnullを返す）
-			const pastDatesArray = [
-				pastDates.oneWeekAgo,
-				pastDates.oneMonthAgo,
-				pastDates.twoMonthsAgo,
-				pastDates.sixMonthsAgo,
-				pastDates.oneYearAgo,
-				pastDates.twoYearsAgo,
-				pastDates.threeYearsAgo,
-				pastDates.fourYearsAgo,
-				pastDates.fiveYearsAgo,
-				pastDates.sixYearsAgo,
-				pastDates.sevenYearsAgo,
-				pastDates.eightYearsAgo,
-				pastDates.nineYearsAgo,
-				pastDates.tenYearsAgo,
-			];
-
-			const pastEntriesPromises = pastDatesArray.map((pastDate) =>
-				getDiaryEntry({
-					date: createYMD(pastDate.year, pastDate.month, pastDate.day),
-					accessToken: authResult.accessToken as string,
-				}).catch(() => ({ entry: null })),
-			);
-
-			const pastEntriesResults = await Promise.all(pastEntriesPromises);
-
-			const pastEntriesKeys = [
-				"oneWeekAgo",
-				"oneMonthAgo",
-				"twoMonthsAgo",
-				"sixMonthsAgo",
-				"oneYearAgo",
-				"twoYearsAgo",
-				"threeYearsAgo",
-				"fourYearsAgo",
-				"fiveYearsAgo",
-				"sixYearsAgo",
-				"sevenYearsAgo",
-				"eightYearsAgo",
-				"nineYearsAgo",
-				"tenYearsAgo",
-			] as const;
-
-			const pastEntriesObject = pastEntriesKeys.reduce(
-				(acc, key, index) => {
-					acc[key] = {
-						date: pastDatesArray[index],
-						entry: pastEntriesResults[index].entry || null,
-					};
-					return acc;
-				},
-				{} as Record<
-					(typeof pastEntriesKeys)[number],
-					{ date: (typeof pastDatesArray)[number]; entry: DiaryEntry | null }
-				>,
-			);
-
-			const today = new Date();
-			const todayYMD = {
-				year: today.getFullYear(),
-				month: today.getMonth() + 1,
-				day: today.getDate(),
-			};
-
-			return {
-				entry: null,
-				date,
-				pastEntries: pastEntriesObject,
-				user: {
-					name: userInfo.name,
-					email: userInfo.email,
-					llmKeys: userInfo.llmKeys || [],
-				},
-				dailySummary: null,
-				today: todayYMD,
-				semanticSearchEnabled: false,
-				embeddingStatus: null,
-			};
-		}
-
-		console.error("Failed to load diary entry:", err);
-		throw error(500, "Failed to load diary entry");
-	}
+		},
+		semanticSearchEnabled,
+		embeddingStatus,
+	};
 };
 
 export const actions: Actions = {

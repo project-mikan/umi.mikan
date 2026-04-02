@@ -28,11 +28,17 @@ import {
 	type UpdateAutoSummarySettingsResponse,
 } from "$lib/grpc/user/user_pb";
 
+// モジュールレベルで Transport と Client を共有する（リクエストごとの生成コストを排除）
 const transport = createGrpcTransport({
 	baseUrl: "http://backend:8080",
 });
 
 const authClient = createClient(AuthService, transport);
+const userClient = createClient(UserService, transport);
+
+function authHeader(accessToken: string) {
+	return { headers: { authorization: `Bearer ${accessToken}` } };
+}
 
 export async function getRegistrationConfig(): Promise<GetRegistrationConfigResponse> {
 	const request = create(GetRegistrationConfigRequestSchema, {});
@@ -97,23 +103,11 @@ export interface UpdateUserNameParams {
 export async function updateUserName(
 	params: UpdateUserNameParams,
 ): Promise<UpdateUserNameResponse> {
-	const transport = createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${params.accessToken}`);
-				return next(req);
-			},
-		],
-	});
-
-	const userClient = createClient(UserService, transport);
 	const request = create(UpdateUserNameRequestSchema, {
 		newName: params.newName,
 	});
 
-	const response = await userClient.updateUserName(request);
-	return response;
+	return await userClient.updateUserName(request, authHeader(params.accessToken));
 }
 
 export interface ChangePasswordParams {
@@ -125,24 +119,12 @@ export interface ChangePasswordParams {
 export async function changePassword(
 	params: ChangePasswordParams,
 ): Promise<ChangePasswordResponse> {
-	const transport = createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${params.accessToken}`);
-				return next(req);
-			},
-		],
-	});
-
-	const userClient = createClient(UserService, transport);
 	const request = create(ChangePasswordRequestSchema, {
 		currentPassword: params.currentPassword,
 		newPassword: params.newPassword,
 	});
 
-	const response = await userClient.changePassword(request);
-	return response;
+	return await userClient.changePassword(request, authHeader(params.accessToken));
 }
 
 export interface UpdateLLMKeyParams {
@@ -154,24 +136,12 @@ export interface UpdateLLMKeyParams {
 export async function updateLLMKey(
 	params: UpdateLLMKeyParams,
 ): Promise<UpdateLLMKeyResponse> {
-	const transport = createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${params.accessToken}`);
-				return next(req);
-			},
-		],
-	});
-
-	const userClient = createClient(UserService, transport);
 	const request = create(UpdateLLMKeyRequestSchema, {
 		llmProvider: params.llmProvider,
 		key: params.key,
 	});
 
-	const response = await userClient.updateLLMKey(request);
-	return response;
+	return await userClient.updateLLMKey(request, authHeader(params.accessToken));
 }
 
 export interface GetUserInfoParams {
@@ -181,21 +151,9 @@ export interface GetUserInfoParams {
 export async function getUserInfo(
 	params: GetUserInfoParams,
 ): Promise<GetUserInfoResponse> {
-	const transport = createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${params.accessToken}`);
-				return next(req);
-			},
-		],
-	});
-
-	const userClient = createClient(UserService, transport);
 	const request = create(GetUserInfoRequestSchema, {});
 
-	const response = await userClient.getUserInfo(request);
-	return response;
+	return await userClient.getUserInfo(request, authHeader(params.accessToken));
 }
 
 export interface DeleteLLMKeyParams {
@@ -206,23 +164,11 @@ export interface DeleteLLMKeyParams {
 export async function deleteLLMKey(
 	params: DeleteLLMKeyParams,
 ): Promise<DeleteLLMKeyResponse> {
-	const transport = createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${params.accessToken}`);
-				return next(req);
-			},
-		],
-	});
-
-	const userClient = createClient(UserService, transport);
 	const request = create(DeleteLLMKeyRequestSchema, {
 		llmProvider: params.llmProvider,
 	});
 
-	const response = await userClient.deleteLLMKey(request);
-	return response;
+	return await userClient.deleteLLMKey(request, authHeader(params.accessToken));
 }
 
 export interface DeleteAccountParams {
@@ -232,21 +178,9 @@ export interface DeleteAccountParams {
 export async function deleteAccount(
 	params: DeleteAccountParams,
 ): Promise<DeleteAccountResponse> {
-	const transport = createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${params.accessToken}`);
-				return next(req);
-			},
-		],
-	});
-
-	const userClient = createClient(UserService, transport);
 	const request = create(DeleteAccountRequestSchema, {});
 
-	const response = await userClient.deleteAccount(request);
-	return response;
+	return await userClient.deleteAccount(request, authHeader(params.accessToken));
 }
 
 export interface UpdateAutoSummarySettingsParams {
@@ -261,17 +195,6 @@ export interface UpdateAutoSummarySettingsParams {
 export async function updateAutoSummarySettings(
 	params: UpdateAutoSummarySettingsParams,
 ): Promise<UpdateAutoSummarySettingsResponse> {
-	const transport = createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${params.accessToken}`);
-				return next(req);
-			},
-		],
-	});
-
-	const userClient = createClient(UserService, transport);
 	const request = create(UpdateAutoSummarySettingsRequestSchema, {
 		llmProvider: params.llmProvider,
 		autoSummaryDaily: params.autoSummaryDaily,
@@ -280,6 +203,5 @@ export async function updateAutoSummarySettings(
 		semanticSearchEnabled: params.semanticSearchEnabled,
 	});
 
-	const response = await userClient.updateAutoSummarySettings(request);
-	return response;
+	return await userClient.updateAutoSummarySettings(request, authHeader(params.accessToken));
 }
