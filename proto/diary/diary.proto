@@ -221,6 +221,7 @@ message SearchDiaryEntriesRequest {
 message SearchDiaryEntriesResponse {
   string searched_keyword = 1; // 実際に検索した単語
   repeated DiaryEntry entries = 2;
+  repeated string expanded_keywords = 3; // エンティティ展開により追加で検索したキーワード
 }
 
 message GetDiaryEntriesResponse {

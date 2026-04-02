@@ -337,7 +337,8 @@
 		"noResultsHint": "別のキーワードで検索してみてください。",
 		"searching": "検索中...",
 		"enterKeyword": "検索キーワードを入力して検索してください。",
-		"backToList": "日記一覧に戻る"
+		"backToList": "日記一覧に戻る",
+		"expandedKeywordsNote": "エンティティに紐づく {keywords} でも検索しました"
 	},
 	"monthly": {
 		"thisMonth": "今月",

@@ -369,6 +369,9 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Auto-generated files are excluded from coverage**: `backend/infrastructure/grpc/**` and `backend/infrastructure/database/*.dbtpl.go` are excluded via `codecov.yml` at the project root. Do not add coverage for generated files.
 - **New backend functions require tests**: When adding new functions to backend services, always add corresponding test cases to maintain patch coverage.
 - **Coverage configuration**: `codecov.yml` at project root controls coverage settings and ignored paths.
+- **Database package tests must be in `package database_test`**: Tests in `backend/infrastructure/database/` must use `package database_test` (external test package) to avoid import cycles. The cycle is `database` → `testutil` → `domain/model` → `database`.
+- **Database layer functions need their own tests**: Functions added to `backend/infrastructure/database/` (e.g., new query functions) require test files in the same directory. Service-layer tests do NOT count as coverage for the database package — Go measures coverage per package separately.
+- **New database query files need a corresponding `*_test.go`**: When adding a new `.go` file with query functions to `backend/infrastructure/database/`, always create a matching `*_test.go` in `package database_test` with tests for each exported function.
 
 ## Configuration Options
 

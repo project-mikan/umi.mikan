@@ -361,7 +361,21 @@ func (s *DiaryEntry) SearchDiaryEntries(
 		return nil, err
 	}
 
-	ds, err := database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), message.Keyword)
+	// エンティティ名・エイリアスに基づいて関連キーワードを展開
+	expandedKeywords, err := database.RelatedKeywordsByUserIDAndKeyword(ctx, s.DB, userID.String(), message.Keyword)
+	if err != nil {
+		return nil, err
+	}
+
+	var ds []*database.Diary
+	if len(expandedKeywords) == 0 {
+		// 展開キーワードがない場合は通常検索
+		ds, err = database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), message.Keyword)
+	} else {
+		// 展開キーワードがある場合は全キーワードでOR検索
+		allKeywords := append([]string{message.Keyword}, expandedKeywords...)
+		ds, err = database.DiariesByUserIDAndKeywords(ctx, s.DB, userID.String(), allKeywords)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -377,8 +391,9 @@ func (s *DiaryEntry) SearchDiaryEntries(
 		})
 	}
 	return &g.SearchDiaryEntriesResponse{
-		SearchedKeyword: message.Keyword,
-		Entries:         entries,
+		SearchedKeyword:  message.Keyword,
+		Entries:          entries,
+		ExpandedKeywords: expandedKeywords,
 	}, nil
 }
 

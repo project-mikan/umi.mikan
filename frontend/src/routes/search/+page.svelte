@@ -47,8 +47,19 @@
 		}
 	}
 
-	// テキストをキーワードで分割してセグメント配列を返す
-	function _getSegments(text: string, keyword: string): TextSegment[] {
+	// エントリ一覧の中でキーワードに一致するエントリ数を返す
+	function _countKeywordInEntries(
+		entries: DiaryEntry[],
+		keyword: string,
+	): number {
+		if (!keyword) return 0;
+		const lower = keyword.toLowerCase();
+		return entries.filter((e) => e.content.toLowerCase().includes(lower))
+			.length;
+	}
+
+	// テキストを複数キーワードで分割してセグメント配列を返す
+	function _getSegments(text: string, keywords: string[]): TextSegment[] {
 		const WINDOW = 150;
 		// 改行（CR/LF/CRLF）を空白に置換して1行で表示し、連続スペースも正規化
 		text = text
@@ -56,47 +67,56 @@
 			.replace(/ {2,}/g, " ")
 			.trim();
 
-		if (!keyword.trim()) {
+		const activeKeywords = keywords.filter((k) => k.trim());
+		if (activeKeywords.length === 0) {
 			const truncated =
 				text.length > WINDOW ? `${text.substring(0, WINDOW)}...` : text;
 			return [{ text: truncated, isMatch: false }];
 		}
 
-		// キーワードの最初の出現位置を検索（大文字小文字無視）
-		const matchIndex = text.toLowerCase().indexOf(keyword.trim().toLowerCase());
+		// 全キーワードから最初のマッチ位置を検索（大文字小文字無視）
+		const lowerText = text.toLowerCase();
+		let firstMatchIndex = -1;
+		for (const kw of activeKeywords) {
+			const idx = lowerText.indexOf(kw.trim().toLowerCase());
+			if (idx !== -1 && (firstMatchIndex === -1 || idx < firstMatchIndex)) {
+				firstMatchIndex = idx;
+			}
+		}
 
 		let excerpt: string;
 		let prefix = "";
 		let suffix = "";
 
-		if (matchIndex === -1 || matchIndex < WINDOW) {
+		if (firstMatchIndex === -1 || firstMatchIndex < WINDOW) {
 			// 1. キーワードが冒頭150文字内に存在する場合（または見つからない場合）は冒頭から表示
 			excerpt = text.length > WINDOW ? text.substring(0, WINDOW) : text;
 			if (text.length > WINDOW) suffix = "...";
 		} else {
 			// 2. キーワードが冒頭150文字以降にある場合：ハイライトが中央になるよう前後を切り出す
 			const half = Math.floor(WINDOW / 2);
-			const start = Math.max(0, matchIndex - half);
+			const start = Math.max(0, firstMatchIndex - half);
 			const end = Math.min(text.length, start + WINDOW);
 			excerpt = text.substring(start, end);
 			if (start > 0) prefix = "...";
 			if (end < text.length) suffix = "...";
 		}
 
-		// excerptをキーワードで分割してセグメント配列を生成
-		const escapedKeyword = keyword
-			.trim()
-			.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-		const regex = new RegExp(`(${escapedKeyword})`, "gi");
+		// 全キーワードを結合した正規表現でexcerptを分割してセグメント配列を生成
+		const escapedKeywords = activeKeywords.map((k) =>
+			k.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+		);
+		const regex = new RegExp(`(${escapedKeywords.join("|")})`, "gi");
 		const parts = excerpt.split(regex);
 
+		const lowerKeywords = activeKeywords.map((k) => k.trim().toLowerCase());
 		const segments: TextSegment[] = [];
 		if (prefix) segments.push({ text: prefix, isMatch: false });
 		for (const part of parts) {
 			if (part) {
 				segments.push({
 					text: part,
-					isMatch: part.toLowerCase() === keyword.trim().toLowerCase(),
+					isMatch: lowerKeywords.some((kw) => part.toLowerCase() === kw),
 				});
 			}
 		}
@@ -144,6 +164,24 @@
 			<p class="text-gray-600 dark:text-gray-400">
 				「{data.searchResults.searchedKeyword}」{$_('search.results')}: {data.searchResults.entries.length}{$_('search.resultCount')}
 			</p>
+			{#if data.expandedKeywords && data.expandedKeywords.length > 0}
+				<div class="text-sm mt-2">
+					<div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+						<span class="font-medium">{data.searchResults.searchedKeyword}</span>
+						<span class="text-gray-400 dark:text-gray-500">({_countKeywordInEntries(data.searchResults.entries, data.searchResults.searchedKeyword)}{$_('search.resultCount')})</span>
+					</div>
+					<div class="ml-2 mt-1">
+						{#each data.expandedKeywords as kw, i}
+							<div class="relative flex items-center gap-2 py-0.5 pl-4">
+								<div class="absolute left-0 w-0.5 bg-gray-200 dark:bg-gray-700 {i === data.expandedKeywords.length - 1 ? 'top-0 h-1/2' : 'top-0 bottom-0'}"></div>
+								<div class="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-200 dark:bg-gray-700 -translate-y-px"></div>
+								<span class="text-gray-500 dark:text-gray-400">{kw}</span>
+								<span class="text-gray-400 dark:text-gray-500">({_countKeywordInEntries(data.searchResults.entries, kw)}{$_('search.resultCount')})</span>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
 		</div>
 
 		{#if data.searchResults.entries.length > 0}
@@ -165,7 +203,7 @@
 							class="text-gray-700 dark:text-gray-300 text-sm auto-phrase-target"
 						>
 							<p class="line-clamp-3">
-								{#each _getSegments(entry.content, data.searchResults?.searchedKeyword ?? '') as segment}
+								{#each _getSegments(entry.content, [data.searchResults?.searchedKeyword ?? '', ...(data.expandedKeywords ?? [])]) as segment}
 									{#if segment.isMatch}
 										<mark class="bg-yellow-200 dark:bg-yellow-800 text-gray-900 dark:text-gray-100 rounded px-0.5">{segment.text}</mark>
 									{:else}
