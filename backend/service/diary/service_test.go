@@ -458,10 +458,10 @@ func TestDiaryEntry_SearchDiaryEntries(t *testing.T) {
 	}
 
 	tests := []struct {
-		name            string
-		keyword         string
-		expectedCount   int
-		shouldSucceed   bool
+		name          string
+		keyword       string
+		expectedCount int
+		shouldSucceed bool
 	}{
 		{
 			name:          "正常系：キーワードに一致する日記を取得",
@@ -798,4 +798,97 @@ func TestDiaryEntry_GetDiaryHighlight_WithHighlight(t *testing.T) {
 	if len(resp.Highlights) != 1 {
 		t.Errorf("ハイライト数が期待値と異なります: got %d, want 1", len(resp.Highlights))
 	}
+}
+
+func TestDiaryEntry_SearchDiaryEntries_EntityExpansion(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// エンティティと エイリアスをDBに直接挿入
+	now := time.Now().UnixMilli()
+	entityID := uuid.New()
+	_, err := db.ExecContext(ctx, `INSERT INTO entities (id, user_id, created_at, updated_at, category_id, name) VALUES ($1, $2, $3, $4, $5, $6)`,
+		entityID, userID, now, now, 1, "田中太郎",
+	)
+	if err != nil {
+		t.Fatalf("エンティティの挿入に失敗: %v", err)
+	}
+	_, err = db.ExecContext(ctx, `INSERT INTO entity_aliases (id, entity_id, created_at, updated_at, alias) VALUES ($1, $2, $3, $4, $5)`,
+		uuid.New(), entityID, now, now, "タナカ",
+	)
+	if err != nil {
+		t.Fatalf("エイリアスの挿入に失敗: %v", err)
+	}
+
+	// テスト用日記を作成
+	entries := []struct {
+		content string
+		date    *g.YMD
+	}{
+		{"今日は田中太郎と映画を観た", &g.YMD{Year: 2024, Month: 9, Day: 1}},
+		{"タナカが来てくれた", &g.YMD{Year: 2024, Month: 9, Day: 2}},
+		{"今日は読書をした", &g.YMD{Year: 2024, Month: 9, Day: 3}},
+	}
+	for _, e := range entries {
+		_, err := diaryService.CreateDiaryEntry(ctx, &g.CreateDiaryEntryRequest{
+			Content: e.content,
+			Date:    e.date,
+		})
+		if err != nil {
+			t.Fatalf("日記の作成に失敗: %v", err)
+		}
+	}
+
+	t.Run("エンティティ名で検索するとエイリアスを含む日記も取得できる", func(t *testing.T) {
+		resp, err := diaryService.SearchDiaryEntries(ctx, &g.SearchDiaryEntriesRequest{
+			Keyword: "田中太郎",
+		})
+		if err != nil {
+			t.Fatalf("検索に失敗: %v", err)
+		}
+		// 「田中太郎」と「タナカ」を含む日記の2件が取得できること
+		if len(resp.Entries) != 2 {
+			t.Errorf("期待件数 2 に対して %d 件取得", len(resp.Entries))
+		}
+		// expandedKeywords に「タナカ」が含まれること
+		if len(resp.ExpandedKeywords) != 1 || resp.ExpandedKeywords[0] != "タナカ" {
+			t.Errorf("ExpandedKeywords が期待値と異なります: got %v, want [タナカ]", resp.ExpandedKeywords)
+		}
+	})
+
+	t.Run("エイリアスで検索するとエンティティ名を含む日記も取得できる", func(t *testing.T) {
+		resp, err := diaryService.SearchDiaryEntries(ctx, &g.SearchDiaryEntriesRequest{
+			Keyword: "タナカ",
+		})
+		if err != nil {
+			t.Fatalf("検索に失敗: %v", err)
+		}
+		// 「田中太郎」と「タナカ」を含む日記の2件が取得できること
+		if len(resp.Entries) != 2 {
+			t.Errorf("期待件数 2 に対して %d 件取得", len(resp.Entries))
+		}
+		// expandedKeywords に「田中太郎」が含まれること
+		if len(resp.ExpandedKeywords) != 1 || resp.ExpandedKeywords[0] != "田中太郎" {
+			t.Errorf("ExpandedKeywords が期待値と異なります: got %v, want [田中太郎]", resp.ExpandedKeywords)
+		}
+	})
+
+	t.Run("エンティティに紐づかないキーワードはExpandedKeywordsが空", func(t *testing.T) {
+		resp, err := diaryService.SearchDiaryEntries(ctx, &g.SearchDiaryEntriesRequest{
+			Keyword: "読書",
+		})
+		if err != nil {
+			t.Fatalf("検索に失敗: %v", err)
+		}
+		if len(resp.Entries) != 1 {
+			t.Errorf("期待件数 1 に対して %d 件取得", len(resp.Entries))
+		}
+		if len(resp.ExpandedKeywords) != 0 {
+			t.Errorf("ExpandedKeywords は空を期待したが: %v", resp.ExpandedKeywords)
+		}
+	})
+
 }

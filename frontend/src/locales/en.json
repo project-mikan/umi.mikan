@@ -337,7 +337,8 @@
 		"noResultsHint": "Try searching with different keywords.",
 		"searching": "Searching...",
 		"enterKeyword": "Enter search keywords to search.",
-		"backToList": "Back to diary list"
+		"backToList": "Back to diary list",
+		"expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}"
 	},
 	"monthly": {
 		"thisMonth": "This month",

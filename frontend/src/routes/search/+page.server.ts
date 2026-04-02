@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 		return {
 			searchResults: null,
 			keyword: "",
+			expandedKeywords: [] as string[],
 		};
 	}
 
@@ -27,12 +28,14 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 		return {
 			searchResults: searchResponse,
 			keyword: keyword,
+			expandedKeywords: searchResponse.expandedKeywords ?? [],
 		};
 	} catch (err) {
 		console.error("Search error:", err);
 		return {
 			searchResults: null,
 			keyword: keyword,
+			expandedKeywords: [] as string[],
 			error: "Failed to search diary entries",
 		};
 	}

@@ -488,11 +488,12 @@ func (x *SearchDiaryEntriesRequest) GetKeyword() string {
 }
 
 type SearchDiaryEntriesResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	SearchedKeyword string                 `protobuf:"bytes,1,opt,name=searched_keyword,json=searchedKeyword,proto3" json:"searched_keyword,omitempty"` // 実際に検索した単語
-	Entries         []*DiaryEntry          `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	SearchedKeyword  string                 `protobuf:"bytes,1,opt,name=searched_keyword,json=searchedKeyword,proto3" json:"searched_keyword,omitempty"` // 実際に検索した単語
+	Entries          []*DiaryEntry          `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
+	ExpandedKeywords []string               `protobuf:"bytes,3,rep,name=expanded_keywords,json=expandedKeywords,proto3" json:"expanded_keywords,omitempty"` // エンティティ展開により追加で検索したキーワード
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *SearchDiaryEntriesResponse) Reset() {
@@ -535,6 +536,13 @@ func (x *SearchDiaryEntriesResponse) GetSearchedKeyword() string {
 func (x *SearchDiaryEntriesResponse) GetEntries() []*DiaryEntry {
 	if x != nil {
 		return x.Entries
+	}
+	return nil
+}
+
+func (x *SearchDiaryEntriesResponse) GetExpandedKeywords() []string {
+	if x != nil {
+		return x.ExpandedKeywords
 	}
 	return nil
 }
@@ -1928,10 +1936,11 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x1dGetDiaryEntriesByMonthRequest\x12\x1f\n" +
 	"\x05month\x18\x01 \x01(\v2\t.diary.YMR\x05month\"5\n" +
 	"\x19SearchDiaryEntriesRequest\x12\x18\n" +
-	"\akeyword\x18\x01 \x01(\tR\akeyword\"t\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\"\xa1\x01\n" +
 	"\x1aSearchDiaryEntriesResponse\x12)\n" +
 	"\x10searched_keyword\x18\x01 \x01(\tR\x0fsearchedKeyword\x12+\n" +
-	"\aentries\x18\x02 \x03(\v2\x11.diary.DiaryEntryR\aentries\"F\n" +
+	"\aentries\x18\x02 \x03(\v2\x11.diary.DiaryEntryR\aentries\x12+\n" +
+	"\x11expanded_keywords\x18\x03 \x03(\tR\x10expandedKeywords\"F\n" +
 	"\x17GetDiaryEntriesResponse\x12+\n" +
 	"\aentries\x18\x01 \x03(\v2\x11.diary.DiaryEntryR\aentries\"M\n" +
 	"\x1eGetDiaryEntriesByMonthResponse\x12+\n" +
