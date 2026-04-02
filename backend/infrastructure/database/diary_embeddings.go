@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,23 +22,24 @@ type DiaryEmbeddingSearchResult struct {
 
 // DiaryEmbeddingStatus は日記のRAGインデックス状態を表す
 type DiaryEmbeddingStatus struct {
-	Indexed      bool
-	ModelVersion string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	Indexed         bool
+	ModelVersion    string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	EmbeddingValues []float32
 }
 
 // GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
 func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UUID) (*DiaryEmbeddingStatus, error) {
 	query := `
-		SELECT model_version, created_at, updated_at
+		SELECT model_version, created_at, updated_at, embedding::text
 		FROM diary_embeddings
 		WHERE diary_id = $1 AND user_id = $2
 	`
 
-	var modelVersion string
+	var modelVersion, embeddingStr string
 	var createdAt, updatedAt time.Time
-	err := db.QueryRowContext(ctx, query, diaryID, userID).Scan(&modelVersion, &createdAt, &updatedAt)
+	err := db.QueryRowContext(ctx, query, diaryID, userID).Scan(&modelVersion, &createdAt, &updatedAt, &embeddingStr)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return &DiaryEmbeddingStatus{Indexed: false}, nil
@@ -45,12 +47,36 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 		return nil, fmt.Errorf("failed to get diary embedding status: %w", err)
 	}
 
+	// pgvectorの文字列表現 "[v1,v2,...]" をfloat32スライスにパース
+	embeddingValues := parseEmbeddingString(embeddingStr)
+
 	return &DiaryEmbeddingStatus{
-		Indexed:      true,
-		ModelVersion: modelVersion,
-		CreatedAt:    createdAt,
-		UpdatedAt:    updatedAt,
+		Indexed:         true,
+		ModelVersion:    modelVersion,
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
+		EmbeddingValues: embeddingValues,
 	}, nil
+}
+
+// parseEmbeddingString はpgvectorの文字列表現をfloat32スライスに変換する
+// pgvectorは "[v1,v2,...,vn]" 形式で返す（科学表記も含む）
+func parseEmbeddingString(s string) []float32 {
+	s = strings.TrimPrefix(s, "[")
+	s = strings.TrimSuffix(s, "]")
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	values := make([]float32, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		f, err := strconv.ParseFloat(p, 32)
+		if err == nil {
+			values = append(values, float32(f))
+		}
+	}
+	return values
 }
 
 // embeddingToSQL はfloat32スライスをpgvector形式の文字列に変換する

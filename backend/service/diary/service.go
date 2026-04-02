@@ -1203,6 +1203,7 @@ func (s *DiaryEntry) GetDiaryEmbeddingStatus(
 		resp.ModelVersion = embeddingStatus.ModelVersion
 		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
 		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
+		resp.EmbeddingValues = embeddingStatus.EmbeddingValues
 	}
 
 	return resp, nil

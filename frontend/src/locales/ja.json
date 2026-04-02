@@ -256,7 +256,9 @@
 			"notIndexed": "意味的検索：未インデックス",
 			"indexedAt": "インデックス日時",
 			"updatedAt": "最終更新日時",
-			"modelVersion": "モデル"
+			"modelVersion": "モデル",
+			"dimensions": "次元数",
+			"vectorPreview": "ベクトル値（先頭10件）"
 		}
 	},
 	"date": {

@@ -2203,13 +2203,14 @@ func (x *GetDiaryEmbeddingStatusRequest) GetDiaryId() string {
 
 // 日記のRAGインデックス状態取得レスポンス
 type GetDiaryEmbeddingStatusResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Indexed       bool                   `protobuf:"varint,1,opt,name=indexed,proto3" json:"indexed,omitempty"`                              // インデックス済みかどうか
-	ModelVersion  string                 `protobuf:"bytes,2,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"` // 使用したモデルバージョン
-	CreatedAt     int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`         // 埋め込み作成日時（Unix timestamp）
-	UpdatedAt     int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`         // 埋め込み更新日時（Unix timestamp）
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Indexed         bool                   `protobuf:"varint,1,opt,name=indexed,proto3" json:"indexed,omitempty"`                                                // インデックス済みかどうか
+	ModelVersion    string                 `protobuf:"bytes,2,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"`                   // 使用したモデルバージョン
+	CreatedAt       int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                           // 埋め込み作成日時（Unix timestamp）
+	UpdatedAt       int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`                           // 埋め込み更新日時（Unix timestamp）
+	EmbeddingValues []float32              `protobuf:"fixed32,5,rep,packed,name=embedding_values,json=embeddingValues,proto3" json:"embedding_values,omitempty"` // ベクトル値
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *GetDiaryEmbeddingStatusResponse) Reset() {
@@ -2268,6 +2269,13 @@ func (x *GetDiaryEmbeddingStatusResponse) GetUpdatedAt() int64 {
 		return x.UpdatedAt
 	}
 	return 0
+}
+
+func (x *GetDiaryEmbeddingStatusResponse) GetEmbeddingValues() []float32 {
+	if x != nil {
+		return x.EmbeddingValues
+	}
+	return nil
 }
 
 var File_diary_diary_proto protoreflect.FileDescriptor
@@ -2420,14 +2428,15 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
 	"\fqueued_count\x18\x02 \x01(\x05R\vqueuedCount\";\n" +
 	"\x1eGetDiaryEmbeddingStatusRequest\x12\x19\n" +
-	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\x9e\x01\n" +
+	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\xc9\x01\n" +
 	"\x1fGetDiaryEmbeddingStatusResponse\x12\x18\n" +
 	"\aindexed\x18\x01 \x01(\bR\aindexed\x12#\n" +
 	"\rmodel_version\x18\x02 \x01(\tR\fmodelVersion\x12\x1d\n" +
 	"\n" +
 	"created_at\x18\x03 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\x03R\tupdatedAt2\x8c\r\n" +
+	"updated_at\x18\x04 \x01(\x03R\tupdatedAt\x12)\n" +
+	"\x10embedding_values\x18\x05 \x03(\x02R\x0fembeddingValues2\x8c\r\n" +
 	"\fDiaryService\x12S\n" +
 	"\x10CreateDiaryEntry\x12\x1e.diary.CreateDiaryEntryRequest\x1a\x1f.diary.CreateDiaryEntryResponse\x12S\n" +
 	"\x10UpdateDiaryEntry\x12\x1e.diary.UpdateDiaryEntryRequest\x1a\x1f.diary.UpdateDiaryEntryResponse\x12S\n" +

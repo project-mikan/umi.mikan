@@ -101,6 +101,7 @@ export const load: PageServerLoad = async ({
 			modelVersion: string;
 			createdAt: number;
 			updatedAt: number;
+			embeddingValues: number[];
 		} | null = null;
 		if (response.entry && semanticSearchEnabled) {
 			try {
@@ -113,6 +114,7 @@ export const load: PageServerLoad = async ({
 					modelVersion: statusResponse.modelVersion,
 					createdAt: Number(statusResponse.createdAt),
 					updatedAt: Number(statusResponse.updatedAt),
+					embeddingValues: statusResponse.embeddingValues,
 				};
 			} catch (_embeddingErr) {
 				// 取得失敗は無視
