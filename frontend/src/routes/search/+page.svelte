@@ -5,6 +5,8 @@
 	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 	import type { PageData } from "./$types";
 
+	type TextSegment = { text: string; isMatch: boolean };
+
 	export let data: PageData;
 
 	let searchKeyword = data.keyword || "";
@@ -44,6 +46,59 @@
 			_handleSearch();
 		}
 	}
+
+	// テキストをキーワードで分割してセグメント配列を返す
+	function _getSegments(text: string, keyword: string): TextSegment[] {
+		const WINDOW = 150;
+
+		if (!keyword.trim()) {
+			const truncated =
+				text.length > WINDOW ? `${text.substring(0, WINDOW)}...` : text;
+			return [{ text: truncated, isMatch: false }];
+		}
+
+		// キーワードの最初の出現位置を検索（大文字小文字無視）
+		const matchIndex = text.toLowerCase().indexOf(keyword.trim().toLowerCase());
+
+		let excerpt: string;
+		let prefix = "";
+		let suffix = "";
+
+		if (matchIndex === -1 || matchIndex < WINDOW) {
+			// 1. キーワードが冒頭150文字内に存在する場合（または見つからない場合）は冒頭から表示
+			excerpt = text.length > WINDOW ? text.substring(0, WINDOW) : text;
+			if (text.length > WINDOW) suffix = "...";
+		} else {
+			// 2. キーワードが冒頭150文字以降にある場合：ハイライトが中央になるよう前後を切り出す
+			const half = Math.floor(WINDOW / 2);
+			const start = Math.max(0, matchIndex - half);
+			const end = Math.min(text.length, start + WINDOW);
+			excerpt = text.substring(start, end);
+			if (start > 0) prefix = "...";
+			if (end < text.length) suffix = "...";
+		}
+
+		// excerptをキーワードで分割してセグメント配列を生成
+		const escapedKeyword = keyword
+			.trim()
+			.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		const regex = new RegExp(`(${escapedKeyword})`, "gi");
+		const parts = excerpt.split(regex);
+
+		const segments: TextSegment[] = [];
+		if (prefix) segments.push({ text: prefix, isMatch: false });
+		for (const part of parts) {
+			if (part) {
+				segments.push({
+					text: part,
+					isMatch: part.toLowerCase() === keyword.trim().toLowerCase(),
+				});
+			}
+		}
+		if (suffix) segments.push({ text: suffix, isMatch: false });
+
+		return segments;
+	}
 </script>
 
 <svelte:head>
@@ -52,7 +107,7 @@
 
 <div class="max-w-4xl mx-auto p-6">
 	<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">{$_('search.title')}</h1>
-	
+
 	<!-- 検索フォーム -->
 	<div class="mb-8">
 		<div class="flex gap-4">
@@ -89,7 +144,7 @@
 		{#if data.searchResults.entries.length > 0}
 			<div class="grid gap-4">
 				{#each data.searchResults.entries as entry}
-					<div 
+					<div
 						class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm dark:shadow-gray-900/20 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow cursor-pointer"
 						on:click={() => _viewEntry(entry)}
 						on:keydown={(e) => e.key === 'Enter' && _viewEntry(entry)}
@@ -105,9 +160,13 @@
 							class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap auto-phrase-target"
 						>
 							<p class="line-clamp-3">
-								{entry.content.length > 150
-									? entry.content.substring(0, 150) + '...'
-									: entry.content}
+								{#each _getSegments(entry.content, data.searchResults?.searchedKeyword ?? '') as segment}
+									{#if segment.isMatch}
+										<mark class="bg-yellow-200 dark:bg-yellow-800 text-gray-900 dark:text-gray-100 rounded px-0.5">{segment.text}</mark>
+									{:else}
+										{segment.text}
+									{/if}
+								{/each}
 							</p>
 						</div>
 					</div>
