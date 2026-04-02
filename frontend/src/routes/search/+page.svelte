@@ -50,6 +50,11 @@
 	// テキストをキーワードで分割してセグメント配列を返す
 	function _getSegments(text: string, keyword: string): TextSegment[] {
 		const WINDOW = 150;
+		// 改行（CR/LF/CRLF）を空白に置換して1行で表示し、連続スペースも正規化
+		text = text
+			.replace(/\r\n|\r|\n/g, " ")
+			.replace(/ {2,}/g, " ")
+			.trim();
 
 		if (!keyword.trim()) {
 			const truncated =
@@ -157,7 +162,7 @@
 							</h3>
 						</div>
 						<div
-							class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap auto-phrase-target"
+							class="text-gray-700 dark:text-gray-300 text-sm auto-phrase-target"
 						>
 							<p class="line-clamp-3">
 								{#each _getSegments(entry.content, data.searchResults?.searchedKeyword ?? '') as segment}
