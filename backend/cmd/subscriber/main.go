@@ -18,6 +18,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -1175,7 +1176,7 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 	}
 
 	// 7. diary_embeddingsテーブルにチャンク単位でUPSERT
-	if err := database.UpsertDiaryChunkEmbeddings(ctx, db, diaryUUID, userUUID, diaryChunks, "gemini-embedding-001"); err != nil {
+	if err := database.UpsertDiaryChunkEmbeddings(ctx, db, diaryUUID, userUUID, diaryChunks, llm.ModelEmbedding); err != nil {
 		return fmt.Errorf("failed to upsert diary chunk embeddings: %w", err)
 	}
 

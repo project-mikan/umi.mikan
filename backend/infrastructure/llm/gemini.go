@@ -10,6 +10,13 @@ import (
 	"google.golang.org/genai"
 )
 
+const (
+	// ModelGenerateContent テキスト生成に使用するモデル
+	ModelGenerateContent = "gemini-2.5-flash-lite"
+	// ModelEmbedding embedding生成に使用するモデル
+	ModelEmbedding = "gemini-embedding-001"
+)
+
 type GeminiClient struct {
 	client *genai.Client
 }
@@ -54,7 +61,7 @@ n日：箇条書き3
 
 	contents := genai.Text(prompt)
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -95,7 +102,7 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 
 	contents := genai.Text(prompt)
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -237,7 +244,7 @@ activities（活動・行動）:
 		ResponseSchema:   schema,
 	}
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, config)
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -271,7 +278,7 @@ func (g *GeminiClient) GenerateEmbedding(ctx context.Context, text string, isDoc
 	}
 
 	// genai.Text() は []*Content を返す
-	result, err := g.client.Models.EmbedContent(ctx, "gemini-embedding-001", genai.Text(text), config)
+	result, err := g.client.Models.EmbedContent(ctx, ModelEmbedding, genai.Text(text), config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate embedding: %w", err)
 	}
@@ -304,7 +311,7 @@ JSON配列のみを返してください（前後の説明文・コードブロ�
 %s`, content)
 
 	contents := genai.Text(prompt)
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to split diary into chunks: %w", err)
 	}
@@ -409,7 +416,7 @@ func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent stri
 		ResponseSchema:   schema,
 	}
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, config)
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
