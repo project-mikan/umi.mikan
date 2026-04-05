@@ -32,6 +32,7 @@ dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, red
 - cAdvisor: http://localhost:2009
 - Loki: http://localhost:2010
 - Grafana Alloy: http://localhost:2011
+- Backend Metrics: http://localhost:2012/metrics
 
 ## Common Development Commands
 
@@ -344,7 +345,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - 2009: cAdvisor
   - 2010: Loki
   - 2011: Grafana Alloy
-- **Custom services**: New services should use available ports in the 2000 range (e.g., 2012+)
+  - 2012: Backend Metrics
+- **Custom services**: New services should use available ports in the 2000 range (e.g., 2013+)
 
 ### Internationalization (i18n)
 
