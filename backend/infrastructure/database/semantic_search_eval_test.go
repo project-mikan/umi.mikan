@@ -270,16 +270,22 @@ func runNegativeCase(
 		t.Fatalf("ネガティブクエリ[%s]のembedding生成に失敗: %v", nc.ID, err)
 	}
 
-	semanticResults, err := database.SearchDiaryEntriesByEmbedding(ctx, db, userID, queryEmbedding, 10, 0.5)
+	// Geminiのembeddingモデルは短い日本語テキスト同士で無関係でも0.55〜0.62程度の
+	// コサイン類似度が出る特性がある。正例クエリの最低スコア（≈0.696）との間には
+	// 明確なギャップがあるため、ネガティブケースの評価には0.65の閾値を使用する。
+	// 本番コードの閾値0.3は再現率を重視した設定であり、これとは目的が異なる。
+	const negativeThreshold = 0.65
+
+	semanticResults, err := database.SearchDiaryEntriesByEmbedding(ctx, db, userID, queryEmbedding, 10, negativeThreshold)
 	if err != nil {
 		t.Fatalf("ネガティブクエリ[%s]の検索に失敗: %v", nc.ID, err)
 	}
 
 	t.Logf("ネガティブクエリ: 「%s」", nc.Query)
-	t.Logf("  セマンティック結果件数: %d件（閾値0.5）", len(semanticResults))
+	t.Logf("  セマンティック結果件数: %d件（閾値%.2f）", len(semanticResults), negativeThreshold)
 
 	if len(semanticResults) == 0 {
-		t.Logf("  ✓ PASS: 誤検出なし")
+		t.Logf("  ✓ PASS: 誤検出なし（全30件が閾値%.2f未満）", negativeThreshold)
 	} else {
 		maxSim := 0.0
 		for _, r := range semanticResults {
@@ -287,7 +293,7 @@ func runNegativeCase(
 				maxSim = r.Similarity
 			}
 		}
-		t.Logf("  ℹ 注意: %d件ヒット（最高類似度: %.3f）", len(semanticResults), maxSim)
+		t.Errorf("  ✗ FAIL: %d件ヒット（最高類似度: %.3f）— 無関係クエリが閾値を超えている", len(semanticResults), maxSim)
 	}
 	t.Log("")
 }
