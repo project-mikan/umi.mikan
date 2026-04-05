@@ -153,3 +153,42 @@ func TestBuildDeleteWhereClause_emailパターン(t *testing.T) {
 		t.Errorf("entity_aliases（email）: got %q, want %q", got, want)
 	}
 }
+
+func TestBuildDynamicCleanupQueries_IntegrationTest(t *testing.T) {
+	db := SetupTestDB(t)
+
+	byUserID, byEmailPattern, err := buildDynamicCleanupQueries(db)
+	if err != nil {
+		t.Fatalf("buildDynamicCleanupQueriesが失敗: %v", err)
+	}
+
+	// 少なくともusersテーブルのDELETE文が含まれること
+	foundUsersByID := slices.Contains(byUserID, "DELETE FROM users WHERE id = $1")
+	if !foundUsersByID {
+		t.Errorf("byUserIDにusersのDELETE文が含まれていない: %v", byUserID)
+	}
+
+	foundUsersByEmail := slices.Contains(byEmailPattern, "DELETE FROM users WHERE email LIKE $1")
+	if !foundUsersByEmail {
+		t.Errorf("byEmailPatternにusersのDELETE文が含まれていない: %v", byEmailPattern)
+	}
+
+	// 各クエリは$1プレースホルダを含むこと
+	for _, q := range byUserID {
+		hasPlaceholder := false
+		for i := range q {
+			if q[i] == '$' {
+				hasPlaceholder = true
+				break
+			}
+		}
+		if !hasPlaceholder {
+			t.Errorf("クエリに$1プレースホルダが含まれていない: %q", q)
+		}
+	}
+}
+
+func TestCleanupTestDB_NilDB(t *testing.T) {
+	// nil DBでCleanupTestDBを呼んでもpanicしないことを確認
+	CleanupTestDB(t, nil)
+}

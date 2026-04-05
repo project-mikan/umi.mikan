@@ -389,6 +389,10 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Database package tests must be in `package database_test`**: Tests in `backend/infrastructure/database/` must use `package database_test` (external test package) to avoid import cycles. The cycle is `database` → `testutil` → `domain/model` → `database`.
 - **Database layer functions need their own tests**: Functions added to `backend/infrastructure/database/` (e.g., new query functions) require test files in the same directory. Service-layer tests do NOT count as coverage for the database package — Go measures coverage per package separately.
 - **New database query files need a corresponding `*_test.go`**: When adding a new `.go` file with query functions to `backend/infrastructure/database/`, always create a matching `*_test.go` in `package database_test` with tests for each exported function.
+- **Service layer tests are in the same package**: Tests in `backend/service/*/` use the internal package (e.g., `package diary`) to allow testing unexported functions like `generateSnippet` and `getTaskTimeout`.
+- **Patch coverage target**: Codecov measures coverage of changed lines per PR. When making changes, ensure all new/changed lines in service and database packages have corresponding test coverage. Files exempt from this requirement: `backend/cmd/*/main.go` (entrypoints), `backend/infrastructure/llm/` (external LLM API dependencies).
+- **testutil package tests**: Functions in `backend/testutil/` that require a real DB (e.g., `buildDynamicCleanupQueries`, `loadFKGraph`) should be tested with integration tests using `SetupTestDB(t)`. Pure functions (e.g., `getEnvOrDefault`, `DefaultTestDBConfig`) can be tested with unit tests in `package testutil`.
+- **User service tests**: `backend/service/user/service_test.go` uses `package user` (internal) and tests all CRUD methods for user management.
 
 ## Configuration Options
 

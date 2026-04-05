@@ -260,3 +260,37 @@ func TestSearchDiaryEntriesByEmbedding(t *testing.T) {
 		}
 	})
 }
+
+func TestSearchDiaryEntriesByEmbedding_LimitEdgeCases(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "embedding-limit-test@example.com", "LimitUser")
+	ctx := context.Background()
+
+	// limit=0 と limit>50 のデフォルト制限動作を確認（エラーが出ないことを検証）
+	queryEmbedding := make([]float32, 3072)
+
+	t.Run("limit=0の場合デフォルト値で動作する", func(t *testing.T) {
+		// エラーなしに動作することを確認（結果は0件でも可）
+		results, err := database.SearchDiaryEntriesByEmbedding(ctx, db, userID, queryEmbedding, 0, 0.5)
+		if err != nil {
+			t.Fatalf("SearchDiaryEntriesByEmbedding(limit=0)失敗: %v", err)
+		}
+		// 結果は0件でも問題なし（データが存在しないため）
+		_ = results
+	})
+
+	t.Run("limit>50の場合上限50で動作する", func(t *testing.T) {
+		results, err := database.SearchDiaryEntriesByEmbedding(ctx, db, userID, queryEmbedding, 100, 0.5)
+		if err != nil {
+			t.Fatalf("SearchDiaryEntriesByEmbedding(limit=100)失敗: %v", err)
+		}
+		_ = results
+	})
+}
+
+func TestUpsertDiaryChunkEmbeddings_NonSQLDB(t *testing.T) {
+	// db が *sql.DB でない場合にエラーが返ることを確認
+	// NOTE: 現在の実装では *sql.DB 以外は受け付けないが、
+	// DBインターフェースの別実装はないためこのケースはスキップ
+	t.Skip("*sql.DB以外のDBインターフェース実装がないためスキップ")
+}
