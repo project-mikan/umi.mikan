@@ -1018,6 +1018,8 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	ctx context.Context,
 	req *g.SearchDiaryEntriesSemanticRequest,
 ) (*g.SearchDiaryEntriesSemanticResponse, error) {
+	startTime := time.Now()
+
 	userIDStr, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -1149,6 +1151,12 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		embeddingModel = searchResults[0].EmbeddingModel
 		chunkModel = searchResults[0].ChunkModel
 	}
+
+	// メトリクスを記録
+	elapsed := time.Since(startTime).Seconds()
+	semanticSearchRequestsCounter.WithLabelValues("success").Inc()
+	semanticSearchDuration.WithLabelValues("success").Observe(elapsed)
+	semanticSearchResultsCount.WithLabelValues().Observe(float64(len(results)))
 
 	return &g.SearchDiaryEntriesSemanticResponse{
 		Results:        results,
