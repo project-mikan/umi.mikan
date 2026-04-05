@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/lock"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/redis/rueidis"
 	"google.golang.org/grpc/codes"
@@ -1217,6 +1218,21 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 	if s.Redis == nil {
 		return nil, status.Error(codes.Internal, "Redis not configured")
 	}
+
+	// 同一ユーザーによる同時実行を防ぐ分散ロック（TTL: 10分）
+	regenLock := lock.NewDistributedLock(s.Redis, lock.EmbeddingRegenLockKey(userIDStr), 10*time.Minute)
+	acquired, err := regenLock.TryLock(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to acquire lock: %v", err)
+	}
+	if !acquired {
+		return nil, status.Error(codes.ResourceExhausted, "Embedding regeneration is already in progress. Please try again later.")
+	}
+	defer func() {
+		if unlockErr := regenLock.Unlock(context.Background()); unlockErr != nil {
+			log.Printf("Failed to release embedding regen lock for user %s: %v", userIDStr, unlockErr)
+		}
+	}()
 
 	// embedding未生成の日記ID一覧を取得
 	query := `
