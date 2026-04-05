@@ -138,9 +138,17 @@ curl http://localhost:2011/metrics   # Grafana Alloy metrics
 
 ```bash
 make db                # Connect to PostgreSQL
-make db-init           # Reset and reinitialize database
+make db-diff           # Preview schema changes (dry run)
+make db-apply          # Apply schema migrations to production DB
+make db-apply-test     # Apply schema migrations to test DB
 make p-log             # View postgres logs
 ```
+
+**Schema change workflow:**
+1. Add a new SQL file to `schema/` (files are applied in filename order)
+2. Preview changes with `make db-diff`
+3. Apply to production DB with `make db-apply`
+4. Apply to test DB with `make db-apply-test` (required before running tests)
 
 ### Code Generation
 
@@ -263,7 +271,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 ## Development Workflow
 
 1. **Code Changes**: Backend uses Air for hot reload, frontend uses Vite
-2. **Database Changes**: Update schema files, run `make db-init`, then `make xo`
+2. **Database Changes**: Add SQL file to `schema/`, run `make db-apply` and `make db-apply-test`, then `make xo`
 3. **Proto Changes**: Update .proto files, run `make grpc`
 4. **Frontend**: Uses pnpm for package management, Biome for formatting
 5. **Backend**: Uses Go modules, standard Go formatting

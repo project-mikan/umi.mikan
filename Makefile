@@ -48,12 +48,22 @@ db-diff:
 		--disable-plan-validation
 
 db-apply:
-	# Apply schema changes to database
+	# Apply schema changes to database (本番DB)
 	docker compose exec backend go tool pg-schema-diff apply \
 		--from-dsn "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" \
 		--to-dir /schema \
 		--disable-plan-validation \
-		--allow-hazards DELETES_DATA,INDEX_DROPPED
+		--allow-hazards DELETES_DATA,INDEX_DROPPED,INDEX_BUILD,ACQUIRES_ACCESS_EXCLUSIVE_LOCK \
+		--skip-confirm-prompt
+
+db-apply-test:
+	# Apply schema changes to test database (テストDB)
+	docker compose exec backend go tool pg-schema-diff apply \
+		--from-dsn "postgres://postgres:test-pass@postgres_test/umi_mikan_test?sslmode=disable" \
+		--to-dir /schema \
+		--disable-plan-validation \
+		--allow-hazards DELETES_DATA,INDEX_DROPPED,INDEX_BUILD,ACQUIRES_ACCESS_EXCLUSIVE_LOCK,UPGRADING_EXTENSION_VERSION \
+		--skip-confirm-prompt
 
 f-log:
 	docker compose logs -f frontend
