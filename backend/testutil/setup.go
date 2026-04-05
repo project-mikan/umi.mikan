@@ -147,6 +147,9 @@ func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
 	defer func() { _ = tx.Rollback() }()
 
 	cleanupQueries := []string{
+		"DELETE FROM diary_embeddings WHERE user_id = $1",
+		"DELETE FROM diary_highlights WHERE user_id = $1",
+		"DELETE FROM semantic_search_logs WHERE user_id = $1",
 		"DELETE FROM diaries WHERE user_id = $1",
 		"DELETE FROM user_password_authes WHERE user_id = $1",
 		"DELETE FROM users WHERE id = $1",

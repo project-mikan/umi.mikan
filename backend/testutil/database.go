@@ -78,6 +78,9 @@ func cleanupTestData(t *testing.T, db *sql.DB) {
 	testPrefix = strings.ReplaceAll(testPrefix, " ", "-")
 
 	cleanupQueries := []string{
+		fmt.Sprintf("DELETE FROM diary_embeddings WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%%test-suite-%s%%')", testPrefix),
+		fmt.Sprintf("DELETE FROM diary_highlights WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%%test-suite-%s%%')", testPrefix),
+		fmt.Sprintf("DELETE FROM semantic_search_logs WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%%test-suite-%s%%')", testPrefix),
 		fmt.Sprintf("DELETE FROM diaries WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%%test-suite-%s%%')", testPrefix),
 		fmt.Sprintf("DELETE FROM user_password_authes WHERE user_id IN (SELECT id FROM users WHERE email LIKE '%%test-suite-%s%%')", testPrefix),
 		fmt.Sprintf("DELETE FROM users WHERE email LIKE '%%test-suite-%s%%'", testPrefix),
