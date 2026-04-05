@@ -2,7 +2,10 @@ package llm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"google.golang.org/genai"
 )
@@ -278,6 +281,65 @@ func (g *GeminiClient) GenerateEmbedding(ctx context.Context, text string, isDoc
 	}
 
 	return result.Embeddings[0].Values, nil
+}
+
+// SplitDiaryIntoChunks は日記の内容を話題ごとのチャンクに分割する
+// 各チャンクは意味的に自己完結したテキストで、ベクトル検索の精度向上に使用する
+// LLMの呼び出しに失敗した場合はエラーを返す（呼び出し元でフォールバック処理を行う）
+func (g *GeminiClient) SplitDiaryIntoChunks(ctx context.Context, content string) ([]string, error) {
+	prompt := fmt.Sprintf(`以下の日記を話題・出来事ごとのまとまりに分割してください。
+
+【ルール】
+- 1つの話題・出来事・テーマごとに1チャンクにする
+- 各チャンクは文脈が伝わるよう意味的に自己完結した内容にする
+- 日記が1つの話題のみ、または短い場合は1要素の配列を返す
+- 話題の数に上限はない。日記の内容に応じて必要な数だけ分割する
+- 各チャンクは元の日記の文章をそのまま使う（要約や改変は禁止）
+- チャンク間で内容が重複しないようにする
+
+JSON配列のみを返してください（前後の説明文・コードブロック記号は不要）:
+["チャンク1のテキスト", "チャンク2のテキスト", ...]
+
+日記:
+%s`, content)
+
+	contents := genai.Text(prompt)
+	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to split diary into chunks: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+		return nil, fmt.Errorf("no content returned from chunk splitting")
+	}
+
+	textPart := resp.Candidates[0].Content.Parts[0]
+	if textPart == nil {
+		return nil, fmt.Errorf("nil content part returned from chunk splitting")
+	}
+
+	// コードブロック記号を除去してJSONをパース
+	rawText := textPart.Text
+	rawText = regexp.MustCompile("(?s)^```[a-z]*\n?|```$").ReplaceAllString(strings.TrimSpace(rawText), "")
+	rawText = strings.TrimSpace(rawText)
+
+	var chunks []string
+	if err := json.Unmarshal([]byte(rawText), &chunks); err != nil {
+		return nil, fmt.Errorf("failed to parse chunk splitting response as JSON: %w", err)
+	}
+
+	// 空のチャンクを除去
+	result := make([]string, 0, len(chunks))
+	for _, c := range chunks {
+		if trimmed := strings.TrimSpace(c); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	if len(result) == 0 {
+		return nil, fmt.Errorf("no valid chunks returned from chunk splitting")
+	}
+
+	return result, nil
 }
 
 func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent string) (string, error) {

@@ -1135,14 +1135,17 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 		}
 	}()
 
-	// マークダウン記法を除去してノイズを低減し、日付情報を先頭に付与して時間的クエリの精度を向上させる
+	// マークダウン記法を除去してノイズを低減する
 	cleanContent := stripMarkdown(diaryContent)
-	enrichedContent := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), cleanContent)
 
-	// 4. 埋め込みベクトルを生成（ドキュメント用タスクタイプ）
-	embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedContent, true)
+	// 4. 日記を話題ごとのチャンクに分割する（失敗時は日記全体を1チャンクとしてフォールバック）
+	rawChunks, err := geminiClient.SplitDiaryIntoChunks(ctx, cleanContent)
 	if err != nil {
-		return fmt.Errorf("failed to generate embedding: %w", err)
+		logger.WithFields(logrus.Fields{
+			"user_id":  userID,
+			"diary_id": diaryID,
+		}).WithError(err).Warn("Failed to split diary into chunks, falling back to single chunk")
+		rawChunks = []string{cleanContent}
 	}
 
 	// 5. UUIDをパース
@@ -1155,16 +1158,33 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 		return fmt.Errorf("failed to parse user_id: %w", err)
 	}
 
-	// 6. diary_embeddingsテーブルにUPSERT
-	if err := database.UpsertDiaryEmbedding(ctx, db, diaryUUID, userUUID, embedding, "gemini-embedding-001"); err != nil {
-		return fmt.Errorf("failed to upsert diary embedding: %w", err)
+	// 6. 各チャンクに日付コンテキストを付与してembedding生成
+	diaryChunks := make([]database.DiaryChunk, 0, len(rawChunks))
+	for i, chunk := range rawChunks {
+		// 時間的クエリの精度向上のため日付情報を先頭に付与する
+		enrichedChunk := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), chunk)
+		embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedChunk, true)
+		if err != nil {
+			return fmt.Errorf("failed to generate embedding for chunk %d: %w", i, err)
+		}
+		diaryChunks = append(diaryChunks, database.DiaryChunk{
+			Index:     i,
+			Content:   chunk,
+			Embedding: embedding,
+		})
+	}
+
+	// 7. diary_embeddingsテーブルにチャンク単位でUPSERT
+	if err := database.UpsertDiaryChunkEmbeddings(ctx, db, diaryUUID, userUUID, diaryChunks, "gemini-embedding-001"); err != nil {
+		return fmt.Errorf("failed to upsert diary chunk embeddings: %w", err)
 	}
 
 	summariesGeneratedCounter.WithLabelValues("diary_embedding").Inc()
 	logger.WithFields(logrus.Fields{
-		"user_id":  userID,
-		"diary_id": diaryID,
-	}).Info("Successfully generated and saved diary embedding")
+		"user_id":     userID,
+		"diary_id":    diaryID,
+		"chunk_count": len(diaryChunks),
+	}).Info("Successfully generated and saved diary chunk embeddings")
 	return nil
 }
 

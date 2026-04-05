@@ -12,29 +12,46 @@ import (
 	"github.com/google/uuid"
 )
 
+// DiaryChunk はembedding生成対象の日記チャンクを表す
+type DiaryChunk struct {
+	// チャンクのインデックス（0始まり）
+	Index int
+	// チャンクのテキスト内容（スニペット表示用）
+	Content string
+	// チャンクのベクトル埋め込み
+	Embedding []float32
+}
+
 // DiaryEmbeddingSearchResult は意味的検索の結果を表す
 type DiaryEmbeddingSearchResult struct {
-	DiaryID    uuid.UUID
-	Date       time.Time
-	Content    string
-	Similarity float64
+	DiaryID uuid.UUID
+	Date    time.Time
+	// 日記全文（キーワード検索フォールバック用）
+	Content string
+	// マッチしたチャンクの内容（スニペット表示用）
+	ChunkContent string
+	Similarity   float64
 }
 
 // DiaryEmbeddingStatus は日記のRAGインデックス状態を表す
 type DiaryEmbeddingStatus struct {
-	Indexed         bool
-	ModelVersion    string
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	Indexed      bool
+	ModelVersion string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	// 最初のチャンクのベクトル値（デバッグ用）
 	EmbeddingValues []float32
 }
 
 // GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
+// 複数チャンクが存在する場合はchunk_index=0のデータを返す
 func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UUID) (*DiaryEmbeddingStatus, error) {
 	query := `
 		SELECT model_version, created_at, updated_at, embedding::text
 		FROM diary_embeddings
 		WHERE diary_id = $1 AND user_id = $2
+		ORDER BY chunk_index ASC
+		LIMIT 1
 	`
 
 	var modelVersion, embeddingStr string
@@ -88,47 +105,76 @@ func embeddingToSQL(v []float32) string {
 	return "[" + strings.Join(parts, ",") + "]"
 }
 
-// UpsertDiaryEmbedding は日記のベクトル埋め込みをUPSERTで保存する
-func UpsertDiaryEmbedding(ctx context.Context, db DB, diaryID, userID uuid.UUID, embedding []float32, modelVersion string) error {
-	query := `
-		INSERT INTO diary_embeddings (id, diary_id, user_id, embedding, model_version, created_at, updated_at)
-		VALUES ($1, $2, $3, $4::halfvec, $5, NOW(), NOW())
-		ON CONFLICT (diary_id) DO UPDATE SET
-			embedding = EXCLUDED.embedding,
-			model_version = EXCLUDED.model_version,
-			updated_at = NOW()
-	`
+// UpsertDiaryChunkEmbeddings は日記の全チャンクをトランザクション内でupsertする
+// 既存チャンクを削除してから新チャンクを挿入することで常に最新状態に保つ
+func UpsertDiaryChunkEmbeddings(ctx context.Context, db DB, diaryID, userID uuid.UUID, chunks []DiaryChunk, modelVersion string) error {
+	sqlDB, ok := db.(*sql.DB)
+	if !ok {
+		return fmt.Errorf("db must be *sql.DB for transactional chunk upsert")
+	}
 
-	id := uuid.New()
-	embeddingStr := embeddingToSQL(embedding)
-
-	_, err := db.ExecContext(ctx, query, id, diaryID, userID, embeddingStr, modelVersion)
+	tx, err := sqlDB.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("failed to upsert diary embedding: %w", err)
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	// 既存チャンクを全削除
+	if _, err := tx.ExecContext(ctx, `DELETE FROM diary_embeddings WHERE diary_id = $1`, diaryID); err != nil {
+		return fmt.Errorf("failed to delete existing diary chunks: %w", err)
+	}
+
+	// 新チャンクを挿入
+	insertQuery := `
+		INSERT INTO diary_embeddings
+			(id, diary_id, user_id, chunk_index, chunk_content, embedding, model_version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6::halfvec, $7, NOW(), NOW())
+	`
+	for _, chunk := range chunks {
+		embeddingStr := embeddingToSQL(chunk.Embedding)
+		if _, err := tx.ExecContext(ctx, insertQuery,
+			uuid.New(), diaryID, userID, chunk.Index, chunk.Content, embeddingStr, modelVersion,
+		); err != nil {
+			return fmt.Errorf("failed to insert diary chunk (index=%d): %w", chunk.Index, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit chunk upsert transaction: %w", err)
 	}
 
 	return nil
 }
 
 // SearchDiaryEntriesByEmbedding はベクトル類似度で日記を検索する
+// 各日記の中で最も類似度の高いチャンクを1件返し、chunk_contentをスニペットとして使用する
 // threshold: コサイン類似度の下限（0.0〜1.0）
-// limit: 最大取得件数
+// limit: 最大取得件数（日記単位）
 func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID, queryEmbedding []float32, limit int, threshold float64) ([]*DiaryEmbeddingSearchResult, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10
 	}
 
+	// 各日記のチャンクの中で最も類似度の高いものを1件だけ選ぶ（日記単位に集約）
 	query := `
-		SELECT
-			d.id,
-			d.date,
-			d.content,
-			1 - (e.embedding <=> $2::halfvec) AS similarity
-		FROM diary_embeddings e
-		JOIN diaries d ON d.id = e.diary_id
-		WHERE e.user_id = $1
-			AND 1 - (e.embedding <=> $2::halfvec) >= $3
-		ORDER BY e.embedding <=> $2::halfvec
+		SELECT diary_id, date, content, chunk_content, similarity
+		FROM (
+			SELECT
+				d.id AS diary_id,
+				d.date,
+				d.content,
+				e.chunk_content,
+				1 - (e.embedding <=> $2::halfvec) AS similarity,
+				ROW_NUMBER() OVER (PARTITION BY d.id ORDER BY e.embedding <=> $2::halfvec ASC) AS rn
+			FROM diary_embeddings e
+			JOIN diaries d ON d.id = e.diary_id
+			WHERE e.user_id = $1
+				AND 1 - (e.embedding <=> $2::halfvec) >= $3
+		) ranked
+		WHERE rn = 1
+		ORDER BY similarity DESC
 		LIMIT $4
 	`
 
@@ -144,7 +190,7 @@ func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID,
 	var results []*DiaryEmbeddingSearchResult
 	for rows.Next() {
 		var result DiaryEmbeddingSearchResult
-		if err := rows.Scan(&result.DiaryID, &result.Date, &result.Content, &result.Similarity); err != nil {
+		if err := rows.Scan(&result.DiaryID, &result.Date, &result.Content, &result.ChunkContent, &result.Similarity); err != nil {
 			return nil, fmt.Errorf("failed to scan diary embedding search result: %w", err)
 		}
 		results = append(results, &result)

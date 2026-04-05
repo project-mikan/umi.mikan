@@ -150,6 +150,10 @@ make p-log             # View postgres logs
 3. Apply to production DB with `make db-apply`
 4. Apply to test DB with `make db-apply-test` (required before running tests)
 
+**Schema file rules:**
+- **One file per table**: Each table must be defined in its own SQL file. Never split a table's definition across multiple files or merge multiple tables into one file.
+- Column additions, constraint changes, and index changes for a table belong in that table's file, not in a separate migration file.
+
 ### Code Generation
 
 ```bash
@@ -207,7 +211,9 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **diary_summary_days**: AI-generated daily summaries
 - **diary_summary_months**: AI-generated monthly summaries
 - **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)
-- **Migrations**: Numbered SQL files in /schema directory
+- **diary_embeddings**: Per-chunk vector embeddings for semantic search (pgvector halfvec)
+- **semantic_search_logs**: Tracks semantic search API requests per user
+- **Migrations**: Numbered SQL files in /schema directory — **one file per table, always**
 
 ### Async Processing Architecture
 

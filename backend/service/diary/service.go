@@ -1120,7 +1120,12 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	// 結果を変換
 	results := make([]*g.SemanticSearchResult, 0, len(searchResults))
 	for _, sr := range searchResults {
-		snippet := generateSnippet(sr.Content, 200)
+		// チャンク内容があればそれをスニペットに使用し、なければ日記全文から生成する
+		snippetSource := sr.ChunkContent
+		if snippetSource == "" {
+			snippetSource = sr.Content
+		}
+		snippet := generateSnippet(snippetSource, 200)
 		results = append(results, &g.SemanticSearchResult{
 			DiaryId: sr.DiaryID.String(),
 			Date: &g.YMD{
