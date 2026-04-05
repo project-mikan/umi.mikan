@@ -296,6 +296,7 @@ message MonthlySummary {
   string summary = 3;
   int64 created_at = 4;
   int64 updated_at = 5;
+  string model_version = 6; // サマリー生成に使用したLLMモデル
 }
 
 // 月ごとのサマリー生成リクエスト
@@ -326,6 +327,7 @@ message DailySummary {
   string summary = 4;
   int64 created_at = 5;
   int64 updated_at = 6;
+  string model_version = 7; // サマリー生成に使用したLLMモデル
 }
 
 // 日ごとのサマリー生成リクエスト
@@ -363,6 +365,7 @@ message GetLatestTrendResponse {
   string period_start = 6; // 分析期間開始（ISO 8601形式）
   string period_end = 7; // 分析期間終了（ISO 8601形式）
   string generated_at = 8; // 生成日時（ISO 8601形式）
+  string model_version = 9; // トレンド生成に使用したLLMモデル
 }
 
 // 直近トレンド分析生成トリガーリクエスト（デバッグ用）

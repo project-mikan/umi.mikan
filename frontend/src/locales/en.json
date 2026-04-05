@@ -547,5 +547,8 @@
 			"title": "About This Page",
 			"description": "This page is only displayed in the development environment. It will not be shown in production."
 		}
+	},
+	"summary": {
+		"modelVersion": "Model"
 	}
 }

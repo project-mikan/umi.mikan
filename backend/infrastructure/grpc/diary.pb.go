@@ -892,6 +892,7 @@ type MonthlySummary struct {
 	Summary       string                 `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
 	CreatedAt     int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	ModelVersion  string                 `protobuf:"bytes,6,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"` // サマリー生成に使用したLLMモデル
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -959,6 +960,13 @@ func (x *MonthlySummary) GetUpdatedAt() int64 {
 		return x.UpdatedAt
 	}
 	return 0
+}
+
+func (x *MonthlySummary) GetModelVersion() string {
+	if x != nil {
+		return x.ModelVersion
+	}
+	return ""
 }
 
 // 月ごとのサマリー生成リクエスト
@@ -1150,6 +1158,7 @@ type DailySummary struct {
 	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
 	CreatedAt     int64                  `protobuf:"varint,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	ModelVersion  string                 `protobuf:"bytes,7,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"` // サマリー生成に使用したLLMモデル
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1224,6 +1233,13 @@ func (x *DailySummary) GetUpdatedAt() int64 {
 		return x.UpdatedAt
 	}
 	return 0
+}
+
+func (x *DailySummary) GetModelVersion() string {
+	if x != nil {
+		return x.ModelVersion
+	}
+	return ""
 }
 
 // 日ごとのサマリー生成リクエスト
@@ -1454,6 +1470,7 @@ type GetLatestTrendResponse struct {
 	PeriodStart   string                 `protobuf:"bytes,6,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"`    // 分析期間開始（ISO 8601形式）
 	PeriodEnd     string                 `protobuf:"bytes,7,opt,name=period_end,json=periodEnd,proto3" json:"period_end,omitempty"`          // 分析期間終了（ISO 8601形式）
 	GeneratedAt   string                 `protobuf:"bytes,8,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`    // 生成日時（ISO 8601形式）
+	ModelVersion  string                 `protobuf:"bytes,9,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"` // トレンド生成に使用したLLMモデル
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1540,6 +1557,13 @@ func (x *GetLatestTrendResponse) GetPeriodEnd() string {
 func (x *GetLatestTrendResponse) GetGeneratedAt() string {
 	if x != nil {
 		return x.GeneratedAt
+	}
+	return ""
+}
+
+func (x *GetLatestTrendResponse) GetModelVersion() string {
+	if x != nil {
+		return x.ModelVersion
 	}
 	return ""
 }
@@ -2361,7 +2385,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x17DeleteDiaryEntryRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"4\n" +
 	"\x18DeleteDiaryEntryResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x99\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xbe\x01\n" +
 	"\x0eMonthlySummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\x05month\x18\x02 \x01(\v2\t.diary.YMR\x05month\x12\x18\n" +
@@ -2369,7 +2393,8 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\"@\n" +
+	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12#\n" +
+	"\rmodel_version\x18\x06 \x01(\tR\fmodelVersion\"@\n" +
 	"\x1dGenerateMonthlySummaryRequest\x12\x1f\n" +
 	"\x05month\x18\x01 \x01(\v2\t.diary.YMR\x05month\"Q\n" +
 	"\x1eGenerateMonthlySummaryResponse\x12/\n" +
@@ -2377,7 +2402,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x18GetMonthlySummaryRequest\x12\x1f\n" +
 	"\x05month\x18\x01 \x01(\v2\t.diary.YMR\x05month\"L\n" +
 	"\x19GetMonthlySummaryResponse\x12/\n" +
-	"\asummary\x18\x01 \x01(\v2\x15.diary.MonthlySummaryR\asummary\"\xb1\x01\n" +
+	"\asummary\x18\x01 \x01(\v2\x15.diary.MonthlySummaryR\asummary\"\xd6\x01\n" +
 	"\fDailySummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bdiary_id\x18\x02 \x01(\tR\adiaryId\x12\x1e\n" +
@@ -2387,7 +2412,8 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\x03R\tupdatedAt\"8\n" +
+	"updated_at\x18\x06 \x01(\x03R\tupdatedAt\x12#\n" +
+	"\rmodel_version\x18\a \x01(\tR\fmodelVersion\"8\n" +
 	"\x1bGenerateDailySummaryRequest\x12\x19\n" +
 	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"M\n" +
 	"\x1cGenerateDailySummaryResponse\x12-\n" +
@@ -2397,7 +2423,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	".diary.YMDR\x04date\"H\n" +
 	"\x17GetDailySummaryResponse\x12-\n" +
 	"\asummary\x18\x01 \x01(\v2\x13.diary.DailySummaryR\asummary\"\x17\n" +
-	"\x15GetLatestTrendRequest\"\x8f\x02\n" +
+	"\x15GetLatestTrendRequest\"\xb4\x02\n" +
 	"\x16GetLatestTrendResponse\x12\x16\n" +
 	"\x06health\x18\x01 \x01(\tR\x06health\x12#\n" +
 	"\rhealth_reason\x18\x02 \x01(\tR\fhealthReason\x12\x12\n" +
@@ -2410,7 +2436,8 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\fperiod_start\x18\x06 \x01(\tR\vperiodStart\x12\x1d\n" +
 	"\n" +
 	"period_end\x18\a \x01(\tR\tperiodEnd\x12!\n" +
-	"\fgenerated_at\x18\b \x01(\tR\vgeneratedAt\"\x1b\n" +
+	"\fgenerated_at\x18\b \x01(\tR\vgeneratedAt\x12#\n" +
+	"\rmodel_version\x18\t \x01(\tR\fmodelVersion\"\x1b\n" +
 	"\x19TriggerLatestTrendRequest\"P\n" +
 	"\x1aTriggerLatestTrendResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +

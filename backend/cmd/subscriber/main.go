@@ -501,17 +501,18 @@ func generateDailySummary(ctx context.Context, db database.DB, redisClient rueid
 
 	// 3. diary_summary_daysに保存
 	insertQuery := `
-		INSERT INTO diary_summary_days (id, user_id, date, summary, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO diary_summary_days (id, user_id, date, summary, model_version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (user_id, date) DO UPDATE SET
 		summary = EXCLUDED.summary,
+		model_version = EXCLUDED.model_version,
 		updated_at = EXCLUDED.updated_at
 	`
 
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, dateStr, summary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, dateStr, summary, llm.ModelGenerateContent, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save summary: %w", err)
 	}
@@ -612,17 +613,18 @@ func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rue
 
 	// 3. diary_summary_monthsに保存
 	insertQuery := `
-		INSERT INTO diary_summary_months (id, user_id, year, month, summary, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO diary_summary_months (id, user_id, year, month, summary, model_version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (user_id, year, month) DO UPDATE SET
 		summary = EXCLUDED.summary,
+		model_version = EXCLUDED.model_version,
 		updated_at = EXCLUDED.updated_at
 	`
 
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, year, month, monthlySummary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, year, month, monthlySummary, llm.ModelGenerateContent, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save monthly summary: %w", err)
 	}
@@ -830,6 +832,7 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 		"period_start":  periodStartStr,
 		"period_end":    periodEndStr,
 		"generated_at":  time.Now().Format(time.RFC3339),
+		"model_version": llm.ModelGenerateContent,
 	}
 
 	trendDataJSON, err := json.Marshal(trendData)

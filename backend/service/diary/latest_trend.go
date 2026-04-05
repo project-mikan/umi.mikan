@@ -34,6 +34,7 @@ type LatestTrendData struct {
 	PeriodStart  string `json:"period_start"`
 	PeriodEnd    string `json:"period_end"`
 	GeneratedAt  string `json:"generated_at"`
+	ModelVersion string `json:"model_version"` // 使用したLLMモデル
 }
 
 // GetLatestTrend は直近1週間の日記のトレンド分析を取得します
@@ -75,6 +76,7 @@ func (s *DiaryEntry) GetLatestTrend(
 		PeriodStart:  trendData.PeriodStart,
 		PeriodEnd:    trendData.PeriodEnd,
 		GeneratedAt:  trendData.GeneratedAt,
+		ModelVersion: trendData.ModelVersion,
 	}, nil
 }
 

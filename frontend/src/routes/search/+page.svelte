@@ -204,13 +204,6 @@
 		{/if}
 	</div>
 
-	<!-- エラー表示 -->
-	{#if data.error}
-		<div class="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-4">
-			{$_(`search.error.${data.error}`) || data.error}
-		</div>
-	{/if}
-
 	<!-- キーワード検索結果 -->
 	{#if data.searchResults}
 		<div class="mb-4">

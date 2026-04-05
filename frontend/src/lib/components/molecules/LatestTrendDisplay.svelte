@@ -15,6 +15,7 @@
 		periodStart: string;
 		periodEnd: string;
 		generatedAt: string;
+		modelVersion?: string;
 	}
 
 	export let userName: string | null = null;
@@ -77,6 +78,7 @@
 							periodStart: result.periodStart,
 							periodEnd: result.periodEnd,
 							generatedAt: result.generatedAt,
+							modelVersion: result.modelVersion || undefined,
 						};
 					} else {
 						// 日付が不正な場合
@@ -312,9 +314,12 @@
 				</ul>
 			</div>
 
-			<!-- 生成日時 -->
-			<div class="text-xs text-gray-500 dark:text-gray-400">
-				{$_("latestTrend.generatedAt")}: {new Date(trendData.generatedAt).toLocaleString($locale || "en")}
+			<!-- 生成日時とモデル -->
+			<div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+				<div>{$_("latestTrend.generatedAt")}: {new Date(trendData.generatedAt).toLocaleString($locale || "en")}</div>
+				{#if trendData.modelVersion}
+					<div>{$_("summary.modelVersion")}: {trendData.modelVersion}</div>
+				{/if}
 			</div>
 		</div>
 	{:else if !trendData}

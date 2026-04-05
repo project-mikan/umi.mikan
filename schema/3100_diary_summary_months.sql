@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS diary_summary_months (
     year INTEGER NOT NULL,
     month INTEGER NOT NULL,
     summary TEXT NOT NULL,
+    -- サマリー生成に使用したLLMモデル
+    model_version TEXT NOT NULL DEFAULT 'gemini-2.5-flash-lite',
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
     CONSTRAINT unique_user_month UNIQUE (user_id, year, month),

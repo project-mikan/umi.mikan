@@ -604,11 +604,12 @@ func (s *DiaryEntry) GetMonthlySummary(
 
 	return &g.GetMonthlySummaryResponse{
 		Summary: &g.MonthlySummary{
-			Id:        summary.ID.String(),
-			Month:     message.Month,
-			Summary:   summary.Summary,
-			CreatedAt: summary.CreatedAt,
-			UpdatedAt: summary.UpdatedAt,
+			Id:           summary.ID.String(),
+			Month:        message.Month,
+			Summary:      summary.Summary,
+			CreatedAt:    summary.CreatedAt,
+			UpdatedAt:    summary.UpdatedAt,
+			ModelVersion: summary.ModelVersion,
 		},
 	}, nil
 }
@@ -824,12 +825,13 @@ func (s *DiaryEntry) GetDailySummary(
 
 	return &g.GetDailySummaryResponse{
 		Summary: &g.DailySummary{
-			Id:        summary.ID.String(),
-			DiaryId:   "", // DiarySummaryDayにはdiaryIdがないので空文字
-			Date:      req.Date,
-			Summary:   summary.Summary,
-			CreatedAt: summary.CreatedAt,
-			UpdatedAt: summary.UpdatedAt,
+			Id:           summary.ID.String(),
+			DiaryId:      "", // DiarySummaryDayにはdiaryIdがないので空文字
+			Date:         req.Date,
+			Summary:      summary.Summary,
+			CreatedAt:    summary.CreatedAt,
+			UpdatedAt:    summary.UpdatedAt,
+			ModelVersion: summary.ModelVersion,
 		},
 	}, nil
 }
