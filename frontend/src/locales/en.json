@@ -479,6 +479,39 @@
 			"dailySummaryExplanation": "Daily Summary: Automatically generated summaries for diary entries over 1000 characters",
 			"monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from daily summaries",
 			"processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
+		},
+		"ragDiagram": {
+			"title": "How RAG Works",
+			"asyncBadge": "Async",
+			"syncBadge": "Sync",
+			"indexingTitle": "Indexing Flow",
+			"searchTitle": "Semantic Search Flow",
+			"step": {
+				"diaryText": "Diary Text",
+				"toPlainText": "Convert to Plain Text",
+				"splitByTopic": "Split by Topic",
+				"enrichWithDate": "Add Date Context",
+				"vectorizeDocument": "Vectorize",
+				"saveToVectorDb": "Save to Vector DB",
+				"naturalLanguageQuery": "Natural Language Query",
+				"vectorizeQuery": "Vectorize Query",
+				"searchSimilarChunks": "Search Similar Chunks",
+				"keywordFallback": "Keyword Fallback",
+				"returnWithSummary": "Return with Summary"
+			},
+			"subLabel": {
+				"markdownFormat": "Markdown format",
+				"removeMarkdown": "Strip code blocks, bold, etc.",
+				"llmSplitWithSummary": "LLM splits by topic/event\nGenerates 1-sentence summary per chunk",
+				"datePrefix": "Prepend \"YYYY-MM-DD diary:\" for context",
+				"retrievalDocument": "RETRIEVAL_DOCUMENT\n3072 dims",
+				"hnswStorage": "halfvec(3072) / HNSW",
+				"queryExample": "e.g. food I ate last summer",
+				"retrievalQuery": "RETRIEVAL_QUERY\n3072 dims",
+				"cosineSimilarity": "Cosine similarity\nthreshold ≥ 0.3",
+				"properNounFallback": "Fallback for proper nouns",
+				"withScore": "With similarity score & summary"
+			}
 		}
 	},
 	"budoux": {

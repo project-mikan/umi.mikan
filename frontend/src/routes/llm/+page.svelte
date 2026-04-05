@@ -52,6 +52,97 @@
 		},
 	];
 
+	// インデックス生成フローのステップ（AI処理に注目）
+	$: indexingSteps = [
+		{
+			icon: "📄",
+			label: $_("llm.ragDiagram.step.diaryText"),
+			subLabel: null as string | null,
+			style:
+				"bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200",
+		},
+		{
+			icon: "🧹",
+			label: $_("llm.ragDiagram.step.toPlainText"),
+			subLabel: $_("llm.ragDiagram.subLabel.removeMarkdown") as string | null,
+			style:
+				"bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200",
+		},
+		{
+			icon: "✂️",
+			label: $_("llm.ragDiagram.step.splitByTopic"),
+			subLabel: $_("llm.ragDiagram.subLabel.llmSplitWithSummary") as
+				| string
+				| null,
+			style:
+				"bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-200",
+		},
+		{
+			icon: "📅",
+			label: $_("llm.ragDiagram.step.enrichWithDate"),
+			subLabel: $_("llm.ragDiagram.subLabel.datePrefix") as string | null,
+			style:
+				"bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
+		},
+		{
+			icon: "🔢",
+			label: $_("llm.ragDiagram.step.vectorizeDocument"),
+			subLabel: $_("llm.ragDiagram.subLabel.retrievalDocument") as
+				| string
+				| null,
+			style:
+				"bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200",
+		},
+		{
+			icon: "🗄️",
+			label: $_("llm.ragDiagram.step.saveToVectorDb"),
+			subLabel: $_("llm.ragDiagram.subLabel.hnswStorage") as string | null,
+			style:
+				"bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200",
+		},
+	];
+
+	// 検索フローのステップ（AI処理に注目）
+	$: searchSteps = [
+		{
+			icon: "🔍",
+			label: $_("llm.ragDiagram.step.naturalLanguageQuery"),
+			subLabel: $_("llm.ragDiagram.subLabel.queryExample") as string | null,
+			style:
+				"bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200",
+		},
+		{
+			icon: "🔢",
+			label: $_("llm.ragDiagram.step.vectorizeQuery"),
+			subLabel: $_("llm.ragDiagram.subLabel.retrievalQuery") as string | null,
+			style:
+				"bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200",
+		},
+		{
+			icon: "⚡",
+			label: $_("llm.ragDiagram.step.searchSimilarChunks"),
+			subLabel: $_("llm.ragDiagram.subLabel.cosineSimilarity") as string | null,
+			style:
+				"bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200",
+		},
+		{
+			icon: "📖",
+			label: $_("llm.ragDiagram.step.keywordFallback"),
+			subLabel: $_("llm.ragDiagram.subLabel.properNounFallback") as
+				| string
+				| null,
+			style:
+				"bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
+		},
+		{
+			icon: "✅",
+			label: $_("llm.ragDiagram.step.returnWithSummary"),
+			subLabel: $_("llm.ragDiagram.subLabel.withScore") as string | null,
+			style:
+				"bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200",
+		},
+	];
+
 	// RAGカード用データ
 	$: ragCards = [
 		{
@@ -238,6 +329,73 @@
 				<li>{$_("llm.metrics.monthlySummaryExplanation")}</li>
 				<li>{$_("llm.metrics.processingExplanation")}</li>
 			</ul>
+		</div>
+
+		<!-- RAGの仕組み図 -->
+		<div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+			<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-5">
+				{$_("llm.ragDiagram.title")}
+			</h4>
+
+			<!-- インデックス生成フロー -->
+			<div class="mb-6">
+				<div class="flex items-center gap-2 mb-3">
+					<span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium rounded-full">
+						{$_("llm.ragDiagram.asyncBadge")}
+					</span>
+					<h5 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+						{$_("llm.ragDiagram.indexingTitle")}
+					</h5>
+				</div>
+				<div class="overflow-x-auto pb-2">
+					<div class="flex items-center gap-1 min-w-max">
+						{#each indexingSteps as step, i}
+							<div class="flex flex-col items-center justify-start w-28 min-h-[88px] p-2 rounded-lg border text-center overflow-hidden {step.style}">
+								<span class="text-xl mb-1 shrink-0">{step.icon}</span>
+								<span class="text-xs font-medium leading-tight break-words w-full">{step.label}</span>
+								{#if step.subLabel}
+									<span class="text-xs opacity-70 mt-0.5 leading-tight break-words w-full" style="white-space: pre-line">{step.subLabel}</span>
+								{/if}
+							</div>
+							{#if i < indexingSteps.length - 1}
+								<svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+								</svg>
+							{/if}
+						{/each}
+					</div>
+				</div>
+			</div>
+
+			<!-- 検索フロー -->
+			<div>
+				<div class="flex items-center gap-2 mb-3">
+					<span class="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 text-xs font-medium rounded-full">
+						{$_("llm.ragDiagram.syncBadge")}
+					</span>
+					<h5 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+						{$_("llm.ragDiagram.searchTitle")}
+					</h5>
+				</div>
+				<div class="overflow-x-auto pb-2">
+					<div class="flex items-center gap-1 min-w-max">
+						{#each searchSteps as step, i}
+							<div class="flex flex-col items-center justify-start w-28 min-h-[88px] p-2 rounded-lg border text-center overflow-hidden {step.style}">
+								<span class="text-xl mb-1 shrink-0">{step.icon}</span>
+								<span class="text-xs font-medium leading-tight break-words w-full">{step.label}</span>
+								{#if step.subLabel}
+									<span class="text-xs opacity-70 mt-0.5 leading-tight break-words w-full" style="white-space: pre-line">{step.subLabel}</span>
+								{/if}
+							</div>
+							{#if i < searchSteps.length - 1}
+								<svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+								</svg>
+							{/if}
+						{/each}
+					</div>
+				</div>
+			</div>
 		</div>
 	</Card>
 </div>

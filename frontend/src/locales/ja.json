@@ -479,6 +479,39 @@
 			"dailySummaryExplanation": "日次まとめ: 1000文字以上の日記に対して毎日自動で生成されるまとめ",
 			"monthlySummaryExplanation": "月次まとめ: 日次まとめから生成される月間の総合まとめ",
 			"processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
+		},
+		"ragDiagram": {
+			"title": "RAGの仕組み",
+			"asyncBadge": "非同期",
+			"syncBadge": "同期",
+			"indexingTitle": "インデックス生成フロー",
+			"searchTitle": "セマンティック検索フロー",
+			"step": {
+				"diaryText": "日記テキスト",
+				"toPlainText": "平文に変換",
+				"splitByTopic": "話題で分割",
+				"enrichWithDate": "日付を付加",
+				"vectorizeDocument": "ベクトル化",
+				"saveToVectorDb": "ベクトルDB保存",
+				"naturalLanguageQuery": "自然言語クエリ",
+				"vectorizeQuery": "クエリをベクトル化",
+				"searchSimilarChunks": "類似チャンクを検索",
+				"keywordFallback": "キーワードで補完",
+				"returnWithSummary": "要約と共に返却"
+			},
+			"subLabel": {
+				"markdownFormat": "Markdown形式",
+				"removeMarkdown": "コードブロック・太字などを除去",
+				"llmSplitWithSummary": "LLMが話題・出来事で分割\n各チャンクに1文の要約を付与",
+				"datePrefix": "「YYYY年M月D日の日記:」を先頭に付加",
+				"retrievalDocument": "RETRIEVAL_DOCUMENT\n3072次元",
+				"hnswStorage": "halfvec(3072) / HNSW",
+				"queryExample": "例: 去年食べたもの",
+				"retrievalQuery": "RETRIEVAL_QUERY\n3072次元",
+				"cosineSimilarity": "コサイン類似度\n閾値0.3以上",
+				"properNounFallback": "固有名詞などのフォールバック",
+				"withScore": "類似度スコア・要約付き"
+			}
 		}
 	},
 	"budoux": {
