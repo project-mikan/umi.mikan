@@ -107,7 +107,10 @@ export async function createDiaryEntry(
 		date: params.date,
 	});
 
-	return await diaryClient.createDiaryEntry(request, authHeader(params.accessToken));
+	return await diaryClient.createDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDiaryEntry(
@@ -117,7 +120,10 @@ export async function getDiaryEntry(
 		date: params.date,
 	});
 
-	return await diaryClient.getDiaryEntry(request, authHeader(params.accessToken));
+	return await diaryClient.getDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDiaryEntriesByMonth(
@@ -127,7 +133,10 @@ export async function getDiaryEntriesByMonth(
 		month: params.month,
 	});
 
-	return await diaryClient.getDiaryEntriesByMonth(request, authHeader(params.accessToken));
+	return await diaryClient.getDiaryEntriesByMonth(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function updateDiaryEntry(
@@ -140,7 +149,10 @@ export async function updateDiaryEntry(
 		date: params.date,
 	});
 
-	return await diaryClient.updateDiaryEntry(request, authHeader(params.accessToken));
+	return await diaryClient.updateDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function deleteDiaryEntry(
@@ -150,7 +162,10 @@ export async function deleteDiaryEntry(
 		id: params.id,
 	});
 
-	return await diaryClient.deleteDiaryEntry(request, authHeader(params.accessToken));
+	return await diaryClient.deleteDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export function createYMD(year: number, month: number, day: number): YMD {
@@ -168,7 +183,10 @@ export async function searchDiaryEntries(
 		keyword: params.keyword,
 	});
 
-	return await diaryClient.searchDiaryEntries(request, authHeader(params.accessToken));
+	return await diaryClient.searchDiaryEntries(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function generateMonthlySummary(
@@ -178,7 +196,10 @@ export async function generateMonthlySummary(
 		month: params.month,
 	});
 
-	return await diaryClient.generateMonthlySummary(request, authHeader(params.accessToken));
+	return await diaryClient.generateMonthlySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getMonthlySummary(
@@ -188,7 +209,10 @@ export async function getMonthlySummary(
 		month: params.month,
 	});
 
-	return await diaryClient.getMonthlySummary(request, authHeader(params.accessToken));
+	return await diaryClient.getMonthlySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface GenerateDailySummaryParams {
@@ -208,7 +232,10 @@ export async function generateDailySummary(
 		diaryId: params.diaryId,
 	});
 
-	return await diaryClient.generateDailySummary(request, authHeader(params.accessToken));
+	return await diaryClient.generateDailySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDailySummary(
@@ -218,7 +245,10 @@ export async function getDailySummary(
 		date: params.date,
 	});
 
-	return await diaryClient.getDailySummary(request, authHeader(params.accessToken));
+	return await diaryClient.getDailySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface GetLatestTrendParams {
@@ -234,7 +264,10 @@ export async function getLatestTrend(
 ): Promise<GetLatestTrendResponse> {
 	const request = create(GetLatestTrendRequestSchema, {});
 
-	return await diaryClient.getLatestTrend(request, authHeader(params.accessToken));
+	return await diaryClient.getLatestTrend(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function triggerLatestTrend(
@@ -242,7 +275,10 @@ export async function triggerLatestTrend(
 ): Promise<TriggerLatestTrendResponse> {
 	const request = create(TriggerLatestTrendRequestSchema, {});
 
-	return await diaryClient.triggerLatestTrend(request, authHeader(params.accessToken));
+	return await diaryClient.triggerLatestTrend(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface TriggerDiaryHighlightParams {
@@ -262,7 +298,10 @@ export async function triggerDiaryHighlight(
 		diaryId: params.diaryId,
 	});
 
-	return await diaryClient.triggerDiaryHighlight(request, authHeader(params.accessToken));
+	return await diaryClient.triggerDiaryHighlight(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDiaryHighlight(
@@ -272,7 +311,10 @@ export async function getDiaryHighlight(
 		diaryId: params.diaryId,
 	});
 
-	return await diaryClient.getDiaryHighlight(request, authHeader(params.accessToken));
+	return await diaryClient.getDiaryHighlight(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface SearchDiaryEntriesSemanticParams {
@@ -289,7 +331,10 @@ export async function searchDiaryEntriesSemantic(
 		limit: params.limit ?? 10,
 	});
 
-	return await diaryClient.searchDiaryEntriesSemantic(request, authHeader(params.accessToken));
+	return await diaryClient.searchDiaryEntriesSemantic(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface RegenerateAllEmbeddingsParams {
@@ -300,7 +345,10 @@ export async function regenerateAllEmbeddings(
 	params: RegenerateAllEmbeddingsParams,
 ): Promise<RegenerateAllEmbeddingsResponse> {
 	const request = create(RegenerateAllEmbeddingsRequestSchema, {});
-	return await diaryClient.regenerateAllEmbeddings(request, authHeader(params.accessToken));
+	return await diaryClient.regenerateAllEmbeddings(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface GetDiaryEmbeddingStatusParams {
@@ -314,5 +362,8 @@ export async function getDiaryEmbeddingStatus(
 	const request = create(GetDiaryEmbeddingStatusRequestSchema, {
 		diaryId: params.diaryId,
 	});
-	return await diaryClient.getDiaryEmbeddingStatus(request, authHeader(params.accessToken));
+	return await diaryClient.getDiaryEmbeddingStatus(
+		request,
+		authHeader(params.accessToken),
+	);
 }

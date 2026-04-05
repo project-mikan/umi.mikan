@@ -17,34 +17,39 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 	}
 
 	// getUserInfo と検索クエリを並列で発火（キーワードがある場合）
-	const userInfoPromise = getUserInfo({ accessToken: authResult.accessToken }).catch(
-		() => null,
-	);
+	const userInfoPromise = getUserInfo({
+		accessToken: authResult.accessToken,
+	}).catch(() => null);
 
-	const searchPromise =
+	const keywordPromise =
+		keyword && mode !== "semantic"
+			? searchDiaryEntries({
+					keyword,
+					accessToken: authResult.accessToken,
+				}).catch(() => null)
+			: Promise.resolve(null);
+
+	const semanticPromise =
 		keyword && mode === "semantic"
 			? searchDiaryEntriesSemantic({
 					query: keyword,
 					limit: 10,
 					accessToken: authResult.accessToken,
 				}).catch(() => null)
-			: keyword
-				? searchDiaryEntries({
-						keyword,
-						accessToken: authResult.accessToken,
-					}).catch(() => null)
-				: Promise.resolve(null);
+			: Promise.resolve(null);
 
-	const [userInfo, searchResponse] = await Promise.all([userInfoPromise, searchPromise]);
+	const [userInfo, keywordResponse, semanticResponse] = await Promise.all([
+		userInfoPromise,
+		keywordPromise,
+		semanticPromise,
+	]);
 
 	const geminiKey = userInfo?.llmKeys?.find((k) => k.llmProvider === 1);
 	const semanticSearchEnabled = geminiKey?.semanticSearchEnabled ?? false;
 
-	const keywordResponse = mode !== "semantic" ? searchResponse : null;
-
 	return {
 		searchResults: keywordResponse,
-		semanticResults: mode === "semantic" ? searchResponse : null,
+		semanticResults: semanticResponse,
 		keyword,
 		expandedKeywords: keywordResponse?.expandedKeywords ?? [],
 		mode,

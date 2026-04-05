@@ -1169,9 +1169,10 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 			return fmt.Errorf("failed to generate embedding for chunk %d: %w", i, err)
 		}
 		diaryChunks = append(diaryChunks, database.DiaryChunk{
-			Index:     i,
-			Content:   chunk,
-			Embedding: embedding,
+			Index:             i,
+			Content:           chunk,
+			Embedding:         embedding,
+			SplitModelVersion: llm.ModelGenerateContent,
 		})
 	}
 

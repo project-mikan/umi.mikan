@@ -394,6 +394,8 @@ message SemanticSearchResult {
 // 意味的検索レスポンス
 message SearchDiaryEntriesSemanticResponse {
   repeated SemanticSearchResult results = 1;
+  string embedding_model = 2;  // クエリのembedding生成に使用したモデル（例: gemini-embedding-001）
+  string chunk_model = 3;      // チャンク分割に使用したLLMモデル（例: gemini-2.5-flash-lite）
 }
 
 // 日記ハイライト生成トリガーリクエスト
@@ -446,9 +448,10 @@ message GetDiaryEmbeddingStatusRequest {
 
 // 日記のRAGインデックス状態取得レスポンス
 message GetDiaryEmbeddingStatusResponse {
-  bool indexed = 1;                   // インデックス済みかどうか
-  string model_version = 2;           // 使用したモデルバージョン
-  int64 created_at = 3;               // 埋め込み作成日時（Unix timestamp）
-  int64 updated_at = 4;               // 埋め込み更新日時（Unix timestamp）
+  bool indexed = 1;                    // インデックス済みかどうか
+  string model_version = 2;            // embedding生成に使用したモデル
+  int64 created_at = 3;                // 埋め込み作成日時（Unix timestamp）
+  int64 updated_at = 4;                // 埋め込み更新日時（Unix timestamp）
   repeated float embedding_values = 5; // ベクトル値
+  string chunk_model_version = 6;      // チャンク分割に使用したLLMモデル
 }

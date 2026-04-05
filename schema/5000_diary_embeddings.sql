@@ -14,7 +14,10 @@ CREATE TABLE diary_embeddings (
     chunk_content TEXT NOT NULL DEFAULT '',
     -- ベクトル埋め込み（Gemini gemini-embedding-001 のネイティブ次元数; halfvec はHNSWで4000次元まで対応）
     embedding halfvec(3072) NOT NULL,
+    -- embedding生成に使用したモデル
     model_version TEXT NOT NULL DEFAULT 'gemini-embedding-001',
+    -- チャンク分割に使用したLLMモデル
+    chunk_model_version TEXT NOT NULL DEFAULT 'gemini-2.5-flash-lite',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(diary_id, chunk_index)

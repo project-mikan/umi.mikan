@@ -354,6 +354,8 @@
 		"semanticResults": "semantic search results for",
 		"resultCount": "results",
 		"similarity": "Relevance",
+		"embeddingModel": "Embedding model",
+		"chunkModel": "Split model",
 		"noResults": "No search results found.",
 		"noResultsHint": "Try searching with different keywords.",
 		"semanticNoResultsHint": "Try different wording or use keyword search.",

@@ -107,7 +107,10 @@ export async function updateUserName(
 		newName: params.newName,
 	});
 
-	return await userClient.updateUserName(request, authHeader(params.accessToken));
+	return await userClient.updateUserName(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface ChangePasswordParams {
@@ -124,7 +127,10 @@ export async function changePassword(
 		newPassword: params.newPassword,
 	});
 
-	return await userClient.changePassword(request, authHeader(params.accessToken));
+	return await userClient.changePassword(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface UpdateLLMKeyParams {
@@ -180,7 +186,10 @@ export async function deleteAccount(
 ): Promise<DeleteAccountResponse> {
 	const request = create(DeleteAccountRequestSchema, {});
 
-	return await userClient.deleteAccount(request, authHeader(params.accessToken));
+	return await userClient.deleteAccount(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface UpdateAutoSummarySettingsParams {
@@ -203,5 +212,8 @@ export async function updateAutoSummarySettings(
 		semanticSearchEnabled: params.semanticSearchEnabled,
 	});
 
-	return await userClient.updateAutoSummarySettings(request, authHeader(params.accessToken));
+	return await userClient.updateAutoSummarySettings(
+		request,
+		authHeader(params.accessToken),
+	);
 }

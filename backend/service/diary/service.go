@@ -1138,8 +1138,18 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		})
 	}
 
+	// レスポンスに使用モデルを付与（最初の検索結果から取得、結果がない場合はデフォルト値）
+	embeddingModel := ""
+	chunkModel := ""
+	if len(searchResults) > 0 {
+		embeddingModel = searchResults[0].EmbeddingModel
+		chunkModel = searchResults[0].ChunkModel
+	}
+
 	return &g.SearchDiaryEntriesSemanticResponse{
-		Results: results,
+		Results:        results,
+		EmbeddingModel: embeddingModel,
+		ChunkModel:     chunkModel,
 	}, nil
 }
 
@@ -1247,6 +1257,7 @@ func (s *DiaryEntry) GetDiaryEmbeddingStatus(
 	}
 	if embeddingStatus.Indexed {
 		resp.ModelVersion = embeddingStatus.ModelVersion
+		resp.ChunkModelVersion = embeddingStatus.ChunkModelVersion
 		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
 		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
 		resp.EmbeddingValues = embeddingStatus.EmbeddingValues

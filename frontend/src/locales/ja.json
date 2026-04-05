@@ -354,6 +354,8 @@
 		"semanticResults": "の意味的検索結果",
 		"resultCount": "件",
 		"similarity": "一致度",
+		"embeddingModel": "埋め込みモデル",
+		"chunkModel": "分割モデル",
 		"noResults": "検索結果が見つかりませんでした。",
 		"noResultsHint": "別のキーワードで検索してみてください。",
 		"semanticNoResultsHint": "別の表現で検索するか、キーワード検索をお試しください。",

@@ -1758,10 +1758,12 @@ func (x *SemanticSearchResult) GetSimilarity() float32 {
 
 // 意味的検索レスポンス
 type SearchDiaryEntriesSemanticResponse struct {
-	state         protoimpl.MessageState  `protogen:"open.v1"`
-	Results       []*SemanticSearchResult `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState  `protogen:"open.v1"`
+	Results        []*SemanticSearchResult `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
+	EmbeddingModel string                  `protobuf:"bytes,2,opt,name=embedding_model,json=embeddingModel,proto3" json:"embedding_model,omitempty"` // クエリのembedding生成に使用したモデル（例: gemini-embedding-001）
+	ChunkModel     string                  `protobuf:"bytes,3,opt,name=chunk_model,json=chunkModel,proto3" json:"chunk_model,omitempty"`             // チャンク分割に使用したLLMモデル（例: gemini-2.5-flash-lite）
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *SearchDiaryEntriesSemanticResponse) Reset() {
@@ -1799,6 +1801,20 @@ func (x *SearchDiaryEntriesSemanticResponse) GetResults() []*SemanticSearchResul
 		return x.Results
 	}
 	return nil
+}
+
+func (x *SearchDiaryEntriesSemanticResponse) GetEmbeddingModel() string {
+	if x != nil {
+		return x.EmbeddingModel
+	}
+	return ""
+}
+
+func (x *SearchDiaryEntriesSemanticResponse) GetChunkModel() string {
+	if x != nil {
+		return x.ChunkModel
+	}
+	return ""
 }
 
 // 日記ハイライト生成トリガーリクエスト
@@ -2203,14 +2219,15 @@ func (x *GetDiaryEmbeddingStatusRequest) GetDiaryId() string {
 
 // 日記のRAGインデックス状態取得レスポンス
 type GetDiaryEmbeddingStatusResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Indexed         bool                   `protobuf:"varint,1,opt,name=indexed,proto3" json:"indexed,omitempty"`                                                // インデックス済みかどうか
-	ModelVersion    string                 `protobuf:"bytes,2,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"`                   // 使用したモデルバージョン
-	CreatedAt       int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                           // 埋め込み作成日時（Unix timestamp）
-	UpdatedAt       int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`                           // 埋め込み更新日時（Unix timestamp）
-	EmbeddingValues []float32              `protobuf:"fixed32,5,rep,packed,name=embedding_values,json=embeddingValues,proto3" json:"embedding_values,omitempty"` // ベクトル値
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Indexed           bool                   `protobuf:"varint,1,opt,name=indexed,proto3" json:"indexed,omitempty"`                                                // インデックス済みかどうか
+	ModelVersion      string                 `protobuf:"bytes,2,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"`                   // embedding生成に使用したモデル
+	CreatedAt         int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                           // 埋め込み作成日時（Unix timestamp）
+	UpdatedAt         int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`                           // 埋め込み更新日時（Unix timestamp）
+	EmbeddingValues   []float32              `protobuf:"fixed32,5,rep,packed,name=embedding_values,json=embeddingValues,proto3" json:"embedding_values,omitempty"` // ベクトル値
+	ChunkModelVersion string                 `protobuf:"bytes,6,opt,name=chunk_model_version,json=chunkModelVersion,proto3" json:"chunk_model_version,omitempty"`  // チャンク分割に使用したLLMモデル
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *GetDiaryEmbeddingStatusResponse) Reset() {
@@ -2276,6 +2293,13 @@ func (x *GetDiaryEmbeddingStatusResponse) GetEmbeddingValues() []float32 {
 		return x.EmbeddingValues
 	}
 	return nil
+}
+
+func (x *GetDiaryEmbeddingStatusResponse) GetChunkModelVersion() string {
+	if x != nil {
+		return x.ChunkModelVersion
+	}
+	return ""
 }
 
 var File_diary_diary_proto protoreflect.FileDescriptor
@@ -2401,9 +2425,12 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\asnippet\x18\x03 \x01(\tR\asnippet\x12\x1e\n" +
 	"\n" +
 	"similarity\x18\x04 \x01(\x02R\n" +
-	"similarity\"[\n" +
+	"similarity\"\xa5\x01\n" +
 	"\"SearchDiaryEntriesSemanticResponse\x125\n" +
-	"\aresults\x18\x01 \x03(\v2\x1b.diary.SemanticSearchResultR\aresults\"9\n" +
+	"\aresults\x18\x01 \x03(\v2\x1b.diary.SemanticSearchResultR\aresults\x12'\n" +
+	"\x0fembedding_model\x18\x02 \x01(\tR\x0eembeddingModel\x12\x1f\n" +
+	"\vchunk_model\x18\x03 \x01(\tR\n" +
+	"chunkModel\"9\n" +
 	"\x1cTriggerDiaryHighlightRequest\x12\x19\n" +
 	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"Q\n" +
 	"\x1dTriggerDiaryHighlightResponse\x12\x16\n" +
@@ -2428,7 +2455,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
 	"\fqueued_count\x18\x02 \x01(\x05R\vqueuedCount\";\n" +
 	"\x1eGetDiaryEmbeddingStatusRequest\x12\x19\n" +
-	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\xc9\x01\n" +
+	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\xf9\x01\n" +
 	"\x1fGetDiaryEmbeddingStatusResponse\x12\x18\n" +
 	"\aindexed\x18\x01 \x01(\bR\aindexed\x12#\n" +
 	"\rmodel_version\x18\x02 \x01(\tR\fmodelVersion\x12\x1d\n" +
@@ -2436,7 +2463,8 @@ const file_diary_diary_proto_rawDesc = "" +
 	"created_at\x18\x03 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"updated_at\x18\x04 \x01(\x03R\tupdatedAt\x12)\n" +
-	"\x10embedding_values\x18\x05 \x03(\x02R\x0fembeddingValues2\x8c\r\n" +
+	"\x10embedding_values\x18\x05 \x03(\x02R\x0fembeddingValues\x12.\n" +
+	"\x13chunk_model_version\x18\x06 \x01(\tR\x11chunkModelVersion2\x8c\r\n" +
 	"\fDiaryService\x12S\n" +
 	"\x10CreateDiaryEntry\x12\x1e.diary.CreateDiaryEntryRequest\x1a\x1f.diary.CreateDiaryEntryResponse\x12S\n" +
 	"\x10UpdateDiaryEntry\x12\x1e.diary.UpdateDiaryEntryRequest\x1a\x1f.diary.UpdateDiaryEntryResponse\x12S\n" +

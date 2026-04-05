@@ -281,6 +281,16 @@
 			<p class="text-gray-600 dark:text-gray-400">
 				「{data.keyword}」{$_('search.semanticResults')}: {data.semanticResults.results.length}{$_('search.resultCount')}
 			</p>
+			{#if data.semanticResults.embeddingModel || data.semanticResults.chunkModel}
+				<p class="text-xs text-gray-400 dark:text-gray-500 mt-1 space-x-3">
+					{#if data.semanticResults.embeddingModel}
+						<span>{$_('search.embeddingModel')}: {data.semanticResults.embeddingModel}</span>
+					{/if}
+					{#if data.semanticResults.chunkModel}
+						<span>{$_('search.chunkModel')}: {data.semanticResults.chunkModel}</span>
+					{/if}
+				</p>
+			{/if}
 		</div>
 
 		{#if data.semanticResults.results.length > 0}
