@@ -120,6 +120,10 @@ b-test-coverage:
 b-test-benchmark:
 	docker compose exec backend go test -bench=. ./...
 
+# GEMINI_API_KEY_FOR_TEST=xxx make b-test-semantic-eval で実行する
+b-test-semantic-eval:
+	docker compose exec -e GEMINI_API_KEY_FOR_TEST=$(GEMINI_API_KEY_FOR_TEST) backend go test -tags=integration -v -run TestSemanticSearchEvaluation ./infrastructure/database/...
+
 b-test-race:
 	docker compose exec backend go test -race ./...
 1:
