@@ -2259,17 +2259,18 @@ func (x *GetDiaryEmbeddingStatusRequest) GetDiaryId() string {
 
 // 日記のRAGインデックス状態取得レスポンス
 type GetDiaryEmbeddingStatusResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Indexed           bool                   `protobuf:"varint,1,opt,name=indexed,proto3" json:"indexed,omitempty"`                                                // インデックス済みかどうか
-	ModelVersion      string                 `protobuf:"bytes,2,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"`                   // embedding生成に使用したモデル
-	CreatedAt         int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                           // 埋め込み作成日時（Unix timestamp）
-	UpdatedAt         int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`                           // 埋め込み更新日時（Unix timestamp）
-	EmbeddingValues   []float32              `protobuf:"fixed32,5,rep,packed,name=embedding_values,json=embeddingValues,proto3" json:"embedding_values,omitempty"` // ベクトル値（chunk_index=0の先頭チャンク）
-	ChunkModelVersion string                 `protobuf:"bytes,6,opt,name=chunk_model_version,json=chunkModelVersion,proto3" json:"chunk_model_version,omitempty"`  // チャンク分割に使用したLLMモデル
-	ChunkCount        int32                  `protobuf:"varint,7,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`                        // チャンク総数
-	ChunkSummaries    []string               `protobuf:"bytes,8,rep,name=chunk_summaries,json=chunkSummaries,proto3" json:"chunk_summaries,omitempty"`             // 各チャンクの概要（chunk_index順）
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Indexed             bool                   `protobuf:"varint,1,opt,name=indexed,proto3" json:"indexed,omitempty"`                                                    // インデックス済みかどうか
+	ModelVersion        string                 `protobuf:"bytes,2,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"`                       // embedding生成に使用したモデル
+	CreatedAt           int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                               // 埋め込み作成日時（Unix timestamp）
+	UpdatedAt           int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`                               // 埋め込み更新日時（Unix timestamp）
+	EmbeddingValues     []float32              `protobuf:"fixed32,5,rep,packed,name=embedding_values,json=embeddingValues,proto3" json:"embedding_values,omitempty"`     // ベクトル値プレビュー（先頭10件のみ、表示用）
+	ChunkModelVersion   string                 `protobuf:"bytes,6,opt,name=chunk_model_version,json=chunkModelVersion,proto3" json:"chunk_model_version,omitempty"`      // チャンク分割に使用したLLMモデル
+	ChunkCount          int32                  `protobuf:"varint,7,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`                            // チャンク総数
+	ChunkSummaries      []string               `protobuf:"bytes,8,rep,name=chunk_summaries,json=chunkSummaries,proto3" json:"chunk_summaries,omitempty"`                 // 各チャンクの概要（chunk_index順）
+	EmbeddingDimensions int32                  `protobuf:"varint,9,opt,name=embedding_dimensions,json=embeddingDimensions,proto3" json:"embedding_dimensions,omitempty"` // ベクトルの総次元数（embedding_valuesは先頭10件のみのため別フィールドで提供）
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *GetDiaryEmbeddingStatusResponse) Reset() {
@@ -2356,6 +2357,13 @@ func (x *GetDiaryEmbeddingStatusResponse) GetChunkSummaries() []string {
 		return x.ChunkSummaries
 	}
 	return nil
+}
+
+func (x *GetDiaryEmbeddingStatusResponse) GetEmbeddingDimensions() int32 {
+	if x != nil {
+		return x.EmbeddingDimensions
+	}
+	return 0
 }
 
 var File_diary_diary_proto protoreflect.FileDescriptor
@@ -2517,7 +2525,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
 	"\fqueued_count\x18\x02 \x01(\x05R\vqueuedCount\";\n" +
 	"\x1eGetDiaryEmbeddingStatusRequest\x12\x19\n" +
-	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\xc3\x02\n" +
+	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\xf6\x02\n" +
 	"\x1fGetDiaryEmbeddingStatusResponse\x12\x18\n" +
 	"\aindexed\x18\x01 \x01(\bR\aindexed\x12#\n" +
 	"\rmodel_version\x18\x02 \x01(\tR\fmodelVersion\x12\x1d\n" +
@@ -2529,7 +2537,8 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x13chunk_model_version\x18\x06 \x01(\tR\x11chunkModelVersion\x12\x1f\n" +
 	"\vchunk_count\x18\a \x01(\x05R\n" +
 	"chunkCount\x12'\n" +
-	"\x0fchunk_summaries\x18\b \x03(\tR\x0echunkSummaries2\x8c\r\n" +
+	"\x0fchunk_summaries\x18\b \x03(\tR\x0echunkSummaries\x121\n" +
+	"\x14embedding_dimensions\x18\t \x01(\x05R\x13embeddingDimensions2\x8c\r\n" +
 	"\fDiaryService\x12S\n" +
 	"\x10CreateDiaryEntry\x12\x1e.diary.CreateDiaryEntryRequest\x1a\x1f.diary.CreateDiaryEntryResponse\x12S\n" +
 	"\x10UpdateDiaryEntry\x12\x1e.diary.UpdateDiaryEntryRequest\x1a\x1f.diary.UpdateDiaryEntryResponse\x12S\n" +

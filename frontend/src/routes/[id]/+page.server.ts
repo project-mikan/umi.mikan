@@ -146,6 +146,7 @@ export const load: PageServerLoad = async ({
 		createdAt: number;
 		updatedAt: number;
 		embeddingValues: number[];
+		embeddingDimensions: number;
 		chunkCount: number;
 		chunkSummaries: string[];
 	} | null = null;
@@ -161,6 +162,7 @@ export const load: PageServerLoad = async ({
 				createdAt: Number(statusResponse.createdAt),
 				updatedAt: Number(statusResponse.updatedAt),
 				embeddingValues: statusResponse.embeddingValues,
+				embeddingDimensions: statusResponse.embeddingDimensions,
 				chunkCount: statusResponse.chunkCount,
 				chunkSummaries: statusResponse.chunkSummaries,
 			};

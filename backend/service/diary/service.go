@@ -1332,7 +1332,10 @@ func (s *DiaryEntry) GetDiaryEmbeddingStatus(
 		resp.ChunkModelVersion = embeddingStatus.ChunkModelVersion
 		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
 		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
-		resp.EmbeddingValues = embeddingStatus.EmbeddingValues
+		// レスポンスサイズ削減のため先頭10件のみ返す（フロントエンドはプレビュー表示のみ）
+		resp.EmbeddingDimensions = int32(len(embeddingStatus.EmbeddingValues))
+		previewLen := min(10, len(embeddingStatus.EmbeddingValues))
+		resp.EmbeddingValues = embeddingStatus.EmbeddingValues[:previewLen]
 		resp.ChunkCount = int32(embeddingStatus.ChunkCount)
 		resp.ChunkSummaries = embeddingStatus.ChunkSummaries
 	}
