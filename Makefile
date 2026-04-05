@@ -30,6 +30,8 @@ xo:
 	# db-initを別で実行することでDBを更新できる
 	rm -rf backend/infrastructure/database/*.xo.go
 	docker compose exec backend go tool dbtpl schema "postgres://postgres:dev-pass@postgres/umi_mikan?sslmode=disable" -o infrastructure/database
+	# pgvectorの拡張関数(sf_*)はコード生成対象外のため削除
+	rm -f backend/infrastructure/database/sf_*.dbtpl.go
 go-mod-tidy:
 	docker compose exec backend go mod tidy
 # airを使うので不要↓
