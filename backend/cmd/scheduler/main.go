@@ -273,6 +273,10 @@ func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logge
 		app.SchedulerConfig.LatestTrendTargetHour,
 		app.SchedulerConfig.LatestTrendTargetMinute,
 	))
+	scheduler.AddDailyJob(NewDiaryEmbeddingJob(
+		app.SchedulerConfig.DiaryEmbeddingTargetHour,
+		app.SchedulerConfig.DiaryEmbeddingTargetMinute,
+	))
 
 	logger.Info("Scheduler is running...")
 
@@ -759,6 +763,167 @@ func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Schedule
 		"period_start": periodStart.Format("2006-01-02"),
 		"period_end":   periodEnd.Format("2006-01-02"),
 	}).Debug("Queued latest trend generation")
+
+	return nil
+}
+
+// DiaryEmbeddingJob は前日の日記の埋め込みベクトルを翌朝生成するジョブ
+// 当日中は日記を継ぎ足す可能性があるため、on-saveでの即時処理をスキップし
+// 翌朝このジョブが昨日の日記をまとめて処理する（意味的検索有効ユーザーのみ）
+type DiaryEmbeddingJob struct {
+	targetHour   int // 実行する時（0-23, JST）
+	targetMinute int // 実行する分（0-59, JST）
+}
+
+func NewDiaryEmbeddingJob(targetHour, targetMinute int) *DiaryEmbeddingJob {
+	return &DiaryEmbeddingJob{
+		targetHour:   targetHour,
+		targetMinute: targetMinute,
+	}
+}
+
+func (j *DiaryEmbeddingJob) Name() string {
+	return "DiaryEmbeddingGeneration"
+}
+
+func (j *DiaryEmbeddingJob) TargetHour() int {
+	return j.targetHour
+}
+
+func (j *DiaryEmbeddingJob) TargetMinute() int {
+	return j.targetMinute
+}
+
+func (j *DiaryEmbeddingJob) Execute(ctx context.Context, s *Scheduler) error {
+	s.logger.Info("Starting diary embedding generation for yesterday's diaries")
+
+	// 1. semantic_search_enabled が true のユーザーを取得
+	usersQuery := `
+		SELECT user_id
+		FROM user_llms
+		WHERE semantic_search_enabled = true
+	`
+
+	rows, err := s.db.QueryContext(ctx, usersQuery)
+	if err != nil {
+		return fmt.Errorf("failed to query users with semantic search enabled: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			s.logger.WithError(err).Error("Failed to close rows")
+		}
+	}()
+
+	var userIDs []string
+	for rows.Next() {
+		var userID string
+		if err := rows.Scan(&userID); err != nil {
+			return fmt.Errorf("failed to scan user ID: %w", err)
+		}
+		userIDs = append(userIDs, userID)
+	}
+
+	if len(userIDs) == 0 {
+		s.logger.Info("No users with semantic search enabled")
+		return nil
+	}
+
+	s.logger.WithField("count", len(userIDs)).Info("Found users with semantic search enabled")
+	usersWithAutoSummaryGauge.WithLabelValues("diary_embedding").Set(float64(len(userIDs)))
+
+	// 2. 昨日の日付を計算（JST基準）
+	yesterdayUTC := calculateYesterdayUTC(time.Now())
+
+	// 3. 各ユーザーについて昨日の日記のembedding生成をキューイング
+	for _, userID := range userIDs {
+		if err := j.processUserDiaryEmbedding(ctx, s, userID, yesterdayUTC); err != nil {
+			s.logger.WithError(err).WithField("user_id", userID).Error("Error processing diary embedding for user")
+			continue
+		}
+	}
+
+	return nil
+}
+
+// calculateYesterdayUTC は指定時刻を基準に昨日（JST）の日付をUTC 00:00:00として返す
+// diariesテーブルのdate列はJSTの日付をUTC 00:00:00として保存しているため、それに合わせる
+func calculateYesterdayUTC(now time.Time) time.Time {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := now.In(jst)
+	yesterdayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day()-1, 0, 0, 0, 0, jst)
+	return time.Date(yesterdayJST.Year(), yesterdayJST.Month(), yesterdayJST.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func (j *DiaryEmbeddingJob) processUserDiaryEmbedding(ctx context.Context, s *Scheduler, userID string, targetDate time.Time) error {
+	// 対象日付の日記を取得
+	// embedding未生成またはembeddingのupdated_atより日記のupdated_atが新しい場合に処理対象とする
+	query := `
+		SELECT d.id
+		FROM diaries d
+		WHERE d.user_id = $1
+		  AND d.date = $2
+		  AND (
+		    NOT EXISTS (SELECT 1 FROM diary_embeddings de WHERE de.diary_id = d.id)
+		    OR (SELECT MAX(de.updated_at) FROM diary_embeddings de WHERE de.diary_id = d.id) < d.updated_at
+		  )
+	`
+
+	rows, err := s.db.QueryContext(ctx, query, userID, targetDate)
+	if err != nil {
+		return fmt.Errorf("failed to query diary for user %s date %s: %w", userID, targetDate.Format("2006-01-02"), err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			s.logger.WithError(err).Error("Failed to close rows")
+		}
+	}()
+
+	var diaryIDs []string
+	for rows.Next() {
+		var diaryID string
+		if err := rows.Scan(&diaryID); err != nil {
+			return fmt.Errorf("failed to scan diary ID: %w", err)
+		}
+		diaryIDs = append(diaryIDs, diaryID)
+	}
+
+	if len(diaryIDs) == 0 {
+		s.logger.WithFields(map[string]any{
+			"user_id": userID,
+			"date":    targetDate.Format("2006-01-02"),
+		}).Debug("No diary requiring embedding for user on target date")
+		return nil
+	}
+
+	for _, diaryID := range diaryIDs {
+		message := map[string]any{
+			"type":     "diary_embedding",
+			"user_id":  userID,
+			"diary_id": diaryID,
+		}
+
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "diary_id": diaryID}).Error("Failed to marshal message")
+			continue
+		}
+
+		publishCmd := s.redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
+		if err := s.redis.Do(ctx, publishCmd).Error(); err != nil {
+			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "diary_id": diaryID}).Error("Failed to publish message")
+			continue
+		}
+
+		queuedMessagesCounter.WithLabelValues("diary_embedding").Inc()
+		s.logger.WithFields(map[string]any{
+			"user_id":  userID,
+			"diary_id": diaryID,
+			"date":     targetDate.Format("2006-01-02"),
+		}).Debug("Queued diary embedding generation")
+	}
 
 	return nil
 }

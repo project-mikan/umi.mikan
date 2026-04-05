@@ -11,6 +11,48 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
 
+func TestIsTodayJST(t *testing.T) {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+
+	// 今日のJST日付をUTC 00:00:00で表現したもの（=当日の日記のdate値）
+	nowJST := time.Now().In(jst)
+	todayUTC := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
+
+	// 昨日のJST日付をUTC 00:00:00で表現したもの
+	yesterdayUTC := todayUTC.AddDate(0, 0, -1)
+
+	// 明日のJST日付をUTC 00:00:00で表現したもの
+	tomorrowUTC := todayUTC.AddDate(0, 0, 1)
+
+	t.Run("当日の日記はtrueを返す", func(t *testing.T) {
+		if !isTodayJST(todayUTC) {
+			t.Error("当日の日記でisTodayJSTがfalseを返した")
+		}
+	})
+
+	t.Run("昨日の日記はfalseを返す", func(t *testing.T) {
+		if isTodayJST(yesterdayUTC) {
+			t.Error("昨日の日記でisTodayJSTがtrueを返した")
+		}
+	})
+
+	t.Run("明日の日記はfalseを返す", func(t *testing.T) {
+		if isTodayJST(tomorrowUTC) {
+			t.Error("明日の日記でisTodayJSTがtrueを返した")
+		}
+	})
+
+	t.Run("過去の固定日付はfalseを返す", func(t *testing.T) {
+		pastDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		if isTodayJST(pastDate) {
+			t.Error("過去の日付でisTodayJSTがtrueを返した")
+		}
+	})
+}
+
 func TestGenerateSnippet(t *testing.T) {
 	tests := []struct {
 		name     string

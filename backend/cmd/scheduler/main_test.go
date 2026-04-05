@@ -54,6 +54,69 @@ func TestLatestTrendJob(t *testing.T) {
 	var _ DailyScheduledJob = job
 }
 
+func TestDiaryEmbeddingJob(t *testing.T) {
+	targetHour := 4
+	targetMinute := 30
+	job := NewDiaryEmbeddingJob(targetHour, targetMinute)
+
+	if job.Name() != "DiaryEmbeddingGeneration" {
+		t.Errorf("expected job name 'DiaryEmbeddingGeneration', got '%s'", job.Name())
+	}
+
+	if job.TargetHour() != targetHour {
+		t.Errorf("expected targetHour %d, got %d", targetHour, job.TargetHour())
+	}
+
+	if job.TargetMinute() != targetMinute {
+		t.Errorf("expected targetMinute %d, got %d", targetMinute, job.TargetMinute())
+	}
+
+	// DailyScheduledJobインターフェースを実装しているか確認
+	var _ DailyScheduledJob = job
+}
+
+// TestCalculateYesterdayUTC は、JST基準で昨日の日付がUTC 00:00:00として返されることを確認するテスト
+func TestCalculateYesterdayUTC(t *testing.T) {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+
+	tests := []struct {
+		name     string
+		now      time.Time
+		expected time.Time
+	}{
+		{
+			// 2025/11/4 4:30 JST → 昨日はJST 2025/11/3 → UTC 00:00:00で表現
+			name:     "通常ケース",
+			now:      time.Date(2025, 11, 4, 4, 30, 0, 0, jst),
+			expected: time.Date(2025, 11, 3, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			// 月またぎ: 2025/12/1 4:30 JST → 昨日はJST 2025/11/30
+			name:     "月またぎ",
+			now:      time.Date(2025, 12, 1, 4, 30, 0, 0, jst),
+			expected: time.Date(2025, 11, 30, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			// 年またぎ: 2026/1/1 4:30 JST → 昨日はJST 2025/12/31
+			name:     "年またぎ",
+			now:      time.Date(2026, 1, 1, 4, 30, 0, 0, jst),
+			expected: time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := calculateYesterdayUTC(tt.now)
+			if !result.Equal(tt.expected) {
+				t.Errorf("expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
+
 // TestCalculateTrendPeriod は、2025/11/4 4:00 JST の実行で
 // 11/1, 11/2, 11/3 の日記が取得されることを確認するテスト
 func TestCalculateTrendPeriod(t *testing.T) {

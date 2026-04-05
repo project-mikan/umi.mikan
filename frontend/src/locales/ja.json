@@ -93,7 +93,7 @@
 			"dailyLabel": "日毎の自動まとめを有効にする",
 			"monthlyLabel": "月毎の自動まとめを有効にする",
 			"semanticSearchLabel": "自然言語検索（意味的検索）を有効にする",
-			"semanticSearchDescription": "日記の内容をAIで解析し、意味・文脈に基づいた検索を可能にします。日記の保存時に自動でインデックスが生成されます。",
+			"semanticSearchDescription": "日記の内容をAIで解析し、意味・文脈に基づいた検索を可能にします。当日の日記は翌朝にインデックスが生成され、過去の日記は保存時に自動でインデックスが生成されます。",
 			"regenerateEmbeddingsDescription": "意味的検索を有効化する前に作成した日記はインデックスされていません。下のボタンで未インデックスの日記を一括でキューに追加できます。",
 			"regenerateEmbeddingsButton": "未インデックスの日記を一括生成",
 			"regenerateEmbeddingsSuccess": "{count}件の日記をキューに追加しました。しばらくお待ちください。",

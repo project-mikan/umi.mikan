@@ -93,7 +93,7 @@
 			"dailyLabel": "Enable daily auto summary",
 			"monthlyLabel": "Enable monthly auto summary",
 			"semanticSearchLabel": "Enable natural language search (semantic search)",
-			"semanticSearchDescription": "Analyzes diary content with AI to enable meaning and context-based search. An index is automatically generated when a diary entry is saved.",
+			"semanticSearchDescription": "Analyzes diary content with AI to enable meaning and context-based search. Today's diary will be indexed the following morning; past diaries are indexed automatically when saved.",
 			"regenerateEmbeddingsDescription": "Diaries created before enabling semantic search are not indexed. Use the button below to queue all unindexed diaries.",
 			"regenerateEmbeddingsButton": "Index all unindexed diaries",
 			"regenerateEmbeddingsSuccess": "Queued {count} diaries. Please wait.",

@@ -189,6 +189,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Scheduler Job Types**:
   - **IntervalScheduledJob**: Periodic execution at fixed intervals (e.g., every 5 minutes)
   - **DailyScheduledJob**: Daily execution at a specific hour (JST timezone)
+- **Today's Diary Embedding Deferral**: On diary save/update, embedding is skipped for today's diary (JST). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Grafana Alloy, and cAdvisor
 
@@ -407,6 +408,8 @@ Environment variables for controlling scheduler behavior:
 **Time-based Jobs (Daily Execution at Specific Time):**
 - `SCHEDULER_LATEST_TREND_HOUR`: Hour (0-23) for latest trend analysis (default: `4`)
 - `SCHEDULER_LATEST_TREND_MINUTE`: Minute (0-59) for latest trend analysis (default: `0`)
+- `SCHEDULER_DIARY_EMBEDDING_HOUR`: Hour (0-23) for yesterday's diary embedding generation (default: `4`)
+- `SCHEDULER_DIARY_EMBEDDING_MINUTE`: Minute (0-59) for yesterday's diary embedding generation (default: `30`)
 
 The scheduler supports two types of job scheduling:
 1. **Interval-based**: Jobs that run periodically at fixed intervals
@@ -422,9 +425,8 @@ SCHEDULER_MONTHLY_INTERVAL=1h   # Run monthly summaries every hour
 # Time-based jobs
 SCHEDULER_LATEST_TREND_HOUR=4       # Run at 4:00 AM JST
 SCHEDULER_LATEST_TREND_MINUTE=0
-# Or run at 4:30 AM JST
-SCHEDULER_LATEST_TREND_HOUR=4
-SCHEDULER_LATEST_TREND_MINUTE=30
+SCHEDULER_DIARY_EMBEDDING_HOUR=4    # Run diary embedding at 4:30 AM JST
+SCHEDULER_DIARY_EMBEDDING_MINUTE=30
 ```
 
 ### Subscriber Configuration

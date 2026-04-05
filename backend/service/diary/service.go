@@ -134,7 +134,8 @@ func (s *DiaryEntry) CreateDiaryEntry(
 	}
 
 	// 非同期で埋め込みベクトルを生成（Redis Pub/Sub経由）
-	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String())
+	// 当日の日記はスキップ（翌朝スケジューラーが処理する）
+	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String(), diary.Date)
 
 	return &g.CreateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -318,7 +319,8 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 	}
 
 	// 非同期で埋め込みベクトルを再生成（Redis Pub/Sub経由）
-	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String())
+	// 当日の日記はスキップ（翌朝スケジューラーが処理する）
+	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String(), diary.Date)
 
 	return &g.UpdateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -993,12 +995,31 @@ func (s *DiaryEntry) GetDiaryHighlight(
 	}, nil
 }
 
+// isTodayJST は指定した日付（UTC 00:00:00で表現されたJST日付）が
+// 現在のJST日付と同じかどうかを返す
+func isTodayJST(diaryDate time.Time) bool {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := time.Now().In(jst)
+	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
+	return diaryDate.Equal(todayJST)
+}
+
 // publishDiaryEmbeddingMessage は日記の埋め込みベクトル生成をRedis Pub/Sub経由でキューに追加する
+// 当日（JST）の日記はスキップし、翌朝スケジューラーが処理する（意味的検索有効時のみ）
 // エラーはログに記録するのみで、レスポンスには影響しない
-func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, diaryID string) {
+func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, diaryID string, diaryDate time.Time) {
 	if s.Redis == nil {
 		return
 	}
+
+	// 当日の日記は翌朝スケジューラーが処理するためスキップ
+	if isTodayJST(diaryDate) {
+		return
+	}
+
 	message := DiaryEmbeddingMessage{
 		Type:    "diary_embedding",
 		UserID:  userID,
@@ -1215,13 +1236,24 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 	}()
 
 	// 各日記のembedding生成メッセージをキューに追加
+	// 手動再生成のため当日の日記も即時処理する（on-saveとは異なる）
 	var count int32
 	for rows.Next() {
 		var diaryID string
 		if err := rows.Scan(&diaryID); err != nil {
 			continue
 		}
-		s.publishDiaryEmbeddingMessage(ctx, userIDStr, diaryID)
+		msg := DiaryEmbeddingMessage{
+			Type:    "diary_embedding",
+			UserID:  userIDStr,
+			DiaryID: diaryID,
+		}
+		msgBytes, err := json.Marshal(msg)
+		if err != nil {
+			continue
+		}
+		publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(msgBytes)).Build()
+		_ = s.Redis.Do(ctx, publishCmd).Error()
 		count++
 	}
 
