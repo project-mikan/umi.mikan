@@ -21,7 +21,7 @@ const (
 type DiaryChunkData struct {
 	// Content チャンクの元テキスト（ベクトル化対象）
 	Content string `json:"content"`
-	// Summary チャンクの概要（1〜2文の短い説明、検索結果表示用）
+	// Summary チャンクの概要（1文の短い説明、検索結果表示用）
 	Summary string `json:"summary"`
 }
 
@@ -311,7 +311,7 @@ func (g *GeminiClient) SplitDiaryIntoChunks(ctx context.Context, content string)
 - 話題の数に上限はない。日記の内容に応じて必要な数だけ分割する
 - contentは元の日記の文章をそのまま使う（要約や改変は禁止）
 - チャンク間で内容が重複しないようにする
-- summaryはそのチャンクの内容を1〜2文で簡潔にまとめた日本語テキスト
+- summaryはそのチャンクの内容を1文で簡潔にまとめた日本語テキスト（句点「。」で終わる1文のみ）
 
 JSON配列のみを返してください（前後の説明文・コードブロック記号は不要）:
 [{"content": "チャンク1のテキスト", "summary": "チャンク1の概要"}, ...]
