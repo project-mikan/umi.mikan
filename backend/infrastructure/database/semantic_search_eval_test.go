@@ -218,28 +218,24 @@ func TestSemanticSearchEvaluation(t *testing.T) {
 	printMultiChunkReport(t, mcResults)
 }
 
-// evalGenerateChunksWithEmbedding は日記テキストをチャンク分割しembeddingを生成する
+// evalGenerateChunksWithEmbedding は日記テキストを1チャンクとしてembeddingを生成する
+// 評価テストの目的は「語彙一致なしの意味的検索精度」の測定であり、チャンク分割精度の検証ではない。
+// SplitDiaryIntoChunks(gemini-2.5-flash-lite)は10 RPM制限があるため呼ばず、
+// gemini-embedding-001のみ使用してTPM超過を回避する。
 func evalGenerateChunksWithEmbedding(ctx context.Context, client *llm.GeminiClient, content, date string) ([]database.DiaryChunk, error) {
-	rawChunks, err := client.SplitDiaryIntoChunks(ctx, content)
-	if err != nil || len(rawChunks) == 0 {
-		rawChunks = []llm.DiaryChunkData{{Content: content, Summary: ""}}
-	}
-
 	datePrefix := evalFormatDatePrefix(date)
-	chunks := make([]database.DiaryChunk, 0, len(rawChunks))
-	for i, raw := range rawChunks {
-		embedding, err := client.GenerateEmbedding(ctx, datePrefix+raw.Content, true)
-		if err != nil {
-			return nil, fmt.Errorf("チャンク%dのembedding生成に失敗: %w", i, err)
-		}
-		chunks = append(chunks, database.DiaryChunk{
-			Index:     i,
-			Content:   raw.Content,
-			Summary:   raw.Summary,
-			Embedding: embedding,
-		})
+	embedding, err := client.GenerateEmbedding(ctx, datePrefix+content, true)
+	if err != nil {
+		return nil, fmt.Errorf("embeddingの生成に失敗: %w", err)
 	}
-	return chunks, nil
+	return []database.DiaryChunk{
+		{
+			Index:     0,
+			Content:   content,
+			Summary:   "",
+			Embedding: embedding,
+		},
+	}, nil
 }
 
 // evalGeneratePredefinedChunks は事前定義チャンクのembeddingを生成する
