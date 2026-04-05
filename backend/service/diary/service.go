@@ -1035,9 +1035,11 @@ func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, d
 		return
 	}
 	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
-	// publishエラーは無視する: 埋め込み生成は非クリティカルな非同期処理のため
+	// publishエラーはログ記録のみ: 埋め込み生成は非クリティカルな非同期処理のため
 	// 失敗しても日記の保存・更新レスポンスには影響せず、スケジューラーが翌朝リカバリする
-	_ = s.Redis.Do(ctx, publishCmd).Error()
+	if pubErr := s.Redis.Do(ctx, publishCmd).Error(); pubErr != nil {
+		log.Printf("Failed to publish diary embedding message for diary %s: %v", diaryID, pubErr)
+	}
 }
 
 // SearchDiaryEntriesSemantic 自然言語クエリで日記を意味的に検索する
