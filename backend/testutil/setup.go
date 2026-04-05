@@ -138,7 +138,14 @@ func createTestUserForSuite(t *testing.T, db *sql.DB) uuid.UUID {
 }
 
 // cleanupTestSuiteData removes all data for a specific user
+// スキーマのFKグラフから削除順とクエリを動的に生成するため、テーブル追加時も自動対応する
 func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
+	byUserID, _, err := buildDynamicCleanupQueries(db)
+	if err != nil {
+		log.Printf("Warning: failed to build cleanup queries: %v", err)
+		return
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("Warning: failed to begin cleanup transaction: %v", err)
@@ -146,16 +153,7 @@ func cleanupTestSuiteData(t *testing.T, db *sql.DB, userID uuid.UUID) {
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	cleanupQueries := []string{
-		"DELETE FROM diary_embeddings WHERE user_id = $1",
-		"DELETE FROM diary_highlights WHERE user_id = $1",
-		"DELETE FROM semantic_search_logs WHERE user_id = $1",
-		"DELETE FROM diaries WHERE user_id = $1",
-		"DELETE FROM user_password_authes WHERE user_id = $1",
-		"DELETE FROM users WHERE id = $1",
-	}
-
-	for _, query := range cleanupQueries {
+	for _, query := range byUserID {
 		if _, err := tx.Exec(query, userID); err != nil {
 			log.Printf("Warning: cleanup query failed: %v", err)
 		}
