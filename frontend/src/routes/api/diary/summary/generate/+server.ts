@@ -49,6 +49,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 				summary: summaryResponse.summary.summary,
 				createdAt: unixToMilliseconds(summaryResponse.summary.createdAt || 0),
 				updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt || 0),
+				modelVersion: summaryResponse.summary.modelVersion,
 			},
 		});
 	} catch (err) {

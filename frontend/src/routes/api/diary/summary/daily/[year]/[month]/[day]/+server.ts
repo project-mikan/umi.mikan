@@ -52,6 +52,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 				summary: response.summary.summary,
 				createdAt: unixToMilliseconds(response.summary.createdAt),
 				updatedAt: unixToMilliseconds(response.summary.updatedAt),
+				modelVersion: response.summary.modelVersion,
 			},
 		});
 	} catch (err) {

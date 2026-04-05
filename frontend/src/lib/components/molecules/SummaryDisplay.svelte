@@ -594,11 +594,11 @@
 
 			{#if summary}
 				<div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-					<div>{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleString($locale || "en")}</div>
-					<div>{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleString($locale || "en")}</div>
 					{#if summary.modelVersion}
 						<div>{$_("summary.modelVersion")}: {summary.modelVersion}</div>
 					{/if}
+					<div>{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleString($locale || "en")}</div>
+					<div>{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleString($locale || "en")}</div>
 				</div>
 			{/if}
 		</div>
