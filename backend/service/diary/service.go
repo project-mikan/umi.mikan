@@ -32,7 +32,7 @@ type GeminiEmbedder interface {
 
 type DiaryEntry struct {
 	g.UnimplementedDiaryServiceServer
-	DB         database.DB
+	DB         *sql.DB
 	Redis      rueidis.Client
 	LLMFactory LLMFactory
 }
@@ -61,6 +61,10 @@ type DiaryEmbeddingMessage struct {
 	UserID  string `json:"user_id"`
 	DiaryID string `json:"diary_id"`
 }
+
+// semanticSimilarityThreshold はセマンティック検索のコサイン類似度下限値
+// 評価テストで検証済みの閾値（低すぎると無関係な結果が増加）
+const semanticSimilarityThreshold = 0.4
 
 // getTaskTimeout 環境変数からタスクタイムアウトを取得(デフォルト600秒)
 func getTaskTimeout() int {
@@ -122,7 +126,7 @@ func (s *DiaryEntry) CreateDiaryEntry(
 	}
 
 	// トランザクション内でdiaryを保存
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		if err := diary.Insert(ctx, tx); err != nil {
 			return err
 		}
@@ -300,7 +304,7 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 	}
 
 	// トランザクション内で日記を更新
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		diary.Content = message.Content
 		if message.Date != nil {
 			diary.Date = time.Date(int(message.Date.Year), time.Month(message.Date.Month), int(message.Date.Day), 0, 0, 0, 0, time.UTC)
@@ -362,7 +366,7 @@ func (s *DiaryEntry) DeleteDiaryEntry(
 	}
 
 	// トランザクション内で日記を削除
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		return diary.Delete(ctx, tx)
 	})
 	if err != nil {
@@ -459,7 +463,7 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		AND EXTRACT(YEAR FROM date) = $2
 		AND EXTRACT(MONTH FROM date) = $3
 	`
-	err = s.DB.(*sql.DB).QueryRow(checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
+	err = s.DB.QueryRowContext(ctx, checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to check diary entries")
 	}
@@ -1030,7 +1034,8 @@ func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, d
 		return
 	}
 	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
-	// エラーはログには出せないが、埋め込み生成の失敗は非クリティカル
+	// publishエラーは無視する: 埋め込み生成は非クリティカルな非同期処理のため
+	// 失敗しても日記の保存・更新レスポンスには影響せず、スケジューラーが翌朝リカバリする
 	_ = s.Redis.Do(ctx, publishCmd).Error()
 }
 
@@ -1096,8 +1101,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}
 
 	// トランザクションを開始して ef_search を設定（同一コネクションを保証するため）
-	sqlDB := s.DB.(*sql.DB)
-	tx, err := sqlDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to begin transaction: %v", err)
 	}
@@ -1110,9 +1114,8 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		return nil, status.Errorf(codes.Internal, "Failed to set hnsw.ef_search: %v", err)
 	}
 
-	// pgvectorでコサイン類似度ANN検索（閾値を0.3に下げて関連日記のヒット率を向上）
-	const similarityThreshold = 0.3
-	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, tx, userID, queryEmbedding, limit, similarityThreshold)
+	// pgvectorでコサイン類似度ANN検索
+	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, tx, userID, queryEmbedding, limit, semanticSimilarityThreshold)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to search diary entries: %v", err)
 	}
@@ -1129,13 +1132,13 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 				DiaryID:    d.ID,
 				Date:       d.Date,
 				Content:    d.Content,
-				Similarity: similarityThreshold, // キーワードヒット分には閾値スコアを付与
+				Similarity: semanticSimilarityThreshold, // キーワードヒット分には閾値スコアを付与
 			})
 		}
 	}
 
 	// 意味的検索のAIリクエストを記録（メトリクス集計用、エラーは無視）
-	if _, logErr := s.DB.(*sql.DB).ExecContext(ctx,
+	if _, logErr := s.DB.ExecContext(ctx,
 		"INSERT INTO semantic_search_logs (user_id) VALUES ($1)",
 		userID,
 	); logErr != nil {
@@ -1225,7 +1228,7 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		  )
 		ORDER BY d.date DESC
 	`
-	rows, err := s.DB.(*sql.DB).QueryContext(ctx, query, userID)
+	rows, err := s.DB.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
 	}
@@ -1241,6 +1244,8 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 	for rows.Next() {
 		var diaryID string
 		if err := rows.Scan(&diaryID); err != nil {
+			// スキャンエラーは該当行をスキップして処理継続（他の日記への影響を防ぐ）
+			log.Printf("Failed to scan diary row: %v", err)
 			continue
 		}
 		msg := DiaryEmbeddingMessage{
@@ -1250,10 +1255,15 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		}
 		msgBytes, err := json.Marshal(msg)
 		if err != nil {
+			// JSONシリアライズエラーは該当行をスキップ（UUIDの形式が正しければ発生しない）
+			log.Printf("Failed to marshal embedding message for diary %s: %v", diaryID, err)
 			continue
 		}
 		publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(msgBytes)).Build()
-		_ = s.Redis.Do(ctx, publishCmd).Error()
+		// Redisへのpublishエラーはカウントから除外せず記録のみ（部分的な成功を許容）
+		if pubErr := s.Redis.Do(ctx, publishCmd).Error(); pubErr != nil {
+			log.Printf("Failed to publish embedding message for diary %s: %v", diaryID, pubErr)
+		}
 		count++
 	}
 

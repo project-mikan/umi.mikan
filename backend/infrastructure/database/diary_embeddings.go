@@ -155,13 +155,8 @@ func embeddingToSQL(v []float32) string {
 
 // UpsertDiaryChunkEmbeddings は日記の全チャンクをトランザクション内でupsertする
 // 既存チャンクを削除してから新チャンクを挿入することで常に最新状態に保つ
-func UpsertDiaryChunkEmbeddings(ctx context.Context, db DB, diaryID, userID uuid.UUID, chunks []DiaryChunk, modelVersion string) error {
-	sqlDB, ok := db.(*sql.DB)
-	if !ok {
-		return fmt.Errorf("db must be *sql.DB for transactional chunk upsert")
-	}
-
-	tx, err := sqlDB.BeginTx(ctx, nil)
+func UpsertDiaryChunkEmbeddings(ctx context.Context, db *sql.DB, diaryID, userID uuid.UUID, chunks []DiaryChunk, modelVersion string) error {
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}

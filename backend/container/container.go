@@ -262,7 +262,7 @@ func NewRateLimitConfig() (*RateLimitConfig, error) {
 }
 
 // NewDatabase creates a database connection
-func NewDatabase(config *DBConfig) (database.DB, error) {
+func NewDatabase(config *DBConfig) (*sql.DB, error) {
 	db := database.NewDB(config.Host, config.Port, config.User, config.Password, config.DBName)
 	log.Printf("Database connection established: %s:%d/%s", config.Host, config.Port, config.DBName)
 	return db, nil
@@ -307,7 +307,7 @@ func NewRegisterAttemptLimiter(rateLimiter ratelimiter.RateLimiter, config *Rate
 }
 
 // NewAuthService creates an auth service
-func NewAuthService(db database.DB, loginLimiter *ratelimiter.LoginAttemptLimiter, registerLimiter *ratelimiter.RegisterAttemptLimiter) *auth.AuthEntry {
+func NewAuthService(db *sql.DB, loginLimiter *ratelimiter.LoginAttemptLimiter, registerLimiter *ratelimiter.RegisterAttemptLimiter) *auth.AuthEntry {
 	registerKey := constants.LoadRegisterKey()
 	return &auth.AuthEntry{
 		DB:              db,
@@ -318,7 +318,7 @@ func NewAuthService(db database.DB, loginLimiter *ratelimiter.LoginAttemptLimite
 }
 
 // NewDiaryService creates a diary service
-func NewDiaryService(db database.DB, redis rueidis.Client) *diary.DiaryEntry {
+func NewDiaryService(db *sql.DB, redis rueidis.Client) *diary.DiaryEntry {
 	return &diary.DiaryEntry{
 		DB:         db,
 		Redis:      redis,
@@ -327,12 +327,12 @@ func NewDiaryService(db database.DB, redis rueidis.Client) *diary.DiaryEntry {
 }
 
 // NewEntityService creates an entity service
-func NewEntityService(db database.DB) *entity.EntityEntry {
+func NewEntityService(db *sql.DB) *entity.EntityEntry {
 	return &entity.EntityEntry{DB: db}
 }
 
 // NewUserService creates a user service
-func NewUserService(db database.DB, redis rueidis.Client) *user.UserEntry {
+func NewUserService(db *sql.DB, redis rueidis.Client) *user.UserEntry {
 	return &user.UserEntry{DB: db, RedisClient: redis}
 }
 
@@ -340,7 +340,7 @@ func NewUserService(db database.DB, redis rueidis.Client) *user.UserEntry {
 
 // ServerApp represents the gRPC server application
 type ServerApp struct {
-	DB            database.DB
+	DB            *sql.DB
 	Redis         rueidis.Client
 	AuthService   *auth.AuthEntry
 	DiaryService  *diary.DiaryEntry
@@ -350,14 +350,14 @@ type ServerApp struct {
 
 // SchedulerApp represents the scheduler application
 type SchedulerApp struct {
-	DB              database.DB
+	DB              *sql.DB
 	Redis           rueidis.Client
 	SchedulerConfig *SchedulerConfig
 }
 
 // SubscriberApp represents the subscriber application
 type SubscriberApp struct {
-	DB               database.DB
+	DB               *sql.DB
 	Redis            rueidis.Client
 	LLMFactory       LLMClientFactory
 	LockService      LockService
@@ -366,7 +366,7 @@ type SubscriberApp struct {
 
 // NewServerApp creates a server application
 func NewServerApp(
-	db database.DB,
+	db *sql.DB,
 	redis rueidis.Client,
 	authService *auth.AuthEntry,
 	diaryService *diary.DiaryEntry,
@@ -385,7 +385,7 @@ func NewServerApp(
 
 // NewSchedulerApp creates a scheduler application
 func NewSchedulerApp(
-	db database.DB,
+	db *sql.DB,
 	redis rueidis.Client,
 	config *SchedulerConfig,
 ) *SchedulerApp {
@@ -398,7 +398,7 @@ func NewSchedulerApp(
 
 // NewSubscriberApp creates a subscriber application
 func NewSubscriberApp(
-	db database.DB,
+	db *sql.DB,
 	redis rueidis.Client,
 	llmFactory LLMClientFactory,
 	lockService LockService,
@@ -415,12 +415,12 @@ func NewSubscriberApp(
 
 // Cleanup provides a way to clean up resources
 type Cleanup struct {
-	db    database.DB
+	db    *sql.DB
 	redis rueidis.Client
 }
 
 // NewCleanup creates a cleanup handler
-func NewCleanup(db database.DB, redis rueidis.Client) *Cleanup {
+func NewCleanup(db *sql.DB, redis rueidis.Client) *Cleanup {
 	return &Cleanup{db: db, redis: redis}
 }
 
@@ -429,16 +429,11 @@ func (c *Cleanup) Close() error {
 	var err error
 
 	if c.db != nil {
-		// Cast database.DB to *sql.DB to access Close method
-		if sqlDB, ok := c.db.(*sql.DB); ok {
-			if closeErr := sqlDB.Close(); closeErr != nil {
-				log.Printf("Failed to close database connection: %v", closeErr)
-				err = closeErr
-			} else {
-				log.Printf("Database connection closed")
-			}
+		if closeErr := c.db.Close(); closeErr != nil {
+			log.Printf("Failed to close database connection: %v", closeErr)
+			err = closeErr
 		} else {
-			log.Printf("Warning: Cannot close database connection - unexpected type %T", c.db)
+			log.Printf("Database connection closed")
 		}
 	}
 

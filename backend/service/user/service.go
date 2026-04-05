@@ -22,7 +22,7 @@ import (
 
 type UserEntry struct {
 	g.UnimplementedUserServiceServer
-	DB          database.DB
+	DB          *sql.DB
 	RedisClient rueidis.Client
 }
 
@@ -386,7 +386,7 @@ func (s *UserEntry) DeleteAccount(ctx context.Context, req *g.DeleteAccountReque
 	}
 
 	// トランザクション内で関連データを削除
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		// 1. 日記データを削除 (個別に削除するためのクエリを実行)
 		_, err := tx.ExecContext(ctx, "DELETE FROM diaries WHERE user_id = $1", parsedUserID)
 		if err != nil {
@@ -633,7 +633,7 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 		ORDER BY h.hour
 	`
 
-	rows, err := s.DB.(*sql.DB).Query(query, userID)
+	rows, err := s.DB.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -742,14 +742,14 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 	// 日次サマリー総数を取得
 	var totalDaily int32
 	dailyQuery := `SELECT COUNT(*) FROM diary_summary_days WHERE user_id = $1`
-	if err := s.DB.(*sql.DB).QueryRow(dailyQuery, userID).Scan(&totalDaily); err != nil {
+	if err := s.DB.QueryRow(dailyQuery, userID).Scan(&totalDaily); err != nil {
 		return nil, err
 	}
 
 	// 月次サマリー総数を取得
 	var totalMonthly int32
 	monthlyQuery := `SELECT COUNT(*) FROM diary_summary_months WHERE user_id = $1`
-	if err := s.DB.(*sql.DB).QueryRow(monthlyQuery, userID).Scan(&totalMonthly); err != nil {
+	if err := s.DB.QueryRow(monthlyQuery, userID).Scan(&totalMonthly); err != nil {
 		return nil, err
 	}
 
@@ -763,7 +763,7 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		  AND d.date < CURRENT_DATE
 		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
 	`
-	if err := s.DB.(*sql.DB).QueryRow(pendingDailyQuery, userID).Scan(&pendingDaily); err != nil {
+	if err := s.DB.QueryRow(pendingDailyQuery, userID).Scan(&pendingDaily); err != nil {
 		return nil, err
 	}
 
@@ -788,14 +788,14 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 			OR (mds.year = EXTRACT(YEAR FROM CURRENT_DATE) AND mds.month < EXTRACT(MONTH FROM CURRENT_DATE)))
 		AND (dsm.updated_at IS NULL OR dsm.updated_at < mds.latest_diary_updated_at)
 	`
-	if err := s.DB.(*sql.DB).QueryRow(pendingMonthlyQuery, userID).Scan(&pendingMonthly); err != nil {
+	if err := s.DB.QueryRow(pendingMonthlyQuery, userID).Scan(&pendingMonthly); err != nil {
 		return nil, err
 	}
 
 	// 自動要約設定とRAG設定を取得
 	var autoDaily, autoMonthly, autoLatestTrend, semanticSearchEnabled bool
 	autoQuery := `SELECT auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	if err := s.DB.(*sql.DB).QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly, &autoLatestTrend, &semanticSearchEnabled); err != nil {
+	if err := s.DB.QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly, &autoLatestTrend, &semanticSearchEnabled); err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
 		}
@@ -809,7 +809,7 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 	// embedding統計を取得
 	var totalEmbeddings int32
 	embeddingCountQuery := `SELECT COUNT(*) FROM diary_embeddings WHERE user_id = $1`
-	if err := s.DB.(*sql.DB).QueryRow(embeddingCountQuery, userID).Scan(&totalEmbeddings); err != nil {
+	if err := s.DB.QueryRow(embeddingCountQuery, userID).Scan(&totalEmbeddings); err != nil {
 		return nil, err
 	}
 
@@ -823,7 +823,7 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
 		  )
 	`
-	if err := s.DB.(*sql.DB).QueryRow(pendingEmbeddingsQuery, userID).Scan(&pendingEmbeddings); err != nil {
+	if err := s.DB.QueryRow(pendingEmbeddingsQuery, userID).Scan(&pendingEmbeddings); err != nil {
 		return nil, err
 	}
 

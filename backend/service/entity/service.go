@@ -17,16 +17,7 @@ import (
 
 type EntityEntry struct {
 	g.UnimplementedEntityServiceServer
-	DB database.DB
-	db *sql.DB // 型アサーション済みフィールド
-}
-
-// getSQLDB は型アサーション済みのsql.DBを返すヘルパーメソッド
-func (s *EntityEntry) getSQLDB() *sql.DB {
-	if s.db == nil {
-		s.db = s.DB.(*sql.DB)
-	}
-	return s.db
+	DB *sql.DB
 }
 
 // validateEntityName はエンティティ名のバリデーションを行う
@@ -88,7 +79,7 @@ func (s *EntityEntry) getAllAliasesByUserID(ctx context.Context, userID uuid.UUI
 		WHERE e.user_id = $1
 		ORDER BY ea.entity_id, ea.created_at
 	`
-	rows, err := s.getSQLDB().QueryContext(ctx, query, userID)
+	rows, err := s.DB.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +144,7 @@ func (s *EntityEntry) CreateEntity(
 	}
 
 	// トランザクション内でエンティティを作成（一貫性のため）
-	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		// エンティティ名が既存のエイリアスと重複していないかチェック
 		checkAliasQuery := `
 			SELECT COUNT(*) FROM entity_aliases ea
@@ -234,7 +225,7 @@ func (s *EntityEntry) UpdateEntity(
 	}
 
 	// トランザクション内でエンティティを更新
-	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		entity.Name = message.Name
 		entity.CategoryID = int(message.Category)
 		entity.UpdatedAt = time.Now().Unix()
@@ -318,7 +309,7 @@ func (s *EntityEntry) DeleteEntity(
 	}
 
 	// トランザクション内でエンティティを削除
-	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		return entity.Delete(ctx, tx)
 	})
 	if err != nil {
@@ -497,7 +488,7 @@ func (s *EntityEntry) CreateEntityAlias(
 		UpdatedAt: currentTime,
 	}
 
-	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		// エイリアスが既存のエンティティ名と重複していないかチェック
 		checkEntityQuery := `
 			SELECT COUNT(*) FROM entities
@@ -592,7 +583,7 @@ func (s *EntityEntry) UpdateEntityAlias(
 	}
 
 	// トランザクション内でエイリアスを更新
-	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		// 新しいエイリアス名が既存のエンティティ名と重複していないかチェック
 		checkEntityQuery := `
 			SELECT COUNT(*) FROM entities
@@ -677,7 +668,7 @@ func (s *EntityEntry) DeleteEntityAlias(
 	}
 
 	// トランザクション内でエイリアスを削除
-	err = database.RwTransaction(ctx, s.getSQLDB(), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		return alias.Delete(ctx, tx)
 	})
 	if err != nil {
@@ -717,7 +708,7 @@ func (s *EntityEntry) SearchEntities(
 			WHERE e.user_id = $1
 			ORDER BY e.name
 		`
-		rows, err = s.getSQLDB().QueryContext(ctx, query, userID)
+		rows, err = s.DB.QueryContext(ctx, query, userID)
 	} else {
 		// クエリがある場合は部分一致検索
 		query = `
@@ -728,7 +719,7 @@ func (s *EntityEntry) SearchEntities(
 			AND (e.name ILIKE $2 OR ea.alias ILIKE $2)
 			ORDER BY e.name
 		`
-		rows, err = s.getSQLDB().QueryContext(ctx, query, userID, "%"+message.Query+"%")
+		rows, err = s.DB.QueryContext(ctx, query, userID, "%"+message.Query+"%")
 	}
 	if err != nil {
 		return nil, err

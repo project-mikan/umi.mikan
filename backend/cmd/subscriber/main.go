@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -336,7 +337,7 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 	return nil
 }
 
-func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
+func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -427,7 +428,7 @@ func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Cli
 	}
 }
 
-func generateDailySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
+func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"date":    dateStr,
@@ -525,7 +526,7 @@ func generateDailySummary(ctx context.Context, db database.DB, redisClient rueid
 	return nil
 }
 
-func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
+func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"year":    year,
@@ -634,7 +635,7 @@ func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rue
 	return nil
 }
 
-func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) (string, error) {
+func generateSummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -667,7 +668,7 @@ func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory cont
 	return summary, nil
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
+func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -700,7 +701,7 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFacto
 	return summary, nil
 }
 
-func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, periodStartStr, periodEndStr string, logger *logrus.Entry) error {
+func generateLatestTrend(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, periodStartStr, periodEndStr string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id":      userID,
 		"period_start": periodStartStr,
@@ -853,7 +854,7 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	return nil
 }
 
-func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
+func generateLatestTrendWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -887,7 +888,7 @@ func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory 
 	return analysis, nil
 }
 
-func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, diaryID string, logger *logrus.Entry) error {
+func generateDiaryHighlight(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, diaryID string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id":  userID,
 		"diary_id": diaryID,
@@ -1041,7 +1042,7 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 	return nil
 }
 
-func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
+func generateDiaryHighlightWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -1091,7 +1092,7 @@ func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFacto
 	return highlights, nil
 }
 
-func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, diaryID string, logger *logrus.Entry) error {
+func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, diaryID string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id":  userID,
 		"diary_id": diaryID,

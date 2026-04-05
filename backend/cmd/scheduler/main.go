@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
-	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -61,7 +61,7 @@ func init() {
 
 // Scheduler types and functions
 type Scheduler struct {
-	db     database.DB
+	db     *sql.DB
 	redis  rueidis.Client
 	ctx    context.Context
 	cancel context.CancelFunc
