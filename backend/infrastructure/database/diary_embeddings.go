@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -18,6 +17,8 @@ type DiaryChunk struct {
 	Index int
 	// チャンクのテキスト内容（スニペット表示用）
 	Content string
+	// チャンクの概要（検索結果に表示する短い説明）
+	Summary string
 	// チャンクのベクトル埋め込み
 	Embedding []float32
 	// チャンク分割に使用したLLMモデル
@@ -32,7 +33,11 @@ type DiaryEmbeddingSearchResult struct {
 	Content string
 	// マッチしたチャンクの内容（スニペット表示用）
 	ChunkContent string
-	Similarity   float64
+	// マッチしたチャンクの概要（検索結果に表示する短い説明）
+	ChunkSummary string
+	// 日記内のチャンク総数
+	ChunkCount int
+	Similarity float64
 	// embedding生成に使用したモデル
 	EmbeddingModel string
 	// チャンク分割に使用したモデル
@@ -49,31 +54,63 @@ type DiaryEmbeddingStatus struct {
 	UpdatedAt         time.Time
 	// 最初のチャンクのベクトル値（デバッグ用）
 	EmbeddingValues []float32
+	// チャンク総数
+	ChunkCount int
+	// 各チャンクの概要（chunk_index順）
+	ChunkSummaries []string
 }
 
 // GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
-// 複数チャンクが存在する場合はchunk_index=0のデータを返す
+// 全チャンクのsummaryとchunk_index=0のベクトル値を返す
 func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UUID) (*DiaryEmbeddingStatus, error) {
 	query := `
-		SELECT model_version, chunk_model_version, created_at, updated_at, embedding::text
+		SELECT model_version, chunk_model_version, created_at, updated_at, embedding::text, chunk_summary
 		FROM diary_embeddings
 		WHERE diary_id = $1 AND user_id = $2
 		ORDER BY chunk_index ASC
-		LIMIT 1
 	`
 
-	var modelVersion, chunkModelVersion, embeddingStr string
-	var createdAt, updatedAt time.Time
-	err := db.QueryRowContext(ctx, query, diaryID, userID).Scan(&modelVersion, &chunkModelVersion, &createdAt, &updatedAt, &embeddingStr)
+	rows, err := db.QueryContext(ctx, query, diaryID, userID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return &DiaryEmbeddingStatus{Indexed: false}, nil
-		}
 		return nil, fmt.Errorf("failed to get diary embedding status: %w", err)
 	}
+	defer func() {
+		_ = rows.Close()
+	}()
 
-	// pgvectorの文字列表現 "[v1,v2,...]" をfloat32スライスにパース
-	embeddingValues := parseEmbeddingString(embeddingStr)
+	var (
+		modelVersion, chunkModelVersion string
+		createdAt, updatedAt            time.Time
+		embeddingValues                 []float32
+		chunkSummaries                  []string
+	)
+	first := true
+
+	for rows.Next() {
+		var embStr, chunkSummary string
+		var mv, cmv string
+		var cat, uat time.Time
+		if err := rows.Scan(&mv, &cmv, &cat, &uat, &embStr, &chunkSummary); err != nil {
+			return nil, fmt.Errorf("failed to scan diary embedding status: %w", err)
+		}
+		if first {
+			modelVersion = mv
+			chunkModelVersion = cmv
+			createdAt = cat
+			updatedAt = uat
+			embeddingValues = parseEmbeddingString(embStr)
+			first = false
+		}
+		chunkSummaries = append(chunkSummaries, chunkSummary)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate diary embedding status: %w", err)
+	}
+
+	if first {
+		// チャンクが1件もない
+		return &DiaryEmbeddingStatus{Indexed: false}, nil
+	}
 
 	return &DiaryEmbeddingStatus{
 		Indexed:           true,
@@ -82,6 +119,8 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
 		EmbeddingValues:   embeddingValues,
+		ChunkCount:        len(chunkSummaries),
+		ChunkSummaries:    chunkSummaries,
 	}, nil
 }
 
@@ -138,13 +177,13 @@ func UpsertDiaryChunkEmbeddings(ctx context.Context, db DB, diaryID, userID uuid
 	// 新チャンクを挿入
 	insertQuery := `
 		INSERT INTO diary_embeddings
-			(id, diary_id, user_id, chunk_index, chunk_content, embedding, model_version, chunk_model_version, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6::halfvec, $7, $8, NOW(), NOW())
+			(id, diary_id, user_id, chunk_index, chunk_content, chunk_summary, embedding, model_version, chunk_model_version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7::halfvec, $8, $9, NOW(), NOW())
 	`
 	for _, chunk := range chunks {
 		embeddingStr := embeddingToSQL(chunk.Embedding)
 		if _, err := tx.ExecContext(ctx, insertQuery,
-			uuid.New(), diaryID, userID, chunk.Index, chunk.Content, embeddingStr, modelVersion, chunk.SplitModelVersion,
+			uuid.New(), diaryID, userID, chunk.Index, chunk.Content, chunk.Summary, embeddingStr, modelVersion, chunk.SplitModelVersion,
 		); err != nil {
 			return fmt.Errorf("failed to insert diary chunk (index=%d): %w", chunk.Index, err)
 		}
@@ -167,14 +206,17 @@ func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID,
 	}
 
 	// 各日記のチャンクの中で最も類似度の高いものを1件だけ選ぶ（日記単位に集約）
+	// chunk_countはその日記の全チャンク数（閾値フィルタ前の総数）を示す
 	query := `
-		SELECT diary_id, date, content, chunk_content, similarity, model_version, chunk_model_version
+		SELECT diary_id, date, content, chunk_content, chunk_summary, chunk_count, similarity, model_version, chunk_model_version
 		FROM (
 			SELECT
 				d.id AS diary_id,
 				d.date,
 				d.content,
 				e.chunk_content,
+				e.chunk_summary,
+				(SELECT COUNT(*) FROM diary_embeddings WHERE diary_id = d.id) AS chunk_count,
 				1 - (e.embedding <=> $2::halfvec) AS similarity,
 				e.model_version,
 				e.chunk_model_version,
@@ -201,7 +243,7 @@ func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID,
 	var results []*DiaryEmbeddingSearchResult
 	for rows.Next() {
 		var result DiaryEmbeddingSearchResult
-		if err := rows.Scan(&result.DiaryID, &result.Date, &result.Content, &result.ChunkContent, &result.Similarity, &result.EmbeddingModel, &result.ChunkModel); err != nil {
+		if err := rows.Scan(&result.DiaryID, &result.Date, &result.Content, &result.ChunkContent, &result.ChunkSummary, &result.ChunkCount, &result.Similarity, &result.EmbeddingModel, &result.ChunkModel); err != nil {
 			return nil, fmt.Errorf("failed to scan diary embedding search result: %w", err)
 		}
 		results = append(results, &result)

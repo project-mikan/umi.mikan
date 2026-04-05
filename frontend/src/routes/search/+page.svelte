@@ -37,7 +37,10 @@
 		const date = entry.date;
 		if (date) {
 			const dateStr = formatDateUrl(date);
-			goto(`/${dateStr}`);
+			const params = searchKeyword.trim()
+				? `?search=${encodeURIComponent(searchKeyword.trim())}`
+				: "";
+			goto(`/${dateStr}${params}`);
 		}
 	}
 
@@ -45,7 +48,10 @@
 		const date = result.date;
 		if (date) {
 			const dateStr = formatDateUrl(date);
-			goto(`/${dateStr}`);
+			const params = searchKeyword.trim()
+				? `?search=${encodeURIComponent(searchKeyword.trim())}`
+				: "";
+			goto(`/${dateStr}${params}`);
 		}
 	}
 
@@ -300,10 +306,20 @@
 							<h3 class="text-lg font-semibold text-purple-600 dark:text-purple-400">
 								{result.date ? _formatDate(result.date) : $_('diary.dateUnknown')}
 							</h3>
-							<span class="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
-								{$_('search.similarity')}: {_formatSimilarity(result.similarity)}
-							</span>
+							<div class="flex items-center gap-2 flex-shrink-0 ml-2">
+								{#if result.chunkCount > 1}
+									<span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full">
+										{$_('search.chunkCount', { values: { count: result.chunkCount } })}
+									</span>
+								{/if}
+								<span class="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+									{$_('search.similarity')}: {_formatSimilarity(result.similarity)}
+								</span>
+							</div>
 						</div>
+						{#if result.chunkSummary}
+							<p class="text-xs text-purple-500 dark:text-purple-400 mb-2 font-medium">{result.chunkSummary}</p>
+						{/if}
 						<div class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap auto-phrase-target">
 							<p class="line-clamp-3">{result.snippet}</p>
 						</div>

@@ -211,6 +211,8 @@
 			"statusQueued": "Summary generation has been queued. Please wait a moment.",
 			"statusProcessing": "Summary is being generated. Please wait a moment."
 		},
+		"searchHighlightBanner": "Searching for \"{keyword}\"",
+		"searchHighlightClear": "Clear",
 		"noEntry": "'s diary is not available.",
 		"yesterdayNoEntry": "Yesterday's diary is not available.",
 		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
@@ -258,7 +260,10 @@
 			"updatedAt": "Last updated at",
 			"modelVersion": "Model",
 			"dimensions": "Dimensions",
-			"vectorPreview": "Vector values (first 10)"
+			"vectorPreview": "Vector values (first 10)",
+			"chunkCount": "Chunks",
+			"chunkSummaries": "Chunk list",
+			"chunkSummaryEmpty": "(no summary)"
 		}
 	},
 	"date": {
@@ -366,7 +371,8 @@
 		"error": {
 			"searchFailed": "Search failed.",
 			"semanticSearchFailed": "Semantic search failed. Please check if your Gemini API key is configured."
-		}
+		},
+		"chunkCount": "{count} chunks"
 	},
 	"monthly": {
 		"thisMonth": "This month",

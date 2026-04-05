@@ -1135,8 +1135,10 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 				Month: uint32(sr.Date.Month()),
 				Day:   uint32(sr.Date.Day()),
 			},
-			Snippet:    snippet,
-			Similarity: float32(sr.Similarity),
+			Snippet:      snippet,
+			Similarity:   float32(sr.Similarity),
+			ChunkSummary: sr.ChunkSummary,
+			ChunkCount:   int32(sr.ChunkCount),
 		})
 	}
 
@@ -1263,6 +1265,8 @@ func (s *DiaryEntry) GetDiaryEmbeddingStatus(
 		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
 		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
 		resp.EmbeddingValues = embeddingStatus.EmbeddingValues
+		resp.ChunkCount = int32(embeddingStatus.ChunkCount)
+		resp.ChunkSummaries = embeddingStatus.ChunkSummaries
 	}
 
 	return resp, nil

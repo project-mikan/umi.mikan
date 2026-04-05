@@ -1143,13 +1143,13 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 	cleanContent := stripMarkdown(diaryContent)
 
 	// 4. 日記を話題ごとのチャンクに分割する（失敗時は日記全体を1チャンクとしてフォールバック）
-	rawChunks, err := geminiClient.SplitDiaryIntoChunks(ctx, cleanContent)
+	chunkDataList, err := geminiClient.SplitDiaryIntoChunks(ctx, cleanContent)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"user_id":  userID,
 			"diary_id": diaryID,
 		}).WithError(err).Warn("Failed to split diary into chunks, falling back to single chunk")
-		rawChunks = []string{cleanContent}
+		chunkDataList = []llm.DiaryChunkData{{Content: cleanContent, Summary: ""}}
 	}
 
 	// 5. UUIDをパース
@@ -1163,17 +1163,18 @@ func generateDiaryEmbedding(ctx context.Context, db database.DB, llmFactory cont
 	}
 
 	// 6. 各チャンクに日付コンテキストを付与してembedding生成
-	diaryChunks := make([]database.DiaryChunk, 0, len(rawChunks))
-	for i, chunk := range rawChunks {
+	diaryChunks := make([]database.DiaryChunk, 0, len(chunkDataList))
+	for i, chunkData := range chunkDataList {
 		// 時間的クエリの精度向上のため日付情報を先頭に付与する
-		enrichedChunk := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), chunk)
+		enrichedChunk := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), chunkData.Content)
 		embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedChunk, true)
 		if err != nil {
 			return fmt.Errorf("failed to generate embedding for chunk %d: %w", i, err)
 		}
 		diaryChunks = append(diaryChunks, database.DiaryChunk{
 			Index:             i,
-			Content:           chunk,
+			Content:           chunkData.Content,
+			Summary:           chunkData.Summary,
 			Embedding:         embedding,
 			SplitModelVersion: llm.ModelGenerateContent,
 		})

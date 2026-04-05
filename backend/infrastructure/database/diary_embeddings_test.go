@@ -33,8 +33,8 @@ func TestUpsertDiaryChunkEmbeddings(t *testing.T) {
 
 	t.Run("複数チャンクを正常にUpsertできる", func(t *testing.T) {
 		chunks := []database.DiaryChunk{
-			{Index: 0, Content: "今日は朝ジムに行った。", Embedding: dummyEmbedding},
-			{Index: 1, Content: "夜は友人と食事をした。", Embedding: dummyEmbedding2},
+			{Index: 0, Content: "今日は朝ジムに行った。", Summary: "朝のジムトレーニング", Embedding: dummyEmbedding},
+			{Index: 1, Content: "夜は友人と食事をした。", Summary: "友人との夕食", Embedding: dummyEmbedding2},
 		}
 		err := database.UpsertDiaryChunkEmbeddings(ctx, db, diaryID, userID, chunks, "gemini-embedding-001")
 		if err != nil {
@@ -165,8 +165,8 @@ func TestSearchDiaryEntriesByEmbedding(t *testing.T) {
 	emb2[1] = 1.0
 
 	chunks1 := []database.DiaryChunk{
-		{Index: 0, Content: "朝ランニング5km走った", Embedding: emb1},
-		{Index: 1, Content: "夜はストレッチをした", Embedding: emb2},
+		{Index: 0, Content: "朝ランニング5km走った", Summary: "朝のランニング", Embedding: emb1},
+		{Index: 1, Content: "夜はストレッチをした", Summary: "夜のストレッチ", Embedding: emb2},
 	}
 	if err := database.UpsertDiaryChunkEmbeddings(ctx, db, diary1ID, userID, chunks1, "gemini-embedding-001"); err != nil {
 		t.Fatalf("日記1のchunk upsertに失敗: %v", err)
@@ -236,6 +236,27 @@ func TestSearchDiaryEntriesByEmbedding(t *testing.T) {
 		}
 		if results[0].ChunkContent != "朝ランニング5km走った" {
 			t.Errorf("ChunkContent が期待値と異なる: got %q", results[0].ChunkContent)
+		}
+	})
+
+	t.Run("ChunkSummaryとChunkCountが検索結果に含まれる", func(t *testing.T) {
+		queryEmbedding := make([]float32, 3072)
+		queryEmbedding[0] = 1.0
+
+		results, err := database.SearchDiaryEntriesByEmbedding(ctx, db, userID, queryEmbedding, 10, 0.9)
+		if err != nil {
+			t.Fatalf("SearchDiaryEntriesByEmbedding失敗: %v", err)
+		}
+		if len(results) == 0 {
+			t.Fatal("結果が0件")
+		}
+		// 日記1は2チャンク持つ
+		if results[0].ChunkCount != 2 {
+			t.Errorf("ChunkCount が期待値 2 と異なる: got %d", results[0].ChunkCount)
+		}
+		// マッチしたのはchunk_index=0のチャンクなのでsummaryは"朝のランニング"
+		if results[0].ChunkSummary != "朝のランニング" {
+			t.Errorf("ChunkSummary が期待値と異なる: got %q", results[0].ChunkSummary)
 		}
 	})
 }

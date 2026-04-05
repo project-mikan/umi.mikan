@@ -146,6 +146,8 @@ export const load: PageServerLoad = async ({
 		createdAt: number;
 		updatedAt: number;
 		embeddingValues: number[];
+		chunkCount: number;
+		chunkSummaries: string[];
 	} | null = null;
 	if (entryResponse.entry && semanticSearchEnabled) {
 		try {
@@ -159,6 +161,8 @@ export const load: PageServerLoad = async ({
 				createdAt: Number(statusResponse.createdAt),
 				updatedAt: Number(statusResponse.updatedAt),
 				embeddingValues: statusResponse.embeddingValues,
+				chunkCount: statusResponse.chunkCount,
+				chunkSummaries: statusResponse.chunkSummaries,
 			};
 		} catch (_embeddingErr) {
 			embeddingStatus = null;

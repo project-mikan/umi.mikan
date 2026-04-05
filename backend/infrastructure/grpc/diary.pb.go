@@ -1716,8 +1716,10 @@ type SemanticSearchResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DiaryId       string                 `protobuf:"bytes,1,opt,name=diary_id,json=diaryId,proto3" json:"diary_id,omitempty"`
 	Date          *YMD                   `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`
-	Snippet       string                 `protobuf:"bytes,3,opt,name=snippet,proto3" json:"snippet,omitempty"`         // クエリに関連する抜粋（最大200文字）
-	Similarity    float32                `protobuf:"fixed32,4,opt,name=similarity,proto3" json:"similarity,omitempty"` // コサイン類似度スコア (0.0〜1.0)
+	Snippet       string                 `protobuf:"bytes,3,opt,name=snippet,proto3" json:"snippet,omitempty"`                               // クエリに関連する抜粋（最大200文字）
+	Similarity    float32                `protobuf:"fixed32,4,opt,name=similarity,proto3" json:"similarity,omitempty"`                       // コサイン類似度スコア (0.0〜1.0)
+	ChunkSummary  string                 `protobuf:"bytes,5,opt,name=chunk_summary,json=chunkSummary,proto3" json:"chunk_summary,omitempty"` // マッチしたチャンクの概要（1〜2文）
+	ChunkCount    int32                  `protobuf:"varint,6,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`      // 日記内のチャンク総数
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1776,6 +1778,20 @@ func (x *SemanticSearchResult) GetSnippet() string {
 func (x *SemanticSearchResult) GetSimilarity() float32 {
 	if x != nil {
 		return x.Similarity
+	}
+	return 0
+}
+
+func (x *SemanticSearchResult) GetChunkSummary() string {
+	if x != nil {
+		return x.ChunkSummary
+	}
+	return ""
+}
+
+func (x *SemanticSearchResult) GetChunkCount() int32 {
+	if x != nil {
+		return x.ChunkCount
 	}
 	return 0
 }
@@ -2248,8 +2264,10 @@ type GetDiaryEmbeddingStatusResponse struct {
 	ModelVersion      string                 `protobuf:"bytes,2,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"`                   // embedding生成に使用したモデル
 	CreatedAt         int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                           // 埋め込み作成日時（Unix timestamp）
 	UpdatedAt         int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`                           // 埋め込み更新日時（Unix timestamp）
-	EmbeddingValues   []float32              `protobuf:"fixed32,5,rep,packed,name=embedding_values,json=embeddingValues,proto3" json:"embedding_values,omitempty"` // ベクトル値
+	EmbeddingValues   []float32              `protobuf:"fixed32,5,rep,packed,name=embedding_values,json=embeddingValues,proto3" json:"embedding_values,omitempty"` // ベクトル値（chunk_index=0の先頭チャンク）
 	ChunkModelVersion string                 `protobuf:"bytes,6,opt,name=chunk_model_version,json=chunkModelVersion,proto3" json:"chunk_model_version,omitempty"`  // チャンク分割に使用したLLMモデル
+	ChunkCount        int32                  `protobuf:"varint,7,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`                        // チャンク総数
+	ChunkSummaries    []string               `protobuf:"bytes,8,rep,name=chunk_summaries,json=chunkSummaries,proto3" json:"chunk_summaries,omitempty"`             // 各チャンクの概要（chunk_index順）
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -2324,6 +2342,20 @@ func (x *GetDiaryEmbeddingStatusResponse) GetChunkModelVersion() string {
 		return x.ChunkModelVersion
 	}
 	return ""
+}
+
+func (x *GetDiaryEmbeddingStatusResponse) GetChunkCount() int32 {
+	if x != nil {
+		return x.ChunkCount
+	}
+	return 0
+}
+
+func (x *GetDiaryEmbeddingStatusResponse) GetChunkSummaries() []string {
+	if x != nil {
+		return x.ChunkSummaries
+	}
+	return nil
 }
 
 var File_diary_diary_proto protoreflect.FileDescriptor
@@ -2444,7 +2476,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"O\n" +
 	"!SearchDiaryEntriesSemanticRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\x05R\x05limit\"\x8b\x01\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\"\xd1\x01\n" +
 	"\x14SemanticSearchResult\x12\x19\n" +
 	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\x12\x1e\n" +
 	"\x04date\x18\x02 \x01(\v2\n" +
@@ -2452,7 +2484,10 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\asnippet\x18\x03 \x01(\tR\asnippet\x12\x1e\n" +
 	"\n" +
 	"similarity\x18\x04 \x01(\x02R\n" +
-	"similarity\"\xa5\x01\n" +
+	"similarity\x12#\n" +
+	"\rchunk_summary\x18\x05 \x01(\tR\fchunkSummary\x12\x1f\n" +
+	"\vchunk_count\x18\x06 \x01(\x05R\n" +
+	"chunkCount\"\xa5\x01\n" +
 	"\"SearchDiaryEntriesSemanticResponse\x125\n" +
 	"\aresults\x18\x01 \x03(\v2\x1b.diary.SemanticSearchResultR\aresults\x12'\n" +
 	"\x0fembedding_model\x18\x02 \x01(\tR\x0eembeddingModel\x12\x1f\n" +
@@ -2482,7 +2517,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
 	"\fqueued_count\x18\x02 \x01(\x05R\vqueuedCount\";\n" +
 	"\x1eGetDiaryEmbeddingStatusRequest\x12\x19\n" +
-	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\xf9\x01\n" +
+	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\xc3\x02\n" +
 	"\x1fGetDiaryEmbeddingStatusResponse\x12\x18\n" +
 	"\aindexed\x18\x01 \x01(\bR\aindexed\x12#\n" +
 	"\rmodel_version\x18\x02 \x01(\tR\fmodelVersion\x12\x1d\n" +
@@ -2491,7 +2526,10 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\x04 \x01(\x03R\tupdatedAt\x12)\n" +
 	"\x10embedding_values\x18\x05 \x03(\x02R\x0fembeddingValues\x12.\n" +
-	"\x13chunk_model_version\x18\x06 \x01(\tR\x11chunkModelVersion2\x8c\r\n" +
+	"\x13chunk_model_version\x18\x06 \x01(\tR\x11chunkModelVersion\x12\x1f\n" +
+	"\vchunk_count\x18\a \x01(\x05R\n" +
+	"chunkCount\x12'\n" +
+	"\x0fchunk_summaries\x18\b \x03(\tR\x0echunkSummaries2\x8c\r\n" +
 	"\fDiaryService\x12S\n" +
 	"\x10CreateDiaryEntry\x12\x1e.diary.CreateDiaryEntryRequest\x1a\x1f.diary.CreateDiaryEntryResponse\x12S\n" +
 	"\x10UpdateDiaryEntry\x12\x1e.diary.UpdateDiaryEntryRequest\x1a\x1f.diary.UpdateDiaryEntryResponse\x12S\n" +

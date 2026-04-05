@@ -12,6 +12,8 @@ CREATE TABLE diary_embeddings (
     chunk_index INT NOT NULL DEFAULT 0,
     -- チャンクのテキスト内容（検索結果のスニペット表示用）
     chunk_content TEXT NOT NULL DEFAULT '',
+    -- チャンクの概要（検索結果に表示する短い説明）
+    chunk_summary TEXT NOT NULL DEFAULT '',
     -- ベクトル埋め込み（Gemini gemini-embedding-001 のネイティブ次元数; halfvec はHNSWで4000次元まで対応）
     embedding halfvec(3072) NOT NULL,
     -- embedding生成に使用したモデル

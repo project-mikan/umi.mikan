@@ -211,6 +211,8 @@
 			"statusQueued": "まとめの生成をキューに追加しました。しばらくお待ちください。",
 			"statusProcessing": "まとめを生成中です。しばらくお待ちください。"
 		},
+		"searchHighlightBanner": "「{keyword}」を検索中",
+		"searchHighlightClear": "クリア",
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
 		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
@@ -258,7 +260,10 @@
 			"updatedAt": "最終更新日時",
 			"modelVersion": "モデル",
 			"dimensions": "次元数",
-			"vectorPreview": "ベクトル値（先頭10件）"
+			"vectorPreview": "ベクトル値（先頭10件）",
+			"chunkCount": "チャンク数",
+			"chunkSummaries": "チャンク一覧",
+			"chunkSummaryEmpty": "（概要なし）"
 		}
 	},
 	"date": {
@@ -366,7 +371,8 @@
 		"error": {
 			"searchFailed": "検索に失敗しました。",
 			"semanticSearchFailed": "意味的検索に失敗しました。Gemini APIキーが設定されているか確認してください。"
-		}
+		},
+		"chunkCount": "{count}チャンク"
 	},
 	"monthly": {
 		"thisMonth": "今月",

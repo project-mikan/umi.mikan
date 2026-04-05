@@ -18,6 +18,7 @@
 	export let rows = 4;
 	export let srOnlyLabel = false;
 	export let diaryHighlights: DiaryHighlight[] = [];
+	export let searchKeyword = "";
 
 	const dispatch = createEventDispatcher();
 </script>
@@ -36,6 +37,7 @@
 			{disabled}
 			{rows}
 			{diaryHighlights}
+			{searchKeyword}
 			bind:value
 			on:save={() => dispatch('save')}
 			on:autosave={() => dispatch('autosave')}

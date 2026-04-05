@@ -390,8 +390,10 @@ message SearchDiaryEntriesSemanticRequest {
 message SemanticSearchResult {
   string diary_id = 1;
   YMD date = 2;
-  string snippet = 3;     // クエリに関連する抜粋（最大200文字）
-  float similarity = 4;   // コサイン類似度スコア (0.0〜1.0)
+  string snippet = 3;       // クエリに関連する抜粋（最大200文字）
+  float similarity = 4;     // コサイン類似度スコア (0.0〜1.0)
+  string chunk_summary = 5; // マッチしたチャンクの概要（1〜2文）
+  int32 chunk_count = 6;    // 日記内のチャンク総数
 }
 
 // 意味的検索レスポンス
@@ -455,6 +457,8 @@ message GetDiaryEmbeddingStatusResponse {
   string model_version = 2;            // embedding生成に使用したモデル
   int64 created_at = 3;                // 埋め込み作成日時（Unix timestamp）
   int64 updated_at = 4;                // 埋め込み更新日時（Unix timestamp）
-  repeated float embedding_values = 5; // ベクトル値
+  repeated float embedding_values = 5; // ベクトル値（chunk_index=0の先頭チャンク）
   string chunk_model_version = 6;      // チャンク分割に使用したLLMモデル
+  int32 chunk_count = 7;               // チャンク総数
+  repeated string chunk_summaries = 8; // 各チャンクの概要（chunk_index順）
 }
