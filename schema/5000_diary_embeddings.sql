@@ -7,6 +7,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE diary_embeddings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     diary_id UUID NOT NULL REFERENCES diaries(id) ON DELETE CASCADE,
+    -- diaries.user_id から導出可能だが、意味的検索クエリでユーザースコープフィルタを
+    -- JOIN なしに行うためのパフォーマンス目的の意図的な非正規化
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     -- 日記内のチャンクインデックス（0始まり）
     chunk_index INT NOT NULL DEFAULT 0,
