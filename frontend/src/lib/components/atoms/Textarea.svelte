@@ -304,17 +304,9 @@
 			// Trigger input event to update the value
 			const inputEvent = new Event("input", { bubbles: true });
 			contentElement.dispatchEvent(inputEvent);
-
-			// 改行後はすぐに入力完了フラグを下ろして、カーソル位置が戻されないようにする
-			// 既存のタイムアウトをクリア
-			if (updateTimeout !== null) {
-				clearTimeout(updateTimeout);
-			}
-			isTyping = false;
-
-			// savedContentを更新して、ハイライト復元を防ぐ
-			// （改行直後は新しいコンテンツとして扱う）
-			savedContent = "";
+			// isTypingはdispatchによって呼ばれた_handleInput内のsetTimeoutに任せる
+			// ここで即座にisTyping = falseにするとhighlightedHTMLの変化でupdateContentElement()が
+			// 呼ばれてカーソル位置が上書きされてしまう
 		}
 	}
 
