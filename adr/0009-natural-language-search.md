@@ -374,7 +374,6 @@ summaries_generated_total{type="diary_embedding"}
 - [x] i18n対応（ja.json, en.json）
 - [x] エラーハンドリング実装
 - [x] ローディング状態の実装（`navigating` ストアでボタンにスピナー表示）
-- [x] 検索履歴のローカルストレージ保存（クエリ文字列のみ・最大20件・同一オリジン保護）
 
 ### インフラ
 

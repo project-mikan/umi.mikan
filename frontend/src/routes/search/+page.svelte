@@ -2,7 +2,6 @@
 	import { _ } from "svelte-i18n";
 	import { goto } from "$app/navigation";
 	import { navigating } from "$app/stores";
-	import { onMount } from "svelte";
 	import "$lib/i18n";
 	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
 	import type { SemanticSearchResult } from "$lib/grpc/diary/diary_pb";
@@ -18,73 +17,6 @@
 		data.semanticSearchEnabled && data.mode === "semantic"
 			? "semantic"
 			: "keyword";
-
-	// 検索履歴のlocalStorageキー
-	const HISTORY_KEY = "umi.mikan:search-history";
-	// 検索履歴の最大保持件数
-	const HISTORY_MAX = 20;
-
-	let searchHistory: string[] = [];
-	let showHistory = false;
-
-	// localStorageから検索履歴を読み込む
-	function _loadHistory(): void {
-		try {
-			const raw = localStorage.getItem(HISTORY_KEY);
-			if (raw) {
-				const parsed = JSON.parse(raw);
-				if (Array.isArray(parsed)) {
-					searchHistory = parsed.filter(
-						(item): item is string =>
-							typeof item === "string" && item.length > 0,
-					);
-				}
-			}
-		} catch {
-			// パース失敗時は空にリセット
-			searchHistory = [];
-		}
-	}
-
-	// 検索履歴をlocalStorageへ保存する
-	function _saveHistory(): void {
-		try {
-			localStorage.setItem(HISTORY_KEY, JSON.stringify(searchHistory));
-		} catch {
-			// ストレージが満杯などのエラーは無視
-		}
-	}
-
-	// 検索履歴にクエリを追加する（重複は先頭へ移動、最大件数を超えたら古いものを削除）
-	function _addToHistory(query: string): void {
-		const trimmed = query.trim();
-		if (!trimmed) return;
-		searchHistory = [
-			trimmed,
-			...searchHistory.filter((h) => h !== trimmed),
-		].slice(0, HISTORY_MAX);
-		_saveHistory();
-	}
-
-	// 検索履歴から特定のアイテムを削除する
-	function _removeHistoryItem(query: string): void {
-		searchHistory = searchHistory.filter((h) => h !== query);
-		_saveHistory();
-	}
-
-	// 検索履歴をすべて削除する
-	function _clearHistory(): void {
-		searchHistory = [];
-		_saveHistory();
-		showHistory = false;
-	}
-
-	// 検索履歴のアイテムを選択して検索を実行する
-	function _selectHistory(query: string): void {
-		searchKeyword = query;
-		showHistory = false;
-		_handleSearch();
-	}
 
 	function _formatDate(ymd: {
 		year: number;
@@ -126,8 +58,6 @@
 
 	function _handleSearch() {
 		if (searchKeyword.trim()) {
-			// 検索実行前に履歴へ追加する
-			_addToHistory(searchKeyword.trim());
 			goto(
 				`/search?q=${encodeURIComponent(searchKeyword.trim())}&mode=${searchMode}`,
 			);
@@ -221,10 +151,6 @@
 	function _formatSimilarity(similarity: number): string {
 		return `${Math.round(similarity * 100)}%`;
 	}
-
-	onMount(() => {
-		_loadHistory();
-	});
 </script>
 
 <svelte:head>
@@ -259,60 +185,15 @@
 		{/if}
 
 		<div class="flex gap-4">
-			<!-- 入力欄と検索履歴ドロップダウンのwrapper -->
-			<div class="relative flex-1">
-				<input
-					type="text"
-					bind:value={searchKeyword}
-					on:keydown={_handleKeydown}
-					on:focus={() => { showHistory = true; }}
-					on:blur={() => { setTimeout(() => { showHistory = false; }, 100); }}
-					placeholder={searchMode === 'semantic' ? $_('search.placeholderSemantic') : $_('search.placeholder')}
-					class="w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:border-transparent {searchMode === 'semantic'
-						? 'border-purple-300 dark:border-purple-600 focus:ring-purple-500'
-						: 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'}"
-				/>
-
-				<!-- 検索履歴ドロップダウン（フォーカス中かつ履歴がある場合のみ表示） -->
-				{#if showHistory && searchHistory.length > 0}
-					<div class="absolute top-full left-0 right-0 z-10 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
-						<!-- 履歴ヘッダー（タイトルと全削除ボタン） -->
-						<div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-							<span class="text-xs text-gray-500 dark:text-gray-400 font-medium">{$_('search.history.title')}</span>
-							<button
-								on:click={_clearHistory}
-								class="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400"
-							>
-								{$_('search.history.clearAll')}
-							</button>
-						</div>
-
-						<!-- 履歴アイテム一覧 -->
-						{#each searchHistory as query}
-							<div class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 group">
-								<!-- 時計アイコン -->
-								<svg class="w-3 h-3 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-								</svg>
-								<!-- 履歴クエリボタン（クリックで検索実行） -->
-								<button
-									class="flex-1 text-left text-sm text-gray-700 dark:text-gray-300 truncate"
-									on:click={() => _selectHistory(query)}
-								>
-									{query}
-								</button>
-								<!-- 個別削除ボタン（ホバー時のみ表示） -->
-								<button
-									class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 text-xs"
-									on:click={() => _removeHistoryItem(query)}
-								>
-									✕
-								</button>
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</div>
+			<input
+				type="text"
+				bind:value={searchKeyword}
+				on:keydown={_handleKeydown}
+				placeholder={searchMode === 'semantic' ? $_('search.placeholderSemantic') : $_('search.placeholder')}
+				class="flex-1 px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:border-transparent {searchMode === 'semantic'
+					? 'border-purple-300 dark:border-purple-600 focus:ring-purple-500'
+					: 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'}"
+			/>
 
 			<!-- 検索ボタン（ナビゲーション中はローディング状態を表示） -->
 			<button
@@ -329,7 +210,7 @@
 							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 						</svg>
-						{$_('search.history.loading')}
+						{$_('search.searching')}
 					</span>
 				{:else}
 					{$_('search.button')}
