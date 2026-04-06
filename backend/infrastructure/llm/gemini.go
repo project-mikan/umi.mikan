@@ -51,6 +51,7 @@ func (g *GeminiClient) GenerateSummary(ctx context.Context, diaryContent string)
 サマリーは以下の要件を満たしてください：
 - Markdownは非対応
 - 冒頭に箇条書きで特筆すべき日付と内容を最大3つ挙げる(箇条書きは「n日：」で始める。月は不要)
+- 箇条書きは必ず日付の小さい順（昇順）に並べること
 - 次にその月全体の傾向を300文字以内で簡潔にまとめる
 
 形式は以下の通りにしてください：
@@ -68,7 +69,12 @@ n日：箇条書き3
 
 	contents := genai.Text(prompt)
 
-	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, nil)
+	zero := float32(0)
+	config := &genai.GenerateContentConfig{
+		Temperature: &zero,
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -109,7 +115,12 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 
 	contents := genai.Text(prompt)
 
-	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, nil)
+	zero := float32(0)
+	config := &genai.GenerateContentConfig{
+		Temperature: &zero,
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
