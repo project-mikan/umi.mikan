@@ -372,7 +372,12 @@
 			"searchFailed": "Search failed.",
 			"semanticSearchFailed": "Semantic search failed. Please check if your Gemini API key is configured."
 		},
-		"chunkCount": "{count} chunks"
+		"chunkCount": "{count} chunks",
+		"history": {
+			"title": "Search history",
+			"clearAll": "Clear all",
+			"loading": "Searching..."
+		}
 	},
 	"monthly": {
 		"thisMonth": "This month",

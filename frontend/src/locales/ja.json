@@ -372,7 +372,12 @@
 			"searchFailed": "検索に失敗しました。",
 			"semanticSearchFailed": "意味的検索に失敗しました。Gemini APIキーが設定されているか確認してください。"
 		},
-		"chunkCount": "{count}チャンク"
+		"chunkCount": "{count}チャンク",
+		"history": {
+			"title": "検索履歴",
+			"clearAll": "すべて削除",
+			"loading": "検索中..."
+		}
 	},
 	"monthly": {
 		"thisMonth": "今月",

@@ -312,12 +312,14 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `0004-pubsub.md`: Redis Pub/Sub implementation details
   - `0005-scheduler.md`: Scheduler system architecture
   - `0008-diary-highlight.md`: Diary highlight generation with LLM
+  - `0009-natural-language-search.md`: Semantic search (RAG) with pgvector + Gemini Embedding
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
   - `loki/loki-config.yml`: Loki log aggregation configuration
   - `alloy/alloy-config.alloy`: Grafana Alloy log collection configuration
   - `grafana/`: Dashboard and data source provisioning
     - `dashboards/umi-mikan-pubsub.json`: Pub/Sub monitoring dashboard
+    - `dashboards/umi-mikan-rag.json`: RAG / semantic search monitoring dashboard
     - `dashboards/container-monitoring.json`: Container resource monitoring dashboard
     - `dashboards/container-logs.json`: Container logs monitoring dashboard
     - `provisioning/datasources/`: Prometheus and Loki data source configurations
