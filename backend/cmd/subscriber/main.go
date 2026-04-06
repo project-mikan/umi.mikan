@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -1140,17 +1139,14 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		}
 	}()
 
-	// マークダウン記法を除去してノイズを低減する
-	cleanContent := stripMarkdown(diaryContent)
-
 	// 4. 日記を話題ごとのチャンクに分割する（失敗時は日記全体を1チャンクとしてフォールバック）
-	chunkDataList, err := geminiClient.SplitDiaryIntoChunks(ctx, cleanContent)
+	chunkDataList, err := geminiClient.SplitDiaryIntoChunks(ctx, diaryContent)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"user_id":  userID,
 			"diary_id": diaryID,
 		}).WithError(err).Warn("Failed to split diary into chunks, falling back to single chunk")
-		chunkDataList = []llm.DiaryChunkData{{Content: cleanContent, Summary: ""}}
+		chunkDataList = []llm.DiaryChunkData{{Content: diaryContent, Summary: ""}}
 	}
 
 	// 5. UUIDをパース
@@ -1193,32 +1189,4 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		"chunk_count": len(diaryChunks),
 	}).Info("Successfully generated and saved diary chunk embeddings")
 	return nil
-}
-
-// stripMarkdown はマークダウン記法をプレーンテキストに変換する
-// 記号ノイズを除去して埋め込みベクトルの意味的品質を向上させる
-func stripMarkdown(text string) string {
-	// コードブロック（内容は保持）
-	text = regexp.MustCompile("(?s)```[a-z]*\n?(.*?)```").ReplaceAllString(text, "$1")
-	// インラインコード（内容は保持）
-	text = regexp.MustCompile("`([^`]+)`").ReplaceAllString(text, "$1")
-	// 見出し記号を除去
-	text = regexp.MustCompile(`(?m)^#{1,6}\s+`).ReplaceAllString(text, "")
-	// 太字・斜体（内容は保持）
-	text = regexp.MustCompile(`\*{1,3}([^*\n]+)\*{1,3}`).ReplaceAllString(text, "$1")
-	text = regexp.MustCompile(`_{1,3}([^_\n]+)_{1,3}`).ReplaceAllString(text, "$1")
-	// 画像を除去
-	text = regexp.MustCompile(`!\[[^\]]*\]\([^\)]+\)`).ReplaceAllString(text, "")
-	// リンク（テキスト部分を保持）
-	text = regexp.MustCompile(`\[([^\]]+)\]\([^\)]+\)`).ReplaceAllString(text, "$1")
-	// リスト記号を除去
-	text = regexp.MustCompile(`(?m)^[\s]*[-*+]\s+`).ReplaceAllString(text, "")
-	text = regexp.MustCompile(`(?m)^[\s]*\d+\.\s+`).ReplaceAllString(text, "")
-	// 引用記号を除去
-	text = regexp.MustCompile(`(?m)^>\s*`).ReplaceAllString(text, "")
-	// 水平線を除去
-	text = regexp.MustCompile(`(?m)^[-*_]{3,}\s*$`).ReplaceAllString(text, "")
-	// 余分な空白行を整理
-	text = regexp.MustCompile(`\n{3,}`).ReplaceAllString(text, "\n\n")
-	return strings.TrimSpace(text)
 }

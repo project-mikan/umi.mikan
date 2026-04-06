@@ -47,8 +47,7 @@ Frontend → Backend gRPC → Gemini Embedding API (クエリのベクトル化)
 1. **日記作成・更新時**: 当日（JST）の日記はスキップ。過去日記は `diary_embedding` メッセージをRedis Pub/Subに送信
 2. **DiaryEmbeddingJob（スケジューラ）**: 毎朝4:30 JST に前日分の日記をRedis Pub/Sub経由でキューに追加
 3. **Subscriber**: メッセージを受信し、`semantic_search_enabled = true` のユーザのみ処理
-4. **前処理**: マークダウン記法を除去してノイズを低減（`stripMarkdown`）
-5. **チャンク分割**: `gemini-2.5-flash-lite` で日記を話題ごとのチャンクに分割（失敗時は全文を1チャンクにフォールバック）
+4. **チャンク分割**: `gemini-2.5-flash-lite` で日記を話題ごとのチャンクに分割（失敗時は全文を1チャンクにフォールバック）
 6. **Gemini API**: 各チャンクに日付コンテキスト（`YYYY年MM月DD日の日記:\n{chunk}`）を付与してembedding生成
 7. **Database**: `diary_embeddings` テーブルにチャンク単位でUPSERT（既存チャンクを削除してから再挿入）
 
@@ -211,10 +210,9 @@ service DiaryService {
 処理内容:
 1. `user_llms` から APIキーと `semantic_search_enabled` を確認（falseならスキップ）
 2. 対象日記の本文・日付を取得
-3. マークダウン記法を除去（`stripMarkdown`）
-4. `SplitDiaryIntoChunks` で話題ごとに分割（失敗時は全文1チャンクにフォールバック）
-5. 各チャンクに日付コンテキスト（`YYYY年MM月DD日の日記:\n`）を付与してembedding生成
-6. `diary_embeddings` テーブルにチャンク単位でUPSERT（既存チャンク削除→再挿入トランザクション）
+3. `SplitDiaryIntoChunks` で話題ごとに分割（失敗時は全文1チャンクにフォールバック）
+4. 各チャンクに日付コンテキスト（`YYYY年MM月DD日の日記:\n`）を付与してembedding生成
+5. `diary_embeddings` テーブルにチャンク単位でUPSERT（既存チャンク削除→再挿入トランザクション）
 
 #### DiaryEmbeddingJob（スケジューラ）
 
