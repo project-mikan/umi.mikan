@@ -452,7 +452,9 @@ func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent stri
 		},
 	}
 
+	zero := float32(0)
 	config := &genai.GenerateContentConfig{
+		Temperature:      &zero,
 		ResponseMIMEType: "application/json",
 		ResponseSchema:   schema,
 	}

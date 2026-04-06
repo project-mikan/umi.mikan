@@ -331,6 +331,13 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 ## Development Guidelines
 
+### Database Access Guidelines
+
+- **Never write inline SQL in `cmd/` packages**: All SQL queries must be defined in `backend/infrastructure/database/` functions. `cmd/scheduler` and `cmd/subscriber` must call these functions instead of using `QueryContext`/`QueryRowContext`/`ExecContext` directly.
+- **One file per query domain**: Place queries in the appropriate file (e.g., `user_llms.go` for user_llms queries, `scheduler_queries.go` for cross-table scheduler queries).
+- **Every new database file needs a `*_test.go`**: When adding query functions to `backend/infrastructure/database/`, always create matching tests in `package database_test`.
+- **Type-aware comparisons**: `diaries.updated_at` is BIGINT (milliseconds), while `diary_embeddings.updated_at` is TIMESTAMP. Use `to_timestamp(d.updated_at / 1000.0)` for cross-table comparisons.
+
 ### Port Usage
 
 - **Always use 2000 series ports**: All services must use ports in the 2000-2099 range

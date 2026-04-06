@@ -13,6 +13,7 @@ import (
 
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -333,29 +334,9 @@ func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	s.logger.Info("Checking for missing daily summaries...")
 
 	// 1. auto_summary_daily が true のユーザーを取得
-	usersQuery := `
-		SELECT user_id
-		FROM user_llms
-		WHERE auto_summary_daily = true
-	`
-
-	rows, err := s.db.QueryContext(ctx, usersQuery)
+	userIDs, err := database.UserIDsWithAutoSummaryDaily(ctx, s.db)
 	if err != nil {
 		return fmt.Errorf("failed to query users with auto summary enabled: %w", err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			s.logger.WithError(err).Error("Failed to close rows")
-		}
-	}()
-
-	var userIDs []string
-	for rows.Next() {
-		var userID string
-		if err := rows.Scan(&userID); err != nil {
-			return fmt.Errorf("failed to scan user ID: %w", err)
-		}
-		userIDs = append(userIDs, userID)
 	}
 
 	if len(userIDs) == 0 {
@@ -381,34 +362,9 @@ func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler
 	// diariesテーブルから該当ユーザーの日記がある日を取得し、
 	// diary_summary_daysにsummaryがない日、または要約のupdated_atが日記のupdated_atより古い日を見つける（今日を除く）
 	// 文字数が1000以上の日記のみ対象とする
-	query := `
-		SELECT d.date
-		FROM diaries d
-		LEFT JOIN diary_summary_days dsd ON d.user_id = dsd.user_id AND d.date = dsd.date
-		WHERE d.user_id = $1
-		  AND d.date < CURRENT_DATE
-		  AND LENGTH(d.content) >= 1000
-		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
-		ORDER BY d.date
-	`
-
-	rows, err := s.db.QueryContext(ctx, query, userID)
+	missingDates, err := database.DiaryDatesNeedingDailySummary(ctx, s.db, userID)
 	if err != nil {
 		return fmt.Errorf("failed to query missing summaries for user %s: %w", userID, err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			s.logger.WithError(err).Error("Failed to close rows")
-		}
-	}()
-
-	var missingDates []time.Time
-	for rows.Next() {
-		var date time.Time
-		if err := rows.Scan(&date); err != nil {
-			return fmt.Errorf("failed to scan date: %w", err)
-		}
-		missingDates = append(missingDates, date)
 	}
 
 	if len(missingDates) == 0 {
@@ -467,29 +423,9 @@ func (j *MonthlySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
 	s.logger.Info("Checking for missing monthly summaries...")
 
 	// 1. auto_summary_monthly が true のユーザーを取得
-	usersQuery := `
-		SELECT user_id
-		FROM user_llms
-		WHERE auto_summary_monthly = true
-	`
-
-	rows, err := s.db.QueryContext(ctx, usersQuery)
+	userIDs, err := database.UserIDsWithAutoSummaryMonthly(ctx, s.db)
 	if err != nil {
 		return fmt.Errorf("failed to query users with auto monthly summary enabled: %w", err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			s.logger.WithError(err).Error("Failed to close rows")
-		}
-	}()
-
-	var userIDs []string
-	for rows.Next() {
-		var userID string
-		if err := rows.Scan(&userID); err != nil {
-			return fmt.Errorf("failed to scan user ID: %w", err)
-		}
-		userIDs = append(userIDs, userID)
 	}
 
 	if len(userIDs) == 0 {
@@ -515,51 +451,9 @@ func (j *MonthlySummaryJob) processUserMonthlySummaries(ctx context.Context, s *
 	// diariesテーブルから該当ユーザーの日記がある年月を取得し、
 	// diary_summary_monthsに月次要約がない月、またはその月の日記の最新updated_atより月次要約のupdated_atが古い月を見つける（今月を除く）
 	// 日記数が1以上の月のみ対象とする
-	query := `
-		WITH monthly_diary_stats AS (
-			SELECT
-				EXTRACT(YEAR FROM d.date) as year,
-				EXTRACT(MONTH FROM d.date) as month,
-				MAX(d.updated_at) as latest_diary_updated_at,
-				COUNT(*) as diary_count
-			FROM diaries d
-			WHERE d.user_id = $1
-			GROUP BY EXTRACT(YEAR FROM d.date), EXTRACT(MONTH FROM d.date)
-			HAVING COUNT(*) >= 1
-		)
-		SELECT mds.year, mds.month
-		FROM monthly_diary_stats mds
-		LEFT JOIN diary_summary_months dsm ON dsm.user_id = $1
-			AND dsm.year = mds.year
-			AND dsm.month = mds.month
-		WHERE (mds.year < EXTRACT(YEAR FROM CURRENT_DATE)
-			OR (mds.year = EXTRACT(YEAR FROM CURRENT_DATE) AND mds.month < EXTRACT(MONTH FROM CURRENT_DATE)))
-		AND (dsm.updated_at IS NULL OR dsm.updated_at < mds.latest_diary_updated_at)
-		ORDER BY mds.year, mds.month
-	`
-
-	rows, err := s.db.QueryContext(ctx, query, userID)
+	missingMonths, err := database.MonthsNeedingMonthlySummary(ctx, s.db, userID)
 	if err != nil {
 		return fmt.Errorf("failed to query missing monthly summaries for user %s: %w", userID, err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			s.logger.WithError(err).Error("Failed to close rows")
-		}
-	}()
-
-	type YearMonth struct {
-		Year  int
-		Month int
-	}
-
-	var missingMonths []YearMonth
-	for rows.Next() {
-		var year, month int
-		if err := rows.Scan(&year, &month); err != nil {
-			return fmt.Errorf("failed to scan year/month: %w", err)
-		}
-		missingMonths = append(missingMonths, YearMonth{Year: year, Month: month})
 	}
 
 	if len(missingMonths) == 0 {
@@ -627,29 +521,9 @@ func (j *LatestTrendJob) Execute(ctx context.Context, s *Scheduler) error {
 	s.logger.Info("Starting latest trend analysis generation")
 
 	// 1. auto_latest_trend_enabled が true のユーザーを取得
-	usersQuery := `
-		SELECT user_id
-		FROM user_llms
-		WHERE auto_latest_trend_enabled = true
-	`
-
-	rows, err := s.db.QueryContext(ctx, usersQuery)
+	userIDs, err := database.UserIDsWithAutoLatestTrendEnabled(ctx, s.db)
 	if err != nil {
 		return fmt.Errorf("failed to query users with auto latest trend enabled: %w", err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			s.logger.WithError(err).Error("Failed to close rows")
-		}
-	}()
-
-	var userIDs []string
-	for rows.Next() {
-		var userID string
-		if err := rows.Scan(&userID); err != nil {
-			return fmt.Errorf("failed to scan user ID: %w", err)
-		}
-		userIDs = append(userIDs, userID)
 	}
 
 	if len(userIDs) == 0 {
@@ -717,13 +591,8 @@ func (j *LatestTrendJob) processUserLatestTrend(ctx context.Context, s *Schedule
 	}
 
 	// 対象期間に日記が最小必要数以上存在するかチェック
-	var count int
-	checkQuery := `
-		SELECT COUNT(*) FROM diaries
-		WHERE user_id = $1
-		AND date >= $2 AND date <= $3
-	`
-	if err := s.db.QueryRowContext(ctx, checkQuery, userID, periodStart, periodEnd).Scan(&count); err != nil {
+	count, err := database.DiaryCountInDateRange(ctx, s.db, userID, periodStart, periodEnd)
+	if err != nil {
 		return fmt.Errorf("failed to check diary entries: %w", err)
 	}
 
@@ -798,29 +667,9 @@ func (j *DiaryEmbeddingJob) Execute(ctx context.Context, s *Scheduler) error {
 	s.logger.Info("Starting diary embedding generation for yesterday's diaries")
 
 	// 1. semantic_search_enabled が true のユーザーを取得
-	usersQuery := `
-		SELECT user_id
-		FROM user_llms
-		WHERE semantic_search_enabled = true
-	`
-
-	rows, err := s.db.QueryContext(ctx, usersQuery)
+	userIDs, err := database.UserIDsWithSemanticSearchEnabled(ctx, s.db)
 	if err != nil {
 		return fmt.Errorf("failed to query users with semantic search enabled: %w", err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			s.logger.WithError(err).Error("Failed to close rows")
-		}
-	}()
-
-	var userIDs []string
-	for rows.Next() {
-		var userID string
-		if err := rows.Scan(&userID); err != nil {
-			return fmt.Errorf("failed to scan user ID: %w", err)
-		}
-		userIDs = append(userIDs, userID)
 	}
 
 	if len(userIDs) == 0 {
@@ -860,34 +709,9 @@ func calculateYesterdayUTC(now time.Time) time.Time {
 func (j *DiaryEmbeddingJob) processUserDiaryEmbedding(ctx context.Context, s *Scheduler, userID string, targetDate time.Time) error {
 	// 対象日付の日記を取得
 	// embedding未生成またはembeddingのupdated_atより日記のupdated_atが新しい場合に処理対象とする
-	query := `
-		SELECT d.id
-		FROM diaries d
-		WHERE d.user_id = $1
-		  AND d.date = $2
-		  AND (
-		    NOT EXISTS (SELECT 1 FROM diary_embeddings de WHERE de.diary_id = d.id)
-		    OR (SELECT MAX(de.updated_at) FROM diary_embeddings de WHERE de.diary_id = d.id) < d.updated_at
-		  )
-	`
-
-	rows, err := s.db.QueryContext(ctx, query, userID, targetDate)
+	diaryIDs, err := database.DiaryIDsNeedingEmbedding(ctx, s.db, userID, targetDate)
 	if err != nil {
 		return fmt.Errorf("failed to query diary for user %s date %s: %w", userID, targetDate.Format("2006-01-02"), err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			s.logger.WithError(err).Error("Failed to close rows")
-		}
-	}()
-
-	var diaryIDs []string
-	for rows.Next() {
-		var diaryID string
-		if err := rows.Scan(&diaryID); err != nil {
-			return fmt.Errorf("failed to scan diary ID: %w", err)
-		}
-		diaryIDs = append(diaryIDs, diaryID)
 	}
 
 	if len(diaryIDs) == 0 {
