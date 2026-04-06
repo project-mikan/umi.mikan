@@ -48,19 +48,19 @@ const (
 
 // evalDataset は評価データセットのルート構造
 type evalDataset struct {
-	Description           string                    `json:"description"`
-	DiaryEntries          []evalDiaryEntry          `json:"diary_entries"`
-	EvalQueries           []evalQuery               `json:"evaluation_queries"`
-	MultiChunkQueries     []multiChunkQuery         `json:"multi_chunk_queries"`
-	PredefinedChunkEntries []predefinedChunkEntry   `json:"predefined_chunk_entries"`
-	NegativeCases         []evalNegativeCase        `json:"negative_cases"`
+	Description            string                 `json:"description"`
+	DiaryEntries           []evalDiaryEntry       `json:"diary_entries"`
+	EvalQueries            []evalQuery            `json:"evaluation_queries"`
+	MultiChunkQueries      []multiChunkQuery      `json:"multi_chunk_queries"`
+	PredefinedChunkEntries []predefinedChunkEntry `json:"predefined_chunk_entries"`
+	NegativeCases          []evalNegativeCase     `json:"negative_cases"`
 }
 
 // predefinedChunkEntry はLLM分割に依存せず事前定義したチャンク構成
 // マルチチャンク日記の検索テストで確実に複数チャンクを挿入するために使用する
 type predefinedChunkEntry struct {
-	DiaryID string              `json:"diary_id"`
-	Chunks  []predefinedChunk   `json:"chunks"`
+	DiaryID string            `json:"diary_id"`
+	Chunks  []predefinedChunk `json:"chunks"`
 }
 
 type predefinedChunk struct {
@@ -86,13 +86,13 @@ type evalQuery struct {
 
 // multiChunkQuery はマルチチャンク日記の特定チャンクへのアクセスを検証するクエリ
 type multiChunkQuery struct {
-	ID                  string   `json:"id"`
-	Query               string   `json:"query"`
-	ExpectedEntryIDs    []string `json:"expected_entry_ids"`
-	KeywordProbe        string   `json:"keyword_probe"`
-	ExpectedMinChunks   int      `json:"expected_min_chunk_count"`
-	WhyKeywordFails     string   `json:"why_keyword_fails"`
-	Category            string   `json:"category"`
+	ID                string   `json:"id"`
+	Query             string   `json:"query"`
+	ExpectedEntryIDs  []string `json:"expected_entry_ids"`
+	KeywordProbe      string   `json:"keyword_probe"`
+	ExpectedMinChunks int      `json:"expected_min_chunk_count"`
+	WhyKeywordFails   string   `json:"why_keyword_fails"`
+	Category          string   `json:"category"`
 }
 
 type evalNegativeCase struct {
