@@ -166,9 +166,9 @@ export function restoreCursorPosition(
 					const parent = node.parentNode;
 					if (parent) {
 						targetNode = parent;
-						targetOffset = Array.from(parent.childNodes).indexOf(
-							node as ChildNode,
-						);
+						// BRの直後にカーソルを置く（BRを1文字としてカウントした後の位置）
+						targetOffset =
+							Array.from(parent.childNodes).indexOf(node as ChildNode) + 1;
 						return true;
 					}
 				}

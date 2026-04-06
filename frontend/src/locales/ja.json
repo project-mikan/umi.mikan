@@ -92,6 +92,12 @@
 			"description": "1000文字以上の日記に対して自動でまとめを生成する設定です。",
 			"dailyLabel": "日毎の自動まとめを有効にする",
 			"monthlyLabel": "月毎の自動まとめを有効にする",
+			"semanticSearchLabel": "自然言語検索（意味的検索）を有効にする",
+			"semanticSearchDescription": "日記の内容をAIで解析し、意味・文脈に基づいた検索を可能にします。当日の日記は翌朝にインデックスが生成され、過去の日記は保存時に自動でインデックスが生成されます。",
+			"regenerateEmbeddingsDescription": "意味的検索を有効化する前に作成した日記はインデックスされていません。下のボタンで未インデックスの日記を一括でキューに追加できます。",
+			"regenerateEmbeddingsButton": "未インデックスの日記を一括生成",
+			"regenerateEmbeddingsSuccess": "{count}件の日記をキューに追加しました。しばらくお待ちください。",
+			"regenerateEmbeddingsFailed": "一括生成に失敗しました。",
 			"save": "設定を保存"
 		},
 		"deleteToken": {
@@ -205,6 +211,8 @@
 			"statusQueued": "まとめの生成をキューに追加しました。しばらくお待ちください。",
 			"statusProcessing": "まとめを生成中です。しばらくお待ちください。"
 		},
+		"searchHighlightBanner": "「{keyword}」を検索中",
+		"searchHighlightClear": "クリア",
 		"noEntry": "の日記はありません。",
 		"yesterdayNoEntry": "昨日の日記はありません。",
 		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
@@ -244,6 +252,18 @@
 			"statusProcessing": "ハイライトを生成中です。しばらくお待ちください",
 			"contentTooShort": "ハイライト生成には最低500文字必要です",
 			"apiKeyNotConfigured": "Gemini APIキーが設定されていません。設定ページから登録してください"
+		},
+		"embedding": {
+			"indexed": "意味的検索：インデックス済み",
+			"notIndexed": "意味的検索：未インデックス",
+			"indexedAt": "インデックス日時",
+			"updatedAt": "最終更新日時",
+			"modelVersion": "モデル",
+			"dimensions": "次元数",
+			"vectorPreview": "ベクトル値（先頭10件）",
+			"chunkCount": "チャンク数",
+			"chunkSummaries": "チャンク一覧",
+			"chunkSummaryEmpty": "（概要なし）"
 		}
 	},
 	"date": {
@@ -330,15 +350,29 @@
 	"search": {
 		"title": "日記検索",
 		"placeholder": "検索キーワードを入力...",
+		"placeholderSemantic": "自然な言葉で検索（例：去年の夏に食べたもの）",
 		"button": "検索",
+		"modeKeyword": "キーワード検索",
+		"modeSemantic": "意味的検索",
+		"semanticDescription": "Gemini AIを使って意味・文脈で検索します（APIキー設定が必要）",
 		"results": "の検索結果",
+		"semanticResults": "の意味的検索結果",
 		"resultCount": "件",
+		"similarity": "一致度",
+		"embeddingModel": "埋め込みモデル",
+		"chunkModel": "分割モデル",
 		"noResults": "検索結果が見つかりませんでした。",
 		"noResultsHint": "別のキーワードで検索してみてください。",
+		"semanticNoResultsHint": "別の表現で検索するか、キーワード検索をお試しください。",
 		"searching": "検索中...",
 		"enterKeyword": "検索キーワードを入力して検索してください。",
 		"backToList": "日記一覧に戻る",
-		"expandedKeywordsNote": "エンティティに紐づく {keywords} でも検索しました"
+		"expandedKeywordsNote": "エンティティに紐づく {keywords} でも検索しました",
+		"error": {
+			"searchFailed": "検索に失敗しました。",
+			"semanticSearchFailed": "意味的検索に失敗しました。Gemini APIキーが設定されているか確認してください。"
+		},
+		"chunkCount": "{count}チャンク"
 	},
 	"monthly": {
 		"thisMonth": "今月",
@@ -426,15 +460,58 @@
 			"processedCount": "処理件数",
 			"dailySummaries": "日次まとめ",
 			"monthlySummaries": "月次まとめ",
+			"diaryEmbeddings": "embedding生成",
+			"semanticSearches": "意味的検索",
 			"dailySummary": "日次まとめ",
 			"monthlySummary": "月次まとめ",
 			"latestTrend": "トレンド分析",
 			"startedAt": "開始時刻",
+			"ragTitle": "自然言語検索（RAG）処理状況",
+			"totalEmbeddings": "生成済みembedding数",
+			"pendingEmbeddings": "未生成embedding数",
+			"ragPendingNote": "未生成の日記は、次回保存時に自動でインデックスが生成されます。",
+			"ragRegenerateButton": "未生成の日記を一括インデックス",
+			"ragRegenerateSuccess": "{count}件の日記をキューに追加しました。バックグラウンドで順次インデックスが生成されます。",
+			"ragRegenerateFailed": "インデックス生成のキュー追加に失敗しました。",
+			"ragDisabledNote": "設定ページでGemini APIキーを登録し、自然言語検索を有効にするとここに状況が表示されます。",
 			"aboutTitle": "LLM処理について",
 			"aboutDescription": "このページでは、AI（Gemini）による自動まとめ処理の状況を確認できます。",
 			"dailySummaryExplanation": "日次まとめ: 1000文字以上の日記に対して毎日自動で生成されるまとめ",
 			"monthlySummaryExplanation": "月次まとめ: 日次まとめから生成される月間の総合まとめ",
 			"processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
+		},
+		"ragDiagram": {
+			"title": "RAGの仕組み",
+			"asyncBadge": "非同期",
+			"syncBadge": "同期",
+			"indexingTitle": "インデックス生成フロー",
+			"searchTitle": "セマンティック検索フロー",
+			"step": {
+				"diaryText": "日記テキスト",
+				"toPlainText": "平文に変換",
+				"splitByTopic": "話題で分割",
+				"enrichWithDate": "日付を付加",
+				"vectorizeDocument": "ベクトル化",
+				"saveToVectorDb": "ベクトルDB保存",
+				"naturalLanguageQuery": "自然言語クエリ",
+				"vectorizeQuery": "クエリをベクトル化",
+				"searchSimilarChunks": "類似チャンクを検索",
+				"keywordFallback": "キーワードで補完",
+				"returnWithSummary": "要約と共に返却"
+			},
+			"subLabel": {
+				"markdownFormat": "Markdown形式",
+				"removeMarkdown": "コードブロック・太字などを除去",
+				"llmSplitWithSummary": "LLMが話題・出来事で分割\n各チャンクに1文の要約を付与",
+				"datePrefix": "「YYYY年M月D日の日記:」を先頭に付加",
+				"retrievalDocument": "RETRIEVAL_DOCUMENT\n3072次元",
+				"hnswStorage": "halfvec(3072) / HNSW",
+				"queryExample": "例: 去年食べたもの",
+				"retrievalQuery": "RETRIEVAL_QUERY\n3072次元",
+				"cosineSimilarity": "コサイン類似度\n閾値0.3以上",
+				"properNounFallback": "固有名詞などのフォールバック",
+				"withScore": "類似度スコア・要約付き"
+			}
 		}
 	},
 	"budoux": {
@@ -509,5 +586,8 @@
 			"title": "このページについて",
 			"description": "このページは開発環境でのみ表示されます。本番環境では表示されません。"
 		}
+	},
+	"summary": {
+		"modelVersion": "モデル"
 	}
 }

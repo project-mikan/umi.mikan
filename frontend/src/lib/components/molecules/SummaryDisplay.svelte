@@ -11,6 +11,7 @@
 		summary: string;
 		createdAt: number;
 		updatedAt: number;
+		modelVersion?: string;
 	}
 
 	export let type: "daily" | "monthly"; // 日次または月次
@@ -593,6 +594,9 @@
 
 			{#if summary}
 				<div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+					{#if summary.modelVersion}
+						<div>{$_("summary.modelVersion")}: {summary.modelVersion}</div>
+					{/if}
 					<div>{$_("common.createdAt")}: {new Date(summary.createdAt).toLocaleString($locale || "en")}</div>
 					<div>{$_("common.updatedAt")}: {new Date(summary.updatedAt).toLocaleString($locale || "en")}</div>
 				</div>

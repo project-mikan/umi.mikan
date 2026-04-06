@@ -5,8 +5,6 @@
 	import {
 		getTextOffset,
 		restoreCursorPosition,
-		saveCursorPosition,
-		restoreCursorFromRange,
 	} from "$lib/utils/cursor-utils";
 	import { htmlToPlainText } from "$lib/utils/html-text-converter";
 
@@ -18,6 +16,7 @@
 	export let name = "";
 	export let rows = 4;
 	export let diaryHighlights: DiaryHighlight[] = [];
+	export let searchKeyword = "";
 
 	// ハイライトを適用すべき元のコンテンツ
 	let savedContent = "";
@@ -57,19 +56,26 @@
 			return value.replace(/\n/g, "<br>");
 		}
 
-		// diaryHighlightsがない場合はプレーンテキスト
-		if (!diaryHighlights || diaryHighlights.length === 0) {
+		const hasSearchKeyword = searchKeyword && searchKeyword.trim().length > 0;
+		const hasDiaryHighlights = diaryHighlights && diaryHighlights.length > 0;
+
+		// ハイライト情報が何もない場合はプレーンテキスト
+		if (!hasDiaryHighlights && !hasSearchKeyword) {
 			return value.replace(/\n/g, "<br>");
 		}
 
-		// 現在のvalueが保存されたコンテンツと異なる場合はプレーンテキスト
+		// diaryHighlightsを適用する場合は保存済みコンテンツと一致が必要
 		// （編集中のテキストには古いpositionデータを適用しない）
-		if (value !== savedContent) {
-			return value.replace(/\n/g, "<br>");
-		}
+		const highlightsToApply =
+			hasDiaryHighlights && value === savedContent ? diaryHighlights : [];
 
-		// diaryHighlightsがある場合はハイライトを適用
-		return highlightEntitiesAndHighlights(value, [], diaryHighlights);
+		// ハイライトを適用
+		return highlightEntitiesAndHighlights(
+			value,
+			[],
+			highlightsToApply,
+			hasSearchKeyword ? searchKeyword.trim() : undefined,
+		);
 	})();
 
 	// captureフェーズでTabキーをキャプチャするためのリスナー
@@ -82,7 +88,8 @@
 		if (contentElement) {
 			// captureフェーズで追加してTabキーを早期にキャプチャ
 			contentElement.addEventListener("keydown", _handleKeydown, true);
-			// 初期値を設定
+			// previousHighlightedHTMLを同期してリアクティブブロックの二重呼び出しを防ぐ
+			previousHighlightedHTML = highlightedHTML;
 			updateContentElement();
 		}
 	});
@@ -100,18 +107,13 @@
 	// Calculate min height based on rows
 	$: minHeight = `${rows * 1.5}rem`;
 
-	// diaryHighlightsが外部から変更されたときもコンテンツを更新
-	// 空配列の場合もハイライトを消すために更新が必要
-	// 配列の長さを監視して変更を確実に検知
-	let previousHighlightsLength = -1;
+	// highlightedHTMLが変化したときにDOMを更新する
+	// searchKeyword・diaryHighlights・value・isTypingの変化を一元的に処理する
+	let previousHighlightedHTML = "";
 	$: {
-		// contentElementが存在する場合のみ処理
 		if (contentElement && !isUpdatingFromValue && !isComposing && !isTyping) {
-			// diaryHighlightsの長さを取得（nullまたはundefinedの場合は0）
-			const currentLength = diaryHighlights ? diaryHighlights.length : 0;
-			// 長さが変わった場合のみ更新（初回は-1から0以上に変わるので必ず更新される）
-			if (currentLength !== previousHighlightsLength) {
-				previousHighlightsLength = currentLength;
+			if (highlightedHTML !== previousHighlightedHTML) {
+				previousHighlightedHTML = highlightedHTML;
 				updateContentElement();
 			}
 		}
@@ -302,17 +304,9 @@
 			// Trigger input event to update the value
 			const inputEvent = new Event("input", { bubbles: true });
 			contentElement.dispatchEvent(inputEvent);
-
-			// 改行後はすぐに入力完了フラグを下ろして、カーソル位置が戻されないようにする
-			// 既存のタイムアウトをクリア
-			if (updateTimeout !== null) {
-				clearTimeout(updateTimeout);
-			}
-			isTyping = false;
-
-			// savedContentを更新して、ハイライト復元を防ぐ
-			// （改行直後は新しいコンテンツとして扱う）
-			savedContent = "";
+			// isTypingはdispatchによって呼ばれた_handleInput内のsetTimeoutに任せる
+			// ここで即座にisTyping = falseにするとhighlightedHTMLの変化でupdateContentElement()が
+			// 呼ばれてカーソル位置が上書きされてしまう
 		}
 	}
 
@@ -321,30 +315,6 @@
 		// IME入力中は自動保存しない
 		if (isComposing) return;
 		dispatch("autosave");
-	}
-
-	// Update content when value changes externally
-	// ただし、updateContentElement()が呼ばれる条件の場合はスキップ
-	$: if (
-		contentElement &&
-		htmlToPlainText(contentElement.innerHTML) !== value
-	) {
-		const savedRange = saveCursorPosition();
-		contentElement.innerHTML = value.replace(/\n/g, "<br>");
-		if (savedRange) {
-			// Adjust range if it's out of bounds
-			try {
-				restoreCursorFromRange(savedRange);
-			} catch {
-				// If range is invalid, place cursor at end
-				const range = document.createRange();
-				const selection = window.getSelection();
-				range.selectNodeContents(contentElement);
-				range.collapse(false);
-				selection?.removeAllRanges();
-				selection?.addRange(range);
-			}
-		}
 	}
 </script>
 

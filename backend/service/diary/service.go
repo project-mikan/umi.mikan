@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -12,16 +13,29 @@ import (
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/lock"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/redis/rueidis"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
+// LLMFactory はLLMクライアントを作成するファクトリインターフェース
+type LLMFactory interface {
+	CreateGeminiClient(ctx context.Context, apiKey string) (GeminiEmbedder, error)
+}
+
+// GeminiEmbedder はGemini埋め込みAPIクライアントのインターフェース
+type GeminiEmbedder interface {
+	GenerateEmbedding(ctx context.Context, text string, isDocument bool) ([]float32, error)
+	Close() error
+}
+
 type DiaryEntry struct {
 	g.UnimplementedDiaryServiceServer
-	DB    database.DB
-	Redis rueidis.Client
+	DB         *sql.DB
+	Redis      rueidis.Client
+	LLMFactory LLMFactory
 }
 
 type SummaryGenerationMessage struct {
@@ -42,6 +56,16 @@ type DiaryHighlightGenerationMessage struct {
 	UserID  string `json:"user_id"`
 	DiaryID string `json:"diary_id"`
 }
+
+type DiaryEmbeddingMessage struct {
+	Type    string `json:"type"`
+	UserID  string `json:"user_id"`
+	DiaryID string `json:"diary_id"`
+}
+
+// semanticSimilarityThreshold はセマンティック検索のコサイン類似度下限値
+// 評価テストで検証済みの閾値（低すぎると無関係な結果が増加）
+const semanticSimilarityThreshold = 0.4
 
 // getTaskTimeout 環境変数からタスクタイムアウトを取得(デフォルト600秒)
 func getTaskTimeout() int {
@@ -103,7 +127,7 @@ func (s *DiaryEntry) CreateDiaryEntry(
 	}
 
 	// トランザクション内でdiaryを保存
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		if err := diary.Insert(ctx, tx); err != nil {
 			return err
 		}
@@ -113,6 +137,10 @@ func (s *DiaryEntry) CreateDiaryEntry(
 	if err != nil {
 		return nil, err
 	}
+
+	// 非同期で埋め込みベクトルを生成（Redis Pub/Sub経由）
+	// 当日の日記はスキップ（翌朝スケジューラーが処理する）
+	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String(), diary.Date)
 
 	return &g.CreateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -277,7 +305,7 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 	}
 
 	// トランザクション内で日記を更新
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		diary.Content = message.Content
 		if message.Date != nil {
 			diary.Date = time.Date(int(message.Date.Year), time.Month(message.Date.Month), int(message.Date.Day), 0, 0, 0, 0, time.UTC)
@@ -294,6 +322,10 @@ func (s *DiaryEntry) UpdateDiaryEntry(
 	if err != nil {
 		return nil, err
 	}
+
+	// 非同期で埋め込みベクトルを再生成（Redis Pub/Sub経由）
+	// 当日の日記はスキップ（翌朝スケジューラーが処理する）
+	s.publishDiaryEmbeddingMessage(ctx, userID.String(), diary.ID.String(), diary.Date)
 
 	return &g.UpdateDiaryEntryResponse{
 		Entry: &g.DiaryEntry{
@@ -335,7 +367,7 @@ func (s *DiaryEntry) DeleteDiaryEntry(
 	}
 
 	// トランザクション内で日記を削除
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		return diary.Delete(ctx, tx)
 	})
 	if err != nil {
@@ -432,7 +464,7 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		AND EXTRACT(YEAR FROM date) = $2
 		AND EXTRACT(MONTH FROM date) = $3
 	`
-	err = s.DB.(*sql.DB).QueryRow(checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
+	err = s.DB.QueryRowContext(ctx, checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to check diary entries")
 	}
@@ -579,11 +611,12 @@ func (s *DiaryEntry) GetMonthlySummary(
 
 	return &g.GetMonthlySummaryResponse{
 		Summary: &g.MonthlySummary{
-			Id:        summary.ID.String(),
-			Month:     message.Month,
-			Summary:   summary.Summary,
-			CreatedAt: summary.CreatedAt,
-			UpdatedAt: summary.UpdatedAt,
+			Id:           summary.ID.String(),
+			Month:        message.Month,
+			Summary:      summary.Summary,
+			CreatedAt:    summary.CreatedAt,
+			UpdatedAt:    summary.UpdatedAt,
+			ModelVersion: summary.ModelVersion,
 		},
 	}, nil
 }
@@ -799,12 +832,13 @@ func (s *DiaryEntry) GetDailySummary(
 
 	return &g.GetDailySummaryResponse{
 		Summary: &g.DailySummary{
-			Id:        summary.ID.String(),
-			DiaryId:   "", // DiarySummaryDayにはdiaryIdがないので空文字
-			Date:      req.Date,
-			Summary:   summary.Summary,
-			CreatedAt: summary.CreatedAt,
-			UpdatedAt: summary.UpdatedAt,
+			Id:           summary.ID.String(),
+			DiaryId:      "", // DiarySummaryDayにはdiaryIdがないので空文字
+			Date:         req.Date,
+			Summary:      summary.Summary,
+			CreatedAt:    summary.CreatedAt,
+			UpdatedAt:    summary.UpdatedAt,
+			ModelVersion: summary.ModelVersion,
 		},
 	}, nil
 }
@@ -964,4 +998,356 @@ func (s *DiaryEntry) GetDiaryHighlight(
 		CreatedAt:  highlight.CreatedAt.Unix(),
 		UpdatedAt:  highlight.UpdatedAt.Unix(),
 	}, nil
+}
+
+// isTodayJST は指定した日付（UTC 00:00:00で表現されたJST日付）が
+// 現在のJST日付と同じかどうかを返す
+func isTodayJST(diaryDate time.Time) bool {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := time.Now().In(jst)
+	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
+	return diaryDate.Equal(todayJST)
+}
+
+// publishDiaryEmbeddingMessage は日記の埋め込みベクトル生成をRedis Pub/Sub経由でキューに追加する
+// 当日（JST）の日記はスキップし、翌朝スケジューラーが処理する（意味的検索有効時のみ）
+// エラーはログに記録するのみで、レスポンスには影響しない
+func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, diaryID string, diaryDate time.Time) {
+	if s.Redis == nil {
+		return
+	}
+
+	// 当日の日記は翌朝スケジューラーが処理するためスキップ
+	if isTodayJST(diaryDate) {
+		return
+	}
+
+	message := DiaryEmbeddingMessage{
+		Type:    "diary_embedding",
+		UserID:  userID,
+		DiaryID: diaryID,
+	}
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		return
+	}
+	publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
+	// publishエラーはログ記録のみ: 埋め込み生成は非クリティカルな非同期処理のため
+	// 失敗しても日記の保存・更新レスポンスには影響せず、スケジューラーが翌朝リカバリする
+	if pubErr := s.Redis.Do(ctx, publishCmd).Error(); pubErr != nil {
+		log.Printf("Failed to publish diary embedding message for diary %s: %v", diaryID, pubErr)
+	}
+}
+
+// SearchDiaryEntriesSemantic 自然言語クエリで日記を意味的に検索する
+func (s *DiaryEntry) SearchDiaryEntriesSemantic(
+	ctx context.Context,
+	req *g.SearchDiaryEntriesSemanticRequest,
+) (*g.SearchDiaryEntriesSemanticResponse, error) {
+	startTime := time.Now()
+
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// クエリ検証
+	if req.Query == "" {
+		return nil, status.Error(codes.InvalidArgument, "Query is required")
+	}
+
+	// ユーザーのAPIキーと設定を取得
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Gemini API key not found")
+	}
+
+	// 意味的検索が有効化されているか確認
+	if !userLLM.SemanticSearchEnabled {
+		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
+	}
+
+	// LLMファクトリーの確認
+	if s.LLMFactory == nil {
+		return nil, status.Error(codes.Internal, "LLM factory not configured")
+	}
+
+	// Geminiクライアント作成
+	geminiClient, err := s.LLMFactory.CreateGeminiClient(ctx, userLLM.Key)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to create Gemini client")
+	}
+	defer func() {
+		_ = geminiClient.Close()
+	}()
+
+	// クエリをベクトル化（クエリ用タスクタイプ）
+	queryEmbedding, err := geminiClient.GenerateEmbedding(ctx, req.Query, false)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to generate query embedding: %v", err)
+	}
+
+	// 検索件数を決定
+	limit := int(req.Limit)
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	// トランザクションを開始して ef_search を設定（同一コネクションを保証するため）
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to begin transaction: %v", err)
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	// HNSWの検索精度を向上させる（デフォルト40→100で再現率を大幅改善）
+	if _, err := tx.ExecContext(ctx, "SET LOCAL hnsw.ef_search = 100"); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to set hnsw.ef_search: %v", err)
+	}
+
+	// pgvectorでコサイン類似度ANN検索
+	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, tx, userID, queryEmbedding, limit, semanticSimilarityThreshold)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to search diary entries: %v", err)
+	}
+
+	// ハイブリッド検索: キーワード LIKE 検索で補完（ベクトル検索が拾えない固有名詞・専門語をカバー）
+	vectorIDs := make(map[uuid.UUID]bool, len(searchResults))
+	for _, sr := range searchResults {
+		vectorIDs[sr.DiaryID] = true
+	}
+	keywordResults, _ := database.DiariesByUserIDAndContent(ctx, tx, userID.String(), req.Query)
+	for _, d := range keywordResults {
+		if !vectorIDs[d.ID] {
+			searchResults = append(searchResults, &database.DiaryEmbeddingSearchResult{
+				DiaryID:    d.ID,
+				Date:       d.Date,
+				Content:    d.Content,
+				Similarity: semanticSimilarityThreshold, // キーワードヒット分には閾値スコアを付与
+			})
+		}
+	}
+
+	// 意味的検索のAIリクエストを記録（メトリクス集計用、エラーは無視）
+	if _, logErr := s.DB.ExecContext(ctx,
+		"INSERT INTO semantic_search_logs (user_id) VALUES ($1)",
+		userID,
+	); logErr != nil {
+		log.Printf("Failed to log semantic search request: %v", logErr)
+	}
+
+	// 結果を変換
+	results := make([]*g.SemanticSearchResult, 0, len(searchResults))
+	for _, sr := range searchResults {
+		// チャンク内容があればそれをスニペットに使用し、なければ日記全文から生成する
+		snippetSource := sr.ChunkContent
+		if snippetSource == "" {
+			snippetSource = sr.Content
+		}
+		snippet := generateSnippet(snippetSource, 200)
+		results = append(results, &g.SemanticSearchResult{
+			DiaryId: sr.DiaryID.String(),
+			Date: &g.YMD{
+				Year:  uint32(sr.Date.Year()),
+				Month: uint32(sr.Date.Month()),
+				Day:   uint32(sr.Date.Day()),
+			},
+			Snippet:      snippet,
+			Similarity:   float32(sr.Similarity),
+			ChunkSummary: sr.ChunkSummary,
+			ChunkCount:   int32(sr.ChunkCount),
+		})
+	}
+
+	// レスポンスに使用モデルを付与（最初の検索結果から取得、結果がない場合はデフォルト値）
+	embeddingModel := ""
+	chunkModel := ""
+	if len(searchResults) > 0 {
+		embeddingModel = searchResults[0].EmbeddingModel
+		chunkModel = searchResults[0].ChunkModel
+	}
+
+	// メトリクスを記録
+	elapsed := time.Since(startTime).Seconds()
+	semanticSearchRequestsCounter.WithLabelValues("success").Inc()
+	semanticSearchDuration.WithLabelValues("success").Observe(elapsed)
+	semanticSearchResultsCount.WithLabelValues().Observe(float64(len(results)))
+
+	return &g.SearchDiaryEntriesSemanticResponse{
+		Results:        results,
+		EmbeddingModel: embeddingModel,
+		ChunkModel:     chunkModel,
+	}, nil
+}
+
+// RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加する
+func (s *DiaryEntry) RegenerateAllEmbeddings(
+	ctx context.Context,
+	_ *g.RegenerateAllEmbeddingsRequest,
+) (*g.RegenerateAllEmbeddingsResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザーのAPIキーと設定を取得
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Gemini API key not found")
+	}
+
+	// 意味的検索が有効化されているか確認
+	if !userLLM.SemanticSearchEnabled {
+		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
+	}
+
+	if s.Redis == nil {
+		return nil, status.Error(codes.Internal, "Redis not configured")
+	}
+
+	// 同一ユーザーによる同時実行を防ぐ分散ロック（TTL: 10分）
+	regenLock := lock.NewDistributedLock(s.Redis, lock.EmbeddingRegenLockKey(userIDStr), 10*time.Minute)
+	acquired, err := regenLock.TryLock(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to acquire lock: %v", err)
+	}
+	if !acquired {
+		return nil, status.Error(codes.ResourceExhausted, "Embedding regeneration is already in progress. Please try again later.")
+	}
+	defer func() {
+		if unlockErr := regenLock.Unlock(context.Background()); unlockErr != nil {
+			log.Printf("Failed to release embedding regen lock for user %s: %v", userIDStr, unlockErr)
+		}
+	}()
+
+	// embedding未生成の日記ID一覧を取得
+	query := `
+		SELECT d.id
+		FROM diaries d
+		WHERE d.user_id = $1
+		  AND NOT EXISTS (
+		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
+		  )
+		ORDER BY d.date DESC
+	`
+	rows, err := s.DB.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			fmt.Printf("Failed to close rows: %v\n", closeErr)
+		}
+	}()
+
+	// 各日記のembedding生成メッセージをキューに追加
+	// 手動再生成のため当日の日記も即時処理する（on-saveとは異なる）
+	var count int32
+	for rows.Next() {
+		var diaryID string
+		if err := rows.Scan(&diaryID); err != nil {
+			// スキャンエラーは該当行をスキップして処理継続（他の日記への影響を防ぐ）
+			log.Printf("Failed to scan diary row: %v", err)
+			continue
+		}
+		msg := DiaryEmbeddingMessage{
+			Type:    "diary_embedding",
+			UserID:  userIDStr,
+			DiaryID: diaryID,
+		}
+		msgBytes, err := json.Marshal(msg)
+		if err != nil {
+			// JSONシリアライズエラーは該当行をスキップ（UUIDの形式が正しければ発生しない）
+			log.Printf("Failed to marshal embedding message for diary %s: %v", diaryID, err)
+			continue
+		}
+		publishCmd := s.Redis.B().Publish().Channel("diary_events").Message(string(msgBytes)).Build()
+		// Redisへのpublishエラーはカウントから除外せず記録のみ（部分的な成功を許容）
+		if pubErr := s.Redis.Do(ctx, publishCmd).Error(); pubErr != nil {
+			log.Printf("Failed to publish embedding message for diary %s: %v", diaryID, pubErr)
+		}
+		count++
+	}
+
+	return &g.RegenerateAllEmbeddingsResponse{
+		Success:     true,
+		QueuedCount: count,
+	}, nil
+}
+
+// GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
+func (s *DiaryEntry) GetDiaryEmbeddingStatus(
+	ctx context.Context,
+	req *g.GetDiaryEmbeddingStatusRequest,
+) (*g.GetDiaryEmbeddingStatusResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	diaryID, err := uuid.Parse(req.DiaryId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid diary ID")
+	}
+
+	// 日記が存在し、このユーザーのものかを確認
+	diary, err := database.DiaryByID(ctx, s.DB, diaryID)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Diary not found")
+	}
+	if diary.UserID != userID {
+		return nil, status.Errorf(codes.PermissionDenied, "Permission denied")
+	}
+
+	embeddingStatus, err := database.GetDiaryEmbeddingStatus(ctx, s.DB, diaryID, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get embedding status: %v", err)
+	}
+
+	resp := &g.GetDiaryEmbeddingStatusResponse{
+		Indexed: embeddingStatus.Indexed,
+	}
+	if embeddingStatus.Indexed {
+		resp.ModelVersion = embeddingStatus.ModelVersion
+		resp.ChunkModelVersion = embeddingStatus.ChunkModelVersion
+		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
+		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
+		// レスポンスサイズ削減のため先頭10件のみ返す（フロントエンドはプレビュー表示のみ）
+		resp.EmbeddingDimensions = int32(len(embeddingStatus.EmbeddingValues))
+		previewLen := min(10, len(embeddingStatus.EmbeddingValues))
+		resp.EmbeddingValues = embeddingStatus.EmbeddingValues[:previewLen]
+		resp.ChunkCount = int32(embeddingStatus.ChunkCount)
+		resp.ChunkSummaries = embeddingStatus.ChunkSummaries
+	}
+
+	return resp, nil
+}
+
+// generateSnippet はコンテンツから最大maxLen文字のスニペットを生成する
+func generateSnippet(content string, maxLen int) string {
+	runes := []rune(content)
+	if len(runes) <= maxLen {
+		return content
+	}
+	return string(runes[:maxLen]) + "..."
 }

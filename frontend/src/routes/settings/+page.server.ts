@@ -8,6 +8,7 @@ import {
 	deleteAccount,
 	updateAutoSummarySettings,
 } from "$lib/server/auth-api";
+import { regenerateAllEmbeddings } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -264,6 +265,7 @@ export const actions: Actions = {
 		const autoSummaryDaily = data.get("autoSummaryDaily") === "on";
 		const autoSummaryMonthly = data.get("autoSummaryMonthly") === "on";
 		const autoLatestTrendEnabled = data.get("autoLatestTrendEnabled") === "on";
+		const semanticSearchEnabled = data.get("semanticSearchEnabled") === "on";
 
 		if (Number.isNaN(llmProvider) || llmProvider < 0) {
 			return fail(400, {
@@ -273,13 +275,18 @@ export const actions: Actions = {
 		}
 
 		try {
-			const response = await updateAutoSummarySettings({
-				llmProvider,
-				autoSummaryDaily,
-				autoSummaryMonthly,
-				autoLatestTrendEnabled,
-				accessToken,
-			});
+			// 設定更新とユーザー情報取得を並列実行（getUserInfo は更新結果に依存しないため）
+			const [response, userInfo] = await Promise.all([
+				updateAutoSummarySettings({
+					llmProvider,
+					autoSummaryDaily,
+					autoSummaryMonthly,
+					autoLatestTrendEnabled,
+					semanticSearchEnabled,
+					accessToken,
+				}),
+				getUserInfo({ accessToken }),
+			]);
 
 			if (!response.success) {
 				return fail(400, {
@@ -287,9 +294,6 @@ export const actions: Actions = {
 					action: "updateAutoSummarySettings",
 				});
 			}
-
-			// Get updated user info to refresh the form state
-			const userInfo = await getUserInfo({ accessToken });
 
 			return {
 				success: true,
@@ -306,6 +310,33 @@ export const actions: Actions = {
 			return fail(500, {
 				error: "updateFailed",
 				action: "updateAutoSummarySettings",
+			});
+		}
+	},
+
+	regenerateAllEmbeddings: async ({ cookies }) => {
+		const authResult = await ensureValidAccessToken(cookies);
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
+			return fail(401, {
+				error: "unauthorized",
+				action: "regenerateAllEmbeddings",
+			});
+		}
+
+		try {
+			const response = await regenerateAllEmbeddings({
+				accessToken: authResult.accessToken,
+			});
+			return {
+				success: true,
+				queuedCount: response.queuedCount,
+				action: "regenerateAllEmbeddings",
+			};
+		} catch (err) {
+			console.error("Failed to regenerate embeddings:", err);
+			return fail(500, {
+				error: "regenerateFailed",
+				action: "regenerateAllEmbeddings",
 			});
 		}
 	},

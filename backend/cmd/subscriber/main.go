@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -113,6 +115,12 @@ type LatestTrendGenerationMessage struct {
 }
 
 type DiaryHighlightGenerationMessage struct {
+	Type    string `json:"type"`
+	UserID  string `json:"user_id"`
+	DiaryID string `json:"diary_id"`
+}
+
+type DiaryEmbeddingMessage struct {
 	Type    string `json:"type"`
 	UserID  string `json:"user_id"`
 	DiaryID string `json:"diary_id"`
@@ -328,7 +336,7 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 	return nil
 }
 
-func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
+func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -398,6 +406,20 @@ func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Cli
 			messagesProcessedCounter.WithLabelValues("diary_highlight", "success").Inc()
 		}
 		return err
+	case "diary_embedding":
+		processingDuration.WithLabelValues("diary_embedding").Observe(time.Since(start).Seconds())
+		var message DiaryEmbeddingMessage
+		if unmarshalErr := json.Unmarshal([]byte(payload), &message); unmarshalErr != nil {
+			messagesProcessedCounter.WithLabelValues("diary_embedding", "error").Inc()
+			return fmt.Errorf("failed to unmarshal diary embedding message: %w", unmarshalErr)
+		}
+		err = generateDiaryEmbedding(ctx, db, llmFactory, message.UserID, message.DiaryID, logger)
+		if err != nil {
+			messagesProcessedCounter.WithLabelValues("diary_embedding", "error").Inc()
+		} else {
+			messagesProcessedCounter.WithLabelValues("diary_embedding", "success").Inc()
+		}
+		return err
 	default:
 		logger.WithField("message_type", baseMessage.Type).Warn("Unknown message type")
 		messagesProcessedCounter.WithLabelValues("unknown", "ignored").Inc()
@@ -405,7 +427,7 @@ func processMessage(ctx context.Context, db database.DB, redisClient rueidis.Cli
 	}
 }
 
-func generateDailySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
+func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"date":    dateStr,
@@ -479,17 +501,18 @@ func generateDailySummary(ctx context.Context, db database.DB, redisClient rueid
 
 	// 3. diary_summary_daysに保存
 	insertQuery := `
-		INSERT INTO diary_summary_days (id, user_id, date, summary, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO diary_summary_days (id, user_id, date, summary, model_version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (user_id, date) DO UPDATE SET
 		summary = EXCLUDED.summary,
+		model_version = EXCLUDED.model_version,
 		updated_at = EXCLUDED.updated_at
 	`
 
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, dateStr, summary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, dateStr, summary, llm.ModelGenerateContent, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save summary: %w", err)
 	}
@@ -502,7 +525,7 @@ func generateDailySummary(ctx context.Context, db database.DB, redisClient rueid
 	return nil
 }
 
-func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
+func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id": userID,
 		"year":    year,
@@ -590,17 +613,18 @@ func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rue
 
 	// 3. diary_summary_monthsに保存
 	insertQuery := `
-		INSERT INTO diary_summary_months (id, user_id, year, month, summary, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO diary_summary_months (id, user_id, year, month, summary, model_version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (user_id, year, month) DO UPDATE SET
 		summary = EXCLUDED.summary,
+		model_version = EXCLUDED.model_version,
 		updated_at = EXCLUDED.updated_at
 	`
 
 	now := time.Now().Unix()
 	summaryID := uuid.New()
 
-	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, year, month, monthlySummary, now, now)
+	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, year, month, monthlySummary, llm.ModelGenerateContent, now, now)
 	if err != nil {
 		return fmt.Errorf("failed to save monthly summary: %w", err)
 	}
@@ -610,7 +634,7 @@ func generateMonthlySummary(ctx context.Context, db database.DB, redisClient rue
 	return nil
 }
 
-func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) (string, error) {
+func generateSummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -643,7 +667,7 @@ func generateSummaryWithLLM(ctx context.Context, db database.DB, llmFactory cont
 	return summary, nil
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
+func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -676,7 +700,7 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db database.DB, llmFacto
 	return summary, nil
 }
 
-func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, periodStartStr, periodEndStr string, logger *logrus.Entry) error {
+func generateLatestTrend(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, periodStartStr, periodEndStr string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id":      userID,
 		"period_start": periodStartStr,
@@ -808,6 +832,7 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 		"period_start":  periodStartStr,
 		"period_end":    periodEndStr,
 		"generated_at":  time.Now().Format(time.RFC3339),
+		"model_version": llm.ModelGenerateContent,
 	}
 
 	trendDataJSON, err := json.Marshal(trendData)
@@ -828,7 +853,7 @@ func generateLatestTrend(ctx context.Context, db database.DB, redisClient rueidi
 	return nil
 }
 
-func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
+func generateLatestTrendWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -862,7 +887,7 @@ func generateLatestTrendWithLLM(ctx context.Context, db database.DB, llmFactory 
 	return analysis, nil
 }
 
-func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, diaryID string, logger *logrus.Entry) error {
+func generateDiaryHighlight(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, diaryID string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id":  userID,
 		"diary_id": diaryID,
@@ -1016,7 +1041,7 @@ func generateDiaryHighlight(ctx context.Context, db database.DB, redisClient rue
 	return nil
 }
 
-func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
+func generateDiaryHighlightWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
 	// ユーザーのGemini API keyをuser_llmsテーブルから取得
 	var apiKey string
 	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
@@ -1064,4 +1089,104 @@ func generateDiaryHighlightWithLLM(ctx context.Context, db database.DB, llmFacto
 
 	logger.Info("Successfully generated highlights using Gemini API")
 	return highlights, nil
+}
+
+func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, diaryID string, logger *logrus.Entry) error {
+	logger.WithFields(logrus.Fields{
+		"user_id":  userID,
+		"diary_id": diaryID,
+	}).Info("Generating diary embedding")
+
+	// 1. ユーザーのAPIキーと意味的検索の有効化を確認（未設定/無効の場合はスキップ）
+	var apiKey string
+	var semanticSearchEnabled bool
+	apiKeyQuery := `SELECT key, semantic_search_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
+	err := db.QueryRowContext(ctx, apiKeyQuery, userID).Scan(&apiKey, &semanticSearchEnabled)
+	if err != nil {
+		// APIキー未設定はスキップ（エラーではない）
+		logger.WithFields(logrus.Fields{
+			"user_id":  userID,
+			"diary_id": diaryID,
+		}).Info("User has no Gemini API key, skipping diary embedding generation")
+		return nil
+	}
+	if !semanticSearchEnabled {
+		// 意味的検索が無効ならスキップ
+		logger.WithFields(logrus.Fields{
+			"user_id":  userID,
+			"diary_id": diaryID,
+		}).Debug("Semantic search not enabled for user, skipping diary embedding generation")
+		return nil
+	}
+
+	// 2. 日記の本文と日付を取得
+	var diaryContent string
+	var diaryDate time.Time
+	contentQuery := `SELECT content, date FROM diaries WHERE id = $1 AND user_id = $2`
+	err = db.QueryRowContext(ctx, contentQuery, diaryID, userID).Scan(&diaryContent, &diaryDate)
+	if err != nil {
+		return fmt.Errorf("failed to get diary content: %w", err)
+	}
+
+	// 3. Gemini クライアント作成
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	if err != nil {
+		return fmt.Errorf("failed to create Gemini client: %w", err)
+	}
+	defer func() {
+		if closeErr := geminiClient.Close(); closeErr != nil {
+			logger.WithError(closeErr).Error("Failed to close Gemini client")
+		}
+	}()
+
+	// 4. 日記を話題ごとのチャンクに分割する（失敗時は日記全体を1チャンクとしてフォールバック）
+	chunkDataList, err := geminiClient.SplitDiaryIntoChunks(ctx, diaryContent)
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"user_id":  userID,
+			"diary_id": diaryID,
+		}).WithError(err).Warn("Failed to split diary into chunks, falling back to single chunk")
+		chunkDataList = []llm.DiaryChunkData{{Content: diaryContent, Summary: ""}}
+	}
+
+	// 5. UUIDをパース
+	diaryUUID, err := uuid.Parse(diaryID)
+	if err != nil {
+		return fmt.Errorf("failed to parse diary_id: %w", err)
+	}
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return fmt.Errorf("failed to parse user_id: %w", err)
+	}
+
+	// 6. 各チャンクに日付コンテキストを付与してembedding生成
+	diaryChunks := make([]database.DiaryChunk, 0, len(chunkDataList))
+	for i, chunkData := range chunkDataList {
+		// 時間的クエリの精度向上のため日付情報を先頭に付与する
+		enrichedChunk := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), chunkData.Content)
+		embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedChunk, true)
+		if err != nil {
+			return fmt.Errorf("failed to generate embedding for chunk %d: %w", i, err)
+		}
+		diaryChunks = append(diaryChunks, database.DiaryChunk{
+			Index:             i,
+			Content:           chunkData.Content,
+			Summary:           chunkData.Summary,
+			Embedding:         embedding,
+			SplitModelVersion: llm.ModelGenerateContent,
+		})
+	}
+
+	// 7. diary_embeddingsテーブルにチャンク単位でUPSERT
+	if err := database.UpsertDiaryChunkEmbeddings(ctx, db, diaryUUID, userUUID, diaryChunks, llm.ModelEmbedding); err != nil {
+		return fmt.Errorf("failed to upsert diary chunk embeddings: %w", err)
+	}
+
+	summariesGeneratedCounter.WithLabelValues("diary_embedding").Inc()
+	logger.WithFields(logrus.Fields{
+		"user_id":     userID,
+		"diary_id":    diaryID,
+		"chunk_count": len(diaryChunks),
+	}).Info("Successfully generated and saved diary chunk embeddings")
+	return nil
 }

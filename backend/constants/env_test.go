@@ -8,28 +8,40 @@ import (
 
 func TestLoadSchedulerConfig(t *testing.T) {
 	tests := []struct {
-		name            string
-		dailyInterval   string
-		monthlyInterval string
-		expectedDaily   time.Duration
-		expectedMonthly time.Duration
-		expectError     bool
+		name                       string
+		dailyInterval              string
+		monthlyInterval            string
+		diaryEmbeddingHour         string
+		diaryEmbeddingMinute       string
+		expectedDaily              time.Duration
+		expectedMonthly            time.Duration
+		expectedDiaryEmbeddingHour int
+		expectedDiaryEmbeddingMin  int
+		expectError                bool
 	}{
 		{
-			name:            "正常系：デフォルト値",
-			dailyInterval:   "",
-			monthlyInterval: "",
-			expectedDaily:   5 * time.Minute,
-			expectedMonthly: 5 * time.Minute,
-			expectError:     false,
+			name:                       "正常系：デフォルト値",
+			dailyInterval:              "",
+			monthlyInterval:            "",
+			diaryEmbeddingHour:         "",
+			diaryEmbeddingMinute:       "",
+			expectedDaily:              5 * time.Minute,
+			expectedMonthly:            5 * time.Minute,
+			expectedDiaryEmbeddingHour: 4,
+			expectedDiaryEmbeddingMin:  30,
+			expectError:                false,
 		},
 		{
-			name:            "正常系：カスタム値",
-			dailyInterval:   "10m",
-			monthlyInterval: "1h",
-			expectedDaily:   10 * time.Minute,
-			expectedMonthly: 1 * time.Hour,
-			expectError:     false,
+			name:                       "正常系：カスタム値",
+			dailyInterval:              "10m",
+			monthlyInterval:            "1h",
+			diaryEmbeddingHour:         "5",
+			diaryEmbeddingMinute:       "15",
+			expectedDaily:              10 * time.Minute,
+			expectedMonthly:            1 * time.Hour,
+			expectedDiaryEmbeddingHour: 5,
+			expectedDiaryEmbeddingMin:  15,
+			expectError:                false,
 		},
 		{
 			name:            "異常系：無効な日次インターバル",
@@ -47,6 +59,22 @@ func TestLoadSchedulerConfig(t *testing.T) {
 			expectedMonthly: 0,
 			expectError:     true,
 		},
+		{
+			name:                 "異常系：無効なdiaryEmbeddingHour",
+			dailyInterval:        "5m",
+			monthlyInterval:      "5m",
+			diaryEmbeddingHour:   "25",
+			diaryEmbeddingMinute: "0",
+			expectError:          true,
+		},
+		{
+			name:                 "異常系：無効なdiaryEmbeddingMinute",
+			dailyInterval:        "5m",
+			monthlyInterval:      "5m",
+			diaryEmbeddingHour:   "4",
+			diaryEmbeddingMinute: "60",
+			expectError:          true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -62,6 +90,18 @@ func TestLoadSchedulerConfig(t *testing.T) {
 				_ = os.Setenv("SCHEDULER_MONTHLY_INTERVAL", tt.monthlyInterval)
 			} else {
 				_ = os.Unsetenv("SCHEDULER_MONTHLY_INTERVAL")
+			}
+
+			if tt.diaryEmbeddingHour != "" {
+				_ = os.Setenv("SCHEDULER_DIARY_EMBEDDING_HOUR", tt.diaryEmbeddingHour)
+			} else {
+				_ = os.Unsetenv("SCHEDULER_DIARY_EMBEDDING_HOUR")
+			}
+
+			if tt.diaryEmbeddingMinute != "" {
+				_ = os.Setenv("SCHEDULER_DIARY_EMBEDDING_MINUTE", tt.diaryEmbeddingMinute)
+			} else {
+				_ = os.Unsetenv("SCHEDULER_DIARY_EMBEDDING_MINUTE")
 			}
 
 			// Test the function
@@ -84,6 +124,14 @@ func TestLoadSchedulerConfig(t *testing.T) {
 
 			if config.MonthlySummaryInterval != tt.expectedMonthly {
 				t.Errorf("expected monthly interval %v, got %v", tt.expectedMonthly, config.MonthlySummaryInterval)
+			}
+
+			if config.DiaryEmbeddingTargetHour != tt.expectedDiaryEmbeddingHour {
+				t.Errorf("expected DiaryEmbeddingTargetHour %d, got %d", tt.expectedDiaryEmbeddingHour, config.DiaryEmbeddingTargetHour)
+			}
+
+			if config.DiaryEmbeddingTargetMinute != tt.expectedDiaryEmbeddingMin {
+				t.Errorf("expected DiaryEmbeddingTargetMinute %d, got %d", tt.expectedDiaryEmbeddingMin, config.DiaryEmbeddingTargetMinute)
 			}
 		})
 	}

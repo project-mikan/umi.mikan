@@ -1,5 +1,5 @@
-import type { PageServerLoad } from "./$types";
-import { error, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
+import { error, fail, redirect } from "@sveltejs/kit";
 import { create } from "@bufbuild/protobuf";
 import { createClient } from "@connectrpc/connect";
 import { createGrpcTransport } from "@connectrpc/connect-node";
@@ -7,6 +7,7 @@ import {
 	UserService,
 	GetPubSubMetricsRequestSchema,
 } from "$lib/grpc/user/user_pb";
+import { regenerateAllEmbeddings } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 
 export const load: PageServerLoad = async ({ cookies }) => {
@@ -38,6 +39,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 					monthlySummariesFailed: metric.monthlySummariesFailed,
 					latestTrendsProcessed: metric.latestTrendsProcessed,
 					latestTrendsFailed: metric.latestTrendsFailed,
+					diaryEmbeddingsProcessed: metric.diaryEmbeddingsProcessed,
+					diaryEmbeddingsFailed: metric.diaryEmbeddingsFailed,
+					semanticSearchesProcessed: metric.semanticSearchesProcessed,
 				})),
 				processingTasks: (response.processingTasks || []).map((task) => ({
 					taskType: task.taskType,
@@ -55,6 +59,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 								response.summary.autoSummaryMonthlyEnabled,
 							autoLatestTrendEnabled: response.summary.autoLatestTrendEnabled,
 							latestTrendGeneratedAt: response.summary.latestTrendGeneratedAt,
+							semanticSearchEnabled: response.summary.semanticSearchEnabled,
+							totalEmbeddings: response.summary.totalEmbeddings,
+							pendingEmbeddings: response.summary.pendingEmbeddings,
 						}
 					: {
 							totalDailySummaries: 0,
@@ -65,6 +72,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 							autoSummaryMonthlyEnabled: false,
 							autoLatestTrendEnabled: false,
 							latestTrendGeneratedAt: "",
+							semanticSearchEnabled: false,
+							totalEmbeddings: 0,
+							pendingEmbeddings: 0,
 						},
 			},
 		};
@@ -72,4 +82,26 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		console.error("Failed to load pub/sub metrics:", err);
 		throw error(500, "Failed to load metrics data");
 	}
+};
+
+export const actions: Actions = {
+	regenerateAllEmbeddings: async ({ cookies }) => {
+		const authResult = await ensureValidAccessToken(cookies);
+		if (!authResult.isAuthenticated || !authResult.accessToken) {
+			return fail(401, { error: "unauthorized" });
+		}
+
+		try {
+			const response = await regenerateAllEmbeddings({
+				accessToken: authResult.accessToken,
+			});
+			return {
+				success: true,
+				queuedCount: response.queuedCount,
+			};
+		} catch (err) {
+			console.error("Failed to regenerate embeddings:", err);
+			return fail(500, { error: "regenerateFailed" });
+		}
+	},
 };

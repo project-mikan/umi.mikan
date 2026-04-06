@@ -21,7 +21,7 @@ import (
 
 type AuthEntry struct {
 	g.UnimplementedAuthServiceServer
-	DB              database.DB
+	DB              *sql.DB
 	LoginLimiter    *ratelimiter.LoginAttemptLimiter
 	RegisterLimiter *ratelimiter.RegisterAttemptLimiter
 	RegisterKey     string // REGISTER_KEY環境変数の値（空文字の場合は制限なし）
@@ -76,7 +76,7 @@ func (s *AuthEntry) RegisterByPassword(ctx context.Context, req *g.RegisterByPas
 	// --- 登録 ---
 	user := model.GenUser(passwordAuth.Email, passwordAuth.Name, model.AuthTypeEmailPassword)
 	// トランザクション内でユーザー作成とパスワード認証を同時に実行
-	err = database.RwTransaction(ctx, s.DB.(*sql.DB), func(tx *sql.Tx) error {
+	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		userDB := user.ConvertToDBModel()
 		if err := userDB.Save(ctx, tx); err != nil {
 			return fmt.Errorf("failed to insert user: %w", err)

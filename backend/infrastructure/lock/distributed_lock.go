@@ -163,3 +163,8 @@ func DailySummaryLockKey(userID, date string) string {
 func MonthlySummaryLockKey(userID string, year, month int) string {
 	return fmt.Sprintf("summary_lock:monthly:%s:%d:%d", userID, year, month)
 }
+
+// EmbeddingRegenLockKey creates a lock key for embedding regeneration per user
+func EmbeddingRegenLockKey(userID string) string {
+	return fmt.Sprintf("embedding_regen_lock:%s", userID)
+}

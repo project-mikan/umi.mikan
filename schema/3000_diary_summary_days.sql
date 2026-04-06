@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS diary_summary_days (
     user_id UUID REFERENCES users(id) NOT NULL,
     date DATE NOT NULL,
     summary TEXT NOT NULL,
+    -- サマリー生成に使用したLLMモデル
+    model_version TEXT NOT NULL DEFAULT 'gemini-2.5-flash-lite',
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
     CONSTRAINT unique_user_date_summary UNIQUE (user_id, date)

@@ -32,6 +32,7 @@ dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, red
 - cAdvisor: http://localhost:2009
 - Loki: http://localhost:2010
 - Grafana Alloy: http://localhost:2011
+- Backend Metrics: http://localhost:2012/metrics
 
 ## Common Development Commands
 
@@ -138,9 +139,21 @@ curl http://localhost:2011/metrics   # Grafana Alloy metrics
 
 ```bash
 make db                # Connect to PostgreSQL
-make db-init           # Reset and reinitialize database
+make db-diff           # Preview schema changes (dry run)
+make db-apply          # Apply schema migrations to production DB
+make db-apply-test     # Apply schema migrations to test DB
 make p-log             # View postgres logs
 ```
+
+**Schema change workflow:**
+1. Add a new SQL file to `schema/` (files are applied in filename order)
+2. Preview changes with `make db-diff`
+3. Apply to production DB with `make db-apply`
+4. Apply to test DB with `make db-apply-test` (required before running tests)
+
+**Schema file rules:**
+- **One file per table**: Each table must be defined in its own SQL file. Never split a table's definition across multiple files or merge multiple tables into one file.
+- Column additions, constraint changes, and index changes for a table belong in that table's file, not in a separate migration file.
 
 ### Code Generation
 
@@ -176,6 +189,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Scheduler Job Types**:
   - **IntervalScheduledJob**: Periodic execution at fixed intervals (e.g., every 5 minutes)
   - **DailyScheduledJob**: Daily execution at a specific hour (JST timezone)
+- **Today's Diary Embedding Deferral**: On diary save/update, embedding is skipped for today's diary (JST). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Grafana Alloy, and cAdvisor
 
@@ -199,7 +213,9 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **diary_summary_days**: AI-generated daily summaries
 - **diary_summary_months**: AI-generated monthly summaries
 - **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)
-- **Migrations**: Numbered SQL files in /schema directory
+- **diary_embeddings**: Per-chunk vector embeddings for semantic search (pgvector halfvec)
+- **semantic_search_logs**: Tracks semantic search API requests per user
+- **Migrations**: Numbered SQL files in /schema directory — **one file per table, always**
 
 ### Async Processing Architecture
 
@@ -263,12 +279,13 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 ## Development Workflow
 
 1. **Code Changes**: Backend uses Air for hot reload, frontend uses Vite
-2. **Database Changes**: Update schema files, run `make db-init`, then `make xo`
+2. **Database Changes**: Add SQL file to `schema/`, run `make db-apply` and `make db-apply-test`, then `make xo`
 3. **Proto Changes**: Update .proto files, run `make grpc`
 4. **Frontend**: Uses pnpm for package management, Biome for formatting
 5. **Backend**: Uses Go modules, standard Go formatting
 6. **DI Container**: Add new dependencies to `backend/container/container.go` provider functions
-7. **QA Testing**: After completing a feature, use Chrome MCP tools to perform QA testing on the frontend (http://localhost:2000)
+7. **LLM-related Changes**: When modifying LLM processing logic (subscriber, scheduler, embedding, semantic search, RAG), update the RAG diagram in the `/llm` page (`frontend/src/routes/llm/+page.svelte`) and its i18n keys (`frontend/src/locales/ja.json`, `en.json`) to reflect the latest flow
+8. **QA Testing**: After completing a feature, use Chrome MCP tools to perform QA testing on the frontend (http://localhost:2000)
    - Test normal functionality and user interactions
    - Perform a hard reload (Ctrl+Shift+R or Cmd+Shift+R) and verify that the behavior remains consistent
    - Ensure PWA functionality works correctly after hard reload
@@ -295,12 +312,14 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `0004-pubsub.md`: Redis Pub/Sub implementation details
   - `0005-scheduler.md`: Scheduler system architecture
   - `0008-diary-highlight.md`: Diary highlight generation with LLM
+  - `0009-natural-language-search.md`: Semantic search (RAG) with pgvector + Gemini Embedding
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
   - `loki/loki-config.yml`: Loki log aggregation configuration
   - `alloy/alloy-config.alloy`: Grafana Alloy log collection configuration
   - `grafana/`: Dashboard and data source provisioning
     - `dashboards/umi-mikan-pubsub.json`: Pub/Sub monitoring dashboard
+    - `dashboards/umi-mikan-rag.json`: RAG / semantic search monitoring dashboard
     - `dashboards/container-monitoring.json`: Container resource monitoring dashboard
     - `dashboards/container-logs.json`: Container logs monitoring dashboard
     - `provisioning/datasources/`: Prometheus and Loki data source configurations
@@ -311,6 +330,13 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `container_test.go`: Comprehensive container tests
 
 ## Development Guidelines
+
+### Database Access Guidelines
+
+- **Never write inline SQL in `cmd/` packages**: All SQL queries must be defined in `backend/infrastructure/database/` functions. `cmd/scheduler` and `cmd/subscriber` must call these functions instead of using `QueryContext`/`QueryRowContext`/`ExecContext` directly.
+- **One file per query domain**: Place queries in the appropriate file (e.g., `user_llms.go` for user_llms queries, `scheduler_queries.go` for cross-table scheduler queries).
+- **Every new database file needs a `*_test.go`**: When adding query functions to `backend/infrastructure/database/`, always create matching tests in `package database_test`.
+- **Type-aware comparisons**: `diaries.updated_at` is BIGINT (milliseconds), while `diary_embeddings.updated_at` is TIMESTAMP. Use `to_timestamp(d.updated_at / 1000.0)` for cross-table comparisons.
 
 ### Port Usage
 
@@ -329,7 +355,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - 2009: cAdvisor
   - 2010: Loki
   - 2011: Grafana Alloy
-- **Custom services**: New services should use available ports in the 2000 range (e.g., 2012+)
+  - 2012: Backend Metrics
+- **Custom services**: New services should use available ports in the 2000 range (e.g., 2013+)
 
 ### Internationalization (i18n)
 
@@ -372,6 +399,10 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Database package tests must be in `package database_test`**: Tests in `backend/infrastructure/database/` must use `package database_test` (external test package) to avoid import cycles. The cycle is `database` → `testutil` → `domain/model` → `database`.
 - **Database layer functions need their own tests**: Functions added to `backend/infrastructure/database/` (e.g., new query functions) require test files in the same directory. Service-layer tests do NOT count as coverage for the database package — Go measures coverage per package separately.
 - **New database query files need a corresponding `*_test.go`**: When adding a new `.go` file with query functions to `backend/infrastructure/database/`, always create a matching `*_test.go` in `package database_test` with tests for each exported function.
+- **Service layer tests are in the same package**: Tests in `backend/service/*/` use the internal package (e.g., `package diary`) to allow testing unexported functions like `generateSnippet` and `getTaskTimeout`.
+- **Patch coverage target**: Codecov measures coverage of changed lines per PR. When making changes, ensure all new/changed lines in service and database packages have corresponding test coverage. Files exempt from this requirement: `backend/cmd/*/main.go` (entrypoints), `backend/infrastructure/llm/` (external LLM API dependencies).
+- **testutil package tests**: Functions in `backend/testutil/` that require a real DB (e.g., `buildDynamicCleanupQueries`, `loadFKGraph`) should be tested with integration tests using `SetupTestDB(t)`. Pure functions (e.g., `getEnvOrDefault`, `DefaultTestDBConfig`) can be tested with unit tests in `package testutil`.
+- **User service tests**: `backend/service/user/service_test.go` uses `package user` (internal) and tests all CRUD methods for user management.
 
 ## Configuration Options
 
@@ -386,6 +417,8 @@ Environment variables for controlling scheduler behavior:
 **Time-based Jobs (Daily Execution at Specific Time):**
 - `SCHEDULER_LATEST_TREND_HOUR`: Hour (0-23) for latest trend analysis (default: `4`)
 - `SCHEDULER_LATEST_TREND_MINUTE`: Minute (0-59) for latest trend analysis (default: `0`)
+- `SCHEDULER_DIARY_EMBEDDING_HOUR`: Hour (0-23) for yesterday's diary embedding generation (default: `4`)
+- `SCHEDULER_DIARY_EMBEDDING_MINUTE`: Minute (0-59) for yesterday's diary embedding generation (default: `30`)
 
 The scheduler supports two types of job scheduling:
 1. **Interval-based**: Jobs that run periodically at fixed intervals
@@ -401,9 +434,8 @@ SCHEDULER_MONTHLY_INTERVAL=1h   # Run monthly summaries every hour
 # Time-based jobs
 SCHEDULER_LATEST_TREND_HOUR=4       # Run at 4:00 AM JST
 SCHEDULER_LATEST_TREND_MINUTE=0
-# Or run at 4:30 AM JST
-SCHEDULER_LATEST_TREND_HOUR=4
-SCHEDULER_LATEST_TREND_MINUTE=30
+SCHEDULER_DIARY_EMBEDDING_HOUR=4    # Run diary embedding at 4:30 AM JST
+SCHEDULER_DIARY_EMBEDDING_MINUTE=30
 ```
 
 ### Subscriber Configuration

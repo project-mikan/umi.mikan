@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,6 +15,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/container"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -71,6 +73,18 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
+	// Prometheusメトリクスサーバーを起動
+	metricsServer := &http.Server{
+		Addr:    ":8082",
+		Handler: promhttp.Handler(),
+	}
+	go func() {
+		log.Print("Metrics server listening on :8082")
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("Metrics server error: %v", err)
+		}
+	}()
+
 	// Start gRPC server in goroutine
 	serverErrChan := make(chan error, 1)
 	go func() {
@@ -102,6 +116,11 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 		case <-ctx.Done():
 			log.Print("Graceful shutdown timeout, forcing stop")
 			grpcServer.Stop()
+		}
+
+		// メトリクスサーバーを停止
+		if err := metricsServer.Shutdown(ctx); err != nil {
+			log.Printf("Error shutting down metrics server: %v", err)
 		}
 
 		// Cleanup resources

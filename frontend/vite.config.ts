@@ -37,6 +37,12 @@ export default defineConfig({
 			manifest: false, // Disable static manifest generation - use dynamic API route instead
 		}),
 	],
+	server: {
+		// DockerのボリュームマウントでHMRが動作するようにpollingを使用
+		watch: {
+			usePolling: true,
+		},
+	},
 	ssr: {
 		noExternal: [],
 		external: ["chart.js"],

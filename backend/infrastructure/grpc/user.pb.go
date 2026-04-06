@@ -438,6 +438,7 @@ type LLMKeyInfo struct {
 	AutoSummaryDaily       bool                   `protobuf:"varint,3,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,4,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,5,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	SemanticSearchEnabled  bool                   `protobuf:"varint,6,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -503,6 +504,13 @@ func (x *LLMKeyInfo) GetAutoSummaryMonthly() bool {
 func (x *LLMKeyInfo) GetAutoLatestTrendEnabled() bool {
 	if x != nil {
 		return x.AutoLatestTrendEnabled
+	}
+	return false
+}
+
+func (x *LLMKeyInfo) GetSemanticSearchEnabled() bool {
+	if x != nil {
+		return x.SemanticSearchEnabled
 	}
 	return false
 }
@@ -702,6 +710,7 @@ type UpdateAutoSummarySettingsRequest struct {
 	AutoSummaryDaily       bool                   `protobuf:"varint,2,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,3,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,4,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	SemanticSearchEnabled  bool                   `protobuf:"varint,5,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -760,6 +769,13 @@ func (x *UpdateAutoSummarySettingsRequest) GetAutoSummaryMonthly() bool {
 func (x *UpdateAutoSummarySettingsRequest) GetAutoLatestTrendEnabled() bool {
 	if x != nil {
 		return x.AutoLatestTrendEnabled
+	}
+	return false
+}
+
+func (x *UpdateAutoSummarySettingsRequest) GetSemanticSearchEnabled() bool {
+	if x != nil {
+		return x.SemanticSearchEnabled
 	}
 	return false
 }
@@ -868,6 +884,7 @@ type GetAutoSummarySettingsResponse struct {
 	AutoSummaryDaily       bool                   `protobuf:"varint,1,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,2,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,3,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
+	SemanticSearchEnabled  bool                   `protobuf:"varint,4,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -919,6 +936,13 @@ func (x *GetAutoSummarySettingsResponse) GetAutoSummaryMonthly() bool {
 func (x *GetAutoSummarySettingsResponse) GetAutoLatestTrendEnabled() bool {
 	if x != nil {
 		return x.AutoLatestTrendEnabled
+	}
+	return false
+}
+
+func (x *GetAutoSummarySettingsResponse) GetSemanticSearchEnabled() bool {
+	if x != nil {
+		return x.SemanticSearchEnabled
 	}
 	return false
 }
@@ -1027,13 +1051,16 @@ func (x *GetPubSubMetricsResponse) GetSummary() *MetricsSummary {
 // 1時間ごとのメトリクス
 type HourlyMetrics struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
-	Timestamp                 int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                                                    // 該当時間のUnixタイムスタンプ
-	DailySummariesProcessed   int32                  `protobuf:"varint,2,opt,name=daily_summaries_processed,json=dailySummariesProcessed,proto3" json:"daily_summaries_processed,omitempty"`       // 処理された日次要約数
-	MonthlySummariesProcessed int32                  `protobuf:"varint,3,opt,name=monthly_summaries_processed,json=monthlySummariesProcessed,proto3" json:"monthly_summaries_processed,omitempty"` // 処理された月次要約数
-	DailySummariesFailed      int32                  `protobuf:"varint,4,opt,name=daily_summaries_failed,json=dailySummariesFailed,proto3" json:"daily_summaries_failed,omitempty"`                // 失敗した日次要約数
-	MonthlySummariesFailed    int32                  `protobuf:"varint,5,opt,name=monthly_summaries_failed,json=monthlySummariesFailed,proto3" json:"monthly_summaries_failed,omitempty"`          // 失敗した月次要約数
-	LatestTrendsProcessed     int32                  `protobuf:"varint,6,opt,name=latest_trends_processed,json=latestTrendsProcessed,proto3" json:"latest_trends_processed,omitempty"`             // 処理されたトレンド分析数
-	LatestTrendsFailed        int32                  `protobuf:"varint,7,opt,name=latest_trends_failed,json=latestTrendsFailed,proto3" json:"latest_trends_failed,omitempty"`                      // 失敗したトレンド分析数
+	Timestamp                 int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                                                     // 該当時間のUnixタイムスタンプ
+	DailySummariesProcessed   int32                  `protobuf:"varint,2,opt,name=daily_summaries_processed,json=dailySummariesProcessed,proto3" json:"daily_summaries_processed,omitempty"`        // 処理された日次要約数
+	MonthlySummariesProcessed int32                  `protobuf:"varint,3,opt,name=monthly_summaries_processed,json=monthlySummariesProcessed,proto3" json:"monthly_summaries_processed,omitempty"`  // 処理された月次要約数
+	DailySummariesFailed      int32                  `protobuf:"varint,4,opt,name=daily_summaries_failed,json=dailySummariesFailed,proto3" json:"daily_summaries_failed,omitempty"`                 // 失敗した日次要約数
+	MonthlySummariesFailed    int32                  `protobuf:"varint,5,opt,name=monthly_summaries_failed,json=monthlySummariesFailed,proto3" json:"monthly_summaries_failed,omitempty"`           // 失敗した月次要約数
+	LatestTrendsProcessed     int32                  `protobuf:"varint,6,opt,name=latest_trends_processed,json=latestTrendsProcessed,proto3" json:"latest_trends_processed,omitempty"`              // 処理されたトレンド分析数
+	LatestTrendsFailed        int32                  `protobuf:"varint,7,opt,name=latest_trends_failed,json=latestTrendsFailed,proto3" json:"latest_trends_failed,omitempty"`                       // 失敗したトレンド分析数
+	DiaryEmbeddingsProcessed  int32                  `protobuf:"varint,8,opt,name=diary_embeddings_processed,json=diaryEmbeddingsProcessed,proto3" json:"diary_embeddings_processed,omitempty"`     // 処理されたembedding数
+	DiaryEmbeddingsFailed     int32                  `protobuf:"varint,9,opt,name=diary_embeddings_failed,json=diaryEmbeddingsFailed,proto3" json:"diary_embeddings_failed,omitempty"`              // 失敗したembedding数
+	SemanticSearchesProcessed int32                  `protobuf:"varint,10,opt,name=semantic_searches_processed,json=semanticSearchesProcessed,proto3" json:"semantic_searches_processed,omitempty"` // 意味的検索のAIリクエスト数
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -1117,6 +1144,27 @@ func (x *HourlyMetrics) GetLatestTrendsFailed() int32 {
 	return 0
 }
 
+func (x *HourlyMetrics) GetDiaryEmbeddingsProcessed() int32 {
+	if x != nil {
+		return x.DiaryEmbeddingsProcessed
+	}
+	return 0
+}
+
+func (x *HourlyMetrics) GetDiaryEmbeddingsFailed() int32 {
+	if x != nil {
+		return x.DiaryEmbeddingsFailed
+	}
+	return 0
+}
+
+func (x *HourlyMetrics) GetSemanticSearchesProcessed() int32 {
+	if x != nil {
+		return x.SemanticSearchesProcessed
+	}
+	return 0
+}
+
 // 処理中のタスク
 type ProcessingTask struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1189,6 +1237,9 @@ type MetricsSummary struct {
 	AutoSummaryMonthlyEnabled bool                   `protobuf:"varint,6,opt,name=auto_summary_monthly_enabled,json=autoSummaryMonthlyEnabled,proto3" json:"auto_summary_monthly_enabled,omitempty"` // 月次要約の自動生成が有効か
 	AutoLatestTrendEnabled    bool                   `protobuf:"varint,7,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"`          // トレンド分析の自動生成が有効か
 	LatestTrendGeneratedAt    string                 `protobuf:"bytes,8,opt,name=latest_trend_generated_at,json=latestTrendGeneratedAt,proto3" json:"latest_trend_generated_at,omitempty"`           // 最後にトレンド分析が生成された日時 (ISO 8601形式)
+	SemanticSearchEnabled     bool                   `protobuf:"varint,9,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`               // 意味的検索（RAG）が有効か
+	TotalEmbeddings           int32                  `protobuf:"varint,10,opt,name=total_embeddings,json=totalEmbeddings,proto3" json:"total_embeddings,omitempty"`                                  // 生成済みのembedding数
+	PendingEmbeddings         int32                  `protobuf:"varint,11,opt,name=pending_embeddings,json=pendingEmbeddings,proto3" json:"pending_embeddings,omitempty"`                            // 未生成のembedding数（日記数 - embedding数）
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -1279,6 +1330,27 @@ func (x *MetricsSummary) GetLatestTrendGeneratedAt() string {
 	return ""
 }
 
+func (x *MetricsSummary) GetSemanticSearchEnabled() bool {
+	if x != nil {
+		return x.SemanticSearchEnabled
+	}
+	return false
+}
+
+func (x *MetricsSummary) GetTotalEmbeddings() int32 {
+	if x != nil {
+		return x.TotalEmbeddings
+	}
+	return 0
+}
+
+func (x *MetricsSummary) GetPendingEmbeddings() int32 {
+	if x != nil {
+		return x.PendingEmbeddings
+	}
+	return 0
+}
+
 var File_user_user_proto protoreflect.FileDescriptor
 
 const file_user_user_proto_rawDesc = "" +
@@ -1305,14 +1377,15 @@ const file_user_user_proto_rawDesc = "" +
 	"\x13GetUserInfoResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12+\n" +
-	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\xdc\x01\n" +
+	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\x94\x02\n" +
 	"\n" +
 	"LLMKeyInfo\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\x12,\n" +
 	"\x12auto_summary_daily\x18\x03 \x01(\bR\x10autoSummaryDaily\x120\n" +
 	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\x129\n" +
-	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\"8\n" +
+	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
+	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabled\"8\n" +
 	"\x13DeleteLLMKeyRequest\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"J\n" +
 	"\x14DeleteLLMKeyResponse\x12\x18\n" +
@@ -1321,26 +1394,28 @@ const file_user_user_proto_rawDesc = "" +
 	"\x14DeleteAccountRequest\"K\n" +
 	"\x15DeleteAccountResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\xe0\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x98\x02\n" +
 	" UpdateAutoSummarySettingsRequest\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12,\n" +
 	"\x12auto_summary_daily\x18\x02 \x01(\bR\x10autoSummaryDaily\x120\n" +
 	"\x14auto_summary_monthly\x18\x03 \x01(\bR\x12autoSummaryMonthly\x129\n" +
-	"\x19auto_latest_trend_enabled\x18\x04 \x01(\bR\x16autoLatestTrendEnabled\"W\n" +
+	"\x19auto_latest_trend_enabled\x18\x04 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
+	"\x17semantic_search_enabled\x18\x05 \x01(\bR\x15semanticSearchEnabled\"W\n" +
 	"!UpdateAutoSummarySettingsResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"B\n" +
 	"\x1dGetAutoSummarySettingsRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xbb\x01\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xf3\x01\n" +
 	"\x1eGetAutoSummarySettingsResponse\x12,\n" +
 	"\x12auto_summary_daily\x18\x01 \x01(\bR\x10autoSummaryDaily\x120\n" +
 	"\x14auto_summary_monthly\x18\x02 \x01(\bR\x12autoSummaryMonthly\x129\n" +
-	"\x19auto_latest_trend_enabled\x18\x03 \x01(\bR\x16autoLatestTrendEnabled\"\x19\n" +
+	"\x19auto_latest_trend_enabled\x18\x03 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
+	"\x17semantic_search_enabled\x18\x04 \x01(\bR\x15semanticSearchEnabled\"\x19\n" +
 	"\x17GetPubSubMetricsRequest\"\xc7\x01\n" +
 	"\x18GetPubSubMetricsResponse\x12:\n" +
 	"\x0ehourly_metrics\x18\x01 \x03(\v2\x13.user.HourlyMetricsR\rhourlyMetrics\x12?\n" +
 	"\x10processing_tasks\x18\x02 \x03(\v2\x14.user.ProcessingTaskR\x0fprocessingTasks\x12.\n" +
-	"\asummary\x18\x03 \x01(\v2\x14.user.MetricsSummaryR\asummary\"\x83\x03\n" +
+	"\asummary\x18\x03 \x01(\v2\x14.user.MetricsSummaryR\asummary\"\xb9\x04\n" +
 	"\rHourlyMetrics\x12\x1c\n" +
 	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12:\n" +
 	"\x19daily_summaries_processed\x18\x02 \x01(\x05R\x17dailySummariesProcessed\x12>\n" +
@@ -1348,12 +1423,16 @@ const file_user_user_proto_rawDesc = "" +
 	"\x16daily_summaries_failed\x18\x04 \x01(\x05R\x14dailySummariesFailed\x128\n" +
 	"\x18monthly_summaries_failed\x18\x05 \x01(\x05R\x16monthlySummariesFailed\x126\n" +
 	"\x17latest_trends_processed\x18\x06 \x01(\x05R\x15latestTrendsProcessed\x120\n" +
-	"\x14latest_trends_failed\x18\a \x01(\x05R\x12latestTrendsFailed\"`\n" +
+	"\x14latest_trends_failed\x18\a \x01(\x05R\x12latestTrendsFailed\x12<\n" +
+	"\x1adiary_embeddings_processed\x18\b \x01(\x05R\x18diaryEmbeddingsProcessed\x126\n" +
+	"\x17diary_embeddings_failed\x18\t \x01(\x05R\x15diaryEmbeddingsFailed\x12>\n" +
+	"\x1bsemantic_searches_processed\x18\n" +
+	" \x01(\x05R\x19semanticSearchesProcessed\"`\n" +
 	"\x0eProcessingTask\x12\x1b\n" +
 	"\ttask_type\x18\x01 \x01(\tR\btaskType\x12\x12\n" +
 	"\x04date\x18\x02 \x01(\tR\x04date\x12\x1d\n" +
 	"\n" +
-	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\xe4\x03\n" +
+	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\xf6\x04\n" +
 	"\x0eMetricsSummary\x122\n" +
 	"\x15total_daily_summaries\x18\x01 \x01(\x05R\x13totalDailySummaries\x126\n" +
 	"\x17total_monthly_summaries\x18\x02 \x01(\x05R\x15totalMonthlySummaries\x126\n" +
@@ -1362,7 +1441,11 @@ const file_user_user_proto_rawDesc = "" +
 	"\x1aauto_summary_daily_enabled\x18\x05 \x01(\bR\x17autoSummaryDailyEnabled\x12?\n" +
 	"\x1cauto_summary_monthly_enabled\x18\x06 \x01(\bR\x19autoSummaryMonthlyEnabled\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\a \x01(\bR\x16autoLatestTrendEnabled\x129\n" +
-	"\x19latest_trend_generated_at\x18\b \x01(\tR\x16latestTrendGeneratedAt2\xe9\x05\n" +
+	"\x19latest_trend_generated_at\x18\b \x01(\tR\x16latestTrendGeneratedAt\x126\n" +
+	"\x17semantic_search_enabled\x18\t \x01(\bR\x15semanticSearchEnabled\x12)\n" +
+	"\x10total_embeddings\x18\n" +
+	" \x01(\x05R\x0ftotalEmbeddings\x12-\n" +
+	"\x12pending_embeddings\x18\v \x01(\x05R\x11pendingEmbeddings2\xe9\x05\n" +
 	"\vUserService\x12K\n" +
 	"\x0eUpdateUserName\x12\x1b.user.UpdateUserNameRequest\x1a\x1c.user.UpdateUserNameResponse\x12K\n" +
 	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12E\n" +

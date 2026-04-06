@@ -19,21 +19,24 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DiaryService_CreateDiaryEntry_FullMethodName       = "/diary.DiaryService/CreateDiaryEntry"
-	DiaryService_UpdateDiaryEntry_FullMethodName       = "/diary.DiaryService/UpdateDiaryEntry"
-	DiaryService_DeleteDiaryEntry_FullMethodName       = "/diary.DiaryService/DeleteDiaryEntry"
-	DiaryService_GetDiaryEntry_FullMethodName          = "/diary.DiaryService/GetDiaryEntry"
-	DiaryService_GetDiaryEntries_FullMethodName        = "/diary.DiaryService/GetDiaryEntries"
-	DiaryService_GetDiaryEntriesByMonth_FullMethodName = "/diary.DiaryService/GetDiaryEntriesByMonth"
-	DiaryService_SearchDiaryEntries_FullMethodName     = "/diary.DiaryService/SearchDiaryEntries"
-	DiaryService_GenerateMonthlySummary_FullMethodName = "/diary.DiaryService/GenerateMonthlySummary"
-	DiaryService_GetMonthlySummary_FullMethodName      = "/diary.DiaryService/GetMonthlySummary"
-	DiaryService_GenerateDailySummary_FullMethodName   = "/diary.DiaryService/GenerateDailySummary"
-	DiaryService_GetDailySummary_FullMethodName        = "/diary.DiaryService/GetDailySummary"
-	DiaryService_GetLatestTrend_FullMethodName         = "/diary.DiaryService/GetLatestTrend"
-	DiaryService_TriggerLatestTrend_FullMethodName     = "/diary.DiaryService/TriggerLatestTrend"
-	DiaryService_TriggerDiaryHighlight_FullMethodName  = "/diary.DiaryService/TriggerDiaryHighlight"
-	DiaryService_GetDiaryHighlight_FullMethodName      = "/diary.DiaryService/GetDiaryHighlight"
+	DiaryService_CreateDiaryEntry_FullMethodName           = "/diary.DiaryService/CreateDiaryEntry"
+	DiaryService_UpdateDiaryEntry_FullMethodName           = "/diary.DiaryService/UpdateDiaryEntry"
+	DiaryService_DeleteDiaryEntry_FullMethodName           = "/diary.DiaryService/DeleteDiaryEntry"
+	DiaryService_GetDiaryEntry_FullMethodName              = "/diary.DiaryService/GetDiaryEntry"
+	DiaryService_GetDiaryEntries_FullMethodName            = "/diary.DiaryService/GetDiaryEntries"
+	DiaryService_GetDiaryEntriesByMonth_FullMethodName     = "/diary.DiaryService/GetDiaryEntriesByMonth"
+	DiaryService_SearchDiaryEntries_FullMethodName         = "/diary.DiaryService/SearchDiaryEntries"
+	DiaryService_GenerateMonthlySummary_FullMethodName     = "/diary.DiaryService/GenerateMonthlySummary"
+	DiaryService_GetMonthlySummary_FullMethodName          = "/diary.DiaryService/GetMonthlySummary"
+	DiaryService_GenerateDailySummary_FullMethodName       = "/diary.DiaryService/GenerateDailySummary"
+	DiaryService_GetDailySummary_FullMethodName            = "/diary.DiaryService/GetDailySummary"
+	DiaryService_GetLatestTrend_FullMethodName             = "/diary.DiaryService/GetLatestTrend"
+	DiaryService_TriggerLatestTrend_FullMethodName         = "/diary.DiaryService/TriggerLatestTrend"
+	DiaryService_SearchDiaryEntriesSemantic_FullMethodName = "/diary.DiaryService/SearchDiaryEntriesSemantic"
+	DiaryService_TriggerDiaryHighlight_FullMethodName      = "/diary.DiaryService/TriggerDiaryHighlight"
+	DiaryService_GetDiaryHighlight_FullMethodName          = "/diary.DiaryService/GetDiaryHighlight"
+	DiaryService_RegenerateAllEmbeddings_FullMethodName    = "/diary.DiaryService/RegenerateAllEmbeddings"
+	DiaryService_GetDiaryEmbeddingStatus_FullMethodName    = "/diary.DiaryService/GetDiaryEmbeddingStatus"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -179,6 +182,18 @@ type DiaryServiceClient interface {
 	//   - PermissionDenied: production環境では使用不可
 	//   - NotFound: LLMキーが設定されていない
 	TriggerLatestTrend(ctx context.Context, in *TriggerLatestTrendRequest, opts ...grpc.CallOption) (*TriggerLatestTrendResponse, error)
+	// SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+	// Gemini Embedding APIを使用してベクトル類似度検索を行います。
+	//
+	// 例:
+	//
+	//	request: { query: "去年の夏に食べたもの", limit: 10 }
+	//	response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
+	//   - InvalidArgument: クエリが空
+	SearchDiaryEntriesSemantic(ctx context.Context, in *SearchDiaryEntriesSemanticRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesSemanticResponse, error)
 	// TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
 	// Redis Pub/Subを通じてSubscriberが処理を実行します。
 	//
@@ -203,6 +218,22 @@ type DiaryServiceClient interface {
 	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryHighlight(ctx context.Context, in *GetDiaryHighlightRequest, opts ...grpc.CallOption) (*GetDiaryHighlightResponse, error)
+	// RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+	// 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+	//
+	// エラー:
+	//   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+	RegenerateAllEmbeddings(ctx context.Context, in *RegenerateAllEmbeddingsRequest, opts ...grpc.CallOption) (*RegenerateAllEmbeddingsResponse, error)
+	// GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+	//
+	// エラー:
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	GetDiaryEmbeddingStatus(ctx context.Context, in *GetDiaryEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetDiaryEmbeddingStatusResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -343,6 +374,16 @@ func (c *diaryServiceClient) TriggerLatestTrend(ctx context.Context, in *Trigger
 	return out, nil
 }
 
+func (c *diaryServiceClient) SearchDiaryEntriesSemantic(ctx context.Context, in *SearchDiaryEntriesSemanticRequest, opts ...grpc.CallOption) (*SearchDiaryEntriesSemanticResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchDiaryEntriesSemanticResponse)
+	err := c.cc.Invoke(ctx, DiaryService_SearchDiaryEntriesSemantic_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *diaryServiceClient) TriggerDiaryHighlight(ctx context.Context, in *TriggerDiaryHighlightRequest, opts ...grpc.CallOption) (*TriggerDiaryHighlightResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TriggerDiaryHighlightResponse)
@@ -357,6 +398,26 @@ func (c *diaryServiceClient) GetDiaryHighlight(ctx context.Context, in *GetDiary
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDiaryHighlightResponse)
 	err := c.cc.Invoke(ctx, DiaryService_GetDiaryHighlight_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) RegenerateAllEmbeddings(ctx context.Context, in *RegenerateAllEmbeddingsRequest, opts ...grpc.CallOption) (*RegenerateAllEmbeddingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegenerateAllEmbeddingsResponse)
+	err := c.cc.Invoke(ctx, DiaryService_RegenerateAllEmbeddings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) GetDiaryEmbeddingStatus(ctx context.Context, in *GetDiaryEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetDiaryEmbeddingStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDiaryEmbeddingStatusResponse)
+	err := c.cc.Invoke(ctx, DiaryService_GetDiaryEmbeddingStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -506,6 +567,18 @@ type DiaryServiceServer interface {
 	//   - PermissionDenied: production環境では使用不可
 	//   - NotFound: LLMキーが設定されていない
 	TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error)
+	// SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+	// Gemini Embedding APIを使用してベクトル類似度検索を行います。
+	//
+	// 例:
+	//
+	//	request: { query: "去年の夏に食べたもの", limit: 10 }
+	//	response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+	//
+	// エラー:
+	//   - NotFound: LLMキーが設定されていない
+	//   - InvalidArgument: クエリが空
+	SearchDiaryEntriesSemantic(context.Context, *SearchDiaryEntriesSemanticRequest) (*SearchDiaryEntriesSemanticResponse, error)
 	// TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
 	// Redis Pub/Subを通じてSubscriberが処理を実行します。
 	//
@@ -530,6 +603,22 @@ type DiaryServiceServer interface {
 	//   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error)
+	// RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+	// 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+	//
+	// エラー:
+	//   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+	RegenerateAllEmbeddings(context.Context, *RegenerateAllEmbeddingsRequest) (*RegenerateAllEmbeddingsResponse, error)
+	// GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+	//
+	// 例:
+	//
+	//	request: { diary_id: "uuid" }
+	//	response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+	//
+	// エラー:
+	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	GetDiaryEmbeddingStatus(context.Context, *GetDiaryEmbeddingStatusRequest) (*GetDiaryEmbeddingStatusResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -579,11 +668,20 @@ func (UnimplementedDiaryServiceServer) GetLatestTrend(context.Context, *GetLates
 func (UnimplementedDiaryServiceServer) TriggerLatestTrend(context.Context, *TriggerLatestTrendRequest) (*TriggerLatestTrendResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method TriggerLatestTrend not implemented")
 }
+func (UnimplementedDiaryServiceServer) SearchDiaryEntriesSemantic(context.Context, *SearchDiaryEntriesSemanticRequest) (*SearchDiaryEntriesSemanticResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchDiaryEntriesSemantic not implemented")
+}
 func (UnimplementedDiaryServiceServer) TriggerDiaryHighlight(context.Context, *TriggerDiaryHighlightRequest) (*TriggerDiaryHighlightResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method TriggerDiaryHighlight not implemented")
 }
 func (UnimplementedDiaryServiceServer) GetDiaryHighlight(context.Context, *GetDiaryHighlightRequest) (*GetDiaryHighlightResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDiaryHighlight not implemented")
+}
+func (UnimplementedDiaryServiceServer) RegenerateAllEmbeddings(context.Context, *RegenerateAllEmbeddingsRequest) (*RegenerateAllEmbeddingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RegenerateAllEmbeddings not implemented")
+}
+func (UnimplementedDiaryServiceServer) GetDiaryEmbeddingStatus(context.Context, *GetDiaryEmbeddingStatusRequest) (*GetDiaryEmbeddingStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetDiaryEmbeddingStatus not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -840,6 +938,24 @@ func _DiaryService_TriggerLatestTrend_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_SearchDiaryEntriesSemantic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchDiaryEntriesSemanticRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).SearchDiaryEntriesSemantic(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_SearchDiaryEntriesSemantic_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).SearchDiaryEntriesSemantic(ctx, req.(*SearchDiaryEntriesSemanticRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DiaryService_TriggerDiaryHighlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TriggerDiaryHighlightRequest)
 	if err := dec(in); err != nil {
@@ -872,6 +988,42 @@ func _DiaryService_GetDiaryHighlight_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DiaryServiceServer).GetDiaryHighlight(ctx, req.(*GetDiaryHighlightRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_RegenerateAllEmbeddings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegenerateAllEmbeddingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).RegenerateAllEmbeddings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_RegenerateAllEmbeddings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).RegenerateAllEmbeddings(ctx, req.(*RegenerateAllEmbeddingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiaryService_GetDiaryEmbeddingStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiaryEmbeddingStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).GetDiaryEmbeddingStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_GetDiaryEmbeddingStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).GetDiaryEmbeddingStatus(ctx, req.(*GetDiaryEmbeddingStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -936,12 +1088,24 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DiaryService_TriggerLatestTrend_Handler,
 		},
 		{
+			MethodName: "SearchDiaryEntriesSemantic",
+			Handler:    _DiaryService_SearchDiaryEntriesSemantic_Handler,
+		},
+		{
 			MethodName: "TriggerDiaryHighlight",
 			Handler:    _DiaryService_TriggerDiaryHighlight_Handler,
 		},
 		{
 			MethodName: "GetDiaryHighlight",
 			Handler:    _DiaryService_GetDiaryHighlight_Handler,
+		},
+		{
+			MethodName: "RegenerateAllEmbeddings",
+			Handler:    _DiaryService_RegenerateAllEmbeddings_Handler,
+		},
+		{
+			MethodName: "GetDiaryEmbeddingStatus",
+			Handler:    _DiaryService_GetDiaryEmbeddingStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

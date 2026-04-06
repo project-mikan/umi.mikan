@@ -144,6 +144,18 @@ service DiaryService {
   //   - NotFound: LLMキーが設定されていない
   rpc TriggerLatestTrend(TriggerLatestTrendRequest) returns (TriggerLatestTrendResponse);
 
+  // SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+  // Gemini Embedding APIを使用してベクトル類似度検索を行います。
+  //
+  // 例:
+  //   request: { query: "去年の夏に食べたもの", limit: 10 }
+  //   response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+  //
+  // エラー:
+  //   - NotFound: LLMキーが設定されていない
+  //   - InvalidArgument: クエリが空
+  rpc SearchDiaryEntriesSemantic(SearchDiaryEntriesSemanticRequest) returns (SearchDiaryEntriesSemanticResponse);
+
   // TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
   // Redis Pub/Subを通じてSubscriberが処理を実行します。
   //
@@ -167,6 +179,23 @@ service DiaryService {
   //   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
   //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
   rpc GetDiaryHighlight(GetDiaryHighlightRequest) returns (GetDiaryHighlightResponse);
+
+  // RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+  // 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+  //
+  // エラー:
+  //   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+  rpc RegenerateAllEmbeddings(RegenerateAllEmbeddingsRequest) returns (RegenerateAllEmbeddingsResponse);
+
+  // GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+  //
+  // 例:
+  //   request: { diary_id: "uuid" }
+  //   response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+  //
+  // エラー:
+  //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+  rpc GetDiaryEmbeddingStatus(GetDiaryEmbeddingStatusRequest) returns (GetDiaryEmbeddingStatusResponse);
 }
 
 message YMD {
@@ -267,6 +296,7 @@ message MonthlySummary {
   string summary = 3;
   int64 created_at = 4;
   int64 updated_at = 5;
+  string model_version = 6; // サマリー生成に使用したLLMモデル
 }
 
 // 月ごとのサマリー生成リクエスト
@@ -297,6 +327,7 @@ message DailySummary {
   string summary = 4;
   int64 created_at = 5;
   int64 updated_at = 6;
+  string model_version = 7; // サマリー生成に使用したLLMモデル
 }
 
 // 日ごとのサマリー生成リクエスト
@@ -334,6 +365,7 @@ message GetLatestTrendResponse {
   string period_start = 6; // 分析期間開始（ISO 8601形式）
   string period_end = 7; // 分析期間終了（ISO 8601形式）
   string generated_at = 8; // 生成日時（ISO 8601形式）
+  string model_version = 9; // トレンド生成に使用したLLMモデル
 }
 
 // 直近トレンド分析生成トリガーリクエスト（デバッグ用）
@@ -345,6 +377,30 @@ message TriggerLatestTrendRequest {
 message TriggerLatestTrendResponse {
   bool success = 1; // 成功フラグ
   string message = 2; // メッセージ
+}
+
+// 意味的検索リクエスト
+message SearchDiaryEntriesSemanticRequest {
+  string query = 1;  // 自然言語クエリ
+  int32 limit = 2;   // 上位何件返すか (default: 10, max: 50)
+  // user_id は認証情報から取得
+}
+
+// 意味的検索の1件分の結果
+message SemanticSearchResult {
+  string diary_id = 1;
+  YMD date = 2;
+  string snippet = 3;       // クエリに関連する抜粋（最大200文字）
+  float similarity = 4;     // コサイン類似度スコア (0.0〜1.0)
+  string chunk_summary = 5; // マッチしたチャンクの概要（1〜2文）
+  int32 chunk_count = 6;    // 日記内のチャンク総数
+}
+
+// 意味的検索レスポンス
+message SearchDiaryEntriesSemanticResponse {
+  repeated SemanticSearchResult results = 1;
+  string embedding_model = 2;  // クエリのembedding生成に使用したモデル（例: gemini-embedding-001）
+  string chunk_model = 3;      // チャンク分割に使用したLLMモデル（例: gemini-2.5-flash-lite）
 }
 
 // 日記ハイライト生成トリガーリクエスト
@@ -377,4 +433,33 @@ message GetDiaryHighlightResponse {
   repeated HighlightRange highlights = 1; // ハイライトリスト
   int64 created_at = 2; // 作成日時（Unix timestamp）
   int64 updated_at = 3; // 更新日時（Unix timestamp）
+}
+
+// 全日記のembedding再生成リクエスト
+message RegenerateAllEmbeddingsRequest {
+  // 空のリクエスト（認証はヘッダーから）
+}
+
+// 全日記のembedding再生成レスポンス
+message RegenerateAllEmbeddingsResponse {
+  bool success = 1;
+  int32 queued_count = 2; // キューに追加した日記数
+}
+
+// 日記のRAGインデックス状態取得リクエスト
+message GetDiaryEmbeddingStatusRequest {
+  string diary_id = 1; // 日記ID
+}
+
+// 日記のRAGインデックス状態取得レスポンス
+message GetDiaryEmbeddingStatusResponse {
+  bool indexed = 1;                    // インデックス済みかどうか
+  string model_version = 2;            // embedding生成に使用したモデル
+  int64 created_at = 3;                // 埋め込み作成日時（Unix timestamp）
+  int64 updated_at = 4;                // 埋め込み更新日時（Unix timestamp）
+  repeated float embedding_values = 5; // ベクトル値プレビュー（先頭10件のみ、表示用）
+  string chunk_model_version = 6;      // チャンク分割に使用したLLMモデル
+  int32 chunk_count = 7;               // チャンク総数
+  repeated string chunk_summaries = 8; // 各チャンクの概要（chunk_index順）
+  int32 embedding_dimensions = 9;      // ベクトルの総次元数（embedding_valuesは先頭10件のみのため別フィールドで提供）
 }

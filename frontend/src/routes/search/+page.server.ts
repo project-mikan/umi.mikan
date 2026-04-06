@@ -1,44 +1,60 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { searchDiaryEntries } from "$lib/server/diary-api.js";
+import {
+	searchDiaryEntries,
+	searchDiaryEntriesSemantic,
+} from "$lib/server/diary-api.js";
+import { getUserInfo } from "$lib/server/auth-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const keyword = url.searchParams.get("q") || "";
+	const mode = url.searchParams.get("mode") || "keyword";
 	const authResult = await ensureValidAccessToken(cookies);
 
 	if (!authResult.isAuthenticated || !authResult.accessToken) {
 		throw redirect(302, "/login");
 	}
 
-	if (!keyword) {
-		return {
-			searchResults: null,
-			keyword: "",
-			expandedKeywords: [] as string[],
-		};
-	}
+	// getUserInfo と検索クエリを並列で発火（キーワードがある場合）
+	const userInfoPromise = getUserInfo({
+		accessToken: authResult.accessToken,
+	}).catch(() => null);
 
-	try {
-		const searchResponse = await searchDiaryEntries({
-			keyword: keyword,
-			accessToken: authResult.accessToken,
-		});
+	const keywordPromise =
+		keyword && mode !== "semantic"
+			? searchDiaryEntries({
+					keyword,
+					accessToken: authResult.accessToken,
+				}).catch(() => null)
+			: Promise.resolve(null);
 
-		return {
-			searchResults: searchResponse,
-			keyword: keyword,
-			expandedKeywords: searchResponse.expandedKeywords ?? [],
-		};
-	} catch (err) {
-		console.error("Search error:", err);
-		return {
-			searchResults: null,
-			keyword: keyword,
-			expandedKeywords: [] as string[],
-			error: "Failed to search diary entries",
-		};
-	}
+	const semanticPromise =
+		keyword && mode === "semantic"
+			? searchDiaryEntriesSemantic({
+					query: keyword,
+					limit: 10,
+					accessToken: authResult.accessToken,
+				}).catch(() => null)
+			: Promise.resolve(null);
+
+	const [userInfo, keywordResponse, semanticResponse] = await Promise.all([
+		userInfoPromise,
+		keywordPromise,
+		semanticPromise,
+	]);
+
+	const geminiKey = userInfo?.llmKeys?.find((k) => k.llmProvider === 1);
+	const semanticSearchEnabled = geminiKey?.semanticSearchEnabled ?? false;
+
+	return {
+		searchResults: keywordResponse,
+		semanticResults: semanticResponse,
+		keyword,
+		expandedKeywords: keywordResponse?.expandedKeywords ?? [],
+		mode,
+		semanticSearchEnabled,
+	};
 };
 
 export const actions: Actions = {

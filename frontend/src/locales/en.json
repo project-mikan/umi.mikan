@@ -92,6 +92,12 @@
 			"description": "Automatically generate summaries for diary entries over 1000 characters.",
 			"dailyLabel": "Enable daily auto summary",
 			"monthlyLabel": "Enable monthly auto summary",
+			"semanticSearchLabel": "Enable natural language search (semantic search)",
+			"semanticSearchDescription": "Analyzes diary content with AI to enable meaning and context-based search. Today's diary will be indexed the following morning; past diaries are indexed automatically when saved.",
+			"regenerateEmbeddingsDescription": "Diaries created before enabling semantic search are not indexed. Use the button below to queue all unindexed diaries.",
+			"regenerateEmbeddingsButton": "Index all unindexed diaries",
+			"regenerateEmbeddingsSuccess": "Queued {count} diaries. Please wait.",
+			"regenerateEmbeddingsFailed": "Bulk indexing failed.",
 			"save": "Save settings"
 		},
 		"deleteToken": {
@@ -205,6 +211,8 @@
 			"statusQueued": "Summary generation has been queued. Please wait a moment.",
 			"statusProcessing": "Summary is being generated. Please wait a moment."
 		},
+		"searchHighlightBanner": "Searching for \"{keyword}\"",
+		"searchHighlightClear": "Clear",
 		"noEntry": "'s diary is not available.",
 		"yesterdayNoEntry": "Yesterday's diary is not available.",
 		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
@@ -244,6 +252,18 @@
 			"statusProcessing": "Generating highlights. Please wait",
 			"contentTooShort": "At least 500 characters are required for highlight generation",
 			"apiKeyNotConfigured": "Gemini API key is not configured. Please register it in the settings page"
+		},
+		"embedding": {
+			"indexed": "Semantic search: Indexed",
+			"notIndexed": "Semantic search: Not indexed",
+			"indexedAt": "Indexed at",
+			"updatedAt": "Last updated at",
+			"modelVersion": "Model",
+			"dimensions": "Dimensions",
+			"vectorPreview": "Vector values (first 10)",
+			"chunkCount": "Chunks",
+			"chunkSummaries": "Chunk list",
+			"chunkSummaryEmpty": "(no summary)"
 		}
 	},
 	"date": {
@@ -330,15 +350,29 @@
 	"search": {
 		"title": "Diary search",
 		"placeholder": "Enter search keywords...",
+		"placeholderSemantic": "Search in natural language (e.g., food I ate last summer)",
 		"button": "Search",
+		"modeKeyword": "Keyword search",
+		"modeSemantic": "Semantic search",
+		"semanticDescription": "Search by meaning and context using Gemini AI (API key required)",
 		"results": "search results for",
+		"semanticResults": "semantic search results for",
 		"resultCount": "results",
+		"similarity": "Relevance",
+		"embeddingModel": "Embedding model",
+		"chunkModel": "Split model",
 		"noResults": "No search results found.",
 		"noResultsHint": "Try searching with different keywords.",
+		"semanticNoResultsHint": "Try different wording or use keyword search.",
 		"searching": "Searching...",
 		"enterKeyword": "Enter search keywords to search.",
 		"backToList": "Back to diary list",
-		"expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}"
+		"expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}",
+		"error": {
+			"searchFailed": "Search failed.",
+			"semanticSearchFailed": "Semantic search failed. Please check if your Gemini API key is configured."
+		},
+		"chunkCount": "{count} chunks"
 	},
 	"monthly": {
 		"thisMonth": "This month",
@@ -426,15 +460,58 @@
 			"processedCount": "Processed Count",
 			"dailySummaries": "Daily Summaries",
 			"monthlySummaries": "Monthly Summaries",
+			"diaryEmbeddings": "Embedding Generation",
+			"semanticSearches": "Semantic Searches",
 			"dailySummary": "Daily Summary",
 			"monthlySummary": "Monthly Summary",
 			"latestTrend": "Trend Analysis",
 			"startedAt": "Started at",
+			"ragTitle": "Natural Language Search (RAG) Status",
+			"totalEmbeddings": "Generated embeddings",
+			"pendingEmbeddings": "Pending embeddings",
+			"ragPendingNote": "Pending diary entries will be indexed automatically the next time they are saved.",
+			"ragRegenerateButton": "Index all pending entries",
+			"ragRegenerateSuccess": "Queued {count} entries. Indexes will be generated in the background.",
+			"ragRegenerateFailed": "Failed to queue index generation.",
+			"ragDisabledNote": "Register a Gemini API key in settings and enable natural language search to see the status here.",
 			"aboutTitle": "About LLM Processing",
 			"aboutDescription": "This page shows the status of automated summary processing by AI (Gemini).",
 			"dailySummaryExplanation": "Daily Summary: Automatically generated summaries for diary entries over 1000 characters",
 			"monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from daily summaries",
 			"processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
+		},
+		"ragDiagram": {
+			"title": "How RAG Works",
+			"asyncBadge": "Async",
+			"syncBadge": "Sync",
+			"indexingTitle": "Indexing Flow",
+			"searchTitle": "Semantic Search Flow",
+			"step": {
+				"diaryText": "Diary Text",
+				"toPlainText": "Convert to Plain Text",
+				"splitByTopic": "Split by Topic",
+				"enrichWithDate": "Add Date Context",
+				"vectorizeDocument": "Vectorize",
+				"saveToVectorDb": "Save to Vector DB",
+				"naturalLanguageQuery": "Natural Language Query",
+				"vectorizeQuery": "Vectorize Query",
+				"searchSimilarChunks": "Search Similar Chunks",
+				"keywordFallback": "Keyword Fallback",
+				"returnWithSummary": "Return with Summary"
+			},
+			"subLabel": {
+				"markdownFormat": "Markdown format",
+				"removeMarkdown": "Strip code blocks, bold, etc.",
+				"llmSplitWithSummary": "LLM splits by topic/event\nGenerates 1-sentence summary per chunk",
+				"datePrefix": "Prepend \"YYYY-MM-DD diary:\" for context",
+				"retrievalDocument": "RETRIEVAL_DOCUMENT\n3072 dims",
+				"hnswStorage": "halfvec(3072) / HNSW",
+				"queryExample": "e.g. food I ate last summer",
+				"retrievalQuery": "RETRIEVAL_QUERY\n3072 dims",
+				"cosineSimilarity": "Cosine similarity\nthreshold ≥ 0.3",
+				"properNounFallback": "Fallback for proper nouns",
+				"withScore": "With similarity score & summary"
+			}
 		}
 	},
 	"budoux": {
@@ -509,5 +586,8 @@
 			"title": "About This Page",
 			"description": "This page is only displayed in the development environment. It will not be shown in production."
 		}
+	},
+	"summary": {
+		"modelVersion": "Model"
 	}
 }

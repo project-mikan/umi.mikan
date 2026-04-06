@@ -23,6 +23,8 @@ import {
 	type GetMonthlySummaryResponse,
 	SearchDiaryEntriesRequestSchema,
 	type SearchDiaryEntriesResponse,
+	SearchDiaryEntriesSemanticRequestSchema,
+	type SearchDiaryEntriesSemanticResponse,
 	TriggerLatestTrendRequestSchema,
 	type TriggerLatestTrendResponse,
 	UpdateDiaryEntryRequestSchema,
@@ -35,18 +37,22 @@ import {
 	type TriggerDiaryHighlightResponse,
 	GetDiaryHighlightRequestSchema,
 	type GetDiaryHighlightResponse,
+	RegenerateAllEmbeddingsRequestSchema,
+	type RegenerateAllEmbeddingsResponse,
+	GetDiaryEmbeddingStatusRequestSchema,
+	type GetDiaryEmbeddingStatusResponse,
 } from "$lib/grpc/diary/diary_pb";
 
-function createAuthenticatedTransport(accessToken: string) {
-	return createGrpcTransport({
-		baseUrl: "http://backend:8080",
-		interceptors: [
-			(next) => (req) => {
-				req.header.set("authorization", `Bearer ${accessToken}`);
-				return next(req);
-			},
-		],
-	});
+// モジュールレベルで Transport と Client を共有する（リクエストごとの生成コストを排除）
+// 認証ヘッダは各 RPC 呼び出し時に CallOptions として個別に付与する
+const transport = createGrpcTransport({
+	baseUrl: "http://backend:8080",
+});
+
+const diaryClient = createClient(DiaryService, transport);
+
+function authHeader(accessToken: string) {
+	return { headers: { authorization: `Bearer ${accessToken}` } };
 }
 
 export interface CreateDiaryEntryParams {
@@ -96,49 +102,46 @@ export interface GetMonthlySummaryParams {
 export async function createDiaryEntry(
 	params: CreateDiaryEntryParams,
 ): Promise<CreateDiaryEntryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(CreateDiaryEntryRequestSchema, {
 		content: params.content,
 		date: params.date,
 	});
 
-	return await client.createDiaryEntry(request);
+	return await diaryClient.createDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDiaryEntry(
 	params: GetDiaryEntryParams,
 ): Promise<GetDiaryEntryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GetDiaryEntryRequestSchema, {
 		date: params.date,
 	});
 
-	return await client.getDiaryEntry(request);
+	return await diaryClient.getDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDiaryEntriesByMonth(
 	params: GetDiaryEntriesByMonthParams,
 ): Promise<GetDiaryEntriesByMonthResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GetDiaryEntriesByMonthRequestSchema, {
 		month: params.month,
 	});
 
-	return await client.getDiaryEntriesByMonth(request);
+	return await diaryClient.getDiaryEntriesByMonth(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function updateDiaryEntry(
 	params: UpdateDiaryEntryParams,
 ): Promise<UpdateDiaryEntryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(UpdateDiaryEntryRequestSchema, {
 		id: params.id,
 		title: params.title,
@@ -146,20 +149,23 @@ export async function updateDiaryEntry(
 		date: params.date,
 	});
 
-	return await client.updateDiaryEntry(request);
+	return await diaryClient.updateDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function deleteDiaryEntry(
 	params: DeleteDiaryEntryParams,
 ): Promise<DeleteDiaryEntryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(DeleteDiaryEntryRequestSchema, {
 		id: params.id,
 	});
 
-	return await client.deleteDiaryEntry(request);
+	return await diaryClient.deleteDiaryEntry(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export function createYMD(year: number, month: number, day: number): YMD {
@@ -173,40 +179,40 @@ export function createYM(year: number, month: number): YM {
 export async function searchDiaryEntries(
 	params: SearchDiaryEntriesParams,
 ): Promise<SearchDiaryEntriesResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(SearchDiaryEntriesRequestSchema, {
 		keyword: params.keyword,
 	});
 
-	return await client.searchDiaryEntries(request);
+	return await diaryClient.searchDiaryEntries(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function generateMonthlySummary(
 	params: GenerateMonthlySummaryParams,
 ): Promise<GenerateMonthlySummaryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GenerateMonthlySummaryRequestSchema, {
 		month: params.month,
 	});
 
-	return await client.generateMonthlySummary(request);
+	return await diaryClient.generateMonthlySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getMonthlySummary(
 	params: GetMonthlySummaryParams,
 ): Promise<GetMonthlySummaryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GetMonthlySummaryRequestSchema, {
 		month: params.month,
 	});
 
-	return await client.getMonthlySummary(request);
+	return await diaryClient.getMonthlySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface GenerateDailySummaryParams {
@@ -222,27 +228,27 @@ export interface GetDailySummaryParams {
 export async function generateDailySummary(
 	params: GenerateDailySummaryParams,
 ): Promise<GenerateDailySummaryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GenerateDailySummaryRequestSchema, {
 		diaryId: params.diaryId,
 	});
 
-	return await client.generateDailySummary(request);
+	return await diaryClient.generateDailySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDailySummary(
 	params: GetDailySummaryParams,
 ): Promise<GetDailySummaryResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GetDailySummaryRequestSchema, {
 		date: params.date,
 	});
 
-	return await client.getDailySummary(request);
+	return await diaryClient.getDailySummary(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface GetLatestTrendParams {
@@ -256,23 +262,23 @@ export interface TriggerLatestTrendParams {
 export async function getLatestTrend(
 	params: GetLatestTrendParams,
 ): Promise<GetLatestTrendResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GetLatestTrendRequestSchema, {});
 
-	return await client.getLatestTrend(request);
+	return await diaryClient.getLatestTrend(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function triggerLatestTrend(
 	params: TriggerLatestTrendParams,
 ): Promise<TriggerLatestTrendResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(TriggerLatestTrendRequestSchema, {});
 
-	return await client.triggerLatestTrend(request);
+	return await diaryClient.triggerLatestTrend(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export interface TriggerDiaryHighlightParams {
@@ -288,25 +294,76 @@ export interface GetDiaryHighlightParams {
 export async function triggerDiaryHighlight(
 	params: TriggerDiaryHighlightParams,
 ): Promise<TriggerDiaryHighlightResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(TriggerDiaryHighlightRequestSchema, {
 		diaryId: params.diaryId,
 	});
 
-	return await client.triggerDiaryHighlight(request);
+	return await diaryClient.triggerDiaryHighlight(
+		request,
+		authHeader(params.accessToken),
+	);
 }
 
 export async function getDiaryHighlight(
 	params: GetDiaryHighlightParams,
 ): Promise<GetDiaryHighlightResponse> {
-	const transport = createAuthenticatedTransport(params.accessToken);
-	const client = createClient(DiaryService, transport);
-
 	const request = create(GetDiaryHighlightRequestSchema, {
 		diaryId: params.diaryId,
 	});
 
-	return await client.getDiaryHighlight(request);
+	return await diaryClient.getDiaryHighlight(
+		request,
+		authHeader(params.accessToken),
+	);
+}
+
+export interface SearchDiaryEntriesSemanticParams {
+	query: string;
+	limit?: number;
+	accessToken: string;
+}
+
+export async function searchDiaryEntriesSemantic(
+	params: SearchDiaryEntriesSemanticParams,
+): Promise<SearchDiaryEntriesSemanticResponse> {
+	const request = create(SearchDiaryEntriesSemanticRequestSchema, {
+		query: params.query,
+		limit: params.limit ?? 10,
+	});
+
+	return await diaryClient.searchDiaryEntriesSemantic(
+		request,
+		authHeader(params.accessToken),
+	);
+}
+
+export interface RegenerateAllEmbeddingsParams {
+	accessToken: string;
+}
+
+export async function regenerateAllEmbeddings(
+	params: RegenerateAllEmbeddingsParams,
+): Promise<RegenerateAllEmbeddingsResponse> {
+	const request = create(RegenerateAllEmbeddingsRequestSchema, {});
+	return await diaryClient.regenerateAllEmbeddings(
+		request,
+		authHeader(params.accessToken),
+	);
+}
+
+export interface GetDiaryEmbeddingStatusParams {
+	diaryId: string;
+	accessToken: string;
+}
+
+export async function getDiaryEmbeddingStatus(
+	params: GetDiaryEmbeddingStatusParams,
+): Promise<GetDiaryEmbeddingStatusResponse> {
+	const request = create(GetDiaryEmbeddingStatusRequestSchema, {
+		diaryId: params.diaryId,
+	});
+	return await diaryClient.getDiaryEmbeddingStatus(
+		request,
+		authHeader(params.accessToken),
+	);
 }

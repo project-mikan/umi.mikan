@@ -2,10 +2,27 @@ package llm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"google.golang.org/genai"
 )
+
+const (
+	// ModelGenerateContent テキスト生成に使用するモデル
+	ModelGenerateContent = "gemini-2.5-flash-lite"
+	// ModelEmbedding embedding生成に使用するモデル
+	ModelEmbedding = "gemini-embedding-001"
+)
+
+// DiaryChunkData はLLMが生成したチャンクの内容と概要を保持する
+type DiaryChunkData struct {
+	// Content チャンクの元テキスト（ベクトル化対象）
+	Content string `json:"content"`
+	// Summary チャンクの概要（1文の短い説明、検索結果表示用）
+	Summary string `json:"summary"`
+}
 
 type GeminiClient struct {
 	client *genai.Client
@@ -34,6 +51,7 @@ func (g *GeminiClient) GenerateSummary(ctx context.Context, diaryContent string)
 サマリーは以下の要件を満たしてください：
 - Markdownは非対応
 - 冒頭に箇条書きで特筆すべき日付と内容を最大3つ挙げる(箇条書きは「n日：」で始める。月は不要)
+- 箇条書きは必ず日付の小さい順（昇順）に並べること
 - 次にその月全体の傾向を300文字以内で簡潔にまとめる
 
 形式は以下の通りにしてください：
@@ -51,7 +69,12 @@ n日：箇条書き3
 
 	contents := genai.Text(prompt)
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+	zero := float32(0)
+	config := &genai.GenerateContentConfig{
+		Temperature: &zero,
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -92,7 +115,12 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 
 	contents := genai.Text(prompt)
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+	zero := float32(0)
+	config := &genai.GenerateContentConfig{
+		Temperature: &zero,
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -234,7 +262,7 @@ activities（活動・行動）:
 		ResponseSchema:   schema,
 	}
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, config)
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -249,6 +277,117 @@ activities（活動・行動）:
 	}
 
 	return "", fmt.Errorf("unexpected content type")
+}
+
+// GenerateEmbedding はテキストのベクトル埋め込みを生成する
+// isDocument=true の場合はドキュメント用、false の場合はクエリ用のタスクタイプを使用
+func (g *GeminiClient) GenerateEmbedding(ctx context.Context, text string, isDocument bool) ([]float32, error) {
+	// TaskTypeは文字列: "RETRIEVAL_DOCUMENT" または "RETRIEVAL_QUERY"
+	taskType := "RETRIEVAL_QUERY"
+	if isDocument {
+		taskType = "RETRIEVAL_DOCUMENT"
+	}
+
+	// gemini-embedding-001 のネイティブ次元（MRL削減なし）で最高精度を得る
+	outputDim := int32(3072)
+	config := &genai.EmbedContentConfig{
+		TaskType:             taskType,
+		OutputDimensionality: &outputDim,
+	}
+
+	// genai.Text() は []*Content を返す
+	result, err := g.client.Models.EmbedContent(ctx, ModelEmbedding, genai.Text(text), config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate embedding: %w", err)
+	}
+
+	if len(result.Embeddings) == 0 {
+		return nil, fmt.Errorf("no embeddings returned")
+	}
+
+	return result.Embeddings[0].Values, nil
+}
+
+// SplitDiaryIntoChunks は日記の内容を話題ごとのチャンクに分割し、各チャンクの概要も生成する
+// 各チャンクは意味的に自己完結したテキストで、ベクトル検索の精度向上に使用する
+// LLMの呼び出しに失敗した場合はエラーを返す（呼び出し元でフォールバック処理を行う）
+func (g *GeminiClient) SplitDiaryIntoChunks(ctx context.Context, content string) ([]DiaryChunkData, error) {
+	prompt := fmt.Sprintf(`以下の日記を、話題・場面の切れ目で分割してください。
+
+【分割ルール（必ず守ること）】
+1. 段落（空行で区切られた段落）を基本単位とする
+2. 同じ段落が複数の話題を含む場合のみ、文単位でさらに分割する
+3. 連続する段落が同じ話題・場面を扱っている場合は、1つのチャンクにまとめる
+4. 日記全体が1つの話題・場面のみの場合は、必ず1チャンクにまとめる
+5. チャンク数の目安: 段落数と同数か、それより少ない数になるはず
+6. contentは元の日記の文章をそのまま使う（要約・改変・省略禁止）
+7. チャンク間で内容が重複しないようにする
+8. summaryはそのチャンクの内容を1文で簡潔にまとめた日本語（句点「。」で終わる）
+
+日記:
+%s`, content)
+
+	contents := genai.Text(prompt)
+
+	// JSON出力を強制するためのスキーマを設定
+	zero := float32(0)
+	schema := &genai.Schema{
+		Type: genai.TypeArray,
+		Items: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
+				"content": {
+					Type:        genai.TypeString,
+					Description: "元の日記テキストをそのまま使ったチャンク本文",
+				},
+				"summary": {
+					Type:        genai.TypeString,
+					Description: "チャンクの内容を1文で簡潔にまとめた日本語（句点「。」で終わる）",
+				},
+			},
+			Required: []string{"content", "summary"},
+		},
+	}
+	config := &genai.GenerateContentConfig{
+		Temperature:      &zero,
+		ResponseMIMEType: "application/json",
+		ResponseSchema:   schema,
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to split diary into chunks: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+		return nil, fmt.Errorf("no content returned from chunk splitting")
+	}
+
+	textPart := resp.Candidates[0].Content.Parts[0]
+	if textPart == nil {
+		return nil, fmt.Errorf("nil content part returned from chunk splitting")
+	}
+
+	var chunks []DiaryChunkData
+	if err := json.Unmarshal([]byte(textPart.Text), &chunks); err != nil {
+		return nil, fmt.Errorf("failed to parse chunk splitting response as JSON: %w", err)
+	}
+
+	// 空のチャンクを除去
+	result := make([]DiaryChunkData, 0, len(chunks))
+	for _, c := range chunks {
+		if trimmed := strings.TrimSpace(c.Content); trimmed != "" {
+			result = append(result, DiaryChunkData{
+				Content: trimmed,
+				Summary: strings.TrimSpace(c.Summary),
+			})
+		}
+	}
+	if len(result) == 0 {
+		return nil, fmt.Errorf("no valid chunks returned from chunk splitting")
+	}
+
+	return result, nil
 }
 
 func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent string) (string, error) {
@@ -313,12 +452,14 @@ func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent stri
 		},
 	}
 
+	zero := float32(0)
 	config := &genai.GenerateContentConfig{
+		Temperature:      &zero,
 		ResponseMIMEType: "application/json",
 		ResponseSchema:   schema,
 	}
 
-	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, config)
+	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}

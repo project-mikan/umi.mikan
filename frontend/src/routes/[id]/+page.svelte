@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms";
 	import { goto, invalidateAll } from "$app/navigation";
 	import { beforeNavigate } from "$app/navigation";
+	import { page } from "$app/stores";
 	import { onMount } from "svelte";
 	import "$lib/i18n";
 	import Button from "$lib/components/atoms/Button.svelte";
@@ -69,6 +70,15 @@
 	// ハイライトデータ
 	let highlightData: HighlightData | null = null;
 	let highlightVisible = true; // ハイライトの表示・非表示状態
+	let embeddingDetailOpen = false; // vectorの詳細表示トグル
+
+	// 検索ハイライト（URLの?searchパラメータから取得）
+	$: searchKeyword = $page.url.searchParams.get("search") ?? "";
+
+	// 検索ハイライトをクリア
+	function _clearSearchHighlight() {
+		goto($page.url.pathname, { replaceState: true });
+	}
 
 	// Textareaに渡すハイライトデータ（表示・非表示を反映）
 	// 配列の参照を毎回変更してTextareaのリアクティビティを確実にトリガー
@@ -449,6 +459,25 @@ use:enhance={createSubmitHandler(
 					/>
 				{/if}
 
+				<!-- 検索ハイライトバナー -->
+				{#if searchKeyword}
+					<div class="flex items-center gap-2 px-3 py-2 mb-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-md text-sm">
+						<svg class="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+						</svg>
+						<span class="text-orange-800 dark:text-orange-200 flex-1">
+							{$_("diary.searchHighlightBanner", { values: { keyword: searchKeyword } })}
+						</span>
+						<button
+							type="button"
+							on:click={_clearSearchHighlight}
+							class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200 font-medium"
+						>
+							{$_("diary.searchHighlightClear")}
+						</button>
+					</div>
+				{/if}
+
 				<FormField
 					type="textarea"
 					label=""
@@ -457,6 +486,7 @@ use:enhance={createSubmitHandler(
 					placeholder={$_("diary.placeholder")}
 					rows={8}
 					diaryHighlights={displayedHighlights}
+					{searchKeyword}
 					bind:value={content}
 					on:save={_handleSave}
 					on:autosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
@@ -482,6 +512,85 @@ use:enhance={createSubmitHandler(
 						</span>
 					{/if}
 				</div>
+
+				<!-- RAGインデックス状態 -->
+				{#if data.semanticSearchEnabled && data.entry}
+					<div class="mt-2 text-xs">
+						<div class="flex items-center gap-2">
+							{#if data.embeddingStatus?.indexed}
+								<button
+									type="button"
+									class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors cursor-pointer"
+									on:click={() => (embeddingDetailOpen = !embeddingDetailOpen)}
+								>
+									<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+									</svg>
+									{$_("diary.embedding.indexed")}
+									<svg class="w-3 h-3 ml-1 transition-transform {embeddingDetailOpen ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+									</svg>
+								</button>
+							{:else}
+								<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+									<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+									</svg>
+									{$_("diary.embedding.notIndexed")}
+								</span>
+							{/if}
+						</div>
+
+						{#if data.embeddingStatus?.indexed && embeddingDetailOpen}
+							<div class="mt-2 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 space-y-1.5">
+								<div class="flex items-center gap-2">
+									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.modelVersion")}:</span>
+									<span class="font-mono text-purple-700 dark:text-purple-300">{data.embeddingStatus.modelVersion}</span>
+								</div>
+								<div class="flex items-center gap-2">
+									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.chunkCount")}:</span>
+									<span class="text-gray-700 dark:text-gray-300">{data.embeddingStatus.chunkCount}</span>
+								</div>
+								{#if data.embeddingStatus.chunkSummaries.length > 0}
+									<div>
+										<span class="text-gray-500 dark:text-gray-400">{$_("diary.embedding.chunkSummaries")}:</span>
+										<ol class="mt-1 space-y-0.5 list-decimal list-inside">
+											{#each data.embeddingStatus.chunkSummaries as chunkSummary}
+												<li class="text-gray-600 dark:text-gray-400">
+													{#if chunkSummary}
+														{chunkSummary}
+													{:else}
+														{$_("diary.embedding.chunkSummaryEmpty")}
+													{/if}
+												</li>
+											{/each}
+										</ol>
+									</div>
+								{/if}
+								<div class="flex items-center gap-2">
+									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.dimensions")}:</span>
+									<span class="text-gray-700 dark:text-gray-300">{data.embeddingStatus.embeddingDimensions}</span>
+								</div>
+								<div class="flex items-center gap-2">
+									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.indexedAt")}:</span>
+									<span class="text-gray-700 dark:text-gray-300">{new Date(data.embeddingStatus.createdAt * 1000).toLocaleString()}</span>
+								</div>
+								<div class="flex items-center gap-2">
+									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.updatedAt")}:</span>
+									<span class="text-gray-700 dark:text-gray-300">{new Date(data.embeddingStatus.updatedAt * 1000).toLocaleString()}</span>
+								</div>
+								{#if data.embeddingStatus.embeddingDimensions > 0}
+									<div>
+										<span class="text-gray-500 dark:text-gray-400">{$_("diary.embedding.vectorPreview")}:</span>
+										<div class="mt-1 font-mono text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 rounded p-2 border border-purple-100 dark:border-purple-900/40 overflow-x-auto whitespace-nowrap">
+											[{data.embeddingStatus.embeddingValues.slice(0, 10).map((v) => v.toFixed(6)).join(", ")}, ...]
+										</div>
+									</div>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				{/if}
 
 
 				<div class="flex justify-between">

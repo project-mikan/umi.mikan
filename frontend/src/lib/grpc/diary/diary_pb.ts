@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_diary_diary: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJ1ChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5EhkKEWV4cGFuZGVkX2tleXdvcmRzGAMgAygJIj0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIm8KDk1vbnRobHlTdW1tYXJ5EgoKAmlkGAEgASgJEhgKBW1vbnRoGAIgASgLMgkuZGlhcnkuWU0SDwoHc3VtbWFyeRgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5In8KDERhaWx5U3VtbWFyeRIKCgJpZBgBIAEoCRIQCghkaWFyeV9pZBgCIAEoCRIYCgRkYXRlGAMgASgLMgouZGlhcnkuWU1EEg8KB3N1bW1hcnkYBCABKAkSEgoKY3JlYXRlZF9hdBgFIAEoAxISCgp1cGRhdGVkX2F0GAYgASgDIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiFwoVR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0IrYBChZHZXRMYXRlc3RUcmVuZFJlc3BvbnNlEg4KBmhlYWx0aBgBIAEoCRIVCg1oZWFsdGhfcmVhc29uGAIgASgJEgwKBG1vb2QYAyABKAkSEwoLbW9vZF9yZWFzb24YBCABKAkSEgoKYWN0aXZpdGllcxgFIAEoCRIUCgxwZXJpb2Rfc3RhcnQYBiABKAkSEgoKcGVyaW9kX2VuZBgHIAEoCRIUCgxnZW5lcmF0ZWRfYXQYCCABKAkiGwoZVHJpZ2dlckxhdGVzdFRyZW5kUmVxdWVzdCI+ChpUcmlnZ2VyTGF0ZXN0VHJlbmRSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiMAocVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJACh1UcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXNwb25zZRIOCgZxdWV1ZWQYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIsChhHZXREaWFyeUhpZ2hsaWdodFJlcXVlc3QSEAoIZGlhcnlfaWQYASABKAkiOgoOSGlnaGxpZ2h0UmFuZ2USDQoFc3RhcnQYASABKAUSCwoDZW5kGAIgASgFEgwKBHRleHQYAyABKAkibgoZR2V0RGlhcnlIaWdobGlnaHRSZXNwb25zZRIpCgpoaWdobGlnaHRzGAEgAygLMhUuZGlhcnkuSGlnaGxpZ2h0UmFuZ2USEgoKY3JlYXRlZF9hdBgCIAEoAxISCgp1cGRhdGVkX2F0GAMgASgDMsUKCgxEaWFyeVNlcnZpY2USUwoQQ3JlYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LkNyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEFVwZGF0ZURpYXJ5RW50cnkSHi5kaWFyeS5VcGRhdGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXNwb25zZRJTChBEZWxldGVEaWFyeUVudHJ5Eh4uZGlhcnkuRGVsZXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVzcG9uc2USSgoNR2V0RGlhcnlFbnRyeRIbLmRpYXJ5LkdldERpYXJ5RW50cnlSZXF1ZXN0GhwuZGlhcnkuR2V0RGlhcnlFbnRyeVJlc3BvbnNlElAKD0dldERpYXJ5RW50cmllcxIdLmRpYXJ5LkdldERpYXJ5RW50cmllc1JlcXVlc3QaHi5kaWFyeS5HZXREaWFyeUVudHJpZXNSZXNwb25zZRJlChZHZXREaWFyeUVudHJpZXNCeU1vbnRoEiQuZGlhcnkuR2V0RGlhcnlFbnRyaWVzQnlNb250aFJlcXVlc3QaJS5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVzcG9uc2USWQoSU2VhcmNoRGlhcnlFbnRyaWVzEiAuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVxdWVzdBohLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdlbmVyYXRlTW9udGhseVN1bW1hcnkSJC5kaWFyeS5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVxdWVzdBolLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXNwb25zZRJWChFHZXRNb250aGx5U3VtbWFyeRIfLmRpYXJ5LkdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBogLmRpYXJ5LkdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USXwoUR2VuZXJhdGVEYWlseVN1bW1hcnkSIi5kaWFyeS5HZW5lcmF0ZURhaWx5U3VtbWFyeVJlcXVlc3QaIy5kaWFyeS5HZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlElAKD0dldERhaWx5U3VtbWFyeRIdLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlcXVlc3QaHi5kaWFyeS5HZXREYWlseVN1bW1hcnlSZXNwb25zZRJNCg5HZXRMYXRlc3RUcmVuZBIcLmRpYXJ5LkdldExhdGVzdFRyZW5kUmVxdWVzdBodLmRpYXJ5LkdldExhdGVzdFRyZW5kUmVzcG9uc2USWQoSVHJpZ2dlckxhdGVzdFRyZW5kEiAuZGlhcnkuVHJpZ2dlckxhdGVzdFRyZW5kUmVxdWVzdBohLmRpYXJ5LlRyaWdnZXJMYXRlc3RUcmVuZFJlc3BvbnNlEmIKFVRyaWdnZXJEaWFyeUhpZ2hsaWdodBIjLmRpYXJ5LlRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlcXVlc3QaJC5kaWFyeS5UcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXNwb25zZRJWChFHZXREaWFyeUhpZ2hsaWdodBIfLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBogLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
+		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJ1ChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5EhkKEWV4cGFuZGVkX2tleXdvcmRzGAMgAygJIj0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIoYBCg5Nb250aGx5U3VtbWFyeRIKCgJpZBgBIAEoCRIYCgVtb250aBgCIAEoCzIJLmRpYXJ5LllNEg8KB3N1bW1hcnkYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDEhUKDW1vZGVsX3ZlcnNpb24YBiABKAkiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IpYBCgxEYWlseVN1bW1hcnkSCgoCaWQYASABKAkSEAoIZGlhcnlfaWQYAiABKAkSGAoEZGF0ZRgDIAEoCzIKLmRpYXJ5LllNRBIPCgdzdW1tYXJ5GAQgASgJEhIKCmNyZWF0ZWRfYXQYBSABKAMSEgoKdXBkYXRlZF9hdBgGIAEoAxIVCg1tb2RlbF92ZXJzaW9uGAcgASgJIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiFwoVR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Is0BChZHZXRMYXRlc3RUcmVuZFJlc3BvbnNlEg4KBmhlYWx0aBgBIAEoCRIVCg1oZWFsdGhfcmVhc29uGAIgASgJEgwKBG1vb2QYAyABKAkSEwoLbW9vZF9yZWFzb24YBCABKAkSEgoKYWN0aXZpdGllcxgFIAEoCRIUCgxwZXJpb2Rfc3RhcnQYBiABKAkSEgoKcGVyaW9kX2VuZBgHIAEoCRIUCgxnZW5lcmF0ZWRfYXQYCCABKAkSFQoNbW9kZWxfdmVyc2lvbhgJIAEoCSIbChlUcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0Ij4KGlRyaWdnZXJMYXRlc3RUcmVuZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSJBCiFTZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUikwEKFFNlbWFudGljU2VhcmNoUmVzdWx0EhAKCGRpYXJ5X2lkGAEgASgJEhgKBGRhdGUYAiABKAsyCi5kaWFyeS5ZTUQSDwoHc25pcHBldBgDIAEoCRISCgpzaW1pbGFyaXR5GAQgASgCEhUKDWNodW5rX3N1bW1hcnkYBSABKAkSEwoLY2h1bmtfY291bnQYBiABKAUigAEKIlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVzcG9uc2USLAoHcmVzdWx0cxgBIAMoCzIbLmRpYXJ5LlNlbWFudGljU2VhcmNoUmVzdWx0EhcKD2VtYmVkZGluZ19tb2RlbBgCIAEoCRITCgtjaHVua19tb2RlbBgDIAEoCSIwChxUcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIkAKHVRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlc3BvbnNlEg4KBnF1ZXVlZBgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIiwKGEdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSI6Cg5IaWdobGlnaHRSYW5nZRINCgVzdGFydBgBIAEoBRILCgNlbmQYAiABKAUSDAoEdGV4dBgDIAEoCSJuChlHZXREaWFyeUhpZ2hsaWdodFJlc3BvbnNlEikKCmhpZ2hsaWdodHMYASADKAsyFS5kaWFyeS5IaWdobGlnaHRSYW5nZRISCgpjcmVhdGVkX2F0GAIgASgDEhIKCnVwZGF0ZWRfYXQYAyABKAMiIAoeUmVnZW5lcmF0ZUFsbEVtYmVkZGluZ3NSZXF1ZXN0IkgKH1JlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIUCgxxdWV1ZWRfY291bnQYAiABKAUiMgoeR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIvQBCh9HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1Jlc3BvbnNlEg8KB2luZGV4ZWQYASABKAgSFQoNbW9kZWxfdmVyc2lvbhgCIAEoCRISCgpjcmVhdGVkX2F0GAMgASgDEhIKCnVwZGF0ZWRfYXQYBCABKAMSGAoQZW1iZWRkaW5nX3ZhbHVlcxgFIAMoAhIbChNjaHVua19tb2RlbF92ZXJzaW9uGAYgASgJEhMKC2NodW5rX2NvdW50GAcgASgFEhcKD2NodW5rX3N1bW1hcmllcxgIIAMoCRIcChRlbWJlZGRpbmdfZGltZW5zaW9ucxgJIAEoBTKMDQoMRGlhcnlTZXJ2aWNlElMKEENyZWF0ZURpYXJ5RW50cnkSHi5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkNyZWF0ZURpYXJ5RW50cnlSZXNwb25zZRJTChBVcGRhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5VcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQRGVsZXRlRGlhcnlFbnRyeRIeLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuRGVsZXRlRGlhcnlFbnRyeVJlc3BvbnNlEkoKDUdldERpYXJ5RW50cnkSGy5kaWFyeS5HZXREaWFyeUVudHJ5UmVxdWVzdBocLmRpYXJ5LkdldERpYXJ5RW50cnlSZXNwb25zZRJQCg9HZXREaWFyeUVudHJpZXMSHS5kaWFyeS5HZXREaWFyeUVudHJpZXNSZXF1ZXN0Gh4uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2V0RGlhcnlFbnRyaWVzQnlNb250aBIkLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXF1ZXN0GiUuZGlhcnkuR2V0RGlhcnlFbnRyaWVzQnlNb250aFJlc3BvbnNlElkKElNlYXJjaERpYXJ5RW50cmllcxIgLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QaIS5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRJlChZHZW5lcmF0ZU1vbnRobHlTdW1tYXJ5EiQuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QaJS5kaWFyeS5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USVgoRR2V0TW9udGhseVN1bW1hcnkSHy5kaWFyeS5HZXRNb250aGx5U3VtbWFyeVJlcXVlc3QaIC5kaWFyeS5HZXRNb250aGx5U3VtbWFyeVJlc3BvbnNlEl8KFEdlbmVyYXRlRGFpbHlTdW1tYXJ5EiIuZGlhcnkuR2VuZXJhdGVEYWlseVN1bW1hcnlSZXF1ZXN0GiMuZGlhcnkuR2VuZXJhdGVEYWlseVN1bW1hcnlSZXNwb25zZRJQCg9HZXREYWlseVN1bW1hcnkSHS5kaWFyeS5HZXREYWlseVN1bW1hcnlSZXF1ZXN0Gh4uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVzcG9uc2USTQoOR2V0TGF0ZXN0VHJlbmQSHC5kaWFyeS5HZXRMYXRlc3RUcmVuZFJlcXVlc3QaHS5kaWFyeS5HZXRMYXRlc3RUcmVuZFJlc3BvbnNlElkKElRyaWdnZXJMYXRlc3RUcmVuZBIgLmRpYXJ5LlRyaWdnZXJMYXRlc3RUcmVuZFJlcXVlc3QaIS5kaWFyeS5UcmlnZ2VyTGF0ZXN0VHJlbmRSZXNwb25zZRJxChpTZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpYxIoLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVxdWVzdBopLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVzcG9uc2USYgoVVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0EiMuZGlhcnkuVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0UmVxdWVzdBokLmRpYXJ5LlRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlc3BvbnNlElYKEUdldERpYXJ5SGlnaGxpZ2h0Eh8uZGlhcnkuR2V0RGlhcnlIaWdobGlnaHRSZXF1ZXN0GiAuZGlhcnkuR2V0RGlhcnlIaWdobGlnaHRSZXNwb25zZRJoChdSZWdlbmVyYXRlQWxsRW1iZWRkaW5ncxIlLmRpYXJ5LlJlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVxdWVzdBomLmRpYXJ5LlJlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVzcG9uc2USaAoXR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXMSJS5kaWFyeS5HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1JlcXVlc3QaJi5kaWFyeS5HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1Jlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM",
 	);
 
 /**
@@ -477,6 +477,13 @@ export type MonthlySummary = Message<"diary.MonthlySummary"> & {
 	 * @generated from field: int64 updated_at = 5;
 	 */
 	updatedAt: bigint;
+
+	/**
+	 * サマリー生成に使用したLLMモデル
+	 *
+	 * @generated from field: string model_version = 6;
+	 */
+	modelVersion: string;
 };
 
 /**
@@ -606,6 +613,13 @@ export type DailySummary = Message<"diary.DailySummary"> & {
 	 * @generated from field: int64 updated_at = 6;
 	 */
 	updatedAt: bigint;
+
+	/**
+	 * サマリー生成に使用したLLMモデル
+	 *
+	 * @generated from field: string model_version = 7;
+	 */
+	modelVersion: string;
 };
 
 /**
@@ -777,6 +791,13 @@ export type GetLatestTrendResponse = Message<"diary.GetLatestTrendResponse"> & {
 	 * @generated from field: string generated_at = 8;
 	 */
 	generatedAt: string;
+
+	/**
+	 * トレンド生成に使用したLLMモデル
+	 *
+	 * @generated from field: string model_version = 9;
+	 */
+	modelVersion: string;
 };
 
 /**
@@ -836,6 +857,124 @@ export const TriggerLatestTrendResponseSchema: GenMessage<TriggerLatestTrendResp
 	messageDesc(file_diary_diary, 30);
 
 /**
+ * 意味的検索リクエスト
+ *
+ * @generated from message diary.SearchDiaryEntriesSemanticRequest
+ */
+export type SearchDiaryEntriesSemanticRequest =
+	Message<"diary.SearchDiaryEntriesSemanticRequest"> & {
+		/**
+		 * 自然言語クエリ
+		 *
+		 * @generated from field: string query = 1;
+		 */
+		query: string;
+
+		/**
+		 * 上位何件返すか (default: 10, max: 50)
+		 *
+		 * @generated from field: int32 limit = 2;
+		 */
+		limit: number;
+	};
+
+/**
+ * Describes the message diary.SearchDiaryEntriesSemanticRequest.
+ * Use `create(SearchDiaryEntriesSemanticRequestSchema)` to create a new message.
+ */
+export const SearchDiaryEntriesSemanticRequestSchema: GenMessage<SearchDiaryEntriesSemanticRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 31);
+
+/**
+ * 意味的検索の1件分の結果
+ *
+ * @generated from message diary.SemanticSearchResult
+ */
+export type SemanticSearchResult = Message<"diary.SemanticSearchResult"> & {
+	/**
+	 * @generated from field: string diary_id = 1;
+	 */
+	diaryId: string;
+
+	/**
+	 * @generated from field: diary.YMD date = 2;
+	 */
+	date?: YMD;
+
+	/**
+	 * クエリに関連する抜粋（最大200文字）
+	 *
+	 * @generated from field: string snippet = 3;
+	 */
+	snippet: string;
+
+	/**
+	 * コサイン類似度スコア (0.0〜1.0)
+	 *
+	 * @generated from field: float similarity = 4;
+	 */
+	similarity: number;
+
+	/**
+	 * マッチしたチャンクの概要（1〜2文）
+	 *
+	 * @generated from field: string chunk_summary = 5;
+	 */
+	chunkSummary: string;
+
+	/**
+	 * 日記内のチャンク総数
+	 *
+	 * @generated from field: int32 chunk_count = 6;
+	 */
+	chunkCount: number;
+};
+
+/**
+ * Describes the message diary.SemanticSearchResult.
+ * Use `create(SemanticSearchResultSchema)` to create a new message.
+ */
+export const SemanticSearchResultSchema: GenMessage<SemanticSearchResult> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 32);
+
+/**
+ * 意味的検索レスポンス
+ *
+ * @generated from message diary.SearchDiaryEntriesSemanticResponse
+ */
+export type SearchDiaryEntriesSemanticResponse =
+	Message<"diary.SearchDiaryEntriesSemanticResponse"> & {
+		/**
+		 * @generated from field: repeated diary.SemanticSearchResult results = 1;
+		 */
+		results: SemanticSearchResult[];
+
+		/**
+		 * クエリのembedding生成に使用したモデル（例: gemini-embedding-001）
+		 *
+		 * @generated from field: string embedding_model = 2;
+		 */
+		embeddingModel: string;
+
+		/**
+		 * チャンク分割に使用したLLMモデル（例: gemini-2.5-flash-lite）
+		 *
+		 * @generated from field: string chunk_model = 3;
+		 */
+		chunkModel: string;
+	};
+
+/**
+ * Describes the message diary.SearchDiaryEntriesSemanticResponse.
+ * Use `create(SearchDiaryEntriesSemanticResponseSchema)` to create a new message.
+ */
+export const SearchDiaryEntriesSemanticResponseSchema: GenMessage<SearchDiaryEntriesSemanticResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 33);
+
+/**
  * 日記ハイライト生成トリガーリクエスト
  *
  * @generated from message diary.TriggerDiaryHighlightRequest
@@ -856,7 +995,7 @@ export type TriggerDiaryHighlightRequest =
  */
 export const TriggerDiaryHighlightRequestSchema: GenMessage<TriggerDiaryHighlightRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 31);
+	messageDesc(file_diary_diary, 34);
 
 /**
  * 日記ハイライト生成トリガーレスポンス
@@ -886,7 +1025,7 @@ export type TriggerDiaryHighlightResponse =
  */
 export const TriggerDiaryHighlightResponseSchema: GenMessage<TriggerDiaryHighlightResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 32);
+	messageDesc(file_diary_diary, 35);
 
 /**
  * 日記ハイライト取得リクエスト
@@ -909,7 +1048,7 @@ export type GetDiaryHighlightRequest =
  */
 export const GetDiaryHighlightRequestSchema: GenMessage<GetDiaryHighlightRequest> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 33);
+	messageDesc(file_diary_diary, 36);
 
 /**
  * ハイライト範囲
@@ -945,7 +1084,7 @@ export type HighlightRange = Message<"diary.HighlightRange"> & {
  */
 export const HighlightRangeSchema: GenMessage<HighlightRange> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 34);
+	messageDesc(file_diary_diary, 37);
 
 /**
  * 日記ハイライト取得レスポンス
@@ -982,7 +1121,155 @@ export type GetDiaryHighlightResponse =
  */
 export const GetDiaryHighlightResponseSchema: GenMessage<GetDiaryHighlightResponse> =
 	/*@__PURE__*/
-	messageDesc(file_diary_diary, 35);
+	messageDesc(file_diary_diary, 38);
+
+/**
+ * 全日記のembedding再生成リクエスト
+ *
+ * 空のリクエスト（認証はヘッダーから）
+ *
+ * @generated from message diary.RegenerateAllEmbeddingsRequest
+ */
+export type RegenerateAllEmbeddingsRequest =
+	Message<"diary.RegenerateAllEmbeddingsRequest"> & {};
+
+/**
+ * Describes the message diary.RegenerateAllEmbeddingsRequest.
+ * Use `create(RegenerateAllEmbeddingsRequestSchema)` to create a new message.
+ */
+export const RegenerateAllEmbeddingsRequestSchema: GenMessage<RegenerateAllEmbeddingsRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 39);
+
+/**
+ * 全日記のembedding再生成レスポンス
+ *
+ * @generated from message diary.RegenerateAllEmbeddingsResponse
+ */
+export type RegenerateAllEmbeddingsResponse =
+	Message<"diary.RegenerateAllEmbeddingsResponse"> & {
+		/**
+		 * @generated from field: bool success = 1;
+		 */
+		success: boolean;
+
+		/**
+		 * キューに追加した日記数
+		 *
+		 * @generated from field: int32 queued_count = 2;
+		 */
+		queuedCount: number;
+	};
+
+/**
+ * Describes the message diary.RegenerateAllEmbeddingsResponse.
+ * Use `create(RegenerateAllEmbeddingsResponseSchema)` to create a new message.
+ */
+export const RegenerateAllEmbeddingsResponseSchema: GenMessage<RegenerateAllEmbeddingsResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 40);
+
+/**
+ * 日記のRAGインデックス状態取得リクエスト
+ *
+ * @generated from message diary.GetDiaryEmbeddingStatusRequest
+ */
+export type GetDiaryEmbeddingStatusRequest =
+	Message<"diary.GetDiaryEmbeddingStatusRequest"> & {
+		/**
+		 * 日記ID
+		 *
+		 * @generated from field: string diary_id = 1;
+		 */
+		diaryId: string;
+	};
+
+/**
+ * Describes the message diary.GetDiaryEmbeddingStatusRequest.
+ * Use `create(GetDiaryEmbeddingStatusRequestSchema)` to create a new message.
+ */
+export const GetDiaryEmbeddingStatusRequestSchema: GenMessage<GetDiaryEmbeddingStatusRequest> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 41);
+
+/**
+ * 日記のRAGインデックス状態取得レスポンス
+ *
+ * @generated from message diary.GetDiaryEmbeddingStatusResponse
+ */
+export type GetDiaryEmbeddingStatusResponse =
+	Message<"diary.GetDiaryEmbeddingStatusResponse"> & {
+		/**
+		 * インデックス済みかどうか
+		 *
+		 * @generated from field: bool indexed = 1;
+		 */
+		indexed: boolean;
+
+		/**
+		 * embedding生成に使用したモデル
+		 *
+		 * @generated from field: string model_version = 2;
+		 */
+		modelVersion: string;
+
+		/**
+		 * 埋め込み作成日時（Unix timestamp）
+		 *
+		 * @generated from field: int64 created_at = 3;
+		 */
+		createdAt: bigint;
+
+		/**
+		 * 埋め込み更新日時（Unix timestamp）
+		 *
+		 * @generated from field: int64 updated_at = 4;
+		 */
+		updatedAt: bigint;
+
+		/**
+		 * ベクトル値プレビュー（先頭10件のみ、表示用）
+		 *
+		 * @generated from field: repeated float embedding_values = 5;
+		 */
+		embeddingValues: number[];
+
+		/**
+		 * チャンク分割に使用したLLMモデル
+		 *
+		 * @generated from field: string chunk_model_version = 6;
+		 */
+		chunkModelVersion: string;
+
+		/**
+		 * チャンク総数
+		 *
+		 * @generated from field: int32 chunk_count = 7;
+		 */
+		chunkCount: number;
+
+		/**
+		 * 各チャンクの概要（chunk_index順）
+		 *
+		 * @generated from field: repeated string chunk_summaries = 8;
+		 */
+		chunkSummaries: string[];
+
+		/**
+		 * ベクトルの総次元数（embedding_valuesは先頭10件のみのため別フィールドで提供）
+		 *
+		 * @generated from field: int32 embedding_dimensions = 9;
+		 */
+		embeddingDimensions: number;
+	};
+
+/**
+ * Describes the message diary.GetDiaryEmbeddingStatusResponse.
+ * Use `create(GetDiaryEmbeddingStatusResponseSchema)` to create a new message.
+ */
+export const GetDiaryEmbeddingStatusResponseSchema: GenMessage<GetDiaryEmbeddingStatusResponse> =
+	/*@__PURE__*/
+	messageDesc(file_diary_diary, 42);
 
 /**
  * DiaryService は日記エントリの作成・読み取り・更新・削除（CRUD）と
@@ -1220,6 +1507,25 @@ export const DiaryService: GenService<{
 		output: typeof TriggerLatestTrendResponseSchema;
 	};
 	/**
+	 * SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+	 * Gemini Embedding APIを使用してベクトル類似度検索を行います。
+	 *
+	 * 例:
+	 *   request: { query: "去年の夏に食べたもの", limit: 10 }
+	 *   response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+	 *
+	 * エラー:
+	 *   - NotFound: LLMキーが設定されていない
+	 *   - InvalidArgument: クエリが空
+	 *
+	 * @generated from rpc diary.DiaryService.SearchDiaryEntriesSemantic
+	 */
+	searchDiaryEntriesSemantic: {
+		methodKind: "unary";
+		input: typeof SearchDiaryEntriesSemanticRequestSchema;
+		output: typeof SearchDiaryEntriesSemanticResponseSchema;
+	};
+	/**
 	 * TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
 	 * Redis Pub/Subを通じてSubscriberが処理を実行します。
 	 *
@@ -1256,5 +1562,36 @@ export const DiaryService: GenService<{
 		methodKind: "unary";
 		input: typeof GetDiaryHighlightRequestSchema;
 		output: typeof GetDiaryHighlightResponseSchema;
+	};
+	/**
+	 * RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+	 * 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+	 *
+	 * エラー:
+	 *   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+	 *
+	 * @generated from rpc diary.DiaryService.RegenerateAllEmbeddings
+	 */
+	regenerateAllEmbeddings: {
+		methodKind: "unary";
+		input: typeof RegenerateAllEmbeddingsRequestSchema;
+		output: typeof RegenerateAllEmbeddingsResponseSchema;
+	};
+	/**
+	 * GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+	 *
+	 * 例:
+	 *   request: { diary_id: "uuid" }
+	 *   response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+	 *
+	 * エラー:
+	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+	 *
+	 * @generated from rpc diary.DiaryService.GetDiaryEmbeddingStatus
+	 */
+	getDiaryEmbeddingStatus: {
+		methodKind: "unary";
+		input: typeof GetDiaryEmbeddingStatusRequestSchema;
+		output: typeof GetDiaryEmbeddingStatusResponseSchema;
 	};
 }> = /*@__PURE__*/ serviceDesc(file_diary_diary, 0);

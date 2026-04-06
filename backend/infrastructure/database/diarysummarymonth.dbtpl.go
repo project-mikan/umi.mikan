@@ -10,13 +10,14 @@ import (
 
 // DiarySummaryMonth represents a row from 'public.diary_summary_months'.
 type DiarySummaryMonth struct {
-	ID        uuid.UUID `json:"id"`         // id
-	UserID    uuid.UUID `json:"user_id"`    // user_id
-	Year      int       `json:"year"`       // year
-	Month     int       `json:"month"`      // month
-	Summary   string    `json:"summary"`    // summary
-	CreatedAt int64     `json:"created_at"` // created_at
-	UpdatedAt int64     `json:"updated_at"` // updated_at
+	ID           uuid.UUID `json:"id"`            // id
+	UserID       uuid.UUID `json:"user_id"`       // user_id
+	Year         int       `json:"year"`          // year
+	Month        int       `json:"month"`         // month
+	Summary      string    `json:"summary"`       // summary
+	CreatedAt    int64     `json:"created_at"`    // created_at
+	UpdatedAt    int64     `json:"updated_at"`    // updated_at
+	ModelVersion string    `json:"model_version"` // model_version
 	// xo fields
 	_exists, _deleted bool
 }
@@ -42,13 +43,13 @@ func (dsm *DiarySummaryMonth) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.diary_summary_months (` +
-		`id, user_id, year, month, summary, created_at, updated_at` +
+		`id, user_id, year, month, summary, created_at, updated_at, model_version` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7` +
+		`$1, $2, $3, $4, $5, $6, $7, $8` +
 		`)`
 	// run
-	logf(sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt); err != nil {
+	logf(sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ModelVersion)
+	if _, err := db.ExecContext(ctx, sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ModelVersion); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -66,11 +67,11 @@ func (dsm *DiarySummaryMonth) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.diary_summary_months SET ` +
-		`user_id = $1, year = $2, month = $3, summary = $4, created_at = $5, updated_at = $6 ` +
-		`WHERE id = $7`
+		`user_id = $1, year = $2, month = $3, summary = $4, created_at = $5, updated_at = $6, model_version = $7 ` +
+		`WHERE id = $8`
 	// run
-	logf(sqlstr, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ID); err != nil {
+	logf(sqlstr, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ModelVersion, dsm.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ModelVersion, dsm.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -92,16 +93,16 @@ func (dsm *DiarySummaryMonth) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.diary_summary_months (` +
-		`id, user_id, year, month, summary, created_at, updated_at` +
+		`id, user_id, year, month, summary, created_at, updated_at, model_version` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7` +
+		`$1, $2, $3, $4, $5, $6, $7, $8` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`user_id = EXCLUDED.user_id, year = EXCLUDED.year, month = EXCLUDED.month, summary = EXCLUDED.summary, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`user_id = EXCLUDED.user_id, year = EXCLUDED.year, month = EXCLUDED.month, summary = EXCLUDED.summary, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, model_version = EXCLUDED.model_version `
 	// run
-	logf(sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt); err != nil {
+	logf(sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ModelVersion)
+	if _, err := db.ExecContext(ctx, sqlstr, dsm.ID, dsm.UserID, dsm.Year, dsm.Month, dsm.Summary, dsm.CreatedAt, dsm.UpdatedAt, dsm.ModelVersion); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -136,7 +137,7 @@ func (dsm *DiarySummaryMonth) Delete(ctx context.Context, db DB) error {
 func DiarySummaryMonthByID(ctx context.Context, db DB, id uuid.UUID) (*DiarySummaryMonth, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, year, month, summary, created_at, updated_at ` +
+		`id, user_id, year, month, summary, created_at, updated_at, model_version ` +
 		`FROM public.diary_summary_months ` +
 		`WHERE id = $1`
 	// run
@@ -144,7 +145,7 @@ func DiarySummaryMonthByID(ctx context.Context, db DB, id uuid.UUID) (*DiarySumm
 	dsm := DiarySummaryMonth{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&dsm.ID, &dsm.UserID, &dsm.Year, &dsm.Month, &dsm.Summary, &dsm.CreatedAt, &dsm.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&dsm.ID, &dsm.UserID, &dsm.Year, &dsm.Month, &dsm.Summary, &dsm.CreatedAt, &dsm.UpdatedAt, &dsm.ModelVersion); err != nil {
 		return nil, logerror(err)
 	}
 	return &dsm, nil
@@ -156,7 +157,7 @@ func DiarySummaryMonthByID(ctx context.Context, db DB, id uuid.UUID) (*DiarySumm
 func DiarySummaryMonthsByUserIDYearMonth(ctx context.Context, db DB, userID uuid.UUID, year, month int) ([]*DiarySummaryMonth, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, year, month, summary, created_at, updated_at ` +
+		`id, user_id, year, month, summary, created_at, updated_at, model_version ` +
 		`FROM public.diary_summary_months ` +
 		`WHERE user_id = $1 AND year = $2 AND month = $3`
 	// run
@@ -173,7 +174,7 @@ func DiarySummaryMonthsByUserIDYearMonth(ctx context.Context, db DB, userID uuid
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&dsm.ID, &dsm.UserID, &dsm.Year, &dsm.Month, &dsm.Summary, &dsm.CreatedAt, &dsm.UpdatedAt); err != nil {
+		if err := rows.Scan(&dsm.ID, &dsm.UserID, &dsm.Year, &dsm.Month, &dsm.Summary, &dsm.CreatedAt, &dsm.UpdatedAt, &dsm.ModelVersion); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &dsm)
@@ -190,7 +191,7 @@ func DiarySummaryMonthsByUserIDYearMonth(ctx context.Context, db DB, userID uuid
 func DiarySummaryMonthByUserIDYearMonth(ctx context.Context, db DB, userID uuid.UUID, year, month int) (*DiarySummaryMonth, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, year, month, summary, created_at, updated_at ` +
+		`id, user_id, year, month, summary, created_at, updated_at, model_version ` +
 		`FROM public.diary_summary_months ` +
 		`WHERE user_id = $1 AND year = $2 AND month = $3`
 	// run
@@ -198,7 +199,7 @@ func DiarySummaryMonthByUserIDYearMonth(ctx context.Context, db DB, userID uuid.
 	dsm := DiarySummaryMonth{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID, year, month).Scan(&dsm.ID, &dsm.UserID, &dsm.Year, &dsm.Month, &dsm.Summary, &dsm.CreatedAt, &dsm.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID, year, month).Scan(&dsm.ID, &dsm.UserID, &dsm.Year, &dsm.Month, &dsm.Summary, &dsm.CreatedAt, &dsm.UpdatedAt, &dsm.ModelVersion); err != nil {
 		return nil, logerror(err)
 	}
 	return &dsm, nil

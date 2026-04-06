@@ -21,10 +21,12 @@ type RedisConfig struct {
 }
 
 type SchedulerConfig struct {
-	DailySummaryInterval    time.Duration
-	MonthlySummaryInterval  time.Duration
-	LatestTrendTargetHour   int
-	LatestTrendTargetMinute int
+	DailySummaryInterval       time.Duration
+	MonthlySummaryInterval     time.Duration
+	LatestTrendTargetHour      int
+	LatestTrendTargetMinute    int
+	DiaryEmbeddingTargetHour   int
+	DiaryEmbeddingTargetMinute int
 }
 
 type SubscriberConfig struct {
@@ -164,11 +166,39 @@ func LoadSchedulerConfig() (*SchedulerConfig, error) {
 		return nil, fmt.Errorf("SCHEDULER_LATEST_TREND_MINUTE must be between 0 and 59, got %d", latestTrendMinute)
 	}
 
+	diaryEmbeddingHourStr := os.Getenv("SCHEDULER_DIARY_EMBEDDING_HOUR")
+	if diaryEmbeddingHourStr == "" {
+		diaryEmbeddingHourStr = "4" // デフォルトは4時
+	}
+
+	diaryEmbeddingMinuteStr := os.Getenv("SCHEDULER_DIARY_EMBEDDING_MINUTE")
+	if diaryEmbeddingMinuteStr == "" {
+		diaryEmbeddingMinuteStr = "30" // デフォルトは30分（LatestTrendJobと重複しないよう4:30）
+	}
+
+	diaryEmbeddingHour, err := strconv.Atoi(diaryEmbeddingHourStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SCHEDULER_DIARY_EMBEDDING_HOUR format: %w", err)
+	}
+	if diaryEmbeddingHour < 0 || diaryEmbeddingHour > 23 {
+		return nil, fmt.Errorf("SCHEDULER_DIARY_EMBEDDING_HOUR must be between 0 and 23, got %d", diaryEmbeddingHour)
+	}
+
+	diaryEmbeddingMinute, err := strconv.Atoi(diaryEmbeddingMinuteStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SCHEDULER_DIARY_EMBEDDING_MINUTE format: %w", err)
+	}
+	if diaryEmbeddingMinute < 0 || diaryEmbeddingMinute > 59 {
+		return nil, fmt.Errorf("SCHEDULER_DIARY_EMBEDDING_MINUTE must be between 0 and 59, got %d", diaryEmbeddingMinute)
+	}
+
 	return &SchedulerConfig{
-		DailySummaryInterval:    dailyInterval,
-		MonthlySummaryInterval:  monthlyInterval,
-		LatestTrendTargetHour:   latestTrendHour,
-		LatestTrendTargetMinute: latestTrendMinute,
+		DailySummaryInterval:       dailyInterval,
+		MonthlySummaryInterval:     monthlyInterval,
+		LatestTrendTargetHour:      latestTrendHour,
+		LatestTrendTargetMinute:    latestTrendMinute,
+		DiaryEmbeddingTargetHour:   diaryEmbeddingHour,
+		DiaryEmbeddingTargetMinute: diaryEmbeddingMinute,
 	}, nil
 }
 
