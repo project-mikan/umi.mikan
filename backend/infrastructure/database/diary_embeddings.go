@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -52,8 +51,6 @@ type DiaryEmbeddingStatus struct {
 	ChunkModelVersion string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
-	// 最初のチャンクのベクトル値（デバッグ用）
-	EmbeddingValues []float32
 	// チャンク総数
 	ChunkCount int
 	// 各チャンクの概要（chunk_index順）
@@ -61,10 +58,10 @@ type DiaryEmbeddingStatus struct {
 }
 
 // GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
-// 全チャンクのsummaryとchunk_index=0のベクトル値を返す
+// 全チャンクのsummaryを返す（ベクトル値は返さない）
 func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UUID) (*DiaryEmbeddingStatus, error) {
 	query := `
-		SELECT model_version, chunk_model_version, created_at, updated_at, embedding::text, chunk_summary
+		SELECT model_version, chunk_model_version, created_at, updated_at, chunk_summary
 		FROM diary_embeddings
 		WHERE diary_id = $1 AND user_id = $2
 		ORDER BY chunk_index ASC
@@ -81,16 +78,15 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 	var (
 		modelVersion, chunkModelVersion string
 		createdAt, updatedAt            time.Time
-		embeddingValues                 []float32
 		chunkSummaries                  []string
 	)
 	first := true
 
 	for rows.Next() {
-		var embStr, chunkSummary string
+		var chunkSummary string
 		var mv, cmv string
 		var cat, uat time.Time
-		if err := rows.Scan(&mv, &cmv, &cat, &uat, &embStr, &chunkSummary); err != nil {
+		if err := rows.Scan(&mv, &cmv, &cat, &uat, &chunkSummary); err != nil {
 			return nil, fmt.Errorf("failed to scan diary embedding status: %w", err)
 		}
 		if first {
@@ -98,7 +94,6 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 			chunkModelVersion = cmv
 			createdAt = cat
 			updatedAt = uat
-			embeddingValues = parseEmbeddingString(embStr)
 			first = false
 		}
 		chunkSummaries = append(chunkSummaries, chunkSummary)
@@ -118,30 +113,9 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 		ChunkModelVersion: chunkModelVersion,
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
-		EmbeddingValues:   embeddingValues,
 		ChunkCount:        len(chunkSummaries),
 		ChunkSummaries:    chunkSummaries,
 	}, nil
-}
-
-// parseEmbeddingString はpgvectorの文字列表現をfloat32スライスに変換する
-// pgvectorは "[v1,v2,...,vn]" 形式で返す（科学表記も含む）
-func parseEmbeddingString(s string) []float32 {
-	s = strings.TrimPrefix(s, "[")
-	s = strings.TrimSuffix(s, "]")
-	if s == "" {
-		return nil
-	}
-	parts := strings.Split(s, ",")
-	values := make([]float32, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		f, err := strconv.ParseFloat(p, 32)
-		if err == nil {
-			values = append(values, float32(f))
-		}
-	}
-	return values
 }
 
 // embeddingToSQL はfloat32スライスをpgvector形式の文字列に変換する

@@ -568,10 +568,6 @@ use:enhance={createSubmitHandler(
 									</div>
 								{/if}
 								<div class="flex items-center gap-2">
-									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.dimensions")}:</span>
-									<span class="text-gray-700 dark:text-gray-300">{data.embeddingStatus.embeddingDimensions}</span>
-								</div>
-								<div class="flex items-center gap-2">
 									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.indexedAt")}:</span>
 									<span class="text-gray-700 dark:text-gray-300">{new Date(data.embeddingStatus.createdAt * 1000).toLocaleString()}</span>
 								</div>
@@ -579,14 +575,6 @@ use:enhance={createSubmitHandler(
 									<span class="text-gray-500 dark:text-gray-400 w-28 shrink-0">{$_("diary.embedding.updatedAt")}:</span>
 									<span class="text-gray-700 dark:text-gray-300">{new Date(data.embeddingStatus.updatedAt * 1000).toLocaleString()}</span>
 								</div>
-								{#if data.embeddingStatus.embeddingDimensions > 0}
-									<div>
-										<span class="text-gray-500 dark:text-gray-400">{$_("diary.embedding.vectorPreview")}:</span>
-										<div class="mt-1 font-mono text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 rounded p-2 border border-purple-100 dark:border-purple-900/40 overflow-x-auto whitespace-nowrap">
-											[{data.embeddingStatus.embeddingValues.slice(0, 10).map((v) => v.toFixed(6)).join(", ")}, ...]
-										</div>
-									</div>
-								{/if}
 							</div>
 						{/if}
 					</div>

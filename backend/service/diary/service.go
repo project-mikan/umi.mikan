@@ -1110,19 +1110,31 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		return nil, status.Errorf(codes.Internal, "Failed to set hnsw.ef_search: %v", err)
 	}
 
-	// pgvectorでコサイン類似度ANN検索
+	// ベクトル検索とキーワード検索を並列実行してレイテンシを削減
+	// キーワード検索はef_searchを必要としないため別コネクション(s.DB)で並列化できる
+	type keywordSearchResult struct {
+		diaries []*database.Diary
+		err     error
+	}
+	kwResultCh := make(chan keywordSearchResult, 1)
+	go func() {
+		ds, err := database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), req.Query)
+		kwResultCh <- keywordSearchResult{diaries: ds, err: err}
+	}()
+
+	// pgvectorでコサイン類似度ANN検索（txのef_search設定を使用）
 	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, tx, userID, queryEmbedding, limit, semanticSimilarityThreshold)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to search diary entries: %v", err)
 	}
 
-	// ハイブリッド検索: キーワード LIKE 検索で補完（ベクトル検索が拾えない固有名詞・専門語をカバー）
+	// ハイブリッド検索: キーワード検索結果で補完（ベクトル検索が拾えない固有名詞・専門語をカバー）
+	kwResult := <-kwResultCh
 	vectorIDs := make(map[uuid.UUID]bool, len(searchResults))
 	for _, sr := range searchResults {
 		vectorIDs[sr.DiaryID] = true
 	}
-	keywordResults, _ := database.DiariesByUserIDAndContent(ctx, tx, userID.String(), req.Query)
-	for _, d := range keywordResults {
+	for _, d := range kwResult.diaries {
 		if !vectorIDs[d.ID] {
 			searchResults = append(searchResults, &database.DiaryEmbeddingSearchResult{
 				DiaryID:    d.ID,
@@ -1302,10 +1314,6 @@ func (s *DiaryEntry) GetDiaryEmbeddingStatus(
 		resp.ChunkModelVersion = embeddingStatus.ChunkModelVersion
 		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
 		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
-		// レスポンスサイズ削減のため先頭10件のみ返す（フロントエンドはプレビュー表示のみ）
-		resp.EmbeddingDimensions = int32(len(embeddingStatus.EmbeddingValues))
-		previewLen := min(10, len(embeddingStatus.EmbeddingValues))
-		resp.EmbeddingValues = embeddingStatus.EmbeddingValues[:previewLen]
 		resp.ChunkCount = int32(embeddingStatus.ChunkCount)
 		resp.ChunkSummaries = embeddingStatus.ChunkSummaries
 	}

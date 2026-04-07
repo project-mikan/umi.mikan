@@ -259,8 +259,6 @@
 			"indexedAt": "インデックス日時",
 			"updatedAt": "最終更新日時",
 			"modelVersion": "モデル",
-			"dimensions": "次元数",
-			"vectorPreview": "ベクトル値（先頭10件）",
 			"chunkCount": "チャンク数",
 			"chunkSummaries": "チャンク一覧",
 			"chunkSummaryEmpty": "（概要なし）"
