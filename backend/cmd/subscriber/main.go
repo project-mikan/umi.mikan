@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 )
 
 // getTaskTimeout 環境変数からタスクタイムアウトを取得(デフォルト600秒)
@@ -167,6 +168,10 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 		}
 	}()
 
+	// Gemini API レートリミッター（3000 RPM = 50 RPS、バースト50）
+	// チャンク分割・embedding生成の両方に適用してレートリミット超過を防ぐ
+	geminiRateLimiter := rate.NewLimiter(rate.Every(time.Minute/3000), 50)
+
 	logger.WithField("max_concurrent_jobs", app.SubscriberConfig.MaxConcurrentJobs).Info("Subscriber is listening for messages...")
 
 	// Create context for subscription that can be cancelled
@@ -239,7 +244,7 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 						}()
 
 						start := time.Now()
-						err := processMessage(subCtx, app.DB, app.Redis, app.LLMFactory, app.LockService, msg.Message, logger)
+						err := processMessage(subCtx, app.DB, app.Redis, app.LLMFactory, app.LockService, geminiRateLimiter, msg.Message, logger)
 						duration := time.Since(start)
 
 						// メトリクス更新は processMessage 内で行う
@@ -336,7 +341,7 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 	return nil
 }
 
-func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, payload string, logger *logrus.Entry) error {
+func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, geminiRateLimiter *rate.Limiter, payload string, logger *logrus.Entry) error {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -413,7 +418,7 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 			messagesProcessedCounter.WithLabelValues("diary_embedding", "error").Inc()
 			return fmt.Errorf("failed to unmarshal diary embedding message: %w", unmarshalErr)
 		}
-		err = generateDiaryEmbedding(ctx, db, llmFactory, message.UserID, message.DiaryID, logger)
+		err = generateDiaryEmbedding(ctx, db, llmFactory, geminiRateLimiter, message.UserID, message.DiaryID, logger)
 		if err != nil {
 			messagesProcessedCounter.WithLabelValues("diary_embedding", "error").Inc()
 		} else {
@@ -1091,7 +1096,7 @@ func generateDiaryHighlightWithLLM(ctx context.Context, db *sql.DB, llmFactory c
 	return highlights, nil
 }
 
-func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, diaryID string, logger *logrus.Entry) error {
+func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, geminiRateLimiter *rate.Limiter, userID, diaryID string, logger *logrus.Entry) error {
 	logger.WithFields(logrus.Fields{
 		"user_id":  userID,
 		"diary_id": diaryID,
@@ -1140,6 +1145,9 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 	}()
 
 	// 4. 日記を話題ごとのチャンクに分割する（失敗時は日記全体を1チャンクとしてフォールバック）
+	if err := geminiRateLimiter.Wait(ctx); err != nil {
+		return fmt.Errorf("rate limiter cancelled before SplitDiaryIntoChunks: %w", err)
+	}
 	chunkDataList, err := geminiClient.SplitDiaryIntoChunks(ctx, diaryContent)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
@@ -1172,6 +1180,10 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 			defer embWg.Done()
 			// 時間的クエリの精度向上のため日付情報を先頭に付与する
 			enrichedChunk := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), cd.Content)
+			if waitErr := geminiRateLimiter.Wait(ctx); waitErr != nil {
+				embResults[idx] = embeddingResult{err: fmt.Errorf("rate limiter cancelled before GenerateEmbedding for chunk %d: %w", idx, waitErr)}
+				return
+			}
 			embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedChunk, true)
 			if err != nil {
 				embResults[idx] = embeddingResult{err: fmt.Errorf("failed to generate embedding for chunk %d: %w", idx, err)}

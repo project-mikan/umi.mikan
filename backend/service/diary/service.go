@@ -1223,8 +1223,23 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		return nil, status.Error(codes.Internal, "Redis not configured")
 	}
 
-	// 同一ユーザーによる同時実行を防ぐ分散ロック（TTL: 10分）
-	regenLock := lock.NewDistributedLock(s.Redis, lock.EmbeddingRegenLockKey(userIDStr), 10*time.Minute)
+	// embedding未生成の日記ID一覧を取得（ロック取得前に件数を確認してTTLを決定する）
+	diaryIDs, err := database.DiaryIDsWithoutEmbeddings(ctx, s.DB, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
+	}
+
+	// 件数に応じてロックTTLを動的に計算する（1件あたり10秒、最小10分・最大24時間）
+	lockTTL := time.Duration(len(diaryIDs)) * 10 * time.Second
+	if lockTTL < 10*time.Minute {
+		lockTTL = 10 * time.Minute
+	}
+	if lockTTL > 24*time.Hour {
+		lockTTL = 24 * time.Hour
+	}
+
+	// 同一ユーザーによる同時実行を防ぐ分散ロック
+	regenLock := lock.NewDistributedLock(s.Redis, lock.EmbeddingRegenLockKey(userIDStr), lockTTL)
 	acquired, err := regenLock.TryLock(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to acquire lock: %v", err)
@@ -1237,12 +1252,6 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 			log.Printf("Failed to release embedding regen lock for user %s: %v", userIDStr, unlockErr)
 		}
 	}()
-
-	// embedding未生成の日記ID一覧を取得
-	diaryIDs, err := database.DiaryIDsWithoutEmbeddings(ctx, s.DB, userID)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
-	}
 
 	// 各日記のembedding生成メッセージをキューに追加
 	// 手動再生成のため当日の日記も即時処理する（on-saveとは異なる）
