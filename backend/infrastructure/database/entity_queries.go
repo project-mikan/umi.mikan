@@ -97,17 +97,27 @@ func SearchEntitiesByQuery(ctx context.Context, db DB, userID uuid.UUID, query s
 		`
 		rows, err = db.QueryContext(ctx, sqlstr, userID)
 	} else {
-		// NOTE: ユーザー入力に % や _ が含まれるとLIKEのワイルドカードとして解釈される。
-		// 厳密な一致検索が必要な場合は、将来的にエスケープ処理を検討する。
+		// LIKE メタキャラクターをエスケープする
+		// % -> \% , _ -> \_ , \ -> \\
+		escapedQuery := ""
+		for _, r := range query {
+			switch r {
+			case '%', '_', '\\':
+				escapedQuery += "\\" + string(r)
+			default:
+				escapedQuery += string(r)
+			}
+		}
+
 		const sqlstr = `
 			SELECT DISTINCT e.id, e.user_id, e.created_at, e.updated_at, e.category_id, e.name, e.memo
 			FROM entities e
 			LEFT JOIN entity_aliases ea ON e.id = ea.entity_id
 			WHERE e.user_id = $1
-			AND (e.name ILIKE $2 OR ea.alias ILIKE $2)
+			AND (e.name ILIKE $2 ESCAPE '\' OR ea.alias ILIKE $2 ESCAPE '\')
 			ORDER BY e.name
 		`
-		rows, err = db.QueryContext(ctx, sqlstr, userID, "%"+query+"%")
+		rows, err = db.QueryContext(ctx, sqlstr, userID, "%"+escapedQuery+"%")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to search entities: %w", err)

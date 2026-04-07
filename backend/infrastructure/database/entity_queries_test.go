@@ -239,4 +239,25 @@ func TestSearchEntitiesByQuery(t *testing.T) {
 			t.Errorf("他ユーザーのエンティティが含まれている")
 		}
 	})
+
+	t.Run("LIKEメタキャラクターがエスケープされる", func(t *testing.T) {
+		// % を含む名前のエンティティを登録
+		specialID := insertEntity(t, db, ctx, userID, "100%満足")
+		defer func() {
+			_, _ = db.ExecContext(ctx, "DELETE FROM entity_aliases WHERE entity_id = $1", specialID)
+			_, _ = db.ExecContext(ctx, "DELETE FROM entities WHERE id = $1", specialID)
+		}()
+
+		// "%" で検索して "100%満足" がヒットし、"山田花子" などはヒットしないことを確認
+		entities, err := database.SearchEntitiesByQuery(ctx, db, userID, "%")
+		if err != nil {
+			t.Fatalf("SearchEntitiesByQuery失敗: %v", err)
+		}
+		if len(entities) != 1 {
+			t.Errorf("期待 1件 (%s), 実際 %d件", "100%満足", len(entities))
+		} else if entities[0].Name != "100%満足" {
+			t.Errorf("期待 100%%満足, 実際 %s", entities[0].Name)
+		}
+	})
 }
+
