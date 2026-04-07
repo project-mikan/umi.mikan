@@ -457,14 +457,7 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 	}
 
 	// その月に日記が存在するかチェック
-	var count int
-	checkQuery := `
-		SELECT COUNT(*) FROM diaries
-		WHERE user_id = $1
-		AND EXTRACT(YEAR FROM date) = $2
-		AND EXTRACT(MONTH FROM date) = $3
-	`
-	err = s.DB.QueryRowContext(ctx, checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
+	count, err := database.DiaryCountInMonth(ctx, s.DB, userIDStr, int(message.Month.Year), int(message.Month.Month))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to check diary entries")
 	}
@@ -1113,23 +1106,39 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}()
 
 	// HNSWの検索精度を向上させる（デフォルト40→100で再現率を大幅改善）
-	if _, err := tx.ExecContext(ctx, "SET LOCAL hnsw.ef_search = 100"); err != nil {
+	if err := database.SetHNSWEfSearch(ctx, tx, 100); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to set hnsw.ef_search: %v", err)
 	}
 
-	// pgvectorでコサイン類似度ANN検索
+	// ベクトル検索とキーワード検索を並列実行してレイテンシを削減
+	// キーワード検索はef_searchを必要としないため別コネクション(s.DB)で並列化できる
+	type keywordSearchResult struct {
+		diaries []*database.Diary
+		err     error
+	}
+	kwResultCh := make(chan keywordSearchResult, 1)
+	go func() {
+		ds, err := database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), req.Query)
+		kwResultCh <- keywordSearchResult{diaries: ds, err: err}
+	}()
+
+	// pgvectorでコサイン類似度ANN検索（txのef_search設定を使用）
 	searchResults, err := database.SearchDiaryEntriesByEmbedding(ctx, tx, userID, queryEmbedding, limit, semanticSimilarityThreshold)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to search diary entries: %v", err)
 	}
 
-	// ハイブリッド検索: キーワード LIKE 検索で補完（ベクトル検索が拾えない固有名詞・専門語をカバー）
+	// ハイブリッド検索: キーワード検索結果で補完（ベクトル検索が拾えない固有名詞・専門語をカバー）
+	kwResult := <-kwResultCh
+	if kwResult.err != nil {
+		// キーワード検索失敗時はベクトル検索結果のみで継続（degraded mode）
+		log.Printf("keyword search failed (degraded mode): %v", kwResult.err)
+	}
 	vectorIDs := make(map[uuid.UUID]bool, len(searchResults))
 	for _, sr := range searchResults {
 		vectorIDs[sr.DiaryID] = true
 	}
-	keywordResults, _ := database.DiariesByUserIDAndContent(ctx, tx, userID.String(), req.Query)
-	for _, d := range keywordResults {
+	for _, d := range kwResult.diaries {
 		if !vectorIDs[d.ID] {
 			searchResults = append(searchResults, &database.DiaryEmbeddingSearchResult{
 				DiaryID:    d.ID,
@@ -1141,10 +1150,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}
 
 	// 意味的検索のAIリクエストを記録（メトリクス集計用、エラーは無視）
-	if _, logErr := s.DB.ExecContext(ctx,
-		"INSERT INTO semantic_search_logs (user_id) VALUES ($1)",
-		userID,
-	); logErr != nil {
+	if logErr := database.InsertSemanticSearchLog(ctx, s.DB, userID); logErr != nil {
 		log.Printf("Failed to log semantic search request: %v", logErr)
 	}
 
@@ -1221,8 +1227,19 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		return nil, status.Error(codes.Internal, "Redis not configured")
 	}
 
-	// 同一ユーザーによる同時実行を防ぐ分散ロック（TTL: 10分）
-	regenLock := lock.NewDistributedLock(s.Redis, lock.EmbeddingRegenLockKey(userIDStr), 10*time.Minute)
+	// embedding未生成の日記ID一覧を取得
+	// NOTE: TTL計算のために意図的にロック取得前に取得している。
+	// 取得からロックまでの間に別リクエストが割り込む可能性がある（TOCTOU）が、embeddingのUPSERTは冪等なので実害はない。
+	diaryIDs, err := database.DiaryIDsWithoutEmbeddings(ctx, s.DB, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
+	}
+
+	// 件数に応じてロックTTLを動的に計算する（1件あたり10秒、最小10分・最大24時間）
+	lockTTL := min(max(time.Duration(len(diaryIDs))*10*time.Second, 10*time.Minute), 24*time.Hour)
+
+	// 同一ユーザーによる同時実行を防ぐ分散ロック
+	regenLock := lock.NewDistributedLock(s.Redis, lock.EmbeddingRegenLockKey(userIDStr), lockTTL)
 	acquired, err := regenLock.TryLock(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to acquire lock: %v", err)
@@ -1236,36 +1253,10 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		}
 	}()
 
-	// embedding未生成の日記ID一覧を取得
-	query := `
-		SELECT d.id
-		FROM diaries d
-		WHERE d.user_id = $1
-		  AND NOT EXISTS (
-		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
-		  )
-		ORDER BY d.date DESC
-	`
-	rows, err := s.DB.QueryContext(ctx, query, userID)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
-	}
-	defer func() {
-		if closeErr := rows.Close(); closeErr != nil {
-			fmt.Printf("Failed to close rows: %v\n", closeErr)
-		}
-	}()
-
 	// 各日記のembedding生成メッセージをキューに追加
 	// 手動再生成のため当日の日記も即時処理する（on-saveとは異なる）
 	var count int32
-	for rows.Next() {
-		var diaryID string
-		if err := rows.Scan(&diaryID); err != nil {
-			// スキャンエラーは該当行をスキップして処理継続（他の日記への影響を防ぐ）
-			log.Printf("Failed to scan diary row: %v", err)
-			continue
-		}
+	for _, diaryID := range diaryIDs {
 		msg := DiaryEmbeddingMessage{
 			Type:    "diary_embedding",
 			UserID:  userIDStr,
@@ -1332,10 +1323,6 @@ func (s *DiaryEntry) GetDiaryEmbeddingStatus(
 		resp.ChunkModelVersion = embeddingStatus.ChunkModelVersion
 		resp.CreatedAt = embeddingStatus.CreatedAt.Unix()
 		resp.UpdatedAt = embeddingStatus.UpdatedAt.Unix()
-		// レスポンスサイズ削減のため先頭10件のみ返す（フロントエンドはプレビュー表示のみ）
-		resp.EmbeddingDimensions = int32(len(embeddingStatus.EmbeddingValues))
-		previewLen := min(10, len(embeddingStatus.EmbeddingValues))
-		resp.EmbeddingValues = embeddingStatus.EmbeddingValues[:previewLen]
 		resp.ChunkCount = int32(embeddingStatus.ChunkCount)
 		resp.ChunkSummaries = embeddingStatus.ChunkSummaries
 	}

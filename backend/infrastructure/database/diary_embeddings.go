@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -52,8 +51,6 @@ type DiaryEmbeddingStatus struct {
 	ChunkModelVersion string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
-	// 最初のチャンクのベクトル値（デバッグ用）
-	EmbeddingValues []float32
 	// チャンク総数
 	ChunkCount int
 	// 各チャンクの概要（chunk_index順）
@@ -61,10 +58,10 @@ type DiaryEmbeddingStatus struct {
 }
 
 // GetDiaryEmbeddingStatus は指定された日記のRAGインデックス状態を返す
-// 全チャンクのsummaryとchunk_index=0のベクトル値を返す
+// 全チャンクのsummaryを返す（ベクトル値は返さない）
 func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UUID) (*DiaryEmbeddingStatus, error) {
 	query := `
-		SELECT model_version, chunk_model_version, created_at, updated_at, embedding::text, chunk_summary
+		SELECT model_version, chunk_model_version, created_at, updated_at, chunk_summary
 		FROM diary_embeddings
 		WHERE diary_id = $1 AND user_id = $2
 		ORDER BY chunk_index ASC
@@ -81,16 +78,15 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 	var (
 		modelVersion, chunkModelVersion string
 		createdAt, updatedAt            time.Time
-		embeddingValues                 []float32
 		chunkSummaries                  []string
 	)
 	first := true
 
 	for rows.Next() {
-		var embStr, chunkSummary string
+		var chunkSummary string
 		var mv, cmv string
 		var cat, uat time.Time
-		if err := rows.Scan(&mv, &cmv, &cat, &uat, &embStr, &chunkSummary); err != nil {
+		if err := rows.Scan(&mv, &cmv, &cat, &uat, &chunkSummary); err != nil {
 			return nil, fmt.Errorf("failed to scan diary embedding status: %w", err)
 		}
 		if first {
@@ -98,7 +94,6 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 			chunkModelVersion = cmv
 			createdAt = cat
 			updatedAt = uat
-			embeddingValues = parseEmbeddingString(embStr)
 			first = false
 		}
 		chunkSummaries = append(chunkSummaries, chunkSummary)
@@ -118,30 +113,9 @@ func GetDiaryEmbeddingStatus(ctx context.Context, db DB, diaryID, userID uuid.UU
 		ChunkModelVersion: chunkModelVersion,
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
-		EmbeddingValues:   embeddingValues,
 		ChunkCount:        len(chunkSummaries),
 		ChunkSummaries:    chunkSummaries,
 	}, nil
-}
-
-// parseEmbeddingString はpgvectorの文字列表現をfloat32スライスに変換する
-// pgvectorは "[v1,v2,...,vn]" 形式で返す（科学表記も含む）
-func parseEmbeddingString(s string) []float32 {
-	s = strings.TrimPrefix(s, "[")
-	s = strings.TrimSuffix(s, "]")
-	if s == "" {
-		return nil
-	}
-	parts := strings.Split(s, ",")
-	values := make([]float32, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		f, err := strconv.ParseFloat(p, 32)
-		if err == nil {
-			values = append(values, float32(f))
-		}
-	}
-	return values
 }
 
 // embeddingToSQL はfloat32スライスをpgvector形式の文字列に変換する
@@ -169,18 +143,26 @@ func UpsertDiaryChunkEmbeddings(ctx context.Context, db *sql.DB, diaryID, userID
 		return fmt.Errorf("failed to delete existing diary chunks: %w", err)
 	}
 
-	// 新チャンクを挿入
-	insertQuery := `
-		INSERT INTO diary_embeddings
-			(id, diary_id, user_id, chunk_index, chunk_content, chunk_summary, embedding, model_version, chunk_model_version, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7::halfvec, $8, $9, NOW(), NOW())
-	`
-	for _, chunk := range chunks {
-		embeddingStr := embeddingToSQL(chunk.Embedding)
-		if _, err := tx.ExecContext(ctx, insertQuery,
-			uuid.New(), diaryID, userID, chunk.Index, chunk.Content, chunk.Summary, embeddingStr, modelVersion, chunk.SplitModelVersion,
-		); err != nil {
-			return fmt.Errorf("failed to insert diary chunk (index=%d): %w", chunk.Index, err)
+	// 新チャンクをバッチINSERTで一括挿入（N+1回のクエリを1回に削減）
+	if len(chunks) > 0 {
+		const colCount = 9
+		valuePlaceholders := make([]string, 0, len(chunks))
+		valueArgs := make([]any, 0, len(chunks)*colCount)
+		for i, chunk := range chunks {
+			base := i * colCount
+			valuePlaceholders = append(valuePlaceholders, fmt.Sprintf(
+				"($%d, $%d, $%d, $%d, $%d, $%d, $%d::halfvec, $%d, $%d, NOW(), NOW())",
+				base+1, base+2, base+3, base+4, base+5, base+6, base+7, base+8, base+9,
+			))
+			valueArgs = append(valueArgs,
+				uuid.New(), diaryID, userID, chunk.Index, chunk.Content, chunk.Summary,
+				embeddingToSQL(chunk.Embedding), modelVersion, chunk.SplitModelVersion,
+			)
+		}
+		batchInsert := "INSERT INTO diary_embeddings (id, diary_id, user_id, chunk_index, chunk_content, chunk_summary, embedding, model_version, chunk_model_version, created_at, updated_at) VALUES " +
+			strings.Join(valuePlaceholders, ", ")
+		if _, err := tx.ExecContext(ctx, batchInsert, valueArgs...); err != nil {
+			return fmt.Errorf("failed to batch insert diary chunks: %w", err)
 		}
 	}
 
@@ -249,4 +231,31 @@ func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID,
 	}
 
 	return results, nil
+}
+
+// SetHNSWEfSearch はHNSW検索の精度パラメータをセッションローカルに設定する
+// pgvectorのANN検索精度を向上させるために使用する（デフォルト40→値を大きくすると再現率が向上）
+func SetHNSWEfSearch(ctx context.Context, db DB, efSearch int) error {
+	// NOTE: SET LOCAL は $1 プレースホルダーが使用できないため、fmt.Sprintf で構築している。
+	// efSearch は int 型であるため、SQLインジェクションのリスクはない。
+	sqlstr := fmt.Sprintf("SET LOCAL hnsw.ef_search = %d", efSearch)
+	if _, err := db.ExecContext(ctx, sqlstr); err != nil {
+		return fmt.Errorf("failed to set hnsw.ef_search to %d: %w", efSearch, err)
+	}
+	return nil
+}
+
+// DiaryIDsWithoutEmbeddings はユーザーのembedding未生成日記IDを日付降順で返す
+// 手動再生成用のため全日記を対象とする（スケジューラーの DiaryIDsNeedingEmbedding とは異なる）
+func DiaryIDsWithoutEmbeddings(ctx context.Context, db DB, userID uuid.UUID) ([]string, error) {
+	const sqlstr = `
+		SELECT d.id
+		FROM diaries d
+		WHERE d.user_id = $1
+		  AND NOT EXISTS (
+		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
+		  )
+		ORDER BY d.date DESC
+	`
+	return queryStringSlice(ctx, db, sqlstr, userID)
 }

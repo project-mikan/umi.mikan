@@ -72,35 +72,7 @@ func validateAlias(alias string) error {
 
 // getAllAliasesByUserID ユーザーの全エイリアスを一括取得してマップで返す（N+1クエリ回避）
 func (s *EntityEntry) getAllAliasesByUserID(ctx context.Context, userID uuid.UUID) (map[string][]*database.EntityAlias, error) {
-	query := `
-		SELECT ea.id, ea.entity_id, ea.created_at, ea.updated_at, ea.alias
-		FROM entity_aliases ea
-		INNER JOIN entities e ON ea.entity_id = e.id
-		WHERE e.user_id = $1
-		ORDER BY ea.entity_id, ea.created_at
-	`
-	rows, err := s.DB.QueryContext(ctx, query, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = rows.Close()
-	}()
-
-	aliasMap := make(map[string][]*database.EntityAlias)
-	for rows.Next() {
-		var alias database.EntityAlias
-		if err := rows.Scan(&alias.ID, &alias.EntityID, &alias.CreatedAt, &alias.UpdatedAt, &alias.Alias); err != nil {
-			return nil, err
-		}
-		entityIDStr := alias.EntityID.String()
-		aliasMap[entityIDStr] = append(aliasMap[entityIDStr], &alias)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return aliasMap, nil
+	return database.AliasesByUserID(ctx, s.DB, userID)
 }
 
 // CreateEntity エンティティを作成する
@@ -146,13 +118,8 @@ func (s *EntityEntry) CreateEntity(
 	// トランザクション内でエンティティを作成（一貫性のため）
 	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		// エンティティ名が既存のエイリアスと重複していないかチェック
-		checkAliasQuery := `
-			SELECT COUNT(*) FROM entity_aliases ea
-			INNER JOIN entities e ON ea.entity_id = e.id
-			WHERE e.user_id = $1 AND ea.alias = $2
-		`
-		var aliasCount int
-		if err := tx.QueryRowContext(ctx, checkAliasQuery, userID, message.Name).Scan(&aliasCount); err != nil {
+		aliasCount, err := database.CountAliasMatchingName(ctx, tx, userID, message.Name)
+		if err != nil {
 			return err
 		}
 		if aliasCount > 0 {
@@ -490,12 +457,8 @@ func (s *EntityEntry) CreateEntityAlias(
 
 	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		// エイリアスが既存のエンティティ名と重複していないかチェック
-		checkEntityQuery := `
-			SELECT COUNT(*) FROM entities
-			WHERE user_id = $1 AND name = $2
-		`
-		var entityCount int
-		if err := tx.QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
+		entityCount, err := database.CountEntityMatchingAlias(ctx, tx, userID, message.Alias)
+		if err != nil {
 			return err
 		}
 		if entityCount > 0 {
@@ -503,13 +466,8 @@ func (s *EntityEntry) CreateEntityAlias(
 		}
 
 		// エイリアスが既存の他のエイリアスと重複していないかチェック（同じユーザー内）
-		checkOtherAliasQuery := `
-			SELECT COUNT(*) FROM entity_aliases ea
-			INNER JOIN entities e ON ea.entity_id = e.id
-			WHERE e.user_id = $1 AND ea.alias = $2
-		`
-		var otherAliasCount int
-		if err := tx.QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias).Scan(&otherAliasCount); err != nil {
+		otherAliasCount, err := database.CountAliasDuplicate(ctx, tx, userID, message.Alias)
+		if err != nil {
 			return err
 		}
 		if otherAliasCount > 0 {
@@ -585,12 +543,8 @@ func (s *EntityEntry) UpdateEntityAlias(
 	// トランザクション内でエイリアスを更新
 	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
 		// 新しいエイリアス名が既存のエンティティ名と重複していないかチェック
-		checkEntityQuery := `
-			SELECT COUNT(*) FROM entities
-			WHERE user_id = $1 AND name = $2
-		`
-		var entityCount int
-		if err := tx.QueryRowContext(ctx, checkEntityQuery, userID, message.Alias).Scan(&entityCount); err != nil {
+		entityCount, err := database.CountEntityMatchingAlias(ctx, tx, userID, message.Alias)
+		if err != nil {
 			return err
 		}
 		if entityCount > 0 {
@@ -598,13 +552,8 @@ func (s *EntityEntry) UpdateEntityAlias(
 		}
 
 		// 新しいエイリアス名が既存の他のエイリアスと重複していないかチェック（同じユーザー内、自分自身を除く）
-		checkOtherAliasQuery := `
-			SELECT COUNT(*) FROM entity_aliases ea
-			INNER JOIN entities e ON ea.entity_id = e.id
-			WHERE e.user_id = $1 AND ea.alias = $2 AND ea.id != $3
-		`
-		var otherAliasCount int
-		if err := tx.QueryRowContext(ctx, checkOtherAliasQuery, userID, message.Alias, aliasID).Scan(&otherAliasCount); err != nil {
+		otherAliasCount, err := database.CountAliasDuplicateExcluding(ctx, tx, userID, message.Alias, aliasID)
+		if err != nil {
 			return err
 		}
 		if otherAliasCount > 0 {
@@ -695,59 +644,18 @@ func (s *EntityEntry) SearchEntities(
 	}
 
 	// エンティティ名とエイリアスから検索
-	// LIKE検索を使用して部分一致検索を行う
 	// 空文字列の場合は全件取得
-	var query string
-	var rows *sql.Rows
-
-	if message.Query == "" {
-		// 空文字列の場合は全件取得
-		query = `
-			SELECT DISTINCT e.id, e.user_id, e.created_at, e.updated_at, e.category_id, e.name, e.memo
-			FROM entities e
-			WHERE e.user_id = $1
-			ORDER BY e.name
-		`
-		rows, err = s.DB.QueryContext(ctx, query, userID)
-	} else {
-		// クエリがある場合は部分一致検索
-		query = `
-			SELECT DISTINCT e.id, e.user_id, e.created_at, e.updated_at, e.category_id, e.name, e.memo
-			FROM entities e
-			LEFT JOIN entity_aliases ea ON e.id = ea.entity_id
-			WHERE e.user_id = $1
-			AND (e.name ILIKE $2 OR ea.alias ILIKE $2)
-			ORDER BY e.name
-		`
-		rows, err = s.DB.QueryContext(ctx, query, userID, "%"+message.Query+"%")
-	}
+	foundEntities, err := database.SearchEntitiesByQuery(ctx, s.DB, userID, message.Query)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = rows.Close()
-	}()
 
-	// エンティティIDを収集
-	entityIDs := make([]uuid.UUID, 0)
-	entityMap := make(map[string]*database.Entity)
-
-	for rows.Next() {
-		var entity database.Entity
-		if err := rows.Scan(&entity.ID, &entity.UserID, &entity.CreatedAt, &entity.UpdatedAt, &entity.CategoryID, &entity.Name, &entity.Memo); err != nil {
-			return nil, err
-		}
-
-		// 重複チェック
-		entityIDStr := entity.ID.String()
-		if _, exists := entityMap[entityIDStr]; !exists {
-			entityIDs = append(entityIDs, entity.ID)
-			entityMap[entityIDStr] = &entity
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
+	// エンティティIDを収集（順序を保持）
+	entityIDs := make([]uuid.UUID, 0, len(foundEntities))
+	entityMap := make(map[string]*database.Entity, len(foundEntities))
+	for _, entity := range foundEntities {
+		entityIDs = append(entityIDs, entity.ID)
+		entityMap[entity.ID.String()] = entity
 	}
 
 	// N+1クエリを避けるため、全エイリアスを一括取得

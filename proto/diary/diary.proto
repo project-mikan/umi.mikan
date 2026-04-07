@@ -457,9 +457,7 @@ message GetDiaryEmbeddingStatusResponse {
   string model_version = 2;            // embedding生成に使用したモデル
   int64 created_at = 3;                // 埋め込み作成日時（Unix timestamp）
   int64 updated_at = 4;                // 埋め込み更新日時（Unix timestamp）
-  repeated float embedding_values = 5; // ベクトル値プレビュー（先頭10件のみ、表示用）
   string chunk_model_version = 6;      // チャンク分割に使用したLLMモデル
   int32 chunk_count = 7;               // チャンク総数
   repeated string chunk_summaries = 8; // 各チャンクの概要（chunk_index順）
-  int32 embedding_dimensions = 9;      // ベクトルの総次元数（embedding_valuesは先頭10件のみのため別フィールドで提供）
 }

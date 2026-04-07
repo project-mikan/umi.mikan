@@ -6,8 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
+	"github.com/redis/rueidis"
 )
 
 func setupUserTestDB(t *testing.T) *sql.DB {
@@ -417,6 +419,87 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 		}
 		if !resp.AutoSummaryMonthly {
 			t.Error("AutoSummaryMonthlyがtrueであるべき")
+		}
+	})
+}
+
+// setupTestRedis はテスト用のminiredisクライアントを起動してrueidisクライアントを返す
+func setupTestRedis(t *testing.T) rueidis.Client {
+	t.Helper()
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("miniredis起動失敗: %v", err)
+	}
+	t.Cleanup(mr.Close)
+
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{mr.Addr()},
+		DisableCache: true,
+	})
+	if err != nil {
+		t.Fatalf("rueidisクライアント作成失敗: %v", err)
+	}
+	t.Cleanup(client.Close)
+	return client
+}
+
+func TestUserEntry_GetHourlyMetrics(t *testing.T) {
+	db := setupUserTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "user-hourly-metrics@example.com", "Metrics User")
+	redisClient := setupTestRedis(t)
+	svc := &UserEntry{DB: db, RedisClient: redisClient}
+	ctx := context.Background()
+
+	t.Run("正常系：時間別メトリクスを取得", func(t *testing.T) {
+		metrics, err := svc.getHourlyMetrics(ctx, userID)
+		if err != nil {
+			t.Fatalf("getHourlyMetrics失敗: %v", err)
+		}
+		// 過去24時間分のデータが返る
+		if len(metrics) != 24 {
+			t.Errorf("期待 24件, 実際 %d件", len(metrics))
+		}
+	})
+}
+
+func TestUserEntry_GetMetricsSummary(t *testing.T) {
+	db := setupUserTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "user-metrics-summary@example.com", "Metrics Summary User")
+	redisClient := setupTestRedis(t)
+	svc := &UserEntry{DB: db, RedisClient: redisClient}
+	ctx := context.Background()
+
+	t.Run("正常系：メトリクスサマリーを取得（データなし）", func(t *testing.T) {
+		summary, err := svc.getMetricsSummary(ctx, userID)
+		if err != nil {
+			t.Fatalf("getMetricsSummary失敗: %v", err)
+		}
+		if summary.TotalDailySummaries != 0 {
+			t.Errorf("TotalDailySummaries: 期待 0, 実際 %d", summary.TotalDailySummaries)
+		}
+		if summary.TotalMonthlySummaries != 0 {
+			t.Errorf("TotalMonthlySummaries: 期待 0, 実際 %d", summary.TotalMonthlySummaries)
+		}
+	})
+}
+
+func TestUserEntry_GetPubSubMetrics(t *testing.T) {
+	db := setupUserTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "user-pubsub-metrics@example.com", "PubSub Metrics User")
+	redisClient := setupTestRedis(t)
+	svc := &UserEntry{DB: db, RedisClient: redisClient}
+	ctx := testutil.CreateAuthenticatedContext(userID)
+
+	t.Run("正常系：PubSubメトリクスを取得", func(t *testing.T) {
+		resp, err := svc.GetPubSubMetrics(ctx, &g.GetPubSubMetricsRequest{})
+		if err != nil {
+			t.Fatalf("GetPubSubMetrics失敗: %v", err)
+		}
+		if resp == nil {
+			t.Fatal("レスポンスがnil")
+		}
+		if len(resp.HourlyMetrics) != 24 {
+			t.Errorf("HourlyMetrics: 期待 24件, 実際 %d件", len(resp.HourlyMetrics))
 		}
 	})
 }

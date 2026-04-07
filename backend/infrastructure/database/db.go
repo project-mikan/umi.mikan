@@ -9,6 +9,37 @@ import (
 	_ "github.com/lib/pq" // postgres driver
 )
 
+// queryStringSlice はクエリを実行して最初の列の文字列スライスを返す内部ヘルパー
+func queryStringSlice(ctx context.Context, db DB, sqlstr string, args ...any) ([]string, error) {
+	rows, err := db.QueryContext(ctx, sqlstr, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var results []string
+	for rows.Next() {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return nil, fmt.Errorf("failed to scan: %w", err)
+		}
+		results = append(results, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error during rows iteration: %w", err)
+	}
+	return results, nil
+}
+
+// queryCount はCOUNT(*)クエリを実行して件数を返す内部ヘルパー
+func queryCount(ctx context.Context, db DB, sqlstr string, args ...any) (int, error) {
+	var count int
+	if err := db.QueryRowContext(ctx, sqlstr, args...).Scan(&count); err != nil {
+		return 0, fmt.Errorf("failed to count: %w", err)
+	}
+	return count, nil
+}
+
 func NewDB(host string, port int, user, password, dbname string) *sql.DB {
 	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname))
 	if err != nil {

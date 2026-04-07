@@ -259,8 +259,6 @@
 			"indexedAt": "Indexed at",
 			"updatedAt": "Last updated at",
 			"modelVersion": "Model",
-			"dimensions": "Dimensions",
-			"vectorPreview": "Vector values (first 10)",
 			"chunkCount": "Chunks",
 			"chunkSummaries": "Chunk list",
 			"chunkSummaryEmpty": "(no summary)"

@@ -19,12 +19,15 @@ services:
       TASK_TIMEOUT_SECONDS: 600 # タスクステータスの有効期限(秒)
     ports:
       - "2001:8080"
+      - "2012:8082" # metrics endpoint
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
+    networks:
+      - internal
 
   frontend:
     image: ghcr.io/project-mikan/umi-mikan-frontend:latest
@@ -41,7 +44,8 @@ services:
       - internal
 
   postgres:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:0.7.4-pg17
+    platform: linux/amd64
     restart: unless-stopped
     environment:
       TZ: Asia/Tokyo
@@ -89,6 +93,8 @@ services:
       - "2005:8082" # metrics endpoint
     restart: unless-stopped
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_started
     networks:

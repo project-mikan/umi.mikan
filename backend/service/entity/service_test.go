@@ -465,3 +465,112 @@ func TestGetAllAliasesByUserID(t *testing.T) {
 		assert.Empty(t, aliasMap)
 	})
 }
+
+func TestUpdateEntityAlias(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-update-alias-%s@example.com", userID.String()),
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	entity := &database.Entity{
+		ID:         uuid.New(),
+		UserID:     userID,
+		Name:       "エイリアス更新テスト",
+		CategoryID: 1,
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
+	}
+	require.NoError(t, entity.Insert(context.Background(), db))
+
+	alias := &database.EntityAlias{
+		ID:        uuid.New(),
+		EntityID:  entity.ID,
+		Alias:     "元のエイリアス",
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, alias.Insert(context.Background(), db))
+
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	t.Run("正常にエイリアスを更新できる", func(t *testing.T) {
+		req := &g.UpdateEntityAliasRequest{
+			Id:    alias.ID.String(),
+			Alias: "新しいエイリアス",
+		}
+		resp, err := service.UpdateEntityAlias(ctx, req)
+		require.NoError(t, err)
+		assert.Equal(t, "新しいエイリアス", resp.Alias.Alias)
+	})
+
+	t.Run("エンティティ名と同じエイリアスには更新できない", func(t *testing.T) {
+		req := &g.UpdateEntityAliasRequest{
+			Id:    alias.ID.String(),
+			Alias: "エイリアス更新テスト",
+		}
+		_, err := service.UpdateEntityAlias(ctx, req)
+		require.Error(t, err)
+	})
+}
+
+func TestSearchEntities(t *testing.T) {
+	db := testkit.Setup(t)
+	defer testkit.Teardown(db)
+
+	service := &EntityEntry{DB: db}
+
+	userID := uuid.New()
+	user := &database.User{
+		ID:        userID,
+		Email:     fmt.Sprintf("test-search-entities-%s@example.com", userID.String()),
+		CreatedAt: time.Now().Unix(),
+		UpdatedAt: time.Now().Unix(),
+	}
+	require.NoError(t, user.Insert(context.Background(), db))
+
+	entity1 := &database.Entity{
+		ID:         uuid.New(),
+		UserID:     userID,
+		Name:       "山田太郎",
+		CategoryID: 1,
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
+	}
+	require.NoError(t, entity1.Insert(context.Background(), db))
+
+	entity2 := &database.Entity{
+		ID:         uuid.New(),
+		UserID:     userID,
+		Name:       "佐藤花子",
+		CategoryID: 1,
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
+	}
+	require.NoError(t, entity2.Insert(context.Background(), db))
+
+	ctx := context.WithValue(context.Background(), middleware.UserIDKey, userID.String())
+
+	t.Run("空クエリで全エンティティを取得できる", func(t *testing.T) {
+		req := &g.SearchEntitiesRequest{Query: ""}
+		resp, err := service.SearchEntities(ctx, req)
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, len(resp.Entities), 2)
+	})
+
+	t.Run("クエリで名前検索できる", func(t *testing.T) {
+		req := &g.SearchEntitiesRequest{Query: "山田"}
+		resp, err := service.SearchEntities(ctx, req)
+		require.NoError(t, err)
+		assert.Len(t, resp.Entities, 1)
+		assert.Equal(t, "山田太郎", resp.Entities[0].Name)
+	})
+}

@@ -60,7 +60,7 @@ func TestProcessMessage_UnknownType(t *testing.T) {
 	payload := `{"type": "unknown_type", "user_id": "test"}`
 
 	// This should not return an error for unknown message types
-	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
+	err := processMessage(ctx, nil, nil, nil, nil, nil, payload, logger)
 	if err != nil {
 		t.Errorf("expected no error for unknown message type, got %v", err)
 	}
@@ -73,7 +73,7 @@ func TestProcessMessage_InvalidJSON(t *testing.T) {
 	payload := `invalid json`
 
 	// This should return an error for invalid JSON
-	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
+	err := processMessage(ctx, nil, nil, nil, nil, nil, payload, logger)
 	if err == nil {
 		t.Fatal("expected error for invalid JSON, got nil")
 	}
@@ -86,7 +86,7 @@ func TestProcessMessage_LatestTrend_InvalidJSON(t *testing.T) {
 	// latestTrendメッセージのJSONが不正な場合はエラーを返すことを確認
 	payload := `{"type": "latest_trend", invalid_json}`
 
-	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
+	err := processMessage(ctx, nil, nil, nil, nil, nil, payload, logger)
 	if err == nil {
 		t.Fatal("不正なJSONに対してエラーが期待されますが、nilが返りました")
 	}
@@ -99,7 +99,7 @@ func TestProcessMessage_DiaryHighlight_InvalidJSON(t *testing.T) {
 	// diaryHighlightメッセージのJSONが不正な場合はエラーを返すことを確認
 	payload := `{"type": "diary_highlight", invalid_json}`
 
-	err := processMessage(ctx, nil, nil, nil, nil, payload, logger)
+	err := processMessage(ctx, nil, nil, nil, nil, nil, payload, logger)
 	if err == nil {
 		t.Fatal("不正なJSONに対してエラーが期待されますが、nilが返りました")
 	}

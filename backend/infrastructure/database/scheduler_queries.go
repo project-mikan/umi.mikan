@@ -90,14 +90,21 @@ func MonthsNeedingMonthlySummary(ctx context.Context, db DB, userID string) ([]Y
 	return months, nil
 }
 
+// DiaryCountInMonth は指定ユーザーの指定年月の日記件数を返す
+func DiaryCountInMonth(ctx context.Context, db DB, userID string, year, month int) (int, error) {
+	const sqlstr = `
+		SELECT COUNT(*) FROM diaries
+		WHERE user_id = $1
+		AND EXTRACT(YEAR FROM date) = $2
+		AND EXTRACT(MONTH FROM date) = $3
+	`
+	return queryCount(ctx, db, sqlstr, userID, year, month)
+}
+
 // DiaryCountInDateRange は指定ユーザーの指定期間内の日記件数を返す
 func DiaryCountInDateRange(ctx context.Context, db DB, userID string, from, to time.Time) (int, error) {
 	const sqlstr = `SELECT COUNT(*) FROM diaries WHERE user_id = $1 AND date >= $2 AND date <= $3`
-	var count int
-	if err := db.QueryRowContext(ctx, sqlstr, userID, from, to).Scan(&count); err != nil {
-		return 0, fmt.Errorf("failed to count diaries in date range: %w", err)
-	}
-	return count, nil
+	return queryCount(ctx, db, sqlstr, userID, from, to)
 }
 
 // DiaryIDsNeedingEmbedding は指定ユーザーの指定日付でembeddingが未生成または古い日記IDを返す
@@ -113,22 +120,5 @@ func DiaryIDsNeedingEmbedding(ctx context.Context, db DB, userID string, targetD
 		    OR (SELECT MAX(de.updated_at) FROM diary_embeddings de WHERE de.diary_id = d.id) < to_timestamp(d.updated_at / 1000.0)
 		  )
 	`
-	rows, err := db.QueryContext(ctx, sqlstr, userID, targetDate)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query diary IDs needing embedding: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-
-	var diaryIDs []string
-	for rows.Next() {
-		var diaryID string
-		if err := rows.Scan(&diaryID); err != nil {
-			return nil, fmt.Errorf("failed to scan diary ID: %w", err)
-		}
-		diaryIDs = append(diaryIDs, diaryID)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error during rows iteration: %w", err)
-	}
-	return diaryIDs, nil
+	return queryStringSlice(ctx, db, sqlstr, userID, targetDate)
 }

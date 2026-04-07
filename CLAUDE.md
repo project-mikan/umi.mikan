@@ -333,10 +333,11 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 ### Database Access Guidelines
 
-- **Never write inline SQL in `cmd/` packages**: All SQL queries must be defined in `backend/infrastructure/database/` functions. `cmd/scheduler` and `cmd/subscriber` must call these functions instead of using `QueryContext`/`QueryRowContext`/`ExecContext` directly.
-- **One file per query domain**: Place queries in the appropriate file (e.g., `user_llms.go` for user_llms queries, `scheduler_queries.go` for cross-table scheduler queries).
+- **Never write inline SQL outside the database layer**: All SQL queries must be defined in `backend/infrastructure/database/` functions. This applies to ALL packages including `cmd/`, `service/`, and any other package. Never use `QueryContext`/`QueryRowContext`/`ExecContext` directly with raw SQL strings in service or cmd layers.
+- **Use auto-generated dbtpl functions when possible**: For simple CRUD operations, prefer the auto-generated functions from `*.dbtpl.go` files (e.g., `Entity.Insert()`, `EntityAlias.Delete()`). Write custom SQL functions only when the generated code is insufficient.
+- **One file per query domain**: Place queries in the appropriate file (e.g., `user_llms.go` for user_llms queries, `user_queries.go` for user service queries, `entity_queries.go` for entity queries, `scheduler_queries.go` for cross-table scheduler queries).
 - **Every new database file needs a `*_test.go`**: When adding query functions to `backend/infrastructure/database/`, always create matching tests in `package database_test`.
-- **Type-aware comparisons**: `diaries.updated_at` is BIGINT (milliseconds), while `diary_embeddings.updated_at` is TIMESTAMP. Use `to_timestamp(d.updated_at / 1000.0)` for cross-table comparisons.
+- **Type-aware comparisons**: `diaries.updated_at` is BIGINT (milliseconds), while `diary_embeddings.updated_at` is TIMESTAMP. Use `to_timestamp(d.updated_at / 1000.0)` for cross-table comparisons. Also note `diary_summary_days.updated_at` and `diary_summary_months.updated_at` are BIGINT (milliseconds) — use millisecond values when inserting/comparing.
 
 ### Port Usage
 

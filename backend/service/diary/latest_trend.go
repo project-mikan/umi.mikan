@@ -124,13 +124,7 @@ func (s *DiaryEntry) TriggerLatestTrend(
 	periodStart := time.Date(threeDaysAgoJST.Year(), threeDaysAgoJST.Month(), threeDaysAgoJST.Day(), 0, 0, 0, 0, time.UTC)
 
 	// 対象期間の日記エントリが存在するかチェック
-	var count int
-	checkQuery := `
-		SELECT COUNT(*) FROM diaries
-		WHERE user_id = $1
-		AND date >= $2 AND date <= $3
-	`
-	err = s.DB.QueryRowContext(ctx, checkQuery, userID, periodStart, periodEnd).Scan(&count)
+	count, err := database.DiaryCountInDateRange(ctx, s.DB, userIDStr, periodStart, periodEnd)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to check diary entries")
 	}
