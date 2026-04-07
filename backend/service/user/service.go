@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -387,22 +386,19 @@ func (s *UserEntry) DeleteAccount(ctx context.Context, req *g.DeleteAccountReque
 
 	// トランザクション内で関連データを削除
 	err = database.RwTransaction(ctx, s.DB, func(tx *sql.Tx) error {
-		// 1. 日記データを削除 (個別に削除するためのクエリを実行)
-		_, err := tx.ExecContext(ctx, "DELETE FROM diaries WHERE user_id = $1", parsedUserID)
-		if err != nil {
-			return fmt.Errorf("failed to delete diary entries: %w", err)
+		// 1. 日記データを削除
+		if err := database.DeleteDiariesByUserID(ctx, tx, parsedUserID); err != nil {
+			return err
 		}
 
 		// 2. LLMトークンを削除
-		_, err = tx.ExecContext(ctx, "DELETE FROM user_llms WHERE user_id = $1", parsedUserID)
-		if err != nil {
-			return fmt.Errorf("failed to delete user LLMs: %w", err)
+		if err := database.DeleteUserLLMsByUserID(ctx, tx, parsedUserID); err != nil {
+			return err
 		}
 
 		// 3. パスワード認証を削除
-		_, err = tx.ExecContext(ctx, "DELETE FROM user_password_authes WHERE user_id = $1", parsedUserID)
-		if err != nil {
-			return fmt.Errorf("failed to delete password auth: %w", err)
+		if err := database.DeleteUserPasswordAuthesByUserID(ctx, tx, parsedUserID); err != nil {
+			return err
 		}
 
 		// 4. ユーザーを削除
@@ -575,94 +571,24 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 	// 過去24時間のデータを1時間ごとに集約
 	// 注: トレンド生成は現状Redisのみに保存されるため、hourly_metricsでは0になる
 	// 将来的にトレンド生成履歴をDBに保存する場合は、ここにクエリを追加する
-	query := `
-		WITH hours AS (
-			SELECT generate_series(
-				date_trunc('hour', NOW() - INTERVAL '23 hours'),
-				date_trunc('hour', NOW()),
-				INTERVAL '1 hour'
-			) AS hour
-		),
-		daily_summaries AS (
-			SELECT
-				date_trunc('hour', to_timestamp(created_at)) as hour,
-				COUNT(*) as created_count
-			FROM diary_summary_days
-			WHERE user_id = $1
-			AND created_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '24 hours')
-			GROUP BY date_trunc('hour', to_timestamp(created_at))
-		),
-		monthly_summaries AS (
-			SELECT
-				date_trunc('hour', to_timestamp(created_at)) as hour,
-				COUNT(*) as created_count
-			FROM diary_summary_months
-			WHERE user_id = $1
-			AND created_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '24 hours')
-			GROUP BY date_trunc('hour', to_timestamp(created_at))
-		),
-		diary_embeddings AS (
-			SELECT
-				date_trunc('hour', created_at) as hour,
-				COUNT(*) as created_count
-			FROM diary_embeddings
-			WHERE user_id = $1
-			AND created_at >= NOW() - INTERVAL '24 hours'
-			GROUP BY date_trunc('hour', created_at)
-		),
-		semantic_searches AS (
-			SELECT
-				date_trunc('hour', created_at) as hour,
-				COUNT(*) as created_count
-			FROM semantic_search_logs
-			WHERE user_id = $1
-			AND created_at >= NOW() - INTERVAL '24 hours'
-			GROUP BY date_trunc('hour', created_at)
-		)
-		SELECT
-			h.hour,
-			COALESCE(ds.created_count, 0) as daily_summaries_processed,
-			COALESCE(ms.created_count, 0) as monthly_summaries_processed,
-			COALESCE(de.created_count, 0) as diary_embeddings_processed,
-			COALESCE(ss.created_count, 0) as semantic_searches_processed
-		FROM hours h
-		LEFT JOIN daily_summaries ds ON h.hour = ds.hour
-		LEFT JOIN monthly_summaries ms ON h.hour = ms.hour
-		LEFT JOIN diary_embeddings de ON h.hour = de.hour
-		LEFT JOIN semantic_searches ss ON h.hour = ss.hour
-		ORDER BY h.hour
-	`
-
-	rows, err := s.DB.Query(query, userID)
+	rawMetrics, err := database.HourlyPubSubMetrics(ctx, s.DB, userID)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			log.Printf("Failed to close rows: %v", err)
-		}
-	}()
 
-	var metrics []*g.HourlyMetrics
-	for rows.Next() {
-		var hour time.Time
-		var dailyProcessed, monthlyProcessed, embeddingsProcessed, semanticSearchesProcessed int32
-
-		if err := rows.Scan(&hour, &dailyProcessed, &monthlyProcessed, &embeddingsProcessed, &semanticSearchesProcessed); err != nil {
-			return nil, err
-		}
-
+	metrics := make([]*g.HourlyMetrics, 0, len(rawMetrics))
+	for _, m := range rawMetrics {
 		metrics = append(metrics, &g.HourlyMetrics{
-			Timestamp:                 hour.Unix(),
-			DailySummariesProcessed:   dailyProcessed,
-			MonthlySummariesProcessed: monthlyProcessed,
+			Timestamp:                 m.Hour.Unix(),
+			DailySummariesProcessed:   m.DailySummariesProcessed,
+			MonthlySummariesProcessed: m.MonthlySummariesProcessed,
 			DailySummariesFailed:      0, // TODO: 失敗ログを記録する仕組みを追加後に実装
 			MonthlySummariesFailed:    0, // TODO: 失敗ログを記録する仕組みを追加後に実装
 			LatestTrendsProcessed:     0, // トレンド生成履歴はDBに保存されていないため0
 			LatestTrendsFailed:        0, // トレンド生成履歴はDBに保存されていないため0
-			DiaryEmbeddingsProcessed:  embeddingsProcessed,
+			DiaryEmbeddingsProcessed:  m.EmbeddingsProcessed,
 			DiaryEmbeddingsFailed:     0, // TODO: 失敗ログを記録する仕組みを追加後に実装
-			SemanticSearchesProcessed: semanticSearchesProcessed,
+			SemanticSearchesProcessed: m.SemanticSearchesProcessed,
 		})
 	}
 
@@ -740,90 +666,44 @@ func (s *UserEntry) getProcessingTasks(ctx context.Context, userID string) ([]*g
 
 func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g.MetricsSummary, error) {
 	// 日次サマリー総数を取得
-	var totalDaily int32
-	dailyQuery := `SELECT COUNT(*) FROM diary_summary_days WHERE user_id = $1`
-	if err := s.DB.QueryRow(dailyQuery, userID).Scan(&totalDaily); err != nil {
+	totalDaily, err := database.TotalDailySummaryCount(ctx, s.DB, userID)
+	if err != nil {
 		return nil, err
 	}
 
 	// 月次サマリー総数を取得
-	var totalMonthly int32
-	monthlyQuery := `SELECT COUNT(*) FROM diary_summary_months WHERE user_id = $1`
-	if err := s.DB.QueryRow(monthlyQuery, userID).Scan(&totalMonthly); err != nil {
+	totalMonthly, err := database.TotalMonthlySummaryCount(ctx, s.DB, userID)
+	if err != nil {
 		return nil, err
 	}
 
 	// 未作成の日次サマリー数を取得（今日を除く）
-	var pendingDaily int32
-	pendingDailyQuery := `
-		SELECT COUNT(*)
-		FROM diaries d
-		LEFT JOIN diary_summary_days dsd ON d.user_id = dsd.user_id AND d.date = dsd.date
-		WHERE d.user_id = $1
-		  AND d.date < CURRENT_DATE
-		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
-	`
-	if err := s.DB.QueryRow(pendingDailyQuery, userID).Scan(&pendingDaily); err != nil {
+	pendingDaily, err := database.PendingDailySummaryCount(ctx, s.DB, userID)
+	if err != nil {
 		return nil, err
 	}
 
 	// 未作成の月次サマリー数を取得（今月を除く）
-	var pendingMonthly int32
-	pendingMonthlyQuery := `
-		WITH monthly_diary_stats AS (
-			SELECT
-				EXTRACT(YEAR FROM d.date) as year,
-				EXTRACT(MONTH FROM d.date) as month,
-				MAX(d.updated_at) as latest_diary_updated_at
-			FROM diaries d
-			WHERE d.user_id = $1
-			GROUP BY EXTRACT(YEAR FROM d.date), EXTRACT(MONTH FROM d.date)
-		)
-		SELECT COUNT(*)
-		FROM monthly_diary_stats mds
-		LEFT JOIN diary_summary_months dsm ON dsm.user_id = $1
-			AND dsm.year = mds.year
-			AND dsm.month = mds.month
-		WHERE (mds.year < EXTRACT(YEAR FROM CURRENT_DATE)
-			OR (mds.year = EXTRACT(YEAR FROM CURRENT_DATE) AND mds.month < EXTRACT(MONTH FROM CURRENT_DATE)))
-		AND (dsm.updated_at IS NULL OR dsm.updated_at < mds.latest_diary_updated_at)
-	`
-	if err := s.DB.QueryRow(pendingMonthlyQuery, userID).Scan(&pendingMonthly); err != nil {
+	pendingMonthly, err := database.PendingMonthlySummaryCount(ctx, s.DB, userID)
+	if err != nil {
 		return nil, err
 	}
 
 	// 自動要約設定とRAG設定を取得
-	var autoDaily, autoMonthly, autoLatestTrend, semanticSearchEnabled bool
-	autoQuery := `SELECT auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	if err := s.DB.QueryRow(autoQuery, userID).Scan(&autoDaily, &autoMonthly, &autoLatestTrend, &semanticSearchEnabled); err != nil {
-		if err != sql.ErrNoRows {
-			return nil, err
-		}
-		// 設定が存在しない場合はfalse
-		autoDaily = false
-		autoMonthly = false
-		autoLatestTrend = false
-		semanticSearchEnabled = false
+	autoSettings, err := database.UserLLMAutoSettingsByUserID(ctx, s.DB, userID)
+	if err != nil {
+		return nil, err
 	}
 
 	// embedding統計を取得
-	var totalEmbeddings int32
-	embeddingCountQuery := `SELECT COUNT(*) FROM diary_embeddings WHERE user_id = $1`
-	if err := s.DB.QueryRow(embeddingCountQuery, userID).Scan(&totalEmbeddings); err != nil {
+	totalEmbeddings, err := database.TotalEmbeddingCount(ctx, s.DB, userID)
+	if err != nil {
 		return nil, err
 	}
 
 	// embedding未生成の日記数を取得
-	var pendingEmbeddings int32
-	pendingEmbeddingsQuery := `
-		SELECT COUNT(*)
-		FROM diaries d
-		WHERE d.user_id = $1
-		  AND NOT EXISTS (
-		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
-		  )
-	`
-	if err := s.DB.QueryRow(pendingEmbeddingsQuery, userID).Scan(&pendingEmbeddings); err != nil {
+	pendingEmbeddings, err := database.PendingEmbeddingCount(ctx, s.DB, userID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -851,11 +731,11 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		TotalMonthlySummaries:     totalMonthly,
 		PendingDailySummaries:     pendingDaily,
 		PendingMonthlySummaries:   pendingMonthly,
-		AutoSummaryDailyEnabled:   autoDaily,
-		AutoSummaryMonthlyEnabled: autoMonthly,
-		AutoLatestTrendEnabled:    autoLatestTrend,
+		AutoSummaryDailyEnabled:   autoSettings.AutoSummaryDaily,
+		AutoSummaryMonthlyEnabled: autoSettings.AutoSummaryMonthly,
+		AutoLatestTrendEnabled:    autoSettings.AutoLatestTrend,
 		LatestTrendGeneratedAt:    latestTrendGeneratedAt,
-		SemanticSearchEnabled:     semanticSearchEnabled,
+		SemanticSearchEnabled:     autoSettings.SemanticSearchEnabled,
 		TotalEmbeddings:           totalEmbeddings,
 		PendingEmbeddings:         pendingEmbeddings,
 	}, nil

@@ -457,14 +457,7 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 	}
 
 	// その月に日記が存在するかチェック
-	var count int
-	checkQuery := `
-		SELECT COUNT(*) FROM diaries
-		WHERE user_id = $1
-		AND EXTRACT(YEAR FROM date) = $2
-		AND EXTRACT(MONTH FROM date) = $3
-	`
-	err = s.DB.QueryRowContext(ctx, checkQuery, userID, message.Month.Year, message.Month.Month).Scan(&count)
+	count, err := database.DiaryCountInMonth(ctx, s.DB, userIDStr, int(message.Month.Year), int(message.Month.Month))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to check diary entries")
 	}
@@ -1113,7 +1106,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}()
 
 	// HNSWの検索精度を向上させる（デフォルト40→100で再現率を大幅改善）
-	if _, err := tx.ExecContext(ctx, "SET LOCAL hnsw.ef_search = 100"); err != nil {
+	if err := database.SetHNSWEfSearch(ctx, tx, 100); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to set hnsw.ef_search: %v", err)
 	}
 
@@ -1141,10 +1134,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}
 
 	// 意味的検索のAIリクエストを記録（メトリクス集計用、エラーは無視）
-	if _, logErr := s.DB.ExecContext(ctx,
-		"INSERT INTO semantic_search_logs (user_id) VALUES ($1)",
-		userID,
-	); logErr != nil {
+	if logErr := database.InsertSemanticSearchLog(ctx, s.DB, userID); logErr != nil {
 		log.Printf("Failed to log semantic search request: %v", logErr)
 	}
 
@@ -1237,35 +1227,15 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 	}()
 
 	// embedding未生成の日記ID一覧を取得
-	query := `
-		SELECT d.id
-		FROM diaries d
-		WHERE d.user_id = $1
-		  AND NOT EXISTS (
-		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
-		  )
-		ORDER BY d.date DESC
-	`
-	rows, err := s.DB.QueryContext(ctx, query, userID)
+	diaryIDs, err := database.DiaryIDsWithoutEmbeddings(ctx, s.DB, userID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)
 	}
-	defer func() {
-		if closeErr := rows.Close(); closeErr != nil {
-			fmt.Printf("Failed to close rows: %v\n", closeErr)
-		}
-	}()
 
 	// 各日記のembedding生成メッセージをキューに追加
 	// 手動再生成のため当日の日記も即時処理する（on-saveとは異なる）
 	var count int32
-	for rows.Next() {
-		var diaryID string
-		if err := rows.Scan(&diaryID); err != nil {
-			// スキャンエラーは該当行をスキップして処理継続（他の日記への影響を防ぐ）
-			log.Printf("Failed to scan diary row: %v", err)
-			continue
-		}
+	for _, diaryID := range diaryIDs {
 		msg := DiaryEmbeddingMessage{
 			Type:    "diary_embedding",
 			UserID:  userIDStr,

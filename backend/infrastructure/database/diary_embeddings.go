@@ -169,18 +169,26 @@ func UpsertDiaryChunkEmbeddings(ctx context.Context, db *sql.DB, diaryID, userID
 		return fmt.Errorf("failed to delete existing diary chunks: %w", err)
 	}
 
-	// 新チャンクを挿入
-	insertQuery := `
-		INSERT INTO diary_embeddings
-			(id, diary_id, user_id, chunk_index, chunk_content, chunk_summary, embedding, model_version, chunk_model_version, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7::halfvec, $8, $9, NOW(), NOW())
-	`
-	for _, chunk := range chunks {
-		embeddingStr := embeddingToSQL(chunk.Embedding)
-		if _, err := tx.ExecContext(ctx, insertQuery,
-			uuid.New(), diaryID, userID, chunk.Index, chunk.Content, chunk.Summary, embeddingStr, modelVersion, chunk.SplitModelVersion,
-		); err != nil {
-			return fmt.Errorf("failed to insert diary chunk (index=%d): %w", chunk.Index, err)
+	// 新チャンクをバッチINSERTで一括挿入（N+1回のクエリを1回に削減）
+	if len(chunks) > 0 {
+		const colCount = 9
+		valuePlaceholders := make([]string, 0, len(chunks))
+		valueArgs := make([]any, 0, len(chunks)*colCount)
+		for i, chunk := range chunks {
+			base := i * colCount
+			valuePlaceholders = append(valuePlaceholders, fmt.Sprintf(
+				"($%d, $%d, $%d, $%d, $%d, $%d, $%d::halfvec, $%d, $%d, NOW(), NOW())",
+				base+1, base+2, base+3, base+4, base+5, base+6, base+7, base+8, base+9,
+			))
+			valueArgs = append(valueArgs,
+				uuid.New(), diaryID, userID, chunk.Index, chunk.Content, chunk.Summary,
+				embeddingToSQL(chunk.Embedding), modelVersion, chunk.SplitModelVersion,
+			)
+		}
+		batchInsert := "INSERT INTO diary_embeddings (id, diary_id, user_id, chunk_index, chunk_content, chunk_summary, embedding, model_version, chunk_model_version, created_at, updated_at) VALUES " +
+			strings.Join(valuePlaceholders, ", ")
+		if _, err := tx.ExecContext(ctx, batchInsert, valueArgs...); err != nil {
+			return fmt.Errorf("failed to batch insert diary chunks: %w", err)
 		}
 	}
 
@@ -249,4 +257,39 @@ func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID,
 	}
 
 	return results, nil
+}
+
+// SetHNSWEfSearch はHNSW検索の精度パラメータをセッションローカルに設定する
+// pgvectorのANN検索精度を向上させるために使用する（デフォルト40→値を大きくすると再現率が向上）
+func SetHNSWEfSearch(ctx context.Context, db DB, efSearch int) error {
+	sqlstr := fmt.Sprintf("SET LOCAL hnsw.ef_search = %d", efSearch)
+	if _, err := db.ExecContext(ctx, sqlstr); err != nil {
+		return fmt.Errorf("failed to set hnsw.ef_search to %d: %w", efSearch, err)
+	}
+	return nil
+}
+
+// InsertSemanticSearchLog は意味的検索ログを記録する（メトリクス集計用）
+func InsertSemanticSearchLog(ctx context.Context, db DB, userID uuid.UUID) error {
+	log := &SemanticSearchLog{
+		ID:        uuid.New(),
+		UserID:    userID,
+		CreatedAt: time.Now(),
+	}
+	return log.Insert(ctx, db)
+}
+
+// DiaryIDsWithoutEmbeddings はユーザーのembedding未生成日記IDを日付降順で返す
+// 手動再生成用のため全日記を対象とする（スケジューラーの DiaryIDsNeedingEmbedding とは異なる）
+func DiaryIDsWithoutEmbeddings(ctx context.Context, db DB, userID uuid.UUID) ([]string, error) {
+	const sqlstr = `
+		SELECT d.id
+		FROM diaries d
+		WHERE d.user_id = $1
+		  AND NOT EXISTS (
+		    SELECT 1 FROM diary_embeddings e WHERE e.diary_id = d.id
+		  )
+		ORDER BY d.date DESC
+	`
+	return queryStringSlice(ctx, db, sqlstr, userID)
 }
