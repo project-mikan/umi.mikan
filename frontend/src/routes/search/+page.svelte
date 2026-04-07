@@ -1,156 +1,156 @@
 <script lang="ts">
-	import { _ } from "svelte-i18n";
-	import { goto } from "$app/navigation";
-	import { navigating } from "$app/stores";
-	import "$lib/i18n";
-	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-	import type { SemanticSearchResult } from "$lib/grpc/diary/diary_pb";
-	import type { PageData } from "./$types";
+  import { _ } from "svelte-i18n";
+  import { goto } from "$app/navigation";
+  import { navigating } from "$app/stores";
+  import "$lib/i18n";
+  import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+  import type { SemanticSearchResult } from "$lib/grpc/diary/diary_pb";
+  import type { PageData } from "./$types";
 
-	type TextSegment = { text: string; isMatch: boolean };
+  type TextSegment = { text: string; isMatch: boolean };
 
-	export let data: PageData;
+  export let data: PageData;
 
-	let searchKeyword = data.keyword || "";
-	// 意味的検索が無効の場合はキーワードモードにフォールバック
-	let searchMode: "keyword" | "semantic" =
-		data.semanticSearchEnabled && data.mode === "semantic"
-			? "semantic"
-			: "keyword";
+  let searchKeyword = data.keyword || "";
+  // 意味的検索が無効の場合はキーワードモードにフォールバック
+  let searchMode: "keyword" | "semantic" =
+    data.semanticSearchEnabled && data.mode === "semantic"
+      ? "semantic"
+      : "keyword";
 
-	function _formatDate(ymd: {
-		year: number;
-		month: number;
-		day: number;
-	}): string {
-		return `${ymd.year}年${ymd.month}月${ymd.day}日`;
-	}
+  function _formatDate(ymd: {
+    year: number;
+    month: number;
+    day: number;
+  }): string {
+    return `${ymd.year}年${ymd.month}月${ymd.day}日`;
+  }
 
-	function formatDateUrl(ymd: {
-		year: number;
-		month: number;
-		day: number;
-	}): string {
-		return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
-	}
+  function formatDateUrl(ymd: {
+    year: number;
+    month: number;
+    day: number;
+  }): string {
+    return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
+  }
 
-	function _viewEntry(entry: DiaryEntry) {
-		const date = entry.date;
-		if (date) {
-			const dateStr = formatDateUrl(date);
-			const params = searchKeyword.trim()
-				? `?search=${encodeURIComponent(searchKeyword.trim())}`
-				: "";
-			goto(`/${dateStr}${params}`);
-		}
-	}
+  function _viewEntry(entry: DiaryEntry) {
+    const date = entry.date;
+    if (date) {
+      const dateStr = formatDateUrl(date);
+      const params = searchKeyword.trim()
+        ? `?search=${encodeURIComponent(searchKeyword.trim())}`
+        : "";
+      goto(`/${dateStr}${params}`);
+    }
+  }
 
-	function _viewSemanticEntry(result: SemanticSearchResult) {
-		const date = result.date;
-		if (date) {
-			const dateStr = formatDateUrl(date);
-			const params = searchKeyword.trim()
-				? `?search=${encodeURIComponent(searchKeyword.trim())}`
-				: "";
-			goto(`/${dateStr}${params}`);
-		}
-	}
+  function _viewSemanticEntry(result: SemanticSearchResult) {
+    const date = result.date;
+    if (date) {
+      const dateStr = formatDateUrl(date);
+      const params = searchKeyword.trim()
+        ? `?search=${encodeURIComponent(searchKeyword.trim())}`
+        : "";
+      goto(`/${dateStr}${params}`);
+    }
+  }
 
-	function _handleSearch() {
-		if (searchKeyword.trim()) {
-			goto(
-				`/search?q=${encodeURIComponent(searchKeyword.trim())}&mode=${searchMode}`,
-			);
-		}
-	}
+  function _handleSearch() {
+    if (searchKeyword.trim()) {
+      goto(
+        `/search?q=${encodeURIComponent(searchKeyword.trim())}&mode=${searchMode}`,
+      );
+    }
+  }
 
-	function _handleKeydown(event: KeyboardEvent) {
-		if (event.key === "Enter") {
-			_handleSearch();
-		}
-	}
+  function _handleKeydown(event: KeyboardEvent) {
+    if (event.key === "Enter") {
+      _handleSearch();
+    }
+  }
 
-	// エントリ一覧の中でキーワードに一致するエントリ数を返す
-	function _countKeywordInEntries(
-		entries: DiaryEntry[],
-		keyword: string,
-	): number {
-		if (!keyword) return 0;
-		const lower = keyword.toLowerCase();
-		return entries.filter((e) => e.content.toLowerCase().includes(lower))
-			.length;
-	}
+  // エントリ一覧の中でキーワードに一致するエントリ数を返す
+  function _countKeywordInEntries(
+    entries: DiaryEntry[],
+    keyword: string,
+  ): number {
+    if (!keyword) return 0;
+    const lower = keyword.toLowerCase();
+    return entries.filter((e) => e.content.toLowerCase().includes(lower))
+      .length;
+  }
 
-	// テキストを複数キーワードで分割してセグメント配列を返す
-	function _getSegments(text: string, keywords: string[]): TextSegment[] {
-		const WINDOW = 150;
-		// 改行（CR/LF/CRLF）を空白に置換して1行で表示し、連続スペースも正規化
-		text = text
-			.replace(/\r\n|\r|\n/g, " ")
-			.replace(/ {2,}/g, " ")
-			.trim();
+  // テキストを複数キーワードで分割してセグメント配列を返す
+  function _getSegments(text: string, keywords: string[]): TextSegment[] {
+    const WINDOW = 150;
+    // 改行（CR/LF/CRLF）を空白に置換して1行で表示し、連続スペースも正規化
+    text = text
+      .replace(/\r\n|\r|\n/g, " ")
+      .replace(/ {2,}/g, " ")
+      .trim();
 
-		const activeKeywords = keywords.filter((k) => k.trim());
-		if (activeKeywords.length === 0) {
-			const truncated =
-				text.length > WINDOW ? `${text.substring(0, WINDOW)}...` : text;
-			return [{ text: truncated, isMatch: false }];
-		}
+    const activeKeywords = keywords.filter((k) => k.trim());
+    if (activeKeywords.length === 0) {
+      const truncated =
+        text.length > WINDOW ? `${text.substring(0, WINDOW)}...` : text;
+      return [{ text: truncated, isMatch: false }];
+    }
 
-		// 全キーワードから最初のマッチ位置を検索（大文字小文字無視）
-		const lowerText = text.toLowerCase();
-		let firstMatchIndex = -1;
-		for (const kw of activeKeywords) {
-			const idx = lowerText.indexOf(kw.trim().toLowerCase());
-			if (idx !== -1 && (firstMatchIndex === -1 || idx < firstMatchIndex)) {
-				firstMatchIndex = idx;
-			}
-		}
+    // 全キーワードから最初のマッチ位置を検索（大文字小文字無視）
+    const lowerText = text.toLowerCase();
+    let firstMatchIndex = -1;
+    for (const kw of activeKeywords) {
+      const idx = lowerText.indexOf(kw.trim().toLowerCase());
+      if (idx !== -1 && (firstMatchIndex === -1 || idx < firstMatchIndex)) {
+        firstMatchIndex = idx;
+      }
+    }
 
-		let excerpt: string;
-		let prefix = "";
-		let suffix = "";
+    let excerpt: string;
+    let prefix = "";
+    let suffix = "";
 
-		if (firstMatchIndex === -1 || firstMatchIndex < WINDOW) {
-			// 1. キーワードが冒頭150文字内に存在する場合（または見つからない場合）は冒頭から表示
-			excerpt = text.length > WINDOW ? text.substring(0, WINDOW) : text;
-			if (text.length > WINDOW) suffix = "...";
-		} else {
-			// 2. キーワードが冒頭150文字以降にある場合：ハイライトが中央になるよう前後を切り出す
-			const half = Math.floor(WINDOW / 2);
-			const start = Math.max(0, firstMatchIndex - half);
-			const end = Math.min(text.length, start + WINDOW);
-			excerpt = text.substring(start, end);
-			if (start > 0) prefix = "...";
-			if (end < text.length) suffix = "...";
-		}
+    if (firstMatchIndex === -1 || firstMatchIndex < WINDOW) {
+      // 1. キーワードが冒頭150文字内に存在する場合（または見つからない場合）は冒頭から表示
+      excerpt = text.length > WINDOW ? text.substring(0, WINDOW) : text;
+      if (text.length > WINDOW) suffix = "...";
+    } else {
+      // 2. キーワードが冒頭150文字以降にある場合：ハイライトが中央になるよう前後を切り出す
+      const half = Math.floor(WINDOW / 2);
+      const start = Math.max(0, firstMatchIndex - half);
+      const end = Math.min(text.length, start + WINDOW);
+      excerpt = text.substring(start, end);
+      if (start > 0) prefix = "...";
+      if (end < text.length) suffix = "...";
+    }
 
-		// 全キーワードを結合した正規表現でexcerptを分割してセグメント配列を生成
-		const escapedKeywords = activeKeywords.map((k) =>
-			k.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-		);
-		const regex = new RegExp(`(${escapedKeywords.join("|")})`, "gi");
-		const parts = excerpt.split(regex);
+    // 全キーワードを結合した正規表現でexcerptを分割してセグメント配列を生成
+    const escapedKeywords = activeKeywords.map((k) =>
+      k.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    );
+    const regex = new RegExp(`(${escapedKeywords.join("|")})`, "gi");
+    const parts = excerpt.split(regex);
 
-		const lowerKeywords = activeKeywords.map((k) => k.trim().toLowerCase());
-		const segments: TextSegment[] = [];
-		if (prefix) segments.push({ text: prefix, isMatch: false });
-		for (const part of parts) {
-			if (part) {
-				segments.push({
-					text: part,
-					isMatch: lowerKeywords.some((kw) => part.toLowerCase() === kw),
-				});
-			}
-		}
-		if (suffix) segments.push({ text: suffix, isMatch: false });
+    const lowerKeywords = activeKeywords.map((k) => k.trim().toLowerCase());
+    const segments: TextSegment[] = [];
+    if (prefix) segments.push({ text: prefix, isMatch: false });
+    for (const part of parts) {
+      if (part) {
+        segments.push({
+          text: part,
+          isMatch: lowerKeywords.some((kw) => part.toLowerCase() === kw),
+        });
+      }
+    }
+    if (suffix) segments.push({ text: suffix, isMatch: false });
 
-		return segments;
-	}
+    return segments;
+  }
 
-	function _formatSimilarity(similarity: number): string {
-		return `${Math.round(similarity * 100)}%`;
-	}
+  function _formatSimilarity(similarity: number): string {
+    return `${Math.round(similarity * 100)}%`;
+  }
 </script>
 
 <svelte:head>

@@ -1,190 +1,190 @@
 <script lang="ts">
-	import { _, locale } from "svelte-i18n";
-	import { browser } from "$app/environment";
-	import { onMount, onDestroy, createEventDispatcher } from "svelte";
-	import { authenticatedFetch } from "$lib/auth-client";
-	import "$lib/i18n";
-	import Button from "$lib/components/atoms/Button.svelte";
-	import type { HighlightData } from "$lib/types/highlight";
+  import { _, locale } from "svelte-i18n";
+  import { browser } from "$app/environment";
+  import { onMount, onDestroy, createEventDispatcher } from "svelte";
+  import { authenticatedFetch } from "$lib/auth-client";
+  import "$lib/i18n";
+  import Button from "$lib/components/atoms/Button.svelte";
+  import type { HighlightData } from "$lib/types/highlight";
 
-	export let diaryId: string;
-	export let hasLLMKey = true;
-	export let isHighlightOutdated = false;
-	export let diaryUpdatedAt: number;
+  export let diaryId: string;
+  export let hasLLMKey = true;
+  export let isHighlightOutdated = false;
+  export let diaryUpdatedAt: number;
 
-	const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher();
 
-	let highlightData: HighlightData | null = null;
-	let highlightStatus:
-		| "none"
-		| "queued"
-		| "processing"
-		| "completed"
-		| "error" = "none";
-	let highlightGenerating = false;
-	let isRegenerating = false;
-	let pollingInterval: ReturnType<typeof setInterval> | null = null;
-	let highlightVisible = true; // ハイライトの表示・非表示状態
-	let pollingAttempts = 0; // ポーリング試行回数
-	let errorMessage = ""; // エラーメッセージ
+  let highlightData: HighlightData | null = null;
+  let highlightStatus:
+    | "none"
+    | "queued"
+    | "processing"
+    | "completed"
+    | "error" = "none";
+  let highlightGenerating = false;
+  let isRegenerating = false;
+  let pollingInterval: ReturnType<typeof setInterval> | null = null;
+  let highlightVisible = true; // ハイライトの表示・非表示状態
+  let pollingAttempts = 0; // ポーリング試行回数
+  let errorMessage = ""; // エラーメッセージ
 
-	const MAX_POLLING_ATTEMPTS = 40; // 最大40回（120秒）
-	const POLLING_INTERVAL = 3000; // 3秒間隔
+  const MAX_POLLING_ATTEMPTS = 40; // 最大40回（120秒）
+  const POLLING_INTERVAL = 3000; // 3秒間隔
 
-	// ポーリング停止とリセット
-	function stopPolling() {
-		if (pollingInterval) {
-			clearInterval(pollingInterval);
-			pollingInterval = null;
-		}
-		pollingAttempts = 0;
-	}
+  // ポーリング停止とリセット
+  function stopPolling() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
+    pollingAttempts = 0;
+  }
 
-	// ハイライトのポーリング機能
-	async function pollHighlightStatus() {
-		if (!browser) return;
+  // ハイライトのポーリング機能
+  async function pollHighlightStatus() {
+    if (!browser) return;
 
-		pollingAttempts++;
+    pollingAttempts++;
 
-		// タイムアウトチェック
-		if (pollingAttempts > MAX_POLLING_ATTEMPTS) {
-			stopPolling();
-			highlightStatus = "error";
-			highlightGenerating = false;
-			isRegenerating = false;
-			errorMessage = $_("diary.highlight.timeout");
-			return;
-		}
+    // タイムアウトチェック
+    if (pollingAttempts > MAX_POLLING_ATTEMPTS) {
+      stopPolling();
+      highlightStatus = "error";
+      highlightGenerating = false;
+      isRegenerating = false;
+      errorMessage = $_("diary.highlight.timeout");
+      return;
+    }
 
-		try {
-			const response = await authenticatedFetch(
-				`/api/diary/highlight/${diaryId}`,
-			);
-			if (response.ok) {
-				const result = await response.json();
-				if (result.highlights && result.highlights.length > 0) {
-					highlightData = result;
-					highlightStatus = "completed";
-					highlightGenerating = false;
-					isRegenerating = false;
-					errorMessage = "";
+    try {
+      const response = await authenticatedFetch(
+        `/api/diary/highlight/${diaryId}`,
+      );
+      if (response.ok) {
+        const result = await response.json();
+        if (result.highlights && result.highlights.length > 0) {
+          highlightData = result;
+          highlightStatus = "completed";
+          highlightGenerating = false;
+          isRegenerating = false;
+          errorMessage = "";
 
-					// ポーリング停止
-					stopPolling();
+          // ポーリング停止
+          stopPolling();
 
-					// 親コンポーネントに通知
-					dispatch("highlightUpdated", { highlight: result });
-				}
-			} else if (response.status === 404) {
-				// ハイライトがまだ存在しない（生成中の可能性）
-				// 次のポーリングを待つ
-			} else {
-				// その他のエラー
-				stopPolling();
-				highlightStatus = "error";
-				highlightGenerating = false;
-				isRegenerating = false;
-				errorMessage = $_("diary.highlight.generationFailed");
-			}
-		} catch (err) {
-			console.error("Failed to poll highlight status:", err);
-			stopPolling();
-			highlightStatus = "error";
-			highlightGenerating = false;
-			isRegenerating = false;
-			errorMessage = $_("diary.highlight.generationFailed");
-		}
-	}
+          // 親コンポーネントに通知
+          dispatch("highlightUpdated", { highlight: result });
+        }
+      } else if (response.status === 404) {
+        // ハイライトがまだ存在しない（生成中の可能性）
+        // 次のポーリングを待つ
+      } else {
+        // その他のエラー
+        stopPolling();
+        highlightStatus = "error";
+        highlightGenerating = false;
+        isRegenerating = false;
+        errorMessage = $_("diary.highlight.generationFailed");
+      }
+    } catch (err) {
+      console.error("Failed to poll highlight status:", err);
+      stopPolling();
+      highlightStatus = "error";
+      highlightGenerating = false;
+      isRegenerating = false;
+      errorMessage = $_("diary.highlight.generationFailed");
+    }
+  }
 
-	// ハイライト生成をトリガー
-	async function generateHighlight() {
-		if (!browser || !hasLLMKey) return;
+  // ハイライト生成をトリガー
+  async function generateHighlight() {
+    if (!browser || !hasLLMKey) return;
 
-		highlightGenerating = true;
-		highlightStatus = highlightData ? "processing" : "queued";
-		isRegenerating = !!highlightData;
-		errorMessage = "";
+    highlightGenerating = true;
+    highlightStatus = highlightData ? "processing" : "queued";
+    isRegenerating = !!highlightData;
+    errorMessage = "";
 
-		try {
-			const response = await authenticatedFetch(
-				"/api/diary/trigger-highlight",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						diaryId,
-					}),
-				},
-			);
+    try {
+      const response = await authenticatedFetch(
+        "/api/diary/trigger-highlight",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            diaryId,
+          }),
+        },
+      );
 
-			if (response.ok) {
-				const result = await response.json();
-				console.log("Highlight generation triggered:", result);
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Highlight generation triggered:", result);
 
-				// ポーリング開始
-				stopPolling(); // 既存のポーリングをクリア
-				pollingAttempts = 0;
-				pollingInterval = setInterval(pollHighlightStatus, POLLING_INTERVAL);
-			} else {
-				const error = await response.json();
-				console.error("Failed to trigger highlight generation:", error);
-				highlightGenerating = false;
-				highlightStatus = "error";
-				isRegenerating = false;
-				errorMessage = error.message || $_("diary.highlight.generationFailed");
-			}
-		} catch (err) {
-			console.error("Error triggering highlight generation:", err);
-			highlightGenerating = false;
-			highlightStatus = "error";
-			isRegenerating = false;
-			errorMessage = $_("diary.highlight.generationFailed");
-		}
-	}
+        // ポーリング開始
+        stopPolling(); // 既存のポーリングをクリア
+        pollingAttempts = 0;
+        pollingInterval = setInterval(pollHighlightStatus, POLLING_INTERVAL);
+      } else {
+        const error = await response.json();
+        console.error("Failed to trigger highlight generation:", error);
+        highlightGenerating = false;
+        highlightStatus = "error";
+        isRegenerating = false;
+        errorMessage = error.message || $_("diary.highlight.generationFailed");
+      }
+    } catch (err) {
+      console.error("Error triggering highlight generation:", err);
+      highlightGenerating = false;
+      highlightStatus = "error";
+      isRegenerating = false;
+      errorMessage = $_("diary.highlight.generationFailed");
+    }
+  }
 
-	// ハイライトの表示・非表示を切り替え
-	function toggleHighlightVisibility() {
-		highlightVisible = !highlightVisible;
-		// 親コンポーネントに表示状態を通知
-		dispatch("highlightVisibilityChanged", { visible: highlightVisible });
-	}
+  // ハイライトの表示・非表示を切り替え
+  function toggleHighlightVisibility() {
+    highlightVisible = !highlightVisible;
+    // 親コンポーネントに表示状態を通知
+    dispatch("highlightVisibilityChanged", { visible: highlightVisible });
+  }
 
-	// 初回読み込み時にハイライトを取得
-	onMount(async () => {
-		if (!browser || !diaryId) return;
+  // 初回読み込み時にハイライトを取得
+  onMount(async () => {
+    if (!browser || !diaryId) return;
 
-		try {
-			const response = await authenticatedFetch(
-				`/api/diary/highlight/${diaryId}`,
-			);
-			if (response.ok) {
-				const result = await response.json();
-				highlightData = result;
-				highlightStatus = "completed";
+    try {
+      const response = await authenticatedFetch(
+        `/api/diary/highlight/${diaryId}`,
+      );
+      if (response.ok) {
+        const result = await response.json();
+        highlightData = result;
+        highlightStatus = "completed";
 
-				// 親コンポーネントに通知
-				dispatch("highlightUpdated", { highlight: result });
+        // 親コンポーネントに通知
+        dispatch("highlightUpdated", { highlight: result });
 
-				// 日記が更新されているかチェック
-				if (diaryUpdatedAt > result.updatedAt) {
-					isHighlightOutdated = true;
-				}
-			}
-		} catch (err) {
-			// ハイライトが存在しない場合は何もしない
-		}
-	});
+        // 日記が更新されているかチェック
+        if (diaryUpdatedAt > result.updatedAt) {
+          isHighlightOutdated = true;
+        }
+      }
+    } catch (err) {
+      // ハイライトが存在しない場合は何もしない
+    }
+  });
 
-	onDestroy(() => {
-		stopPolling();
-	});
+  onDestroy(() => {
+    stopPolling();
+  });
 
-	$: buttonLabel = highlightData
-		? $_("diary.highlight.regenerate")
-		: $_("diary.highlight.generate");
-	$: buttonLoadingLabel = $_("diary.highlight.generating");
+  $: buttonLabel = highlightData
+    ? $_("diary.highlight.regenerate")
+    : $_("diary.highlight.generate");
+  $: buttonLoadingLabel = $_("diary.highlight.generating");
 </script>
 
 {#if hasLLMKey}

@@ -3,14 +3,14 @@
 /* eslint-disable */
 
 import type {
-	GenFile,
-	GenMessage,
-	GenService,
+  GenFile,
+  GenMessage,
+  GenService,
 } from "@bufbuild/protobuf/codegenv2";
 import {
-	fileDesc,
-	messageDesc,
-	serviceDesc,
+  fileDesc,
+  messageDesc,
+  serviceDesc,
 } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -18,29 +18,29 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file diary/diary.proto.
  */
 export const file_diary_diary: GenFile =
-	/*@__PURE__*/
-	fileDesc(
-		"ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJ1ChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5EhkKEWV4cGFuZGVkX2tleXdvcmRzGAMgAygJIj0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIoYBCg5Nb250aGx5U3VtbWFyeRIKCgJpZBgBIAEoCRIYCgVtb250aBgCIAEoCzIJLmRpYXJ5LllNEg8KB3N1bW1hcnkYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDEhUKDW1vZGVsX3ZlcnNpb24YBiABKAkiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IpYBCgxEYWlseVN1bW1hcnkSCgoCaWQYASABKAkSEAoIZGlhcnlfaWQYAiABKAkSGAoEZGF0ZRgDIAEoCzIKLmRpYXJ5LllNRBIPCgdzdW1tYXJ5GAQgASgJEhIKCmNyZWF0ZWRfYXQYBSABKAMSEgoKdXBkYXRlZF9hdBgGIAEoAxIVCg1tb2RlbF92ZXJzaW9uGAcgASgJIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiFwoVR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Is0BChZHZXRMYXRlc3RUcmVuZFJlc3BvbnNlEg4KBmhlYWx0aBgBIAEoCRIVCg1oZWFsdGhfcmVhc29uGAIgASgJEgwKBG1vb2QYAyABKAkSEwoLbW9vZF9yZWFzb24YBCABKAkSEgoKYWN0aXZpdGllcxgFIAEoCRIUCgxwZXJpb2Rfc3RhcnQYBiABKAkSEgoKcGVyaW9kX2VuZBgHIAEoCRIUCgxnZW5lcmF0ZWRfYXQYCCABKAkSFQoNbW9kZWxfdmVyc2lvbhgJIAEoCSIbChlUcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0Ij4KGlRyaWdnZXJMYXRlc3RUcmVuZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSJBCiFTZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUikwEKFFNlbWFudGljU2VhcmNoUmVzdWx0EhAKCGRpYXJ5X2lkGAEgASgJEhgKBGRhdGUYAiABKAsyCi5kaWFyeS5ZTUQSDwoHc25pcHBldBgDIAEoCRISCgpzaW1pbGFyaXR5GAQgASgCEhUKDWNodW5rX3N1bW1hcnkYBSABKAkSEwoLY2h1bmtfY291bnQYBiABKAUigAEKIlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVzcG9uc2USLAoHcmVzdWx0cxgBIAMoCzIbLmRpYXJ5LlNlbWFudGljU2VhcmNoUmVzdWx0EhcKD2VtYmVkZGluZ19tb2RlbBgCIAEoCRITCgtjaHVua19tb2RlbBgDIAEoCSIwChxUcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIkAKHVRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlc3BvbnNlEg4KBnF1ZXVlZBgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIiwKGEdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSI6Cg5IaWdobGlnaHRSYW5nZRINCgVzdGFydBgBIAEoBRILCgNlbmQYAiABKAUSDAoEdGV4dBgDIAEoCSJuChlHZXREaWFyeUhpZ2hsaWdodFJlc3BvbnNlEikKCmhpZ2hsaWdodHMYASADKAsyFS5kaWFyeS5IaWdobGlnaHRSYW5nZRISCgpjcmVhdGVkX2F0GAIgASgDEhIKCnVwZGF0ZWRfYXQYAyABKAMiIAoeUmVnZW5lcmF0ZUFsbEVtYmVkZGluZ3NSZXF1ZXN0IkgKH1JlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIUCgxxdWV1ZWRfY291bnQYAiABKAUiMgoeR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIrwBCh9HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1Jlc3BvbnNlEg8KB2luZGV4ZWQYASABKAgSFQoNbW9kZWxfdmVyc2lvbhgCIAEoCRISCgpjcmVhdGVkX2F0GAMgASgDEhIKCnVwZGF0ZWRfYXQYBCABKAMSGwoTY2h1bmtfbW9kZWxfdmVyc2lvbhgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIXCg9jaHVua19zdW1tYXJpZXMYCCADKAkyjA0KDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlEk0KDkdldExhdGVzdFRyZW5kEhwuZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Gh0uZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXNwb25zZRJZChJUcmlnZ2VyTGF0ZXN0VHJlbmQSIC5kaWFyeS5UcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0GiEuZGlhcnkuVHJpZ2dlckxhdGVzdFRyZW5kUmVzcG9uc2UScQoaU2VhcmNoRGlhcnlFbnRyaWVzU2VtYW50aWMSKC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1JlcXVlc3QaKS5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1Jlc3BvbnNlEmIKFVRyaWdnZXJEaWFyeUhpZ2hsaWdodBIjLmRpYXJ5LlRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlcXVlc3QaJC5kaWFyeS5UcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXNwb25zZRJWChFHZXREaWFyeUhpZ2hsaWdodBIfLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBogLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVzcG9uc2USaAoXUmVnZW5lcmF0ZUFsbEVtYmVkZGluZ3MSJS5kaWFyeS5SZWdlbmVyYXRlQWxsRW1iZWRkaW5nc1JlcXVlc3QaJi5kaWFyeS5SZWdlbmVyYXRlQWxsRW1iZWRkaW5nc1Jlc3BvbnNlEmgKF0dldERpYXJ5RW1iZWRkaW5nU3RhdHVzEiUuZGlhcnkuR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXF1ZXN0GiYuZGlhcnkuR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
-	);
+  /*@__PURE__*/
+  fileDesc(
+    "ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJ1ChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5EhkKEWV4cGFuZGVkX2tleXdvcmRzGAMgAygJIj0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIoYBCg5Nb250aGx5U3VtbWFyeRIKCgJpZBgBIAEoCRIYCgVtb250aBgCIAEoCzIJLmRpYXJ5LllNEg8KB3N1bW1hcnkYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDEhUKDW1vZGVsX3ZlcnNpb24YBiABKAkiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IpYBCgxEYWlseVN1bW1hcnkSCgoCaWQYASABKAkSEAoIZGlhcnlfaWQYAiABKAkSGAoEZGF0ZRgDIAEoCzIKLmRpYXJ5LllNRBIPCgdzdW1tYXJ5GAQgASgJEhIKCmNyZWF0ZWRfYXQYBSABKAMSEgoKdXBkYXRlZF9hdBgGIAEoAxIVCg1tb2RlbF92ZXJzaW9uGAcgASgJIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiFwoVR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Is0BChZHZXRMYXRlc3RUcmVuZFJlc3BvbnNlEg4KBmhlYWx0aBgBIAEoCRIVCg1oZWFsdGhfcmVhc29uGAIgASgJEgwKBG1vb2QYAyABKAkSEwoLbW9vZF9yZWFzb24YBCABKAkSEgoKYWN0aXZpdGllcxgFIAEoCRIUCgxwZXJpb2Rfc3RhcnQYBiABKAkSEgoKcGVyaW9kX2VuZBgHIAEoCRIUCgxnZW5lcmF0ZWRfYXQYCCABKAkSFQoNbW9kZWxfdmVyc2lvbhgJIAEoCSIbChlUcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0Ij4KGlRyaWdnZXJMYXRlc3RUcmVuZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSJBCiFTZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUikwEKFFNlbWFudGljU2VhcmNoUmVzdWx0EhAKCGRpYXJ5X2lkGAEgASgJEhgKBGRhdGUYAiABKAsyCi5kaWFyeS5ZTUQSDwoHc25pcHBldBgDIAEoCRISCgpzaW1pbGFyaXR5GAQgASgCEhUKDWNodW5rX3N1bW1hcnkYBSABKAkSEwoLY2h1bmtfY291bnQYBiABKAUigAEKIlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVzcG9uc2USLAoHcmVzdWx0cxgBIAMoCzIbLmRpYXJ5LlNlbWFudGljU2VhcmNoUmVzdWx0EhcKD2VtYmVkZGluZ19tb2RlbBgCIAEoCRITCgtjaHVua19tb2RlbBgDIAEoCSIwChxUcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIkAKHVRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlc3BvbnNlEg4KBnF1ZXVlZBgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIiwKGEdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSI6Cg5IaWdobGlnaHRSYW5nZRINCgVzdGFydBgBIAEoBRILCgNlbmQYAiABKAUSDAoEdGV4dBgDIAEoCSJuChlHZXREaWFyeUhpZ2hsaWdodFJlc3BvbnNlEikKCmhpZ2hsaWdodHMYASADKAsyFS5kaWFyeS5IaWdobGlnaHRSYW5nZRISCgpjcmVhdGVkX2F0GAIgASgDEhIKCnVwZGF0ZWRfYXQYAyABKAMiIAoeUmVnZW5lcmF0ZUFsbEVtYmVkZGluZ3NSZXF1ZXN0IkgKH1JlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIUCgxxdWV1ZWRfY291bnQYAiABKAUiMgoeR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIrwBCh9HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1Jlc3BvbnNlEg8KB2luZGV4ZWQYASABKAgSFQoNbW9kZWxfdmVyc2lvbhgCIAEoCRISCgpjcmVhdGVkX2F0GAMgASgDEhIKCnVwZGF0ZWRfYXQYBCABKAMSGwoTY2h1bmtfbW9kZWxfdmVyc2lvbhgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIXCg9jaHVua19zdW1tYXJpZXMYCCADKAkyjA0KDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlEk0KDkdldExhdGVzdFRyZW5kEhwuZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Gh0uZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXNwb25zZRJZChJUcmlnZ2VyTGF0ZXN0VHJlbmQSIC5kaWFyeS5UcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0GiEuZGlhcnkuVHJpZ2dlckxhdGVzdFRyZW5kUmVzcG9uc2UScQoaU2VhcmNoRGlhcnlFbnRyaWVzU2VtYW50aWMSKC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1JlcXVlc3QaKS5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1Jlc3BvbnNlEmIKFVRyaWdnZXJEaWFyeUhpZ2hsaWdodBIjLmRpYXJ5LlRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlcXVlc3QaJC5kaWFyeS5UcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXNwb25zZRJWChFHZXREaWFyeUhpZ2hsaWdodBIfLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBogLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVzcG9uc2USaAoXUmVnZW5lcmF0ZUFsbEVtYmVkZGluZ3MSJS5kaWFyeS5SZWdlbmVyYXRlQWxsRW1iZWRkaW5nc1JlcXVlc3QaJi5kaWFyeS5SZWdlbmVyYXRlQWxsRW1iZWRkaW5nc1Jlc3BvbnNlEmgKF0dldERpYXJ5RW1iZWRkaW5nU3RhdHVzEiUuZGlhcnkuR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXF1ZXN0GiYuZGlhcnkuR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
+  );
 
 /**
  * @generated from message diary.YMD
  */
 export type YMD = Message<"diary.YMD"> & {
-	/**
-	 * @generated from field: uint32 year = 1;
-	 */
-	year: number;
+  /**
+   * @generated from field: uint32 year = 1;
+   */
+  year: number;
 
-	/**
-	 * @generated from field: uint32 month = 2;
-	 */
-	month: number;
+  /**
+   * @generated from field: uint32 month = 2;
+   */
+  month: number;
 
-	/**
-	 * @generated from field: uint32 day = 3;
-	 */
-	day: number;
+  /**
+   * @generated from field: uint32 day = 3;
+   */
+  day: number;
 };
 
 /**
@@ -48,22 +48,22 @@ export type YMD = Message<"diary.YMD"> & {
  * Use `create(YMDSchema)` to create a new message.
  */
 export const YMDSchema: GenMessage<YMD> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 0);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 0);
 
 /**
  * @generated from message diary.YM
  */
 export type YM = Message<"diary.YM"> & {
-	/**
-	 * @generated from field: uint32 year = 1;
-	 */
-	year: number;
+  /**
+   * @generated from field: uint32 year = 1;
+   */
+  year: number;
 
-	/**
-	 * @generated from field: uint32 month = 2;
-	 */
-	month: number;
+  /**
+   * @generated from field: uint32 month = 2;
+   */
+  month: number;
 };
 
 /**
@@ -71,8 +71,8 @@ export type YM = Message<"diary.YM"> & {
  * Use `create(YMSchema)` to create a new message.
  */
 export const YMSchema: GenMessage<YM> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 1);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 1);
 
 /**
  * 日記エントリのメッセージ
@@ -80,40 +80,40 @@ export const YMSchema: GenMessage<YM> =
  * @generated from message diary.DiaryEntry
  */
 export type DiaryEntry = Message<"diary.DiaryEntry"> & {
-	/**
-	 * 日記ID
-	 *
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * 日記ID
+   *
+   * @generated from field: string id = 1;
+   */
+  id: string;
 
-	/**
-	 * 日付
-	 *
-	 * @generated from field: diary.YMD date = 2;
-	 */
-	date?: YMD;
+  /**
+   * 日付
+   *
+   * @generated from field: diary.YMD date = 2;
+   */
+  date?: YMD;
 
-	/**
-	 * 内容
-	 *
-	 * @generated from field: string content = 3;
-	 */
-	content: string;
+  /**
+   * 内容
+   *
+   * @generated from field: string content = 3;
+   */
+  content: string;
 
-	/**
-	 * 作成日時（Unix timestamp）
-	 *
-	 * @generated from field: int64 created_at = 4;
-	 */
-	createdAt: bigint;
+  /**
+   * 作成日時（Unix timestamp）
+   *
+   * @generated from field: int64 created_at = 4;
+   */
+  createdAt: bigint;
 
-	/**
-	 * 更新日時（Unix timestamp）
-	 *
-	 * @generated from field: int64 updated_at = 5;
-	 */
-	updatedAt: bigint;
+  /**
+   * 更新日時（Unix timestamp）
+   *
+   * @generated from field: int64 updated_at = 5;
+   */
+  updatedAt: bigint;
 };
 
 /**
@@ -121,8 +121,8 @@ export type DiaryEntry = Message<"diary.DiaryEntry"> & {
  * Use `create(DiaryEntrySchema)` to create a new message.
  */
 export const DiaryEntrySchema: GenMessage<DiaryEntry> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 2);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 2);
 
 /**
  * 新しい日記エントリを作成するためのリクエスト
@@ -130,25 +130,25 @@ export const DiaryEntrySchema: GenMessage<DiaryEntry> =
  * @generated from message diary.CreateDiaryEntryRequest
  */
 export type CreateDiaryEntryRequest =
-	Message<"diary.CreateDiaryEntryRequest"> & {
-		/**
-		 * @generated from field: string content = 1;
-		 */
-		content: string;
+  Message<"diary.CreateDiaryEntryRequest"> & {
+    /**
+     * @generated from field: string content = 1;
+     */
+    content: string;
 
-		/**
-		 * @generated from field: diary.YMD date = 2;
-		 */
-		date?: YMD;
-	};
+    /**
+     * @generated from field: diary.YMD date = 2;
+     */
+    date?: YMD;
+  };
 
 /**
  * Describes the message diary.CreateDiaryEntryRequest.
  * Use `create(CreateDiaryEntryRequestSchema)` to create a new message.
  */
 export const CreateDiaryEntryRequestSchema: GenMessage<CreateDiaryEntryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 3);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 3);
 
 /**
  * 日記エントリを作成した結果を返すレスポンス
@@ -156,20 +156,20 @@ export const CreateDiaryEntryRequestSchema: GenMessage<CreateDiaryEntryRequest> 
  * @generated from message diary.CreateDiaryEntryResponse
  */
 export type CreateDiaryEntryResponse =
-	Message<"diary.CreateDiaryEntryResponse"> & {
-		/**
-		 * @generated from field: diary.DiaryEntry entry = 1;
-		 */
-		entry?: DiaryEntry;
-	};
+  Message<"diary.CreateDiaryEntryResponse"> & {
+    /**
+     * @generated from field: diary.DiaryEntry entry = 1;
+     */
+    entry?: DiaryEntry;
+  };
 
 /**
  * Describes the message diary.CreateDiaryEntryResponse.
  * Use `create(CreateDiaryEntryResponseSchema)` to create a new message.
  */
 export const CreateDiaryEntryResponseSchema: GenMessage<CreateDiaryEntryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 4);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 4);
 
 /**
  * 特定の日記エントリを取得するためのリクエスト
@@ -177,12 +177,12 @@ export const CreateDiaryEntryResponseSchema: GenMessage<CreateDiaryEntryResponse
  * @generated from message diary.GetDiaryEntryRequest
  */
 export type GetDiaryEntryRequest = Message<"diary.GetDiaryEntryRequest"> & {
-	/**
-	 * 日付を指定して取得
-	 *
-	 * @generated from field: diary.YMD date = 1;
-	 */
-	date?: YMD;
+  /**
+   * 日付を指定して取得
+   *
+   * @generated from field: diary.YMD date = 1;
+   */
+  date?: YMD;
 };
 
 /**
@@ -190,8 +190,8 @@ export type GetDiaryEntryRequest = Message<"diary.GetDiaryEntryRequest"> & {
  * Use `create(GetDiaryEntryRequestSchema)` to create a new message.
  */
 export const GetDiaryEntryRequestSchema: GenMessage<GetDiaryEntryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 5);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 5);
 
 /**
  * 複数日記エントリを取得するためのリクエスト (e.g., by range or count)
@@ -199,12 +199,12 @@ export const GetDiaryEntryRequestSchema: GenMessage<GetDiaryEntryRequest> =
  * @generated from message diary.GetDiaryEntriesRequest
  */
 export type GetDiaryEntriesRequest = Message<"diary.GetDiaryEntriesRequest"> & {
-	/**
-	 * 取得したい日付の配列
-	 *
-	 * @generated from field: repeated diary.YMD dates = 1;
-	 */
-	dates: YMD[];
+  /**
+   * 取得したい日付の配列
+   *
+   * @generated from field: repeated diary.YMD dates = 1;
+   */
+  dates: YMD[];
 };
 
 /**
@@ -212,8 +212,8 @@ export type GetDiaryEntriesRequest = Message<"diary.GetDiaryEntriesRequest"> & {
  * Use `create(GetDiaryEntriesRequestSchema)` to create a new message.
  */
 export const GetDiaryEntriesRequestSchema: GenMessage<GetDiaryEntriesRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 6);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 6);
 
 /**
  * 月ごとに日記エントリを取得するためのリクエスト
@@ -221,112 +221,112 @@ export const GetDiaryEntriesRequestSchema: GenMessage<GetDiaryEntriesRequest> =
  * @generated from message diary.GetDiaryEntriesByMonthRequest
  */
 export type GetDiaryEntriesByMonthRequest =
-	Message<"diary.GetDiaryEntriesByMonthRequest"> & {
-		/**
-		 * 年月を指定
-		 *
-		 * @generated from field: diary.YM month = 1;
-		 */
-		month?: YM;
-	};
+  Message<"diary.GetDiaryEntriesByMonthRequest"> & {
+    /**
+     * 年月を指定
+     *
+     * @generated from field: diary.YM month = 1;
+     */
+    month?: YM;
+  };
 
 /**
  * Describes the message diary.GetDiaryEntriesByMonthRequest.
  * Use `create(GetDiaryEntriesByMonthRequestSchema)` to create a new message.
  */
 export const GetDiaryEntriesByMonthRequestSchema: GenMessage<GetDiaryEntriesByMonthRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 7);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 7);
 
 /**
  * @generated from message diary.SearchDiaryEntriesRequest
  */
 export type SearchDiaryEntriesRequest =
-	Message<"diary.SearchDiaryEntriesRequest"> & {
-		/**
-		 * @generated from field: string keyword = 1;
-		 */
-		keyword: string;
-	};
+  Message<"diary.SearchDiaryEntriesRequest"> & {
+    /**
+     * @generated from field: string keyword = 1;
+     */
+    keyword: string;
+  };
 
 /**
  * Describes the message diary.SearchDiaryEntriesRequest.
  * Use `create(SearchDiaryEntriesRequestSchema)` to create a new message.
  */
 export const SearchDiaryEntriesRequestSchema: GenMessage<SearchDiaryEntriesRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 8);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 8);
 
 /**
  * @generated from message diary.SearchDiaryEntriesResponse
  */
 export type SearchDiaryEntriesResponse =
-	Message<"diary.SearchDiaryEntriesResponse"> & {
-		/**
-		 * 実際に検索した単語
-		 *
-		 * @generated from field: string searched_keyword = 1;
-		 */
-		searchedKeyword: string;
+  Message<"diary.SearchDiaryEntriesResponse"> & {
+    /**
+     * 実際に検索した単語
+     *
+     * @generated from field: string searched_keyword = 1;
+     */
+    searchedKeyword: string;
 
-		/**
-		 * @generated from field: repeated diary.DiaryEntry entries = 2;
-		 */
-		entries: DiaryEntry[];
+    /**
+     * @generated from field: repeated diary.DiaryEntry entries = 2;
+     */
+    entries: DiaryEntry[];
 
-		/**
-		 * エンティティ展開により追加で検索したキーワード
-		 *
-		 * @generated from field: repeated string expanded_keywords = 3;
-		 */
-		expandedKeywords: string[];
-	};
+    /**
+     * エンティティ展開により追加で検索したキーワード
+     *
+     * @generated from field: repeated string expanded_keywords = 3;
+     */
+    expandedKeywords: string[];
+  };
 
 /**
  * Describes the message diary.SearchDiaryEntriesResponse.
  * Use `create(SearchDiaryEntriesResponseSchema)` to create a new message.
  */
 export const SearchDiaryEntriesResponseSchema: GenMessage<SearchDiaryEntriesResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 9);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 9);
 
 /**
  * @generated from message diary.GetDiaryEntriesResponse
  */
 export type GetDiaryEntriesResponse =
-	Message<"diary.GetDiaryEntriesResponse"> & {
-		/**
-		 * @generated from field: repeated diary.DiaryEntry entries = 1;
-		 */
-		entries: DiaryEntry[];
-	};
+  Message<"diary.GetDiaryEntriesResponse"> & {
+    /**
+     * @generated from field: repeated diary.DiaryEntry entries = 1;
+     */
+    entries: DiaryEntry[];
+  };
 
 /**
  * Describes the message diary.GetDiaryEntriesResponse.
  * Use `create(GetDiaryEntriesResponseSchema)` to create a new message.
  */
 export const GetDiaryEntriesResponseSchema: GenMessage<GetDiaryEntriesResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 10);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 10);
 
 /**
  * @generated from message diary.GetDiaryEntriesByMonthResponse
  */
 export type GetDiaryEntriesByMonthResponse =
-	Message<"diary.GetDiaryEntriesByMonthResponse"> & {
-		/**
-		 * @generated from field: repeated diary.DiaryEntry entries = 1;
-		 */
-		entries: DiaryEntry[];
-	};
+  Message<"diary.GetDiaryEntriesByMonthResponse"> & {
+    /**
+     * @generated from field: repeated diary.DiaryEntry entries = 1;
+     */
+    entries: DiaryEntry[];
+  };
 
 /**
  * Describes the message diary.GetDiaryEntriesByMonthResponse.
  * Use `create(GetDiaryEntriesByMonthResponseSchema)` to create a new message.
  */
 export const GetDiaryEntriesByMonthResponseSchema: GenMessage<GetDiaryEntriesByMonthResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 11);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 11);
 
 /**
  * 日記エントリを取得した結果を返すレスポンス
@@ -334,10 +334,10 @@ export const GetDiaryEntriesByMonthResponseSchema: GenMessage<GetDiaryEntriesByM
  * @generated from message diary.GetDiaryEntryResponse
  */
 export type GetDiaryEntryResponse = Message<"diary.GetDiaryEntryResponse"> & {
-	/**
-	 * @generated from field: diary.DiaryEntry entry = 1;
-	 */
-	entry?: DiaryEntry;
+  /**
+   * @generated from field: diary.DiaryEntry entry = 1;
+   */
+  entry?: DiaryEntry;
 };
 
 /**
@@ -345,8 +345,8 @@ export type GetDiaryEntryResponse = Message<"diary.GetDiaryEntryResponse"> & {
  * Use `create(GetDiaryEntryResponseSchema)` to create a new message.
  */
 export const GetDiaryEntryResponseSchema: GenMessage<GetDiaryEntryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 12);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 12);
 
 /**
  * 日記エントリを更新するためのリクエスト
@@ -354,35 +354,35 @@ export const GetDiaryEntryResponseSchema: GenMessage<GetDiaryEntryResponse> =
  * @generated from message diary.UpdateDiaryEntryRequest
  */
 export type UpdateDiaryEntryRequest =
-	Message<"diary.UpdateDiaryEntryRequest"> & {
-		/**
-		 * @generated from field: string id = 1;
-		 */
-		id: string;
+  Message<"diary.UpdateDiaryEntryRequest"> & {
+    /**
+     * @generated from field: string id = 1;
+     */
+    id: string;
 
-		/**
-		 * @generated from field: string title = 2;
-		 */
-		title: string;
+    /**
+     * @generated from field: string title = 2;
+     */
+    title: string;
 
-		/**
-		 * @generated from field: string content = 3;
-		 */
-		content: string;
+    /**
+     * @generated from field: string content = 3;
+     */
+    content: string;
 
-		/**
-		 * @generated from field: diary.YMD date = 4;
-		 */
-		date?: YMD;
-	};
+    /**
+     * @generated from field: diary.YMD date = 4;
+     */
+    date?: YMD;
+  };
 
 /**
  * Describes the message diary.UpdateDiaryEntryRequest.
  * Use `create(UpdateDiaryEntryRequestSchema)` to create a new message.
  */
 export const UpdateDiaryEntryRequestSchema: GenMessage<UpdateDiaryEntryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 13);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 13);
 
 /**
  * 更新された日記エントリを返すレスポンス
@@ -390,20 +390,20 @@ export const UpdateDiaryEntryRequestSchema: GenMessage<UpdateDiaryEntryRequest> 
  * @generated from message diary.UpdateDiaryEntryResponse
  */
 export type UpdateDiaryEntryResponse =
-	Message<"diary.UpdateDiaryEntryResponse"> & {
-		/**
-		 * @generated from field: diary.DiaryEntry entry = 1;
-		 */
-		entry?: DiaryEntry;
-	};
+  Message<"diary.UpdateDiaryEntryResponse"> & {
+    /**
+     * @generated from field: diary.DiaryEntry entry = 1;
+     */
+    entry?: DiaryEntry;
+  };
 
 /**
  * Describes the message diary.UpdateDiaryEntryResponse.
  * Use `create(UpdateDiaryEntryResponseSchema)` to create a new message.
  */
 export const UpdateDiaryEntryResponseSchema: GenMessage<UpdateDiaryEntryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 14);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 14);
 
 /**
  * 日記エントリを削除するためのリクエスト
@@ -411,20 +411,20 @@ export const UpdateDiaryEntryResponseSchema: GenMessage<UpdateDiaryEntryResponse
  * @generated from message diary.DeleteDiaryEntryRequest
  */
 export type DeleteDiaryEntryRequest =
-	Message<"diary.DeleteDiaryEntryRequest"> & {
-		/**
-		 * @generated from field: string id = 1;
-		 */
-		id: string;
-	};
+  Message<"diary.DeleteDiaryEntryRequest"> & {
+    /**
+     * @generated from field: string id = 1;
+     */
+    id: string;
+  };
 
 /**
  * Describes the message diary.DeleteDiaryEntryRequest.
  * Use `create(DeleteDiaryEntryRequestSchema)` to create a new message.
  */
 export const DeleteDiaryEntryRequestSchema: GenMessage<DeleteDiaryEntryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 15);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 15);
 
 /**
  * 削除操作の結果を返すレスポンス
@@ -432,20 +432,20 @@ export const DeleteDiaryEntryRequestSchema: GenMessage<DeleteDiaryEntryRequest> 
  * @generated from message diary.DeleteDiaryEntryResponse
  */
 export type DeleteDiaryEntryResponse =
-	Message<"diary.DeleteDiaryEntryResponse"> & {
-		/**
-		 * @generated from field: bool success = 1;
-		 */
-		success: boolean;
-	};
+  Message<"diary.DeleteDiaryEntryResponse"> & {
+    /**
+     * @generated from field: bool success = 1;
+     */
+    success: boolean;
+  };
 
 /**
  * Describes the message diary.DeleteDiaryEntryResponse.
  * Use `create(DeleteDiaryEntryResponseSchema)` to create a new message.
  */
 export const DeleteDiaryEntryResponseSchema: GenMessage<DeleteDiaryEntryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 16);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 16);
 
 /**
  * 月サマリー
@@ -453,37 +453,37 @@ export const DeleteDiaryEntryResponseSchema: GenMessage<DeleteDiaryEntryResponse
  * @generated from message diary.MonthlySummary
  */
 export type MonthlySummary = Message<"diary.MonthlySummary"> & {
-	/**
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
 
-	/**
-	 * @generated from field: diary.YM month = 2;
-	 */
-	month?: YM;
+  /**
+   * @generated from field: diary.YM month = 2;
+   */
+  month?: YM;
 
-	/**
-	 * @generated from field: string summary = 3;
-	 */
-	summary: string;
+  /**
+   * @generated from field: string summary = 3;
+   */
+  summary: string;
 
-	/**
-	 * @generated from field: int64 created_at = 4;
-	 */
-	createdAt: bigint;
+  /**
+   * @generated from field: int64 created_at = 4;
+   */
+  createdAt: bigint;
 
-	/**
-	 * @generated from field: int64 updated_at = 5;
-	 */
-	updatedAt: bigint;
+  /**
+   * @generated from field: int64 updated_at = 5;
+   */
+  updatedAt: bigint;
 
-	/**
-	 * サマリー生成に使用したLLMモデル
-	 *
-	 * @generated from field: string model_version = 6;
-	 */
-	modelVersion: string;
+  /**
+   * サマリー生成に使用したLLMモデル
+   *
+   * @generated from field: string model_version = 6;
+   */
+  modelVersion: string;
 };
 
 /**
@@ -491,8 +491,8 @@ export type MonthlySummary = Message<"diary.MonthlySummary"> & {
  * Use `create(MonthlySummarySchema)` to create a new message.
  */
 export const MonthlySummarySchema: GenMessage<MonthlySummary> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 17);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 17);
 
 /**
  * 月ごとのサマリー生成リクエスト
@@ -500,20 +500,20 @@ export const MonthlySummarySchema: GenMessage<MonthlySummary> =
  * @generated from message diary.GenerateMonthlySummaryRequest
  */
 export type GenerateMonthlySummaryRequest =
-	Message<"diary.GenerateMonthlySummaryRequest"> & {
-		/**
-		 * @generated from field: diary.YM month = 1;
-		 */
-		month?: YM;
-	};
+  Message<"diary.GenerateMonthlySummaryRequest"> & {
+    /**
+     * @generated from field: diary.YM month = 1;
+     */
+    month?: YM;
+  };
 
 /**
  * Describes the message diary.GenerateMonthlySummaryRequest.
  * Use `create(GenerateMonthlySummaryRequestSchema)` to create a new message.
  */
 export const GenerateMonthlySummaryRequestSchema: GenMessage<GenerateMonthlySummaryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 18);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 18);
 
 /**
  * 月ごとのサマリー生成レスポンス
@@ -521,20 +521,20 @@ export const GenerateMonthlySummaryRequestSchema: GenMessage<GenerateMonthlySumm
  * @generated from message diary.GenerateMonthlySummaryResponse
  */
 export type GenerateMonthlySummaryResponse =
-	Message<"diary.GenerateMonthlySummaryResponse"> & {
-		/**
-		 * @generated from field: diary.MonthlySummary summary = 1;
-		 */
-		summary?: MonthlySummary;
-	};
+  Message<"diary.GenerateMonthlySummaryResponse"> & {
+    /**
+     * @generated from field: diary.MonthlySummary summary = 1;
+     */
+    summary?: MonthlySummary;
+  };
 
 /**
  * Describes the message diary.GenerateMonthlySummaryResponse.
  * Use `create(GenerateMonthlySummaryResponseSchema)` to create a new message.
  */
 export const GenerateMonthlySummaryResponseSchema: GenMessage<GenerateMonthlySummaryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 19);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 19);
 
 /**
  * 月ごとのサマリー取得リクエスト
@@ -542,20 +542,20 @@ export const GenerateMonthlySummaryResponseSchema: GenMessage<GenerateMonthlySum
  * @generated from message diary.GetMonthlySummaryRequest
  */
 export type GetMonthlySummaryRequest =
-	Message<"diary.GetMonthlySummaryRequest"> & {
-		/**
-		 * @generated from field: diary.YM month = 1;
-		 */
-		month?: YM;
-	};
+  Message<"diary.GetMonthlySummaryRequest"> & {
+    /**
+     * @generated from field: diary.YM month = 1;
+     */
+    month?: YM;
+  };
 
 /**
  * Describes the message diary.GetMonthlySummaryRequest.
  * Use `create(GetMonthlySummaryRequestSchema)` to create a new message.
  */
 export const GetMonthlySummaryRequestSchema: GenMessage<GetMonthlySummaryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 20);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 20);
 
 /**
  * 月ごとのサマリー取得レスポンス
@@ -563,20 +563,20 @@ export const GetMonthlySummaryRequestSchema: GenMessage<GetMonthlySummaryRequest
  * @generated from message diary.GetMonthlySummaryResponse
  */
 export type GetMonthlySummaryResponse =
-	Message<"diary.GetMonthlySummaryResponse"> & {
-		/**
-		 * @generated from field: diary.MonthlySummary summary = 1;
-		 */
-		summary?: MonthlySummary;
-	};
+  Message<"diary.GetMonthlySummaryResponse"> & {
+    /**
+     * @generated from field: diary.MonthlySummary summary = 1;
+     */
+    summary?: MonthlySummary;
+  };
 
 /**
  * Describes the message diary.GetMonthlySummaryResponse.
  * Use `create(GetMonthlySummaryResponseSchema)` to create a new message.
  */
 export const GetMonthlySummaryResponseSchema: GenMessage<GetMonthlySummaryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 21);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 21);
 
 /**
  * 日サマリー
@@ -584,42 +584,42 @@ export const GetMonthlySummaryResponseSchema: GenMessage<GetMonthlySummaryRespon
  * @generated from message diary.DailySummary
  */
 export type DailySummary = Message<"diary.DailySummary"> & {
-	/**
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
 
-	/**
-	 * @generated from field: string diary_id = 2;
-	 */
-	diaryId: string;
+  /**
+   * @generated from field: string diary_id = 2;
+   */
+  diaryId: string;
 
-	/**
-	 * @generated from field: diary.YMD date = 3;
-	 */
-	date?: YMD;
+  /**
+   * @generated from field: diary.YMD date = 3;
+   */
+  date?: YMD;
 
-	/**
-	 * @generated from field: string summary = 4;
-	 */
-	summary: string;
+  /**
+   * @generated from field: string summary = 4;
+   */
+  summary: string;
 
-	/**
-	 * @generated from field: int64 created_at = 5;
-	 */
-	createdAt: bigint;
+  /**
+   * @generated from field: int64 created_at = 5;
+   */
+  createdAt: bigint;
 
-	/**
-	 * @generated from field: int64 updated_at = 6;
-	 */
-	updatedAt: bigint;
+  /**
+   * @generated from field: int64 updated_at = 6;
+   */
+  updatedAt: bigint;
 
-	/**
-	 * サマリー生成に使用したLLMモデル
-	 *
-	 * @generated from field: string model_version = 7;
-	 */
-	modelVersion: string;
+  /**
+   * サマリー生成に使用したLLMモデル
+   *
+   * @generated from field: string model_version = 7;
+   */
+  modelVersion: string;
 };
 
 /**
@@ -627,8 +627,8 @@ export type DailySummary = Message<"diary.DailySummary"> & {
  * Use `create(DailySummarySchema)` to create a new message.
  */
 export const DailySummarySchema: GenMessage<DailySummary> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 22);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 22);
 
 /**
  * 日ごとのサマリー生成リクエスト
@@ -636,20 +636,20 @@ export const DailySummarySchema: GenMessage<DailySummary> =
  * @generated from message diary.GenerateDailySummaryRequest
  */
 export type GenerateDailySummaryRequest =
-	Message<"diary.GenerateDailySummaryRequest"> & {
-		/**
-		 * @generated from field: string diary_id = 1;
-		 */
-		diaryId: string;
-	};
+  Message<"diary.GenerateDailySummaryRequest"> & {
+    /**
+     * @generated from field: string diary_id = 1;
+     */
+    diaryId: string;
+  };
 
 /**
  * Describes the message diary.GenerateDailySummaryRequest.
  * Use `create(GenerateDailySummaryRequestSchema)` to create a new message.
  */
 export const GenerateDailySummaryRequestSchema: GenMessage<GenerateDailySummaryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 23);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 23);
 
 /**
  * 日ごとのサマリー生成レスポンス
@@ -657,20 +657,20 @@ export const GenerateDailySummaryRequestSchema: GenMessage<GenerateDailySummaryR
  * @generated from message diary.GenerateDailySummaryResponse
  */
 export type GenerateDailySummaryResponse =
-	Message<"diary.GenerateDailySummaryResponse"> & {
-		/**
-		 * @generated from field: diary.DailySummary summary = 1;
-		 */
-		summary?: DailySummary;
-	};
+  Message<"diary.GenerateDailySummaryResponse"> & {
+    /**
+     * @generated from field: diary.DailySummary summary = 1;
+     */
+    summary?: DailySummary;
+  };
 
 /**
  * Describes the message diary.GenerateDailySummaryResponse.
  * Use `create(GenerateDailySummaryResponseSchema)` to create a new message.
  */
 export const GenerateDailySummaryResponseSchema: GenMessage<GenerateDailySummaryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 24);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 24);
 
 /**
  * 日ごとのサマリー取得リクエスト
@@ -678,10 +678,10 @@ export const GenerateDailySummaryResponseSchema: GenMessage<GenerateDailySummary
  * @generated from message diary.GetDailySummaryRequest
  */
 export type GetDailySummaryRequest = Message<"diary.GetDailySummaryRequest"> & {
-	/**
-	 * @generated from field: diary.YMD date = 1;
-	 */
-	date?: YMD;
+  /**
+   * @generated from field: diary.YMD date = 1;
+   */
+  date?: YMD;
 };
 
 /**
@@ -689,8 +689,8 @@ export type GetDailySummaryRequest = Message<"diary.GetDailySummaryRequest"> & {
  * Use `create(GetDailySummaryRequestSchema)` to create a new message.
  */
 export const GetDailySummaryRequestSchema: GenMessage<GetDailySummaryRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 25);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 25);
 
 /**
  * 日ごとのサマリー取得レスポンス
@@ -698,20 +698,20 @@ export const GetDailySummaryRequestSchema: GenMessage<GetDailySummaryRequest> =
  * @generated from message diary.GetDailySummaryResponse
  */
 export type GetDailySummaryResponse =
-	Message<"diary.GetDailySummaryResponse"> & {
-		/**
-		 * @generated from field: diary.DailySummary summary = 1;
-		 */
-		summary?: DailySummary;
-	};
+  Message<"diary.GetDailySummaryResponse"> & {
+    /**
+     * @generated from field: diary.DailySummary summary = 1;
+     */
+    summary?: DailySummary;
+  };
 
 /**
  * Describes the message diary.GetDailySummaryResponse.
  * Use `create(GetDailySummaryResponseSchema)` to create a new message.
  */
 export const GetDailySummaryResponseSchema: GenMessage<GetDailySummaryResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 26);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 26);
 
 /**
  * 直近トレンド分析取得リクエスト
@@ -727,8 +727,8 @@ export type GetLatestTrendRequest = Message<"diary.GetLatestTrendRequest"> & {};
  * Use `create(GetLatestTrendRequestSchema)` to create a new message.
  */
 export const GetLatestTrendRequestSchema: GenMessage<GetLatestTrendRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 27);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 27);
 
 /**
  * 直近トレンド分析取得レスポンス
@@ -736,68 +736,68 @@ export const GetLatestTrendRequestSchema: GenMessage<GetLatestTrendRequest> =
  * @generated from message diary.GetLatestTrendResponse
  */
 export type GetLatestTrendResponse = Message<"diary.GetLatestTrendResponse"> & {
-	/**
-	 * 体調: "bad" (悪い), "slight" (やや悪い), "normal" (普通), "good" (良い)
-	 *
-	 * @generated from field: string health = 1;
-	 */
-	health: string;
+  /**
+   * 体調: "bad" (悪い), "slight" (やや悪い), "normal" (普通), "good" (良い)
+   *
+   * @generated from field: string health = 1;
+   */
+  health: string;
 
-	/**
-	 * 体調の理由（10文字以内）
-	 *
-	 * @generated from field: string health_reason = 2;
-	 */
-	healthReason: string;
+  /**
+   * 体調の理由（10文字以内）
+   *
+   * @generated from field: string health_reason = 2;
+   */
+  healthReason: string;
 
-	/**
-	 * 気分: "bad" (悪い), "slight" (やや悪い), "normal" (普通), "good" (良い)
-	 *
-	 * @generated from field: string mood = 3;
-	 */
-	mood: string;
+  /**
+   * 気分: "bad" (悪い), "slight" (やや悪い), "normal" (普通), "good" (良い)
+   *
+   * @generated from field: string mood = 3;
+   */
+  mood: string;
 
-	/**
-	 * 気分の理由（10文字以内）
-	 *
-	 * @generated from field: string mood_reason = 4;
-	 */
-	moodReason: string;
+  /**
+   * 気分の理由（10文字以内）
+   *
+   * @generated from field: string mood_reason = 4;
+   */
+  moodReason: string;
 
-	/**
-	 * 活動・行動（箇条書き・階層構造のテキスト）
-	 *
-	 * @generated from field: string activities = 5;
-	 */
-	activities: string;
+  /**
+   * 活動・行動（箇条書き・階層構造のテキスト）
+   *
+   * @generated from field: string activities = 5;
+   */
+  activities: string;
 
-	/**
-	 * 分析期間開始（ISO 8601形式）
-	 *
-	 * @generated from field: string period_start = 6;
-	 */
-	periodStart: string;
+  /**
+   * 分析期間開始（ISO 8601形式）
+   *
+   * @generated from field: string period_start = 6;
+   */
+  periodStart: string;
 
-	/**
-	 * 分析期間終了（ISO 8601形式）
-	 *
-	 * @generated from field: string period_end = 7;
-	 */
-	periodEnd: string;
+  /**
+   * 分析期間終了（ISO 8601形式）
+   *
+   * @generated from field: string period_end = 7;
+   */
+  periodEnd: string;
 
-	/**
-	 * 生成日時（ISO 8601形式）
-	 *
-	 * @generated from field: string generated_at = 8;
-	 */
-	generatedAt: string;
+  /**
+   * 生成日時（ISO 8601形式）
+   *
+   * @generated from field: string generated_at = 8;
+   */
+  generatedAt: string;
 
-	/**
-	 * トレンド生成に使用したLLMモデル
-	 *
-	 * @generated from field: string model_version = 9;
-	 */
-	modelVersion: string;
+  /**
+   * トレンド生成に使用したLLMモデル
+   *
+   * @generated from field: string model_version = 9;
+   */
+  modelVersion: string;
 };
 
 /**
@@ -805,8 +805,8 @@ export type GetLatestTrendResponse = Message<"diary.GetLatestTrendResponse"> & {
  * Use `create(GetLatestTrendResponseSchema)` to create a new message.
  */
 export const GetLatestTrendResponseSchema: GenMessage<GetLatestTrendResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 28);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 28);
 
 /**
  * 直近トレンド分析生成トリガーリクエスト（デバッグ用）
@@ -816,15 +816,15 @@ export const GetLatestTrendResponseSchema: GenMessage<GetLatestTrendResponse> =
  * @generated from message diary.TriggerLatestTrendRequest
  */
 export type TriggerLatestTrendRequest =
-	Message<"diary.TriggerLatestTrendRequest"> & {};
+  Message<"diary.TriggerLatestTrendRequest"> & {};
 
 /**
  * Describes the message diary.TriggerLatestTrendRequest.
  * Use `create(TriggerLatestTrendRequestSchema)` to create a new message.
  */
 export const TriggerLatestTrendRequestSchema: GenMessage<TriggerLatestTrendRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 29);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 29);
 
 /**
  * 直近トレンド分析生成トリガーレスポンス（デバッグ用）
@@ -832,29 +832,29 @@ export const TriggerLatestTrendRequestSchema: GenMessage<TriggerLatestTrendReque
  * @generated from message diary.TriggerLatestTrendResponse
  */
 export type TriggerLatestTrendResponse =
-	Message<"diary.TriggerLatestTrendResponse"> & {
-		/**
-		 * 成功フラグ
-		 *
-		 * @generated from field: bool success = 1;
-		 */
-		success: boolean;
+  Message<"diary.TriggerLatestTrendResponse"> & {
+    /**
+     * 成功フラグ
+     *
+     * @generated from field: bool success = 1;
+     */
+    success: boolean;
 
-		/**
-		 * メッセージ
-		 *
-		 * @generated from field: string message = 2;
-		 */
-		message: string;
-	};
+    /**
+     * メッセージ
+     *
+     * @generated from field: string message = 2;
+     */
+    message: string;
+  };
 
 /**
  * Describes the message diary.TriggerLatestTrendResponse.
  * Use `create(TriggerLatestTrendResponseSchema)` to create a new message.
  */
 export const TriggerLatestTrendResponseSchema: GenMessage<TriggerLatestTrendResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 30);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 30);
 
 /**
  * 意味的検索リクエスト
@@ -862,29 +862,29 @@ export const TriggerLatestTrendResponseSchema: GenMessage<TriggerLatestTrendResp
  * @generated from message diary.SearchDiaryEntriesSemanticRequest
  */
 export type SearchDiaryEntriesSemanticRequest =
-	Message<"diary.SearchDiaryEntriesSemanticRequest"> & {
-		/**
-		 * 自然言語クエリ
-		 *
-		 * @generated from field: string query = 1;
-		 */
-		query: string;
+  Message<"diary.SearchDiaryEntriesSemanticRequest"> & {
+    /**
+     * 自然言語クエリ
+     *
+     * @generated from field: string query = 1;
+     */
+    query: string;
 
-		/**
-		 * 上位何件返すか (default: 10, max: 50)
-		 *
-		 * @generated from field: int32 limit = 2;
-		 */
-		limit: number;
-	};
+    /**
+     * 上位何件返すか (default: 10, max: 50)
+     *
+     * @generated from field: int32 limit = 2;
+     */
+    limit: number;
+  };
 
 /**
  * Describes the message diary.SearchDiaryEntriesSemanticRequest.
  * Use `create(SearchDiaryEntriesSemanticRequestSchema)` to create a new message.
  */
 export const SearchDiaryEntriesSemanticRequestSchema: GenMessage<SearchDiaryEntriesSemanticRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 31);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 31);
 
 /**
  * 意味的検索の1件分の結果
@@ -892,43 +892,43 @@ export const SearchDiaryEntriesSemanticRequestSchema: GenMessage<SearchDiaryEntr
  * @generated from message diary.SemanticSearchResult
  */
 export type SemanticSearchResult = Message<"diary.SemanticSearchResult"> & {
-	/**
-	 * @generated from field: string diary_id = 1;
-	 */
-	diaryId: string;
+  /**
+   * @generated from field: string diary_id = 1;
+   */
+  diaryId: string;
 
-	/**
-	 * @generated from field: diary.YMD date = 2;
-	 */
-	date?: YMD;
+  /**
+   * @generated from field: diary.YMD date = 2;
+   */
+  date?: YMD;
 
-	/**
-	 * クエリに関連する抜粋（最大200文字）
-	 *
-	 * @generated from field: string snippet = 3;
-	 */
-	snippet: string;
+  /**
+   * クエリに関連する抜粋（最大200文字）
+   *
+   * @generated from field: string snippet = 3;
+   */
+  snippet: string;
 
-	/**
-	 * コサイン類似度スコア (0.0〜1.0)
-	 *
-	 * @generated from field: float similarity = 4;
-	 */
-	similarity: number;
+  /**
+   * コサイン類似度スコア (0.0〜1.0)
+   *
+   * @generated from field: float similarity = 4;
+   */
+  similarity: number;
 
-	/**
-	 * マッチしたチャンクの概要（1〜2文）
-	 *
-	 * @generated from field: string chunk_summary = 5;
-	 */
-	chunkSummary: string;
+  /**
+   * マッチしたチャンクの概要（1〜2文）
+   *
+   * @generated from field: string chunk_summary = 5;
+   */
+  chunkSummary: string;
 
-	/**
-	 * 日記内のチャンク総数
-	 *
-	 * @generated from field: int32 chunk_count = 6;
-	 */
-	chunkCount: number;
+  /**
+   * 日記内のチャンク総数
+   *
+   * @generated from field: int32 chunk_count = 6;
+   */
+  chunkCount: number;
 };
 
 /**
@@ -936,8 +936,8 @@ export type SemanticSearchResult = Message<"diary.SemanticSearchResult"> & {
  * Use `create(SemanticSearchResultSchema)` to create a new message.
  */
 export const SemanticSearchResultSchema: GenMessage<SemanticSearchResult> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 32);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 32);
 
 /**
  * 意味的検索レスポンス
@@ -945,34 +945,34 @@ export const SemanticSearchResultSchema: GenMessage<SemanticSearchResult> =
  * @generated from message diary.SearchDiaryEntriesSemanticResponse
  */
 export type SearchDiaryEntriesSemanticResponse =
-	Message<"diary.SearchDiaryEntriesSemanticResponse"> & {
-		/**
-		 * @generated from field: repeated diary.SemanticSearchResult results = 1;
-		 */
-		results: SemanticSearchResult[];
+  Message<"diary.SearchDiaryEntriesSemanticResponse"> & {
+    /**
+     * @generated from field: repeated diary.SemanticSearchResult results = 1;
+     */
+    results: SemanticSearchResult[];
 
-		/**
-		 * クエリのembedding生成に使用したモデル（例: gemini-embedding-001）
-		 *
-		 * @generated from field: string embedding_model = 2;
-		 */
-		embeddingModel: string;
+    /**
+     * クエリのembedding生成に使用したモデル（例: gemini-embedding-001）
+     *
+     * @generated from field: string embedding_model = 2;
+     */
+    embeddingModel: string;
 
-		/**
-		 * チャンク分割に使用したLLMモデル（例: gemini-2.5-flash-lite）
-		 *
-		 * @generated from field: string chunk_model = 3;
-		 */
-		chunkModel: string;
-	};
+    /**
+     * チャンク分割に使用したLLMモデル（例: gemini-2.5-flash-lite）
+     *
+     * @generated from field: string chunk_model = 3;
+     */
+    chunkModel: string;
+  };
 
 /**
  * Describes the message diary.SearchDiaryEntriesSemanticResponse.
  * Use `create(SearchDiaryEntriesSemanticResponseSchema)` to create a new message.
  */
 export const SearchDiaryEntriesSemanticResponseSchema: GenMessage<SearchDiaryEntriesSemanticResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 33);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 33);
 
 /**
  * 日記ハイライト生成トリガーリクエスト
@@ -980,22 +980,22 @@ export const SearchDiaryEntriesSemanticResponseSchema: GenMessage<SearchDiaryEnt
  * @generated from message diary.TriggerDiaryHighlightRequest
  */
 export type TriggerDiaryHighlightRequest =
-	Message<"diary.TriggerDiaryHighlightRequest"> & {
-		/**
-		 * 日記ID
-		 *
-		 * @generated from field: string diary_id = 1;
-		 */
-		diaryId: string;
-	};
+  Message<"diary.TriggerDiaryHighlightRequest"> & {
+    /**
+     * 日記ID
+     *
+     * @generated from field: string diary_id = 1;
+     */
+    diaryId: string;
+  };
 
 /**
  * Describes the message diary.TriggerDiaryHighlightRequest.
  * Use `create(TriggerDiaryHighlightRequestSchema)` to create a new message.
  */
 export const TriggerDiaryHighlightRequestSchema: GenMessage<TriggerDiaryHighlightRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 34);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 34);
 
 /**
  * 日記ハイライト生成トリガーレスポンス
@@ -1003,29 +1003,29 @@ export const TriggerDiaryHighlightRequestSchema: GenMessage<TriggerDiaryHighligh
  * @generated from message diary.TriggerDiaryHighlightResponse
  */
 export type TriggerDiaryHighlightResponse =
-	Message<"diary.TriggerDiaryHighlightResponse"> & {
-		/**
-		 * キューイング成功/失敗
-		 *
-		 * @generated from field: bool queued = 1;
-		 */
-		queued: boolean;
+  Message<"diary.TriggerDiaryHighlightResponse"> & {
+    /**
+     * キューイング成功/失敗
+     *
+     * @generated from field: bool queued = 1;
+     */
+    queued: boolean;
 
-		/**
-		 * メッセージ
-		 *
-		 * @generated from field: string message = 2;
-		 */
-		message: string;
-	};
+    /**
+     * メッセージ
+     *
+     * @generated from field: string message = 2;
+     */
+    message: string;
+  };
 
 /**
  * Describes the message diary.TriggerDiaryHighlightResponse.
  * Use `create(TriggerDiaryHighlightResponseSchema)` to create a new message.
  */
 export const TriggerDiaryHighlightResponseSchema: GenMessage<TriggerDiaryHighlightResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 35);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 35);
 
 /**
  * 日記ハイライト取得リクエスト
@@ -1033,22 +1033,22 @@ export const TriggerDiaryHighlightResponseSchema: GenMessage<TriggerDiaryHighlig
  * @generated from message diary.GetDiaryHighlightRequest
  */
 export type GetDiaryHighlightRequest =
-	Message<"diary.GetDiaryHighlightRequest"> & {
-		/**
-		 * 日記ID
-		 *
-		 * @generated from field: string diary_id = 1;
-		 */
-		diaryId: string;
-	};
+  Message<"diary.GetDiaryHighlightRequest"> & {
+    /**
+     * 日記ID
+     *
+     * @generated from field: string diary_id = 1;
+     */
+    diaryId: string;
+  };
 
 /**
  * Describes the message diary.GetDiaryHighlightRequest.
  * Use `create(GetDiaryHighlightRequestSchema)` to create a new message.
  */
 export const GetDiaryHighlightRequestSchema: GenMessage<GetDiaryHighlightRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 36);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 36);
 
 /**
  * ハイライト範囲
@@ -1056,26 +1056,26 @@ export const GetDiaryHighlightRequestSchema: GenMessage<GetDiaryHighlightRequest
  * @generated from message diary.HighlightRange
  */
 export type HighlightRange = Message<"diary.HighlightRange"> & {
-	/**
-	 * ハイライト開始位置（文字数）
-	 *
-	 * @generated from field: int32 start = 1;
-	 */
-	start: number;
+  /**
+   * ハイライト開始位置（文字数）
+   *
+   * @generated from field: int32 start = 1;
+   */
+  start: number;
 
-	/**
-	 * ハイライト終了位置（文字数）
-	 *
-	 * @generated from field: int32 end = 2;
-	 */
-	end: number;
+  /**
+   * ハイライト終了位置（文字数）
+   *
+   * @generated from field: int32 end = 2;
+   */
+  end: number;
 
-	/**
-	 * ハイライト対象のテキスト
-	 *
-	 * @generated from field: string text = 3;
-	 */
-	text: string;
+  /**
+   * ハイライト対象のテキスト
+   *
+   * @generated from field: string text = 3;
+   */
+  text: string;
 };
 
 /**
@@ -1083,8 +1083,8 @@ export type HighlightRange = Message<"diary.HighlightRange"> & {
  * Use `create(HighlightRangeSchema)` to create a new message.
  */
 export const HighlightRangeSchema: GenMessage<HighlightRange> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 37);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 37);
 
 /**
  * 日記ハイライト取得レスポンス
@@ -1092,36 +1092,36 @@ export const HighlightRangeSchema: GenMessage<HighlightRange> =
  * @generated from message diary.GetDiaryHighlightResponse
  */
 export type GetDiaryHighlightResponse =
-	Message<"diary.GetDiaryHighlightResponse"> & {
-		/**
-		 * ハイライトリスト
-		 *
-		 * @generated from field: repeated diary.HighlightRange highlights = 1;
-		 */
-		highlights: HighlightRange[];
+  Message<"diary.GetDiaryHighlightResponse"> & {
+    /**
+     * ハイライトリスト
+     *
+     * @generated from field: repeated diary.HighlightRange highlights = 1;
+     */
+    highlights: HighlightRange[];
 
-		/**
-		 * 作成日時（Unix timestamp）
-		 *
-		 * @generated from field: int64 created_at = 2;
-		 */
-		createdAt: bigint;
+    /**
+     * 作成日時（Unix timestamp）
+     *
+     * @generated from field: int64 created_at = 2;
+     */
+    createdAt: bigint;
 
-		/**
-		 * 更新日時（Unix timestamp）
-		 *
-		 * @generated from field: int64 updated_at = 3;
-		 */
-		updatedAt: bigint;
-	};
+    /**
+     * 更新日時（Unix timestamp）
+     *
+     * @generated from field: int64 updated_at = 3;
+     */
+    updatedAt: bigint;
+  };
 
 /**
  * Describes the message diary.GetDiaryHighlightResponse.
  * Use `create(GetDiaryHighlightResponseSchema)` to create a new message.
  */
 export const GetDiaryHighlightResponseSchema: GenMessage<GetDiaryHighlightResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 38);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 38);
 
 /**
  * 全日記のembedding再生成リクエスト
@@ -1131,15 +1131,15 @@ export const GetDiaryHighlightResponseSchema: GenMessage<GetDiaryHighlightRespon
  * @generated from message diary.RegenerateAllEmbeddingsRequest
  */
 export type RegenerateAllEmbeddingsRequest =
-	Message<"diary.RegenerateAllEmbeddingsRequest"> & {};
+  Message<"diary.RegenerateAllEmbeddingsRequest"> & {};
 
 /**
  * Describes the message diary.RegenerateAllEmbeddingsRequest.
  * Use `create(RegenerateAllEmbeddingsRequestSchema)` to create a new message.
  */
 export const RegenerateAllEmbeddingsRequestSchema: GenMessage<RegenerateAllEmbeddingsRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 39);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 39);
 
 /**
  * 全日記のembedding再生成レスポンス
@@ -1147,27 +1147,27 @@ export const RegenerateAllEmbeddingsRequestSchema: GenMessage<RegenerateAllEmbed
  * @generated from message diary.RegenerateAllEmbeddingsResponse
  */
 export type RegenerateAllEmbeddingsResponse =
-	Message<"diary.RegenerateAllEmbeddingsResponse"> & {
-		/**
-		 * @generated from field: bool success = 1;
-		 */
-		success: boolean;
+  Message<"diary.RegenerateAllEmbeddingsResponse"> & {
+    /**
+     * @generated from field: bool success = 1;
+     */
+    success: boolean;
 
-		/**
-		 * キューに追加した日記数
-		 *
-		 * @generated from field: int32 queued_count = 2;
-		 */
-		queuedCount: number;
-	};
+    /**
+     * キューに追加した日記数
+     *
+     * @generated from field: int32 queued_count = 2;
+     */
+    queuedCount: number;
+  };
 
 /**
  * Describes the message diary.RegenerateAllEmbeddingsResponse.
  * Use `create(RegenerateAllEmbeddingsResponseSchema)` to create a new message.
  */
 export const RegenerateAllEmbeddingsResponseSchema: GenMessage<RegenerateAllEmbeddingsResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 40);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 40);
 
 /**
  * 日記のRAGインデックス状態取得リクエスト
@@ -1175,22 +1175,22 @@ export const RegenerateAllEmbeddingsResponseSchema: GenMessage<RegenerateAllEmbe
  * @generated from message diary.GetDiaryEmbeddingStatusRequest
  */
 export type GetDiaryEmbeddingStatusRequest =
-	Message<"diary.GetDiaryEmbeddingStatusRequest"> & {
-		/**
-		 * 日記ID
-		 *
-		 * @generated from field: string diary_id = 1;
-		 */
-		diaryId: string;
-	};
+  Message<"diary.GetDiaryEmbeddingStatusRequest"> & {
+    /**
+     * 日記ID
+     *
+     * @generated from field: string diary_id = 1;
+     */
+    diaryId: string;
+  };
 
 /**
  * Describes the message diary.GetDiaryEmbeddingStatusRequest.
  * Use `create(GetDiaryEmbeddingStatusRequestSchema)` to create a new message.
  */
 export const GetDiaryEmbeddingStatusRequestSchema: GenMessage<GetDiaryEmbeddingStatusRequest> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 41);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 41);
 
 /**
  * 日記のRAGインデックス状態取得レスポンス
@@ -1198,64 +1198,64 @@ export const GetDiaryEmbeddingStatusRequestSchema: GenMessage<GetDiaryEmbeddingS
  * @generated from message diary.GetDiaryEmbeddingStatusResponse
  */
 export type GetDiaryEmbeddingStatusResponse =
-	Message<"diary.GetDiaryEmbeddingStatusResponse"> & {
-		/**
-		 * インデックス済みかどうか
-		 *
-		 * @generated from field: bool indexed = 1;
-		 */
-		indexed: boolean;
+  Message<"diary.GetDiaryEmbeddingStatusResponse"> & {
+    /**
+     * インデックス済みかどうか
+     *
+     * @generated from field: bool indexed = 1;
+     */
+    indexed: boolean;
 
-		/**
-		 * embedding生成に使用したモデル
-		 *
-		 * @generated from field: string model_version = 2;
-		 */
-		modelVersion: string;
+    /**
+     * embedding生成に使用したモデル
+     *
+     * @generated from field: string model_version = 2;
+     */
+    modelVersion: string;
 
-		/**
-		 * 埋め込み作成日時（Unix timestamp）
-		 *
-		 * @generated from field: int64 created_at = 3;
-		 */
-		createdAt: bigint;
+    /**
+     * 埋め込み作成日時（Unix timestamp）
+     *
+     * @generated from field: int64 created_at = 3;
+     */
+    createdAt: bigint;
 
-		/**
-		 * 埋め込み更新日時（Unix timestamp）
-		 *
-		 * @generated from field: int64 updated_at = 4;
-		 */
-		updatedAt: bigint;
+    /**
+     * 埋め込み更新日時（Unix timestamp）
+     *
+     * @generated from field: int64 updated_at = 4;
+     */
+    updatedAt: bigint;
 
-		/**
-		 * チャンク分割に使用したLLMモデル
-		 *
-		 * @generated from field: string chunk_model_version = 6;
-		 */
-		chunkModelVersion: string;
+    /**
+     * チャンク分割に使用したLLMモデル
+     *
+     * @generated from field: string chunk_model_version = 6;
+     */
+    chunkModelVersion: string;
 
-		/**
-		 * チャンク総数
-		 *
-		 * @generated from field: int32 chunk_count = 7;
-		 */
-		chunkCount: number;
+    /**
+     * チャンク総数
+     *
+     * @generated from field: int32 chunk_count = 7;
+     */
+    chunkCount: number;
 
-		/**
-		 * 各チャンクの概要（chunk_index順）
-		 *
-		 * @generated from field: repeated string chunk_summaries = 8;
-		 */
-		chunkSummaries: string[];
-	};
+    /**
+     * 各チャンクの概要（chunk_index順）
+     *
+     * @generated from field: repeated string chunk_summaries = 8;
+     */
+    chunkSummaries: string[];
+  };
 
 /**
  * Describes the message diary.GetDiaryEmbeddingStatusResponse.
  * Use `create(GetDiaryEmbeddingStatusResponseSchema)` to create a new message.
  */
 export const GetDiaryEmbeddingStatusResponseSchema: GenMessage<GetDiaryEmbeddingStatusResponse> =
-	/*@__PURE__*/
-	messageDesc(file_diary_diary, 42);
+  /*@__PURE__*/
+  messageDesc(file_diary_diary, 42);
 
 /**
  * DiaryService は日記エントリの作成・読み取り・更新・削除（CRUD）と
@@ -1264,320 +1264,320 @@ export const GetDiaryEmbeddingStatusResponseSchema: GenMessage<GetDiaryEmbedding
  * @generated from service diary.DiaryService
  */
 export const DiaryService: GenService<{
-	/**
-	 * CreateDiaryEntry は新しい日記エントリを作成します。
-	 * 1日1エントリの制約があり、同じ日付に複数のエントリは作成できません。
-	 *
-	 * 例:
-	 *   request: { content: "今日は友人と会った", date: { year: 2025, month: 10, day: 9 } }
-	 *   response: { entry: { id: "uuid", content: "...", ... } }
-	 *
-	 * エラー:
-	 *   - AlreadyExists: 指定された日付の日記が既に存在する
-	 *   - InvalidArgument: 日付が不正
-	 *
-	 * @generated from rpc diary.DiaryService.CreateDiaryEntry
-	 */
-	createDiaryEntry: {
-		methodKind: "unary";
-		input: typeof CreateDiaryEntryRequestSchema;
-		output: typeof CreateDiaryEntryResponseSchema;
-	};
-	/**
-	 * UpdateDiaryEntry は既存の日記エントリを更新します。
-	 *
-	 * 例:
-	 *   request: { id: "uuid", content: "更新された内容", date: { year: 2025, month: 10, day: 9 } }
-	 *   response: { entry: { id: "uuid", content: "更新された内容", ... } }
-	 *
-	 * エラー:
-	 *   - NotFound: 日記エントリが見つからない
-	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	 *
-	 * @generated from rpc diary.DiaryService.UpdateDiaryEntry
-	 */
-	updateDiaryEntry: {
-		methodKind: "unary";
-		input: typeof UpdateDiaryEntryRequestSchema;
-		output: typeof UpdateDiaryEntryResponseSchema;
-	};
-	/**
-	 * DeleteDiaryEntry は日記エントリを削除します。
-	 *
-	 * エラー:
-	 *   - NotFound: 日記エントリが見つからない
-	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	 *
-	 * @generated from rpc diary.DiaryService.DeleteDiaryEntry
-	 */
-	deleteDiaryEntry: {
-		methodKind: "unary";
-		input: typeof DeleteDiaryEntryRequestSchema;
-		output: typeof DeleteDiaryEntryResponseSchema;
-	};
-	/**
-	 * GetDiaryEntry は指定された日付の日記エントリを取得します。
-	 *
-	 * 例:
-	 *   request: { date: { year: 2025, month: 10, day: 9 } }
-	 *   response: { entry: { id: "uuid", content: "...", ... } }
-	 *
-	 * エラー:
-	 *   - NotFound: 指定された日付の日記が存在しない
-	 *
-	 * @generated from rpc diary.DiaryService.GetDiaryEntry
-	 */
-	getDiaryEntry: {
-		methodKind: "unary";
-		input: typeof GetDiaryEntryRequestSchema;
-		output: typeof GetDiaryEntryResponseSchema;
-	};
-	/**
-	 * GetDiaryEntries は指定された複数の日付の日記エントリを取得します。
-	 * ホームでの直近3日表示や、過去数年分の取得など、柔軟な取得が可能です。
-	 *
-	 * 例:
-	 *   request: { dates: [{ year: 2025, month: 10, day: 9 }, { year: 2025, month: 10, day: 8 }] }
-	 *   response: { entries: [{ id: "uuid1", ... }, { id: "uuid2", ... }] }
-	 *
-	 * エラー: なし（存在する日記のみ返される）
-	 *
-	 * @generated from rpc diary.DiaryService.GetDiaryEntries
-	 */
-	getDiaryEntries: {
-		methodKind: "unary";
-		input: typeof GetDiaryEntriesRequestSchema;
-		output: typeof GetDiaryEntriesResponseSchema;
-	};
-	/**
-	 * GetDiaryEntriesByMonth は指定された月の全日記エントリを取得します。
-	 *
-	 * 例:
-	 *   request: { month: { year: 2025, month: 10 } }
-	 *   response: { entries: [{ id: "uuid1", date: { year: 2025, month: 10, day: 1 }, ... }, ...] }
-	 *
-	 * エラー: なし（存在する日記のみ返される）
-	 *
-	 * @generated from rpc diary.DiaryService.GetDiaryEntriesByMonth
-	 */
-	getDiaryEntriesByMonth: {
-		methodKind: "unary";
-		input: typeof GetDiaryEntriesByMonthRequestSchema;
-		output: typeof GetDiaryEntriesByMonthResponseSchema;
-	};
-	/**
-	 * SearchDiaryEntries はキーワードで日記を全文検索します。
-	 * PostgreSQLのLIKE検索を使用しています。
-	 *
-	 * 例:
-	 *   request: { keyword: "友人" }
-	 *   response: { searched_keyword: "友人", entries: [{ id: "uuid", content: "今日は友人と...", ... }] }
-	 *
-	 * エラー: なし（見つからない場合は空配列）
-	 *
-	 * @generated from rpc diary.DiaryService.SearchDiaryEntries
-	 */
-	searchDiaryEntries: {
-		methodKind: "unary";
-		input: typeof SearchDiaryEntriesRequestSchema;
-		output: typeof SearchDiaryEntriesResponseSchema;
-	};
-	/**
-	 * GenerateMonthlySummary は指定された月の日記をLLMで要約します。
-	 * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
-	 *
-	 * 例:
-	 *   request: { month: { year: 2025, month: 10 } }
-	 *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
-	 *
-	 * エラー:
-	 *   - NotFound: LLMキーが設定されていない、または対象月に日記が存在しない
-	 *   - Internal: LLM API呼び出しエラー
-	 *
-	 * @generated from rpc diary.DiaryService.GenerateMonthlySummary
-	 */
-	generateMonthlySummary: {
-		methodKind: "unary";
-		input: typeof GenerateMonthlySummaryRequestSchema;
-		output: typeof GenerateMonthlySummaryResponseSchema;
-	};
-	/**
-	 * GetMonthlySummary は指定された月のサマリーを取得します。
-	 *
-	 * 例:
-	 *   request: { month: { year: 2025, month: 10 } }
-	 *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
-	 *
-	 * エラー:
-	 *   - NotFound: サマリーが存在しない
-	 *
-	 * @generated from rpc diary.DiaryService.GetMonthlySummary
-	 */
-	getMonthlySummary: {
-		methodKind: "unary";
-		input: typeof GetMonthlySummaryRequestSchema;
-		output: typeof GetMonthlySummaryResponseSchema;
-	};
-	/**
-	 * GenerateDailySummary は指定された日記をLLMで要約します。
-	 * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
-	 *
-	 * 例:
-	 *   request: { diary_id: "uuid" }
-	 *   response: { summary: { id: "uuid", diary_id: "uuid", summary: "今日は...", ... } }
-	 *
-	 * エラー:
-	 *   - NotFound: LLMキーが設定されていない、または日記が存在しない
-	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	 *   - Internal: LLM API呼び出しエラー
-	 *
-	 * @generated from rpc diary.DiaryService.GenerateDailySummary
-	 */
-	generateDailySummary: {
-		methodKind: "unary";
-		input: typeof GenerateDailySummaryRequestSchema;
-		output: typeof GenerateDailySummaryResponseSchema;
-	};
-	/**
-	 * GetDailySummary は指定された日付のサマリーを取得します。
-	 *
-	 * 例:
-	 *   request: { date: { year: 2025, month: 10, day: 9 } }
-	 *   response: { summary: { id: "uuid", date: { year: 2025, month: 10, day: 9 }, summary: "今日は...", ... } }
-	 *
-	 * エラー:
-	 *   - NotFound: サマリーが存在しない
-	 *
-	 * @generated from rpc diary.DiaryService.GetDailySummary
-	 */
-	getDailySummary: {
-		methodKind: "unary";
-		input: typeof GetDailySummaryRequestSchema;
-		output: typeof GetDailySummaryResponseSchema;
-	};
-	/**
-	 * GetLatestTrend は直近の日記のトレンド分析を取得します（前日を中心に最大1週間程度を参考）。
-	 * Redisに保存された分析結果を返します。
-	 *
-	 * 例:
-	 *   request: {}
-	 *   response: { health: "good", mood: "normal", activities: "- 運動\n  - 朝のランニング\n- 仕事\n  - プロジェクトミーティング", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
-	 *
-	 * エラー:
-	 *   - NotFound: トレンド分析が存在しない
-	 *
-	 * @generated from rpc diary.DiaryService.GetLatestTrend
-	 */
-	getLatestTrend: {
-		methodKind: "unary";
-		input: typeof GetLatestTrendRequestSchema;
-		output: typeof GetLatestTrendResponseSchema;
-	};
-	/**
-	 * TriggerLatestTrend はトレンド分析の生成を手動でトリガーします（デバッグ用）。
-	 * 非production環境でのみ使用可能です。
-	 *
-	 * 例:
-	 *   request: {}
-	 *   response: { success: true, message: "トレンド分析の生成をキューに追加しました" }
-	 *
-	 * エラー:
-	 *   - PermissionDenied: production環境では使用不可
-	 *   - NotFound: LLMキーが設定されていない
-	 *
-	 * @generated from rpc diary.DiaryService.TriggerLatestTrend
-	 */
-	triggerLatestTrend: {
-		methodKind: "unary";
-		input: typeof TriggerLatestTrendRequestSchema;
-		output: typeof TriggerLatestTrendResponseSchema;
-	};
-	/**
-	 * SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
-	 * Gemini Embedding APIを使用してベクトル類似度検索を行います。
-	 *
-	 * 例:
-	 *   request: { query: "去年の夏に食べたもの", limit: 10 }
-	 *   response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
-	 *
-	 * エラー:
-	 *   - NotFound: LLMキーが設定されていない
-	 *   - InvalidArgument: クエリが空
-	 *
-	 * @generated from rpc diary.DiaryService.SearchDiaryEntriesSemantic
-	 */
-	searchDiaryEntriesSemantic: {
-		methodKind: "unary";
-		input: typeof SearchDiaryEntriesSemanticRequestSchema;
-		output: typeof SearchDiaryEntriesSemanticResponseSchema;
-	};
-	/**
-	 * TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
-	 * Redis Pub/Subを通じてSubscriberが処理を実行します。
-	 *
-	 * 例:
-	 *   request: { diary_id: "uuid" }
-	 *   response: { queued: true, message: "ハイライト生成をキューに追加しました" }
-	 *
-	 * エラー:
-	 *   - NotFound: 日記エントリが見つからない、またはLLMキーが設定されていない
-	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	 *
-	 * @generated from rpc diary.DiaryService.TriggerDiaryHighlight
-	 */
-	triggerDiaryHighlight: {
-		methodKind: "unary";
-		input: typeof TriggerDiaryHighlightRequestSchema;
-		output: typeof TriggerDiaryHighlightResponseSchema;
-	};
-	/**
-	 * GetDiaryHighlight は日記エントリのハイライト情報を取得します。
-	 * 日記が更新された場合、古いハイライトは無効として扱われます。
-	 *
-	 * 例:
-	 *   request: { diary_id: "uuid" }
-	 *   response: { highlights: [{ start: 0, end: 25, text: "..." }], created_at: 1234567890, updated_at: 1234567890 }
-	 *
-	 * エラー:
-	 *   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
-	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	 *
-	 * @generated from rpc diary.DiaryService.GetDiaryHighlight
-	 */
-	getDiaryHighlight: {
-		methodKind: "unary";
-		input: typeof GetDiaryHighlightRequestSchema;
-		output: typeof GetDiaryHighlightResponseSchema;
-	};
-	/**
-	 * RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
-	 * 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
-	 *
-	 * エラー:
-	 *   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
-	 *
-	 * @generated from rpc diary.DiaryService.RegenerateAllEmbeddings
-	 */
-	regenerateAllEmbeddings: {
-		methodKind: "unary";
-		input: typeof RegenerateAllEmbeddingsRequestSchema;
-		output: typeof RegenerateAllEmbeddingsResponseSchema;
-	};
-	/**
-	 * GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
-	 *
-	 * 例:
-	 *   request: { diary_id: "uuid" }
-	 *   response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
-	 *
-	 * エラー:
-	 *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-	 *
-	 * @generated from rpc diary.DiaryService.GetDiaryEmbeddingStatus
-	 */
-	getDiaryEmbeddingStatus: {
-		methodKind: "unary";
-		input: typeof GetDiaryEmbeddingStatusRequestSchema;
-		output: typeof GetDiaryEmbeddingStatusResponseSchema;
-	};
+  /**
+   * CreateDiaryEntry は新しい日記エントリを作成します。
+   * 1日1エントリの制約があり、同じ日付に複数のエントリは作成できません。
+   *
+   * 例:
+   *   request: { content: "今日は友人と会った", date: { year: 2025, month: 10, day: 9 } }
+   *   response: { entry: { id: "uuid", content: "...", ... } }
+   *
+   * エラー:
+   *   - AlreadyExists: 指定された日付の日記が既に存在する
+   *   - InvalidArgument: 日付が不正
+   *
+   * @generated from rpc diary.DiaryService.CreateDiaryEntry
+   */
+  createDiaryEntry: {
+    methodKind: "unary";
+    input: typeof CreateDiaryEntryRequestSchema;
+    output: typeof CreateDiaryEntryResponseSchema;
+  };
+  /**
+   * UpdateDiaryEntry は既存の日記エントリを更新します。
+   *
+   * 例:
+   *   request: { id: "uuid", content: "更新された内容", date: { year: 2025, month: 10, day: 9 } }
+   *   response: { entry: { id: "uuid", content: "更新された内容", ... } }
+   *
+   * エラー:
+   *   - NotFound: 日記エントリが見つからない
+   *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+   *
+   * @generated from rpc diary.DiaryService.UpdateDiaryEntry
+   */
+  updateDiaryEntry: {
+    methodKind: "unary";
+    input: typeof UpdateDiaryEntryRequestSchema;
+    output: typeof UpdateDiaryEntryResponseSchema;
+  };
+  /**
+   * DeleteDiaryEntry は日記エントリを削除します。
+   *
+   * エラー:
+   *   - NotFound: 日記エントリが見つからない
+   *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+   *
+   * @generated from rpc diary.DiaryService.DeleteDiaryEntry
+   */
+  deleteDiaryEntry: {
+    methodKind: "unary";
+    input: typeof DeleteDiaryEntryRequestSchema;
+    output: typeof DeleteDiaryEntryResponseSchema;
+  };
+  /**
+   * GetDiaryEntry は指定された日付の日記エントリを取得します。
+   *
+   * 例:
+   *   request: { date: { year: 2025, month: 10, day: 9 } }
+   *   response: { entry: { id: "uuid", content: "...", ... } }
+   *
+   * エラー:
+   *   - NotFound: 指定された日付の日記が存在しない
+   *
+   * @generated from rpc diary.DiaryService.GetDiaryEntry
+   */
+  getDiaryEntry: {
+    methodKind: "unary";
+    input: typeof GetDiaryEntryRequestSchema;
+    output: typeof GetDiaryEntryResponseSchema;
+  };
+  /**
+   * GetDiaryEntries は指定された複数の日付の日記エントリを取得します。
+   * ホームでの直近3日表示や、過去数年分の取得など、柔軟な取得が可能です。
+   *
+   * 例:
+   *   request: { dates: [{ year: 2025, month: 10, day: 9 }, { year: 2025, month: 10, day: 8 }] }
+   *   response: { entries: [{ id: "uuid1", ... }, { id: "uuid2", ... }] }
+   *
+   * エラー: なし（存在する日記のみ返される）
+   *
+   * @generated from rpc diary.DiaryService.GetDiaryEntries
+   */
+  getDiaryEntries: {
+    methodKind: "unary";
+    input: typeof GetDiaryEntriesRequestSchema;
+    output: typeof GetDiaryEntriesResponseSchema;
+  };
+  /**
+   * GetDiaryEntriesByMonth は指定された月の全日記エントリを取得します。
+   *
+   * 例:
+   *   request: { month: { year: 2025, month: 10 } }
+   *   response: { entries: [{ id: "uuid1", date: { year: 2025, month: 10, day: 1 }, ... }, ...] }
+   *
+   * エラー: なし（存在する日記のみ返される）
+   *
+   * @generated from rpc diary.DiaryService.GetDiaryEntriesByMonth
+   */
+  getDiaryEntriesByMonth: {
+    methodKind: "unary";
+    input: typeof GetDiaryEntriesByMonthRequestSchema;
+    output: typeof GetDiaryEntriesByMonthResponseSchema;
+  };
+  /**
+   * SearchDiaryEntries はキーワードで日記を全文検索します。
+   * PostgreSQLのLIKE検索を使用しています。
+   *
+   * 例:
+   *   request: { keyword: "友人" }
+   *   response: { searched_keyword: "友人", entries: [{ id: "uuid", content: "今日は友人と...", ... }] }
+   *
+   * エラー: なし（見つからない場合は空配列）
+   *
+   * @generated from rpc diary.DiaryService.SearchDiaryEntries
+   */
+  searchDiaryEntries: {
+    methodKind: "unary";
+    input: typeof SearchDiaryEntriesRequestSchema;
+    output: typeof SearchDiaryEntriesResponseSchema;
+  };
+  /**
+   * GenerateMonthlySummary は指定された月の日記をLLMで要約します。
+   * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
+   *
+   * 例:
+   *   request: { month: { year: 2025, month: 10 } }
+   *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
+   *
+   * エラー:
+   *   - NotFound: LLMキーが設定されていない、または対象月に日記が存在しない
+   *   - Internal: LLM API呼び出しエラー
+   *
+   * @generated from rpc diary.DiaryService.GenerateMonthlySummary
+   */
+  generateMonthlySummary: {
+    methodKind: "unary";
+    input: typeof GenerateMonthlySummaryRequestSchema;
+    output: typeof GenerateMonthlySummaryResponseSchema;
+  };
+  /**
+   * GetMonthlySummary は指定された月のサマリーを取得します。
+   *
+   * 例:
+   *   request: { month: { year: 2025, month: 10 } }
+   *   response: { summary: { id: "uuid", month: { year: 2025, month: 10 }, summary: "10月は...", ... } }
+   *
+   * エラー:
+   *   - NotFound: サマリーが存在しない
+   *
+   * @generated from rpc diary.DiaryService.GetMonthlySummary
+   */
+  getMonthlySummary: {
+    methodKind: "unary";
+    input: typeof GetMonthlySummaryRequestSchema;
+    output: typeof GetMonthlySummaryResponseSchema;
+  };
+  /**
+   * GenerateDailySummary は指定された日記をLLMで要約します。
+   * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
+   *
+   * 例:
+   *   request: { diary_id: "uuid" }
+   *   response: { summary: { id: "uuid", diary_id: "uuid", summary: "今日は...", ... } }
+   *
+   * エラー:
+   *   - NotFound: LLMキーが設定されていない、または日記が存在しない
+   *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+   *   - Internal: LLM API呼び出しエラー
+   *
+   * @generated from rpc diary.DiaryService.GenerateDailySummary
+   */
+  generateDailySummary: {
+    methodKind: "unary";
+    input: typeof GenerateDailySummaryRequestSchema;
+    output: typeof GenerateDailySummaryResponseSchema;
+  };
+  /**
+   * GetDailySummary は指定された日付のサマリーを取得します。
+   *
+   * 例:
+   *   request: { date: { year: 2025, month: 10, day: 9 } }
+   *   response: { summary: { id: "uuid", date: { year: 2025, month: 10, day: 9 }, summary: "今日は...", ... } }
+   *
+   * エラー:
+   *   - NotFound: サマリーが存在しない
+   *
+   * @generated from rpc diary.DiaryService.GetDailySummary
+   */
+  getDailySummary: {
+    methodKind: "unary";
+    input: typeof GetDailySummaryRequestSchema;
+    output: typeof GetDailySummaryResponseSchema;
+  };
+  /**
+   * GetLatestTrend は直近の日記のトレンド分析を取得します（前日を中心に最大1週間程度を参考）。
+   * Redisに保存された分析結果を返します。
+   *
+   * 例:
+   *   request: {}
+   *   response: { health: "good", mood: "normal", activities: "- 運動\n  - 朝のランニング\n- 仕事\n  - プロジェクトミーティング", period_start: "2025-10-10T00:00:00Z", period_end: "2025-10-16T23:59:59Z", generated_at: "2025-10-17T04:00:00Z" }
+   *
+   * エラー:
+   *   - NotFound: トレンド分析が存在しない
+   *
+   * @generated from rpc diary.DiaryService.GetLatestTrend
+   */
+  getLatestTrend: {
+    methodKind: "unary";
+    input: typeof GetLatestTrendRequestSchema;
+    output: typeof GetLatestTrendResponseSchema;
+  };
+  /**
+   * TriggerLatestTrend はトレンド分析の生成を手動でトリガーします（デバッグ用）。
+   * 非production環境でのみ使用可能です。
+   *
+   * 例:
+   *   request: {}
+   *   response: { success: true, message: "トレンド分析の生成をキューに追加しました" }
+   *
+   * エラー:
+   *   - PermissionDenied: production環境では使用不可
+   *   - NotFound: LLMキーが設定されていない
+   *
+   * @generated from rpc diary.DiaryService.TriggerLatestTrend
+   */
+  triggerLatestTrend: {
+    methodKind: "unary";
+    input: typeof TriggerLatestTrendRequestSchema;
+    output: typeof TriggerLatestTrendResponseSchema;
+  };
+  /**
+   * SearchDiaryEntriesSemantic は自然言語クエリで日記を意味的に検索します。
+   * Gemini Embedding APIを使用してベクトル類似度検索を行います。
+   *
+   * 例:
+   *   request: { query: "去年の夏に食べたもの", limit: 10 }
+   *   response: { results: [{ diary_id: "uuid", date: {...}, snippet: "...", similarity: 0.85 }] }
+   *
+   * エラー:
+   *   - NotFound: LLMキーが設定されていない
+   *   - InvalidArgument: クエリが空
+   *
+   * @generated from rpc diary.DiaryService.SearchDiaryEntriesSemantic
+   */
+  searchDiaryEntriesSemantic: {
+    methodKind: "unary";
+    input: typeof SearchDiaryEntriesSemanticRequestSchema;
+    output: typeof SearchDiaryEntriesSemanticResponseSchema;
+  };
+  /**
+   * TriggerDiaryHighlight は日記エントリのハイライト生成を非同期でトリガーします。
+   * Redis Pub/Subを通じてSubscriberが処理を実行します。
+   *
+   * 例:
+   *   request: { diary_id: "uuid" }
+   *   response: { queued: true, message: "ハイライト生成をキューに追加しました" }
+   *
+   * エラー:
+   *   - NotFound: 日記エントリが見つからない、またはLLMキーが設定されていない
+   *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+   *
+   * @generated from rpc diary.DiaryService.TriggerDiaryHighlight
+   */
+  triggerDiaryHighlight: {
+    methodKind: "unary";
+    input: typeof TriggerDiaryHighlightRequestSchema;
+    output: typeof TriggerDiaryHighlightResponseSchema;
+  };
+  /**
+   * GetDiaryHighlight は日記エントリのハイライト情報を取得します。
+   * 日記が更新された場合、古いハイライトは無効として扱われます。
+   *
+   * 例:
+   *   request: { diary_id: "uuid" }
+   *   response: { highlights: [{ start: 0, end: 25, text: "..." }], created_at: 1234567890, updated_at: 1234567890 }
+   *
+   * エラー:
+   *   - NotFound: ハイライトが存在しない、または日記が更新されたため無効
+   *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+   *
+   * @generated from rpc diary.DiaryService.GetDiaryHighlight
+   */
+  getDiaryHighlight: {
+    methodKind: "unary";
+    input: typeof GetDiaryHighlightRequestSchema;
+    output: typeof GetDiaryHighlightResponseSchema;
+  };
+  /**
+   * RegenerateAllEmbeddings はembeddingが未生成の全日記をキューに追加します。
+   * 意味的検索を有効化した後、過去の日記をインデックスするために使用します。
+   *
+   * エラー:
+   *   - FailedPrecondition: 意味的検索が無効またはLLMキーが未設定
+   *
+   * @generated from rpc diary.DiaryService.RegenerateAllEmbeddings
+   */
+  regenerateAllEmbeddings: {
+    methodKind: "unary";
+    input: typeof RegenerateAllEmbeddingsRequestSchema;
+    output: typeof RegenerateAllEmbeddingsResponseSchema;
+  };
+  /**
+   * GetDiaryEmbeddingStatus は特定の日記のRAGインデックス状態を取得します。
+   *
+   * 例:
+   *   request: { diary_id: "uuid" }
+   *   response: { indexed: true, model_version: "text-embedding-004", created_at: 1234567890, updated_at: 1234567890 }
+   *
+   * エラー:
+   *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
+   *
+   * @generated from rpc diary.DiaryService.GetDiaryEmbeddingStatus
+   */
+  getDiaryEmbeddingStatus: {
+    methodKind: "unary";
+    input: typeof GetDiaryEmbeddingStatusRequestSchema;
+    output: typeof GetDiaryEmbeddingStatusResponseSchema;
+  };
 }> = /*@__PURE__*/ serviceDesc(file_diary_diary, 0);

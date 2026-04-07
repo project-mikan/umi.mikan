@@ -5,28 +5,28 @@ import { EntityCategory } from "$lib/grpc/entity/entity_pb";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies }) => {
-	const authResult = await ensureValidAccessToken(cookies);
+  const authResult = await ensureValidAccessToken(cookies);
 
-	if (!authResult.isAuthenticated || !authResult.accessToken) {
-		throw redirect(302, "/login");
-	}
+  if (!authResult.isAuthenticated || !authResult.accessToken) {
+    throw redirect(302, "/login");
+  }
 
-	try {
-		// 全てのエンティティを表示（カテゴリフィルタなし）
-		const response = await listEntities({
-			category: EntityCategory.NO_CATEGORY,
-			allCategories: true,
-			accessToken: authResult.accessToken,
-		});
+  try {
+    // 全てのエンティティを表示（カテゴリフィルタなし）
+    const response = await listEntities({
+      category: EntityCategory.NO_CATEGORY,
+      allCategories: true,
+      accessToken: authResult.accessToken,
+    });
 
-		return {
-			entities: response.entities,
-		};
-	} catch (err) {
-		console.error("Failed to load entities:", err);
-		return {
-			entities: [],
-			error: "Failed to load entities",
-		};
-	}
+    return {
+      entities: response.entities,
+    };
+  } catch (err) {
+    console.error("Failed to load entities:", err);
+    return {
+      entities: [],
+      error: "Failed to load entities",
+    };
+  }
 };

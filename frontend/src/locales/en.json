@@ -1,591 +1,591 @@
 {
-	"common": {
-		"loading": "Loading...",
-		"save": "Save",
-		"cancel": "Cancel",
-		"error": "Error",
-		"success": "Success",
-		"createdAt": "Created",
-		"updatedAt": "Updated",
-		"close": "Close",
-		"enabled": "Enabled",
-		"disabled": "Disabled"
-	},
-	"offline": {
-		"title": "Offline",
-		"description": "No internet connection. Some features are limited.",
-		"availableFeatures": {
-			"title": "Available Features",
-			"readCachedDiaries": "Read cached diaries",
-			"navigation": "App navigation",
-			"darkMode": "Dark mode toggle",
-			"languageSettings": "Language settings"
-		},
-		"limitedFeatures": {
-			"title": "Limited Features",
-			"createDiary": "Create new diary",
-			"editDiary": "Edit/delete diary",
-			"aiSummary": "AI summary feature",
-			"search": "Search function (new)"
-		},
-		"connectionStatus": "When connection is restored, click the button below to refresh the page.",
-		"retryConnection": "Retry Connection",
-		"backToHome": "Back to Home"
-	},
-	"pwa": {
-		"install": {
-			"title": "Install App",
-			"description": "Add to home screen for easier access",
-			"install": "Install umi.mikan",
-			"dismiss": "Close",
-			"benefit1": "Works offline",
-			"benefit2": "One-tap access from home screen",
-			"benefit3": "App-like experience",
-			"manualInstructions": "Please select 'Add to Home Screen' or 'Install App' from your browser menu."
-		},
-		"update": {
-			"title": "Update Available",
-			"description": "A new version is available. Please update.",
-			"update": "Update Now",
-			"later": "Later"
-		}
-	},
-	"settings": {
-		"title": "Settings",
-		"nav": {
-			"title": "Table of Contents",
-			"userSettings": "User Settings",
-			"llmSettings": "LLM Settings",
-			"dangerZone": "Danger Zone",
-			"close": "Close"
-		},
-		"username": {
-			"title": "Change Username",
-			"label": "New username",
-			"placeholder": "Enter new username",
-			"save": "Update username"
-		},
-		"password": {
-			"title": "Change Password",
-			"currentLabel": "Current password",
-			"currentPlaceholder": "Enter current password",
-			"newLabel": "New password",
-			"newPlaceholder": "Enter new password (8+ characters)",
-			"confirmLabel": "Confirm new password",
-			"confirmPlaceholder": "Re-enter new password",
-			"save": "Change password"
-		},
-		"llmToken": {
-			"title": "LLM Token Settings",
-			"providerLabel": "LLM Provider",
-			"provider": {
-				"gemini": "Gemini"
-			},
-			"tokenLabel": "API Key",
-			"tokenPlaceholder": "Enter API key",
-			"tokenHelp": "Get API Token here:",
-			"freeWarning": "Google AI Studio Free Tier is used for learning purposes, so please do not enter personal information. For private diaries, please use paid APIs.",
-			"save": "Save token"
-		},
-		"autoSummary": {
-			"title": "Auto Summary Settings",
-			"description": "Automatically generate summaries for diary entries over 1000 characters.",
-			"dailyLabel": "Enable daily auto summary",
-			"monthlyLabel": "Enable monthly auto summary",
-			"semanticSearchLabel": "Enable natural language search (semantic search)",
-			"semanticSearchDescription": "Analyzes diary content with AI to enable meaning and context-based search. Today's diary will be indexed the following morning; past diaries are indexed automatically when saved.",
-			"regenerateEmbeddingsDescription": "Diaries created before enabling semantic search are not indexed. Use the button below to queue all unindexed diaries.",
-			"regenerateEmbeddingsButton": "Index all unindexed diaries",
-			"regenerateEmbeddingsSuccess": "Queued {count} diaries. Please wait.",
-			"regenerateEmbeddingsFailed": "Bulk indexing failed.",
-			"save": "Save settings"
-		},
-		"deleteToken": {
-			"button": "Delete Token",
-			"confirm": "Delete LLM Token",
-			"confirmMessage": "Are you sure you want to delete this LLM token? This action cannot be undone."
-		},
-		"llmStatus": {
-			"title": "LLM Processing Status",
-			"description": "View AI summary processing status and performance metrics.",
-			"viewButton": "View Processing Status"
-		},
-		"deleteAccount": {
-			"title": "Delete Account",
-			"button": "Delete Account",
-			"confirm": "Delete Account",
-			"confirmMessage": "Are you sure you want to delete your account? This action cannot be undone and will delete all your data including diaries.",
-			"warning": "This action is irreversible. All your data will be permanently deleted."
-		},
-		"messages": {
-			"usernameUpdateSuccess": "Username updated successfully",
-			"passwordChangeSuccess": "Password changed successfully",
-			"llmTokenUpdateSuccess": "LLM token updated successfully",
-			"llmTokenDeleteSuccess": "LLM token deleted successfully",
-			"autoSummarySettingsUpdateSuccess": "Auto summary settings updated successfully",
-			"accountDeleteSuccess": "Account deleted successfully",
-			"unauthorized": "Authentication required",
-			"userNotFound": "User not found",
-			"invalidUserId": "Invalid user ID",
-			"nameRequired": "Name is required",
-			"nameTooLong": "Name must be 20 characters or less",
-			"passwordsRequired": "Current password and new password are required",
-			"passwordsDoNotMatch": "New passwords do not match",
-			"passwordTooShort": "New password must be at least 8 characters long",
-			"currentPasswordIncorrect": "Current password is incorrect",
-			"tokenRequired": "Token is required",
-			"tokenTooLong": "Token must be 100 characters or less",
-			"tokenNotFound": "Token not found",
-			"invalidProvider": "Invalid LLM provider",
-			"updateFailed": "Update failed"
-		}
-	},
-	"auth": {
-		"login": {
-			"title": "Sign in to your account",
-			"email": "Email address",
-			"password": "Password",
-			"submit": "Sign in",
-			"submitting": "Signing in...",
-			"noAccount": "Don't have an account? Sign up",
-			"required": "Email and password are required",
-			"failed": "Login failed"
-		},
-		"register": {
-			"title": "Create your account",
-			"name": "Full name",
-			"email": "Email address",
-			"password": "Password",
-			"registerKey": "Registration Key",
-			"registerKeyRequired": "Please enter registration key",
-			"submit": "Sign up",
-			"submitting": "Signing up...",
-			"hasAccount": "Already have an account? Sign in",
-			"required": "Name, email and password are required",
-			"failed": "Registration failed"
-		},
-		"logout": "Logout"
-	},
-	"diary": {
-		"title": "Diary",
-		"today": "Today",
-		"yesterday": "Yesterday",
-		"dayBeforeYesterday": "Day before yesterday",
-		"thisMonth": "This month's diary",
-		"search": "Search",
-		"save": "Save",
-		"saving": "Saving...",
-		"saved": "Saved",
-		"saveTodayDiary": "Save Today's Diary",
-		"saveYesterdayDiary": "Save Yesterday's Diary",
-		"saveDayBeforeYesterdayDiary": "Save Day Before Yesterday's Diary",
-		"back": "Back",
-		"edit": "Edit",
-		"delete": "Delete",
-		"cancel": "Cancel",
-		"update": "Update",
-		"detail": "Detail",
-		"viewDetail": "View details",
-		"viewThisMonth": "This month's diary",
-		"placeholder": "Write about today's events...",
-		"characterCount": "{count} characters",
-		"autoSummaryEligible": "Auto-summary eligible",
-		"unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?",
-		"generateSummary": "Generate Summary",
-		"regenerateSummary": "Regenerate Summary",
-		"generatingSummary": "Generating Summary...",
-		"regeneratingSummary": "Regenerating Summary...",
-		"summaryRequires1000Chars": "Summary available for 1000+ characters",
-		"summaryNotAvailableToday": "Summary not available for today's entries",
-		"summaryNotAvailableFuture": "Summary not available for future dates",
-		"summaryAutoEnabled": "Auto-summary is enabled",
-		"summaryGenerationFailed": "Summary generation failed",
-		"summaryTimeout": "Summary generation timed out. Please try again.",
-		"summary": {
-			"title": "Diary Summary",
-			"label": "Summary",
-			"view": "View Summary",
-			"hide": "Hide Summary",
-			"outdated": "The diary has been updated since this summary was created, so the summary may be outdated.",
-			"outdatedWarning": "The diary has been updated since this summary was created, so the summary may be outdated.",
-			"statusQueued": "Summary generation has been queued. Please wait a moment.",
-			"statusProcessing": "Summary is being generated. Please wait a moment."
-		},
-		"searchHighlightBanner": "Searching for \"{keyword}\"",
-		"searchHighlightClear": "Clear",
-		"noEntry": "'s diary is not available.",
-		"yesterdayNoEntry": "Yesterday's diary is not available.",
-		"dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
-		"dateUnknown": "Date unknown",
-		"previousDay": "Previous day",
-		"nextDay": "Next day",
-		"pastEntries": "Past entries on this day",
-		"oneWeekAgo": "1 week ago",
-		"oneMonthAgo": "1 month ago",
-		"twoMonthsAgo": "2 months ago",
-		"sixMonthsAgo": "6 months ago",
-		"oneYearAgo": "1 year ago",
-		"twoYearsAgo": "2 years ago",
-		"threeYearsAgo": "3 years ago",
-		"fourYearsAgo": "4 years ago",
-		"fiveYearsAgo": "5 years ago",
-		"sixYearsAgo": "6 years ago",
-		"sevenYearsAgo": "7 years ago",
-		"eightYearsAgo": "8 years ago",
-		"nineYearsAgo": "9 years ago",
-		"tenYearsAgo": "10 years ago",
-		"noPastEntry": "No entry",
-		"noPastEntries": "No past entries on this day",
-		"highlight": {
-			"title": "Highlights",
-			"generate": "Generate Highlights",
-			"regenerate": "Regenerate Highlights",
-			"generating": "Generating highlights...",
-			"show": "Show Highlights",
-			"hide": "Hide Highlights",
-			"label": "Important Parts",
-			"notAvailable": "Highlights have not been generated yet",
-			"outdated": "The diary has been updated. Please regenerate to get the latest highlights",
-			"generationFailed": "Failed to generate highlights",
-			"timeout": "Highlight generation timed out. Please try again",
-			"statusQueued": "Highlight generation has been queued. Please wait",
-			"statusProcessing": "Generating highlights. Please wait",
-			"contentTooShort": "At least 500 characters are required for highlight generation",
-			"apiKeyNotConfigured": "Gemini API key is not configured. Please register it in the settings page"
-		},
-		"embedding": {
-			"indexed": "Semantic search: Indexed",
-			"notIndexed": "Semantic search: Not indexed",
-			"indexedAt": "Indexed at",
-			"updatedAt": "Last updated at",
-			"modelVersion": "Model",
-			"chunkCount": "Chunks",
-			"chunkSummaries": "Chunk list",
-			"chunkSummaryEmpty": "(no summary)"
-		}
-	},
-	"date": {
-		"dayOfWeek": {
-			"sunday": "Sun",
-			"monday": "Mon",
-			"tuesday": "Tue",
-			"wednesday": "Wed",
-			"thursday": "Thu",
-			"friday": "Fri",
-			"saturday": "Sat",
-			"Sunday": "Sun",
-			"Monday": "Mon",
-			"Tuesday": "Tue",
-			"Wednesday": "Wed",
-			"Thursday": "Thu",
-			"Friday": "Fri",
-			"Saturday": "Sat"
-		},
-		"format": {
-			"yearMonthDay": "{month}/{day}/{year}",
-			"yearMonthDayWithDayOfWeek": "{month}/{day}/{year} ({dayOfWeek})"
-		}
-	},
-	"home": {
-		"name": "home"
-	},
-	"latestTrend": {
-		"title": "Latest Trend Analysis",
-		"titleWithName": "Recent {name}",
-		"description": "Analyze your trends from recent diary entries, focusing on yesterday",
-		"period": "Analysis Period",
-		"generatedAt": "Generated At",
-		"noData": "No trend analysis data available",
-		"loading": "Loading analysis data...",
-		"error": "Failed to fetch trend analysis",
-		"analyzing": "Analyzing...",
-		"notEnoughData": "Not enough diary data for analysis",
-		"refresh": "Get latest analysis",
-		"lastUpdated": "Last Updated",
-		"hide": "Hide trend analysis",
-		"view": "Show trend analysis",
-		"health": "Yesterday's Health",
-		"mood": "Yesterday's Mood",
-		"activities": "Activities",
-		"healthLevel": {
-			"bad": "Bad",
-			"slight": "Slightly Bad",
-			"normal": "Normal",
-			"good": "Good"
-		},
-		"moodLevel": {
-			"bad": "Bad",
-			"slight": "Slightly Bad",
-			"normal": "Normal",
-			"good": "Good"
-		},
-		"settings": {
-			"autoGenerate": "Enable daily trend generation",
-			"autoGenerateDescription": "Automatically generate trend analysis daily at 4:00 AM"
-		}
-	},
-	"recentStreak": {
-		"title": "Recent 7 Days",
-		"day": "",
-		"written": "Written",
-		"notWritten": "Not written"
-	},
-	"collapsibleSections": {
-		"sideInfo": "Recently"
-	},
-	"create": {
-		"title": "Write a new diary",
-		"date": "Date",
-		"content": "Content"
-	},
-	"edit": {
-		"title": "Edit diary",
-		"date": "Date",
-		"content": "Content",
-		"deleteConfirm": "Delete diary",
-		"deleteMessage": "Are you sure you want to delete this diary entry? This action cannot be undone."
-	},
-	"search": {
-		"title": "Diary search",
-		"placeholder": "Enter search keywords...",
-		"placeholderSemantic": "Search in natural language (e.g., food I ate last summer)",
-		"button": "Search",
-		"modeKeyword": "Keyword search",
-		"modeSemantic": "Semantic search",
-		"semanticDescription": "Search by meaning and context using Gemini AI (API key required)",
-		"results": "search results for",
-		"semanticResults": "semantic search results for",
-		"resultCount": "results",
-		"similarity": "Relevance",
-		"embeddingModel": "Embedding model",
-		"chunkModel": "Split model",
-		"noResults": "No search results found.",
-		"noResultsHint": "Try searching with different keywords.",
-		"semanticNoResultsHint": "Try different wording or use keyword search.",
-		"searching": "Searching...",
-		"enterKeyword": "Enter search keywords to search.",
-		"backToList": "Back to diary list",
-		"expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}",
-		"error": {
-			"searchFailed": "Search failed.",
-			"semanticSearchFailed": "Semantic search failed. Please check if your Gemini API key is configured."
-		},
-		"chunkCount": "{count} chunks"
-	},
-	"monthly": {
-		"thisMonth": "This month",
-		"listView": "List view",
-		"previousMonth": "Previous month",
-		"nextMonth": "Next month",
-		"writeEntry": "Write diary",
-		"entry": "Diary",
-		"detail": "Detail",
-		"edit": "Edit",
-		"summary": {
-			"title": "Monthly Summary",
-			"generate": "Generate Summary",
-			"generating": "Generating summary...",
-			"view": "View Summary",
-			"hide": "Hide Summary",
-			"regenerate": "Regenerate Summary",
-			"regenerating": "Regenerating summary...",
-			"error": "Failed to generate summary",
-			"outdated": "Diary entries have been updated since this summary was created. Regenerate the summary for the latest version.",
-			"noEntries": "No diary entries found for this month. To generate a monthly summary, please write diary entries first.",
-			"noApiKey": "Gemini API key is not configured. Please set it up in settings.",
-			"updateAvailable": "Diary entries have been updated since this summary was generated. We recommend regenerating the summary.",
-			"currentMonthError": "Monthly summary can only be generated for past months. Current month cannot be processed.",
-			"currentMonthNote": "Summary cannot be generated for current month",
-			"futureMonthError": "Summary cannot be generated for future months.",
-			"noEntriesError": "No diary entries found for this month. Please write diary entries first to generate a summary."
-		}
-	},
-	"timeProgress": {
-		"yearProgress": "Year progress",
-		"monthProgress": "Month progress",
-		"dayProgress": "Day progress"
-	},
-	"monthSelector": {
-		"title": "Select Month",
-		"year": "Year",
-		"month": "Month",
-		"confirm": "Confirm",
-		"cancel": "Cancel"
-	},
-	"navigation": {
-		"home": "Home",
-		"monthly": "Calendar",
-		"search": "Search",
-		"entities": "Entities",
-		"settings": "Settings",
-		"debug": "Debug"
-	},
-	"page": {
-		"title": {
-			"home": "Home - umi.mikan",
-			"calendar": "Calendar - umi.mikan",
-			"individual": "{date} - umi.mikan"
-		}
-	},
-	"footer": {
-		"github": "GitHub"
-	},
-	"chart": {
-		"characterCount": "Character Count",
-		"charactersUnit": " characters",
-		"day": "Day",
-		"dailyCharacterCount": "Daily Character Count Progress"
-	},
-	"llm": {
-		"title": "LLM Processing Status",
-		"description": "Display AI summary processing status and statistics",
-		"metrics": {
-			"totalDailySummaries": "Total Daily Summaries",
-			"totalMonthlySummaries": "Total Monthly Summaries",
-			"pendingDailySummaries": "Pending Daily Summaries",
-			"pendingMonthlySummaries": "Pending Monthly Summaries",
-			"autoSummarySettings": "Auto Summary Settings",
-			"dailyAutoSummary": "Daily Auto Summary",
-			"monthlyAutoSummary": "Monthly Auto Summary",
-			"latestTrendAutoGeneration": "Trend Analysis Auto Generation",
-			"latestTrendStatus": "Trend Analysis Generation Status",
-			"lastGeneratedAt": "Last Generated At",
-			"processingTasks": "Processing Tasks",
-			"processing": "Processing",
-			"last24Hours": "Processing Activity in Last 24 Hours",
-			"processingActivity": "Processing Activity",
-			"time": "Time",
-			"processedCount": "Processed Count",
-			"dailySummaries": "Daily Summaries",
-			"monthlySummaries": "Monthly Summaries",
-			"diaryEmbeddings": "Embedding Generation",
-			"semanticSearches": "Semantic Searches",
-			"dailySummary": "Daily Summary",
-			"monthlySummary": "Monthly Summary",
-			"latestTrend": "Trend Analysis",
-			"startedAt": "Started at",
-			"ragTitle": "Natural Language Search (RAG) Status",
-			"totalEmbeddings": "Generated embeddings",
-			"pendingEmbeddings": "Pending embeddings",
-			"ragPendingNote": "Pending diary entries will be indexed automatically the next time they are saved.",
-			"ragRegenerateButton": "Index all pending entries",
-			"ragRegenerateSuccess": "Queued {count} entries. Indexes will be generated in the background.",
-			"ragRegenerateFailed": "Failed to queue index generation.",
-			"ragDisabledNote": "Register a Gemini API key in settings and enable natural language search to see the status here.",
-			"aboutTitle": "About LLM Processing",
-			"aboutDescription": "This page shows the status of automated summary processing by AI (Gemini).",
-			"dailySummaryExplanation": "Daily Summary: Automatically generated summaries for diary entries over 1000 characters",
-			"monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from daily summaries",
-			"processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
-		},
-		"ragDiagram": {
-			"title": "How RAG Works",
-			"asyncBadge": "Async",
-			"syncBadge": "Sync",
-			"indexingTitle": "Indexing Flow",
-			"searchTitle": "Semantic Search Flow",
-			"step": {
-				"diaryText": "Diary Text",
-				"toPlainText": "Convert to Plain Text",
-				"splitByTopic": "Split by Topic",
-				"enrichWithDate": "Add Date Context",
-				"vectorizeDocument": "Vectorize",
-				"saveToVectorDb": "Save to Vector DB",
-				"naturalLanguageQuery": "Natural Language Query",
-				"vectorizeQuery": "Vectorize Query",
-				"searchSimilarChunks": "Search Similar Chunks",
-				"keywordFallback": "Keyword Fallback",
-				"returnWithSummary": "Return with Summary"
-			},
-			"subLabel": {
-				"markdownFormat": "Markdown format",
-				"removeMarkdown": "Strip code blocks, bold, etc.",
-				"llmSplitWithSummary": "LLM splits by topic/event\nGenerates 1-sentence summary per chunk",
-				"datePrefix": "Prepend \"YYYY-MM-DD diary:\" for context",
-				"retrievalDocument": "RETRIEVAL_DOCUMENT\n3072 dims",
-				"hnswStorage": "halfvec(3072) / HNSW",
-				"queryExample": "e.g. food I ate last summer",
-				"retrievalQuery": "RETRIEVAL_QUERY\n3072 dims",
-				"cosineSimilarity": "Cosine similarity\nthreshold ≥ 0.3",
-				"properNounFallback": "Fallback for proper nouns",
-				"withScore": "With similarity score & summary"
-			}
-		}
-	},
-	"budoux": {
-		"toggle": "Toggle BudouX",
-		"description": "Japanese line break segmentation mode. When enabled, Japanese text will break naturally at appropriate points"
-	},
-	"entity": {
-		"title": "Entity Management",
-		"description": "Register and manage people, places, and other entities that appear in your diary. Registered entities are automatically highlighted in diary entries, making it easy to find entries where they appear.",
-		"list": {
-			"title": "Entity List",
-			"empty": "No entities registered",
-			"create": "Create New",
-			"category": {
-				"all": "All",
-				"people": "People",
-				"noCategory": "Uncategorized"
-			}
-		},
-		"detail": {
-			"title": "Entity Details",
-			"name": "Name",
-			"category": "Category",
-			"memo": "Memo",
-			"aliases": "Aliases",
-			"addAlias": "Add Alias",
-			"deleteAlias": "Delete",
-			"linkedDiaries": "Linked Diaries",
-			"noDiaries": "No linked diaries",
-			"update": "Update",
-			"delete": "Delete",
-			"deleteConfirm": "Delete Entity",
-			"deleteMessage": "Are you sure you want to delete this entity? Related diary associations will also be deleted.",
-			"deleteAliasConfirm": "Delete Alias",
-			"deleteAliasMessage": "Are you sure you want to delete this alias?"
-		},
-		"create": {
-			"title": "Create Entity",
-			"name": "Name",
-			"namePlaceholder": "Enter entity name",
-			"category": "Category",
-			"memo": "Memo",
-			"memoPlaceholder": "Enter memo (optional)",
-			"submit": "Create"
-		},
-		"messages": {
-			"createSuccess": "Entity created successfully",
-			"updateSuccess": "Entity updated successfully",
-			"deleteSuccess": "Entity deleted successfully",
-			"aliasCreateSuccess": "Alias added successfully",
-			"aliasUpdateSuccess": "Alias updated successfully",
-			"aliasDeleteSuccess": "Alias deleted successfully",
-			"nameRequired": "Name is required",
-			"duplicateName": "An entity with the same name already exists",
-			"nameUsedAsAlias": "That name is already used as an alias",
-			"aliasUsedAsName": "That alias is already used as an entity name",
-			"aliasAlreadyExists": "That alias is already used",
-			"error": "An error occurred"
-		}
-	},
-	"debug": {
-		"pageTitle": "Development Environment Only",
-		"latestTrend": {
-			"title": "Latest Trend Analysis Manual Trigger",
-			"description": "Generate latest trend analysis immediately from the past 7 days of diary entries.",
-			"button": "Generate Trend Analysis",
-			"buttonGenerating": "Generating...",
-			"successMessage": "Latest trend analysis generation has been queued",
-			"errorMessage": "Failed to trigger latest trend analysis"
-		},
-		"about": {
-			"title": "About This Page",
-			"description": "This page is only displayed in the development environment. It will not be shown in production."
-		}
-	},
-	"summary": {
-		"modelVersion": "Model"
-	}
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "error": "Error",
+    "success": "Success",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "close": "Close",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "offline": {
+    "title": "Offline",
+    "description": "No internet connection. Some features are limited.",
+    "availableFeatures": {
+      "title": "Available Features",
+      "readCachedDiaries": "Read cached diaries",
+      "navigation": "App navigation",
+      "darkMode": "Dark mode toggle",
+      "languageSettings": "Language settings"
+    },
+    "limitedFeatures": {
+      "title": "Limited Features",
+      "createDiary": "Create new diary",
+      "editDiary": "Edit/delete diary",
+      "aiSummary": "AI summary feature",
+      "search": "Search function (new)"
+    },
+    "connectionStatus": "When connection is restored, click the button below to refresh the page.",
+    "retryConnection": "Retry Connection",
+    "backToHome": "Back to Home"
+  },
+  "pwa": {
+    "install": {
+      "title": "Install App",
+      "description": "Add to home screen for easier access",
+      "install": "Install umi.mikan",
+      "dismiss": "Close",
+      "benefit1": "Works offline",
+      "benefit2": "One-tap access from home screen",
+      "benefit3": "App-like experience",
+      "manualInstructions": "Please select 'Add to Home Screen' or 'Install App' from your browser menu."
+    },
+    "update": {
+      "title": "Update Available",
+      "description": "A new version is available. Please update.",
+      "update": "Update Now",
+      "later": "Later"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "nav": {
+      "title": "Table of Contents",
+      "userSettings": "User Settings",
+      "llmSettings": "LLM Settings",
+      "dangerZone": "Danger Zone",
+      "close": "Close"
+    },
+    "username": {
+      "title": "Change Username",
+      "label": "New username",
+      "placeholder": "Enter new username",
+      "save": "Update username"
+    },
+    "password": {
+      "title": "Change Password",
+      "currentLabel": "Current password",
+      "currentPlaceholder": "Enter current password",
+      "newLabel": "New password",
+      "newPlaceholder": "Enter new password (8+ characters)",
+      "confirmLabel": "Confirm new password",
+      "confirmPlaceholder": "Re-enter new password",
+      "save": "Change password"
+    },
+    "llmToken": {
+      "title": "LLM Token Settings",
+      "providerLabel": "LLM Provider",
+      "provider": {
+        "gemini": "Gemini"
+      },
+      "tokenLabel": "API Key",
+      "tokenPlaceholder": "Enter API key",
+      "tokenHelp": "Get API Token here:",
+      "freeWarning": "Google AI Studio Free Tier is used for learning purposes, so please do not enter personal information. For private diaries, please use paid APIs.",
+      "save": "Save token"
+    },
+    "autoSummary": {
+      "title": "Auto Summary Settings",
+      "description": "Automatically generate summaries for diary entries over 1000 characters.",
+      "dailyLabel": "Enable daily auto summary",
+      "monthlyLabel": "Enable monthly auto summary",
+      "semanticSearchLabel": "Enable natural language search (semantic search)",
+      "semanticSearchDescription": "Analyzes diary content with AI to enable meaning and context-based search. Today's diary will be indexed the following morning; past diaries are indexed automatically when saved.",
+      "regenerateEmbeddingsDescription": "Diaries created before enabling semantic search are not indexed. Use the button below to queue all unindexed diaries.",
+      "regenerateEmbeddingsButton": "Index all unindexed diaries",
+      "regenerateEmbeddingsSuccess": "Queued {count} diaries. Please wait.",
+      "regenerateEmbeddingsFailed": "Bulk indexing failed.",
+      "save": "Save settings"
+    },
+    "deleteToken": {
+      "button": "Delete Token",
+      "confirm": "Delete LLM Token",
+      "confirmMessage": "Are you sure you want to delete this LLM token? This action cannot be undone."
+    },
+    "llmStatus": {
+      "title": "LLM Processing Status",
+      "description": "View AI summary processing status and performance metrics.",
+      "viewButton": "View Processing Status"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "button": "Delete Account",
+      "confirm": "Delete Account",
+      "confirmMessage": "Are you sure you want to delete your account? This action cannot be undone and will delete all your data including diaries.",
+      "warning": "This action is irreversible. All your data will be permanently deleted."
+    },
+    "messages": {
+      "usernameUpdateSuccess": "Username updated successfully",
+      "passwordChangeSuccess": "Password changed successfully",
+      "llmTokenUpdateSuccess": "LLM token updated successfully",
+      "llmTokenDeleteSuccess": "LLM token deleted successfully",
+      "autoSummarySettingsUpdateSuccess": "Auto summary settings updated successfully",
+      "accountDeleteSuccess": "Account deleted successfully",
+      "unauthorized": "Authentication required",
+      "userNotFound": "User not found",
+      "invalidUserId": "Invalid user ID",
+      "nameRequired": "Name is required",
+      "nameTooLong": "Name must be 20 characters or less",
+      "passwordsRequired": "Current password and new password are required",
+      "passwordsDoNotMatch": "New passwords do not match",
+      "passwordTooShort": "New password must be at least 8 characters long",
+      "currentPasswordIncorrect": "Current password is incorrect",
+      "tokenRequired": "Token is required",
+      "tokenTooLong": "Token must be 100 characters or less",
+      "tokenNotFound": "Token not found",
+      "invalidProvider": "Invalid LLM provider",
+      "updateFailed": "Update failed"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to your account",
+      "email": "Email address",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account? Sign up",
+      "required": "Email and password are required",
+      "failed": "Login failed"
+    },
+    "register": {
+      "title": "Create your account",
+      "name": "Full name",
+      "email": "Email address",
+      "password": "Password",
+      "registerKey": "Registration Key",
+      "registerKeyRequired": "Please enter registration key",
+      "submit": "Sign up",
+      "submitting": "Signing up...",
+      "hasAccount": "Already have an account? Sign in",
+      "required": "Name, email and password are required",
+      "failed": "Registration failed"
+    },
+    "logout": "Logout"
+  },
+  "diary": {
+    "title": "Diary",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "dayBeforeYesterday": "Day before yesterday",
+    "thisMonth": "This month's diary",
+    "search": "Search",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "saveTodayDiary": "Save Today's Diary",
+    "saveYesterdayDiary": "Save Yesterday's Diary",
+    "saveDayBeforeYesterdayDiary": "Save Day Before Yesterday's Diary",
+    "back": "Back",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "update": "Update",
+    "detail": "Detail",
+    "viewDetail": "View details",
+    "viewThisMonth": "This month's diary",
+    "placeholder": "Write about today's events...",
+    "characterCount": "{count} characters",
+    "autoSummaryEligible": "Auto-summary eligible",
+    "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave this page?",
+    "generateSummary": "Generate Summary",
+    "regenerateSummary": "Regenerate Summary",
+    "generatingSummary": "Generating Summary...",
+    "regeneratingSummary": "Regenerating Summary...",
+    "summaryRequires1000Chars": "Summary available for 1000+ characters",
+    "summaryNotAvailableToday": "Summary not available for today's entries",
+    "summaryNotAvailableFuture": "Summary not available for future dates",
+    "summaryAutoEnabled": "Auto-summary is enabled",
+    "summaryGenerationFailed": "Summary generation failed",
+    "summaryTimeout": "Summary generation timed out. Please try again.",
+    "summary": {
+      "title": "Diary Summary",
+      "label": "Summary",
+      "view": "View Summary",
+      "hide": "Hide Summary",
+      "outdated": "The diary has been updated since this summary was created, so the summary may be outdated.",
+      "outdatedWarning": "The diary has been updated since this summary was created, so the summary may be outdated.",
+      "statusQueued": "Summary generation has been queued. Please wait a moment.",
+      "statusProcessing": "Summary is being generated. Please wait a moment."
+    },
+    "searchHighlightBanner": "Searching for \"{keyword}\"",
+    "searchHighlightClear": "Clear",
+    "noEntry": "'s diary is not available.",
+    "yesterdayNoEntry": "Yesterday's diary is not available.",
+    "dayBeforeYesterdayNoEntry": "Day before yesterday's diary is not available.",
+    "dateUnknown": "Date unknown",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "pastEntries": "Past entries on this day",
+    "oneWeekAgo": "1 week ago",
+    "oneMonthAgo": "1 month ago",
+    "twoMonthsAgo": "2 months ago",
+    "sixMonthsAgo": "6 months ago",
+    "oneYearAgo": "1 year ago",
+    "twoYearsAgo": "2 years ago",
+    "threeYearsAgo": "3 years ago",
+    "fourYearsAgo": "4 years ago",
+    "fiveYearsAgo": "5 years ago",
+    "sixYearsAgo": "6 years ago",
+    "sevenYearsAgo": "7 years ago",
+    "eightYearsAgo": "8 years ago",
+    "nineYearsAgo": "9 years ago",
+    "tenYearsAgo": "10 years ago",
+    "noPastEntry": "No entry",
+    "noPastEntries": "No past entries on this day",
+    "highlight": {
+      "title": "Highlights",
+      "generate": "Generate Highlights",
+      "regenerate": "Regenerate Highlights",
+      "generating": "Generating highlights...",
+      "show": "Show Highlights",
+      "hide": "Hide Highlights",
+      "label": "Important Parts",
+      "notAvailable": "Highlights have not been generated yet",
+      "outdated": "The diary has been updated. Please regenerate to get the latest highlights",
+      "generationFailed": "Failed to generate highlights",
+      "timeout": "Highlight generation timed out. Please try again",
+      "statusQueued": "Highlight generation has been queued. Please wait",
+      "statusProcessing": "Generating highlights. Please wait",
+      "contentTooShort": "At least 500 characters are required for highlight generation",
+      "apiKeyNotConfigured": "Gemini API key is not configured. Please register it in the settings page"
+    },
+    "embedding": {
+      "indexed": "Semantic search: Indexed",
+      "notIndexed": "Semantic search: Not indexed",
+      "indexedAt": "Indexed at",
+      "updatedAt": "Last updated at",
+      "modelVersion": "Model",
+      "chunkCount": "Chunks",
+      "chunkSummaries": "Chunk list",
+      "chunkSummaryEmpty": "(no summary)"
+    }
+  },
+  "date": {
+    "dayOfWeek": {
+      "sunday": "Sun",
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "Sunday": "Sun",
+      "Monday": "Mon",
+      "Tuesday": "Tue",
+      "Wednesday": "Wed",
+      "Thursday": "Thu",
+      "Friday": "Fri",
+      "Saturday": "Sat"
+    },
+    "format": {
+      "yearMonthDay": "{month}/{day}/{year}",
+      "yearMonthDayWithDayOfWeek": "{month}/{day}/{year} ({dayOfWeek})"
+    }
+  },
+  "home": {
+    "name": "home"
+  },
+  "latestTrend": {
+    "title": "Latest Trend Analysis",
+    "titleWithName": "Recent {name}",
+    "description": "Analyze your trends from recent diary entries, focusing on yesterday",
+    "period": "Analysis Period",
+    "generatedAt": "Generated At",
+    "noData": "No trend analysis data available",
+    "loading": "Loading analysis data...",
+    "error": "Failed to fetch trend analysis",
+    "analyzing": "Analyzing...",
+    "notEnoughData": "Not enough diary data for analysis",
+    "refresh": "Get latest analysis",
+    "lastUpdated": "Last Updated",
+    "hide": "Hide trend analysis",
+    "view": "Show trend analysis",
+    "health": "Yesterday's Health",
+    "mood": "Yesterday's Mood",
+    "activities": "Activities",
+    "healthLevel": {
+      "bad": "Bad",
+      "slight": "Slightly Bad",
+      "normal": "Normal",
+      "good": "Good"
+    },
+    "moodLevel": {
+      "bad": "Bad",
+      "slight": "Slightly Bad",
+      "normal": "Normal",
+      "good": "Good"
+    },
+    "settings": {
+      "autoGenerate": "Enable daily trend generation",
+      "autoGenerateDescription": "Automatically generate trend analysis daily at 4:00 AM"
+    }
+  },
+  "recentStreak": {
+    "title": "Recent 7 Days",
+    "day": "",
+    "written": "Written",
+    "notWritten": "Not written"
+  },
+  "collapsibleSections": {
+    "sideInfo": "Recently"
+  },
+  "create": {
+    "title": "Write a new diary",
+    "date": "Date",
+    "content": "Content"
+  },
+  "edit": {
+    "title": "Edit diary",
+    "date": "Date",
+    "content": "Content",
+    "deleteConfirm": "Delete diary",
+    "deleteMessage": "Are you sure you want to delete this diary entry? This action cannot be undone."
+  },
+  "search": {
+    "title": "Diary search",
+    "placeholder": "Enter search keywords...",
+    "placeholderSemantic": "Search in natural language (e.g., food I ate last summer)",
+    "button": "Search",
+    "modeKeyword": "Keyword search",
+    "modeSemantic": "Semantic search",
+    "semanticDescription": "Search by meaning and context using Gemini AI (API key required)",
+    "results": "search results for",
+    "semanticResults": "semantic search results for",
+    "resultCount": "results",
+    "similarity": "Relevance",
+    "embeddingModel": "Embedding model",
+    "chunkModel": "Split model",
+    "noResults": "No search results found.",
+    "noResultsHint": "Try searching with different keywords.",
+    "semanticNoResultsHint": "Try different wording or use keyword search.",
+    "searching": "Searching...",
+    "enterKeyword": "Enter search keywords to search.",
+    "backToList": "Back to diary list",
+    "expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}",
+    "error": {
+      "searchFailed": "Search failed.",
+      "semanticSearchFailed": "Semantic search failed. Please check if your Gemini API key is configured."
+    },
+    "chunkCount": "{count} chunks"
+  },
+  "monthly": {
+    "thisMonth": "This month",
+    "listView": "List view",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "writeEntry": "Write diary",
+    "entry": "Diary",
+    "detail": "Detail",
+    "edit": "Edit",
+    "summary": {
+      "title": "Monthly Summary",
+      "generate": "Generate Summary",
+      "generating": "Generating summary...",
+      "view": "View Summary",
+      "hide": "Hide Summary",
+      "regenerate": "Regenerate Summary",
+      "regenerating": "Regenerating summary...",
+      "error": "Failed to generate summary",
+      "outdated": "Diary entries have been updated since this summary was created. Regenerate the summary for the latest version.",
+      "noEntries": "No diary entries found for this month. To generate a monthly summary, please write diary entries first.",
+      "noApiKey": "Gemini API key is not configured. Please set it up in settings.",
+      "updateAvailable": "Diary entries have been updated since this summary was generated. We recommend regenerating the summary.",
+      "currentMonthError": "Monthly summary can only be generated for past months. Current month cannot be processed.",
+      "currentMonthNote": "Summary cannot be generated for current month",
+      "futureMonthError": "Summary cannot be generated for future months.",
+      "noEntriesError": "No diary entries found for this month. Please write diary entries first to generate a summary."
+    }
+  },
+  "timeProgress": {
+    "yearProgress": "Year progress",
+    "monthProgress": "Month progress",
+    "dayProgress": "Day progress"
+  },
+  "monthSelector": {
+    "title": "Select Month",
+    "year": "Year",
+    "month": "Month",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "navigation": {
+    "home": "Home",
+    "monthly": "Calendar",
+    "search": "Search",
+    "entities": "Entities",
+    "settings": "Settings",
+    "debug": "Debug"
+  },
+  "page": {
+    "title": {
+      "home": "Home - umi.mikan",
+      "calendar": "Calendar - umi.mikan",
+      "individual": "{date} - umi.mikan"
+    }
+  },
+  "footer": {
+    "github": "GitHub"
+  },
+  "chart": {
+    "characterCount": "Character Count",
+    "charactersUnit": " characters",
+    "day": "Day",
+    "dailyCharacterCount": "Daily Character Count Progress"
+  },
+  "llm": {
+    "title": "LLM Processing Status",
+    "description": "Display AI summary processing status and statistics",
+    "metrics": {
+      "totalDailySummaries": "Total Daily Summaries",
+      "totalMonthlySummaries": "Total Monthly Summaries",
+      "pendingDailySummaries": "Pending Daily Summaries",
+      "pendingMonthlySummaries": "Pending Monthly Summaries",
+      "autoSummarySettings": "Auto Summary Settings",
+      "dailyAutoSummary": "Daily Auto Summary",
+      "monthlyAutoSummary": "Monthly Auto Summary",
+      "latestTrendAutoGeneration": "Trend Analysis Auto Generation",
+      "latestTrendStatus": "Trend Analysis Generation Status",
+      "lastGeneratedAt": "Last Generated At",
+      "processingTasks": "Processing Tasks",
+      "processing": "Processing",
+      "last24Hours": "Processing Activity in Last 24 Hours",
+      "processingActivity": "Processing Activity",
+      "time": "Time",
+      "processedCount": "Processed Count",
+      "dailySummaries": "Daily Summaries",
+      "monthlySummaries": "Monthly Summaries",
+      "diaryEmbeddings": "Embedding Generation",
+      "semanticSearches": "Semantic Searches",
+      "dailySummary": "Daily Summary",
+      "monthlySummary": "Monthly Summary",
+      "latestTrend": "Trend Analysis",
+      "startedAt": "Started at",
+      "ragTitle": "Natural Language Search (RAG) Status",
+      "totalEmbeddings": "Generated embeddings",
+      "pendingEmbeddings": "Pending embeddings",
+      "ragPendingNote": "Pending diary entries will be indexed automatically the next time they are saved.",
+      "ragRegenerateButton": "Index all pending entries",
+      "ragRegenerateSuccess": "Queued {count} entries. Indexes will be generated in the background.",
+      "ragRegenerateFailed": "Failed to queue index generation.",
+      "ragDisabledNote": "Register a Gemini API key in settings and enable natural language search to see the status here.",
+      "aboutTitle": "About LLM Processing",
+      "aboutDescription": "This page shows the status of automated summary processing by AI (Gemini).",
+      "dailySummaryExplanation": "Daily Summary: Automatically generated summaries for diary entries over 1000 characters",
+      "monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from daily summaries",
+      "processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
+    },
+    "ragDiagram": {
+      "title": "How RAG Works",
+      "asyncBadge": "Async",
+      "syncBadge": "Sync",
+      "indexingTitle": "Indexing Flow",
+      "searchTitle": "Semantic Search Flow",
+      "step": {
+        "diaryText": "Diary Text",
+        "toPlainText": "Convert to Plain Text",
+        "splitByTopic": "Split by Topic",
+        "enrichWithDate": "Add Date Context",
+        "vectorizeDocument": "Vectorize",
+        "saveToVectorDb": "Save to Vector DB",
+        "naturalLanguageQuery": "Natural Language Query",
+        "vectorizeQuery": "Vectorize Query",
+        "searchSimilarChunks": "Search Similar Chunks",
+        "keywordFallback": "Keyword Fallback",
+        "returnWithSummary": "Return with Summary"
+      },
+      "subLabel": {
+        "markdownFormat": "Markdown format",
+        "removeMarkdown": "Strip code blocks, bold, etc.",
+        "llmSplitWithSummary": "LLM splits by topic/event\nGenerates 1-sentence summary per chunk",
+        "datePrefix": "Prepend \"YYYY-MM-DD diary:\" for context",
+        "retrievalDocument": "RETRIEVAL_DOCUMENT\n3072 dims",
+        "hnswStorage": "halfvec(3072) / HNSW",
+        "queryExample": "e.g. food I ate last summer",
+        "retrievalQuery": "RETRIEVAL_QUERY\n3072 dims",
+        "cosineSimilarity": "Cosine similarity\nthreshold ≥ 0.3",
+        "properNounFallback": "Fallback for proper nouns",
+        "withScore": "With similarity score & summary"
+      }
+    }
+  },
+  "budoux": {
+    "toggle": "Toggle BudouX",
+    "description": "Japanese line break segmentation mode. When enabled, Japanese text will break naturally at appropriate points"
+  },
+  "entity": {
+    "title": "Entity Management",
+    "description": "Register and manage people, places, and other entities that appear in your diary. Registered entities are automatically highlighted in diary entries, making it easy to find entries where they appear.",
+    "list": {
+      "title": "Entity List",
+      "empty": "No entities registered",
+      "create": "Create New",
+      "category": {
+        "all": "All",
+        "people": "People",
+        "noCategory": "Uncategorized"
+      }
+    },
+    "detail": {
+      "title": "Entity Details",
+      "name": "Name",
+      "category": "Category",
+      "memo": "Memo",
+      "aliases": "Aliases",
+      "addAlias": "Add Alias",
+      "deleteAlias": "Delete",
+      "linkedDiaries": "Linked Diaries",
+      "noDiaries": "No linked diaries",
+      "update": "Update",
+      "delete": "Delete",
+      "deleteConfirm": "Delete Entity",
+      "deleteMessage": "Are you sure you want to delete this entity? Related diary associations will also be deleted.",
+      "deleteAliasConfirm": "Delete Alias",
+      "deleteAliasMessage": "Are you sure you want to delete this alias?"
+    },
+    "create": {
+      "title": "Create Entity",
+      "name": "Name",
+      "namePlaceholder": "Enter entity name",
+      "category": "Category",
+      "memo": "Memo",
+      "memoPlaceholder": "Enter memo (optional)",
+      "submit": "Create"
+    },
+    "messages": {
+      "createSuccess": "Entity created successfully",
+      "updateSuccess": "Entity updated successfully",
+      "deleteSuccess": "Entity deleted successfully",
+      "aliasCreateSuccess": "Alias added successfully",
+      "aliasUpdateSuccess": "Alias updated successfully",
+      "aliasDeleteSuccess": "Alias deleted successfully",
+      "nameRequired": "Name is required",
+      "duplicateName": "An entity with the same name already exists",
+      "nameUsedAsAlias": "That name is already used as an alias",
+      "aliasUsedAsName": "That alias is already used as an entity name",
+      "aliasAlreadyExists": "That alias is already used",
+      "error": "An error occurred"
+    }
+  },
+  "debug": {
+    "pageTitle": "Development Environment Only",
+    "latestTrend": {
+      "title": "Latest Trend Analysis Manual Trigger",
+      "description": "Generate latest trend analysis immediately from the past 7 days of diary entries.",
+      "button": "Generate Trend Analysis",
+      "buttonGenerating": "Generating...",
+      "successMessage": "Latest trend analysis generation has been queued",
+      "errorMessage": "Failed to trigger latest trend analysis"
+    },
+    "about": {
+      "title": "About This Page",
+      "description": "This page is only displayed in the development environment. It will not be shown in production."
+    }
+  },
+  "summary": {
+    "modelVersion": "Model"
+  }
 }

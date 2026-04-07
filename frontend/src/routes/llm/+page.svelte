@@ -1,161 +1,161 @@
 <script lang="ts">
-	import { _, locale } from "svelte-i18n";
-	import "$lib/i18n";
-	import Head from "$lib/components/atoms/Head.svelte";
-	import Card from "$lib/components/atoms/Card.svelte";
-	import PubSubMetricsChart from "$lib/components/molecules/PubSubMetricsChart.svelte";
-	import type { PageData } from "./$types";
+  import { _, locale } from "svelte-i18n";
+  import "$lib/i18n";
+  import Head from "$lib/components/atoms/Head.svelte";
+  import Card from "$lib/components/atoms/Card.svelte";
+  import PubSubMetricsChart from "$lib/components/molecules/PubSubMetricsChart.svelte";
+  import type { PageData } from "./$types";
 
-	export let data: PageData;
+  export let data: PageData;
 
-	$: ({ metrics } = data);
+  $: ({ metrics } = data);
 
-	// 処理中タスクの表示用フォーマット
-	function formatProcessingTask(task: {
-		taskType: string;
-		date: string;
-		startedAt: number;
-	}) {
-		let type = "";
-		if (task.taskType === "daily_summary") {
-			type = $_("llm.metrics.dailySummary");
-		} else if (task.taskType === "monthly_summary") {
-			type = $_("llm.metrics.monthlySummary");
-		} else if (task.taskType === "latest_trend") {
-			type = $_("llm.metrics.latestTrend");
-		}
-		const startedAt = new Date(task.startedAt * 1000).toLocaleTimeString();
-		return `${type} (${task.date}) - ${$_("llm.metrics.startedAt")} ${startedAt}`;
-	}
+  // 処理中タスクの表示用フォーマット
+  function formatProcessingTask(task: {
+    taskType: string;
+    date: string;
+    startedAt: number;
+  }) {
+    let type = "";
+    if (task.taskType === "daily_summary") {
+      type = $_("llm.metrics.dailySummary");
+    } else if (task.taskType === "monthly_summary") {
+      type = $_("llm.metrics.monthlySummary");
+    } else if (task.taskType === "latest_trend") {
+      type = $_("llm.metrics.latestTrend");
+    }
+    const startedAt = new Date(task.startedAt * 1000).toLocaleTimeString();
+    return `${type} (${task.date}) - ${$_("llm.metrics.startedAt")} ${startedAt}`;
+  }
 
-	// 統計情報のカード用データ
-	$: summaryCards = [
-		{
-			title: $_("llm.metrics.totalDailySummaries"),
-			value: metrics.summary.totalDailySummaries,
-			color: "text-green-600 dark:text-green-400",
-		},
-		{
-			title: $_("llm.metrics.totalMonthlySummaries"),
-			value: metrics.summary.totalMonthlySummaries,
-			color: "text-blue-600 dark:text-blue-400",
-		},
-		{
-			title: $_("llm.metrics.pendingDailySummaries"),
-			value: metrics.summary.pendingDailySummaries,
-			color: "text-yellow-600 dark:text-yellow-400",
-		},
-		{
-			title: $_("llm.metrics.pendingMonthlySummaries"),
-			value: metrics.summary.pendingMonthlySummaries,
-			color: "text-orange-600 dark:text-orange-400",
-		},
-	];
+  // 統計情報のカード用データ
+  $: summaryCards = [
+    {
+      title: $_("llm.metrics.totalDailySummaries"),
+      value: metrics.summary.totalDailySummaries,
+      color: "text-green-600 dark:text-green-400",
+    },
+    {
+      title: $_("llm.metrics.totalMonthlySummaries"),
+      value: metrics.summary.totalMonthlySummaries,
+      color: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      title: $_("llm.metrics.pendingDailySummaries"),
+      value: metrics.summary.pendingDailySummaries,
+      color: "text-yellow-600 dark:text-yellow-400",
+    },
+    {
+      title: $_("llm.metrics.pendingMonthlySummaries"),
+      value: metrics.summary.pendingMonthlySummaries,
+      color: "text-orange-600 dark:text-orange-400",
+    },
+  ];
 
-	// インデックス生成フローのステップ（AI処理に注目）
-	$: indexingSteps = [
-		{
-			icon: "📄",
-			label: $_("llm.ragDiagram.step.diaryText"),
-			subLabel: null as string | null,
-			style:
-				"bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200",
-		},
-		{
-			icon: "🧹",
-			label: $_("llm.ragDiagram.step.toPlainText"),
-			subLabel: $_("llm.ragDiagram.subLabel.removeMarkdown") as string | null,
-			style:
-				"bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200",
-		},
-		{
-			icon: "✂️",
-			label: $_("llm.ragDiagram.step.splitByTopic"),
-			subLabel: $_("llm.ragDiagram.subLabel.llmSplitWithSummary") as
-				| string
-				| null,
-			style:
-				"bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-200",
-		},
-		{
-			icon: "📅",
-			label: $_("llm.ragDiagram.step.enrichWithDate"),
-			subLabel: $_("llm.ragDiagram.subLabel.datePrefix") as string | null,
-			style:
-				"bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
-		},
-		{
-			icon: "🔢",
-			label: $_("llm.ragDiagram.step.vectorizeDocument"),
-			subLabel: $_("llm.ragDiagram.subLabel.retrievalDocument") as
-				| string
-				| null,
-			style:
-				"bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200",
-		},
-		{
-			icon: "🗄️",
-			label: $_("llm.ragDiagram.step.saveToVectorDb"),
-			subLabel: $_("llm.ragDiagram.subLabel.hnswStorage") as string | null,
-			style:
-				"bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200",
-		},
-	];
+  // インデックス生成フローのステップ（AI処理に注目）
+  $: indexingSteps = [
+    {
+      icon: "📄",
+      label: $_("llm.ragDiagram.step.diaryText"),
+      subLabel: null as string | null,
+      style:
+        "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200",
+    },
+    {
+      icon: "🧹",
+      label: $_("llm.ragDiagram.step.toPlainText"),
+      subLabel: $_("llm.ragDiagram.subLabel.removeMarkdown") as string | null,
+      style:
+        "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200",
+    },
+    {
+      icon: "✂️",
+      label: $_("llm.ragDiagram.step.splitByTopic"),
+      subLabel: $_("llm.ragDiagram.subLabel.llmSplitWithSummary") as
+        | string
+        | null,
+      style:
+        "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-200",
+    },
+    {
+      icon: "📅",
+      label: $_("llm.ragDiagram.step.enrichWithDate"),
+      subLabel: $_("llm.ragDiagram.subLabel.datePrefix") as string | null,
+      style:
+        "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
+    },
+    {
+      icon: "🔢",
+      label: $_("llm.ragDiagram.step.vectorizeDocument"),
+      subLabel: $_("llm.ragDiagram.subLabel.retrievalDocument") as
+        | string
+        | null,
+      style:
+        "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200",
+    },
+    {
+      icon: "🗄️",
+      label: $_("llm.ragDiagram.step.saveToVectorDb"),
+      subLabel: $_("llm.ragDiagram.subLabel.hnswStorage") as string | null,
+      style:
+        "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200",
+    },
+  ];
 
-	// 検索フローのステップ（AI処理に注目）
-	$: searchSteps = [
-		{
-			icon: "🔍",
-			label: $_("llm.ragDiagram.step.naturalLanguageQuery"),
-			subLabel: $_("llm.ragDiagram.subLabel.queryExample") as string | null,
-			style:
-				"bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200",
-		},
-		{
-			icon: "🔢",
-			label: $_("llm.ragDiagram.step.vectorizeQuery"),
-			subLabel: $_("llm.ragDiagram.subLabel.retrievalQuery") as string | null,
-			style:
-				"bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200",
-		},
-		{
-			icon: "⚡",
-			label: $_("llm.ragDiagram.step.searchSimilarChunks"),
-			subLabel: $_("llm.ragDiagram.subLabel.cosineSimilarity") as string | null,
-			style:
-				"bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200",
-		},
-		{
-			icon: "📖",
-			label: $_("llm.ragDiagram.step.keywordFallback"),
-			subLabel: $_("llm.ragDiagram.subLabel.properNounFallback") as
-				| string
-				| null,
-			style:
-				"bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
-		},
-		{
-			icon: "✅",
-			label: $_("llm.ragDiagram.step.returnWithSummary"),
-			subLabel: $_("llm.ragDiagram.subLabel.withScore") as string | null,
-			style:
-				"bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200",
-		},
-	];
+  // 検索フローのステップ（AI処理に注目）
+  $: searchSteps = [
+    {
+      icon: "🔍",
+      label: $_("llm.ragDiagram.step.naturalLanguageQuery"),
+      subLabel: $_("llm.ragDiagram.subLabel.queryExample") as string | null,
+      style:
+        "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200",
+    },
+    {
+      icon: "🔢",
+      label: $_("llm.ragDiagram.step.vectorizeQuery"),
+      subLabel: $_("llm.ragDiagram.subLabel.retrievalQuery") as string | null,
+      style:
+        "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200",
+    },
+    {
+      icon: "⚡",
+      label: $_("llm.ragDiagram.step.searchSimilarChunks"),
+      subLabel: $_("llm.ragDiagram.subLabel.cosineSimilarity") as string | null,
+      style:
+        "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200",
+    },
+    {
+      icon: "📖",
+      label: $_("llm.ragDiagram.step.keywordFallback"),
+      subLabel: $_("llm.ragDiagram.subLabel.properNounFallback") as
+        | string
+        | null,
+      style:
+        "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200",
+    },
+    {
+      icon: "✅",
+      label: $_("llm.ragDiagram.step.returnWithSummary"),
+      subLabel: $_("llm.ragDiagram.subLabel.withScore") as string | null,
+      style:
+        "bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200",
+    },
+  ];
 
-	// RAGカード用データ
-	$: ragCards = [
-		{
-			title: $_("llm.metrics.totalEmbeddings"),
-			value: metrics.summary.totalEmbeddings,
-			color: "text-purple-600 dark:text-purple-400",
-		},
-		{
-			title: $_("llm.metrics.pendingEmbeddings"),
-			value: metrics.summary.pendingEmbeddings,
-			color: "text-pink-600 dark:text-pink-400",
-		},
-	];
+  // RAGカード用データ
+  $: ragCards = [
+    {
+      title: $_("llm.metrics.totalEmbeddings"),
+      value: metrics.summary.totalEmbeddings,
+      color: "text-purple-600 dark:text-purple-400",
+    },
+    {
+      title: $_("llm.metrics.pendingEmbeddings"),
+      value: metrics.summary.pendingEmbeddings,
+      color: "text-pink-600 dark:text-pink-400",
+    },
+  ];
 </script>
 
 <Head title={$_("llm.title")} />

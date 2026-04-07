@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { _ } from "svelte-i18n";
-	import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-	import Button from "../atoms/Button.svelte";
-	import Card from "../atoms/Card.svelte";
-	export let title: string;
-	export let entry: DiaryEntry | null = null;
-	export let showForm = false;
-	export let onView: ((entry: DiaryEntry) => void) | null = null;
-	export let href: string | null = null;
+  import { _ } from "svelte-i18n";
+  import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+  import Button from "../atoms/Button.svelte";
+  import Card from "../atoms/Card.svelte";
+  export let title: string;
+  export let entry: DiaryEntry | null = null;
+  export let showForm = false;
+  export let onView: ((entry: DiaryEntry) => void) | null = null;
+  export let href: string | null = null;
 
-	// contentをそのまま表示
-	$: highlightedContent = entry ? entry.content : "";
+  // contentをそのまま表示
+  $: highlightedContent = entry ? entry.content : "";
 </script>
 
 <Card padding="sm">

@@ -1,69 +1,69 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { _ } from "svelte-i18n";
-	import "$lib/i18n";
-	import type { BeforeInstallPromptEvent } from "../pwa-types";
+  import { onMount } from "svelte";
+  import { _ } from "svelte-i18n";
+  import "$lib/i18n";
+  import type { BeforeInstallPromptEvent } from "../pwa-types";
 
-	let deferredPrompt: BeforeInstallPromptEvent | null = null;
-	let showInstallPrompt = false;
-	let isInstallable = false;
+  let deferredPrompt: BeforeInstallPromptEvent | null = null;
+  let showInstallPrompt = false;
+  let isInstallable = false;
 
-	onMount(() => {
-		// Check if already installed
-		if (window.matchMedia("(display-mode: standalone)").matches) {
-			return;
-		}
+  onMount(() => {
+    // Check if already installed
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      return;
+    }
 
-		// Check visit count
-		const visitCount =
-			Number(localStorage.getItem("pwa-visit-count") || "0") + 1;
-		localStorage.setItem("pwa-visit-count", visitCount.toString());
+    // Check visit count
+    const visitCount =
+      Number(localStorage.getItem("pwa-visit-count") || "0") + 1;
+    localStorage.setItem("pwa-visit-count", visitCount.toString());
 
-		// Check if user has dismissed the prompt recently
-		const dismissedAt = localStorage.getItem("pwa-prompt-dismissed");
-		if (dismissedAt) {
-			const dismissedTime = new Date(dismissedAt);
-			const threeMonthsAgo = new Date();
-			threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    // Check if user has dismissed the prompt recently
+    const dismissedAt = localStorage.getItem("pwa-prompt-dismissed");
+    if (dismissedAt) {
+      const dismissedTime = new Date(dismissedAt);
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-			if (dismissedTime > threeMonthsAgo) {
-				return;
-			}
-		}
+      if (dismissedTime > threeMonthsAgo) {
+        return;
+      }
+    }
 
-		// Show prompt after 1 visit (immediately)
-		if (visitCount >= 1) {
-			window.addEventListener("beforeinstallprompt", (e) => {
-				e.preventDefault();
-				deferredPrompt = e;
-				isInstallable = true;
-				showInstallPrompt = true;
-			});
-		}
-	});
+    // Show prompt after 1 visit (immediately)
+    if (visitCount >= 1) {
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        isInstallable = true;
+        showInstallPrompt = true;
+      });
+    }
+  });
 
-	const handleInstall = async () => {
-		if (!deferredPrompt) return;
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
 
-		showInstallPrompt = false;
-		deferredPrompt.prompt();
+    showInstallPrompt = false;
+    deferredPrompt.prompt();
 
-		const { outcome } = await deferredPrompt.userChoice;
+    const { outcome } = await deferredPrompt.userChoice;
 
-		if (outcome === "accepted") {
-			localStorage.setItem("pwa-installed", "true");
-		} else {
-			localStorage.setItem("pwa-prompt-dismissed", new Date().toISOString());
-		}
+    if (outcome === "accepted") {
+      localStorage.setItem("pwa-installed", "true");
+    } else {
+      localStorage.setItem("pwa-prompt-dismissed", new Date().toISOString());
+    }
 
-		deferredPrompt = null;
-		isInstallable = false;
-	};
+    deferredPrompt = null;
+    isInstallable = false;
+  };
 
-	const handleDismiss = () => {
-		showInstallPrompt = false;
-		localStorage.setItem("pwa-prompt-dismissed", new Date().toISOString());
-	};
+  const handleDismiss = () => {
+    showInstallPrompt = false;
+    localStorage.setItem("pwa-prompt-dismissed", new Date().toISOString());
+  };
 </script>
 
 {#if showInstallPrompt}

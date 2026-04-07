@@ -5,14 +5,14 @@ register("en", () => import("../locales/en.json"));
 register("ja", () => import("../locales/ja.json"));
 
 const initialLocale = browser
-	? localStorage.getItem("locale") ||
-		(navigator.language.startsWith("ja") ? "ja" : "en")
-	: "en";
+  ? localStorage.getItem("locale") ||
+    (navigator.language.startsWith("ja") ? "ja" : "en")
+  : "en";
 
 init({
-	fallbackLocale: "en",
-	initialLocale,
-	warnOnMissingMessages: false,
+  fallbackLocale: "en",
+  initialLocale,
+  warnOnMissingMessages: false,
 });
 
 // Set locale immediately for both SSR and client
