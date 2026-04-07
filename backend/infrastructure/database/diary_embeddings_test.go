@@ -288,6 +288,89 @@ func TestSearchDiaryEntriesByEmbedding_LimitEdgeCases(t *testing.T) {
 	})
 }
 
+func TestSetHNSWEfSearch(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+
+	t.Run("トランザクション内でhnsw.ef_searchを設定できる", func(t *testing.T) {
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			t.Fatalf("トランザクション開始失敗: %v", err)
+		}
+		defer func() { _ = tx.Rollback() }()
+
+		if err := database.SetHNSWEfSearch(ctx, tx, 100); err != nil {
+			t.Fatalf("SetHNSWEfSearch失敗: %v", err)
+		}
+	})
+}
+
+func TestInsertSemanticSearchLog(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+	userID := testutil.CreateTestUser(t, db, "semantic-search-log@example.com", "User")
+
+	t.Run("意味的検索ログを挿入できる", func(t *testing.T) {
+		if err := database.InsertSemanticSearchLog(ctx, db, userID); err != nil {
+			t.Fatalf("InsertSemanticSearchLog失敗: %v", err)
+		}
+
+		var count int
+		if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM semantic_search_logs WHERE user_id = $1`, userID).Scan(&count); err != nil {
+			t.Fatalf("カウントクエリ失敗: %v", err)
+		}
+		if count != 1 {
+			t.Errorf("期待 1, 実際 %d", count)
+		}
+	})
+}
+
+func TestDiaryIDsWithoutEmbeddings(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+	userID := testutil.CreateTestUser(t, db, "diary-ids-without-embeddings@example.com", "User")
+
+	diaryID := uuid.New()
+	now := time.Now().UnixMilli()
+	if _, err := db.ExecContext(ctx,
+		`INSERT INTO diaries (id, user_id, content, date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+		diaryID, userID, "embedding未生成の日記", "2024-01-01", now, now,
+	); err != nil {
+		t.Fatalf("日記の挿入に失敗: %v", err)
+	}
+
+	t.Run("embedding未生成の日記IDを返す", func(t *testing.T) {
+		ids, err := database.DiaryIDsWithoutEmbeddings(ctx, db, userID)
+		if err != nil {
+			t.Fatalf("DiaryIDsWithoutEmbeddings失敗: %v", err)
+		}
+		if len(ids) != 1 {
+			t.Errorf("期待 1件, 実際 %d件", len(ids))
+		}
+		if len(ids) > 0 && ids[0] != diaryID.String() {
+			t.Errorf("期待ID %s, 実際 %s", diaryID, ids[0])
+		}
+	})
+
+	t.Run("embedding生成済みの日記は含まない", func(t *testing.T) {
+		dummyEmbedding := make([]float32, 3072)
+		chunks := []database.DiaryChunk{
+			{Index: 0, Content: "テスト", Summary: "テスト概要", Embedding: dummyEmbedding},
+		}
+		if err := database.UpsertDiaryChunkEmbeddings(ctx, db, diaryID, userID, chunks, "gemini-embedding-001"); err != nil {
+			t.Fatalf("UpsertDiaryChunkEmbeddings失敗: %v", err)
+		}
+
+		ids, err := database.DiaryIDsWithoutEmbeddings(ctx, db, userID)
+		if err != nil {
+			t.Fatalf("DiaryIDsWithoutEmbeddings失敗: %v", err)
+		}
+		if len(ids) != 0 {
+			t.Errorf("embedding生成済みで0件を期待したが %d件", len(ids))
+		}
+	})
+}
+
 func TestUpsertDiaryChunkEmbeddings_NonSQLDB(t *testing.T) {
 	// db が *sql.DB でない場合にエラーが返ることを確認
 	// NOTE: 現在の実装では *sql.DB 以外は受け付けないが、

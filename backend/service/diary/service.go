@@ -1230,13 +1230,7 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 	}
 
 	// 件数に応じてロックTTLを動的に計算する（1件あたり10秒、最小10分・最大24時間）
-	lockTTL := time.Duration(len(diaryIDs)) * 10 * time.Second
-	if lockTTL < 10*time.Minute {
-		lockTTL = 10 * time.Minute
-	}
-	if lockTTL > 24*time.Hour {
-		lockTTL = 24 * time.Hour
-	}
+	lockTTL := min(max(time.Duration(len(diaryIDs))*10*time.Second, 10*time.Minute), 24*time.Hour)
 
 	// 同一ユーザーによる同時実行を防ぐ分散ロック
 	regenLock := lock.NewDistributedLock(s.Redis, lock.EmbeddingRegenLockKey(userIDStr), lockTTL)

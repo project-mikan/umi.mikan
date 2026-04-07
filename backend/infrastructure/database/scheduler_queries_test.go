@@ -155,6 +155,42 @@ func TestDiaryCountInDateRange(t *testing.T) {
 	})
 }
 
+func TestDiaryCountInMonth(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+	userID := testutil.CreateTestUser(t, db, "diary-count-in-month@example.com", "User")
+
+	now := time.Now().UnixMilli()
+	for _, date := range []string{"2020-01-10", "2020-01-20"} {
+		if _, err := db.ExecContext(ctx,
+			`INSERT INTO diaries (id, user_id, content, date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+			uuid.New(), userID, "日記内容", date, now, now,
+		); err != nil {
+			t.Fatalf("日記の挿入に失敗: %v", err)
+		}
+	}
+
+	t.Run("指定月の日記件数を返す", func(t *testing.T) {
+		count, err := database.DiaryCountInMonth(ctx, db, userID.String(), 2020, 1)
+		if err != nil {
+			t.Fatalf("DiaryCountInMonth失敗: %v", err)
+		}
+		if count != 2 {
+			t.Errorf("期待 2, 実際 %d", count)
+		}
+	})
+
+	t.Run("日記が存在しない月は0を返す", func(t *testing.T) {
+		count, err := database.DiaryCountInMonth(ctx, db, userID.String(), 2020, 2)
+		if err != nil {
+			t.Fatalf("DiaryCountInMonth失敗: %v", err)
+		}
+		if count != 0 {
+			t.Errorf("期待 0, 実際 %d", count)
+		}
+	})
+}
+
 func TestDiaryIDsNeedingEmbedding(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	ctx := context.Background()

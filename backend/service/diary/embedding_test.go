@@ -6,9 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/google/uuid"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
+	"github.com/redis/rueidis"
 )
 
 func TestIsTodayJST(t *testing.T) {
@@ -281,6 +283,24 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_NoLLMKey(t *testing.T) {
 	}
 }
 
+func TestDiaryEntry_GenerateMonthlySummary_NoDiaries(t *testing.T) {
+	db := setupTestDB(t)
+	userID := createTestUser(t, db)
+	svc := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// LLMキーを作成（GenerateMonthlySummaryはLLMキーチェックを通過する必要がある）
+	testutil.CreateTestUserLLM(t, db, userID, "test-api-key")
+
+	// 日記が存在しない過去月に対してサマリー生成を要求する
+	_, err := svc.GenerateMonthlySummary(ctx, &g.GenerateMonthlySummaryRequest{
+		Month: &g.YM{Year: 2020, Month: 1},
+	})
+	if err == nil {
+		t.Error("日記が存在しない月でエラーが返らなかった")
+	}
+}
+
 func TestDiaryEntry_SearchDiaryEntriesSemantic_EmptyQuery(t *testing.T) {
 	db := setupTestDB(t)
 	userID := createTestUser(t, db)
@@ -293,4 +313,53 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_EmptyQuery(t *testing.T) {
 	if err == nil {
 		t.Error("空クエリでエラーが返らなかった")
 	}
+}
+
+func setupTestRedisForDiary(t *testing.T) rueidis.Client {
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("miniredis起動失敗: %v", err)
+	}
+	t.Cleanup(mr.Close)
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{mr.Addr()},
+		DisableCache: true,
+	})
+	if err != nil {
+		t.Fatalf("rueidisクライアント作成失敗: %v", err)
+	}
+	t.Cleanup(client.Close)
+	return client
+}
+
+func TestDiaryEntry_RegenerateAllEmbeddings_SemanticEnabled(t *testing.T) {
+	db := setupTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "regen-embedding@example.com", "Regen Test User")
+	ctx := createAuthenticatedContext(userID)
+
+	// semantic_search_enabled=trueでuser_llmsを直接挿入
+	now := time.Now().Unix()
+	if _, err := db.ExecContext(ctx,
+		`INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		userID, 1, "test-api-key", false, false, false, true, now, now,
+	); err != nil {
+		t.Fatalf("user_llmsの挿入に失敗: %v", err)
+	}
+
+	redisClient := setupTestRedisForDiary(t)
+	svc := &DiaryEntry{DB: db, Redis: redisClient}
+
+	t.Run("正常系：日記が存在しない場合はQueuedCount=0で成功する", func(t *testing.T) {
+		resp, err := svc.RegenerateAllEmbeddings(ctx, &g.RegenerateAllEmbeddingsRequest{})
+		if err != nil {
+			t.Fatalf("予期しないエラー: %v", err)
+		}
+		if !resp.Success {
+			t.Error("Successがfalseになっている")
+		}
+		if resp.QueuedCount != 0 {
+			t.Errorf("QueuedCount: got %d, want 0", resp.QueuedCount)
+		}
+	})
 }

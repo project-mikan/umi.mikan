@@ -284,3 +284,46 @@ func TestPendingEmbeddingCount(t *testing.T) {
 		}
 	})
 }
+
+func TestHourlyPubSubMetrics(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+	userID := testutil.CreateTestUser(t, db, "hourly-pubsub-metrics@example.com", "User")
+
+	t.Run("過去24時間の時間別メトリクスを返す（データなし）", func(t *testing.T) {
+		metrics, err := database.HourlyPubSubMetrics(ctx, db, userID)
+		if err != nil {
+			t.Fatalf("HourlyPubSubMetrics失敗: %v", err)
+		}
+		// generate_seriesで24時間分返る
+		if len(metrics) != 24 {
+			t.Errorf("期待 24件, 実際 %d件", len(metrics))
+		}
+		// データがない場合は全てゼロ
+		for _, m := range metrics {
+			if m.DailySummariesProcessed != 0 || m.MonthlySummariesProcessed != 0 ||
+				m.EmbeddingsProcessed != 0 || m.SemanticSearchesProcessed != 0 {
+				t.Errorf("データなしで全ゼロを期待したが: %+v", m)
+			}
+		}
+	})
+
+	t.Run("日次サマリーデータが集計に反映される", func(t *testing.T) {
+		now := time.Now().Unix()
+		if _, err := db.ExecContext(ctx,
+			`INSERT INTO diary_summary_days (id, user_id, date, summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+			uuid.New(), userID, "2020-01-01", "サマリ", now, now,
+		); err != nil {
+			t.Fatalf("日次サマリーの挿入に失敗: %v", err)
+		}
+
+		// 直近1時間以内に挿入されたデータは集計に反映される
+		recentMetrics, err := database.HourlyPubSubMetrics(ctx, db, userID)
+		if err != nil {
+			t.Fatalf("HourlyPubSubMetrics失敗: %v", err)
+		}
+		if len(recentMetrics) != 24 {
+			t.Errorf("期待 24件, 実際 %d件", len(recentMetrics))
+		}
+	})
+}
