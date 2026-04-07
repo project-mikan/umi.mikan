@@ -1159,22 +1159,43 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		return fmt.Errorf("failed to parse user_id: %w", err)
 	}
 
-	// 6. 各チャンクに日付コンテキストを付与してembedding生成
-	diaryChunks := make([]database.DiaryChunk, 0, len(chunkDataList))
+	// 6. 各チャンクに日付コンテキストを付与してembedding生成（並列実行でレイテンシを削減）
+	type embeddingResult struct {
+		chunk database.DiaryChunk
+		err   error
+	}
+	embResults := make([]embeddingResult, len(chunkDataList))
+	var embWg sync.WaitGroup
 	for i, chunkData := range chunkDataList {
-		// 時間的クエリの精度向上のため日付情報を先頭に付与する
-		enrichedChunk := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), chunkData.Content)
-		embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedChunk, true)
-		if err != nil {
-			return fmt.Errorf("failed to generate embedding for chunk %d: %w", i, err)
+		embWg.Add(1)
+		go func(idx int, cd llm.DiaryChunkData) {
+			defer embWg.Done()
+			// 時間的クエリの精度向上のため日付情報を先頭に付与する
+			enrichedChunk := fmt.Sprintf("%d年%d月%d日の日記:\n%s", diaryDate.Year(), int(diaryDate.Month()), diaryDate.Day(), cd.Content)
+			embedding, err := geminiClient.GenerateEmbedding(ctx, enrichedChunk, true)
+			if err != nil {
+				embResults[idx] = embeddingResult{err: fmt.Errorf("failed to generate embedding for chunk %d: %w", idx, err)}
+				return
+			}
+			embResults[idx] = embeddingResult{
+				chunk: database.DiaryChunk{
+					Index:             idx,
+					Content:           cd.Content,
+					Summary:           cd.Summary,
+					Embedding:         embedding,
+					SplitModelVersion: llm.ModelGenerateContent,
+				},
+			}
+		}(i, chunkData)
+	}
+	embWg.Wait()
+
+	diaryChunks := make([]database.DiaryChunk, 0, len(chunkDataList))
+	for _, r := range embResults {
+		if r.err != nil {
+			return r.err
 		}
-		diaryChunks = append(diaryChunks, database.DiaryChunk{
-			Index:             i,
-			Content:           chunkData.Content,
-			Summary:           chunkData.Summary,
-			Embedding:         embedding,
-			SplitModelVersion: llm.ModelGenerateContent,
-		})
+		diaryChunks = append(diaryChunks, r.chunk)
 	}
 
 	// 7. diary_embeddingsテーブルにチャンク単位でUPSERT
