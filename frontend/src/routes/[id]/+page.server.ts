@@ -137,35 +137,26 @@ export const load: PageServerLoad = async ({
 	}
 
 	// RAGインデックス状態を取得（entry.id が必要なため第2フェーズ）
+	// Promiseのまま返してストリーミングし、ページ表示をブロックしない
 	const semanticSearchEnabled =
 		userInfo.llmKeys?.find((k) => k.llmProvider === 1)?.semanticSearchEnabled ??
 		false;
-	let embeddingStatus: {
-		indexed: boolean;
-		modelVersion: string;
-		createdAt: number;
-		updatedAt: number;
-		chunkCount: number;
-		chunkSummaries: string[];
-	} | null = null;
-	if (entryResponse.entry && semanticSearchEnabled) {
-		try {
-			const statusResponse = await getDiaryEmbeddingStatus({
-				diaryId: entryResponse.entry.id,
-				accessToken: authResult.accessToken,
-			});
-			embeddingStatus = {
-				indexed: statusResponse.indexed,
-				modelVersion: statusResponse.modelVersion,
-				createdAt: Number(statusResponse.createdAt),
-				updatedAt: Number(statusResponse.updatedAt),
-				chunkCount: statusResponse.chunkCount,
-				chunkSummaries: statusResponse.chunkSummaries,
-			};
-		} catch (_embeddingErr) {
-			embeddingStatus = null;
-		}
-	}
+	const embeddingStatus =
+		entryResponse.entry && semanticSearchEnabled
+			? getDiaryEmbeddingStatus({
+					diaryId: entryResponse.entry.id,
+					accessToken: authResult.accessToken,
+				})
+					.then((statusResponse) => ({
+						indexed: statusResponse.indexed,
+						modelVersion: statusResponse.modelVersion,
+						createdAt: Number(statusResponse.createdAt),
+						updatedAt: Number(statusResponse.updatedAt),
+						chunkCount: statusResponse.chunkCount,
+						chunkSummaries: statusResponse.chunkSummaries,
+					}))
+					.catch(() => null)
+			: Promise.resolve(null);
 
 	// 過去日記を整形
 	const pastEntriesObject = pastEntriesKeys.reduce(
