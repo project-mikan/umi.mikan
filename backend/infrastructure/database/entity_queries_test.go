@@ -260,4 +260,3 @@ func TestSearchEntitiesByQuery(t *testing.T) {
 		}
 	})
 }
-

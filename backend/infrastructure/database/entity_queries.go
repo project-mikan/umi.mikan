@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -99,13 +100,13 @@ func SearchEntitiesByQuery(ctx context.Context, db DB, userID uuid.UUID, query s
 	} else {
 		// LIKE メタキャラクターをエスケープする
 		// % -> \% , _ -> \_ , \ -> \\
-		escapedQuery := ""
+		var escapedQuery strings.Builder
 		for _, r := range query {
 			switch r {
 			case '%', '_', '\\':
-				escapedQuery += "\\" + string(r)
+				escapedQuery.WriteString("\\" + string(r))
 			default:
-				escapedQuery += string(r)
+				escapedQuery.WriteString(string(r))
 			}
 		}
 
@@ -117,7 +118,7 @@ func SearchEntitiesByQuery(ctx context.Context, db DB, userID uuid.UUID, query s
 			AND (e.name ILIKE $2 ESCAPE '\' OR ea.alias ILIKE $2 ESCAPE '\')
 			ORDER BY e.name
 		`
-		rows, err = db.QueryContext(ctx, sqlstr, userID, "%"+escapedQuery+"%")
+		rows, err = db.QueryContext(ctx, sqlstr, userID, "%"+escapedQuery.String()+"%")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to search entities: %w", err)
