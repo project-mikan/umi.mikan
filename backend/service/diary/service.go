@@ -1130,6 +1130,10 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 
 	// ハイブリッド検索: キーワード検索結果で補完（ベクトル検索が拾えない固有名詞・専門語をカバー）
 	kwResult := <-kwResultCh
+	if kwResult.err != nil {
+		// キーワード検索失敗時はベクトル検索結果のみで継続（degraded mode）
+		log.Printf("keyword search failed (degraded mode): %v", kwResult.err)
+	}
 	vectorIDs := make(map[uuid.UUID]bool, len(searchResults))
 	for _, sr := range searchResults {
 		vectorIDs[sr.DiaryID] = true
