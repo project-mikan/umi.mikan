@@ -1,361 +1,361 @@
 <script lang="ts">
-	import { _ } from "svelte-i18n";
-	import { enhance } from "$app/forms";
-	import { goto } from "$app/navigation";
-	import { beforeNavigate } from "$app/navigation";
-	import { page } from "$app/stores";
-	import { onMount } from "svelte";
-	import "$lib/i18n";
-	import Button from "$lib/components/atoms/Button.svelte";
-	import SaveButton from "$lib/components/atoms/SaveButton.svelte";
-	import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
-	import FormField from "$lib/components/molecules/FormField.svelte";
-	import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
-	import RecentDiaryStreak from "$lib/components/molecules/RecentDiaryStreak.svelte";
-	import LatestTrendDisplay from "$lib/components/molecules/LatestTrendDisplay.svelte";
-	import CollapsibleSection from "$lib/components/molecules/CollapsibleSection.svelte";
-	import PWAInstallButton from "$lib/components/PWAInstallButton.svelte";
-	import { createSubmitHandler } from "$lib/utils/form-utils";
-	import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
-	import type { PageData } from "./$types";
+  import { _ } from "svelte-i18n";
+  import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
+  import { beforeNavigate } from "$app/navigation";
+  import { page } from "$app/stores";
+  import { onMount } from "svelte";
+  import "$lib/i18n";
+  import Button from "$lib/components/atoms/Button.svelte";
+  import SaveButton from "$lib/components/atoms/SaveButton.svelte";
+  import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
+  import FormField from "$lib/components/molecules/FormField.svelte";
+  import TimeProgressBar from "$lib/components/molecules/TimeProgressBar.svelte";
+  import RecentDiaryStreak from "$lib/components/molecules/RecentDiaryStreak.svelte";
+  import LatestTrendDisplay from "$lib/components/molecules/LatestTrendDisplay.svelte";
+  import CollapsibleSection from "$lib/components/molecules/CollapsibleSection.svelte";
+  import PWAInstallButton from "$lib/components/PWAInstallButton.svelte";
+  import { createSubmitHandler } from "$lib/utils/form-utils";
+  import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
+  import type { PageData } from "./$types";
 
-	$: title = $_("page.title.home");
+  $: title = $_("page.title.home");
 
-	export let data: PageData;
+  export let data: PageData;
 
-	// dataが更新されたときに自動的に更新されるようにリアクティブ宣言を使用
-	$: todayContent = data.today.entry?.content || "";
-	$: yesterdayContent = data.yesterday.entry?.content || "";
-	$: dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
+  // dataが更新されたときに自動的に更新されるようにリアクティブ宣言を使用
+  $: todayContent = data.today.entry?.content || "";
+  $: yesterdayContent = data.yesterday.entry?.content || "";
+  $: dayBeforeYesterdayContent = data.dayBeforeYesterday.entry?.content || "";
 
-	let formElement: HTMLFormElement;
-	let yesterdayFormElement: HTMLFormElement;
-	let dayBeforeYesterdayFormElement: HTMLFormElement;
-	let [todayLoading, yesterdayLoading, dayBeforeLoading] = [
-		false,
-		false,
-		false,
-	];
-	let [todaySaved, yesterdaySaved, dayBeforeSaved] = [false, false, false];
+  let formElement: HTMLFormElement;
+  let yesterdayFormElement: HTMLFormElement;
+  let dayBeforeYesterdayFormElement: HTMLFormElement;
+  let [todayLoading, yesterdayLoading, dayBeforeLoading] = [
+    false,
+    false,
+    false,
+  ];
+  let [todaySaved, yesterdaySaved, dayBeforeSaved] = [false, false, false];
 
-	// Character count calculations
-	$: todayCharacterCount = todayContent ? todayContent.length : 0;
-	$: yesterdayCharacterCount = yesterdayContent ? yesterdayContent.length : 0;
-	$: dayBeforeYesterdayCharacterCount = dayBeforeYesterdayContent
-		? dayBeforeYesterdayContent.length
-		: 0;
+  // Character count calculations
+  $: todayCharacterCount = todayContent ? todayContent.length : 0;
+  $: yesterdayCharacterCount = yesterdayContent ? yesterdayContent.length : 0;
+  $: dayBeforeYesterdayCharacterCount = dayBeforeYesterdayContent
+    ? dayBeforeYesterdayContent.length
+    : 0;
 
-	// 未保存状態の管理
-	let initialTodayContent = "";
-	let initialYesterdayContent = "";
-	let initialDayBeforeYesterdayContent = "";
-	let allowNavigation = false;
+  // 未保存状態の管理
+  let initialTodayContent = "";
+  let initialYesterdayContent = "";
+  let initialDayBeforeYesterdayContent = "";
+  let allowNavigation = false;
 
-	// 前回のdataを保持して変更を検出
-	let previousDataId = "";
+  // 前回のdataを保持して変更を検出
+  let previousDataId = "";
 
-	// データが変更された時に初期コンテンツをリセット
-	// ページ遷移時のみ（dataのIDが変わった時のみ）実行
-	$: {
-		// dataの一意性を判定するためのID（日付の組み合わせ）
-		const currentDataId = `${data.today.date.year}-${data.today.date.month}-${data.today.date.day}`;
+  // データが変更された時に初期コンテンツをリセット
+  // ページ遷移時のみ（dataのIDが変わった時のみ）実行
+  $: {
+    // dataの一意性を判定するためのID（日付の組み合わせ）
+    const currentDataId = `${data.today.date.year}-${data.today.date.month}-${data.today.date.day}`;
 
-		// ページが変更された場合のみ初期化
-		if (currentDataId !== previousDataId) {
-			previousDataId = currentDataId;
+    // ページが変更された場合のみ初期化
+    if (currentDataId !== previousDataId) {
+      previousDataId = currentDataId;
 
-			// 初期コンテンツを設定
-			initialTodayContent = data.today.entry?.content || "";
-			initialYesterdayContent = data.yesterday.entry?.content || "";
-			initialDayBeforeYesterdayContent =
-				data.dayBeforeYesterday.entry?.content || "";
+      // 初期コンテンツを設定
+      initialTodayContent = data.today.entry?.content || "";
+      initialYesterdayContent = data.yesterday.entry?.content || "";
+      initialDayBeforeYesterdayContent =
+        data.dayBeforeYesterday.entry?.content || "";
 
-			// コンテンツ変数を初期化（ユーザー入力を上書きしない）
-			if (todayContent !== initialTodayContent) {
-				todayContent = initialTodayContent;
-			}
-			if (yesterdayContent !== initialYesterdayContent) {
-				yesterdayContent = initialYesterdayContent;
-			}
-			if (dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent) {
-				dayBeforeYesterdayContent = initialDayBeforeYesterdayContent;
-			}
+      // コンテンツ変数を初期化（ユーザー入力を上書きしない）
+      if (todayContent !== initialTodayContent) {
+        todayContent = initialTodayContent;
+      }
+      if (yesterdayContent !== initialYesterdayContent) {
+        yesterdayContent = initialYesterdayContent;
+      }
+      if (dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent) {
+        dayBeforeYesterdayContent = initialDayBeforeYesterdayContent;
+      }
 
-			// 新しいページではallowNavigationをリセット
-			allowNavigation = false;
-		}
-	}
+      // 新しいページではallowNavigationをリセット
+      allowNavigation = false;
+    }
+  }
 
-	// 各日記の未保存状態を監視
-	$: todayHasUnsavedChanges =
-		todayContent !== initialTodayContent && !allowNavigation;
-	$: yesterdayHasUnsavedChanges =
-		yesterdayContent !== initialYesterdayContent && !allowNavigation;
-	$: dayBeforeYesterdayHasUnsavedChanges =
-		dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent &&
-		!allowNavigation;
+  // 各日記の未保存状態を監視
+  $: todayHasUnsavedChanges =
+    todayContent !== initialTodayContent && !allowNavigation;
+  $: yesterdayHasUnsavedChanges =
+    yesterdayContent !== initialYesterdayContent && !allowNavigation;
+  $: dayBeforeYesterdayHasUnsavedChanges =
+    dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent &&
+    !allowNavigation;
 
-	// いずれか1つでも未保存の変更があるかチェック
-	$: hasAnyUnsavedChanges =
-		todayHasUnsavedChanges ||
-		yesterdayHasUnsavedChanges ||
-		dayBeforeYesterdayHasUnsavedChanges;
+  // いずれか1つでも未保存の変更があるかチェック
+  $: hasAnyUnsavedChanges =
+    todayHasUnsavedChanges ||
+    yesterdayHasUnsavedChanges ||
+    dayBeforeYesterdayHasUnsavedChanges;
 
-	// トグルセクションの開閉状態（localStorageから復元）
-	let sideInfoOpen = false;
+  // トグルセクションの開閉状態（localStorageから復元）
+  let sideInfoOpen = false;
 
-	// localStorageから開閉状態を復元
-	if (typeof window !== "undefined") {
-		const stored = localStorage.getItem("sideInfoOpen");
-		if (stored !== null) {
-			sideInfoOpen = stored === "true";
-		}
-	}
+  // localStorageから開閉状態を復元
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("sideInfoOpen");
+    if (stored !== null) {
+      sideInfoOpen = stored === "true";
+    }
+  }
 
-	// 開閉状態が変更されたらlocalStorageに保存
-	$: if (typeof window !== "undefined") {
-		localStorage.setItem("sideInfoOpen", String(sideInfoOpen));
-	}
+  // 開閉状態が変更されたらlocalStorageに保存
+  $: if (typeof window !== "undefined") {
+    localStorage.setItem("sideInfoOpen", String(sideInfoOpen));
+  }
 
-	function getMonthlyUrl(): string {
-		const now = new Date();
-		return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
-	}
+  function getMonthlyUrl(): string {
+    const now = new Date();
+    return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
+  }
 
-	function formatDateStr(ymd: YMD): string {
-		return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
-	}
+  function formatDateStr(ymd: YMD): string {
+    return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
+  }
 
-	function viewEntry(entry: DiaryEntry) {
-		const date = entry.date;
-		if (date) {
-			const dateStr = formatDateStr(date);
-			goto(`/${dateStr}`);
-		}
-	}
+  function viewEntry(entry: DiaryEntry) {
+    const date = entry.date;
+    if (date) {
+      const dateStr = formatDateStr(date);
+      goto(`/${dateStr}`);
+    }
+  }
 
-	function handleSave() {
-		formElement?.requestSubmit();
-	}
+  function handleSave() {
+    formElement?.requestSubmit();
+  }
 
-	function handleYesterdaySave() {
-		yesterdayFormElement?.requestSubmit();
-	}
+  function handleYesterdaySave() {
+    yesterdayFormElement?.requestSubmit();
+  }
 
-	function handleDayBeforeYesterdaySave() {
-		dayBeforeYesterdayFormElement?.requestSubmit();
-	}
+  function handleDayBeforeYesterdaySave() {
+    dayBeforeYesterdayFormElement?.requestSubmit();
+  }
 
-	// ページ遷移前の警告
-	beforeNavigate((navigation) => {
-		if (hasAnyUnsavedChanges && !allowNavigation) {
-			if (!confirm($_("diary.unsavedChangesWarning"))) {
-				navigation.cancel();
-			}
-		}
-	});
+  // ページ遷移前の警告
+  beforeNavigate((navigation) => {
+    if (hasAnyUnsavedChanges && !allowNavigation) {
+      if (!confirm($_("diary.unsavedChangesWarning"))) {
+        navigation.cancel();
+      }
+    }
+  });
 
-	// 表示する保存ボタンを決定（フォーカスまたはスクロール位置に基づく）
-	let activeSection: "today" | "yesterday" | "dayBeforeYesterday" = "today";
-	let todayCard: HTMLElement;
-	let yesterdayCard: HTMLElement;
-	let dayBeforeYesterdayCard: HTMLElement;
+  // 表示する保存ボタンを決定（フォーカスまたはスクロール位置に基づく）
+  let activeSection: "today" | "yesterday" | "dayBeforeYesterday" = "today";
+  let todayCard: HTMLElement;
+  let yesterdayCard: HTMLElement;
+  let dayBeforeYesterdayCard: HTMLElement;
 
-	// フォーカスベースのセクション検出（モバイルキーボード対応）
-	let focusedSection: "today" | "yesterday" | "dayBeforeYesterday" | null =
-		null;
+  // フォーカスベースのセクション検出（モバイルキーボード対応）
+  let focusedSection: "today" | "yesterday" | "dayBeforeYesterday" | null =
+    null;
 
-	function handleFocusIn(
-		section: "today" | "yesterday" | "dayBeforeYesterday",
-	) {
-		focusedSection = section;
-		activeSection = section;
-	}
+  function handleFocusIn(
+    section: "today" | "yesterday" | "dayBeforeYesterday",
+  ) {
+    focusedSection = section;
+    activeSection = section;
+  }
 
-	function handleFocusOut() {
-		// フォーカスが別のセクションに移る場合があるので、少し遅延してリセット
-		setTimeout(() => {
-			// フォーカスがどのカードにも無い場合のみスクロールベースに戻す
-			const activeEl = document.activeElement;
-			if (
-				activeEl &&
-				(todayCard?.contains(activeEl) ||
-					yesterdayCard?.contains(activeEl) ||
-					dayBeforeYesterdayCard?.contains(activeEl))
-			) {
-				return;
-			}
-			focusedSection = null;
-		}, 100);
-	}
+  function handleFocusOut() {
+    // フォーカスが別のセクションに移る場合があるので、少し遅延してリセット
+    setTimeout(() => {
+      // フォーカスがどのカードにも無い場合のみスクロールベースに戻す
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (todayCard?.contains(activeEl) ||
+          yesterdayCard?.contains(activeEl) ||
+          dayBeforeYesterdayCard?.contains(activeEl))
+      ) {
+        return;
+      }
+      focusedSection = null;
+    }, 100);
+  }
 
-	// モバイルキーボード表示時の保存ボタン位置調整
-	let saveButtonBottom = "5rem"; // デフォルト: bottom-20 (QuickNavigationの上)
+  // モバイルキーボード表示時の保存ボタン位置調整
+  let saveButtonBottom = "5rem"; // デフォルト: bottom-20 (QuickNavigationの上)
 
-	// ブラウザのページ離脱時の警告
-	onMount(() => {
-		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-			if (hasAnyUnsavedChanges) {
-				e.preventDefault();
-				e.returnValue = "";
-			}
-		};
+  // ブラウザのページ離脱時の警告
+  onMount(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasAnyUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
 
-		// visualViewport APIを使ってキーボード表示を検出し、保存ボタンの位置を調整
-		const updateSaveButtonPosition = () => {
-			if (!window.visualViewport) return;
-			const viewport = window.visualViewport;
-			// キーボードが表示されている場合: layoutViewportの高さとvisualViewportの高さの差
-			const keyboardHeight = window.innerHeight - viewport.height;
-			const KEYBOARD_THRESHOLD = 100;
-			if (keyboardHeight > KEYBOARD_THRESHOLD) {
-				// キーボードが表示されている: キーボードの上に配置
-				saveButtonBottom = `${keyboardHeight + 8}px`;
-			} else {
-				// キーボード非表示: QuickNavigationの上に配置
-				saveButtonBottom = "5rem";
-			}
-		};
+    // visualViewport APIを使ってキーボード表示を検出し、保存ボタンの位置を調整
+    const updateSaveButtonPosition = () => {
+      if (!window.visualViewport) return;
+      const viewport = window.visualViewport;
+      // キーボードが表示されている場合: layoutViewportの高さとvisualViewportの高さの差
+      const keyboardHeight = window.innerHeight - viewport.height;
+      const KEYBOARD_THRESHOLD = 100;
+      if (keyboardHeight > KEYBOARD_THRESHOLD) {
+        // キーボードが表示されている: キーボードの上に配置
+        saveButtonBottom = `${keyboardHeight + 8}px`;
+      } else {
+        // キーボード非表示: QuickNavigationの上に配置
+        saveButtonBottom = "5rem";
+      }
+    };
 
-		if (window.visualViewport) {
-			window.visualViewport.addEventListener(
-				"resize",
-				updateSaveButtonPosition,
-			);
-			window.visualViewport.addEventListener(
-				"scroll",
-				updateSaveButtonPosition,
-			);
-		}
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener(
+        "resize",
+        updateSaveButtonPosition,
+      );
+      window.visualViewport.addEventListener(
+        "scroll",
+        updateSaveButtonPosition,
+      );
+    }
 
-		// スクロール位置判定の定数
-		const VIEWPORT_CENTER_DIVISOR = 2;
+    // スクロール位置判定の定数
+    const VIEWPORT_CENTER_DIVISOR = 2;
 
-		// スクロール位置を監視して、現在表示中のセクションを判定
-		const updateActiveSection = () => {
-			// テキストエリアにフォーカスがある場合はスクロールベースの更新をスキップ
-			if (focusedSection) return;
+    // スクロール位置を監視して、現在表示中のセクションを判定
+    const updateActiveSection = () => {
+      // テキストエリアにフォーカスがある場合はスクロールベースの更新をスキップ
+      if (focusedSection) return;
 
-			const scrollY = window.scrollY;
-			const viewportHeight = window.innerHeight;
-			const viewportCenter = scrollY + viewportHeight / VIEWPORT_CENTER_DIVISOR;
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const viewportCenter = scrollY + viewportHeight / VIEWPORT_CENTER_DIVISOR;
 
-			// 各カードの位置を取得
-			const todayRect = todayCard?.getBoundingClientRect();
-			const yesterdayRect = yesterdayCard?.getBoundingClientRect();
-			const dayBeforeYesterdayRect =
-				dayBeforeYesterdayCard?.getBoundingClientRect();
+      // 各カードの位置を取得
+      const todayRect = todayCard?.getBoundingClientRect();
+      const yesterdayRect = yesterdayCard?.getBoundingClientRect();
+      const dayBeforeYesterdayRect =
+        dayBeforeYesterdayCard?.getBoundingClientRect();
 
-			// 画面中央を含むカードを優先的に選択
-			// 画面中央がカードの範囲内にある場合、そのカードを選択
-			if (
-				todayRect &&
-				todayRect.top + scrollY <= viewportCenter &&
-				todayRect.bottom + scrollY >= viewportCenter
-			) {
-				activeSection = "today";
-				return;
-			}
+      // 画面中央を含むカードを優先的に選択
+      // 画面中央がカードの範囲内にある場合、そのカードを選択
+      if (
+        todayRect &&
+        todayRect.top + scrollY <= viewportCenter &&
+        todayRect.bottom + scrollY >= viewportCenter
+      ) {
+        activeSection = "today";
+        return;
+      }
 
-			if (
-				yesterdayRect &&
-				yesterdayRect.top + scrollY <= viewportCenter &&
-				yesterdayRect.bottom + scrollY >= viewportCenter
-			) {
-				activeSection = "yesterday";
-				return;
-			}
+      if (
+        yesterdayRect &&
+        yesterdayRect.top + scrollY <= viewportCenter &&
+        yesterdayRect.bottom + scrollY >= viewportCenter
+      ) {
+        activeSection = "yesterday";
+        return;
+      }
 
-			if (
-				dayBeforeYesterdayRect &&
-				dayBeforeYesterdayRect.top + scrollY <= viewportCenter &&
-				dayBeforeYesterdayRect.bottom + scrollY >= viewportCenter
-			) {
-				activeSection = "dayBeforeYesterday";
-				return;
-			}
+      if (
+        dayBeforeYesterdayRect &&
+        dayBeforeYesterdayRect.top + scrollY <= viewportCenter &&
+        dayBeforeYesterdayRect.bottom + scrollY >= viewportCenter
+      ) {
+        activeSection = "dayBeforeYesterday";
+        return;
+      }
 
-			// 画面中央がどのカードにも含まれない場合、画面内で最も近いカードを選択
-			const candidates: Array<{
-				section: "today" | "yesterday" | "dayBeforeYesterday";
-				distance: number;
-			}> = [];
+      // 画面中央がどのカードにも含まれない場合、画面内で最も近いカードを選択
+      const candidates: Array<{
+        section: "today" | "yesterday" | "dayBeforeYesterday";
+        distance: number;
+      }> = [];
 
-			if (todayRect && todayRect.top < viewportHeight && todayRect.bottom > 0) {
-				const todayCenter =
-					todayRect.top + scrollY + todayRect.height / VIEWPORT_CENTER_DIVISOR;
-				const todayDistance = Math.abs(viewportCenter - todayCenter);
-				candidates.push({ section: "today", distance: todayDistance });
-			}
+      if (todayRect && todayRect.top < viewportHeight && todayRect.bottom > 0) {
+        const todayCenter =
+          todayRect.top + scrollY + todayRect.height / VIEWPORT_CENTER_DIVISOR;
+        const todayDistance = Math.abs(viewportCenter - todayCenter);
+        candidates.push({ section: "today", distance: todayDistance });
+      }
 
-			if (
-				yesterdayRect &&
-				yesterdayRect.top < viewportHeight &&
-				yesterdayRect.bottom > 0
-			) {
-				const yesterdayCenter =
-					yesterdayRect.top +
-					scrollY +
-					yesterdayRect.height / VIEWPORT_CENTER_DIVISOR;
-				const yesterdayDistance = Math.abs(viewportCenter - yesterdayCenter);
-				candidates.push({ section: "yesterday", distance: yesterdayDistance });
-			}
+      if (
+        yesterdayRect &&
+        yesterdayRect.top < viewportHeight &&
+        yesterdayRect.bottom > 0
+      ) {
+        const yesterdayCenter =
+          yesterdayRect.top +
+          scrollY +
+          yesterdayRect.height / VIEWPORT_CENTER_DIVISOR;
+        const yesterdayDistance = Math.abs(viewportCenter - yesterdayCenter);
+        candidates.push({ section: "yesterday", distance: yesterdayDistance });
+      }
 
-			if (
-				dayBeforeYesterdayRect &&
-				dayBeforeYesterdayRect.top < viewportHeight &&
-				dayBeforeYesterdayRect.bottom > 0
-			) {
-				const dayBeforeYesterdayCenter =
-					dayBeforeYesterdayRect.top +
-					scrollY +
-					dayBeforeYesterdayRect.height / VIEWPORT_CENTER_DIVISOR;
-				const dayBeforeYesterdayDistance = Math.abs(
-					viewportCenter - dayBeforeYesterdayCenter,
-				);
-				candidates.push({
-					section: "dayBeforeYesterday",
-					distance: dayBeforeYesterdayDistance,
-				});
-			}
+      if (
+        dayBeforeYesterdayRect &&
+        dayBeforeYesterdayRect.top < viewportHeight &&
+        dayBeforeYesterdayRect.bottom > 0
+      ) {
+        const dayBeforeYesterdayCenter =
+          dayBeforeYesterdayRect.top +
+          scrollY +
+          dayBeforeYesterdayRect.height / VIEWPORT_CENTER_DIVISOR;
+        const dayBeforeYesterdayDistance = Math.abs(
+          viewportCenter - dayBeforeYesterdayCenter,
+        );
+        candidates.push({
+          section: "dayBeforeYesterday",
+          distance: dayBeforeYesterdayDistance,
+        });
+      }
 
-			if (candidates.length > 0) {
-				candidates.sort((a, b) => a.distance - b.distance);
-				activeSection = candidates[0].section;
-			}
-		};
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => a.distance - b.distance);
+        activeSection = candidates[0].section;
+      }
+    };
 
-		// debounce実装（100msの遅延）
-		let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
-		const handleScroll = () => {
-			if (scrollTimeout) clearTimeout(scrollTimeout);
-			scrollTimeout = setTimeout(() => {
-				updateActiveSection();
-			}, 100);
-		};
+    // debounce実装（100msの遅延）
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+    const handleScroll = () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        updateActiveSection();
+      }, 100);
+    };
 
-		window.addEventListener("beforeunload", handleBeforeUnload);
-		window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
-		// 初期表示時に一度実行
-		updateActiveSection();
+    // 初期表示時に一度実行
+    updateActiveSection();
 
-		return () => {
-			window.removeEventListener("beforeunload", handleBeforeUnload);
-			window.removeEventListener("scroll", handleScroll);
-			if (scrollTimeout) clearTimeout(scrollTimeout);
-			if (window.visualViewport) {
-				window.visualViewport.removeEventListener(
-					"resize",
-					updateSaveButtonPosition,
-				);
-				window.visualViewport.removeEventListener(
-					"scroll",
-					updateSaveButtonPosition,
-				);
-			}
-		};
-	});
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("scroll", handleScroll);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener(
+          "resize",
+          updateSaveButtonPosition,
+        );
+        window.visualViewport.removeEventListener(
+          "scroll",
+          updateSaveButtonPosition,
+        );
+      }
+    };
+  });
 </script>
 
 <svelte:head>

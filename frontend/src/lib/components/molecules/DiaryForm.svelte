@@ -1,36 +1,36 @@
 <script lang="ts">
-	import { _ } from "svelte-i18n";
-	import "$lib/i18n";
-	import { enhance } from "$app/forms";
-	import { goto } from "$app/navigation";
-	import Alert from "../atoms/Alert.svelte";
-	import Button from "../atoms/Button.svelte";
-	import FormField from "./FormField.svelte";
+  import { _ } from "svelte-i18n";
+  import "$lib/i18n";
+  import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
+  import Alert from "../atoms/Alert.svelte";
+  import Button from "../atoms/Button.svelte";
+  import FormField from "./FormField.svelte";
 
-	export let title: string;
-	export let content = "";
-	export let date = "";
-	export let error: string | undefined = undefined;
-	export let showDeleteButton = false;
-	export let onCancel: (() => void) | null = null;
-	export let onDelete: (() => void) | null = null;
+  export let title: string;
+  export let content = "";
+  export let date = "";
+  export let error: string | undefined = undefined;
+  export let showDeleteButton = false;
+  export let onCancel: (() => void) | null = null;
+  export let onDelete: (() => void) | null = null;
 
-	let isSubmitting = false;
-	let textarea: HTMLTextAreaElement;
+  let isSubmitting = false;
+  let textarea: HTMLTextAreaElement;
 
-	function _handleCancel() {
-		if (onCancel) {
-			onCancel();
-		} else {
-			goto("/");
-		}
-	}
+  function _handleCancel() {
+    if (onCancel) {
+      onCancel();
+    } else {
+      goto("/");
+    }
+  }
 
-	// テキストエリアでの入力処理
-	function handleInput(event: Event) {
-		const target = event.target as HTMLTextAreaElement;
-		content = target.value;
-	}
+  // テキストエリアでの入力処理
+  function handleInput(event: Event) {
+    const target = event.target as HTMLTextAreaElement;
+    content = target.value;
+  }
 </script>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

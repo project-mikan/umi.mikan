@@ -3,14 +3,14 @@
 /* eslint-disable */
 
 import type {
-	GenFile,
-	GenMessage,
-	GenService,
+  GenFile,
+  GenMessage,
+  GenService,
 } from "@bufbuild/protobuf/codegenv2";
 import {
-	fileDesc,
-	messageDesc,
-	serviceDesc,
+  fileDesc,
+  messageDesc,
+  serviceDesc,
 } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -18,10 +18,10 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file user/user.proto.
  */
 export const file_user_user: GenFile =
-	/*@__PURE__*/
-	fileDesc(
-		"Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8irQEKCkxMTUtleUluZm8SFAoMbGxtX3Byb3ZpZGVyGAEgASgFEgsKA2tleRgCIAEoCRIaChJhdXRvX3N1bW1hcnlfZGFpbHkYAyABKAgSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYBCABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgFIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgGIAEoCCIrChNEZWxldGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSI4ChREZWxldGVMTE1LZXlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiFgoURGVsZXRlQWNjb3VudFJlcXVlc3QiOQoVRGVsZXRlQWNjb3VudFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSK2AQogVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFEhoKEmF1dG9fc3VtbWFyeV9kYWlseRgCIAEoCBIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgDIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAQgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAUgASgIIkUKIVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiNQodR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIp4BCh5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USGgoSYXV0b19zdW1tYXJ5X2RhaWx5GAEgASgIEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAIgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYAyABKAgSHwoXc2VtYW50aWNfc2VhcmNoX2VuYWJsZWQYBCABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSLVAgoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIQoZZGFpbHlfc3VtbWFyaWVzX3Byb2Nlc3NlZBgCIAEoBRIjChttb250aGx5X3N1bW1hcmllc19wcm9jZXNzZWQYAyABKAUSHgoWZGFpbHlfc3VtbWFyaWVzX2ZhaWxlZBgEIAEoBRIgChhtb250aGx5X3N1bW1hcmllc19mYWlsZWQYBSABKAUSHwoXbGF0ZXN0X3RyZW5kc19wcm9jZXNzZWQYBiABKAUSHAoUbGF0ZXN0X3RyZW5kc19mYWlsZWQYByABKAUSIgoaZGlhcnlfZW1iZWRkaW5nc19wcm9jZXNzZWQYCCABKAUSHwoXZGlhcnlfZW1iZWRkaW5nc19mYWlsZWQYCSABKAUSIwobc2VtYW50aWNfc2VhcmNoZXNfcHJvY2Vzc2VkGAogASgFIkUKDlByb2Nlc3NpbmdUYXNrEhEKCXRhc2tfdHlwZRgBIAEoCRIMCgRkYXRlGAIgASgJEhIKCnN0YXJ0ZWRfYXQYAyABKAMi+wIKDk1ldHJpY3NTdW1tYXJ5Eh0KFXRvdGFsX2RhaWx5X3N1bW1hcmllcxgBIAEoBRIfChd0b3RhbF9tb250aGx5X3N1bW1hcmllcxgCIAEoBRIfChdwZW5kaW5nX2RhaWx5X3N1bW1hcmllcxgDIAEoBRIhChlwZW5kaW5nX21vbnRobHlfc3VtbWFyaWVzGAQgASgFEiIKGmF1dG9fc3VtbWFyeV9kYWlseV9lbmFibGVkGAUgASgIEiQKHGF1dG9fc3VtbWFyeV9tb250aGx5X2VuYWJsZWQYBiABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgHIAEoCBIhChlsYXRlc3RfdHJlbmRfZ2VuZXJhdGVkX2F0GAggASgJEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAkgASgIEhgKEHRvdGFsX2VtYmVkZGluZ3MYCiABKAUSGgoScGVuZGluZ19lbWJlZGRpbmdzGAsgASgFMukFCgtVc2VyU2VydmljZRJLCg5VcGRhdGVVc2VyTmFtZRIbLnVzZXIuVXBkYXRlVXNlck5hbWVSZXF1ZXN0GhwudXNlci5VcGRhdGVVc2VyTmFtZVJlc3BvbnNlEksKDkNoYW5nZVBhc3N3b3JkEhsudXNlci5DaGFuZ2VQYXNzd29yZFJlcXVlc3QaHC51c2VyLkNoYW5nZVBhc3N3b3JkUmVzcG9uc2USRQoMVXBkYXRlTExNS2V5EhkudXNlci5VcGRhdGVMTE1LZXlSZXF1ZXN0GhoudXNlci5VcGRhdGVMTE1LZXlSZXNwb25zZRJCCgtHZXRVc2VySW5mbxIYLnVzZXIuR2V0VXNlckluZm9SZXF1ZXN0GhkudXNlci5HZXRVc2VySW5mb1Jlc3BvbnNlEkUKDERlbGV0ZUxMTUtleRIZLnVzZXIuRGVsZXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuRGVsZXRlTExNS2V5UmVzcG9uc2USSAoNRGVsZXRlQWNjb3VudBIaLnVzZXIuRGVsZXRlQWNjb3VudFJlcXVlc3QaGy51c2VyLkRlbGV0ZUFjY291bnRSZXNwb25zZRJsChlVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzEiYudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBonLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEmMKFkdldEF1dG9TdW1tYXJ5U2V0dGluZ3MSIy51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GiQudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USUQoQR2V0UHViU3ViTWV0cmljcxIdLnVzZXIuR2V0UHViU3ViTWV0cmljc1JlcXVlc3QaHi51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
-	);
+  /*@__PURE__*/
+  fileDesc(
+    "Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8irQEKCkxMTUtleUluZm8SFAoMbGxtX3Byb3ZpZGVyGAEgASgFEgsKA2tleRgCIAEoCRIaChJhdXRvX3N1bW1hcnlfZGFpbHkYAyABKAgSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYBCABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgFIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgGIAEoCCIrChNEZWxldGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSI4ChREZWxldGVMTE1LZXlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiFgoURGVsZXRlQWNjb3VudFJlcXVlc3QiOQoVRGVsZXRlQWNjb3VudFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSK2AQogVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFEhoKEmF1dG9fc3VtbWFyeV9kYWlseRgCIAEoCBIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgDIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAQgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAUgASgIIkUKIVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiNQodR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIp4BCh5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USGgoSYXV0b19zdW1tYXJ5X2RhaWx5GAEgASgIEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAIgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYAyABKAgSHwoXc2VtYW50aWNfc2VhcmNoX2VuYWJsZWQYBCABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSLVAgoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIQoZZGFpbHlfc3VtbWFyaWVzX3Byb2Nlc3NlZBgCIAEoBRIjChttb250aGx5X3N1bW1hcmllc19wcm9jZXNzZWQYAyABKAUSHgoWZGFpbHlfc3VtbWFyaWVzX2ZhaWxlZBgEIAEoBRIgChhtb250aGx5X3N1bW1hcmllc19mYWlsZWQYBSABKAUSHwoXbGF0ZXN0X3RyZW5kc19wcm9jZXNzZWQYBiABKAUSHAoUbGF0ZXN0X3RyZW5kc19mYWlsZWQYByABKAUSIgoaZGlhcnlfZW1iZWRkaW5nc19wcm9jZXNzZWQYCCABKAUSHwoXZGlhcnlfZW1iZWRkaW5nc19mYWlsZWQYCSABKAUSIwobc2VtYW50aWNfc2VhcmNoZXNfcHJvY2Vzc2VkGAogASgFIkUKDlByb2Nlc3NpbmdUYXNrEhEKCXRhc2tfdHlwZRgBIAEoCRIMCgRkYXRlGAIgASgJEhIKCnN0YXJ0ZWRfYXQYAyABKAMi+wIKDk1ldHJpY3NTdW1tYXJ5Eh0KFXRvdGFsX2RhaWx5X3N1bW1hcmllcxgBIAEoBRIfChd0b3RhbF9tb250aGx5X3N1bW1hcmllcxgCIAEoBRIfChdwZW5kaW5nX2RhaWx5X3N1bW1hcmllcxgDIAEoBRIhChlwZW5kaW5nX21vbnRobHlfc3VtbWFyaWVzGAQgASgFEiIKGmF1dG9fc3VtbWFyeV9kYWlseV9lbmFibGVkGAUgASgIEiQKHGF1dG9fc3VtbWFyeV9tb250aGx5X2VuYWJsZWQYBiABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgHIAEoCBIhChlsYXRlc3RfdHJlbmRfZ2VuZXJhdGVkX2F0GAggASgJEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAkgASgIEhgKEHRvdGFsX2VtYmVkZGluZ3MYCiABKAUSGgoScGVuZGluZ19lbWJlZGRpbmdzGAsgASgFMukFCgtVc2VyU2VydmljZRJLCg5VcGRhdGVVc2VyTmFtZRIbLnVzZXIuVXBkYXRlVXNlck5hbWVSZXF1ZXN0GhwudXNlci5VcGRhdGVVc2VyTmFtZVJlc3BvbnNlEksKDkNoYW5nZVBhc3N3b3JkEhsudXNlci5DaGFuZ2VQYXNzd29yZFJlcXVlc3QaHC51c2VyLkNoYW5nZVBhc3N3b3JkUmVzcG9uc2USRQoMVXBkYXRlTExNS2V5EhkudXNlci5VcGRhdGVMTE1LZXlSZXF1ZXN0GhoudXNlci5VcGRhdGVMTE1LZXlSZXNwb25zZRJCCgtHZXRVc2VySW5mbxIYLnVzZXIuR2V0VXNlckluZm9SZXF1ZXN0GhkudXNlci5HZXRVc2VySW5mb1Jlc3BvbnNlEkUKDERlbGV0ZUxMTUtleRIZLnVzZXIuRGVsZXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuRGVsZXRlTExNS2V5UmVzcG9uc2USSAoNRGVsZXRlQWNjb3VudBIaLnVzZXIuRGVsZXRlQWNjb3VudFJlcXVlc3QaGy51c2VyLkRlbGV0ZUFjY291bnRSZXNwb25zZRJsChlVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzEiYudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBonLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEmMKFkdldEF1dG9TdW1tYXJ5U2V0dGluZ3MSIy51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GiQudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USUQoQR2V0UHViU3ViTWV0cmljcxIdLnVzZXIuR2V0UHViU3ViTWV0cmljc1JlcXVlc3QaHi51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
+  );
 
 /**
  * ユーザー名更新用のリクエスト
@@ -29,10 +29,10 @@ export const file_user_user: GenFile =
  * @generated from message user.UpdateUserNameRequest
  */
 export type UpdateUserNameRequest = Message<"user.UpdateUserNameRequest"> & {
-	/**
-	 * @generated from field: string new_name = 1;
-	 */
-	newName: string;
+  /**
+   * @generated from field: string new_name = 1;
+   */
+  newName: string;
 };
 
 /**
@@ -40,8 +40,8 @@ export type UpdateUserNameRequest = Message<"user.UpdateUserNameRequest"> & {
  * Use `create(UpdateUserNameRequestSchema)` to create a new message.
  */
 export const UpdateUserNameRequestSchema: GenMessage<UpdateUserNameRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 0);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 0);
 
 /**
  * ユーザー名更新用のレスポンス
@@ -49,15 +49,15 @@ export const UpdateUserNameRequestSchema: GenMessage<UpdateUserNameRequest> =
  * @generated from message user.UpdateUserNameResponse
  */
 export type UpdateUserNameResponse = Message<"user.UpdateUserNameResponse"> & {
-	/**
-	 * @generated from field: bool success = 1;
-	 */
-	success: boolean;
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
 
-	/**
-	 * @generated from field: string message = 2;
-	 */
-	message: string;
+  /**
+   * @generated from field: string message = 2;
+   */
+  message: string;
 };
 
 /**
@@ -65,8 +65,8 @@ export type UpdateUserNameResponse = Message<"user.UpdateUserNameResponse"> & {
  * Use `create(UpdateUserNameResponseSchema)` to create a new message.
  */
 export const UpdateUserNameResponseSchema: GenMessage<UpdateUserNameResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 1);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 1);
 
 /**
  * パスワード変更用のリクエスト
@@ -74,15 +74,15 @@ export const UpdateUserNameResponseSchema: GenMessage<UpdateUserNameResponse> =
  * @generated from message user.ChangePasswordRequest
  */
 export type ChangePasswordRequest = Message<"user.ChangePasswordRequest"> & {
-	/**
-	 * @generated from field: string current_password = 1;
-	 */
-	currentPassword: string;
+  /**
+   * @generated from field: string current_password = 1;
+   */
+  currentPassword: string;
 
-	/**
-	 * @generated from field: string new_password = 2;
-	 */
-	newPassword: string;
+  /**
+   * @generated from field: string new_password = 2;
+   */
+  newPassword: string;
 };
 
 /**
@@ -90,8 +90,8 @@ export type ChangePasswordRequest = Message<"user.ChangePasswordRequest"> & {
  * Use `create(ChangePasswordRequestSchema)` to create a new message.
  */
 export const ChangePasswordRequestSchema: GenMessage<ChangePasswordRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 2);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 2);
 
 /**
  * パスワード変更用のレスポンス
@@ -99,15 +99,15 @@ export const ChangePasswordRequestSchema: GenMessage<ChangePasswordRequest> =
  * @generated from message user.ChangePasswordResponse
  */
 export type ChangePasswordResponse = Message<"user.ChangePasswordResponse"> & {
-	/**
-	 * @generated from field: bool success = 1;
-	 */
-	success: boolean;
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
 
-	/**
-	 * @generated from field: string message = 2;
-	 */
-	message: string;
+  /**
+   * @generated from field: string message = 2;
+   */
+  message: string;
 };
 
 /**
@@ -115,8 +115,8 @@ export type ChangePasswordResponse = Message<"user.ChangePasswordResponse"> & {
  * Use `create(ChangePasswordResponseSchema)` to create a new message.
  */
 export const ChangePasswordResponseSchema: GenMessage<ChangePasswordResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 3);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 3);
 
 /**
  * LLMキー更新用のリクエスト
@@ -124,17 +124,17 @@ export const ChangePasswordResponseSchema: GenMessage<ChangePasswordResponse> =
  * @generated from message user.UpdateLLMKeyRequest
  */
 export type UpdateLLMKeyRequest = Message<"user.UpdateLLMKeyRequest"> & {
-	/**
-	 * 1:Gemini
-	 *
-	 * @generated from field: int32 llm_provider = 1;
-	 */
-	llmProvider: number;
+  /**
+   * 1:Gemini
+   *
+   * @generated from field: int32 llm_provider = 1;
+   */
+  llmProvider: number;
 
-	/**
-	 * @generated from field: string key = 2;
-	 */
-	key: string;
+  /**
+   * @generated from field: string key = 2;
+   */
+  key: string;
 };
 
 /**
@@ -142,8 +142,8 @@ export type UpdateLLMKeyRequest = Message<"user.UpdateLLMKeyRequest"> & {
  * Use `create(UpdateLLMKeyRequestSchema)` to create a new message.
  */
 export const UpdateLLMKeyRequestSchema: GenMessage<UpdateLLMKeyRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 4);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 4);
 
 /**
  * LLMキー更新用のレスポンス
@@ -151,15 +151,15 @@ export const UpdateLLMKeyRequestSchema: GenMessage<UpdateLLMKeyRequest> =
  * @generated from message user.UpdateLLMKeyResponse
  */
 export type UpdateLLMKeyResponse = Message<"user.UpdateLLMKeyResponse"> & {
-	/**
-	 * @generated from field: bool success = 1;
-	 */
-	success: boolean;
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
 
-	/**
-	 * @generated from field: string message = 2;
-	 */
-	message: string;
+  /**
+   * @generated from field: string message = 2;
+   */
+  message: string;
 };
 
 /**
@@ -167,8 +167,8 @@ export type UpdateLLMKeyResponse = Message<"user.UpdateLLMKeyResponse"> & {
  * Use `create(UpdateLLMKeyResponseSchema)` to create a new message.
  */
 export const UpdateLLMKeyResponseSchema: GenMessage<UpdateLLMKeyResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 5);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 5);
 
 /**
  * ユーザー情報取得用のリクエスト
@@ -184,8 +184,8 @@ export type GetUserInfoRequest = Message<"user.GetUserInfoRequest"> & {};
  * Use `create(GetUserInfoRequestSchema)` to create a new message.
  */
 export const GetUserInfoRequestSchema: GenMessage<GetUserInfoRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 6);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 6);
 
 /**
  * ユーザー情報取得用のレスポンス
@@ -193,22 +193,22 @@ export const GetUserInfoRequestSchema: GenMessage<GetUserInfoRequest> =
  * @generated from message user.GetUserInfoResponse
  */
 export type GetUserInfoResponse = Message<"user.GetUserInfoResponse"> & {
-	/**
-	 * @generated from field: string name = 1;
-	 */
-	name: string;
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
 
-	/**
-	 * @generated from field: string email = 2;
-	 */
-	email: string;
+  /**
+   * @generated from field: string email = 2;
+   */
+  email: string;
 
-	/**
-	 * LLMキー情報（存在する場合）
-	 *
-	 * @generated from field: repeated user.LLMKeyInfo llm_keys = 3;
-	 */
-	llmKeys: LLMKeyInfo[];
+  /**
+   * LLMキー情報（存在する場合）
+   *
+   * @generated from field: repeated user.LLMKeyInfo llm_keys = 3;
+   */
+  llmKeys: LLMKeyInfo[];
 };
 
 /**
@@ -216,8 +216,8 @@ export type GetUserInfoResponse = Message<"user.GetUserInfoResponse"> & {
  * Use `create(GetUserInfoResponseSchema)` to create a new message.
  */
 export const GetUserInfoResponseSchema: GenMessage<GetUserInfoResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 7);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 7);
 
 /**
  * LLMキー情報
@@ -225,45 +225,45 @@ export const GetUserInfoResponseSchema: GenMessage<GetUserInfoResponse> =
  * @generated from message user.LLMKeyInfo
  */
 export type LLMKeyInfo = Message<"user.LLMKeyInfo"> & {
-	/**
-	 * 1:Gemini
-	 *
-	 * @generated from field: int32 llm_provider = 1;
-	 */
-	llmProvider: number;
+  /**
+   * 1:Gemini
+   *
+   * @generated from field: int32 llm_provider = 1;
+   */
+  llmProvider: number;
 
-	/**
-	 * @generated from field: string key = 2;
-	 */
-	key: string;
+  /**
+   * @generated from field: string key = 2;
+   */
+  key: string;
 
-	/**
-	 * 日毎の自動要約生成
-	 *
-	 * @generated from field: bool auto_summary_daily = 3;
-	 */
-	autoSummaryDaily: boolean;
+  /**
+   * 日毎の自動要約生成
+   *
+   * @generated from field: bool auto_summary_daily = 3;
+   */
+  autoSummaryDaily: boolean;
 
-	/**
-	 * 月毎の自動要約生成
-	 *
-	 * @generated from field: bool auto_summary_monthly = 4;
-	 */
-	autoSummaryMonthly: boolean;
+  /**
+   * 月毎の自動要約生成
+   *
+   * @generated from field: bool auto_summary_monthly = 4;
+   */
+  autoSummaryMonthly: boolean;
 
-	/**
-	 * 直近トレンド分析の自動生成
-	 *
-	 * @generated from field: bool auto_latest_trend_enabled = 5;
-	 */
-	autoLatestTrendEnabled: boolean;
+  /**
+   * 直近トレンド分析の自動生成
+   *
+   * @generated from field: bool auto_latest_trend_enabled = 5;
+   */
+  autoLatestTrendEnabled: boolean;
 
-	/**
-	 * 意味的検索（RAG）機能の有効化
-	 *
-	 * @generated from field: bool semantic_search_enabled = 6;
-	 */
-	semanticSearchEnabled: boolean;
+  /**
+   * 意味的検索（RAG）機能の有効化
+   *
+   * @generated from field: bool semantic_search_enabled = 6;
+   */
+  semanticSearchEnabled: boolean;
 };
 
 /**
@@ -271,8 +271,8 @@ export type LLMKeyInfo = Message<"user.LLMKeyInfo"> & {
  * Use `create(LLMKeyInfoSchema)` to create a new message.
  */
 export const LLMKeyInfoSchema: GenMessage<LLMKeyInfo> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 8);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 8);
 
 /**
  * LLMキー削除用のリクエスト
@@ -280,12 +280,12 @@ export const LLMKeyInfoSchema: GenMessage<LLMKeyInfo> =
  * @generated from message user.DeleteLLMKeyRequest
  */
 export type DeleteLLMKeyRequest = Message<"user.DeleteLLMKeyRequest"> & {
-	/**
-	 * 1:Gemini
-	 *
-	 * @generated from field: int32 llm_provider = 1;
-	 */
-	llmProvider: number;
+  /**
+   * 1:Gemini
+   *
+   * @generated from field: int32 llm_provider = 1;
+   */
+  llmProvider: number;
 };
 
 /**
@@ -293,8 +293,8 @@ export type DeleteLLMKeyRequest = Message<"user.DeleteLLMKeyRequest"> & {
  * Use `create(DeleteLLMKeyRequestSchema)` to create a new message.
  */
 export const DeleteLLMKeyRequestSchema: GenMessage<DeleteLLMKeyRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 9);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 9);
 
 /**
  * LLMキー削除用のレスポンス
@@ -302,15 +302,15 @@ export const DeleteLLMKeyRequestSchema: GenMessage<DeleteLLMKeyRequest> =
  * @generated from message user.DeleteLLMKeyResponse
  */
 export type DeleteLLMKeyResponse = Message<"user.DeleteLLMKeyResponse"> & {
-	/**
-	 * @generated from field: bool success = 1;
-	 */
-	success: boolean;
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
 
-	/**
-	 * @generated from field: string message = 2;
-	 */
-	message: string;
+  /**
+   * @generated from field: string message = 2;
+   */
+  message: string;
 };
 
 /**
@@ -318,8 +318,8 @@ export type DeleteLLMKeyResponse = Message<"user.DeleteLLMKeyResponse"> & {
  * Use `create(DeleteLLMKeyResponseSchema)` to create a new message.
  */
 export const DeleteLLMKeyResponseSchema: GenMessage<DeleteLLMKeyResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 10);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 10);
 
 /**
  * アカウント削除用のリクエスト
@@ -335,8 +335,8 @@ export type DeleteAccountRequest = Message<"user.DeleteAccountRequest"> & {};
  * Use `create(DeleteAccountRequestSchema)` to create a new message.
  */
 export const DeleteAccountRequestSchema: GenMessage<DeleteAccountRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 11);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 11);
 
 /**
  * アカウント削除用のレスポンス
@@ -344,15 +344,15 @@ export const DeleteAccountRequestSchema: GenMessage<DeleteAccountRequest> =
  * @generated from message user.DeleteAccountResponse
  */
 export type DeleteAccountResponse = Message<"user.DeleteAccountResponse"> & {
-	/**
-	 * @generated from field: bool success = 1;
-	 */
-	success: boolean;
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
 
-	/**
-	 * @generated from field: string message = 2;
-	 */
-	message: string;
+  /**
+   * @generated from field: string message = 2;
+   */
+  message: string;
 };
 
 /**
@@ -360,8 +360,8 @@ export type DeleteAccountResponse = Message<"user.DeleteAccountResponse"> & {
  * Use `create(DeleteAccountResponseSchema)` to create a new message.
  */
 export const DeleteAccountResponseSchema: GenMessage<DeleteAccountResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 12);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 12);
 
 /**
  * 自動要約設定更新用のリクエスト
@@ -369,50 +369,50 @@ export const DeleteAccountResponseSchema: GenMessage<DeleteAccountResponse> =
  * @generated from message user.UpdateAutoSummarySettingsRequest
  */
 export type UpdateAutoSummarySettingsRequest =
-	Message<"user.UpdateAutoSummarySettingsRequest"> & {
-		/**
-		 * 1:Gemini
-		 *
-		 * @generated from field: int32 llm_provider = 1;
-		 */
-		llmProvider: number;
+  Message<"user.UpdateAutoSummarySettingsRequest"> & {
+    /**
+     * 1:Gemini
+     *
+     * @generated from field: int32 llm_provider = 1;
+     */
+    llmProvider: number;
 
-		/**
-		 * 日毎の自動要約生成
-		 *
-		 * @generated from field: bool auto_summary_daily = 2;
-		 */
-		autoSummaryDaily: boolean;
+    /**
+     * 日毎の自動要約生成
+     *
+     * @generated from field: bool auto_summary_daily = 2;
+     */
+    autoSummaryDaily: boolean;
 
-		/**
-		 * 月毎の自動要約生成
-		 *
-		 * @generated from field: bool auto_summary_monthly = 3;
-		 */
-		autoSummaryMonthly: boolean;
+    /**
+     * 月毎の自動要約生成
+     *
+     * @generated from field: bool auto_summary_monthly = 3;
+     */
+    autoSummaryMonthly: boolean;
 
-		/**
-		 * 直近トレンド分析の自動生成
-		 *
-		 * @generated from field: bool auto_latest_trend_enabled = 4;
-		 */
-		autoLatestTrendEnabled: boolean;
+    /**
+     * 直近トレンド分析の自動生成
+     *
+     * @generated from field: bool auto_latest_trend_enabled = 4;
+     */
+    autoLatestTrendEnabled: boolean;
 
-		/**
-		 * 意味的検索（RAG）機能の有効化
-		 *
-		 * @generated from field: bool semantic_search_enabled = 5;
-		 */
-		semanticSearchEnabled: boolean;
-	};
+    /**
+     * 意味的検索（RAG）機能の有効化
+     *
+     * @generated from field: bool semantic_search_enabled = 5;
+     */
+    semanticSearchEnabled: boolean;
+  };
 
 /**
  * Describes the message user.UpdateAutoSummarySettingsRequest.
  * Use `create(UpdateAutoSummarySettingsRequestSchema)` to create a new message.
  */
 export const UpdateAutoSummarySettingsRequestSchema: GenMessage<UpdateAutoSummarySettingsRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 13);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 13);
 
 /**
  * 自動要約設定更新用のレスポンス
@@ -420,25 +420,25 @@ export const UpdateAutoSummarySettingsRequestSchema: GenMessage<UpdateAutoSummar
  * @generated from message user.UpdateAutoSummarySettingsResponse
  */
 export type UpdateAutoSummarySettingsResponse =
-	Message<"user.UpdateAutoSummarySettingsResponse"> & {
-		/**
-		 * @generated from field: bool success = 1;
-		 */
-		success: boolean;
+  Message<"user.UpdateAutoSummarySettingsResponse"> & {
+    /**
+     * @generated from field: bool success = 1;
+     */
+    success: boolean;
 
-		/**
-		 * @generated from field: string message = 2;
-		 */
-		message: string;
-	};
+    /**
+     * @generated from field: string message = 2;
+     */
+    message: string;
+  };
 
 /**
  * Describes the message user.UpdateAutoSummarySettingsResponse.
  * Use `create(UpdateAutoSummarySettingsResponseSchema)` to create a new message.
  */
 export const UpdateAutoSummarySettingsResponseSchema: GenMessage<UpdateAutoSummarySettingsResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 14);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 14);
 
 /**
  * 自動要約設定取得用のリクエスト
@@ -446,22 +446,22 @@ export const UpdateAutoSummarySettingsResponseSchema: GenMessage<UpdateAutoSumma
  * @generated from message user.GetAutoSummarySettingsRequest
  */
 export type GetAutoSummarySettingsRequest =
-	Message<"user.GetAutoSummarySettingsRequest"> & {
-		/**
-		 * 1:Gemini
-		 *
-		 * @generated from field: int32 llm_provider = 1;
-		 */
-		llmProvider: number;
-	};
+  Message<"user.GetAutoSummarySettingsRequest"> & {
+    /**
+     * 1:Gemini
+     *
+     * @generated from field: int32 llm_provider = 1;
+     */
+    llmProvider: number;
+  };
 
 /**
  * Describes the message user.GetAutoSummarySettingsRequest.
  * Use `create(GetAutoSummarySettingsRequestSchema)` to create a new message.
  */
 export const GetAutoSummarySettingsRequestSchema: GenMessage<GetAutoSummarySettingsRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 15);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 15);
 
 /**
  * 自動要約設定取得用のレスポンス
@@ -469,43 +469,43 @@ export const GetAutoSummarySettingsRequestSchema: GenMessage<GetAutoSummarySetti
  * @generated from message user.GetAutoSummarySettingsResponse
  */
 export type GetAutoSummarySettingsResponse =
-	Message<"user.GetAutoSummarySettingsResponse"> & {
-		/**
-		 * 日毎の自動要約生成
-		 *
-		 * @generated from field: bool auto_summary_daily = 1;
-		 */
-		autoSummaryDaily: boolean;
+  Message<"user.GetAutoSummarySettingsResponse"> & {
+    /**
+     * 日毎の自動要約生成
+     *
+     * @generated from field: bool auto_summary_daily = 1;
+     */
+    autoSummaryDaily: boolean;
 
-		/**
-		 * 月毎の自動要約生成
-		 *
-		 * @generated from field: bool auto_summary_monthly = 2;
-		 */
-		autoSummaryMonthly: boolean;
+    /**
+     * 月毎の自動要約生成
+     *
+     * @generated from field: bool auto_summary_monthly = 2;
+     */
+    autoSummaryMonthly: boolean;
 
-		/**
-		 * 直近トレンド分析の自動生成
-		 *
-		 * @generated from field: bool auto_latest_trend_enabled = 3;
-		 */
-		autoLatestTrendEnabled: boolean;
+    /**
+     * 直近トレンド分析の自動生成
+     *
+     * @generated from field: bool auto_latest_trend_enabled = 3;
+     */
+    autoLatestTrendEnabled: boolean;
 
-		/**
-		 * 意味的検索（RAG）機能の有効化
-		 *
-		 * @generated from field: bool semantic_search_enabled = 4;
-		 */
-		semanticSearchEnabled: boolean;
-	};
+    /**
+     * 意味的検索（RAG）機能の有効化
+     *
+     * @generated from field: bool semantic_search_enabled = 4;
+     */
+    semanticSearchEnabled: boolean;
+  };
 
 /**
  * Describes the message user.GetAutoSummarySettingsResponse.
  * Use `create(GetAutoSummarySettingsResponseSchema)` to create a new message.
  */
 export const GetAutoSummarySettingsResponseSchema: GenMessage<GetAutoSummarySettingsResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 16);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 16);
 
 /**
  * Pub/Subメトリクス取得用のリクエスト
@@ -515,15 +515,15 @@ export const GetAutoSummarySettingsResponseSchema: GenMessage<GetAutoSummarySett
  * @generated from message user.GetPubSubMetricsRequest
  */
 export type GetPubSubMetricsRequest =
-	Message<"user.GetPubSubMetricsRequest"> & {};
+  Message<"user.GetPubSubMetricsRequest"> & {};
 
 /**
  * Describes the message user.GetPubSubMetricsRequest.
  * Use `create(GetPubSubMetricsRequestSchema)` to create a new message.
  */
 export const GetPubSubMetricsRequestSchema: GenMessage<GetPubSubMetricsRequest> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 17);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 17);
 
 /**
  * Pub/Subメトリクス取得用のレスポンス
@@ -531,36 +531,36 @@ export const GetPubSubMetricsRequestSchema: GenMessage<GetPubSubMetricsRequest> 
  * @generated from message user.GetPubSubMetricsResponse
  */
 export type GetPubSubMetricsResponse =
-	Message<"user.GetPubSubMetricsResponse"> & {
-		/**
-		 * 過去24時間の処理状況
-		 *
-		 * @generated from field: repeated user.HourlyMetrics hourly_metrics = 1;
-		 */
-		hourlyMetrics: HourlyMetrics[];
+  Message<"user.GetPubSubMetricsResponse"> & {
+    /**
+     * 過去24時間の処理状況
+     *
+     * @generated from field: repeated user.HourlyMetrics hourly_metrics = 1;
+     */
+    hourlyMetrics: HourlyMetrics[];
 
-		/**
-		 * 処理中のタスク
-		 *
-		 * @generated from field: repeated user.ProcessingTask processing_tasks = 2;
-		 */
-		processingTasks: ProcessingTask[];
+    /**
+     * 処理中のタスク
+     *
+     * @generated from field: repeated user.ProcessingTask processing_tasks = 2;
+     */
+    processingTasks: ProcessingTask[];
 
-		/**
-		 * 統計情報
-		 *
-		 * @generated from field: user.MetricsSummary summary = 3;
-		 */
-		summary?: MetricsSummary;
-	};
+    /**
+     * 統計情報
+     *
+     * @generated from field: user.MetricsSummary summary = 3;
+     */
+    summary?: MetricsSummary;
+  };
 
 /**
  * Describes the message user.GetPubSubMetricsResponse.
  * Use `create(GetPubSubMetricsResponseSchema)` to create a new message.
  */
 export const GetPubSubMetricsResponseSchema: GenMessage<GetPubSubMetricsResponse> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 18);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 18);
 
 /**
  * 1時間ごとのメトリクス
@@ -568,75 +568,75 @@ export const GetPubSubMetricsResponseSchema: GenMessage<GetPubSubMetricsResponse
  * @generated from message user.HourlyMetrics
  */
 export type HourlyMetrics = Message<"user.HourlyMetrics"> & {
-	/**
-	 * 該当時間のUnixタイムスタンプ
-	 *
-	 * @generated from field: int64 timestamp = 1;
-	 */
-	timestamp: bigint;
+  /**
+   * 該当時間のUnixタイムスタンプ
+   *
+   * @generated from field: int64 timestamp = 1;
+   */
+  timestamp: bigint;
 
-	/**
-	 * 処理された日次要約数
-	 *
-	 * @generated from field: int32 daily_summaries_processed = 2;
-	 */
-	dailySummariesProcessed: number;
+  /**
+   * 処理された日次要約数
+   *
+   * @generated from field: int32 daily_summaries_processed = 2;
+   */
+  dailySummariesProcessed: number;
 
-	/**
-	 * 処理された月次要約数
-	 *
-	 * @generated from field: int32 monthly_summaries_processed = 3;
-	 */
-	monthlySummariesProcessed: number;
+  /**
+   * 処理された月次要約数
+   *
+   * @generated from field: int32 monthly_summaries_processed = 3;
+   */
+  monthlySummariesProcessed: number;
 
-	/**
-	 * 失敗した日次要約数
-	 *
-	 * @generated from field: int32 daily_summaries_failed = 4;
-	 */
-	dailySummariesFailed: number;
+  /**
+   * 失敗した日次要約数
+   *
+   * @generated from field: int32 daily_summaries_failed = 4;
+   */
+  dailySummariesFailed: number;
 
-	/**
-	 * 失敗した月次要約数
-	 *
-	 * @generated from field: int32 monthly_summaries_failed = 5;
-	 */
-	monthlySummariesFailed: number;
+  /**
+   * 失敗した月次要約数
+   *
+   * @generated from field: int32 monthly_summaries_failed = 5;
+   */
+  monthlySummariesFailed: number;
 
-	/**
-	 * 処理されたトレンド分析数
-	 *
-	 * @generated from field: int32 latest_trends_processed = 6;
-	 */
-	latestTrendsProcessed: number;
+  /**
+   * 処理されたトレンド分析数
+   *
+   * @generated from field: int32 latest_trends_processed = 6;
+   */
+  latestTrendsProcessed: number;
 
-	/**
-	 * 失敗したトレンド分析数
-	 *
-	 * @generated from field: int32 latest_trends_failed = 7;
-	 */
-	latestTrendsFailed: number;
+  /**
+   * 失敗したトレンド分析数
+   *
+   * @generated from field: int32 latest_trends_failed = 7;
+   */
+  latestTrendsFailed: number;
 
-	/**
-	 * 処理されたembedding数
-	 *
-	 * @generated from field: int32 diary_embeddings_processed = 8;
-	 */
-	diaryEmbeddingsProcessed: number;
+  /**
+   * 処理されたembedding数
+   *
+   * @generated from field: int32 diary_embeddings_processed = 8;
+   */
+  diaryEmbeddingsProcessed: number;
 
-	/**
-	 * 失敗したembedding数
-	 *
-	 * @generated from field: int32 diary_embeddings_failed = 9;
-	 */
-	diaryEmbeddingsFailed: number;
+  /**
+   * 失敗したembedding数
+   *
+   * @generated from field: int32 diary_embeddings_failed = 9;
+   */
+  diaryEmbeddingsFailed: number;
 
-	/**
-	 * 意味的検索のAIリクエスト数
-	 *
-	 * @generated from field: int32 semantic_searches_processed = 10;
-	 */
-	semanticSearchesProcessed: number;
+  /**
+   * 意味的検索のAIリクエスト数
+   *
+   * @generated from field: int32 semantic_searches_processed = 10;
+   */
+  semanticSearchesProcessed: number;
 };
 
 /**
@@ -644,8 +644,8 @@ export type HourlyMetrics = Message<"user.HourlyMetrics"> & {
  * Use `create(HourlyMetricsSchema)` to create a new message.
  */
 export const HourlyMetricsSchema: GenMessage<HourlyMetrics> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 19);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 19);
 
 /**
  * 処理中のタスク
@@ -653,26 +653,26 @@ export const HourlyMetricsSchema: GenMessage<HourlyMetrics> =
  * @generated from message user.ProcessingTask
  */
 export type ProcessingTask = Message<"user.ProcessingTask"> & {
-	/**
-	 * タスク種別: "daily_summary" (日次要約), "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
-	 *
-	 * @generated from field: string task_type = 1;
-	 */
-	taskType: string;
+  /**
+   * タスク種別: "daily_summary" (日次要約), "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
+   *
+   * @generated from field: string task_type = 1;
+   */
+  taskType: string;
 
-	/**
-	 * 日付: 日次はYYYY-MM-DD形式, 月次はYYYY-MM形式, トレンドは期間説明
-	 *
-	 * @generated from field: string date = 2;
-	 */
-	date: string;
+  /**
+   * 日付: 日次はYYYY-MM-DD形式, 月次はYYYY-MM形式, トレンドは期間説明
+   *
+   * @generated from field: string date = 2;
+   */
+  date: string;
 
-	/**
-	 * タスク開始時刻 (Unixタイムスタンプ)
-	 *
-	 * @generated from field: int64 started_at = 3;
-	 */
-	startedAt: bigint;
+  /**
+   * タスク開始時刻 (Unixタイムスタンプ)
+   *
+   * @generated from field: int64 started_at = 3;
+   */
+  startedAt: bigint;
 };
 
 /**
@@ -680,8 +680,8 @@ export type ProcessingTask = Message<"user.ProcessingTask"> & {
  * Use `create(ProcessingTaskSchema)` to create a new message.
  */
 export const ProcessingTaskSchema: GenMessage<ProcessingTask> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 20);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 20);
 
 /**
  * メトリクス統計情報
@@ -689,82 +689,82 @@ export const ProcessingTaskSchema: GenMessage<ProcessingTask> =
  * @generated from message user.MetricsSummary
  */
 export type MetricsSummary = Message<"user.MetricsSummary"> & {
-	/**
-	 * 総日次要約数
-	 *
-	 * @generated from field: int32 total_daily_summaries = 1;
-	 */
-	totalDailySummaries: number;
+  /**
+   * 総日次要約数
+   *
+   * @generated from field: int32 total_daily_summaries = 1;
+   */
+  totalDailySummaries: number;
 
-	/**
-	 * 総月次要約数
-	 *
-	 * @generated from field: int32 total_monthly_summaries = 2;
-	 */
-	totalMonthlySummaries: number;
+  /**
+   * 総月次要約数
+   *
+   * @generated from field: int32 total_monthly_summaries = 2;
+   */
+  totalMonthlySummaries: number;
 
-	/**
-	 * 未作成の日次要約数
-	 *
-	 * @generated from field: int32 pending_daily_summaries = 3;
-	 */
-	pendingDailySummaries: number;
+  /**
+   * 未作成の日次要約数
+   *
+   * @generated from field: int32 pending_daily_summaries = 3;
+   */
+  pendingDailySummaries: number;
 
-	/**
-	 * 未作成の月次要約数
-	 *
-	 * @generated from field: int32 pending_monthly_summaries = 4;
-	 */
-	pendingMonthlySummaries: number;
+  /**
+   * 未作成の月次要約数
+   *
+   * @generated from field: int32 pending_monthly_summaries = 4;
+   */
+  pendingMonthlySummaries: number;
 
-	/**
-	 * 日次要約の自動生成が有効か
-	 *
-	 * @generated from field: bool auto_summary_daily_enabled = 5;
-	 */
-	autoSummaryDailyEnabled: boolean;
+  /**
+   * 日次要約の自動生成が有効か
+   *
+   * @generated from field: bool auto_summary_daily_enabled = 5;
+   */
+  autoSummaryDailyEnabled: boolean;
 
-	/**
-	 * 月次要約の自動生成が有効か
-	 *
-	 * @generated from field: bool auto_summary_monthly_enabled = 6;
-	 */
-	autoSummaryMonthlyEnabled: boolean;
+  /**
+   * 月次要約の自動生成が有効か
+   *
+   * @generated from field: bool auto_summary_monthly_enabled = 6;
+   */
+  autoSummaryMonthlyEnabled: boolean;
 
-	/**
-	 * トレンド分析の自動生成が有効か
-	 *
-	 * @generated from field: bool auto_latest_trend_enabled = 7;
-	 */
-	autoLatestTrendEnabled: boolean;
+  /**
+   * トレンド分析の自動生成が有効か
+   *
+   * @generated from field: bool auto_latest_trend_enabled = 7;
+   */
+  autoLatestTrendEnabled: boolean;
 
-	/**
-	 * 最後にトレンド分析が生成された日時 (ISO 8601形式)
-	 *
-	 * @generated from field: string latest_trend_generated_at = 8;
-	 */
-	latestTrendGeneratedAt: string;
+  /**
+   * 最後にトレンド分析が生成された日時 (ISO 8601形式)
+   *
+   * @generated from field: string latest_trend_generated_at = 8;
+   */
+  latestTrendGeneratedAt: string;
 
-	/**
-	 * 意味的検索（RAG）が有効か
-	 *
-	 * @generated from field: bool semantic_search_enabled = 9;
-	 */
-	semanticSearchEnabled: boolean;
+  /**
+   * 意味的検索（RAG）が有効か
+   *
+   * @generated from field: bool semantic_search_enabled = 9;
+   */
+  semanticSearchEnabled: boolean;
 
-	/**
-	 * 生成済みのembedding数
-	 *
-	 * @generated from field: int32 total_embeddings = 10;
-	 */
-	totalEmbeddings: number;
+  /**
+   * 生成済みのembedding数
+   *
+   * @generated from field: int32 total_embeddings = 10;
+   */
+  totalEmbeddings: number;
 
-	/**
-	 * 未生成のembedding数（日記数 - embedding数）
-	 *
-	 * @generated from field: int32 pending_embeddings = 11;
-	 */
-	pendingEmbeddings: number;
+  /**
+   * 未生成のembedding数（日記数 - embedding数）
+   *
+   * @generated from field: int32 pending_embeddings = 11;
+   */
+  pendingEmbeddings: number;
 };
 
 /**
@@ -772,8 +772,8 @@ export type MetricsSummary = Message<"user.MetricsSummary"> & {
  * Use `create(MetricsSummarySchema)` to create a new message.
  */
 export const MetricsSummarySchema: GenMessage<MetricsSummary> =
-	/*@__PURE__*/
-	messageDesc(file_user_user, 21);
+  /*@__PURE__*/
+  messageDesc(file_user_user, 21);
 
 /**
  * UserService はユーザー設定とアカウント管理を提供するサービスです。
@@ -782,162 +782,162 @@ export const MetricsSummarySchema: GenMessage<MetricsSummary> =
  * @generated from service user.UserService
  */
 export const UserService: GenService<{
-	/**
-	 * UpdateUserName はユーザー名を変更します。
-	 *
-	 * 例:
-	 *   request: { new_name: "新しい名前" }
-	 *   response: { success: true, message: "ユーザー名を更新しました" }
-	 *
-	 * エラー:
-	 *   - InvalidArgument: 名前が空
-	 *   - Internal: データベースエラー
-	 *
-	 * @generated from rpc user.UserService.UpdateUserName
-	 */
-	updateUserName: {
-		methodKind: "unary";
-		input: typeof UpdateUserNameRequestSchema;
-		output: typeof UpdateUserNameResponseSchema;
-	};
-	/**
-	 * ChangePassword は現在のパスワードを検証して新しいパスワードに変更します。
-	 *
-	 * 例:
-	 *   request: { current_password: "old123", new_password: "new456" }
-	 *   response: { success: true, message: "パスワードを変更しました" }
-	 *
-	 * エラー:
-	 *   - Unauthenticated: 現在のパスワードが不正
-	 *   - InvalidArgument: 新しいパスワードが短すぎる
-	 *
-	 * @generated from rpc user.UserService.ChangePassword
-	 */
-	changePassword: {
-		methodKind: "unary";
-		input: typeof ChangePasswordRequestSchema;
-		output: typeof ChangePasswordResponseSchema;
-	};
-	/**
-	 * UpdateLLMKey はLLM APIキーを更新または新規作成します。
-	 * 現在はGemini (llm_provider=1) のみ対応しています。
-	 *
-	 * 例:
-	 *   request: { llm_provider: 1, key: "AIza..." }
-	 *   response: { success: true, message: "LLMキーを更新しました" }
-	 *
-	 * エラー:
-	 *   - InvalidArgument: プロバイダーまたはキーが不正
-	 *
-	 * @generated from rpc user.UserService.UpdateLLMKey
-	 */
-	updateLLMKey: {
-		methodKind: "unary";
-		input: typeof UpdateLLMKeyRequestSchema;
-		output: typeof UpdateLLMKeyResponseSchema;
-	};
-	/**
-	 * GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
-	 *
-	 * 例:
-	 *   request: {}
-	 *   response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
-	 *
-	 * エラー:
-	 *   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
-	 *
-	 * @generated from rpc user.UserService.GetUserInfo
-	 */
-	getUserInfo: {
-		methodKind: "unary";
-		input: typeof GetUserInfoRequestSchema;
-		output: typeof GetUserInfoResponseSchema;
-	};
-	/**
-	 * DeleteLLMKey は指定されたLLM APIキーを削除します。
-	 *
-	 * 例:
-	 *   request: { llm_provider: 1 }
-	 *   response: { success: true, message: "LLMキーを削除しました" }
-	 *
-	 * エラー:
-	 *   - NotFound: 指定されたプロバイダーのキーが存在しない
-	 *
-	 * @generated from rpc user.UserService.DeleteLLMKey
-	 */
-	deleteLLMKey: {
-		methodKind: "unary";
-		input: typeof DeleteLLMKeyRequestSchema;
-		output: typeof DeleteLLMKeyResponseSchema;
-	};
-	/**
-	 * DeleteAccount はユーザーアカウントと関連データを完全に削除します。
-	 * 日記、エンティティ、要約など全てのデータがカスケード削除されます。
-	 *
-	 * 例:
-	 *   request: {}
-	 *   response: { success: true, message: "アカウントを削除しました" }
-	 *
-	 * エラー:
-	 *   - Internal: 削除処理エラー
-	 *
-	 * @generated from rpc user.UserService.DeleteAccount
-	 */
-	deleteAccount: {
-		methodKind: "unary";
-		input: typeof DeleteAccountRequestSchema;
-		output: typeof DeleteAccountResponseSchema;
-	};
-	/**
-	 * UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	 * 日次要約と月次要約をそれぞれ有効/無効にできます。
-	 *
-	 * 例:
-	 *   request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
-	 *   response: { success: true, message: "自動要約設定を更新しました" }
-	 *
-	 * エラー:
-	 *   - NotFound: LLMキーが設定されていない
-	 *
-	 * @generated from rpc user.UserService.UpdateAutoSummarySettings
-	 */
-	updateAutoSummarySettings: {
-		methodKind: "unary";
-		input: typeof UpdateAutoSummarySettingsRequestSchema;
-		output: typeof UpdateAutoSummarySettingsResponseSchema;
-	};
-	/**
-	 * GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
-	 *
-	 * 例:
-	 *   request: { llm_provider: 1 }
-	 *   response: { auto_summary_daily: true, auto_summary_monthly: false }
-	 *
-	 * エラー:
-	 *   - NotFound: LLMキーが設定されていない
-	 *
-	 * @generated from rpc user.UserService.GetAutoSummarySettings
-	 */
-	getAutoSummarySettings: {
-		methodKind: "unary";
-		input: typeof GetAutoSummarySettingsRequestSchema;
-		output: typeof GetAutoSummarySettingsResponseSchema;
-	};
-	/**
-	 * GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
-	 * 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
-	 *
-	 * 例:
-	 *   request: {}
-	 *   response: { hourly_metrics: [...], processing_tasks: [...], summary: { total_daily_summaries: 10, ... } }
-	 *
-	 * エラー: なし（データがない場合は空配列）
-	 *
-	 * @generated from rpc user.UserService.GetPubSubMetrics
-	 */
-	getPubSubMetrics: {
-		methodKind: "unary";
-		input: typeof GetPubSubMetricsRequestSchema;
-		output: typeof GetPubSubMetricsResponseSchema;
-	};
+  /**
+   * UpdateUserName はユーザー名を変更します。
+   *
+   * 例:
+   *   request: { new_name: "新しい名前" }
+   *   response: { success: true, message: "ユーザー名を更新しました" }
+   *
+   * エラー:
+   *   - InvalidArgument: 名前が空
+   *   - Internal: データベースエラー
+   *
+   * @generated from rpc user.UserService.UpdateUserName
+   */
+  updateUserName: {
+    methodKind: "unary";
+    input: typeof UpdateUserNameRequestSchema;
+    output: typeof UpdateUserNameResponseSchema;
+  };
+  /**
+   * ChangePassword は現在のパスワードを検証して新しいパスワードに変更します。
+   *
+   * 例:
+   *   request: { current_password: "old123", new_password: "new456" }
+   *   response: { success: true, message: "パスワードを変更しました" }
+   *
+   * エラー:
+   *   - Unauthenticated: 現在のパスワードが不正
+   *   - InvalidArgument: 新しいパスワードが短すぎる
+   *
+   * @generated from rpc user.UserService.ChangePassword
+   */
+  changePassword: {
+    methodKind: "unary";
+    input: typeof ChangePasswordRequestSchema;
+    output: typeof ChangePasswordResponseSchema;
+  };
+  /**
+   * UpdateLLMKey はLLM APIキーを更新または新規作成します。
+   * 現在はGemini (llm_provider=1) のみ対応しています。
+   *
+   * 例:
+   *   request: { llm_provider: 1, key: "AIza..." }
+   *   response: { success: true, message: "LLMキーを更新しました" }
+   *
+   * エラー:
+   *   - InvalidArgument: プロバイダーまたはキーが不正
+   *
+   * @generated from rpc user.UserService.UpdateLLMKey
+   */
+  updateLLMKey: {
+    methodKind: "unary";
+    input: typeof UpdateLLMKeyRequestSchema;
+    output: typeof UpdateLLMKeyResponseSchema;
+  };
+  /**
+   * GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
+   *
+   * 例:
+   *   request: {}
+   *   response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
+   *
+   * エラー:
+   *   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
+   *
+   * @generated from rpc user.UserService.GetUserInfo
+   */
+  getUserInfo: {
+    methodKind: "unary";
+    input: typeof GetUserInfoRequestSchema;
+    output: typeof GetUserInfoResponseSchema;
+  };
+  /**
+   * DeleteLLMKey は指定されたLLM APIキーを削除します。
+   *
+   * 例:
+   *   request: { llm_provider: 1 }
+   *   response: { success: true, message: "LLMキーを削除しました" }
+   *
+   * エラー:
+   *   - NotFound: 指定されたプロバイダーのキーが存在しない
+   *
+   * @generated from rpc user.UserService.DeleteLLMKey
+   */
+  deleteLLMKey: {
+    methodKind: "unary";
+    input: typeof DeleteLLMKeyRequestSchema;
+    output: typeof DeleteLLMKeyResponseSchema;
+  };
+  /**
+   * DeleteAccount はユーザーアカウントと関連データを完全に削除します。
+   * 日記、エンティティ、要約など全てのデータがカスケード削除されます。
+   *
+   * 例:
+   *   request: {}
+   *   response: { success: true, message: "アカウントを削除しました" }
+   *
+   * エラー:
+   *   - Internal: 削除処理エラー
+   *
+   * @generated from rpc user.UserService.DeleteAccount
+   */
+  deleteAccount: {
+    methodKind: "unary";
+    input: typeof DeleteAccountRequestSchema;
+    output: typeof DeleteAccountResponseSchema;
+  };
+  /**
+   * UpdateAutoSummarySettings は自動要約生成の設定を更新します。
+   * 日次要約と月次要約をそれぞれ有効/無効にできます。
+   *
+   * 例:
+   *   request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
+   *   response: { success: true, message: "自動要約設定を更新しました" }
+   *
+   * エラー:
+   *   - NotFound: LLMキーが設定されていない
+   *
+   * @generated from rpc user.UserService.UpdateAutoSummarySettings
+   */
+  updateAutoSummarySettings: {
+    methodKind: "unary";
+    input: typeof UpdateAutoSummarySettingsRequestSchema;
+    output: typeof UpdateAutoSummarySettingsResponseSchema;
+  };
+  /**
+   * GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
+   *
+   * 例:
+   *   request: { llm_provider: 1 }
+   *   response: { auto_summary_daily: true, auto_summary_monthly: false }
+   *
+   * エラー:
+   *   - NotFound: LLMキーが設定されていない
+   *
+   * @generated from rpc user.UserService.GetAutoSummarySettings
+   */
+  getAutoSummarySettings: {
+    methodKind: "unary";
+    input: typeof GetAutoSummarySettingsRequestSchema;
+    output: typeof GetAutoSummarySettingsResponseSchema;
+  };
+  /**
+   * GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
+   * 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
+   *
+   * 例:
+   *   request: {}
+   *   response: { hourly_metrics: [...], processing_tasks: [...], summary: { total_daily_summaries: 10, ... } }
+   *
+   * エラー: なし（データがない場合は空配列）
+   *
+   * @generated from rpc user.UserService.GetPubSubMetrics
+   */
+  getPubSubMetrics: {
+    methodKind: "unary";
+    input: typeof GetPubSubMetricsRequestSchema;
+    output: typeof GetPubSubMetricsResponseSchema;
+  };
 }> = /*@__PURE__*/ serviceDesc(file_user_user, 0);

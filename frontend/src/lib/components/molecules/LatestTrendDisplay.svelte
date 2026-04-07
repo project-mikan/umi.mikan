@@ -1,225 +1,225 @@
 <script lang="ts">
-	import { _, locale } from "svelte-i18n";
-	import { browser } from "$app/environment";
-	import { onMount } from "svelte";
-	import { authenticatedFetch } from "$lib/auth-client";
-	import { summaryVisibility } from "$lib/summary-visibility-store";
-	import "$lib/i18n";
+  import { _, locale } from "svelte-i18n";
+  import { browser } from "$app/environment";
+  import { onMount } from "svelte";
+  import { authenticatedFetch } from "$lib/auth-client";
+  import { summaryVisibility } from "$lib/summary-visibility-store";
+  import "$lib/i18n";
 
-	interface LatestTrendData {
-		health: string; // "bad", "slight", "normal", "good"
-		healthReason: string; // 比較|具体的理由（20文字以内）
-		mood: string; // "bad", "slight", "normal", "good"
-		moodReason: string; // 比較|具体的理由（20文字以内）
-		activities: string;
-		periodStart: string;
-		periodEnd: string;
-		generatedAt: string;
-		modelVersion?: string;
-	}
+  interface LatestTrendData {
+    health: string; // "bad", "slight", "normal", "good"
+    healthReason: string; // 比較|具体的理由（20文字以内）
+    mood: string; // "bad", "slight", "normal", "good"
+    moodReason: string; // 比較|具体的理由（20文字以内）
+    activities: string;
+    periodStart: string;
+    periodEnd: string;
+    generatedAt: string;
+    modelVersion?: string;
+  }
 
-	export let userName: string | null = null;
+  export let userName: string | null = null;
 
-	let trendData: LatestTrendData | null = null;
-	let isLoading = true;
-	let errorMessage = "";
+  let trendData: LatestTrendData | null = null;
+  let isLoading = true;
+  let errorMessage = "";
 
-	// ストアから表示状態を取得
-	$: showTrend = $summaryVisibility.latestTrend;
+  // ストアから表示状態を取得
+  $: showTrend = $summaryVisibility.latestTrend;
 
-	function toggleTrend() {
-		summaryVisibility.toggleLatestTrend();
-	}
+  function toggleTrend() {
+    summaryVisibility.toggleLatestTrend();
+  }
 
-	// トレンド分析データを取得
-	async function fetchLatestTrend(retryCount = 0) {
-		if (!browser) return;
+  // トレンド分析データを取得
+  async function fetchLatestTrend(retryCount = 0) {
+    if (!browser) return;
 
-		isLoading = true;
-		errorMessage = "";
+    isLoading = true;
+    errorMessage = "";
 
-		try {
-			const response = await authenticatedFetch("/api/diary/latest-trend");
-			if (response.ok) {
-				const result = await response.json();
+    try {
+      const response = await authenticatedFetch("/api/diary/latest-trend");
+      if (response.ok) {
+        const result = await response.json();
 
-				// データのバリデーション
-				if (
-					result.health &&
-					typeof result.health === "string" &&
-					result.healthReason &&
-					typeof result.healthReason === "string" &&
-					result.mood &&
-					typeof result.mood === "string" &&
-					result.moodReason &&
-					typeof result.moodReason === "string" &&
-					result.activities &&
-					typeof result.activities === "string" &&
-					result.periodStart &&
-					result.periodEnd &&
-					result.generatedAt
-				) {
-					// 日付の妥当性チェック
-					const startDate = new Date(result.periodStart);
-					const endDate = new Date(result.periodEnd);
-					const generatedDate = new Date(result.generatedAt);
+        // データのバリデーション
+        if (
+          result.health &&
+          typeof result.health === "string" &&
+          result.healthReason &&
+          typeof result.healthReason === "string" &&
+          result.mood &&
+          typeof result.mood === "string" &&
+          result.moodReason &&
+          typeof result.moodReason === "string" &&
+          result.activities &&
+          typeof result.activities === "string" &&
+          result.periodStart &&
+          result.periodEnd &&
+          result.generatedAt
+        ) {
+          // 日付の妥当性チェック
+          const startDate = new Date(result.periodStart);
+          const endDate = new Date(result.periodEnd);
+          const generatedDate = new Date(result.generatedAt);
 
-					if (
-						!Number.isNaN(startDate.getTime()) &&
-						!Number.isNaN(endDate.getTime()) &&
-						!Number.isNaN(generatedDate.getTime())
-					) {
-						trendData = {
-							health: result.health,
-							healthReason: result.healthReason,
-							mood: result.mood,
-							moodReason: result.moodReason,
-							activities: result.activities,
-							periodStart: result.periodStart,
-							periodEnd: result.periodEnd,
-							generatedAt: result.generatedAt,
-							modelVersion: result.modelVersion || undefined,
-						};
-					} else {
-						// 日付が不正な場合
-						console.warn("Invalid date format in latest trend data");
-						trendData = null;
-					}
-				} else {
-					// データが空または不正な場合はnullにする
-					trendData = null;
-				}
-			} else if (response.status === 404) {
-				// 404の場合はデータが存在しない
-				trendData = null;
-			} else if (response.status >= 500 && retryCount < 2) {
-				// サーバーエラーの場合は最大2回リトライ
-				console.warn(`Server error, retrying... (${retryCount + 1}/2)`);
-				setTimeout(
-					() => fetchLatestTrend(retryCount + 1),
-					1000 * (retryCount + 1),
-				);
-				return;
-			} else {
-				errorMessage = $_("latestTrend.error");
-			}
-		} catch (error) {
-			console.error("Failed to fetch latest trend:", error);
-			if (retryCount < 2) {
-				// ネットワークエラーの場合も最大2回リトライ
-				console.warn(`Network error, retrying... (${retryCount + 1}/2)`);
-				setTimeout(
-					() => fetchLatestTrend(retryCount + 1),
-					1000 * (retryCount + 1),
-				);
-				return;
-			}
-			errorMessage = $_("latestTrend.error");
-		} finally {
-			isLoading = false;
-		}
-	}
+          if (
+            !Number.isNaN(startDate.getTime()) &&
+            !Number.isNaN(endDate.getTime()) &&
+            !Number.isNaN(generatedDate.getTime())
+          ) {
+            trendData = {
+              health: result.health,
+              healthReason: result.healthReason,
+              mood: result.mood,
+              moodReason: result.moodReason,
+              activities: result.activities,
+              periodStart: result.periodStart,
+              periodEnd: result.periodEnd,
+              generatedAt: result.generatedAt,
+              modelVersion: result.modelVersion || undefined,
+            };
+          } else {
+            // 日付が不正な場合
+            console.warn("Invalid date format in latest trend data");
+            trendData = null;
+          }
+        } else {
+          // データが空または不正な場合はnullにする
+          trendData = null;
+        }
+      } else if (response.status === 404) {
+        // 404の場合はデータが存在しない
+        trendData = null;
+      } else if (response.status >= 500 && retryCount < 2) {
+        // サーバーエラーの場合は最大2回リトライ
+        console.warn(`Server error, retrying... (${retryCount + 1}/2)`);
+        setTimeout(
+          () => fetchLatestTrend(retryCount + 1),
+          1000 * (retryCount + 1),
+        );
+        return;
+      } else {
+        errorMessage = $_("latestTrend.error");
+      }
+    } catch (error) {
+      console.error("Failed to fetch latest trend:", error);
+      if (retryCount < 2) {
+        // ネットワークエラーの場合も最大2回リトライ
+        console.warn(`Network error, retrying... (${retryCount + 1}/2)`);
+        setTimeout(
+          () => fetchLatestTrend(retryCount + 1),
+          1000 * (retryCount + 1),
+        );
+        return;
+      }
+      errorMessage = $_("latestTrend.error");
+    } finally {
+      isLoading = false;
+    }
+  }
 
-	// 期間の日本語表示を生成
-	// バックエンドから返される日付はUTC 00:00:00形式（JST日付をUTCとして表現）なので、
-	// タイムゾーンに関係なく正しく表示するためにgetUTC*メソッドを使用
-	function formatPeriod(start: string, end: string): string {
-		if (!start || !end) return "";
+  // 期間の日本語表示を生成
+  // バックエンドから返される日付はUTC 00:00:00形式（JST日付をUTCとして表現）なので、
+  // タイムゾーンに関係なく正しく表示するためにgetUTC*メソッドを使用
+  function formatPeriod(start: string, end: string): string {
+    if (!start || !end) return "";
 
-		const startDate = new Date(start);
-		const endDate = new Date(end);
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
-		if ($locale === "ja") {
-			const startStr = `${startDate.getUTCFullYear()}年${startDate.getUTCMonth() + 1}月${startDate.getUTCDate()}日`;
-			const endStr = `${endDate.getUTCFullYear()}年${endDate.getUTCMonth() + 1}月${endDate.getUTCDate()}日`;
-			return `${startStr} 〜 ${endStr}`;
-		} else {
-			// 英語の場合もUTC日付として表示
-			const options: Intl.DateTimeFormatOptions = {
-				year: "numeric",
-				month: "long",
-				day: "numeric",
-				timeZone: "UTC",
-			};
-			return `${startDate.toLocaleDateString($locale || "en", options)} - ${endDate.toLocaleDateString($locale || "en", options)}`;
-		}
-	}
+    if ($locale === "ja") {
+      const startStr = `${startDate.getUTCFullYear()}年${startDate.getUTCMonth() + 1}月${startDate.getUTCDate()}日`;
+      const endStr = `${endDate.getUTCFullYear()}年${endDate.getUTCMonth() + 1}月${endDate.getUTCDate()}日`;
+      return `${startStr} 〜 ${endStr}`;
+    } else {
+      // 英語の場合もUTC日付として表示
+      const options: Intl.DateTimeFormatOptions = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC",
+      };
+      return `${startDate.toLocaleDateString($locale || "en", options)} - ${endDate.toLocaleDateString($locale || "en", options)}`;
+    }
+  }
 
-	// 体調・気分のレベルに応じた色を取得
-	function getLevelColor(level: string): {
-		bgClass: string;
-		textClass: string;
-		dotClass: string;
-	} {
-		switch (level) {
-			case "bad":
-				return {
-					bgClass: "bg-red-50 dark:bg-red-900/20",
-					textClass: "text-red-800 dark:text-red-200",
-					dotClass: "bg-red-500",
-				};
-			case "slight":
-				return {
-					bgClass: "bg-yellow-50 dark:bg-yellow-900/20",
-					textClass: "text-yellow-800 dark:text-yellow-200",
-					dotClass: "bg-yellow-500",
-				};
-			case "normal":
-				return {
-					bgClass: "bg-blue-50 dark:bg-blue-900/20",
-					textClass: "text-blue-800 dark:text-blue-200",
-					dotClass: "bg-blue-500",
-				};
-			case "good":
-				return {
-					bgClass: "bg-green-50 dark:bg-green-900/20",
-					textClass: "text-green-800 dark:text-green-200",
-					dotClass: "bg-green-500",
-				};
-			default:
-				return {
-					bgClass: "bg-gray-50 dark:bg-gray-900/20",
-					textClass: "text-gray-800 dark:text-gray-200",
-					dotClass: "bg-gray-500",
-				};
-		}
-	}
+  // 体調・気分のレベルに応じた色を取得
+  function getLevelColor(level: string): {
+    bgClass: string;
+    textClass: string;
+    dotClass: string;
+  } {
+    switch (level) {
+      case "bad":
+        return {
+          bgClass: "bg-red-50 dark:bg-red-900/20",
+          textClass: "text-red-800 dark:text-red-200",
+          dotClass: "bg-red-500",
+        };
+      case "slight":
+        return {
+          bgClass: "bg-yellow-50 dark:bg-yellow-900/20",
+          textClass: "text-yellow-800 dark:text-yellow-200",
+          dotClass: "bg-yellow-500",
+        };
+      case "normal":
+        return {
+          bgClass: "bg-blue-50 dark:bg-blue-900/20",
+          textClass: "text-blue-800 dark:text-blue-200",
+          dotClass: "bg-blue-500",
+        };
+      case "good":
+        return {
+          bgClass: "bg-green-50 dark:bg-green-900/20",
+          textClass: "text-green-800 dark:text-green-200",
+          dotClass: "bg-green-500",
+        };
+      default:
+        return {
+          bgClass: "bg-gray-50 dark:bg-gray-900/20",
+          textClass: "text-gray-800 dark:text-gray-200",
+          dotClass: "bg-gray-500",
+        };
+    }
+  }
 
-	// 活動・行動のテキストを箇条書きに変換
-	interface ActivityItem {
-		text: string;
-		level: number; // 0: トップレベル, 1: ネストレベル1, 2: ネストレベル2
-	}
+  // 活動・行動のテキストを箇条書きに変換
+  interface ActivityItem {
+    text: string;
+    level: number; // 0: トップレベル, 1: ネストレベル1, 2: ネストレベル2
+  }
 
-	function formatActivities(activities: string): ActivityItem[] {
-		// まず改行で分割を試みる
-		let lines = activities.split("\n").filter((line) => line.trim() !== "");
+  function formatActivities(activities: string): ActivityItem[] {
+    // まず改行で分割を試みる
+    let lines = activities.split("\n").filter((line) => line.trim() !== "");
 
-		// 改行がない、または1行しかない場合は「- 」で分割
-		if (lines.length <= 1 && activities.includes("- ")) {
-			// 「- 」で分割（最初の文字が「-」の場合は除外）
-			const parts = activities.split(/(?=\s*-\s)/);
-			lines = parts.filter((part) => part.trim() !== "");
-		}
+    // 改行がない、または1行しかない場合は「- 」で分割
+    if (lines.length <= 1 && activities.includes("- ")) {
+      // 「- 」で分割（最初の文字が「-」の場合は除外）
+      const parts = activities.split(/(?=\s*-\s)/);
+      lines = parts.filter((part) => part.trim() !== "");
+    }
 
-		return lines.map((line) => {
-			// インデントレベルを計算（2スペースごとに1レベル）
-			const match = line.match(/^(\s*)-\s*(.+)$/);
-			if (match) {
-				const indent = match[1].length;
-				const text = match[2].trim();
-				const level = Math.floor(indent / 2);
-				return { text, level };
-			}
-			// ハイフンがない場合はトップレベルとして扱う
-			return { text: line.trim(), level: 0 };
-		});
-	}
+    return lines.map((line) => {
+      // インデントレベルを計算（2スペースごとに1レベル）
+      const match = line.match(/^(\s*)-\s*(.+)$/);
+      if (match) {
+        const indent = match[1].length;
+        const text = match[2].trim();
+        const level = Math.floor(indent / 2);
+        return { text, level };
+      }
+      // ハイフンがない場合はトップレベルとして扱う
+      return { text: line.trim(), level: 0 };
+    });
+  }
 
-	onMount(() => {
-		// summaryVisibility.init()は+layout.svelteで既に呼ばれているため不要
-		fetchLatestTrend();
-	});
+  onMount(() => {
+    // summaryVisibility.init()は+layout.svelteで既に呼ばれているため不要
+    fetchLatestTrend();
+  });
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">

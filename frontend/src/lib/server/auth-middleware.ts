@@ -2,13 +2,13 @@ import type { Cookies } from "@sveltejs/kit";
 import { refreshAccessToken } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
 import {
-	ACCESS_TOKEN_COOKIE_OPTIONS,
-	REFRESH_TOKEN_COOKIE_OPTIONS,
+  ACCESS_TOKEN_COOKIE_OPTIONS,
+  REFRESH_TOKEN_COOKIE_OPTIONS,
 } from "$lib/utils/cookie-utils";
 
 export interface AuthResult {
-	accessToken: string | null;
-	isAuthenticated: boolean;
+  accessToken: string | null;
+  isAuthenticated: boolean;
 }
 
 /**
@@ -16,48 +16,48 @@ export interface AuthResult {
  * サーバーサイドのAPIエンドポイントで使用
  */
 export async function ensureValidAccessToken(
-	cookies: Cookies,
+  cookies: Cookies,
 ): Promise<AuthResult> {
-	let accessToken = cookies.get("accessToken");
-	const refreshToken = cookies.get("refreshToken");
+  let accessToken = cookies.get("accessToken");
+  const refreshToken = cookies.get("refreshToken");
 
-	// Try to refresh token if access token is missing or expiring soon
-	if (refreshToken && (!accessToken || isTokenExpiringSoon(accessToken))) {
-		try {
-			const response = await refreshAccessToken(refreshToken);
+  // Try to refresh token if access token is missing or expiring soon
+  if (refreshToken && (!accessToken || isTokenExpiringSoon(accessToken))) {
+    try {
+      const response = await refreshAccessToken(refreshToken);
 
-			// Update cookies with new tokens
-			cookies.set(
-				"accessToken",
-				response.accessToken,
-				ACCESS_TOKEN_COOKIE_OPTIONS,
-			);
+      // Update cookies with new tokens
+      cookies.set(
+        "accessToken",
+        response.accessToken,
+        ACCESS_TOKEN_COOKIE_OPTIONS,
+      );
 
-			if (response.refreshToken) {
-				cookies.set(
-					"refreshToken",
-					response.refreshToken,
-					REFRESH_TOKEN_COOKIE_OPTIONS,
-				);
-			}
+      if (response.refreshToken) {
+        cookies.set(
+          "refreshToken",
+          response.refreshToken,
+          REFRESH_TOKEN_COOKIE_OPTIONS,
+        );
+      }
 
-			accessToken = response.accessToken;
-		} catch (err) {
-			console.error("Token refresh failed:", err);
+      accessToken = response.accessToken;
+    } catch (err) {
+      console.error("Token refresh failed:", err);
 
-			// Clear invalid tokens
-			cookies.delete("accessToken", { path: "/" });
-			cookies.delete("refreshToken", { path: "/" });
+      // Clear invalid tokens
+      cookies.delete("accessToken", { path: "/" });
+      cookies.delete("refreshToken", { path: "/" });
 
-			return {
-				accessToken: null,
-				isAuthenticated: false,
-			};
-		}
-	}
+      return {
+        accessToken: null,
+        isAuthenticated: false,
+      };
+    }
+  }
 
-	return {
-		accessToken: accessToken || null,
-		isAuthenticated: !!accessToken,
-	};
+  return {
+    accessToken: accessToken || null,
+    isAuthenticated: !!accessToken,
+  };
 }

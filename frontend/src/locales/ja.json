@@ -1,591 +1,591 @@
 {
-	"common": {
-		"loading": "読み込み中...",
-		"save": "保存",
-		"cancel": "キャンセル",
-		"error": "エラー",
-		"success": "成功",
-		"createdAt": "作成日",
-		"updatedAt": "更新日",
-		"close": "閉じる",
-		"enabled": "有効",
-		"disabled": "無効"
-	},
-	"offline": {
-		"title": "オフライン",
-		"description": "インターネット接続がありません。一部の機能が制限されています。",
-		"availableFeatures": {
-			"title": "利用可能な機能",
-			"readCachedDiaries": "キャッシュされた日記の閲覧",
-			"navigation": "アプリ内ナビゲーション",
-			"darkMode": "ダークモード切り替え",
-			"languageSettings": "言語設定変更"
-		},
-		"limitedFeatures": {
-			"title": "制限される機能",
-			"createDiary": "新規日記作成",
-			"editDiary": "日記編集・削除",
-			"aiSummary": "AI要約機能",
-			"search": "検索機能（新規）"
-		},
-		"connectionStatus": "接続が復旧したら、下のボタンをクリックしてページを更新してください。",
-		"retryConnection": "接続を再試行",
-		"backToHome": "ホームに戻る"
-	},
-	"pwa": {
-		"install": {
-			"title": "アプリをインストール",
-			"description": "ホーム画面に追加してより便利に使用できます",
-			"install": "umi.mikanをインストールできます",
-			"dismiss": "閉じる",
-			"benefit1": "オフラインでも利用可能",
-			"benefit2": "ホーム画面からワンタップでアクセス",
-			"benefit3": "アプリのような快適な操作感",
-			"manualInstructions": "ブラウザのメニューから「ホーム画面に追加」または「アプリをインストール」を選択してください。"
-		},
-		"update": {
-			"title": "アップデート利用可能",
-			"description": "新しいバージョンが利用可能です。更新してください。",
-			"update": "今すぐ更新",
-			"later": "後で"
-		}
-	},
-	"settings": {
-		"title": "設定",
-		"nav": {
-			"title": "目次",
-			"userSettings": "ユーザー設定",
-			"llmSettings": "LLM設定",
-			"dangerZone": "その他",
-			"close": "閉じる"
-		},
-		"username": {
-			"title": "お名前変更",
-			"label": "新しいお名前",
-			"placeholder": "新しいお名前を入力してください",
-			"save": "お名前を更新"
-		},
-		"password": {
-			"title": "パスワード変更",
-			"currentLabel": "現在のパスワード",
-			"currentPlaceholder": "現在のパスワードを入力してください",
-			"newLabel": "新しいパスワード",
-			"newPlaceholder": "新しいパスワードを入力してください（8文字以上）",
-			"confirmLabel": "新しいパスワード（確認）",
-			"confirmPlaceholder": "新しいパスワードを再入力してください",
-			"save": "パスワードを変更"
-		},
-		"llmToken": {
-			"title": "LLMトークン設定",
-			"providerLabel": "LLMプロバイダー",
-			"provider": {
-				"gemini": "Gemini"
-			},
-			"tokenLabel": "APIキー",
-			"tokenPlaceholder": "APIキーを入力してください",
-			"tokenHelp": "API Tokenはこちら:",
-			"freeWarning": "Google AI StudioのFree Tierは学習に利用されるため個人情報を入れないでください。プライベートな日記を使用する場合は有料APIを利用してください。",
-			"save": "トークンを保存"
-		},
-		"autoSummary": {
-			"title": "自動まとめ設定",
-			"description": "1000文字以上の日記に対して自動でまとめを生成する設定です。",
-			"dailyLabel": "日毎の自動まとめを有効にする",
-			"monthlyLabel": "月毎の自動まとめを有効にする",
-			"semanticSearchLabel": "自然言語検索（意味的検索）を有効にする",
-			"semanticSearchDescription": "日記の内容をAIで解析し、意味・文脈に基づいた検索を可能にします。当日の日記は翌朝にインデックスが生成され、過去の日記は保存時に自動でインデックスが生成されます。",
-			"regenerateEmbeddingsDescription": "意味的検索を有効化する前に作成した日記はインデックスされていません。下のボタンで未インデックスの日記を一括でキューに追加できます。",
-			"regenerateEmbeddingsButton": "未インデックスの日記を一括生成",
-			"regenerateEmbeddingsSuccess": "{count}件の日記をキューに追加しました。しばらくお待ちください。",
-			"regenerateEmbeddingsFailed": "一括生成に失敗しました。",
-			"save": "設定を保存"
-		},
-		"deleteToken": {
-			"button": "トークンを削除",
-			"confirm": "LLMトークンを削除",
-			"confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
-		},
-		"llmStatus": {
-			"title": "LLM処理状況",
-			"description": "AIまとめの処理状況とパフォーマンスメトリクスを確認できます。",
-			"viewButton": "処理状況を表示"
-		},
-		"deleteAccount": {
-			"title": "アカウント削除",
-			"button": "アカウントを削除",
-			"confirm": "アカウントを削除",
-			"confirmMessage": "アカウントを削除してもよろしいですか？この操作は取り消せません。日記データを含むすべてのデータが削除されます。",
-			"warning": "この操作は元に戻すことができません。すべてのデータが完全に削除されます。"
-		},
-		"messages": {
-			"usernameUpdateSuccess": "お名前を更新しました",
-			"passwordChangeSuccess": "パスワードを変更しました",
-			"llmTokenUpdateSuccess": "LLMトークンを保存しました",
-			"llmTokenDeleteSuccess": "LLMトークンを削除しました",
-			"autoSummarySettingsUpdateSuccess": "自動まとめ設定を更新しました",
-			"accountDeleteSuccess": "アカウントを削除しました",
-			"unauthorized": "認証が必要です",
-			"userNotFound": "ユーザーが見つかりません",
-			"invalidUserId": "無効なユーザーIDです",
-			"nameRequired": "お名前は必須です",
-			"nameTooLong": "お名前は20文字以内で入力してください",
-			"passwordsRequired": "現在のパスワードと新しいパスワードは必須です",
-			"passwordsDoNotMatch": "新しいパスワードが一致しません",
-			"passwordTooShort": "新しいパスワードは8文字以上で入力してください",
-			"currentPasswordIncorrect": "現在のパスワードが正しくありません",
-			"tokenRequired": "トークンは必須です",
-			"tokenTooLong": "トークンは100文字以内で入力してください",
-			"tokenNotFound": "トークンが見つかりません",
-			"invalidProvider": "無効なLLMプロバイダーです",
-			"updateFailed": "更新に失敗しました"
-		}
-	},
-	"auth": {
-		"login": {
-			"title": "アカウントにサインイン",
-			"email": "メールアドレス",
-			"password": "パスワード",
-			"submit": "サインイン",
-			"submitting": "サインイン中...",
-			"noAccount": "アカウントをお持ちでない方はこちら",
-			"required": "メールアドレスとパスワードは必須です",
-			"failed": "ログインに失敗しました"
-		},
-		"register": {
-			"title": "アカウントを作成",
-			"name": "氏名",
-			"email": "メールアドレス",
-			"password": "パスワード",
-			"registerKey": "登録キー",
-			"registerKeyRequired": "登録キーを入力してください",
-			"submit": "サインアップ",
-			"submitting": "サインアップ中...",
-			"hasAccount": "すでにアカウントをお持ちの方はこちら",
-			"required": "氏名、メールアドレス、パスワードは必須です",
-			"failed": "登録に失敗しました"
-		},
-		"logout": "ログアウト"
-	},
-	"diary": {
-		"title": "日記",
-		"today": "今日",
-		"yesterday": "昨日",
-		"dayBeforeYesterday": "一昨日",
-		"thisMonth": "今月の日記",
-		"search": "検索",
-		"save": "保存",
-		"saving": "保存中...",
-		"saved": "保存しました",
-		"saveTodayDiary": "今日の日記の保存",
-		"saveYesterdayDiary": "昨日の日記の保存",
-		"saveDayBeforeYesterdayDiary": "一昨日の日記の保存",
-		"back": "戻る",
-		"edit": "編集",
-		"delete": "削除",
-		"cancel": "キャンセル",
-		"update": "更新",
-		"detail": "詳細",
-		"viewDetail": "詳細を見る",
-		"viewThisMonth": "この月の日記",
-		"placeholder": "今日の出来事を書いてください...",
-		"characterCount": "{count}文字",
-		"autoSummaryEligible": "自動まとめ対象",
-		"unsavedChangesWarning": "保存されていない変更があります。このページを離れてもよろしいですか?",
-		"generateSummary": "まとめを生成",
-		"regenerateSummary": "まとめを再生成",
-		"generatingSummary": "まとめ生成中...",
-		"regeneratingSummary": "まとめ再生成中...",
-		"summaryRequires1000Chars": "1000文字以上でまとめが利用できます",
-		"summaryNotAvailableToday": "まとめは当日は利用できません",
-		"summaryNotAvailableFuture": "まとめは未来の日付では利用できません",
-		"summaryAutoEnabled": "自動まとめが有効です",
-		"summaryGenerationFailed": "まとめの生成に失敗しました",
-		"summaryTimeout": "まとめの生成がタイムアウトしました。再度お試しください。",
-		"summary": {
-			"title": "日記のまとめ",
-			"label": "まとめ",
-			"view": "まとめを表示",
-			"hide": "まとめを非表示",
-			"outdated": "日記が更新されています。最新のまとめにする場合は再生成してください。",
-			"outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。",
-			"statusQueued": "まとめの生成をキューに追加しました。しばらくお待ちください。",
-			"statusProcessing": "まとめを生成中です。しばらくお待ちください。"
-		},
-		"searchHighlightBanner": "「{keyword}」を検索中",
-		"searchHighlightClear": "クリア",
-		"noEntry": "の日記はありません。",
-		"yesterdayNoEntry": "昨日の日記はありません。",
-		"dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
-		"dateUnknown": "日付不明",
-		"previousDay": "前日",
-		"nextDay": "翌日",
-		"pastEntries": "過去の同じ日",
-		"oneWeekAgo": "1週間前",
-		"oneMonthAgo": "1ヶ月前",
-		"twoMonthsAgo": "2ヶ月前",
-		"sixMonthsAgo": "半年前",
-		"oneYearAgo": "1年前",
-		"twoYearsAgo": "2年前",
-		"threeYearsAgo": "3年前",
-		"fourYearsAgo": "4年前",
-		"fiveYearsAgo": "5年前",
-		"sixYearsAgo": "6年前",
-		"sevenYearsAgo": "7年前",
-		"eightYearsAgo": "8年前",
-		"nineYearsAgo": "9年前",
-		"tenYearsAgo": "10年前",
-		"noPastEntry": "日記がありません",
-		"noPastEntries": "過去の同じ日の日記はありません",
-		"highlight": {
-			"title": "ハイライト",
-			"generate": "ハイライト生成",
-			"regenerate": "ハイライト再生成",
-			"generating": "ハイライト生成中...",
-			"show": "ハイライト表示",
-			"hide": "ハイライト非表示",
-			"label": "重要な部分",
-			"notAvailable": "ハイライトはまだ生成されていません",
-			"outdated": "日記が更新されています。最新のハイライトにする場合は再生成してください",
-			"generationFailed": "ハイライトの生成に失敗しました",
-			"timeout": "ハイライト生成がタイムアウトしました。再度お試しください",
-			"statusQueued": "ハイライトの生成をキューに追加しました。しばらくお待ちください",
-			"statusProcessing": "ハイライトを生成中です。しばらくお待ちください",
-			"contentTooShort": "ハイライト生成には最低500文字必要です",
-			"apiKeyNotConfigured": "Gemini APIキーが設定されていません。設定ページから登録してください"
-		},
-		"embedding": {
-			"indexed": "意味的検索：インデックス済み",
-			"notIndexed": "意味的検索：未インデックス",
-			"indexedAt": "インデックス日時",
-			"updatedAt": "最終更新日時",
-			"modelVersion": "モデル",
-			"chunkCount": "チャンク数",
-			"chunkSummaries": "チャンク一覧",
-			"chunkSummaryEmpty": "（概要なし）"
-		}
-	},
-	"date": {
-		"dayOfWeek": {
-			"sunday": "日",
-			"monday": "月",
-			"tuesday": "火",
-			"wednesday": "水",
-			"thursday": "木",
-			"friday": "金",
-			"saturday": "土",
-			"Sunday": "日",
-			"Monday": "月",
-			"Tuesday": "火",
-			"Wednesday": "水",
-			"Thursday": "木",
-			"Friday": "金",
-			"Saturday": "土"
-		},
-		"format": {
-			"yearMonthDay": "{year}年{month}月{day}日",
-			"yearMonthDayWithDayOfWeek": "{year}年{month}月{day}日({dayOfWeek})"
-		}
-	},
-	"home": {
-		"name": "ホーム"
-	},
-	"latestTrend": {
-		"title": "直近トレンド分析",
-		"titleWithName": "最近の{name}さん",
-		"description": "前日を中心に最近の日記から、あなたの傾向を分析します",
-		"period": "分析期間",
-		"generatedAt": "生成日時",
-		"noData": "トレンド分析データがありません",
-		"loading": "分析データを読み込み中...",
-		"error": "トレンド分析の取得に失敗しました",
-		"analyzing": "分析中...",
-		"notEnoughData": "分析に必要な日記データが不足しています",
-		"refresh": "最新の分析を取得",
-		"lastUpdated": "最終更新",
-		"hide": "トレンド分析を隠す",
-		"view": "トレンド分析を表示",
-		"health": "昨日の体調",
-		"mood": "昨日の気分",
-		"activities": "活動",
-		"healthLevel": {
-			"bad": "悪い",
-			"slight": "やや悪い",
-			"normal": "普通",
-			"good": "良い"
-		},
-		"moodLevel": {
-			"bad": "悪い",
-			"slight": "やや悪い",
-			"normal": "普通",
-			"good": "良い"
-		},
-		"settings": {
-			"autoGenerate": "毎日のトレンド生成を有効にする",
-			"autoGenerateDescription": "毎日午前4時に自動的にトレンド分析を生成します"
-		}
-	},
-	"recentStreak": {
-		"title": "直近7日",
-		"day": "日",
-		"written": "書いた",
-		"notWritten": "未記入"
-	},
-	"collapsibleSections": {
-		"sideInfo": "さいきん"
-	},
-	"create": {
-		"title": "新しい日記を書く",
-		"date": "日付",
-		"content": "内容"
-	},
-	"edit": {
-		"title": "日記を編集",
-		"date": "日付",
-		"content": "内容",
-		"deleteConfirm": "日記を削除",
-		"deleteMessage": "この日記を削除してもよろしいですか？この操作は取り消せません。"
-	},
-	"search": {
-		"title": "日記検索",
-		"placeholder": "検索キーワードを入力...",
-		"placeholderSemantic": "自然な言葉で検索（例：去年の夏に食べたもの）",
-		"button": "検索",
-		"modeKeyword": "キーワード検索",
-		"modeSemantic": "意味的検索",
-		"semanticDescription": "Gemini AIを使って意味・文脈で検索します（APIキー設定が必要）",
-		"results": "の検索結果",
-		"semanticResults": "の意味的検索結果",
-		"resultCount": "件",
-		"similarity": "一致度",
-		"embeddingModel": "埋め込みモデル",
-		"chunkModel": "分割モデル",
-		"noResults": "検索結果が見つかりませんでした。",
-		"noResultsHint": "別のキーワードで検索してみてください。",
-		"semanticNoResultsHint": "別の表現で検索するか、キーワード検索をお試しください。",
-		"searching": "検索中...",
-		"enterKeyword": "検索キーワードを入力して検索してください。",
-		"backToList": "日記一覧に戻る",
-		"expandedKeywordsNote": "エンティティに紐づく {keywords} でも検索しました",
-		"error": {
-			"searchFailed": "検索に失敗しました。",
-			"semanticSearchFailed": "意味的検索に失敗しました。Gemini APIキーが設定されているか確認してください。"
-		},
-		"chunkCount": "{count}チャンク"
-	},
-	"monthly": {
-		"thisMonth": "今月",
-		"listView": "一覧表示",
-		"previousMonth": "前の月へ",
-		"nextMonth": "次の月へ",
-		"writeEntry": "日記を書く",
-		"entry": "日記",
-		"detail": "詳細",
-		"edit": "編集",
-		"summary": {
-			"title": "月間まとめ",
-			"generate": "まとめを生成",
-			"generating": "まとめ生成中...",
-			"view": "まとめを表示",
-			"hide": "まとめを非表示",
-			"regenerate": "まとめを再生成",
-			"regenerating": "まとめ再生成中...",
-			"error": "まとめの生成に失敗しました",
-			"outdated": "この月の日記が更新されています。最新のまとめにする場合は再生成してください。",
-			"noEntries": "この月の日記が見つかりません。月次まとめを生成するには、まず日記を書いてください。",
-			"noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
-			"updateAvailable": "このまとめ生成後に日記が更新されています。最新のまとめを得るには再生成してください。",
-			"currentMonthError": "月次まとめは過去の月のみ生成できます。現在の月は生成できません。",
-			"currentMonthNote": "現在の月のためまとめは生成できません",
-			"futureMonthError": "未来の月のまとめは生成できません。",
-			"noEntriesError": "この月には日記がありません。まとめを生成するには、まず日記を書いてください。"
-		}
-	},
-	"timeProgress": {
-		"yearProgress": "今年",
-		"monthProgress": "今月",
-		"dayProgress": "今日"
-	},
-	"monthSelector": {
-		"title": "月を選択",
-		"year": "年",
-		"month": "月",
-		"confirm": "決定",
-		"cancel": "キャンセル"
-	},
-	"navigation": {
-		"home": "トップ",
-		"monthly": "カレンダー",
-		"search": "検索",
-		"entities": "人物",
-		"settings": "設定",
-		"debug": "デバッグ"
-	},
-	"page": {
-		"title": {
-			"home": "トップ - umi.mikan",
-			"calendar": "カレンダー - umi.mikan",
-			"individual": "{date} - umi.mikan"
-		}
-	},
-	"footer": {
-		"github": "GitHub"
-	},
-	"chart": {
-		"characterCount": "文字数",
-		"charactersUnit": "文字",
-		"day": "日",
-		"dailyCharacterCount": "日毎の文字数推移"
-	},
-	"llm": {
-		"title": "LLM処理状況",
-		"description": "AIまとめの処理状況と統計情報を表示します",
-		"metrics": {
-			"totalDailySummaries": "日次まとめ総数",
-			"totalMonthlySummaries": "月次まとめ総数",
-			"pendingDailySummaries": "未処理日次まとめ",
-			"pendingMonthlySummaries": "未処理月次まとめ",
-			"autoSummarySettings": "自動まとめ設定",
-			"dailyAutoSummary": "日次自動まとめ",
-			"monthlyAutoSummary": "月次自動まとめ",
-			"latestTrendAutoGeneration": "トレンド分析自動生成",
-			"latestTrendStatus": "トレンド分析生成状況",
-			"lastGeneratedAt": "最終生成日時",
-			"processingTasks": "処理中のタスク",
-			"processing": "処理中",
-			"last24Hours": "過去24時間の処理状況",
-			"processingActivity": "処理活動",
-			"time": "時刻",
-			"processedCount": "処理件数",
-			"dailySummaries": "日次まとめ",
-			"monthlySummaries": "月次まとめ",
-			"diaryEmbeddings": "embedding生成",
-			"semanticSearches": "意味的検索",
-			"dailySummary": "日次まとめ",
-			"monthlySummary": "月次まとめ",
-			"latestTrend": "トレンド分析",
-			"startedAt": "開始時刻",
-			"ragTitle": "自然言語検索（RAG）処理状況",
-			"totalEmbeddings": "生成済みembedding数",
-			"pendingEmbeddings": "未生成embedding数",
-			"ragPendingNote": "未生成の日記は、次回保存時に自動でインデックスが生成されます。",
-			"ragRegenerateButton": "未生成の日記を一括インデックス",
-			"ragRegenerateSuccess": "{count}件の日記をキューに追加しました。バックグラウンドで順次インデックスが生成されます。",
-			"ragRegenerateFailed": "インデックス生成のキュー追加に失敗しました。",
-			"ragDisabledNote": "設定ページでGemini APIキーを登録し、自然言語検索を有効にするとここに状況が表示されます。",
-			"aboutTitle": "LLM処理について",
-			"aboutDescription": "このページでは、AI（Gemini）による自動まとめ処理の状況を確認できます。",
-			"dailySummaryExplanation": "日次まとめ: 1000文字以上の日記に対して毎日自動で生成されるまとめ",
-			"monthlySummaryExplanation": "月次まとめ: 日次まとめから生成される月間の総合まとめ",
-			"processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
-		},
-		"ragDiagram": {
-			"title": "RAGの仕組み",
-			"asyncBadge": "非同期",
-			"syncBadge": "同期",
-			"indexingTitle": "インデックス生成フロー",
-			"searchTitle": "セマンティック検索フロー",
-			"step": {
-				"diaryText": "日記テキスト",
-				"toPlainText": "平文に変換",
-				"splitByTopic": "話題で分割",
-				"enrichWithDate": "日付を付加",
-				"vectorizeDocument": "ベクトル化",
-				"saveToVectorDb": "ベクトルDB保存",
-				"naturalLanguageQuery": "自然言語クエリ",
-				"vectorizeQuery": "クエリをベクトル化",
-				"searchSimilarChunks": "類似チャンクを検索",
-				"keywordFallback": "キーワードで補完",
-				"returnWithSummary": "要約と共に返却"
-			},
-			"subLabel": {
-				"markdownFormat": "Markdown形式",
-				"removeMarkdown": "コードブロック・太字などを除去",
-				"llmSplitWithSummary": "LLMが話題・出来事で分割\n各チャンクに1文の要約を付与",
-				"datePrefix": "「YYYY年M月D日の日記:」を先頭に付加",
-				"retrievalDocument": "RETRIEVAL_DOCUMENT\n3072次元",
-				"hnswStorage": "halfvec(3072) / HNSW",
-				"queryExample": "例: 去年食べたもの",
-				"retrievalQuery": "RETRIEVAL_QUERY\n3072次元",
-				"cosineSimilarity": "コサイン類似度\n閾値0.3以上",
-				"properNounFallback": "固有名詞などのフォールバック",
-				"withScore": "類似度スコア・要約付き"
-			}
-		}
-	},
-	"budoux": {
-		"toggle": "BudouX切り替え",
-		"description": "日本語の改行分節区切りモード。これを使用すると日本語での改行が自然な単位で改行されるようになります"
-	},
-	"entity": {
-		"title": "人物管理",
-		"description": "日記に登場する人物や場所などを登録・管理できます。登録した人物は日記本文内で自動的にハイライト表示され、そのひとが登場する日記を簡単に探すことができます。",
-		"list": {
-			"title": "人物一覧",
-			"empty": "人物が登録されていません",
-			"create": "新規作成",
-			"category": {
-				"all": "すべて",
-				"people": "人物",
-				"noCategory": "未分類"
-			}
-		},
-		"detail": {
-			"title": "人物詳細",
-			"name": "名前",
-			"category": "カテゴリ",
-			"memo": "メモ",
-			"aliases": "他のよびかた",
-			"addAlias": "他のよびかたを追加",
-			"deleteAlias": "削除",
-			"linkedDiaries": "紐づく日記",
-			"noDiaries": "紐づく日記がありません",
-			"update": "更新",
-			"delete": "削除",
-			"deleteConfirm": "人物を削除",
-			"deleteMessage": "この人物を削除してもよろしいですか？関連する日記の紐付けも削除されます。(日記は消えません)",
-			"deleteAliasConfirm": "他のよびかたを削除",
-			"deleteAliasMessage": "このよびかたを削除してもよろしいですか?"
-		},
-		"create": {
-			"title": "人物作成",
-			"name": "名前",
-			"namePlaceholder": "人物名を入力",
-			"category": "カテゴリ",
-			"memo": "メモ",
-			"memoPlaceholder": "メモを入力（任意）",
-			"submit": "作成"
-		},
-		"messages": {
-			"createSuccess": "人物を作成しました",
-			"updateSuccess": "人物を更新しました",
-			"deleteSuccess": "人物を削除しました",
-			"aliasCreateSuccess": "別名を追加しました",
-			"aliasUpdateSuccess": "別名を更新しました",
-			"aliasDeleteSuccess": "別名を削除しました",
-			"nameRequired": "名前は必須です",
-			"duplicateName": "同じ名前の人物が既に存在します",
-			"nameUsedAsAlias": "その名前は既に別名として使用されています",
-			"aliasUsedAsName": "その別名は既に人物名として使用されています",
-			"aliasAlreadyExists": "その別名は既に使用されています",
-			"error": "エラーが発生しました"
-		}
-	},
-	"debug": {
-		"pageTitle": "開発環境専用ページ",
-		"latestTrend": {
-			"title": "直近トレンド分析 手動トリガー",
-			"description": "過去7日間の日記から直近トレンド分析を即座に生成します。",
-			"button": "トレンド分析を生成",
-			"buttonGenerating": "生成中...",
-			"successMessage": "トレンド分析の生成をキューに追加しました",
-			"errorMessage": "トレンド分析の生成に失敗しました"
-		},
-		"about": {
-			"title": "このページについて",
-			"description": "このページは開発環境でのみ表示されます。本番環境では表示されません。"
-		}
-	},
-	"summary": {
-		"modelVersion": "モデル"
-	}
+  "common": {
+    "loading": "読み込み中...",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "error": "エラー",
+    "success": "成功",
+    "createdAt": "作成日",
+    "updatedAt": "更新日",
+    "close": "閉じる",
+    "enabled": "有効",
+    "disabled": "無効"
+  },
+  "offline": {
+    "title": "オフライン",
+    "description": "インターネット接続がありません。一部の機能が制限されています。",
+    "availableFeatures": {
+      "title": "利用可能な機能",
+      "readCachedDiaries": "キャッシュされた日記の閲覧",
+      "navigation": "アプリ内ナビゲーション",
+      "darkMode": "ダークモード切り替え",
+      "languageSettings": "言語設定変更"
+    },
+    "limitedFeatures": {
+      "title": "制限される機能",
+      "createDiary": "新規日記作成",
+      "editDiary": "日記編集・削除",
+      "aiSummary": "AI要約機能",
+      "search": "検索機能（新規）"
+    },
+    "connectionStatus": "接続が復旧したら、下のボタンをクリックしてページを更新してください。",
+    "retryConnection": "接続を再試行",
+    "backToHome": "ホームに戻る"
+  },
+  "pwa": {
+    "install": {
+      "title": "アプリをインストール",
+      "description": "ホーム画面に追加してより便利に使用できます",
+      "install": "umi.mikanをインストールできます",
+      "dismiss": "閉じる",
+      "benefit1": "オフラインでも利用可能",
+      "benefit2": "ホーム画面からワンタップでアクセス",
+      "benefit3": "アプリのような快適な操作感",
+      "manualInstructions": "ブラウザのメニューから「ホーム画面に追加」または「アプリをインストール」を選択してください。"
+    },
+    "update": {
+      "title": "アップデート利用可能",
+      "description": "新しいバージョンが利用可能です。更新してください。",
+      "update": "今すぐ更新",
+      "later": "後で"
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "nav": {
+      "title": "目次",
+      "userSettings": "ユーザー設定",
+      "llmSettings": "LLM設定",
+      "dangerZone": "その他",
+      "close": "閉じる"
+    },
+    "username": {
+      "title": "お名前変更",
+      "label": "新しいお名前",
+      "placeholder": "新しいお名前を入力してください",
+      "save": "お名前を更新"
+    },
+    "password": {
+      "title": "パスワード変更",
+      "currentLabel": "現在のパスワード",
+      "currentPlaceholder": "現在のパスワードを入力してください",
+      "newLabel": "新しいパスワード",
+      "newPlaceholder": "新しいパスワードを入力してください（8文字以上）",
+      "confirmLabel": "新しいパスワード（確認）",
+      "confirmPlaceholder": "新しいパスワードを再入力してください",
+      "save": "パスワードを変更"
+    },
+    "llmToken": {
+      "title": "LLMトークン設定",
+      "providerLabel": "LLMプロバイダー",
+      "provider": {
+        "gemini": "Gemini"
+      },
+      "tokenLabel": "APIキー",
+      "tokenPlaceholder": "APIキーを入力してください",
+      "tokenHelp": "API Tokenはこちら:",
+      "freeWarning": "Google AI StudioのFree Tierは学習に利用されるため個人情報を入れないでください。プライベートな日記を使用する場合は有料APIを利用してください。",
+      "save": "トークンを保存"
+    },
+    "autoSummary": {
+      "title": "自動まとめ設定",
+      "description": "1000文字以上の日記に対して自動でまとめを生成する設定です。",
+      "dailyLabel": "日毎の自動まとめを有効にする",
+      "monthlyLabel": "月毎の自動まとめを有効にする",
+      "semanticSearchLabel": "自然言語検索（意味的検索）を有効にする",
+      "semanticSearchDescription": "日記の内容をAIで解析し、意味・文脈に基づいた検索を可能にします。当日の日記は翌朝にインデックスが生成され、過去の日記は保存時に自動でインデックスが生成されます。",
+      "regenerateEmbeddingsDescription": "意味的検索を有効化する前に作成した日記はインデックスされていません。下のボタンで未インデックスの日記を一括でキューに追加できます。",
+      "regenerateEmbeddingsButton": "未インデックスの日記を一括生成",
+      "regenerateEmbeddingsSuccess": "{count}件の日記をキューに追加しました。しばらくお待ちください。",
+      "regenerateEmbeddingsFailed": "一括生成に失敗しました。",
+      "save": "設定を保存"
+    },
+    "deleteToken": {
+      "button": "トークンを削除",
+      "confirm": "LLMトークンを削除",
+      "confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
+    },
+    "llmStatus": {
+      "title": "LLM処理状況",
+      "description": "AIまとめの処理状況とパフォーマンスメトリクスを確認できます。",
+      "viewButton": "処理状況を表示"
+    },
+    "deleteAccount": {
+      "title": "アカウント削除",
+      "button": "アカウントを削除",
+      "confirm": "アカウントを削除",
+      "confirmMessage": "アカウントを削除してもよろしいですか？この操作は取り消せません。日記データを含むすべてのデータが削除されます。",
+      "warning": "この操作は元に戻すことができません。すべてのデータが完全に削除されます。"
+    },
+    "messages": {
+      "usernameUpdateSuccess": "お名前を更新しました",
+      "passwordChangeSuccess": "パスワードを変更しました",
+      "llmTokenUpdateSuccess": "LLMトークンを保存しました",
+      "llmTokenDeleteSuccess": "LLMトークンを削除しました",
+      "autoSummarySettingsUpdateSuccess": "自動まとめ設定を更新しました",
+      "accountDeleteSuccess": "アカウントを削除しました",
+      "unauthorized": "認証が必要です",
+      "userNotFound": "ユーザーが見つかりません",
+      "invalidUserId": "無効なユーザーIDです",
+      "nameRequired": "お名前は必須です",
+      "nameTooLong": "お名前は20文字以内で入力してください",
+      "passwordsRequired": "現在のパスワードと新しいパスワードは必須です",
+      "passwordsDoNotMatch": "新しいパスワードが一致しません",
+      "passwordTooShort": "新しいパスワードは8文字以上で入力してください",
+      "currentPasswordIncorrect": "現在のパスワードが正しくありません",
+      "tokenRequired": "トークンは必須です",
+      "tokenTooLong": "トークンは100文字以内で入力してください",
+      "tokenNotFound": "トークンが見つかりません",
+      "invalidProvider": "無効なLLMプロバイダーです",
+      "updateFailed": "更新に失敗しました"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "アカウントにサインイン",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "submit": "サインイン",
+      "submitting": "サインイン中...",
+      "noAccount": "アカウントをお持ちでない方はこちら",
+      "required": "メールアドレスとパスワードは必須です",
+      "failed": "ログインに失敗しました"
+    },
+    "register": {
+      "title": "アカウントを作成",
+      "name": "氏名",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "registerKey": "登録キー",
+      "registerKeyRequired": "登録キーを入力してください",
+      "submit": "サインアップ",
+      "submitting": "サインアップ中...",
+      "hasAccount": "すでにアカウントをお持ちの方はこちら",
+      "required": "氏名、メールアドレス、パスワードは必須です",
+      "failed": "登録に失敗しました"
+    },
+    "logout": "ログアウト"
+  },
+  "diary": {
+    "title": "日記",
+    "today": "今日",
+    "yesterday": "昨日",
+    "dayBeforeYesterday": "一昨日",
+    "thisMonth": "今月の日記",
+    "search": "検索",
+    "save": "保存",
+    "saving": "保存中...",
+    "saved": "保存しました",
+    "saveTodayDiary": "今日の日記の保存",
+    "saveYesterdayDiary": "昨日の日記の保存",
+    "saveDayBeforeYesterdayDiary": "一昨日の日記の保存",
+    "back": "戻る",
+    "edit": "編集",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "update": "更新",
+    "detail": "詳細",
+    "viewDetail": "詳細を見る",
+    "viewThisMonth": "この月の日記",
+    "placeholder": "今日の出来事を書いてください...",
+    "characterCount": "{count}文字",
+    "autoSummaryEligible": "自動まとめ対象",
+    "unsavedChangesWarning": "保存されていない変更があります。このページを離れてもよろしいですか?",
+    "generateSummary": "まとめを生成",
+    "regenerateSummary": "まとめを再生成",
+    "generatingSummary": "まとめ生成中...",
+    "regeneratingSummary": "まとめ再生成中...",
+    "summaryRequires1000Chars": "1000文字以上でまとめが利用できます",
+    "summaryNotAvailableToday": "まとめは当日は利用できません",
+    "summaryNotAvailableFuture": "まとめは未来の日付では利用できません",
+    "summaryAutoEnabled": "自動まとめが有効です",
+    "summaryGenerationFailed": "まとめの生成に失敗しました",
+    "summaryTimeout": "まとめの生成がタイムアウトしました。再度お試しください。",
+    "summary": {
+      "title": "日記のまとめ",
+      "label": "まとめ",
+      "view": "まとめを表示",
+      "hide": "まとめを非表示",
+      "outdated": "日記が更新されています。最新のまとめにする場合は再生成してください。",
+      "outdatedWarning": "日記が更新されています。最新のまとめにする場合は再生成してください。",
+      "statusQueued": "まとめの生成をキューに追加しました。しばらくお待ちください。",
+      "statusProcessing": "まとめを生成中です。しばらくお待ちください。"
+    },
+    "searchHighlightBanner": "「{keyword}」を検索中",
+    "searchHighlightClear": "クリア",
+    "noEntry": "の日記はありません。",
+    "yesterdayNoEntry": "昨日の日記はありません。",
+    "dayBeforeYesterdayNoEntry": "一昨日の日記はありません。",
+    "dateUnknown": "日付不明",
+    "previousDay": "前日",
+    "nextDay": "翌日",
+    "pastEntries": "過去の同じ日",
+    "oneWeekAgo": "1週間前",
+    "oneMonthAgo": "1ヶ月前",
+    "twoMonthsAgo": "2ヶ月前",
+    "sixMonthsAgo": "半年前",
+    "oneYearAgo": "1年前",
+    "twoYearsAgo": "2年前",
+    "threeYearsAgo": "3年前",
+    "fourYearsAgo": "4年前",
+    "fiveYearsAgo": "5年前",
+    "sixYearsAgo": "6年前",
+    "sevenYearsAgo": "7年前",
+    "eightYearsAgo": "8年前",
+    "nineYearsAgo": "9年前",
+    "tenYearsAgo": "10年前",
+    "noPastEntry": "日記がありません",
+    "noPastEntries": "過去の同じ日の日記はありません",
+    "highlight": {
+      "title": "ハイライト",
+      "generate": "ハイライト生成",
+      "regenerate": "ハイライト再生成",
+      "generating": "ハイライト生成中...",
+      "show": "ハイライト表示",
+      "hide": "ハイライト非表示",
+      "label": "重要な部分",
+      "notAvailable": "ハイライトはまだ生成されていません",
+      "outdated": "日記が更新されています。最新のハイライトにする場合は再生成してください",
+      "generationFailed": "ハイライトの生成に失敗しました",
+      "timeout": "ハイライト生成がタイムアウトしました。再度お試しください",
+      "statusQueued": "ハイライトの生成をキューに追加しました。しばらくお待ちください",
+      "statusProcessing": "ハイライトを生成中です。しばらくお待ちください",
+      "contentTooShort": "ハイライト生成には最低500文字必要です",
+      "apiKeyNotConfigured": "Gemini APIキーが設定されていません。設定ページから登録してください"
+    },
+    "embedding": {
+      "indexed": "意味的検索：インデックス済み",
+      "notIndexed": "意味的検索：未インデックス",
+      "indexedAt": "インデックス日時",
+      "updatedAt": "最終更新日時",
+      "modelVersion": "モデル",
+      "chunkCount": "チャンク数",
+      "chunkSummaries": "チャンク一覧",
+      "chunkSummaryEmpty": "（概要なし）"
+    }
+  },
+  "date": {
+    "dayOfWeek": {
+      "sunday": "日",
+      "monday": "月",
+      "tuesday": "火",
+      "wednesday": "水",
+      "thursday": "木",
+      "friday": "金",
+      "saturday": "土",
+      "Sunday": "日",
+      "Monday": "月",
+      "Tuesday": "火",
+      "Wednesday": "水",
+      "Thursday": "木",
+      "Friday": "金",
+      "Saturday": "土"
+    },
+    "format": {
+      "yearMonthDay": "{year}年{month}月{day}日",
+      "yearMonthDayWithDayOfWeek": "{year}年{month}月{day}日({dayOfWeek})"
+    }
+  },
+  "home": {
+    "name": "ホーム"
+  },
+  "latestTrend": {
+    "title": "直近トレンド分析",
+    "titleWithName": "最近の{name}さん",
+    "description": "前日を中心に最近の日記から、あなたの傾向を分析します",
+    "period": "分析期間",
+    "generatedAt": "生成日時",
+    "noData": "トレンド分析データがありません",
+    "loading": "分析データを読み込み中...",
+    "error": "トレンド分析の取得に失敗しました",
+    "analyzing": "分析中...",
+    "notEnoughData": "分析に必要な日記データが不足しています",
+    "refresh": "最新の分析を取得",
+    "lastUpdated": "最終更新",
+    "hide": "トレンド分析を隠す",
+    "view": "トレンド分析を表示",
+    "health": "昨日の体調",
+    "mood": "昨日の気分",
+    "activities": "活動",
+    "healthLevel": {
+      "bad": "悪い",
+      "slight": "やや悪い",
+      "normal": "普通",
+      "good": "良い"
+    },
+    "moodLevel": {
+      "bad": "悪い",
+      "slight": "やや悪い",
+      "normal": "普通",
+      "good": "良い"
+    },
+    "settings": {
+      "autoGenerate": "毎日のトレンド生成を有効にする",
+      "autoGenerateDescription": "毎日午前4時に自動的にトレンド分析を生成します"
+    }
+  },
+  "recentStreak": {
+    "title": "直近7日",
+    "day": "日",
+    "written": "書いた",
+    "notWritten": "未記入"
+  },
+  "collapsibleSections": {
+    "sideInfo": "さいきん"
+  },
+  "create": {
+    "title": "新しい日記を書く",
+    "date": "日付",
+    "content": "内容"
+  },
+  "edit": {
+    "title": "日記を編集",
+    "date": "日付",
+    "content": "内容",
+    "deleteConfirm": "日記を削除",
+    "deleteMessage": "この日記を削除してもよろしいですか？この操作は取り消せません。"
+  },
+  "search": {
+    "title": "日記検索",
+    "placeholder": "検索キーワードを入力...",
+    "placeholderSemantic": "自然な言葉で検索（例：去年の夏に食べたもの）",
+    "button": "検索",
+    "modeKeyword": "キーワード検索",
+    "modeSemantic": "意味的検索",
+    "semanticDescription": "Gemini AIを使って意味・文脈で検索します（APIキー設定が必要）",
+    "results": "の検索結果",
+    "semanticResults": "の意味的検索結果",
+    "resultCount": "件",
+    "similarity": "一致度",
+    "embeddingModel": "埋め込みモデル",
+    "chunkModel": "分割モデル",
+    "noResults": "検索結果が見つかりませんでした。",
+    "noResultsHint": "別のキーワードで検索してみてください。",
+    "semanticNoResultsHint": "別の表現で検索するか、キーワード検索をお試しください。",
+    "searching": "検索中...",
+    "enterKeyword": "検索キーワードを入力して検索してください。",
+    "backToList": "日記一覧に戻る",
+    "expandedKeywordsNote": "エンティティに紐づく {keywords} でも検索しました",
+    "error": {
+      "searchFailed": "検索に失敗しました。",
+      "semanticSearchFailed": "意味的検索に失敗しました。Gemini APIキーが設定されているか確認してください。"
+    },
+    "chunkCount": "{count}チャンク"
+  },
+  "monthly": {
+    "thisMonth": "今月",
+    "listView": "一覧表示",
+    "previousMonth": "前の月へ",
+    "nextMonth": "次の月へ",
+    "writeEntry": "日記を書く",
+    "entry": "日記",
+    "detail": "詳細",
+    "edit": "編集",
+    "summary": {
+      "title": "月間まとめ",
+      "generate": "まとめを生成",
+      "generating": "まとめ生成中...",
+      "view": "まとめを表示",
+      "hide": "まとめを非表示",
+      "regenerate": "まとめを再生成",
+      "regenerating": "まとめ再生成中...",
+      "error": "まとめの生成に失敗しました",
+      "outdated": "この月の日記が更新されています。最新のまとめにする場合は再生成してください。",
+      "noEntries": "この月の日記が見つかりません。月次まとめを生成するには、まず日記を書いてください。",
+      "noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
+      "updateAvailable": "このまとめ生成後に日記が更新されています。最新のまとめを得るには再生成してください。",
+      "currentMonthError": "月次まとめは過去の月のみ生成できます。現在の月は生成できません。",
+      "currentMonthNote": "現在の月のためまとめは生成できません",
+      "futureMonthError": "未来の月のまとめは生成できません。",
+      "noEntriesError": "この月には日記がありません。まとめを生成するには、まず日記を書いてください。"
+    }
+  },
+  "timeProgress": {
+    "yearProgress": "今年",
+    "monthProgress": "今月",
+    "dayProgress": "今日"
+  },
+  "monthSelector": {
+    "title": "月を選択",
+    "year": "年",
+    "month": "月",
+    "confirm": "決定",
+    "cancel": "キャンセル"
+  },
+  "navigation": {
+    "home": "トップ",
+    "monthly": "カレンダー",
+    "search": "検索",
+    "entities": "人物",
+    "settings": "設定",
+    "debug": "デバッグ"
+  },
+  "page": {
+    "title": {
+      "home": "トップ - umi.mikan",
+      "calendar": "カレンダー - umi.mikan",
+      "individual": "{date} - umi.mikan"
+    }
+  },
+  "footer": {
+    "github": "GitHub"
+  },
+  "chart": {
+    "characterCount": "文字数",
+    "charactersUnit": "文字",
+    "day": "日",
+    "dailyCharacterCount": "日毎の文字数推移"
+  },
+  "llm": {
+    "title": "LLM処理状況",
+    "description": "AIまとめの処理状況と統計情報を表示します",
+    "metrics": {
+      "totalDailySummaries": "日次まとめ総数",
+      "totalMonthlySummaries": "月次まとめ総数",
+      "pendingDailySummaries": "未処理日次まとめ",
+      "pendingMonthlySummaries": "未処理月次まとめ",
+      "autoSummarySettings": "自動まとめ設定",
+      "dailyAutoSummary": "日次自動まとめ",
+      "monthlyAutoSummary": "月次自動まとめ",
+      "latestTrendAutoGeneration": "トレンド分析自動生成",
+      "latestTrendStatus": "トレンド分析生成状況",
+      "lastGeneratedAt": "最終生成日時",
+      "processingTasks": "処理中のタスク",
+      "processing": "処理中",
+      "last24Hours": "過去24時間の処理状況",
+      "processingActivity": "処理活動",
+      "time": "時刻",
+      "processedCount": "処理件数",
+      "dailySummaries": "日次まとめ",
+      "monthlySummaries": "月次まとめ",
+      "diaryEmbeddings": "embedding生成",
+      "semanticSearches": "意味的検索",
+      "dailySummary": "日次まとめ",
+      "monthlySummary": "月次まとめ",
+      "latestTrend": "トレンド分析",
+      "startedAt": "開始時刻",
+      "ragTitle": "自然言語検索（RAG）処理状況",
+      "totalEmbeddings": "生成済みembedding数",
+      "pendingEmbeddings": "未生成embedding数",
+      "ragPendingNote": "未生成の日記は、次回保存時に自動でインデックスが生成されます。",
+      "ragRegenerateButton": "未生成の日記を一括インデックス",
+      "ragRegenerateSuccess": "{count}件の日記をキューに追加しました。バックグラウンドで順次インデックスが生成されます。",
+      "ragRegenerateFailed": "インデックス生成のキュー追加に失敗しました。",
+      "ragDisabledNote": "設定ページでGemini APIキーを登録し、自然言語検索を有効にするとここに状況が表示されます。",
+      "aboutTitle": "LLM処理について",
+      "aboutDescription": "このページでは、AI（Gemini）による自動まとめ処理の状況を確認できます。",
+      "dailySummaryExplanation": "日次まとめ: 1000文字以上の日記に対して毎日自動で生成されるまとめ",
+      "monthlySummaryExplanation": "月次まとめ: 日次まとめから生成される月間の総合まとめ",
+      "processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
+    },
+    "ragDiagram": {
+      "title": "RAGの仕組み",
+      "asyncBadge": "非同期",
+      "syncBadge": "同期",
+      "indexingTitle": "インデックス生成フロー",
+      "searchTitle": "セマンティック検索フロー",
+      "step": {
+        "diaryText": "日記テキスト",
+        "toPlainText": "平文に変換",
+        "splitByTopic": "話題で分割",
+        "enrichWithDate": "日付を付加",
+        "vectorizeDocument": "ベクトル化",
+        "saveToVectorDb": "ベクトルDB保存",
+        "naturalLanguageQuery": "自然言語クエリ",
+        "vectorizeQuery": "クエリをベクトル化",
+        "searchSimilarChunks": "類似チャンクを検索",
+        "keywordFallback": "キーワードで補完",
+        "returnWithSummary": "要約と共に返却"
+      },
+      "subLabel": {
+        "markdownFormat": "Markdown形式",
+        "removeMarkdown": "コードブロック・太字などを除去",
+        "llmSplitWithSummary": "LLMが話題・出来事で分割\n各チャンクに1文の要約を付与",
+        "datePrefix": "「YYYY年M月D日の日記:」を先頭に付加",
+        "retrievalDocument": "RETRIEVAL_DOCUMENT\n3072次元",
+        "hnswStorage": "halfvec(3072) / HNSW",
+        "queryExample": "例: 去年食べたもの",
+        "retrievalQuery": "RETRIEVAL_QUERY\n3072次元",
+        "cosineSimilarity": "コサイン類似度\n閾値0.3以上",
+        "properNounFallback": "固有名詞などのフォールバック",
+        "withScore": "類似度スコア・要約付き"
+      }
+    }
+  },
+  "budoux": {
+    "toggle": "BudouX切り替え",
+    "description": "日本語の改行分節区切りモード。これを使用すると日本語での改行が自然な単位で改行されるようになります"
+  },
+  "entity": {
+    "title": "人物管理",
+    "description": "日記に登場する人物や場所などを登録・管理できます。登録した人物は日記本文内で自動的にハイライト表示され、そのひとが登場する日記を簡単に探すことができます。",
+    "list": {
+      "title": "人物一覧",
+      "empty": "人物が登録されていません",
+      "create": "新規作成",
+      "category": {
+        "all": "すべて",
+        "people": "人物",
+        "noCategory": "未分類"
+      }
+    },
+    "detail": {
+      "title": "人物詳細",
+      "name": "名前",
+      "category": "カテゴリ",
+      "memo": "メモ",
+      "aliases": "他のよびかた",
+      "addAlias": "他のよびかたを追加",
+      "deleteAlias": "削除",
+      "linkedDiaries": "紐づく日記",
+      "noDiaries": "紐づく日記がありません",
+      "update": "更新",
+      "delete": "削除",
+      "deleteConfirm": "人物を削除",
+      "deleteMessage": "この人物を削除してもよろしいですか？関連する日記の紐付けも削除されます。(日記は消えません)",
+      "deleteAliasConfirm": "他のよびかたを削除",
+      "deleteAliasMessage": "このよびかたを削除してもよろしいですか?"
+    },
+    "create": {
+      "title": "人物作成",
+      "name": "名前",
+      "namePlaceholder": "人物名を入力",
+      "category": "カテゴリ",
+      "memo": "メモ",
+      "memoPlaceholder": "メモを入力（任意）",
+      "submit": "作成"
+    },
+    "messages": {
+      "createSuccess": "人物を作成しました",
+      "updateSuccess": "人物を更新しました",
+      "deleteSuccess": "人物を削除しました",
+      "aliasCreateSuccess": "別名を追加しました",
+      "aliasUpdateSuccess": "別名を更新しました",
+      "aliasDeleteSuccess": "別名を削除しました",
+      "nameRequired": "名前は必須です",
+      "duplicateName": "同じ名前の人物が既に存在します",
+      "nameUsedAsAlias": "その名前は既に別名として使用されています",
+      "aliasUsedAsName": "その別名は既に人物名として使用されています",
+      "aliasAlreadyExists": "その別名は既に使用されています",
+      "error": "エラーが発生しました"
+    }
+  },
+  "debug": {
+    "pageTitle": "開発環境専用ページ",
+    "latestTrend": {
+      "title": "直近トレンド分析 手動トリガー",
+      "description": "過去7日間の日記から直近トレンド分析を即座に生成します。",
+      "button": "トレンド分析を生成",
+      "buttonGenerating": "生成中...",
+      "successMessage": "トレンド分析の生成をキューに追加しました",
+      "errorMessage": "トレンド分析の生成に失敗しました"
+    },
+    "about": {
+      "title": "このページについて",
+      "description": "このページは開発環境でのみ表示されます。本番環境では表示されません。"
+    }
+  },
+  "summary": {
+    "modelVersion": "モデル"
+  }
 }

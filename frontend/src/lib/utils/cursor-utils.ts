@@ -10,65 +10,65 @@
  * @returns テキストオフセット位置
  */
 export function getTextOffset(root: Node, node: Node, offset: number): number {
-	let textOffset = 0;
+  let textOffset = 0;
 
-	function traverse(currentNode: Node): number | null {
-		if (currentNode === node) {
-			if (currentNode.nodeType === Node.TEXT_NODE) {
-				return textOffset + offset;
-			}
-			if (currentNode.nodeType === Node.ELEMENT_NODE) {
-				const children = Array.from(currentNode.childNodes);
-				for (let i = 0; i < Math.min(offset, children.length); i++) {
-					const child = children[i];
-					if (child.nodeType === Node.TEXT_NODE) {
-						textOffset += child.textContent?.length || 0;
-					} else if (child.nodeType === Node.ELEMENT_NODE) {
-						if (child.nodeName === "BR") {
-							textOffset += 1;
-						} else {
-							textOffset += getTextLength(child);
-						}
-					}
-				}
-				return textOffset;
-			}
-		}
+  function traverse(currentNode: Node): number | null {
+    if (currentNode === node) {
+      if (currentNode.nodeType === Node.TEXT_NODE) {
+        return textOffset + offset;
+      }
+      if (currentNode.nodeType === Node.ELEMENT_NODE) {
+        const children = Array.from(currentNode.childNodes);
+        for (let i = 0; i < Math.min(offset, children.length); i++) {
+          const child = children[i];
+          if (child.nodeType === Node.TEXT_NODE) {
+            textOffset += child.textContent?.length || 0;
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            if (child.nodeName === "BR") {
+              textOffset += 1;
+            } else {
+              textOffset += getTextLength(child);
+            }
+          }
+        }
+        return textOffset;
+      }
+    }
 
-		if (currentNode.nodeType === Node.TEXT_NODE) {
-			textOffset += currentNode.textContent?.length || 0;
-		} else if (currentNode.nodeType === Node.ELEMENT_NODE) {
-			if (currentNode.nodeName === "BR") {
-				textOffset += 1;
-			}
-			for (const child of Array.from(currentNode.childNodes)) {
-				const result = traverse(child);
-				if (result !== null) return result;
-			}
-		}
+    if (currentNode.nodeType === Node.TEXT_NODE) {
+      textOffset += currentNode.textContent?.length || 0;
+    } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+      if (currentNode.nodeName === "BR") {
+        textOffset += 1;
+      }
+      for (const child of Array.from(currentNode.childNodes)) {
+        const result = traverse(child);
+        if (result !== null) return result;
+      }
+    }
 
-		return null;
-	}
+    return null;
+  }
 
-	function getTextLength(node: Node): number {
-		if (node.nodeType === Node.TEXT_NODE) {
-			return node.textContent?.length || 0;
-		}
-		if (node.nodeType === Node.ELEMENT_NODE) {
-			if (node.nodeName === "BR") {
-				return 1;
-			}
-			let length = 0;
-			for (const child of Array.from(node.childNodes)) {
-				length += getTextLength(child);
-			}
-			return length;
-		}
-		return 0;
-	}
+  function getTextLength(node: Node): number {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent?.length || 0;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.nodeName === "BR") {
+        return 1;
+      }
+      let length = 0;
+      for (const child of Array.from(node.childNodes)) {
+        length += getTextLength(child);
+      }
+      return length;
+    }
+    return 0;
+  }
 
-	const result = traverse(root);
-	return result !== null ? result : textOffset;
+  const result = traverse(root);
+  return result !== null ? result : textOffset;
 }
 
 /**
@@ -78,57 +78,57 @@ export function getTextOffset(root: Node, node: Node, offset: number): number {
  * @returns 作成されたRange、または失敗時null
  */
 export function createRangeAtTextOffset(
-	root: Node,
-	targetOffset: number,
+  root: Node,
+  targetOffset: number,
 ): Range | null {
-	const range = document.createRange();
-	let currentOffset = 0;
+  const range = document.createRange();
+  let currentOffset = 0;
 
-	function traverse(currentNode: Node): boolean {
-		if (currentNode.nodeType === Node.TEXT_NODE) {
-			const textLength = currentNode.textContent?.length || 0;
-			if (currentOffset + textLength >= targetOffset) {
-				const offset = targetOffset - currentOffset;
-				range.setStart(currentNode, Math.min(offset, textLength));
-				range.collapse(true);
-				return true;
-			}
-			currentOffset += textLength;
-		} else if (currentNode.nodeType === Node.ELEMENT_NODE) {
-			if (currentNode.nodeName === "BR") {
-				if (currentOffset === targetOffset) {
-					const parent = currentNode.parentNode;
-					if (parent) {
-						const index = Array.from(parent.childNodes).indexOf(
-							currentNode as ChildNode,
-						);
-						range.setStart(parent, index);
-						range.collapse(true);
-						return true;
-					}
-				}
-				currentOffset += 1;
-			}
-			for (const child of Array.from(currentNode.childNodes)) {
-				if (traverse(child)) return true;
-			}
-		}
+  function traverse(currentNode: Node): boolean {
+    if (currentNode.nodeType === Node.TEXT_NODE) {
+      const textLength = currentNode.textContent?.length || 0;
+      if (currentOffset + textLength >= targetOffset) {
+        const offset = targetOffset - currentOffset;
+        range.setStart(currentNode, Math.min(offset, textLength));
+        range.collapse(true);
+        return true;
+      }
+      currentOffset += textLength;
+    } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+      if (currentNode.nodeName === "BR") {
+        if (currentOffset === targetOffset) {
+          const parent = currentNode.parentNode;
+          if (parent) {
+            const index = Array.from(parent.childNodes).indexOf(
+              currentNode as ChildNode,
+            );
+            range.setStart(parent, index);
+            range.collapse(true);
+            return true;
+          }
+        }
+        currentOffset += 1;
+      }
+      for (const child of Array.from(currentNode.childNodes)) {
+        if (traverse(child)) return true;
+      }
+    }
 
-		return false;
-	}
+    return false;
+  }
 
-	if (traverse(root)) {
-		return range;
-	}
+  if (traverse(root)) {
+    return range;
+  }
 
-	// オフセットが範囲外の場合は最後に設定
-	if (root.lastChild) {
-		range.setStartAfter(root.lastChild);
-		range.collapse(true);
-		return range;
-	}
+  // オフセットが範囲外の場合は最後に設定
+  if (root.lastChild) {
+    range.setStartAfter(root.lastChild);
+    range.collapse(true);
+    return range;
+  }
 
-	return null;
+  return null;
 }
 
 /**
@@ -137,111 +137,111 @@ export function createRangeAtTextOffset(
  * @param targetPos 目標テキストオフセット
  */
 export function restoreCursorPosition(
-	contentElement: HTMLDivElement,
-	targetPos: number,
+  contentElement: HTMLDivElement,
+  targetPos: number,
 ): void {
-	if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
 
-	const selection = window.getSelection();
-	if (!selection) return;
+  const selection = window.getSelection();
+  if (!selection) return;
 
-	let currentPos = 0;
-	let targetNode: Node | null = null;
-	let targetOffset = 0;
-	let found = false;
+  let currentPos = 0;
+  let targetNode: Node | null = null;
+  let targetOffset = 0;
+  let found = false;
 
-	function traverse(node: Node): boolean {
-		if (node.nodeType === Node.TEXT_NODE) {
-			const textLength = node.textContent?.length || 0;
-			if (currentPos + textLength >= targetPos) {
-				targetNode = node;
-				targetOffset = targetPos - currentPos;
-				return true;
-			}
-			currentPos += textLength;
-		} else if (node.nodeType === Node.ELEMENT_NODE) {
-			if (node.nodeName === "BR") {
-				currentPos += 1;
-				if (currentPos >= targetPos) {
-					const parent = node.parentNode;
-					if (parent) {
-						targetNode = parent;
-						// BRの直後にカーソルを置く（BRを1文字としてカウントした後の位置）
-						targetOffset =
-							Array.from(parent.childNodes).indexOf(node as ChildNode) + 1;
-						return true;
-					}
-				}
-			} else {
-				for (const child of Array.from(node.childNodes)) {
-					if (traverse(child)) return true;
-				}
-			}
-		}
-		return false;
-	}
+  function traverse(node: Node): boolean {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textLength = node.textContent?.length || 0;
+      if (currentPos + textLength >= targetPos) {
+        targetNode = node;
+        targetOffset = targetPos - currentPos;
+        return true;
+      }
+      currentPos += textLength;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.nodeName === "BR") {
+        currentPos += 1;
+        if (currentPos >= targetPos) {
+          const parent = node.parentNode;
+          if (parent) {
+            targetNode = parent;
+            // BRの直後にカーソルを置く（BRを1文字としてカウントした後の位置）
+            targetOffset =
+              Array.from(parent.childNodes).indexOf(node as ChildNode) + 1;
+            return true;
+          }
+        }
+      } else {
+        for (const child of Array.from(node.childNodes)) {
+          if (traverse(child)) return true;
+        }
+      }
+    }
+    return false;
+  }
 
-	found = traverse(contentElement);
+  found = traverse(contentElement);
 
-	if (found && targetNode) {
-		try {
-			const range = document.createRange();
-			const node = targetNode as Node;
-			if (node.nodeType === Node.TEXT_NODE) {
-				const textLength = node.textContent?.length || 0;
-				range.setStart(node, Math.min(targetOffset, textLength));
-				range.collapse(true);
-			} else {
-				range.setStart(node, targetOffset);
-				range.collapse(true);
-			}
-			selection.removeAllRanges();
-			selection.addRange(range);
-		} catch (error: unknown) {
-			if (error instanceof Error) {
-				console.error("Failed to restore cursor position:", error.message);
-			} else {
-				console.error("Failed to restore cursor position:", error);
-			}
-			fallbackToEnd(contentElement, selection);
-		}
-	} else {
-		// createRangeAtTextOffsetを使って再試行
-		try {
-			const range = createRangeAtTextOffset(contentElement, targetPos);
-			if (range) {
-				selection.removeAllRanges();
-				selection.addRange(range);
-			} else {
-				fallbackToEnd(contentElement, selection);
-			}
-		} catch (error: unknown) {
-			if (error instanceof Error) {
-				console.error("Failed to create range at text offset:", error.message);
-			} else {
-				console.error("Failed to create range at text offset:", error);
-			}
-			fallbackToEnd(contentElement, selection);
-		}
-	}
+  if (found && targetNode) {
+    try {
+      const range = document.createRange();
+      const node = targetNode as Node;
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textLength = node.textContent?.length || 0;
+        range.setStart(node, Math.min(targetOffset, textLength));
+        range.collapse(true);
+      } else {
+        range.setStart(node, targetOffset);
+        range.collapse(true);
+      }
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Failed to restore cursor position:", error.message);
+      } else {
+        console.error("Failed to restore cursor position:", error);
+      }
+      fallbackToEnd(contentElement, selection);
+    }
+  } else {
+    // createRangeAtTextOffsetを使って再試行
+    try {
+      const range = createRangeAtTextOffset(contentElement, targetPos);
+      if (range) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        fallbackToEnd(contentElement, selection);
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Failed to create range at text offset:", error.message);
+      } else {
+        console.error("Failed to create range at text offset:", error);
+      }
+      fallbackToEnd(contentElement, selection);
+    }
+  }
 }
 
 /**
  * カーソルを末尾に配置（フォールバック）
  */
 function fallbackToEnd(contentElement: HTMLDivElement, selection: Selection) {
-	try {
-		const range = document.createRange();
-		range.selectNodeContents(contentElement);
-		range.collapse(false);
-		selection.removeAllRanges();
-		selection.addRange(range);
-	} catch (error: unknown) {
-		// カーソル復元の最終手段が失敗した場合は何もしない
-		if (error instanceof Error) {
-			console.error("Failed to fallback to end:", error.message);
-		}
-	}
+  try {
+    const range = document.createRange();
+    range.selectNodeContents(contentElement);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } catch (error: unknown) {
+    // カーソル復元の最終手段が失敗した場合は何もしない
+    if (error instanceof Error) {
+      console.error("Failed to fallback to end:", error.message);
+    }
+  }
 }
 
 /**
@@ -249,11 +249,11 @@ function fallbackToEnd(contentElement: HTMLDivElement, selection: Selection) {
  * @returns 保存されたRange、または失敗時null
  */
 export function saveCursorPosition(): Range | null {
-	const selection = window.getSelection();
-	if (selection && selection.rangeCount > 0) {
-		return selection.getRangeAt(0);
-	}
-	return null;
+  const selection = window.getSelection();
+  if (selection && selection.rangeCount > 0) {
+    return selection.getRangeAt(0);
+  }
+  return null;
 }
 
 /**
@@ -261,9 +261,9 @@ export function saveCursorPosition(): Range | null {
  * @param range 保存されたRange
  */
 export function restoreCursorFromRange(range: Range): void {
-	const selection = window.getSelection();
-	if (selection && range) {
-		selection.removeAllRanges();
-		selection.addRange(range);
-	}
+  const selection = window.getSelection();
+  if (selection && range) {
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
 }

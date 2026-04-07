@@ -3,16 +3,16 @@
 /* eslint-disable */
 
 import type {
-	GenEnum,
-	GenFile,
-	GenMessage,
-	GenService,
+  GenEnum,
+  GenFile,
+  GenMessage,
+  GenService,
 } from "@bufbuild/protobuf/codegenv2";
 import {
-	enumDesc,
-	fileDesc,
-	messageDesc,
-	serviceDesc,
+  enumDesc,
+  fileDesc,
+  messageDesc,
+  serviceDesc,
 } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -20,10 +20,10 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file entity/entity.proto.
  */
 export const file_entity_entity: GenFile =
-	/*@__PURE__*/
-	fileDesc(
-		"ChNlbnRpdHkvZW50aXR5LnByb3RvEgZlbnRpdHkiOAoIUG9zaXRpb24SDQoFc3RhcnQYASABKA0SCwoDZW5kGAIgASgNEhAKCGFsaWFzX2lkGAMgASgJIqgBCgZFbnRpdHkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIoCghjYXRlZ29yeRgDIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIMCgRtZW1vGAQgASgJEiQKB2FsaWFzZXMYBSADKAsyEy5lbnRpdHkuRW50aXR5QWxpYXMSEgoKY3JlYXRlZF9hdBgGIAEoAxISCgp1cGRhdGVkX2F0GAcgASgDImMKC0VudGl0eUFsaWFzEgoKAmlkGAEgASgJEhEKCWVudGl0eV9pZBgCIAEoCRINCgVhbGlhcxgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiWwoTQ3JlYXRlRW50aXR5UmVxdWVzdBIMCgRuYW1lGAEgASgJEigKCGNhdGVnb3J5GAIgASgOMhYuZW50aXR5LkVudGl0eUNhdGVnb3J5EgwKBG1lbW8YAyABKAkiNgoUQ3JlYXRlRW50aXR5UmVzcG9uc2USHgoGZW50aXR5GAEgASgLMg4uZW50aXR5LkVudGl0eSJnChNVcGRhdGVFbnRpdHlSZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSKAoIY2F0ZWdvcnkYAyABKA4yFi5lbnRpdHkuRW50aXR5Q2F0ZWdvcnkSDAoEbWVtbxgEIAEoCSI2ChRVcGRhdGVFbnRpdHlSZXNwb25zZRIeCgZlbnRpdHkYASABKAsyDi5lbnRpdHkuRW50aXR5IiEKE0RlbGV0ZUVudGl0eVJlcXVlc3QSCgoCaWQYASABKAkiJwoURGVsZXRlRW50aXR5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIeChBHZXRFbnRpdHlSZXF1ZXN0EgoKAmlkGAEgASgJIjMKEUdldEVudGl0eVJlc3BvbnNlEh4KBmVudGl0eRgBIAEoCzIOLmVudGl0eS5FbnRpdHkiVwoTTGlzdEVudGl0aWVzUmVxdWVzdBIoCghjYXRlZ29yeRgBIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIWCg5hbGxfY2F0ZWdvcmllcxgCIAEoCCI4ChRMaXN0RW50aXRpZXNSZXNwb25zZRIgCghlbnRpdGllcxgBIAMoCzIOLmVudGl0eS5FbnRpdHkiPAoYQ3JlYXRlRW50aXR5QWxpYXNSZXF1ZXN0EhEKCWVudGl0eV9pZBgBIAEoCRINCgVhbGlhcxgCIAEoCSI/ChlDcmVhdGVFbnRpdHlBbGlhc1Jlc3BvbnNlEiIKBWFsaWFzGAEgASgLMhMuZW50aXR5LkVudGl0eUFsaWFzIjUKGFVwZGF0ZUVudGl0eUFsaWFzUmVxdWVzdBIKCgJpZBgBIAEoCRINCgVhbGlhcxgCIAEoCSI/ChlVcGRhdGVFbnRpdHlBbGlhc1Jlc3BvbnNlEiIKBWFsaWFzGAEgASgLMhMuZW50aXR5LkVudGl0eUFsaWFzIiYKGERlbGV0ZUVudGl0eUFsaWFzUmVxdWVzdBIKCgJpZBgBIAEoCSIsChlEZWxldGVFbnRpdHlBbGlhc1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiJgoVU2VhcmNoRW50aXRpZXNSZXF1ZXN0Eg0KBXF1ZXJ5GAEgASgJIjoKFlNlYXJjaEVudGl0aWVzUmVzcG9uc2USIAoIZW50aXRpZXMYASADKAsyDi5lbnRpdHkuRW50aXR5Ki0KDkVudGl0eUNhdGVnb3J5Eg8KC05PX0NBVEVHT1JZEAASCgoGUEVPUExFEAEy3AUKDUVudGl0eVNlcnZpY2USSQoMQ3JlYXRlRW50aXR5EhsuZW50aXR5LkNyZWF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuQ3JlYXRlRW50aXR5UmVzcG9uc2USSQoMVXBkYXRlRW50aXR5EhsuZW50aXR5LlVwZGF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuVXBkYXRlRW50aXR5UmVzcG9uc2USSQoMRGVsZXRlRW50aXR5EhsuZW50aXR5LkRlbGV0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuRGVsZXRlRW50aXR5UmVzcG9uc2USQAoJR2V0RW50aXR5EhguZW50aXR5LkdldEVudGl0eVJlcXVlc3QaGS5lbnRpdHkuR2V0RW50aXR5UmVzcG9uc2USSQoMTGlzdEVudGl0aWVzEhsuZW50aXR5Lkxpc3RFbnRpdGllc1JlcXVlc3QaHC5lbnRpdHkuTGlzdEVudGl0aWVzUmVzcG9uc2USWAoRQ3JlYXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuQ3JlYXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkNyZWF0ZUVudGl0eUFsaWFzUmVzcG9uc2USWAoRVXBkYXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuVXBkYXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LlVwZGF0ZUVudGl0eUFsaWFzUmVzcG9uc2USWAoRRGVsZXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuRGVsZXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkRlbGV0ZUVudGl0eUFsaWFzUmVzcG9uc2USTwoOU2VhcmNoRW50aXRpZXMSHS5lbnRpdHkuU2VhcmNoRW50aXRpZXNSZXF1ZXN0Gh4uZW50aXR5LlNlYXJjaEVudGl0aWVzUmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
-	);
+  /*@__PURE__*/
+  fileDesc(
+    "ChNlbnRpdHkvZW50aXR5LnByb3RvEgZlbnRpdHkiOAoIUG9zaXRpb24SDQoFc3RhcnQYASABKA0SCwoDZW5kGAIgASgNEhAKCGFsaWFzX2lkGAMgASgJIqgBCgZFbnRpdHkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIoCghjYXRlZ29yeRgDIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIMCgRtZW1vGAQgASgJEiQKB2FsaWFzZXMYBSADKAsyEy5lbnRpdHkuRW50aXR5QWxpYXMSEgoKY3JlYXRlZF9hdBgGIAEoAxISCgp1cGRhdGVkX2F0GAcgASgDImMKC0VudGl0eUFsaWFzEgoKAmlkGAEgASgJEhEKCWVudGl0eV9pZBgCIAEoCRINCgVhbGlhcxgDIAEoCRISCgpjcmVhdGVkX2F0GAQgASgDEhIKCnVwZGF0ZWRfYXQYBSABKAMiWwoTQ3JlYXRlRW50aXR5UmVxdWVzdBIMCgRuYW1lGAEgASgJEigKCGNhdGVnb3J5GAIgASgOMhYuZW50aXR5LkVudGl0eUNhdGVnb3J5EgwKBG1lbW8YAyABKAkiNgoUQ3JlYXRlRW50aXR5UmVzcG9uc2USHgoGZW50aXR5GAEgASgLMg4uZW50aXR5LkVudGl0eSJnChNVcGRhdGVFbnRpdHlSZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSKAoIY2F0ZWdvcnkYAyABKA4yFi5lbnRpdHkuRW50aXR5Q2F0ZWdvcnkSDAoEbWVtbxgEIAEoCSI2ChRVcGRhdGVFbnRpdHlSZXNwb25zZRIeCgZlbnRpdHkYASABKAsyDi5lbnRpdHkuRW50aXR5IiEKE0RlbGV0ZUVudGl0eVJlcXVlc3QSCgoCaWQYASABKAkiJwoURGVsZXRlRW50aXR5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIeChBHZXRFbnRpdHlSZXF1ZXN0EgoKAmlkGAEgASgJIjMKEUdldEVudGl0eVJlc3BvbnNlEh4KBmVudGl0eRgBIAEoCzIOLmVudGl0eS5FbnRpdHkiVwoTTGlzdEVudGl0aWVzUmVxdWVzdBIoCghjYXRlZ29yeRgBIAEoDjIWLmVudGl0eS5FbnRpdHlDYXRlZ29yeRIWCg5hbGxfY2F0ZWdvcmllcxgCIAEoCCI4ChRMaXN0RW50aXRpZXNSZXNwb25zZRIgCghlbnRpdGllcxgBIAMoCzIOLmVudGl0eS5FbnRpdHkiPAoYQ3JlYXRlRW50aXR5QWxpYXNSZXF1ZXN0EhEKCWVudGl0eV9pZBgBIAEoCRINCgVhbGlhcxgCIAEoCSI/ChlDcmVhdGVFbnRpdHlBbGlhc1Jlc3BvbnNlEiIKBWFsaWFzGAEgASgLMhMuZW50aXR5LkVudGl0eUFsaWFzIjUKGFVwZGF0ZUVudGl0eUFsaWFzUmVxdWVzdBIKCgJpZBgBIAEoCRINCgVhbGlhcxgCIAEoCSI/ChlVcGRhdGVFbnRpdHlBbGlhc1Jlc3BvbnNlEiIKBWFsaWFzGAEgASgLMhMuZW50aXR5LkVudGl0eUFsaWFzIiYKGERlbGV0ZUVudGl0eUFsaWFzUmVxdWVzdBIKCgJpZBgBIAEoCSIsChlEZWxldGVFbnRpdHlBbGlhc1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiJgoVU2VhcmNoRW50aXRpZXNSZXF1ZXN0Eg0KBXF1ZXJ5GAEgASgJIjoKFlNlYXJjaEVudGl0aWVzUmVzcG9uc2USIAoIZW50aXRpZXMYASADKAsyDi5lbnRpdHkuRW50aXR5Ki0KDkVudGl0eUNhdGVnb3J5Eg8KC05PX0NBVEVHT1JZEAASCgoGUEVPUExFEAEy3AUKDUVudGl0eVNlcnZpY2USSQoMQ3JlYXRlRW50aXR5EhsuZW50aXR5LkNyZWF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuQ3JlYXRlRW50aXR5UmVzcG9uc2USSQoMVXBkYXRlRW50aXR5EhsuZW50aXR5LlVwZGF0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuVXBkYXRlRW50aXR5UmVzcG9uc2USSQoMRGVsZXRlRW50aXR5EhsuZW50aXR5LkRlbGV0ZUVudGl0eVJlcXVlc3QaHC5lbnRpdHkuRGVsZXRlRW50aXR5UmVzcG9uc2USQAoJR2V0RW50aXR5EhguZW50aXR5LkdldEVudGl0eVJlcXVlc3QaGS5lbnRpdHkuR2V0RW50aXR5UmVzcG9uc2USSQoMTGlzdEVudGl0aWVzEhsuZW50aXR5Lkxpc3RFbnRpdGllc1JlcXVlc3QaHC5lbnRpdHkuTGlzdEVudGl0aWVzUmVzcG9uc2USWAoRQ3JlYXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuQ3JlYXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkNyZWF0ZUVudGl0eUFsaWFzUmVzcG9uc2USWAoRVXBkYXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuVXBkYXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LlVwZGF0ZUVudGl0eUFsaWFzUmVzcG9uc2USWAoRRGVsZXRlRW50aXR5QWxpYXMSIC5lbnRpdHkuRGVsZXRlRW50aXR5QWxpYXNSZXF1ZXN0GiEuZW50aXR5LkRlbGV0ZUVudGl0eUFsaWFzUmVzcG9uc2USTwoOU2VhcmNoRW50aXRpZXMSHS5lbnRpdHkuU2VhcmNoRW50aXRpZXNSZXF1ZXN0Gh4uZW50aXR5LlNlYXJjaEVudGl0aWVzUmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
+  );
 
 /**
  * 位置情報
@@ -31,26 +31,26 @@ export const file_entity_entity: GenFile =
  * @generated from message entity.Position
  */
 export type Position = Message<"entity.Position"> & {
-	/**
-	 * 開始位置
-	 *
-	 * @generated from field: uint32 start = 1;
-	 */
-	start: number;
+  /**
+   * 開始位置
+   *
+   * @generated from field: uint32 start = 1;
+   */
+  start: number;
 
-	/**
-	 * 終了位置
-	 *
-	 * @generated from field: uint32 end = 2;
-	 */
-	end: number;
+  /**
+   * 終了位置
+   *
+   * @generated from field: uint32 end = 2;
+   */
+  end: number;
 
-	/**
-	 * エイリアスID（エイリアスを使用した場合のみ設定、エンティティ名を直接使用した場合は空文字列）
-	 *
-	 * @generated from field: string alias_id = 3;
-	 */
-	aliasId: string;
+  /**
+   * エイリアスID（エイリアスを使用した場合のみ設定、エンティティ名を直接使用した場合は空文字列）
+   *
+   * @generated from field: string alias_id = 3;
+   */
+  aliasId: string;
 };
 
 /**
@@ -58,8 +58,8 @@ export type Position = Message<"entity.Position"> & {
  * Use `create(PositionSchema)` to create a new message.
  */
 export const PositionSchema: GenMessage<Position> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 0);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 0);
 
 /**
  * エンティティ
@@ -67,42 +67,42 @@ export const PositionSchema: GenMessage<Position> =
  * @generated from message entity.Entity
  */
 export type Entity = Message<"entity.Entity"> & {
-	/**
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
 
-	/**
-	 * @generated from field: string name = 2;
-	 */
-	name: string;
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
 
-	/**
-	 * @generated from field: entity.EntityCategory category = 3;
-	 */
-	category: EntityCategory;
+  /**
+   * @generated from field: entity.EntityCategory category = 3;
+   */
+  category: EntityCategory;
 
-	/**
-	 * @generated from field: string memo = 4;
-	 */
-	memo: string;
+  /**
+   * @generated from field: string memo = 4;
+   */
+  memo: string;
 
-	/**
-	 * エイリアスのリスト
-	 *
-	 * @generated from field: repeated entity.EntityAlias aliases = 5;
-	 */
-	aliases: EntityAlias[];
+  /**
+   * エイリアスのリスト
+   *
+   * @generated from field: repeated entity.EntityAlias aliases = 5;
+   */
+  aliases: EntityAlias[];
 
-	/**
-	 * @generated from field: int64 created_at = 6;
-	 */
-	createdAt: bigint;
+  /**
+   * @generated from field: int64 created_at = 6;
+   */
+  createdAt: bigint;
 
-	/**
-	 * @generated from field: int64 updated_at = 7;
-	 */
-	updatedAt: bigint;
+  /**
+   * @generated from field: int64 updated_at = 7;
+   */
+  updatedAt: bigint;
 };
 
 /**
@@ -110,8 +110,8 @@ export type Entity = Message<"entity.Entity"> & {
  * Use `create(EntitySchema)` to create a new message.
  */
 export const EntitySchema: GenMessage<Entity> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 1);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 1);
 
 /**
  * エイリアス
@@ -119,30 +119,30 @@ export const EntitySchema: GenMessage<Entity> =
  * @generated from message entity.EntityAlias
  */
 export type EntityAlias = Message<"entity.EntityAlias"> & {
-	/**
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
 
-	/**
-	 * @generated from field: string entity_id = 2;
-	 */
-	entityId: string;
+  /**
+   * @generated from field: string entity_id = 2;
+   */
+  entityId: string;
 
-	/**
-	 * @generated from field: string alias = 3;
-	 */
-	alias: string;
+  /**
+   * @generated from field: string alias = 3;
+   */
+  alias: string;
 
-	/**
-	 * @generated from field: int64 created_at = 4;
-	 */
-	createdAt: bigint;
+  /**
+   * @generated from field: int64 created_at = 4;
+   */
+  createdAt: bigint;
 
-	/**
-	 * @generated from field: int64 updated_at = 5;
-	 */
-	updatedAt: bigint;
+  /**
+   * @generated from field: int64 updated_at = 5;
+   */
+  updatedAt: bigint;
 };
 
 /**
@@ -150,8 +150,8 @@ export type EntityAlias = Message<"entity.EntityAlias"> & {
  * Use `create(EntityAliasSchema)` to create a new message.
  */
 export const EntityAliasSchema: GenMessage<EntityAlias> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 2);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 2);
 
 /**
  * エンティティ作成リクエスト
@@ -159,20 +159,20 @@ export const EntityAliasSchema: GenMessage<EntityAlias> =
  * @generated from message entity.CreateEntityRequest
  */
 export type CreateEntityRequest = Message<"entity.CreateEntityRequest"> & {
-	/**
-	 * @generated from field: string name = 1;
-	 */
-	name: string;
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
 
-	/**
-	 * @generated from field: entity.EntityCategory category = 2;
-	 */
-	category: EntityCategory;
+  /**
+   * @generated from field: entity.EntityCategory category = 2;
+   */
+  category: EntityCategory;
 
-	/**
-	 * @generated from field: string memo = 3;
-	 */
-	memo: string;
+  /**
+   * @generated from field: string memo = 3;
+   */
+  memo: string;
 };
 
 /**
@@ -180,8 +180,8 @@ export type CreateEntityRequest = Message<"entity.CreateEntityRequest"> & {
  * Use `create(CreateEntityRequestSchema)` to create a new message.
  */
 export const CreateEntityRequestSchema: GenMessage<CreateEntityRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 3);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 3);
 
 /**
  * エンティティ作成レスポンス
@@ -189,10 +189,10 @@ export const CreateEntityRequestSchema: GenMessage<CreateEntityRequest> =
  * @generated from message entity.CreateEntityResponse
  */
 export type CreateEntityResponse = Message<"entity.CreateEntityResponse"> & {
-	/**
-	 * @generated from field: entity.Entity entity = 1;
-	 */
-	entity?: Entity;
+  /**
+   * @generated from field: entity.Entity entity = 1;
+   */
+  entity?: Entity;
 };
 
 /**
@@ -200,8 +200,8 @@ export type CreateEntityResponse = Message<"entity.CreateEntityResponse"> & {
  * Use `create(CreateEntityResponseSchema)` to create a new message.
  */
 export const CreateEntityResponseSchema: GenMessage<CreateEntityResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 4);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 4);
 
 /**
  * エンティティ更新リクエスト
@@ -209,25 +209,25 @@ export const CreateEntityResponseSchema: GenMessage<CreateEntityResponse> =
  * @generated from message entity.UpdateEntityRequest
  */
 export type UpdateEntityRequest = Message<"entity.UpdateEntityRequest"> & {
-	/**
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
 
-	/**
-	 * @generated from field: string name = 2;
-	 */
-	name: string;
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
 
-	/**
-	 * @generated from field: entity.EntityCategory category = 3;
-	 */
-	category: EntityCategory;
+  /**
+   * @generated from field: entity.EntityCategory category = 3;
+   */
+  category: EntityCategory;
 
-	/**
-	 * @generated from field: string memo = 4;
-	 */
-	memo: string;
+  /**
+   * @generated from field: string memo = 4;
+   */
+  memo: string;
 };
 
 /**
@@ -235,8 +235,8 @@ export type UpdateEntityRequest = Message<"entity.UpdateEntityRequest"> & {
  * Use `create(UpdateEntityRequestSchema)` to create a new message.
  */
 export const UpdateEntityRequestSchema: GenMessage<UpdateEntityRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 5);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 5);
 
 /**
  * エンティティ更新レスポンス
@@ -244,10 +244,10 @@ export const UpdateEntityRequestSchema: GenMessage<UpdateEntityRequest> =
  * @generated from message entity.UpdateEntityResponse
  */
 export type UpdateEntityResponse = Message<"entity.UpdateEntityResponse"> & {
-	/**
-	 * @generated from field: entity.Entity entity = 1;
-	 */
-	entity?: Entity;
+  /**
+   * @generated from field: entity.Entity entity = 1;
+   */
+  entity?: Entity;
 };
 
 /**
@@ -255,8 +255,8 @@ export type UpdateEntityResponse = Message<"entity.UpdateEntityResponse"> & {
  * Use `create(UpdateEntityResponseSchema)` to create a new message.
  */
 export const UpdateEntityResponseSchema: GenMessage<UpdateEntityResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 6);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 6);
 
 /**
  * エンティティ削除リクエスト
@@ -264,10 +264,10 @@ export const UpdateEntityResponseSchema: GenMessage<UpdateEntityResponse> =
  * @generated from message entity.DeleteEntityRequest
  */
 export type DeleteEntityRequest = Message<"entity.DeleteEntityRequest"> & {
-	/**
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
 };
 
 /**
@@ -275,8 +275,8 @@ export type DeleteEntityRequest = Message<"entity.DeleteEntityRequest"> & {
  * Use `create(DeleteEntityRequestSchema)` to create a new message.
  */
 export const DeleteEntityRequestSchema: GenMessage<DeleteEntityRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 7);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 7);
 
 /**
  * エンティティ削除レスポンス
@@ -284,10 +284,10 @@ export const DeleteEntityRequestSchema: GenMessage<DeleteEntityRequest> =
  * @generated from message entity.DeleteEntityResponse
  */
 export type DeleteEntityResponse = Message<"entity.DeleteEntityResponse"> & {
-	/**
-	 * @generated from field: bool success = 1;
-	 */
-	success: boolean;
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
 };
 
 /**
@@ -295,8 +295,8 @@ export type DeleteEntityResponse = Message<"entity.DeleteEntityResponse"> & {
  * Use `create(DeleteEntityResponseSchema)` to create a new message.
  */
 export const DeleteEntityResponseSchema: GenMessage<DeleteEntityResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 8);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 8);
 
 /**
  * エンティティ取得リクエスト
@@ -304,10 +304,10 @@ export const DeleteEntityResponseSchema: GenMessage<DeleteEntityResponse> =
  * @generated from message entity.GetEntityRequest
  */
 export type GetEntityRequest = Message<"entity.GetEntityRequest"> & {
-	/**
-	 * @generated from field: string id = 1;
-	 */
-	id: string;
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
 };
 
 /**
@@ -315,8 +315,8 @@ export type GetEntityRequest = Message<"entity.GetEntityRequest"> & {
  * Use `create(GetEntityRequestSchema)` to create a new message.
  */
 export const GetEntityRequestSchema: GenMessage<GetEntityRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 9);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 9);
 
 /**
  * エンティティ取得レスポンス
@@ -324,10 +324,10 @@ export const GetEntityRequestSchema: GenMessage<GetEntityRequest> =
  * @generated from message entity.GetEntityResponse
  */
 export type GetEntityResponse = Message<"entity.GetEntityResponse"> & {
-	/**
-	 * @generated from field: entity.Entity entity = 1;
-	 */
-	entity?: Entity;
+  /**
+   * @generated from field: entity.Entity entity = 1;
+   */
+  entity?: Entity;
 };
 
 /**
@@ -335,8 +335,8 @@ export type GetEntityResponse = Message<"entity.GetEntityResponse"> & {
  * Use `create(GetEntityResponseSchema)` to create a new message.
  */
 export const GetEntityResponseSchema: GenMessage<GetEntityResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 10);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 10);
 
 /**
  * エンティティ一覧取得リクエスト
@@ -344,19 +344,19 @@ export const GetEntityResponseSchema: GenMessage<GetEntityResponse> =
  * @generated from message entity.ListEntitiesRequest
  */
 export type ListEntitiesRequest = Message<"entity.ListEntitiesRequest"> & {
-	/**
-	 * カテゴリでフィルタ
-	 *
-	 * @generated from field: entity.EntityCategory category = 1;
-	 */
-	category: EntityCategory;
+  /**
+   * カテゴリでフィルタ
+   *
+   * @generated from field: entity.EntityCategory category = 1;
+   */
+  category: EntityCategory;
 
-	/**
-	 * trueの場合は全てのカテゴリを表示、falseの場合はcategoryでフィルタ
-	 *
-	 * @generated from field: bool all_categories = 2;
-	 */
-	allCategories: boolean;
+  /**
+   * trueの場合は全てのカテゴリを表示、falseの場合はcategoryでフィルタ
+   *
+   * @generated from field: bool all_categories = 2;
+   */
+  allCategories: boolean;
 };
 
 /**
@@ -364,8 +364,8 @@ export type ListEntitiesRequest = Message<"entity.ListEntitiesRequest"> & {
  * Use `create(ListEntitiesRequestSchema)` to create a new message.
  */
 export const ListEntitiesRequestSchema: GenMessage<ListEntitiesRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 11);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 11);
 
 /**
  * エンティティ一覧取得レスポンス
@@ -373,10 +373,10 @@ export const ListEntitiesRequestSchema: GenMessage<ListEntitiesRequest> =
  * @generated from message entity.ListEntitiesResponse
  */
 export type ListEntitiesResponse = Message<"entity.ListEntitiesResponse"> & {
-	/**
-	 * @generated from field: repeated entity.Entity entities = 1;
-	 */
-	entities: Entity[];
+  /**
+   * @generated from field: repeated entity.Entity entities = 1;
+   */
+  entities: Entity[];
 };
 
 /**
@@ -384,8 +384,8 @@ export type ListEntitiesResponse = Message<"entity.ListEntitiesResponse"> & {
  * Use `create(ListEntitiesResponseSchema)` to create a new message.
  */
 export const ListEntitiesResponseSchema: GenMessage<ListEntitiesResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 12);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 12);
 
 /**
  * エイリアス追加リクエスト
@@ -393,25 +393,25 @@ export const ListEntitiesResponseSchema: GenMessage<ListEntitiesResponse> =
  * @generated from message entity.CreateEntityAliasRequest
  */
 export type CreateEntityAliasRequest =
-	Message<"entity.CreateEntityAliasRequest"> & {
-		/**
-		 * @generated from field: string entity_id = 1;
-		 */
-		entityId: string;
+  Message<"entity.CreateEntityAliasRequest"> & {
+    /**
+     * @generated from field: string entity_id = 1;
+     */
+    entityId: string;
 
-		/**
-		 * @generated from field: string alias = 2;
-		 */
-		alias: string;
-	};
+    /**
+     * @generated from field: string alias = 2;
+     */
+    alias: string;
+  };
 
 /**
  * Describes the message entity.CreateEntityAliasRequest.
  * Use `create(CreateEntityAliasRequestSchema)` to create a new message.
  */
 export const CreateEntityAliasRequestSchema: GenMessage<CreateEntityAliasRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 13);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 13);
 
 /**
  * エイリアス追加レスポンス
@@ -419,20 +419,20 @@ export const CreateEntityAliasRequestSchema: GenMessage<CreateEntityAliasRequest
  * @generated from message entity.CreateEntityAliasResponse
  */
 export type CreateEntityAliasResponse =
-	Message<"entity.CreateEntityAliasResponse"> & {
-		/**
-		 * @generated from field: entity.EntityAlias alias = 1;
-		 */
-		alias?: EntityAlias;
-	};
+  Message<"entity.CreateEntityAliasResponse"> & {
+    /**
+     * @generated from field: entity.EntityAlias alias = 1;
+     */
+    alias?: EntityAlias;
+  };
 
 /**
  * Describes the message entity.CreateEntityAliasResponse.
  * Use `create(CreateEntityAliasResponseSchema)` to create a new message.
  */
 export const CreateEntityAliasResponseSchema: GenMessage<CreateEntityAliasResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 14);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 14);
 
 /**
  * エイリアス更新リクエスト
@@ -440,25 +440,25 @@ export const CreateEntityAliasResponseSchema: GenMessage<CreateEntityAliasRespon
  * @generated from message entity.UpdateEntityAliasRequest
  */
 export type UpdateEntityAliasRequest =
-	Message<"entity.UpdateEntityAliasRequest"> & {
-		/**
-		 * @generated from field: string id = 1;
-		 */
-		id: string;
+  Message<"entity.UpdateEntityAliasRequest"> & {
+    /**
+     * @generated from field: string id = 1;
+     */
+    id: string;
 
-		/**
-		 * @generated from field: string alias = 2;
-		 */
-		alias: string;
-	};
+    /**
+     * @generated from field: string alias = 2;
+     */
+    alias: string;
+  };
 
 /**
  * Describes the message entity.UpdateEntityAliasRequest.
  * Use `create(UpdateEntityAliasRequestSchema)` to create a new message.
  */
 export const UpdateEntityAliasRequestSchema: GenMessage<UpdateEntityAliasRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 15);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 15);
 
 /**
  * エイリアス更新レスポンス
@@ -466,20 +466,20 @@ export const UpdateEntityAliasRequestSchema: GenMessage<UpdateEntityAliasRequest
  * @generated from message entity.UpdateEntityAliasResponse
  */
 export type UpdateEntityAliasResponse =
-	Message<"entity.UpdateEntityAliasResponse"> & {
-		/**
-		 * @generated from field: entity.EntityAlias alias = 1;
-		 */
-		alias?: EntityAlias;
-	};
+  Message<"entity.UpdateEntityAliasResponse"> & {
+    /**
+     * @generated from field: entity.EntityAlias alias = 1;
+     */
+    alias?: EntityAlias;
+  };
 
 /**
  * Describes the message entity.UpdateEntityAliasResponse.
  * Use `create(UpdateEntityAliasResponseSchema)` to create a new message.
  */
 export const UpdateEntityAliasResponseSchema: GenMessage<UpdateEntityAliasResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 16);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 16);
 
 /**
  * エイリアス削除リクエスト
@@ -487,20 +487,20 @@ export const UpdateEntityAliasResponseSchema: GenMessage<UpdateEntityAliasRespon
  * @generated from message entity.DeleteEntityAliasRequest
  */
 export type DeleteEntityAliasRequest =
-	Message<"entity.DeleteEntityAliasRequest"> & {
-		/**
-		 * @generated from field: string id = 1;
-		 */
-		id: string;
-	};
+  Message<"entity.DeleteEntityAliasRequest"> & {
+    /**
+     * @generated from field: string id = 1;
+     */
+    id: string;
+  };
 
 /**
  * Describes the message entity.DeleteEntityAliasRequest.
  * Use `create(DeleteEntityAliasRequestSchema)` to create a new message.
  */
 export const DeleteEntityAliasRequestSchema: GenMessage<DeleteEntityAliasRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 17);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 17);
 
 /**
  * エイリアス削除レスポンス
@@ -508,20 +508,20 @@ export const DeleteEntityAliasRequestSchema: GenMessage<DeleteEntityAliasRequest
  * @generated from message entity.DeleteEntityAliasResponse
  */
 export type DeleteEntityAliasResponse =
-	Message<"entity.DeleteEntityAliasResponse"> & {
-		/**
-		 * @generated from field: bool success = 1;
-		 */
-		success: boolean;
-	};
+  Message<"entity.DeleteEntityAliasResponse"> & {
+    /**
+     * @generated from field: bool success = 1;
+     */
+    success: boolean;
+  };
 
 /**
  * Describes the message entity.DeleteEntityAliasResponse.
  * Use `create(DeleteEntityAliasResponseSchema)` to create a new message.
  */
 export const DeleteEntityAliasResponseSchema: GenMessage<DeleteEntityAliasResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 18);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 18);
 
 /**
  * エンティティ検索リクエスト
@@ -529,12 +529,12 @@ export const DeleteEntityAliasResponseSchema: GenMessage<DeleteEntityAliasRespon
  * @generated from message entity.SearchEntitiesRequest
  */
 export type SearchEntitiesRequest = Message<"entity.SearchEntitiesRequest"> & {
-	/**
-	 * 検索クエリ
-	 *
-	 * @generated from field: string query = 1;
-	 */
-	query: string;
+  /**
+   * 検索クエリ
+   *
+   * @generated from field: string query = 1;
+   */
+  query: string;
 };
 
 /**
@@ -542,8 +542,8 @@ export type SearchEntitiesRequest = Message<"entity.SearchEntitiesRequest"> & {
  * Use `create(SearchEntitiesRequestSchema)` to create a new message.
  */
 export const SearchEntitiesRequestSchema: GenMessage<SearchEntitiesRequest> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 19);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 19);
 
 /**
  * エンティティ検索レスポンス
@@ -551,20 +551,20 @@ export const SearchEntitiesRequestSchema: GenMessage<SearchEntitiesRequest> =
  * @generated from message entity.SearchEntitiesResponse
  */
 export type SearchEntitiesResponse =
-	Message<"entity.SearchEntitiesResponse"> & {
-		/**
-		 * @generated from field: repeated entity.Entity entities = 1;
-		 */
-		entities: Entity[];
-	};
+  Message<"entity.SearchEntitiesResponse"> & {
+    /**
+     * @generated from field: repeated entity.Entity entities = 1;
+     */
+    entities: Entity[];
+  };
 
 /**
  * Describes the message entity.SearchEntitiesResponse.
  * Use `create(SearchEntitiesResponseSchema)` to create a new message.
  */
 export const SearchEntitiesResponseSchema: GenMessage<SearchEntitiesResponse> =
-	/*@__PURE__*/
-	messageDesc(file_entity_entity, 20);
+  /*@__PURE__*/
+  messageDesc(file_entity_entity, 20);
 
 /**
  * エンティティのカテゴリー
@@ -572,27 +572,27 @@ export const SearchEntitiesResponseSchema: GenMessage<SearchEntitiesResponse> =
  * @generated from enum entity.EntityCategory
  */
 export enum EntityCategory {
-	/**
-	 * 未分類
-	 *
-	 * @generated from enum value: NO_CATEGORY = 0;
-	 */
-	NO_CATEGORY = 0,
+  /**
+   * 未分類
+   *
+   * @generated from enum value: NO_CATEGORY = 0;
+   */
+  NO_CATEGORY = 0,
 
-	/**
-	 * 人物
-	 *
-	 * @generated from enum value: PEOPLE = 1;
-	 */
-	PEOPLE = 1,
+  /**
+   * 人物
+   *
+   * @generated from enum value: PEOPLE = 1;
+   */
+  PEOPLE = 1,
 }
 
 /**
  * Describes the enum entity.EntityCategory.
  */
 export const EntityCategorySchema: GenEnum<EntityCategory> =
-	/*@__PURE__*/
-	enumDesc(file_entity_entity, 0);
+  /*@__PURE__*/
+  enumDesc(file_entity_entity, 0);
 
 /**
  * EntityService は固有名詞（人物、場所など）を管理するサービスです。
@@ -601,150 +601,150 @@ export const EntityCategorySchema: GenEnum<EntityCategory> =
  * @generated from service entity.EntityService
  */
 export const EntityService: GenService<{
-	/**
-	 * CreateEntity は新しいエンティティを作成します。
-	 *
-	 * 例:
-	 *   request: { name: "山田太郎", category: PEOPLE, memo: "友人" }
-	 *   response: { entity: { id: "uuid", name: "山田太郎", ... } }
-	 *
-	 * エラー:
-	 *   - AlreadyExists: 同じ名前のエンティティまたはエイリアスが既に存在する
-	 *
-	 * @generated from rpc entity.EntityService.CreateEntity
-	 */
-	createEntity: {
-		methodKind: "unary";
-		input: typeof CreateEntityRequestSchema;
-		output: typeof CreateEntityResponseSchema;
-	};
-	/**
-	 * UpdateEntity は既存のエンティティを更新します。
-	 *
-	 * 例:
-	 *   request: { id: "uuid", name: "山田花子", category: PEOPLE, memo: "同僚" }
-	 *
-	 * エラー:
-	 *   - NotFound: エンティティが見つからない
-	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
-	 *
-	 * @generated from rpc entity.EntityService.UpdateEntity
-	 */
-	updateEntity: {
-		methodKind: "unary";
-		input: typeof UpdateEntityRequestSchema;
-		output: typeof UpdateEntityResponseSchema;
-	};
-	/**
-	 * DeleteEntity はエンティティとそれに紐づくエイリアスを削除します。
-	 *
-	 * エラー:
-	 *   - NotFound: エンティティが見つからない
-	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
-	 *
-	 * @generated from rpc entity.EntityService.DeleteEntity
-	 */
-	deleteEntity: {
-		methodKind: "unary";
-		input: typeof DeleteEntityRequestSchema;
-		output: typeof DeleteEntityResponseSchema;
-	};
-	/**
-	 * GetEntity は指定されたIDのエンティティを取得します。
-	 * エイリアスも含めて返されます。
-	 *
-	 * エラー:
-	 *   - NotFound: エンティティが見つからない
-	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
-	 *
-	 * @generated from rpc entity.EntityService.GetEntity
-	 */
-	getEntity: {
-		methodKind: "unary";
-		input: typeof GetEntityRequestSchema;
-		output: typeof GetEntityResponseSchema;
-	};
-	/**
-	 * ListEntities はユーザーのエンティティ一覧を取得します。
-	 * カテゴリでフィルタリングも可能です。
-	 *
-	 * 例（全件取得）:
-	 *   request: { all_categories: true }
-	 *
-	 * 例（カテゴリフィルタ）:
-	 *   request: { category: PEOPLE, all_categories: false }
-	 *
-	 * @generated from rpc entity.EntityService.ListEntities
-	 */
-	listEntities: {
-		methodKind: "unary";
-		input: typeof ListEntitiesRequestSchema;
-		output: typeof ListEntitiesResponseSchema;
-	};
-	/**
-	 * CreateEntityAlias はエンティティにエイリアス（別名）を追加します。
-	 *
-	 * 例:
-	 *   request: { entity_id: "uuid", alias: "太郎" }
-	 *
-	 * エラー:
-	 *   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
-	 *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
-	 *
-	 * @generated from rpc entity.EntityService.CreateEntityAlias
-	 */
-	createEntityAlias: {
-		methodKind: "unary";
-		input: typeof CreateEntityAliasRequestSchema;
-		output: typeof CreateEntityAliasResponseSchema;
-	};
-	/**
-	 * UpdateEntityAlias はエイリアスを更新します。
-	 *
-	 * 例:
-	 *   request: { id: "uuid", alias: "太郎くん" }
-	 *
-	 * エラー:
-	 *   - NotFound: エイリアスが見つからない
-	 *   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
-	 *   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
-	 *
-	 * @generated from rpc entity.EntityService.UpdateEntityAlias
-	 */
-	updateEntityAlias: {
-		methodKind: "unary";
-		input: typeof UpdateEntityAliasRequestSchema;
-		output: typeof UpdateEntityAliasResponseSchema;
-	};
-	/**
-	 * DeleteEntityAlias はエイリアスを削除します。
-	 *
-	 * エラー:
-	 *   - NotFound: エイリアスが見つからない
-	 *   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
-	 *
-	 * @generated from rpc entity.EntityService.DeleteEntityAlias
-	 */
-	deleteEntityAlias: {
-		methodKind: "unary";
-		input: typeof DeleteEntityAliasRequestSchema;
-		output: typeof DeleteEntityAliasResponseSchema;
-	};
-	/**
-	 * SearchEntities はエンティティ名またはエイリアスで部分一致検索を行います。
-	 * 主に日記入力時の補完候補として使用されます。
-	 *
-	 * 例:
-	 *   request: { query: "山田" }
-	 *   response: { entities: [{ name: "山田太郎", ... }, { name: "山田花子", ... }] }
-	 *
-	 * 空文字列を指定すると全件取得されます。
-	 *
-	 * @generated from rpc entity.EntityService.SearchEntities
-	 */
-	searchEntities: {
-		methodKind: "unary";
-		input: typeof SearchEntitiesRequestSchema;
-		output: typeof SearchEntitiesResponseSchema;
-	};
+  /**
+   * CreateEntity は新しいエンティティを作成します。
+   *
+   * 例:
+   *   request: { name: "山田太郎", category: PEOPLE, memo: "友人" }
+   *   response: { entity: { id: "uuid", name: "山田太郎", ... } }
+   *
+   * エラー:
+   *   - AlreadyExists: 同じ名前のエンティティまたはエイリアスが既に存在する
+   *
+   * @generated from rpc entity.EntityService.CreateEntity
+   */
+  createEntity: {
+    methodKind: "unary";
+    input: typeof CreateEntityRequestSchema;
+    output: typeof CreateEntityResponseSchema;
+  };
+  /**
+   * UpdateEntity は既存のエンティティを更新します。
+   *
+   * 例:
+   *   request: { id: "uuid", name: "山田花子", category: PEOPLE, memo: "同僚" }
+   *
+   * エラー:
+   *   - NotFound: エンティティが見つからない
+   *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+   *
+   * @generated from rpc entity.EntityService.UpdateEntity
+   */
+  updateEntity: {
+    methodKind: "unary";
+    input: typeof UpdateEntityRequestSchema;
+    output: typeof UpdateEntityResponseSchema;
+  };
+  /**
+   * DeleteEntity はエンティティとそれに紐づくエイリアスを削除します。
+   *
+   * エラー:
+   *   - NotFound: エンティティが見つからない
+   *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+   *
+   * @generated from rpc entity.EntityService.DeleteEntity
+   */
+  deleteEntity: {
+    methodKind: "unary";
+    input: typeof DeleteEntityRequestSchema;
+    output: typeof DeleteEntityResponseSchema;
+  };
+  /**
+   * GetEntity は指定されたIDのエンティティを取得します。
+   * エイリアスも含めて返されます。
+   *
+   * エラー:
+   *   - NotFound: エンティティが見つからない
+   *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+   *
+   * @generated from rpc entity.EntityService.GetEntity
+   */
+  getEntity: {
+    methodKind: "unary";
+    input: typeof GetEntityRequestSchema;
+    output: typeof GetEntityResponseSchema;
+  };
+  /**
+   * ListEntities はユーザーのエンティティ一覧を取得します。
+   * カテゴリでフィルタリングも可能です。
+   *
+   * 例（全件取得）:
+   *   request: { all_categories: true }
+   *
+   * 例（カテゴリフィルタ）:
+   *   request: { category: PEOPLE, all_categories: false }
+   *
+   * @generated from rpc entity.EntityService.ListEntities
+   */
+  listEntities: {
+    methodKind: "unary";
+    input: typeof ListEntitiesRequestSchema;
+    output: typeof ListEntitiesResponseSchema;
+  };
+  /**
+   * CreateEntityAlias はエンティティにエイリアス（別名）を追加します。
+   *
+   * 例:
+   *   request: { entity_id: "uuid", alias: "太郎" }
+   *
+   * エラー:
+   *   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+   *   - PermissionDenied: 他のユーザーのエンティティにアクセスしようとした
+   *
+   * @generated from rpc entity.EntityService.CreateEntityAlias
+   */
+  createEntityAlias: {
+    methodKind: "unary";
+    input: typeof CreateEntityAliasRequestSchema;
+    output: typeof CreateEntityAliasResponseSchema;
+  };
+  /**
+   * UpdateEntityAlias はエイリアスを更新します。
+   *
+   * 例:
+   *   request: { id: "uuid", alias: "太郎くん" }
+   *
+   * エラー:
+   *   - NotFound: エイリアスが見つからない
+   *   - AlreadyExists: 同じエイリアスまたはエンティティ名が既に存在する
+   *   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+   *
+   * @generated from rpc entity.EntityService.UpdateEntityAlias
+   */
+  updateEntityAlias: {
+    methodKind: "unary";
+    input: typeof UpdateEntityAliasRequestSchema;
+    output: typeof UpdateEntityAliasResponseSchema;
+  };
+  /**
+   * DeleteEntityAlias はエイリアスを削除します。
+   *
+   * エラー:
+   *   - NotFound: エイリアスが見つからない
+   *   - PermissionDenied: 他のユーザーのエンティティのエイリアスにアクセスしようとした
+   *
+   * @generated from rpc entity.EntityService.DeleteEntityAlias
+   */
+  deleteEntityAlias: {
+    methodKind: "unary";
+    input: typeof DeleteEntityAliasRequestSchema;
+    output: typeof DeleteEntityAliasResponseSchema;
+  };
+  /**
+   * SearchEntities はエンティティ名またはエイリアスで部分一致検索を行います。
+   * 主に日記入力時の補完候補として使用されます。
+   *
+   * 例:
+   *   request: { query: "山田" }
+   *   response: { entities: [{ name: "山田太郎", ... }, { name: "山田花子", ... }] }
+   *
+   * 空文字列を指定すると全件取得されます。
+   *
+   * @generated from rpc entity.EntityService.SearchEntities
+   */
+  searchEntities: {
+    methodKind: "unary";
+    input: typeof SearchEntitiesRequestSchema;
+    output: typeof SearchEntitiesResponseSchema;
+  };
 }> = /*@__PURE__*/ serviceDesc(file_entity_entity, 0);

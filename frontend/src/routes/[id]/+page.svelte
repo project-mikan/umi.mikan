@@ -1,361 +1,361 @@
 <script lang="ts">
-	import { _, locale } from "svelte-i18n";
-	import { enhance } from "$app/forms";
-	import { goto, invalidateAll } from "$app/navigation";
-	import { beforeNavigate } from "$app/navigation";
-	import { page } from "$app/stores";
-	import { onMount } from "svelte";
-	import "$lib/i18n";
-	import Button from "$lib/components/atoms/Button.svelte";
-	import SaveButton from "$lib/components/atoms/SaveButton.svelte";
-	import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
-	import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
-	import FormField from "$lib/components/molecules/FormField.svelte";
-	import HighlightDisplay from "$lib/components/molecules/HighlightDisplay.svelte";
-	import Modal from "$lib/components/molecules/Modal.svelte";
-	import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
-	import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
-	import { getDayOfWeekKey } from "$lib/utils/date-utils";
-	import { createSubmitHandler } from "$lib/utils/form-utils";
-	import type { HighlightData } from "$lib/types/highlight";
-	import type { ActionData, PageData } from "./$types";
+  import { _, locale } from "svelte-i18n";
+  import { enhance } from "$app/forms";
+  import { goto, invalidateAll } from "$app/navigation";
+  import { beforeNavigate } from "$app/navigation";
+  import { page } from "$app/stores";
+  import { onMount } from "svelte";
+  import "$lib/i18n";
+  import Button from "$lib/components/atoms/Button.svelte";
+  import SaveButton from "$lib/components/atoms/SaveButton.svelte";
+  import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
+  import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
+  import FormField from "$lib/components/molecules/FormField.svelte";
+  import HighlightDisplay from "$lib/components/molecules/HighlightDisplay.svelte";
+  import Modal from "$lib/components/molecules/Modal.svelte";
+  import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
+  import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
+  import { getDayOfWeekKey } from "$lib/utils/date-utils";
+  import { createSubmitHandler } from "$lib/utils/form-utils";
+  import type { HighlightData } from "$lib/types/highlight";
+  import type { ActionData, PageData } from "./$types";
 
-	export let data: PageData;
-	export let form: ActionData;
+  export let data: PageData;
+  export let form: ActionData;
 
-	// Reactive date formatting function
-	$: _formatDate = (ymd: {
-		year: number;
-		month: number;
-		day: number;
-	}): string => {
-		const dayOfWeekKey = getDayOfWeekKey(ymd);
-		const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
-		return $_("date.format.yearMonthDayWithDayOfWeek", {
-			values: {
-				year: ymd.year,
-				month: ymd.month,
-				day: ymd.day,
-				dayOfWeek: dayOfWeek,
-			},
-		});
-	};
+  // Reactive date formatting function
+  $: _formatDate = (ymd: {
+    year: number;
+    month: number;
+    day: number;
+  }): string => {
+    const dayOfWeekKey = getDayOfWeekKey(ymd);
+    const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
+    return $_("date.format.yearMonthDayWithDayOfWeek", {
+      values: {
+        year: ymd.year,
+        month: ymd.month,
+        day: ymd.day,
+        dayOfWeek: dayOfWeek,
+      },
+    });
+  };
 
-	$: title = $_("page.title.individual", {
-		values: {
-			date: _formatDate(data.date),
-		},
-	});
+  $: title = $_("page.title.individual", {
+    values: {
+      date: _formatDate(data.date),
+    },
+  });
 
-	$: content = data.entry?.content || "";
-	let formElement: HTMLFormElement;
-	let _showDeleteConfirm = false;
-	let loading = false;
-	let saved = false;
-	let summary: {
-		id: string;
-		diaryId: string;
-		date: { year: number; month: number; day: number };
-		summary: string;
-		createdAt: number;
-		updatedAt: number;
-	} | null = data.dailySummary;
-	let summaryError: string | null = null;
-	let isToday = false;
-	let isFutureDate = false;
-	let isSummaryGenerating = false; // 要約生成中のフラグ
-	let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
-	let isHighlightOutdated = false; // ハイライトが古いかどうか
+  $: content = data.entry?.content || "";
+  let formElement: HTMLFormElement;
+  let _showDeleteConfirm = false;
+  let loading = false;
+  let saved = false;
+  let summary: {
+    id: string;
+    diaryId: string;
+    date: { year: number; month: number; day: number };
+    summary: string;
+    createdAt: number;
+    updatedAt: number;
+  } | null = data.dailySummary;
+  let summaryError: string | null = null;
+  let isToday = false;
+  let isFutureDate = false;
+  let isSummaryGenerating = false; // 要約生成中のフラグ
+  let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
+  let isHighlightOutdated = false; // ハイライトが古いかどうか
 
-	// ハイライトデータ
-	let highlightData: HighlightData | null = null;
-	let highlightVisible = true; // ハイライトの表示・非表示状態
-	let embeddingDetailOpen = false; // vectorの詳細表示トグル
+  // ハイライトデータ
+  let highlightData: HighlightData | null = null;
+  let highlightVisible = true; // ハイライトの表示・非表示状態
+  let embeddingDetailOpen = false; // vectorの詳細表示トグル
 
-	// 検索ハイライト（URLの?searchパラメータから取得）
-	$: searchKeyword = $page.url.searchParams.get("search") ?? "";
+  // 検索ハイライト（URLの?searchパラメータから取得）
+  $: searchKeyword = $page.url.searchParams.get("search") ?? "";
 
-	// 検索ハイライトをクリア
-	function _clearSearchHighlight() {
-		goto($page.url.pathname, { replaceState: true });
-	}
+  // 検索ハイライトをクリア
+  function _clearSearchHighlight() {
+    goto($page.url.pathname, { replaceState: true });
+  }
 
-	// Textareaに渡すハイライトデータ（表示・非表示を反映）
-	// 配列の参照を毎回変更してTextareaのリアクティビティを確実にトリガー
-	$: displayedHighlights =
-		highlightVisible && highlightData ? [...highlightData.highlights] : [];
+  // Textareaに渡すハイライトデータ（表示・非表示を反映）
+  // 配列の参照を毎回変更してTextareaのリアクティビティを確実にトリガー
+  $: displayedHighlights =
+    highlightVisible && highlightData ? [...highlightData.highlights] : [];
 
-	// 未保存状態の管理
-	let initialContent = "";
-	let allowNavigation = false;
+  // 未保存状態の管理
+  let initialContent = "";
+  let allowNavigation = false;
 
-	// 前回のdataを保持して変更を検出
-	let previousEntryId = "";
+  // 前回のdataを保持して変更を検出
+  let previousEntryId = "";
 
-	// コンテンツの変更を監視して未保存状態を更新
-	$: hasUnsavedChanges = content !== initialContent && !allowNavigation;
+  // コンテンツの変更を監視して未保存状態を更新
+  $: hasUnsavedChanges = content !== initialContent && !allowNavigation;
 
-	// Check if user has LLM key configured
-	$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
-	$: hasLLMKey = !!existingLLMKey;
+  // Check if user has LLM key configured
+  $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
+  $: hasLLMKey = !!existingLLMKey;
 
-	// 日付判定（当日・未来日）
-	$: {
-		const now = new Date();
-		const currentDate = new Date(
-			data.date.year,
-			data.date.month - 1,
-			data.date.day,
-		);
-		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // 日付判定（当日・未来日）
+  $: {
+    const now = new Date();
+    const currentDate = new Date(
+      data.date.year,
+      data.date.month - 1,
+      data.date.day,
+    );
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-		isToday = currentDate.getTime() === today.getTime();
-		isFutureDate = currentDate.getTime() > today.getTime();
-	}
-	$: autoSummaryDisabled = !existingLLMKey?.autoSummaryDaily;
+    isToday = currentDate.getTime() === today.getTime();
+    isFutureDate = currentDate.getTime() > today.getTime();
+  }
+  $: autoSummaryDisabled = !existingLLMKey?.autoSummaryDaily;
 
-	// 無効化メッセージを取得
-	function getDisabledMessage(): string {
-		if (isFutureDate) {
-			return $_("diary.summaryNotAvailableFuture");
-		}
-		if (isToday) {
-			return $_("diary.summaryNotAvailableToday");
-		}
-		return "";
-	}
+  // 無効化メッセージを取得
+  function getDisabledMessage(): string {
+    if (isFutureDate) {
+      return $_("diary.summaryNotAvailableFuture");
+    }
+    if (isToday) {
+      return $_("diary.summaryNotAvailableToday");
+    }
+    return "";
+  }
 
-	// Check if the diary date is not today (only allow summary generation for past entries)
-	$: isNotToday = (() => {
-		if (!data.today) return false;
+  // Check if the diary date is not today (only allow summary generation for past entries)
+  $: isNotToday = (() => {
+    if (!data.today) return false;
 
-		return (
-			data.date.year < data.today.year ||
-			(data.date.year === data.today.year &&
-				data.date.month < data.today.month) ||
-			(data.date.year === data.today.year &&
-				data.date.month === data.today.month &&
-				data.date.day < data.today.day)
-		);
-	})();
+    return (
+      data.date.year < data.today.year ||
+      (data.date.year === data.today.year &&
+        data.date.month < data.today.month) ||
+      (data.date.year === data.today.year &&
+        data.date.month === data.today.month &&
+        data.date.day < data.today.day)
+    );
+  })();
 
-	// Check if summary is outdated (diary updatedAt > summary updatedAt)
-	$: isSummaryOutdated = (() => {
-		if (!summary || !data.entry) return false;
+  // Check if summary is outdated (diary updatedAt > summary updatedAt)
+  $: isSummaryOutdated = (() => {
+    if (!summary || !data.entry) return false;
 
-		// 日記エントリは秒単位、サマリーはミリ秒単位なので統一
-		const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
-		const summaryUpdatedAt = Number(summary.updatedAt); // 既にミリ秒
+    // 日記エントリは秒単位、サマリーはミリ秒単位なので統一
+    const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
+    const summaryUpdatedAt = Number(summary.updatedAt); // 既にミリ秒
 
-		// 要約が最近更新された場合（5秒以内）は古くないとみなす
-		const now = Date.now();
-		const recentlyUpdated =
-			lastSummaryUpdateTime > 0 && now - lastSummaryUpdateTime < 5000;
+    // 要約が最近更新された場合（5秒以内）は古くないとみなす
+    const now = Date.now();
+    const recentlyUpdated =
+      lastSummaryUpdateTime > 0 && now - lastSummaryUpdateTime < 5000;
 
-		// 要約が日記よりも新しい場合、または最近更新された場合は古くない
-		const isOutdated = diaryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
+    // 要約が日記よりも新しい場合、または最近更新された場合は古くない
+    const isOutdated = diaryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
 
-		return isOutdated;
-	})();
+    return isOutdated;
+  })();
 
-	// Check if highlight is outdated (diary updatedAt > highlight updatedAt)
-	$: {
-		if (!highlightData || !data.entry) {
-			isHighlightOutdated = false;
-		} else {
-			// 日記エントリは秒単位、ハイライトはミリ秒単位なので統一
-			const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
-			const highlightUpdatedAt = Number(highlightData.updatedAt); // 既にミリ秒
+  // Check if highlight is outdated (diary updatedAt > highlight updatedAt)
+  $: {
+    if (!highlightData || !data.entry) {
+      isHighlightOutdated = false;
+    } else {
+      // 日記エントリは秒単位、ハイライトはミリ秒単位なので統一
+      const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
+      const highlightUpdatedAt = Number(highlightData.updatedAt); // 既にミリ秒
 
-			// ハイライトが日記よりも古い場合
-			const isOutdated = diaryUpdatedAt > highlightUpdatedAt;
+      // ハイライトが日記よりも古い場合
+      const isOutdated = diaryUpdatedAt > highlightUpdatedAt;
 
-			// 古くなった場合は非表示にする
-			if (isOutdated && !isHighlightOutdated) {
-				isHighlightOutdated = true;
-				highlightVisible = false;
-			} else if (!isOutdated) {
-				isHighlightOutdated = false;
-			}
-		}
-	}
+      // 古くなった場合は非表示にする
+      if (isOutdated && !isHighlightOutdated) {
+        isHighlightOutdated = true;
+        highlightVisible = false;
+      } else if (!isOutdated) {
+        isHighlightOutdated = false;
+      }
+    }
+  }
 
-	// Character count calculation
-	$: characterCount = content ? content.length : 0;
+  // Character count calculation
+  $: characterCount = content ? content.length : 0;
 
-	// データが変更された時に要約状態を更新
-	// ページ遷移時のみ（entryのIDが変わった時のみ）実行
-	$: {
-		// entryの一意性を判定するためのID
-		const currentEntryId =
-			data.entry?.id || `${data.date.year}-${data.date.month}-${data.date.day}`;
+  // データが変更された時に要約状態を更新
+  // ページ遷移時のみ（entryのIDが変わった時のみ）実行
+  $: {
+    // entryの一意性を判定するためのID
+    const currentEntryId =
+      data.entry?.id || `${data.date.year}-${data.date.month}-${data.date.day}`;
 
-		// ページが変更された場合のみ初期化
-		if (currentEntryId !== previousEntryId) {
-			previousEntryId = currentEntryId;
+    // ページが変更された場合のみ初期化
+    if (currentEntryId !== previousEntryId) {
+      previousEntryId = currentEntryId;
 
-			// 要約とコンテンツを更新
-			summary = data.dailySummary;
-			isSummaryGenerating = false;
+      // 要約とコンテンツを更新
+      summary = data.dailySummary;
+      isSummaryGenerating = false;
 
-			// 初期コンテンツを設定
-			initialContent = data.entry?.content || "";
+      // 初期コンテンツを設定
+      initialContent = data.entry?.content || "";
 
-			// コンテンツ変数を初期化（ユーザー入力を上書きしない）
-			if (content !== initialContent) {
-				content = initialContent;
-			}
+      // コンテンツ変数を初期化（ユーザー入力を上書きしない）
+      if (content !== initialContent) {
+        content = initialContent;
+      }
 
-			// 新しいページではallowNavigationをリセット
-			allowNavigation = false;
-		}
-	}
+      // 新しいページではallowNavigationをリセット
+      allowNavigation = false;
+    }
+  }
 
-	function handleSummaryUpdated(event: CustomEvent) {
-		const newSummary = event.detail.summary;
-		const oldSummary = summary;
+  function handleSummaryUpdated(event: CustomEvent) {
+    const newSummary = event.detail.summary;
+    const oldSummary = summary;
 
-		// 要約が実際に変更されたかどうかを確認
-		const actuallyUpdated =
-			!oldSummary ||
-			oldSummary.updatedAt !== newSummary.updatedAt ||
-			oldSummary.summary !== newSummary.summary;
+    // 要約が実際に変更されたかどうかを確認
+    const actuallyUpdated =
+      !oldSummary ||
+      oldSummary.updatedAt !== newSummary.updatedAt ||
+      oldSummary.summary !== newSummary.summary;
 
-		summary = newSummary;
+    summary = newSummary;
 
-		// 要約が実際に更新された場合のみ時刻を記録
-		if (actuallyUpdated) {
-			lastSummaryUpdateTime = Date.now();
-		}
-	}
+    // 要約が実際に更新された場合のみ時刻を記録
+    if (actuallyUpdated) {
+      lastSummaryUpdateTime = Date.now();
+    }
+  }
 
-	function handleSummaryError(event: CustomEvent) {
-		summaryError = event.detail.message;
-	}
+  function handleSummaryError(event: CustomEvent) {
+    summaryError = event.detail.message;
+  }
 
-	function handleGenerationStarted() {
-		isSummaryGenerating = true;
-		summaryError = null;
-	}
+  function handleGenerationStarted() {
+    isSummaryGenerating = true;
+    summaryError = null;
+  }
 
-	function handleGenerationCompleted() {
-		isSummaryGenerating = false;
-	}
+  function handleGenerationCompleted() {
+    isSummaryGenerating = false;
+  }
 
-	function handleHighlightUpdated(event: CustomEvent) {
-		const newHighlight = event.detail.highlight;
-		highlightData = newHighlight;
-		// ハイライトが更新されたら古くないとマークして表示する
-		isHighlightOutdated = false;
-		highlightVisible = true;
-	}
+  function handleHighlightUpdated(event: CustomEvent) {
+    const newHighlight = event.detail.highlight;
+    highlightData = newHighlight;
+    // ハイライトが更新されたら古くないとマークして表示する
+    isHighlightOutdated = false;
+    highlightVisible = true;
+  }
 
-	function handleHighlightVisibilityChanged(event: CustomEvent) {
-		// ハイライトの表示・非表示状態を更新
-		highlightVisible = event.detail.visible;
-	}
+  function handleHighlightVisibilityChanged(event: CustomEvent) {
+    // ハイライトの表示・非表示状態を更新
+    highlightVisible = event.detail.visible;
+  }
 
-	function _formatDateStr(ymd: {
-		year: number;
-		month: number;
-		day: number;
-	}): string {
-		return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
-	}
+  function _formatDateStr(ymd: {
+    year: number;
+    month: number;
+    day: number;
+  }): string {
+    return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
+  }
 
-	function _goBack() {
-		goto("/");
-	}
+  function _goBack() {
+    goto("/");
+  }
 
-	function _goToMonthly() {
-		const year = data.date.year;
-		const month = String(data.date.month).padStart(2, "0");
-		goto(`/monthly/${year}/${month}`);
-	}
+  function _goToMonthly() {
+    const year = data.date.year;
+    const month = String(data.date.month).padStart(2, "0");
+    goto(`/monthly/${year}/${month}`);
+  }
 
-	function _handleSave() {
-		formElement?.requestSubmit();
-	}
+  function _handleSave() {
+    formElement?.requestSubmit();
+  }
 
-	function _confirmDelete() {
-		_showDeleteConfirm = true;
-	}
+  function _confirmDelete() {
+    _showDeleteConfirm = true;
+  }
 
-	function _cancelDelete() {
-		_showDeleteConfirm = false;
-	}
+  function _cancelDelete() {
+    _showDeleteConfirm = false;
+  }
 
-	function _handleDelete() {
-		// 削除時は遷移を許可
-		allowNavigation = true;
-		const form = document.createElement("form");
-		form.method = "POST";
-		form.action = "?/delete";
-		document.body.appendChild(form);
-		form.submit();
-	}
+  function _handleDelete() {
+    // 削除時は遷移を許可
+    allowNavigation = true;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "?/delete";
+    document.body.appendChild(form);
+    form.submit();
+  }
 
-	// ページ遷移前の警告
-	beforeNavigate((navigation) => {
-		if (hasUnsavedChanges && !allowNavigation) {
-			if (!confirm($_("diary.unsavedChangesWarning"))) {
-				navigation.cancel();
-			}
-		}
-	});
+  // ページ遷移前の警告
+  beforeNavigate((navigation) => {
+    if (hasUnsavedChanges && !allowNavigation) {
+      if (!confirm($_("diary.unsavedChangesWarning"))) {
+        navigation.cancel();
+      }
+    }
+  });
 
-	// モバイルキーボード表示時の保存ボタン位置調整
-	let saveButtonBottom = "5rem"; // デフォルト: bottom-20 (QuickNavigationの上)
+  // モバイルキーボード表示時の保存ボタン位置調整
+  let saveButtonBottom = "5rem"; // デフォルト: bottom-20 (QuickNavigationの上)
 
-	// ブラウザのページ離脱時の警告
-	onMount(() => {
-		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-			if (hasUnsavedChanges) {
-				e.preventDefault();
-				e.returnValue = "";
-			}
-		};
+  // ブラウザのページ離脱時の警告
+  onMount(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
 
-		// visualViewport APIを使ってキーボード表示を検出し、保存ボタンの位置を調整
-		const updateSaveButtonPosition = () => {
-			if (!window.visualViewport) return;
-			const viewport = window.visualViewport;
-			const keyboardHeight = window.innerHeight - viewport.height;
-			const KEYBOARD_THRESHOLD = 100;
-			if (keyboardHeight > KEYBOARD_THRESHOLD) {
-				saveButtonBottom = `${keyboardHeight + 8}px`;
-			} else {
-				saveButtonBottom = "5rem";
-			}
-		};
+    // visualViewport APIを使ってキーボード表示を検出し、保存ボタンの位置を調整
+    const updateSaveButtonPosition = () => {
+      if (!window.visualViewport) return;
+      const viewport = window.visualViewport;
+      const keyboardHeight = window.innerHeight - viewport.height;
+      const KEYBOARD_THRESHOLD = 100;
+      if (keyboardHeight > KEYBOARD_THRESHOLD) {
+        saveButtonBottom = `${keyboardHeight + 8}px`;
+      } else {
+        saveButtonBottom = "5rem";
+      }
+    };
 
-		if (window.visualViewport) {
-			window.visualViewport.addEventListener(
-				"resize",
-				updateSaveButtonPosition,
-			);
-			window.visualViewport.addEventListener(
-				"scroll",
-				updateSaveButtonPosition,
-			);
-		}
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener(
+        "resize",
+        updateSaveButtonPosition,
+      );
+      window.visualViewport.addEventListener(
+        "scroll",
+        updateSaveButtonPosition,
+      );
+    }
 
-		window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
-		return () => {
-			window.removeEventListener("beforeunload", handleBeforeUnload);
-			if (window.visualViewport) {
-				window.visualViewport.removeEventListener(
-					"resize",
-					updateSaveButtonPosition,
-				);
-				window.visualViewport.removeEventListener(
-					"scroll",
-					updateSaveButtonPosition,
-				);
-			}
-		};
-	});
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener(
+          "resize",
+          updateSaveButtonPosition,
+        );
+        window.visualViewport.removeEventListener(
+          "scroll",
+          updateSaveButtonPosition,
+        );
+      }
+    };
+  });
 </script>
 
 <svelte:head>

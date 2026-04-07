@@ -1,161 +1,161 @@
 <script lang="ts">
-	import { _ } from "svelte-i18n";
-	import "$lib/i18n";
-	import { enhance } from "$app/forms";
-	import { onMount } from "svelte";
-	import Modal from "$lib/components/molecules/Modal.svelte";
-	import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
-	import type { ActionData, PageData } from "./$types";
+  import { _ } from "svelte-i18n";
+  import "$lib/i18n";
+  import { enhance } from "$app/forms";
+  import { onMount } from "svelte";
+  import Modal from "$lib/components/molecules/Modal.svelte";
+  import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
+  import type { ActionData, PageData } from "./$types";
 
-	export let form: ActionData;
-	export let data: PageData;
+  export let form: ActionData;
+  export let data: PageData;
 
-	// Helper function to check if message belongs to specific action
-	function isMessageForAction(actionName: string): boolean {
-		return form?.action === actionName;
-	}
+  // Helper function to check if message belongs to specific action
+  function isMessageForAction(actionName: string): boolean {
+    return form?.action === actionName;
+  }
 
-	let usernameLoading = false;
-	let passwordLoading = false;
-	let llmTokenLoading = false;
-	let autoSummaryLoading = false;
-	let deleteLLMKeyLoading = false;
-	let deleteAccountLoading = false;
-	let regenerateEmbeddingsLoading = false;
+  let usernameLoading = false;
+  let passwordLoading = false;
+  let llmTokenLoading = false;
+  let autoSummaryLoading = false;
+  let deleteLLMKeyLoading = false;
+  let deleteAccountLoading = false;
+  let regenerateEmbeddingsLoading = false;
 
-	// Modal states
-	let showDeleteLLMTokenConfirm = false;
-	let showDeleteAccountConfirm = false;
+  // Modal states
+  let showDeleteLLMTokenConfirm = false;
+  let showDeleteAccountConfirm = false;
 
-	// Password visibility toggles
-	let showCurrentPassword = false;
-	let showNewPassword = false;
-	let showConfirmPassword = false;
+  // Password visibility toggles
+  let showCurrentPassword = false;
+  let showNewPassword = false;
+  let showConfirmPassword = false;
 
-	// Get existing LLM key for Gemini (provider 1)
-	$: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
-	$: existingLLMToken = existingLLMKey?.key || "";
+  // Get existing LLM key for Gemini (provider 1)
+  $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
+  $: existingLLMToken = existingLLMKey?.key || "";
 
-	// Local state for checkbox values
-	let autoSummaryDaily = false;
-	let autoSummaryMonthly = false;
-	let autoLatestTrend = false;
-	let semanticSearchEnabled = false;
+  // Local state for checkbox values
+  let autoSummaryDaily = false;
+  let autoSummaryMonthly = false;
+  let autoLatestTrend = false;
+  let semanticSearchEnabled = false;
 
-	// Update local state when data changes
-	$: {
-		if (existingLLMKey) {
-			autoSummaryDaily = existingLLMKey.autoSummaryDaily || false;
-			autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
-			autoLatestTrend = existingLLMKey.autoLatestTrendEnabled || false;
-			semanticSearchEnabled = existingLLMKey.semanticSearchEnabled || false;
-		}
-	}
+  // Update local state when data changes
+  $: {
+    if (existingLLMKey) {
+      autoSummaryDaily = existingLLMKey.autoSummaryDaily || false;
+      autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
+      autoLatestTrend = existingLLMKey.autoLatestTrendEnabled || false;
+      semanticSearchEnabled = existingLLMKey.semanticSearchEnabled || false;
+    }
+  }
 
-	// Active section tracking
-	let activeSection = "";
+  // Active section tracking
+  let activeSection = "";
 
-	// Mobile navigation state
-	let isMobileNavOpen = false;
+  // Mobile navigation state
+  let isMobileNavOpen = false;
 
-	function toggleMobileNav() {
-		isMobileNavOpen = !isMobileNavOpen;
-	}
+  function toggleMobileNav() {
+    isMobileNavOpen = !isMobileNavOpen;
+  }
 
-	// Intersection Observer for tracking active section
-	onMount(() => {
-		let isUserScrolling = false;
-		let scrollTimeout: ReturnType<typeof setTimeout>;
+  // Intersection Observer for tracking active section
+  onMount(() => {
+    let isUserScrolling = false;
+    let scrollTimeout: ReturnType<typeof setTimeout>;
 
-		// Listen for scroll events to detect user scrolling
-		const handleScroll = () => {
-			isUserScrolling = true;
-			if (scrollTimeout) {
-				clearTimeout(scrollTimeout);
-			}
-			scrollTimeout = setTimeout(() => {
-				isUserScrolling = false;
-			}, 150);
-		};
+    // Listen for scroll events to detect user scrolling
+    const handleScroll = () => {
+      isUserScrolling = true;
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+      }, 150);
+    };
 
-		window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll);
 
-		const observer = new IntersectionObserver(
-			(entries) => {
-				// Only update if not currently scrolling programmatically
-				if (!isUserScrolling) {
-					entries.forEach((entry) => {
-						if (entry.isIntersecting) {
-							activeSection = entry.target.id;
-						}
-					});
-				}
-			},
-			{ threshold: 0.3, rootMargin: "-20% 0px -60% 0px" },
-		);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Only update if not currently scrolling programmatically
+        if (!isUserScrolling) {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              activeSection = entry.target.id;
+            }
+          });
+        }
+      },
+      { threshold: 0.3, rootMargin: "-20% 0px -60% 0px" },
+    );
 
-		const sections = document.querySelectorAll("section[id]");
-		for (const section of sections) {
-			observer.observe(section);
-		}
+    const sections = document.querySelectorAll("section[id]");
+    for (const section of sections) {
+      observer.observe(section);
+    }
 
-		return () => {
-			window.removeEventListener("scroll", handleScroll);
-			for (const section of sections) {
-				observer.unobserve(section);
-			}
-			if (scrollTimeout) {
-				clearTimeout(scrollTimeout);
-			}
-		};
-	});
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      for (const section of sections) {
+        observer.unobserve(section);
+      }
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+    };
+  });
 
-	// Modal helper functions
-	function confirmDeleteLLMToken() {
-		showDeleteLLMTokenConfirm = true;
-	}
+  // Modal helper functions
+  function confirmDeleteLLMToken() {
+    showDeleteLLMTokenConfirm = true;
+  }
 
-	function cancelDeleteLLMToken() {
-		showDeleteLLMTokenConfirm = false;
-	}
+  function cancelDeleteLLMToken() {
+    showDeleteLLMTokenConfirm = false;
+  }
 
-	function handleDeleteLLMToken() {
-		showDeleteLLMTokenConfirm = false;
-		// Submit the delete form
-		const form = document.createElement("form");
-		form.method = "POST";
-		form.action = "?/deleteLLMKey";
+  function handleDeleteLLMToken() {
+    showDeleteLLMTokenConfirm = false;
+    // Submit the delete form
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "?/deleteLLMKey";
 
-		const input = document.createElement("input");
-		input.type = "hidden";
-		input.name = "llmProvider";
-		input.value = "1";
-		form.appendChild(input);
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "llmProvider";
+    input.value = "1";
+    form.appendChild(input);
 
-		document.body.appendChild(form);
-		deleteLLMKeyLoading = true;
-		form.submit();
-	}
+    document.body.appendChild(form);
+    deleteLLMKeyLoading = true;
+    form.submit();
+  }
 
-	function confirmDeleteAccount() {
-		showDeleteAccountConfirm = true;
-	}
+  function confirmDeleteAccount() {
+    showDeleteAccountConfirm = true;
+  }
 
-	function cancelDeleteAccount() {
-		showDeleteAccountConfirm = false;
-	}
+  function cancelDeleteAccount() {
+    showDeleteAccountConfirm = false;
+  }
 
-	function handleDeleteAccount() {
-		showDeleteAccountConfirm = false;
-		// Submit the delete form
-		const form = document.createElement("form");
-		form.method = "POST";
-		form.action = "?/deleteAccount";
+  function handleDeleteAccount() {
+    showDeleteAccountConfirm = false;
+    // Submit the delete form
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "?/deleteAccount";
 
-		document.body.appendChild(form);
-		deleteAccountLoading = true;
-		form.submit();
-	}
+    document.body.appendChild(form);
+    deleteAccountLoading = true;
+    form.submit();
+  }
 </script>
 
 <svelte:head>
