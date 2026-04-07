@@ -1227,7 +1227,9 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		return nil, status.Error(codes.Internal, "Redis not configured")
 	}
 
-	// embedding未生成の日記ID一覧を取得（ロック取得前に件数を確認してTTLを決定する）
+	// embedding未生成の日記ID一覧を取得
+	// NOTE: TTL計算のために意図的にロック取得前に取得している。
+	// 取得からロックまでの間に別リクエストが割り込む可能性がある（TOCTOU）が、embeddingのUPSERTは冪等なので実害はない。
 	diaryIDs, err := database.DiaryIDsWithoutEmbeddings(ctx, s.DB, userID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to query diaries: %v", err)

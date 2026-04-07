@@ -220,3 +220,13 @@ func PendingEmbeddingCount(ctx context.Context, db DB, userID uuid.UUID) (int32,
 	count, err := queryCount(ctx, db, sqlstr, userID)
 	return int32(count), err
 }
+
+// InsertSemanticSearchLog は意味的検索ログを記録する（メトリクス集計用）
+func InsertSemanticSearchLog(ctx context.Context, db DB, userID uuid.UUID) error {
+	log := &SemanticSearchLog{
+		ID:        uuid.New(),
+		UserID:    userID,
+		CreatedAt: time.Now(),
+	}
+	return log.Insert(ctx, db)
+}

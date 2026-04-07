@@ -327,3 +327,23 @@ func TestHourlyPubSubMetrics(t *testing.T) {
 		}
 	})
 }
+
+func TestInsertSemanticSearchLog(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+	userID := testutil.CreateTestUser(t, db, "semantic-search-log@example.com", "User")
+
+	t.Run("意味的検索ログを挿入できる", func(t *testing.T) {
+		if err := database.InsertSemanticSearchLog(ctx, db, userID); err != nil {
+			t.Fatalf("InsertSemanticSearchLog失敗: %v", err)
+		}
+
+		var count int
+		if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM semantic_search_logs WHERE user_id = $1`, userID).Scan(&count); err != nil {
+			t.Fatalf("カウントクエリ失敗: %v", err)
+		}
+		if count != 1 {
+			t.Errorf("期待 1, 実際 %d", count)
+		}
+	})
+}

@@ -236,21 +236,13 @@ func SearchDiaryEntriesByEmbedding(ctx context.Context, db DB, userID uuid.UUID,
 // SetHNSWEfSearch はHNSW検索の精度パラメータをセッションローカルに設定する
 // pgvectorのANN検索精度を向上させるために使用する（デフォルト40→値を大きくすると再現率が向上）
 func SetHNSWEfSearch(ctx context.Context, db DB, efSearch int) error {
+	// NOTE: SET LOCAL は $1 プレースホルダーが使用できないため、fmt.Sprintf で構築している。
+	// efSearch は int 型であるため、SQLインジェクションのリスクはない。
 	sqlstr := fmt.Sprintf("SET LOCAL hnsw.ef_search = %d", efSearch)
 	if _, err := db.ExecContext(ctx, sqlstr); err != nil {
 		return fmt.Errorf("failed to set hnsw.ef_search to %d: %w", efSearch, err)
 	}
 	return nil
-}
-
-// InsertSemanticSearchLog は意味的検索ログを記録する（メトリクス集計用）
-func InsertSemanticSearchLog(ctx context.Context, db DB, userID uuid.UUID) error {
-	log := &SemanticSearchLog{
-		ID:        uuid.New(),
-		UserID:    userID,
-		CreatedAt: time.Now(),
-	}
-	return log.Insert(ctx, db)
 }
 
 // DiaryIDsWithoutEmbeddings はユーザーのembedding未生成日記IDを日付降順で返す

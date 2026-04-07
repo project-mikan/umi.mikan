@@ -97,6 +97,8 @@ func SearchEntitiesByQuery(ctx context.Context, db DB, userID uuid.UUID, query s
 		`
 		rows, err = db.QueryContext(ctx, sqlstr, userID)
 	} else {
+		// NOTE: ユーザー入力に % や _ が含まれるとLIKEのワイルドカードとして解釈される。
+		// 厳密な一致検索が必要な場合は、将来的にエスケープ処理を検討する。
 		const sqlstr = `
 			SELECT DISTINCT e.id, e.user_id, e.created_at, e.updated_at, e.category_id, e.name, e.memo
 			FROM entities e
