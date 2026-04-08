@@ -258,7 +258,8 @@
       "notIndexed": "意味的検索：未インデックス",
       "indexedAt": "インデックス日時",
       "updatedAt": "最終更新日時",
-      "modelVersion": "モデル",
+      "embeddingModelVersion": "埋め込みモデル",
+      "chunkModelVersion": "分割モデル",
       "chunkCount": "チャンク数",
       "chunkSummaries": "チャンク一覧",
       "chunkSummaryEmpty": "（概要なし）"

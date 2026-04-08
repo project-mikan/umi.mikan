@@ -5,6 +5,7 @@
   export let embeddingStatus: Promise<{
     indexed: boolean;
     modelVersion: string;
+    chunkModelVersion: string;
     createdAt: number;
     updatedAt: number;
     chunkCount: number;
@@ -59,7 +60,8 @@
         </div>
         <!-- メタ情報フッター -->
         <div class="mt-1 pb-2 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-gray-400 dark:text-gray-500">
-          <span>{$_("diary.embedding.modelVersion")}: <span class="font-mono">{status.modelVersion}</span></span>
+          <span>{$_("diary.embedding.embeddingModelVersion")}: <span class="font-mono">{status.modelVersion}</span></span>
+          <span>{$_("diary.embedding.chunkModelVersion")}: <span class="font-mono">{status.chunkModelVersion}</span></span>
           <span>{$_("diary.embedding.updatedAt")}: {new Date(status.updatedAt * 1000).toLocaleString()}</span>
         </div>
       </div>

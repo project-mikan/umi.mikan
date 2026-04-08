@@ -257,9 +257,10 @@
       "indexed": "Semantic search: Indexed",
       "notIndexed": "Semantic search: Not indexed",
       "indexedAt": "Indexed at",
-      "updatedAt": "Last updated at",
-      "modelVersion": "Model",
-      "chunkCount": "Chunks",
+      "updatedAt": "Last Updated",
+      "embeddingModelVersion": "Embedding Model",
+      "chunkModelVersion": "Chunking Model",
+      "chunkCount": "Chunk Count",
       "chunkSummaries": "Chunk list",
       "chunkSummaryEmpty": "(no summary)"
     },

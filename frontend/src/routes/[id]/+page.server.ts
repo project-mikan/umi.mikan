@@ -150,6 +150,7 @@ export const load: PageServerLoad = async ({
           .then((statusResponse) => ({
             indexed: statusResponse.indexed,
             modelVersion: statusResponse.modelVersion,
+            chunkModelVersion: statusResponse.chunkModelVersion,
             createdAt: Number(statusResponse.createdAt),
             updatedAt: Number(statusResponse.updatedAt),
             chunkCount: statusResponse.chunkCount,
