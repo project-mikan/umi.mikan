@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -279,9 +280,9 @@ func TestTotalEmbeddingDiaryCount(t *testing.T) {
 		// 同じdiaryIDで複数のembeddingを挿入
 		for i := 0; i < 3; i++ {
 			if _, err := db.ExecContext(ctx,
-				`INSERT INTO diary_embeddings (id, diary_id, user_id, content, embedding, model_version, created_at, updated_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-				uuid.New(), diaryID, userID, fmt.Sprintf("チャンク %d", i), "{0.1,0.2,0.3}", "v1", now, now,
+				`INSERT INTO diary_embeddings (id, diary_id, user_id, chunk_index, chunk_content, chunk_summary, embedding, model_version)
+				 VALUES ($1, $2, $3, $4, $5, $6, array_fill(0.1, ARRAY[3072])::halfvec, $7)`,
+				uuid.New(), diaryID, userID, i, fmt.Sprintf("チャンク内容 %d", i), fmt.Sprintf("チャンク概要 %d", i), "v1",
 			); err != nil {
 				t.Fatalf("embeddingの挿入に失敗: %v", err)
 			}

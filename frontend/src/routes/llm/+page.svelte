@@ -144,12 +144,7 @@
   ];
 
   // RAGカード用データ
-  $: ragCards: {
-    title: string;
-    value: number;
-    subLabel?: string;
-    color: string;
-  }[] = [
+  $: ragCards = [
     {
       title: $_("llm.metrics.totalEmbeddings"),
       value: metrics.summary.totalEmbeddingDiaries,
@@ -161,7 +156,12 @@
       value: metrics.summary.pendingEmbeddings,
       color: "text-pink-600 dark:text-pink-400",
     },
-  ];
+  ] as {
+    title: string;
+    value: number;
+    subLabel?: string;
+    color: string;
+  }[];
 </script>
 
 <Head title={$_("llm.title")} />
