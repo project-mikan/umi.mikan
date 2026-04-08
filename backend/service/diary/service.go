@@ -1081,8 +1081,14 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		_ = geminiClient.Close()
 	}()
 
+	// 日記embeddings は "YYYY年M月D日の日記:\n{content}" 形式で保存されているため、
+	// クエリにも現在日付を付与することで「最近」などの時間的表現を正しく解釈させる
+	jst := time.FixedZone("JST", 9*60*60)
+	now := time.Now().In(jst)
+	enrichedQuery := fmt.Sprintf("今日は%d年%d月%d日。\n%s", now.Year(), int(now.Month()), now.Day(), req.Query)
+
 	// クエリをベクトル化（クエリ用タスクタイプ）
-	queryEmbedding, err := geminiClient.GenerateEmbedding(ctx, req.Query, false)
+	queryEmbedding, err := geminiClient.GenerateEmbedding(ctx, enrichedQuery, false)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to generate query embedding: %v", err)
 	}
