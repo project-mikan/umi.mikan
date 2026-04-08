@@ -258,10 +258,16 @@
       "notIndexed": "意味的検索：未インデックス",
       "indexedAt": "インデックス日時",
       "updatedAt": "最終更新日時",
-      "modelVersion": "モデル",
+      "embeddingModelVersion": "埋め込みモデル",
+      "chunkModelVersion": "分割モデル",
       "chunkCount": "チャンク数",
       "chunkSummaries": "チャンク一覧",
       "chunkSummaryEmpty": "（概要なし）"
+    },
+    "chunkTimeline": {
+      "title": "この日記の概要",
+      "show": "表示",
+      "hide": "非表示"
     }
   },
   "date": {
@@ -465,7 +471,8 @@
       "latestTrend": "トレンド分析",
       "startedAt": "開始時刻",
       "ragTitle": "自然言語検索（RAG）処理状況",
-      "totalEmbeddings": "生成済みembedding数",
+      "totalEmbeddings": "生成済み日記数",
+      "embeddingChunks": "{count}チャンク",
       "pendingEmbeddings": "未生成embedding数",
       "ragPendingNote": "未生成の日記は、次回保存時に自動でインデックスが生成されます。",
       "ragRegenerateButton": "未生成の日記を一括インデックス",

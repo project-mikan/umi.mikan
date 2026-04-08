@@ -695,8 +695,14 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		return nil, err
 	}
 
-	// embedding統計を取得
+	// embeddingチャンク数を取得
 	totalEmbeddings, err := database.TotalEmbeddingCount(ctx, s.DB, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// embedding生成済み日記数を取得
+	totalEmbeddingDiaries, err := database.TotalEmbeddingDiaryCount(ctx, s.DB, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -737,6 +743,7 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 		LatestTrendGeneratedAt:    latestTrendGeneratedAt,
 		SemanticSearchEnabled:     autoSettings.SemanticSearchEnabled,
 		TotalEmbeddings:           totalEmbeddings,
+		TotalEmbeddingDiaries:     totalEmbeddingDiaries,
 		PendingEmbeddings:         pendingEmbeddings,
 	}, nil
 }

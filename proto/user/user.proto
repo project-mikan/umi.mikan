@@ -258,6 +258,7 @@ message MetricsSummary {
   bool auto_latest_trend_enabled = 7; // トレンド分析の自動生成が有効か
   string latest_trend_generated_at = 8; // 最後にトレンド分析が生成された日時 (ISO 8601形式)
   bool semantic_search_enabled = 9; // 意味的検索（RAG）が有効か
-  int32 total_embeddings = 10; // 生成済みのembedding数
-  int32 pending_embeddings = 11; // 未生成のembedding数（日記数 - embedding数）
+  int32 total_embeddings = 10; // 生成済みのembeddingチャンク数
+  int32 pending_embeddings = 11; // 未生成のembedding数（日記数 - embedding済み日記数）
+  int32 total_embedding_diaries = 12; // embedding生成済みの日記数
 }

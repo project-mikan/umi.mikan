@@ -1,6 +1,8 @@
 package diary
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -12,6 +14,35 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 	"github.com/redis/rueidis"
 )
+
+// mockGeminiEmbedder はテスト用のGeminiEmbedderモック
+type mockGeminiEmbedder struct {
+	capturedText string
+	returnErr    error
+}
+
+func (m *mockGeminiEmbedder) GenerateEmbedding(_ context.Context, text string, _ bool) ([]float32, error) {
+	m.capturedText = text
+	if m.returnErr != nil {
+		return nil, m.returnErr
+	}
+	return []float32{0.1, 0.2, 0.3}, nil
+}
+
+func (m *mockGeminiEmbedder) Close() error { return nil }
+
+// mockLLMFactory はテスト用のLLMFactoryモック
+type mockLLMFactory struct {
+	embedder *mockGeminiEmbedder
+	err      error
+}
+
+func (f *mockLLMFactory) CreateGeminiClient(_ context.Context, _ string) (GeminiEmbedder, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.embedder, nil
+}
 
 func TestIsTodayJST(t *testing.T) {
 	jst, err := time.LoadLocation("Asia/Tokyo")
@@ -337,15 +368,8 @@ func TestDiaryEntry_RegenerateAllEmbeddings_SemanticEnabled(t *testing.T) {
 	userID := testutil.CreateTestUser(t, db, "regen-embedding@example.com", "Regen Test User")
 	ctx := createAuthenticatedContext(userID)
 
-	// semantic_search_enabled=trueでuser_llmsを直接挿入
-	now := time.Now().Unix()
-	if _, err := db.ExecContext(ctx,
-		`INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		userID, 1, "test-api-key", false, false, false, true, now, now,
-	); err != nil {
-		t.Fatalf("user_llmsの挿入に失敗: %v", err)
-	}
+	// semantic_search_enabled=trueでuser_llmsを挿入
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, false, true)
 
 	redisClient := setupTestRedisForDiary(t)
 	svc := &DiaryEntry{DB: db, Redis: redisClient}
@@ -362,4 +386,35 @@ func TestDiaryEntry_RegenerateAllEmbeddings_SemanticEnabled(t *testing.T) {
 			t.Errorf("QueuedCount: got %d, want 0", resp.QueuedCount)
 		}
 	})
+}
+
+func TestDiaryEntry_SearchDiaryEntriesSemantic_EnrichedQuery(t *testing.T) {
+	db := setupTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "semantic-enriched@example.com", "Semantic Test User")
+	ctx := createAuthenticatedContext(userID)
+
+	// semantic_search_enabled=trueでuser_llmsを挿入
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, false, true)
+
+	embedder := &mockGeminiEmbedder{}
+	svc := &DiaryEntry{
+		DB:         db,
+		LLMFactory: &mockLLMFactory{embedder: embedder},
+	}
+
+	query := "最近の日記を教えて"
+	_, _ = svc.SearchDiaryEntriesSemantic(ctx, &g.SearchDiaryEntriesSemanticRequest{
+		Query: query,
+	})
+
+	// クエリに現在日付が付与されていることを確認
+	jst := time.FixedZone("JST", 9*60*60)
+	n := time.Now().In(jst)
+	expectedPrefix := fmt.Sprintf("今日は%d年%d月%d日。", n.Year(), int(n.Month()), n.Day())
+	if !strings.Contains(embedder.capturedText, expectedPrefix) {
+		t.Errorf("enrichedQueryに日付が付与されていない: got %q, want prefix %q", embedder.capturedText, expectedPrefix)
+	}
+	if !strings.Contains(embedder.capturedText, query) {
+		t.Errorf("enrichedQueryに元のクエリが含まれていない: got %q", embedder.capturedText)
+	}
 }

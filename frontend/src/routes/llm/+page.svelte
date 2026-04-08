@@ -147,7 +147,8 @@
   $: ragCards = [
     {
       title: $_("llm.metrics.totalEmbeddings"),
-      value: metrics.summary.totalEmbeddings,
+      value: metrics.summary.totalEmbeddingDiaries,
+      subLabel: `(${$_("llm.metrics.embeddingChunks", { values: { count: metrics.summary.totalEmbeddings } })})`,
       color: "text-purple-600 dark:text-purple-400",
     },
     {
@@ -155,7 +156,12 @@
       value: metrics.summary.pendingEmbeddings,
       color: "text-pink-600 dark:text-pink-400",
     },
-  ];
+  ] as {
+    title: string;
+    value: number;
+    subLabel?: string;
+    color: string;
+  }[];
 </script>
 
 <Head title={$_("llm.title")} />
@@ -252,6 +258,9 @@
 					<div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
 						<div class="text-2xl font-bold {card.color}">
 							{card.value}
+							{#if card.subLabel}
+								<span class="text-base font-normal text-gray-500 dark:text-gray-400">{card.subLabel}</span>
+							{/if}
 						</div>
 						<div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
 							{card.title}

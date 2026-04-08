@@ -61,6 +61,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
               latestTrendGeneratedAt: response.summary.latestTrendGeneratedAt,
               semanticSearchEnabled: response.summary.semanticSearchEnabled,
               totalEmbeddings: response.summary.totalEmbeddings,
+              totalEmbeddingDiaries: response.summary.totalEmbeddingDiaries,
               pendingEmbeddings: response.summary.pendingEmbeddings,
             }
           : {
@@ -74,6 +75,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
               latestTrendGeneratedAt: "",
               semanticSearchEnabled: false,
               totalEmbeddings: 0,
+              totalEmbeddingDiaries: 0,
               pendingEmbeddings: 0,
             },
       },

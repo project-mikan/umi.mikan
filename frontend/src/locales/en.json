@@ -257,11 +257,17 @@
       "indexed": "Semantic search: Indexed",
       "notIndexed": "Semantic search: Not indexed",
       "indexedAt": "Indexed at",
-      "updatedAt": "Last updated at",
-      "modelVersion": "Model",
-      "chunkCount": "Chunks",
+      "updatedAt": "Last Updated",
+      "embeddingModelVersion": "Embedding Model",
+      "chunkModelVersion": "Chunking Model",
+      "chunkCount": "Chunk Count",
       "chunkSummaries": "Chunk list",
       "chunkSummaryEmpty": "(no summary)"
+    },
+    "chunkTimeline": {
+      "title": "Diary overview",
+      "show": "Show",
+      "hide": "Hide"
     }
   },
   "date": {
@@ -465,7 +471,8 @@
       "latestTrend": "Trend Analysis",
       "startedAt": "Started at",
       "ragTitle": "Natural Language Search (RAG) Status",
-      "totalEmbeddings": "Generated embeddings",
+      "totalEmbeddings": "Indexed diaries",
+      "embeddingChunks": "{count} chunks",
       "pendingEmbeddings": "Pending embeddings",
       "ragPendingNote": "Pending diary entries will be indexed automatically the next time they are saved.",
       "ragRegenerateButton": "Index all pending entries",
