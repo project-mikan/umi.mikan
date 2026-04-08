@@ -1238,8 +1238,9 @@ type MetricsSummary struct {
 	AutoLatestTrendEnabled    bool                   `protobuf:"varint,7,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"`          // トレンド分析の自動生成が有効か
 	LatestTrendGeneratedAt    string                 `protobuf:"bytes,8,opt,name=latest_trend_generated_at,json=latestTrendGeneratedAt,proto3" json:"latest_trend_generated_at,omitempty"`           // 最後にトレンド分析が生成された日時 (ISO 8601形式)
 	SemanticSearchEnabled     bool                   `protobuf:"varint,9,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`               // 意味的検索（RAG）が有効か
-	TotalEmbeddings           int32                  `protobuf:"varint,10,opt,name=total_embeddings,json=totalEmbeddings,proto3" json:"total_embeddings,omitempty"`                                  // 生成済みのembedding数
-	PendingEmbeddings         int32                  `protobuf:"varint,11,opt,name=pending_embeddings,json=pendingEmbeddings,proto3" json:"pending_embeddings,omitempty"`                            // 未生成のembedding数（日記数 - embedding数）
+	TotalEmbeddings           int32                  `protobuf:"varint,10,opt,name=total_embeddings,json=totalEmbeddings,proto3" json:"total_embeddings,omitempty"`                                  // 生成済みのembeddingチャンク数
+	PendingEmbeddings         int32                  `protobuf:"varint,11,opt,name=pending_embeddings,json=pendingEmbeddings,proto3" json:"pending_embeddings,omitempty"`                            // 未生成のembedding数（日記数 - embedding済み日記数）
+	TotalEmbeddingDiaries     int32                  `protobuf:"varint,12,opt,name=total_embedding_diaries,json=totalEmbeddingDiaries,proto3" json:"total_embedding_diaries,omitempty"`              // embedding生成済みの日記数
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -1351,6 +1352,13 @@ func (x *MetricsSummary) GetPendingEmbeddings() int32 {
 	return 0
 }
 
+func (x *MetricsSummary) GetTotalEmbeddingDiaries() int32 {
+	if x != nil {
+		return x.TotalEmbeddingDiaries
+	}
+	return 0
+}
+
 var File_user_user_proto protoreflect.FileDescriptor
 
 const file_user_user_proto_rawDesc = "" +
@@ -1432,7 +1440,7 @@ const file_user_user_proto_rawDesc = "" +
 	"\ttask_type\x18\x01 \x01(\tR\btaskType\x12\x12\n" +
 	"\x04date\x18\x02 \x01(\tR\x04date\x12\x1d\n" +
 	"\n" +
-	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\xf6\x04\n" +
+	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\xae\x05\n" +
 	"\x0eMetricsSummary\x122\n" +
 	"\x15total_daily_summaries\x18\x01 \x01(\x05R\x13totalDailySummaries\x126\n" +
 	"\x17total_monthly_summaries\x18\x02 \x01(\x05R\x15totalMonthlySummaries\x126\n" +
@@ -1445,7 +1453,8 @@ const file_user_user_proto_rawDesc = "" +
 	"\x17semantic_search_enabled\x18\t \x01(\bR\x15semanticSearchEnabled\x12)\n" +
 	"\x10total_embeddings\x18\n" +
 	" \x01(\x05R\x0ftotalEmbeddings\x12-\n" +
-	"\x12pending_embeddings\x18\v \x01(\x05R\x11pendingEmbeddings2\xe9\x05\n" +
+	"\x12pending_embeddings\x18\v \x01(\x05R\x11pendingEmbeddings\x126\n" +
+	"\x17total_embedding_diaries\x18\f \x01(\x05R\x15totalEmbeddingDiaries2\xe9\x05\n" +
 	"\vUserService\x12K\n" +
 	"\x0eUpdateUserName\x12\x1b.user.UpdateUserNameRequest\x1a\x1c.user.UpdateUserNameResponse\x12K\n" +
 	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12E\n" +

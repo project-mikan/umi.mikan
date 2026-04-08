@@ -207,6 +207,13 @@ func TotalEmbeddingCount(ctx context.Context, db DB, userID uuid.UUID) (int32, e
 	return int32(count), err
 }
 
+// TotalEmbeddingDiaryCount は指定ユーザーのembedding生成済み日記数を返す
+func TotalEmbeddingDiaryCount(ctx context.Context, db DB, userID uuid.UUID) (int32, error) {
+	const sqlstr = `SELECT COUNT(DISTINCT diary_id) FROM diary_embeddings WHERE user_id = $1`
+	count, err := queryCount(ctx, db, sqlstr, userID)
+	return int32(count), err
+}
+
 // PendingEmbeddingCount は指定ユーザーのembedding未生成日記数を返す
 func PendingEmbeddingCount(ctx context.Context, db DB, userID uuid.UUID) (int32, error) {
 	const sqlstr = `

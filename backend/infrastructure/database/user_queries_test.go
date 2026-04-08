@@ -261,6 +261,22 @@ func TestTotalEmbeddingCount(t *testing.T) {
 	})
 }
 
+func TestTotalEmbeddingDiaryCount(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+	userID := testutil.CreateTestUser(t, db, "total-embedding-diary-count@example.com", "User")
+
+	t.Run("embeddingが存在しない場合は0を返す", func(t *testing.T) {
+		count, err := database.TotalEmbeddingDiaryCount(ctx, db, userID)
+		if err != nil {
+			t.Fatalf("TotalEmbeddingDiaryCount失敗: %v", err)
+		}
+		if count != 0 {
+			t.Errorf("期待 0, 実際 %d", count)
+		}
+	})
+}
+
 func TestPendingEmbeddingCount(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	ctx := context.Background()
