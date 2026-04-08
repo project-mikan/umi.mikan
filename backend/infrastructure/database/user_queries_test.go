@@ -278,7 +278,7 @@ func TestTotalEmbeddingDiaryCount(t *testing.T) {
 		}
 
 		// 同じdiaryIDで複数のembeddingを挿入
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			if _, err := db.ExecContext(ctx,
 				`INSERT INTO diary_embeddings (id, diary_id, user_id, chunk_index, chunk_content, chunk_summary, embedding, model_version)
 				 VALUES ($1, $2, $3, $4, $5, $6, array_fill(0.1, ARRAY[3072])::halfvec, $7)`,
