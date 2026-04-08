@@ -144,7 +144,12 @@
   ];
 
   // RAGカード用データ
-  $: ragCards = [
+  $: ragCards: {
+    title: string;
+    value: number;
+    subLabel?: string;
+    color: string;
+  }[] = [
     {
       title: $_("llm.metrics.totalEmbeddings"),
       value: metrics.summary.totalEmbeddingDiaries,
@@ -154,7 +159,6 @@
     {
       title: $_("llm.metrics.pendingEmbeddings"),
       value: metrics.summary.pendingEmbeddings,
-      subLabel: null,
       color: "text-pink-600 dark:text-pink-400",
     },
   ];

@@ -368,15 +368,8 @@ func TestDiaryEntry_RegenerateAllEmbeddings_SemanticEnabled(t *testing.T) {
 	userID := testutil.CreateTestUser(t, db, "regen-embedding@example.com", "Regen Test User")
 	ctx := createAuthenticatedContext(userID)
 
-	// semantic_search_enabled=trueでuser_llmsを直接挿入
-	now := time.Now().Unix()
-	if _, err := db.ExecContext(ctx,
-		`INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		userID, 1, "test-api-key", false, false, false, true, now, now,
-	); err != nil {
-		t.Fatalf("user_llmsの挿入に失敗: %v", err)
-	}
+	// semantic_search_enabled=trueでuser_llmsを挿入
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, false, true)
 
 	redisClient := setupTestRedisForDiary(t)
 	svc := &DiaryEntry{DB: db, Redis: redisClient}
@@ -401,14 +394,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_EnrichedQuery(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// semantic_search_enabled=trueでuser_llmsを挿入
-	now := time.Now().Unix()
-	if _, err := db.ExecContext(ctx,
-		`INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		userID, 1, "test-api-key", false, false, false, true, now, now,
-	); err != nil {
-		t.Fatalf("user_llmsの挿入に失敗: %v", err)
-	}
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, false, true)
 
 	embedder := &mockGeminiEmbedder{}
 	svc := &DiaryEntry{

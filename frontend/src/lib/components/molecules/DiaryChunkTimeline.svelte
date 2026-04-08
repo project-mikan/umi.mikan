@@ -45,7 +45,7 @@
       </div>
 
       <!-- タイムライン本体: PC は常時表示、モバイルはトグル -->
-      <div class="hidden sm:block px-4 pt-3 pb-1">
+      <div class="{mobileOpen ? '' : 'hidden'} sm:block px-4 pt-3 pb-1">
         <!-- チャンク一覧 -->
         <div class="border-l-2 border-indigo-200 dark:border-indigo-700 pl-5 space-y-2 pb-2">
           {#each status.chunkSummaries as summary}
@@ -63,28 +63,6 @@
           <span>{$_("diary.embedding.updatedAt")}: {new Date(status.updatedAt * 1000).toLocaleString()}</span>
         </div>
       </div>
-
-      <!-- モバイル展開時 -->
-      {#if mobileOpen}
-        <div class="sm:hidden px-4 pt-3 pb-1">
-          <!-- チャンク一覧 -->
-          <div class="border-l-2 border-indigo-200 dark:border-indigo-700 pl-5 space-y-2 pb-2">
-            {#each status.chunkSummaries as summary}
-              <div class="relative">
-                <div class="absolute -left-[1.6rem] top-1 w-2.5 h-2.5 rounded-full border-2 border-indigo-400 dark:border-indigo-500 bg-white dark:bg-gray-800"></div>
-                <p class="text-sm text-gray-700 dark:text-gray-300 leading-snug">
-                  {summary || $_("diary.embedding.chunkSummaryEmpty")}
-                </p>
-              </div>
-            {/each}
-          </div>
-          <!-- メタ情報フッター -->
-          <div class="mt-1 pb-2 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-gray-400 dark:text-gray-500">
-            <span>{$_("diary.embedding.modelVersion")}: <span class="font-mono">{status.modelVersion}</span></span>
-            <span>{$_("diary.embedding.updatedAt")}: {new Date(status.updatedAt * 1000).toLocaleString()}</span>
-          </div>
-        </div>
-      {/if}
     </div>
   {/if}
 {/await}

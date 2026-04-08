@@ -266,13 +266,38 @@ func TestTotalEmbeddingDiaryCount(t *testing.T) {
 	ctx := context.Background()
 	userID := testutil.CreateTestUser(t, db, "total-embedding-diary-count@example.com", "User")
 
-	t.Run("embeddingが存在しない場合は0を返す", func(t *testing.T) {
+	t.Run("同一日記の複数チャンクは1件としてカウントされる", func(t *testing.T) {
+		diaryID := uuid.New()
+		now := time.Now().UnixMilli()
+		if _, err := db.ExecContext(ctx,
+			`INSERT INTO diaries (id, user_id, content, date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+			diaryID, userID, "日記内容", "2020-01-01", now, now,
+		); err != nil {
+			t.Fatalf("日記の挿入に失敗: %v", err)
+		}
+
+		// 同じdiaryIDで複数のembeddingを挿入
+		for i := 0; i < 3; i++ {
+			if _, err := db.ExecContext(ctx,
+				`INSERT INTO diary_embeddings (id, diary_id, user_id, content, embedding, model_version, created_at, updated_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+				uuid.New(), diaryID, userID, fmt.Sprintf("チャンク %d", i), "{0.1,0.2,0.3}", "v1", now, now,
+			); err != nil {
+				t.Fatalf("embeddingの挿入に失敗: %v", err)
+			}
+		}
+
 		count, err := database.TotalEmbeddingDiaryCount(ctx, db, userID)
 		if err != nil {
 			t.Fatalf("TotalEmbeddingDiaryCount失敗: %v", err)
 		}
-		if count != 0 {
-			t.Errorf("期待 0, 実際 %d", count)
+		if count != 1 {
+			t.Errorf("期待 1, 実際 %d (DISTINCTが機能していない可能性があります)", count)
+		}
+
+		totalChunks, _ := database.TotalEmbeddingCount(ctx, db, userID)
+		if totalChunks != 3 {
+			t.Errorf("TotalEmbeddingCount: 期待 3, 実際 %d", totalChunks)
 		}
 	})
 }
