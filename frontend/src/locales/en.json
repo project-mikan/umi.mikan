@@ -262,6 +262,11 @@
       "chunkCount": "Chunks",
       "chunkSummaries": "Chunk list",
       "chunkSummaryEmpty": "(no summary)"
+    },
+    "chunkTimeline": {
+      "title": "Diary overview",
+      "show": "Show",
+      "hide": "Hide"
     }
   },
   "date": {

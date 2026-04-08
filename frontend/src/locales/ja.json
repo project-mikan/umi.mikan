@@ -262,6 +262,11 @@
       "chunkCount": "チャンク数",
       "chunkSummaries": "チャンク一覧",
       "chunkSummaryEmpty": "（概要なし）"
+    },
+    "chunkTimeline": {
+      "title": "この日記の概要",
+      "show": "表示",
+      "hide": "非表示"
     }
   },
   "date": {
