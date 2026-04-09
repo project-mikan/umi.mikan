@@ -8,3 +8,5 @@ coverage:
 ignore:
   - "backend/infrastructure/grpc/**"
   - "backend/infrastructure/database/*.dbtpl.go"
+  - "backend/infrastructure/llm/**"
+  - "backend/cmd/**/main.go"

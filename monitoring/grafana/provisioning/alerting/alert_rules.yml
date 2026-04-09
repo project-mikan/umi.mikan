@@ -1,0 +1,115 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: umi-mikan-errors
+    folder: umi-mikan
+    interval: 1m
+    rules:
+      # backendサービスのエラーログ検知
+      - uid: backend_error_logs
+        title: Backend エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({service="backend"} |~ "(?i)(error|panic|fatal)" [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "Backendサービスでエラーが検出されました"
+          description: "過去5分間にbackendサービスでエラーログが{{ $values.A }}件発生しています"
+        labels:
+          service: backend
+          severity: error
+        isPaused: false
+
+      # schedulerサービスのエラーログ検知
+      - uid: scheduler_error_logs
+        title: Scheduler エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({service="scheduler"} |~ "(?i)(error|panic|fatal)" [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "Schedulerサービスでエラーが検出されました"
+          description: "過去5分間にschedulerサービスでエラーログが{{ $values.A }}件発生しています"
+        labels:
+          service: scheduler
+          severity: error
+        isPaused: false
+
+      # subscriberサービスのエラーログ検知
+      - uid: subscriber_error_logs
+        title: Subscriber エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({service="subscriber"} |~ "(?i)(error|panic|fatal)" [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "Subscriberサービスでエラーが検出されました"
+          description: "過去5分間にsubscriberサービスでエラーログが{{ $values.A }}件発生しています"
+        labels:
+          service: subscriber
+          severity: error
+        isPaused: false
+
+      # frontendサービスのエラーログ検知
+      - uid: frontend_error_logs
+        title: Frontend エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({service="frontend"} |~ "(?i)(error|panic|fatal)" [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "Frontendサービスでエラーが検出されました"
+          description: "過去5分間にfrontendサービスでエラーログが{{ $values.A }}件発生しています"
+        labels:
+          service: frontend
+          severity: error
+        isPaused: false
