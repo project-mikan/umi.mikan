@@ -79,7 +79,7 @@ n日：箇条書き3
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
@@ -125,7 +125,7 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
@@ -267,7 +267,7 @@ activities（活動・行動）:
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
@@ -360,7 +360,7 @@ func (g *GeminiClient) SplitDiaryIntoChunks(ctx context.Context, content string)
 		return nil, fmt.Errorf("failed to split diary into chunks: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return nil, fmt.Errorf("no content returned from chunk splitting")
 	}
 
@@ -465,7 +465,7 @@ func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent stri
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
