@@ -237,7 +237,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"docker\", container=~\"$container\"} |~ \"(?i)(error|err|exception|fail)\"",
+          "expr": "{job=\"docker\", container=~\"$container\"} |~ \"level=(error|fatal)|(?i)(error:|fatal:|exception:|failed to )\"",
           "refId": "A"
         }
       ],
@@ -272,7 +272,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"docker\", container=~\"$container\"} |~ \"(?i)(warn|warning)\"",
+          "expr": "{job=\"docker\", container=~\"$container\"} |~ \"level=(warn|warning)|(?i)(warn:|warning:)\"",
           "refId": "A"
         }
       ],
