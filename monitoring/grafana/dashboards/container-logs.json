@@ -237,8 +237,16 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"docker\", container=~\"$container\"} |~ \"level=(error|fatal)|(?i)(error:|fatal:|exception:|failed to )\"",
+          "expr": "{job=\"docker\", container=~\"$container\"} | logfmt | level=~\"(error|fatal|panic)\"",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"docker\", container=~\"$container\", service=~\"backend|frontend|postgres|postgres_test|redis\"} |~ \"(?i)(error:|fatal:|panic:|failed to )\"",
+          "refId": "B"
         }
       ],
       "title": "Error Logs",
@@ -272,8 +280,16 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"docker\", container=~\"$container\"} |~ \"level=(warn|warning)|(?i)(warn:|warning:)\"",
+          "expr": "{job=\"docker\", container=~\"$container\"} | logfmt | level=~\"(warn|warning)\"",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"docker\", container=~\"$container\", service=~\"backend|frontend|postgres|postgres_test|redis\"} |~ \"(?i)(warn:|warning:)\"",
+          "refId": "B"
         }
       ],
       "title": "Warning Logs",
