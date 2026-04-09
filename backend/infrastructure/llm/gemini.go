@@ -16,6 +16,15 @@ const (
 	ModelEmbedding = "gemini-embedding-001"
 )
 
+// noSafetySettings は全カテゴリの安全フィルターを無効にする設定
+// 日記アプリでは個人の記録を正確に処理するためブロックなしとする
+var noSafetySettings = []*genai.SafetySetting{
+	{Category: genai.HarmCategoryHateSpeech, Threshold: genai.HarmBlockThresholdBlockNone},
+	{Category: genai.HarmCategoryDangerousContent, Threshold: genai.HarmBlockThresholdBlockNone},
+	{Category: genai.HarmCategorySexuallyExplicit, Threshold: genai.HarmBlockThresholdBlockNone},
+	{Category: genai.HarmCategoryHarassment, Threshold: genai.HarmBlockThresholdBlockNone},
+}
+
 // DiaryChunkData はLLMが生成したチャンクの内容と概要を保持する
 type DiaryChunkData struct {
 	// Content チャンクの元テキスト（ベクトル化対象）
@@ -71,7 +80,8 @@ n日：箇条書き3
 
 	zero := float32(0)
 	config := &genai.GenerateContentConfig{
-		Temperature: &zero,
+		Temperature:    &zero,
+		SafetySettings: noSafetySettings,
 	}
 
 	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
@@ -79,7 +89,7 @@ n日：箇条書き3
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
@@ -117,7 +127,8 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 
 	zero := float32(0)
 	config := &genai.GenerateContentConfig{
-		Temperature: &zero,
+		Temperature:    &zero,
+		SafetySettings: noSafetySettings,
 	}
 
 	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
@@ -125,7 +136,7 @@ func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent st
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
@@ -260,6 +271,7 @@ activities（活動・行動）:
 	config := &genai.GenerateContentConfig{
 		ResponseMIMEType: "application/json",
 		ResponseSchema:   schema,
+		SafetySettings:   noSafetySettings,
 	}
 
 	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
@@ -267,7 +279,7 @@ activities（活動・行動）:
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
@@ -353,6 +365,7 @@ func (g *GeminiClient) SplitDiaryIntoChunks(ctx context.Context, content string)
 		Temperature:      &zero,
 		ResponseMIMEType: "application/json",
 		ResponseSchema:   schema,
+		SafetySettings:   noSafetySettings,
 	}
 
 	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
@@ -360,7 +373,7 @@ func (g *GeminiClient) SplitDiaryIntoChunks(ctx context.Context, content string)
 		return nil, fmt.Errorf("failed to split diary into chunks: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return nil, fmt.Errorf("no content returned from chunk splitting")
 	}
 
@@ -458,6 +471,7 @@ func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent stri
 		Temperature:      &zero,
 		ResponseMIMEType: "application/json",
 		ResponseSchema:   schema,
+		SafetySettings:   noSafetySettings,
 	}
 
 	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
@@ -465,7 +479,7 @@ func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent stri
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no content generated")
 	}
 
