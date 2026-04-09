@@ -157,7 +157,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_SERVER_ROOT_URL: "http://localhost:2008" # GrafanaのURL（アラートリンクに使用）
-      DISCORD_WEBHOOK_URL: "" # DiscordのWebhook URLを設定してください
+      DISCORD_WEBHOOK_URL: "http://localhost" # dev環境用ダミー値（アラート通知は飛ばない）
     volumes:
       - grafana_volume:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
