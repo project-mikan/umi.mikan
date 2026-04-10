@@ -237,7 +237,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"docker\", container=~\"$container\"} | logfmt | level=~\"(error|fatal|panic)\"",
+          "expr": "{job=\"docker\", container=~\"$container\", level=~\"error|fatal|panic\"}",
           "refId": "A"
         },
         {
@@ -280,7 +280,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"docker\", container=~\"$container\"} | logfmt | level=~\"(warn|warning)\"",
+          "expr": "{job=\"docker\", container=~\"$container\", level=~\"warn|warning\"}",
           "refId": "A"
         },
         {
