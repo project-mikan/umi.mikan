@@ -579,6 +579,14 @@
   },
   "debug": {
     "pageTitle": "開発環境専用ページ",
+    "logVerification": {
+      "title": "ログ検証",
+      "description": "GrafanaのError Logs / Warning Logsパネルに意図的なログを送信して動作を確認します。",
+      "triggerError": "Error を発生させる",
+      "triggerWarn": "Warning を発生させる",
+      "sending": "送信中...",
+      "sent": "送信完了"
+    },
     "latestTrend": {
       "title": "直近トレンド分析 手動トリガー",
       "description": "過去7日間の日記から直近トレンド分析を即座に生成します。",
