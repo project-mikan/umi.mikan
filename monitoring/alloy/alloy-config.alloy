@@ -35,6 +35,25 @@ discovery.relabel "docker_logs" {
 	}
 }
 
+// logfmtフォーマットのログからlevelラベルを抽出するパイプライン
+loki.process "extract_level" {
+	// logfmt形式（scheduler/subscriber）のlevelフィールドを抽出
+	stage.logfmt {
+		mapping = {
+			"level" = "",
+		}
+	}
+
+	// 抽出したlevelをLokiラベルとして設定
+	stage.labels {
+		values = {
+			"level" = "",
+		}
+	}
+
+	forward_to = [loki.write.loki.receiver]
+}
+
 // Log collection from Docker containers
 loki.source.docker "docker_logs" {
 	host             = "unix:///var/run/docker.sock"
@@ -42,7 +61,7 @@ loki.source.docker "docker_logs" {
 	refresh_interval = "5s"
 	relabel_rules    = discovery.relabel.docker_logs.rules
 
-	forward_to = [loki.write.loki.receiver]
+	forward_to = [loki.process.extract_level.receiver]
 }
 
 // Static log collection from system files

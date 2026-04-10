@@ -18,7 +18,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="backend"} |~ "(?i)(error|panic|fatal)" [5m])'
+              expr: 'count_over_time({service="backend"} |~ "(?i)(error:|panic:|fatal:)" [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
@@ -45,7 +45,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="scheduler"} |~ "(?i)(error|panic|fatal)" [5m])'
+              expr: 'count_over_time({service="scheduler", level=~"error|fatal|panic"} [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
@@ -72,7 +72,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="subscriber"} |~ "(?i)(error|panic|fatal)" [5m])'
+              expr: 'count_over_time({service="subscriber", level=~"error|fatal|panic"} [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
@@ -99,7 +99,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="frontend"} |~ "(?i)(error|panic|fatal)" [5m])'
+              expr: 'count_over_time({service="frontend"} |~ "(?i)(error:|panic:|fatal:|failed to )" [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
