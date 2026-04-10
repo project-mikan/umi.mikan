@@ -5,7 +5,7 @@ ARG TARGETARCH
 WORKDIR /build
 
 # Install ca-certificates for HTTPS requests
-RUN apk add --no-cache ca-certificates git
+RUN apk add --no-cache ca-certificates git tzdata
 
 # Copy go mod files and download dependencies
 COPY go.mod go.sum ./
@@ -26,8 +26,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 # Production stage
 FROM scratch
 
-# Copy ca-certificates from builder
+# Copy ca-certificates and tzdata from builder
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 # Copy the binary
 COPY --from=builder /build/binary /binary
