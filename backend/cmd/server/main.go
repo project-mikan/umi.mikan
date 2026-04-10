@@ -73,10 +73,28 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Prometheusメトリクスサーバーを起動
+	// Prometheusメトリクスサーバーを起動（デバッグエンドポイント含む）
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+	mux.HandleFunc("/debug/error", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Error: debug test error triggered")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(`{"ok":true}`)); err != nil {
+			log.Printf("Error: failed to write debug response: %v", err)
+		}
+	})
+	mux.HandleFunc("/debug/warn", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Warn: debug test warning triggered")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(`{"ok":true}`)); err != nil {
+			log.Printf("Error: failed to write debug response: %v", err)
+		}
+	})
 	metricsServer := &http.Server{
 		Addr:    ":8082",
-		Handler: promhttp.Handler(),
+		Handler: mux,
 	}
 	go func() {
 		log.Print("Metrics server listening on :8082")

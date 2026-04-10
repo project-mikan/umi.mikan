@@ -27,8 +27,7 @@ services:
       TASK_TIMEOUT_SECONDS: 600 # タスクステータスの有効期限(秒)
     tty: true
     ports:
-      - 2001:8080
-      - "2012:8082" # metrics endpoint
+      - "2001:8080"
 
   frontend:
     build:
@@ -38,8 +37,6 @@ services:
     stdin_open: true
     ports:
       - "2000:5173"
-      # - "2802:2802" # playwright report
-      # - "24678:24678" # hot relaod
     user: "1000:1000"
     environment:
       NODE_ENV: development
@@ -52,11 +49,9 @@ services:
     platform: linux/amd64
     environment:
       TZ: Asia/Tokyo
-      POSTGRES_USER: "postgres"
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "dev-pass"
       POSTGRES_DB: "umi_mikan"
-    ports:
-      - "2002:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
@@ -66,19 +61,15 @@ services:
     platform: linux/amd64
     environment:
       TZ: Asia/Tokyo
-      POSTGRES_USER: "postgres"
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "test-pass"
       POSTGRES_DB: "umi_mikan_test"
-    ports:
-      - "2003:5432"
     volumes:
       - postgres_test_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
 
   redis:
     image: redis:8-alpine
-    ports:
-      - "2004:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_volume:/data
@@ -99,8 +90,6 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SUBSCRIBER_MAX_CONCURRENT_JOBS: 10
-    ports:
-      - "2005:8082" # metrics endpoint
     tty: true
     depends_on:
       - postgres
@@ -125,8 +114,6 @@ services:
       SCHEDULER_MONTHLY_INTERVAL: 5m
       SCHEDULER_LATEST_TREND_HOUR: 4
       SCHEDULER_LATEST_TREND_MINUTE: 0
-    ports:
-      - "2006:8081" # metrics endpoint
     tty: true
     depends_on:
       - postgres
@@ -134,8 +121,6 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    ports:
-      - "2007:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_volume:/prometheus
@@ -168,8 +153,6 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
-    ports:
-      - "2009:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -182,8 +165,6 @@ services:
 
   loki:
     image: grafana/loki:latest
-    ports:
-      - "2010:3100"
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
       - loki_volume:/loki
@@ -192,8 +173,6 @@ services:
 
   alloy:
     image: grafana/alloy:latest
-    ports:
-      - "2011:12345"
     volumes:
       - ./monitoring/alloy/alloy-config.alloy:/etc/alloy/config.alloy
       - /var/log:/var/log:ro

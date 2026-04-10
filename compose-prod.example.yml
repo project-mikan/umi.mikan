@@ -17,9 +17,6 @@ services:
       REDIS_PORT: 6379
       REGISTER_KEY: "usuyuki" # 新規登録を制限する場合はコメントを外して設定
       TASK_TIMEOUT_SECONDS: 600 # タスクステータスの有効期限(秒)
-    ports:
-      - "2001:8080"
-      - "2012:8082" # metrics endpoint
     restart: unless-stopped
     depends_on:
       postgres:
@@ -35,8 +32,6 @@ services:
       TZ: Asia/Tokyo
       NODE_ENV: production
       BODY_SIZE_LIMIT: 1M
-    ports:
-      - "2000:5173"
     restart: unless-stopped
     depends_on:
       - backend
@@ -52,8 +47,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: prod-pass
       POSTGRES_DB: umi_mikan
-    ports:
-      - "2002:5432"
     volumes:
       - postgres_prod_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
@@ -69,8 +62,6 @@ services:
   redis:
     image: redis:8-alpine
     restart: unless-stopped
-    ports:
-      - "2004:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_prod_volume:/data
@@ -89,8 +80,6 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SUBSCRIBER_MAX_CONCURRENT_JOBS: 20
-    ports:
-      - "2005:8082" # metrics endpoint
     restart: unless-stopped
     depends_on:
       postgres:
@@ -115,8 +104,6 @@ services:
       SCHEDULER_MONTHLY_INTERVAL: 30m
       SCHEDULER_LATEST_TREND_HOUR: 4
       SCHEDULER_LATEST_TREND_MINUTE: 0
-    ports:
-      - "2006:8081" # metrics endpoint
     restart: unless-stopped
     depends_on:
       postgres:
@@ -129,8 +116,6 @@ services:
   prometheus:
     image: prom/prometheus:latest
     restart: unless-stopped
-    ports:
-      - "2007:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_prod_volume:/prometheus
@@ -165,7 +150,6 @@ services:
     networks:
       - internal
 
-  # Development tools service for running database migrations and other dev tasks
   dev-tools:
     build:
       context: ./backend
@@ -195,8 +179,6 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     restart: always
-    ports:
-      - "2009:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -212,8 +194,6 @@ services:
   loki:
     image: grafana/loki:latest
     restart: unless-stopped
-    ports:
-      - "2010:3100"
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
       - loki_prod_volume:/loki
@@ -225,8 +205,6 @@ services:
   alloy:
     image: grafana/alloy:latest
     restart: unless-stopped
-    ports:
-      - "2011:12345"
     volumes:
       - ./monitoring/alloy/alloy-config.alloy:/etc/alloy/config.alloy
       - /var/log:/var/log:ro

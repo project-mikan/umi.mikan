@@ -99,7 +99,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="frontend"} |~ "(?i)(error:|panic:|fatal:|failed to )" [5m])'
+              expr: 'count_over_time({service="frontend"} |~ "(?i)(error:|panic:|fatal:)" [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant

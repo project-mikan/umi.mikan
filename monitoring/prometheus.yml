@@ -13,20 +13,15 @@ scrape_configs:
 
   - job_name: "scheduler"
     static_configs:
-      - targets: ["scheduler:2006"]
+      - targets: ["scheduler:8081"]
     scrape_interval: 5s
     metrics_path: /metrics
 
   - job_name: "subscriber"
     static_configs:
-      - targets: ["subscriber:2005"]
+      - targets: ["subscriber:8082"]
     scrape_interval: 5s
     metrics_path: /metrics
-
-  - job_name: "redis"
-    static_configs:
-      - targets: ["redis:6379"]
-    scrape_interval: 15s
 
   - job_name: "backend"
     static_configs:
