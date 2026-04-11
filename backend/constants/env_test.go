@@ -61,8 +61,6 @@ func TestLoadSchedulerConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// 環境変数をセットアップ
-			_ = os.Unsetenv("SCHEDULER_DAILY_INTERVAL")
-
 			if tt.monthlyInterval != "" {
 				_ = os.Setenv("SCHEDULER_MONTHLY_INTERVAL", tt.monthlyInterval)
 			} else {

@@ -277,6 +277,31 @@ func TestHourlyPubSubMetrics(t *testing.T) {
 		}
 	})
 
+	t.Run("月次サマリーデータが集計に反映される", func(t *testing.T) {
+		now := time.Now().Unix()
+		if _, err := db.ExecContext(ctx,
+			`INSERT INTO diary_summary_months (id, user_id, year, month, summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			uuid.New(), userID, 2020, 1, "サマリ", now, now,
+		); err != nil {
+			t.Fatalf("月次サマリーの挿入に失敗: %v", err)
+		}
+
+		metrics, err := database.HourlyPubSubMetrics(ctx, db, userID)
+		if err != nil {
+			t.Fatalf("HourlyPubSubMetrics失敗: %v", err)
+		}
+		if len(metrics) != 24 {
+			t.Errorf("期待 24件, 実際 %d件", len(metrics))
+		}
+		var total int32
+		for _, m := range metrics {
+			total += m.MonthlySummariesProcessed
+		}
+		if total != 1 {
+			t.Errorf("月次サマリー合計: 期待 1, 実際 %d", total)
+		}
+	})
+
 }
 
 func TestInsertSemanticSearchLog(t *testing.T) {
