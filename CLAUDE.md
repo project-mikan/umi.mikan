@@ -189,7 +189,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Scheduler Job Types**:
   - **IntervalScheduledJob**: Periodic execution at fixed intervals (e.g., every 5 minutes)
   - **DailyScheduledJob**: Daily execution at a specific hour (JST timezone)
-- **Today's Diary Embedding Deferral**: On diary save/update, embedding is skipped for today's diary (JST). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
+- **Diary Embedding Inline Generation Target**: On diary save/update, embedding is skipped for today's diary (JST) and yesterday's diary if the current time is before 4:30 AM JST (both handled by the scheduler). Embedding IS generated inline for yesterday's diary at or after 4:30 AM JST (scheduler already ran and won't reprocess) and for diaries 2+ days old (scheduler never processes these). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Grafana Alloy, and cAdvisor
 
@@ -394,7 +394,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 ### Codecov / Test Coverage Guidelines
 
 - **Auto-generated files are excluded from coverage**: `backend/infrastructure/grpc/**` and `backend/infrastructure/database/*.dbtpl.go` are excluded via `codecov.yml` at the project root. Do not add coverage for generated files.
-- **New backend functions require tests**: When adding new functions to backend services, always add corresponding test cases to maintain patch coverage.
+- **New backend functions require tests**: When adding new functions to backend services, always add corresponding test cases to maintain patch coverage. This applies to **all new helper functions** (e.g., `isTodayJST`, `isYesterdayJST`, `isPastDiaryEmbeddingTime`) — not just public methods. Omitting tests for private helper functions is a recurring source of patch coverage failures.
+- **Time-dependent functions must accept `time.Time` as a parameter**: Functions that check the current time (e.g., `isPastDiaryEmbeddingTime`) must accept a `time.Time` argument instead of calling `time.Now()` internally. Call sites pass `time.Now()`. This makes boundary conditions testable with fixed timestamps.
 - **Coverage configuration**: `codecov.yml` at project root controls coverage settings and ignored paths.
 - **Database package tests must be in `package database_test`**: Tests in `backend/infrastructure/database/` must use `package database_test` (external test package) to avoid import cycles. The cycle is `database` → `testutil` → `domain/model` → `database`.
 - **Database layer functions need their own tests**: Functions added to `backend/infrastructure/database/` (e.g., new query functions) require test files in the same directory. Service-layer tests do NOT count as coverage for the database package — Go measures coverage per package separately.

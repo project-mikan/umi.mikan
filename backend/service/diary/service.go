@@ -783,16 +783,47 @@ func isTodayJST(diaryDate time.Time) bool {
 	return diaryDate.Equal(todayJST)
 }
 
+// isYesterdayJST は指定した日付（UTC 00:00:00で表現されたJST日付）が
+// now のJST日付の前日と同じかどうかを返す
+func isYesterdayJST(diaryDate time.Time, now time.Time) bool {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := now.In(jst)
+	todayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
+	yesterdayJST := todayJST.AddDate(0, 0, -1)
+	return diaryDate.Equal(yesterdayJST)
+}
+
+// isPastDiaryEmbeddingTime はJST 4:30（DiaryEmbeddingJobの実行時刻）を過ぎているかどうかを返す
+// 4:30以降は昨日の日記がスケジューラーによって処理済みとみなす
+// 注意: この時刻はハードコードされており、SCHEDULER_DIARY_EMBEDDING_HOUR/MINUTE 環境変数と
+// 独立している。スケジューラーの実行時刻を変更する場合はここも合わせて修正すること。
+func isPastDiaryEmbeddingTime(now time.Time) bool {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := now.In(jst)
+	// DiaryEmbeddingJobのデフォルト実行時刻: 4:30 JST
+	return nowJST.Hour() > 4 || (nowJST.Hour() == 4 && nowJST.Minute() >= 30)
+}
+
 // publishDiaryEmbeddingMessage は日記の埋め込みベクトル生成をRedis Pub/Sub経由でキューに追加する
-// 当日（JST）の日記はスキップし、翌朝スケジューラーが処理する（意味的検索有効時のみ）
+// スキップ対象: 今日の日記（明朝スケジューラーが処理）+ 昨日の日記でJST 4:30前（当日スケジューラーが処理）
+// インライン生成対象: 昨日の日記でJST 4:30以降（スケジューラー処理済み）+ 2日以上前（スケジューラー対象外）
 // エラーはログに記録するのみで、レスポンスには影響しない
 func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, diaryID string, diaryDate time.Time) {
 	if s.Redis == nil {
 		return
 	}
 
-	// 当日の日記は翌朝スケジューラーが処理するためスキップ
-	if isTodayJST(diaryDate) {
+	// スキップ条件: 今日の日記 OR (昨日の日記 AND JST 4:30前)
+	// → どちらもスケジューラーが処理するためインライン生成不要
+	now := time.Now()
+	shouldSkip := isTodayJST(diaryDate) || (isYesterdayJST(diaryDate, now) && !isPastDiaryEmbeddingTime(now))
+	if shouldSkip {
 		return
 	}
 
