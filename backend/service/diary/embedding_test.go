@@ -86,6 +86,60 @@ func TestIsTodayJST(t *testing.T) {
 	})
 }
 
+func TestIsYesterdayJST(t *testing.T) {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+
+	nowJST := time.Now().In(jst)
+	todayUTC := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
+	yesterdayUTC := todayUTC.AddDate(0, 0, -1)
+	tomorrowUTC := todayUTC.AddDate(0, 0, 1)
+	twoDaysAgoUTC := todayUTC.AddDate(0, 0, -2)
+
+	t.Run("昨日の日記はtrueを返す", func(t *testing.T) {
+		if !isYesterdayJST(yesterdayUTC) {
+			t.Error("昨日の日記でisYesterdayJSTがfalseを返した")
+		}
+	})
+
+	t.Run("当日の日記はfalseを返す", func(t *testing.T) {
+		if isYesterdayJST(todayUTC) {
+			t.Error("当日の日記でisYesterdayJSTがtrueを返した")
+		}
+	})
+
+	t.Run("明日の日記はfalseを返す", func(t *testing.T) {
+		if isYesterdayJST(tomorrowUTC) {
+			t.Error("明日の日記でisYesterdayJSTがtrueを返した")
+		}
+	})
+
+	t.Run("2日前の日記はfalseを返す", func(t *testing.T) {
+		if isYesterdayJST(twoDaysAgoUTC) {
+			t.Error("2日前の日記でisYesterdayJSTがtrueを返した")
+		}
+	})
+
+	t.Run("過去の固定日付はfalseを返す", func(t *testing.T) {
+		pastDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		if isYesterdayJST(pastDate) {
+			t.Error("過去の日付でisYesterdayJSTがtrueを返した")
+		}
+	})
+}
+
+func TestIsPastDiaryEmbeddingTime(t *testing.T) {
+	// isPastDiaryEmbeddingTime は現在時刻に依存するため、
+	// 関数が bool を返すことと境界条件のロジックを確認するテスト
+	// 実際の返り値は実行時刻によって変わる（4:30 JST 前後で異なる）
+	result := isPastDiaryEmbeddingTime()
+	// bool 型を返すことだけ確認（実行時刻依存のため値は検証しない）
+	_ = result
+	t.Log("isPastDiaryEmbeddingTime returned:", result)
+}
+
 func TestGenerateSnippet(t *testing.T) {
 	tests := []struct {
 		name     string

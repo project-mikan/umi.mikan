@@ -783,16 +783,44 @@ func isTodayJST(diaryDate time.Time) bool {
 	return diaryDate.Equal(todayJST)
 }
 
+// isYesterdayJST は指定した日付（UTC 00:00:00で表現されたJST日付）が
+// 現在のJST日付の前日と同じかどうかを返す
+func isYesterdayJST(diaryDate time.Time) bool {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := time.Now().In(jst)
+	yesterdayJST := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day()-1, 0, 0, 0, 0, time.UTC)
+	return diaryDate.Equal(yesterdayJST)
+}
+
+// isPastDiaryEmbeddingTime はJST 4:30（DiaryEmbeddingJobの実行時刻）を過ぎているかどうかを返す
+// 4:30以降は昨日の日記がスケジューラーによって処理済みとみなす
+func isPastDiaryEmbeddingTime() bool {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
+	}
+	nowJST := time.Now().In(jst)
+	// DiaryEmbeddingJobのデフォルト実行時刻: 4:30 JST
+	return nowJST.Hour() > 4 || (nowJST.Hour() == 4 && nowJST.Minute() >= 30)
+}
+
 // publishDiaryEmbeddingMessage は日記の埋め込みベクトル生成をRedis Pub/Sub経由でキューに追加する
-// 当日（JST）の日記はスキップし、翌朝スケジューラーが処理する（意味的検索有効時のみ）
+// インライン生成対象: 今日の日記 + 昨日の日記（JST 4:30前のみ）
+// 昨日の日記がJST 4:30以降の場合は DiaryEmbeddingJob が処理済みのためスキップ
 // エラーはログに記録するのみで、レスポンスには影響しない
 func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, diaryID string, diaryDate time.Time) {
 	if s.Redis == nil {
 		return
 	}
 
-	// 当日の日記は翌朝スケジューラーが処理するためスキップ
-	if isTodayJST(diaryDate) {
+	// 生成対象: 今日の日記 OR (昨日の日記 AND 4:30前)
+	// 昨日の日記で4:30以降はDiaryEmbeddingJobが処理済みのためスキップ
+	// それ以外の日付（2日以上前）はスキップ
+	isTarget := isTodayJST(diaryDate) || (isYesterdayJST(diaryDate) && !isPastDiaryEmbeddingTime())
+	if !isTarget {
 		return
 	}
 
