@@ -133,7 +133,7 @@
 						</div>
 						<div class="text-sm text-gray-800 dark:text-gray-200">
 							<Link href="/{formatDateToId(pastEntry.date)}" class="text-blue-600 hover:text-blue-800">
-								{@html _getEntryTitle(pastEntry.entry)}
+								{_getEntryTitle(pastEntry.entry)}
 							</Link>
 						</div>
 					</div>
