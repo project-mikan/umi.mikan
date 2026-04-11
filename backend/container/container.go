@@ -136,7 +136,6 @@ type RedisConfig struct {
 }
 
 type SchedulerConfig struct {
-	DailySummaryInterval       time.Duration
 	MonthlySummaryInterval     time.Duration
 	LatestTrendTargetHour      int
 	LatestTrendTargetMinute    int
@@ -225,7 +224,6 @@ func NewSchedulerConfig() (*SchedulerConfig, error) {
 	}
 
 	return &SchedulerConfig{
-		DailySummaryInterval:       config.DailySummaryInterval,
 		MonthlySummaryInterval:     config.MonthlySummaryInterval,
 		LatestTrendTargetHour:      config.LatestTrendTargetHour,
 		LatestTrendTargetMinute:    config.LatestTrendTargetMinute,

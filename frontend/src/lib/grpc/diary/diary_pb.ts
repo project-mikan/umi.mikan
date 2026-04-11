@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_diary_diary: GenFile =
   /*@__PURE__*/
   fileDesc(
-    "ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJ1ChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5EhkKEWV4cGFuZGVkX2tleXdvcmRzGAMgAygJIj0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIoYBCg5Nb250aGx5U3VtbWFyeRIKCgJpZBgBIAEoCRIYCgVtb250aBgCIAEoCzIJLmRpYXJ5LllNEg8KB3N1bW1hcnkYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDEhUKDW1vZGVsX3ZlcnNpb24YBiABKAkiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IpYBCgxEYWlseVN1bW1hcnkSCgoCaWQYASABKAkSEAoIZGlhcnlfaWQYAiABKAkSGAoEZGF0ZRgDIAEoCzIKLmRpYXJ5LllNRBIPCgdzdW1tYXJ5GAQgASgJEhIKCmNyZWF0ZWRfYXQYBSABKAMSEgoKdXBkYXRlZF9hdBgGIAEoAxIVCg1tb2RlbF92ZXJzaW9uGAcgASgJIi8KG0dlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJEChxHZW5lcmF0ZURhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiMgoWR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBIYCgRkYXRlGAEgASgLMgouZGlhcnkuWU1EIj8KF0dldERhaWx5U3VtbWFyeVJlc3BvbnNlEiQKB3N1bW1hcnkYASABKAsyEy5kaWFyeS5EYWlseVN1bW1hcnkiFwoVR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Is0BChZHZXRMYXRlc3RUcmVuZFJlc3BvbnNlEg4KBmhlYWx0aBgBIAEoCRIVCg1oZWFsdGhfcmVhc29uGAIgASgJEgwKBG1vb2QYAyABKAkSEwoLbW9vZF9yZWFzb24YBCABKAkSEgoKYWN0aXZpdGllcxgFIAEoCRIUCgxwZXJpb2Rfc3RhcnQYBiABKAkSEgoKcGVyaW9kX2VuZBgHIAEoCRIUCgxnZW5lcmF0ZWRfYXQYCCABKAkSFQoNbW9kZWxfdmVyc2lvbhgJIAEoCSIbChlUcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0Ij4KGlRyaWdnZXJMYXRlc3RUcmVuZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSJBCiFTZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUikwEKFFNlbWFudGljU2VhcmNoUmVzdWx0EhAKCGRpYXJ5X2lkGAEgASgJEhgKBGRhdGUYAiABKAsyCi5kaWFyeS5ZTUQSDwoHc25pcHBldBgDIAEoCRISCgpzaW1pbGFyaXR5GAQgASgCEhUKDWNodW5rX3N1bW1hcnkYBSABKAkSEwoLY2h1bmtfY291bnQYBiABKAUigAEKIlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVzcG9uc2USLAoHcmVzdWx0cxgBIAMoCzIbLmRpYXJ5LlNlbWFudGljU2VhcmNoUmVzdWx0EhcKD2VtYmVkZGluZ19tb2RlbBgCIAEoCRITCgtjaHVua19tb2RlbBgDIAEoCSIwChxUcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIkAKHVRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlc3BvbnNlEg4KBnF1ZXVlZBgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIiwKGEdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSI6Cg5IaWdobGlnaHRSYW5nZRINCgVzdGFydBgBIAEoBRILCgNlbmQYAiABKAUSDAoEdGV4dBgDIAEoCSJuChlHZXREaWFyeUhpZ2hsaWdodFJlc3BvbnNlEikKCmhpZ2hsaWdodHMYASADKAsyFS5kaWFyeS5IaWdobGlnaHRSYW5nZRISCgpjcmVhdGVkX2F0GAIgASgDEhIKCnVwZGF0ZWRfYXQYAyABKAMiIAoeUmVnZW5lcmF0ZUFsbEVtYmVkZGluZ3NSZXF1ZXN0IkgKH1JlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIUCgxxdWV1ZWRfY291bnQYAiABKAUiMgoeR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXF1ZXN0EhAKCGRpYXJ5X2lkGAEgASgJIrwBCh9HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1Jlc3BvbnNlEg8KB2luZGV4ZWQYASABKAgSFQoNbW9kZWxfdmVyc2lvbhgCIAEoCRISCgpjcmVhdGVkX2F0GAMgASgDEhIKCnVwZGF0ZWRfYXQYBCABKAMSGwoTY2h1bmtfbW9kZWxfdmVyc2lvbhgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIXCg9jaHVua19zdW1tYXJpZXMYCCADKAkyjA0KDERpYXJ5U2VydmljZRJTChBDcmVhdGVEaWFyeUVudHJ5Eh4uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5DcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USUwoQVXBkYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuVXBkYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEERlbGV0ZURpYXJ5RW50cnkSHi5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LkRlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRJKCg1HZXREaWFyeUVudHJ5EhsuZGlhcnkuR2V0RGlhcnlFbnRyeVJlcXVlc3QaHC5kaWFyeS5HZXREaWFyeUVudHJ5UmVzcG9uc2USUAoPR2V0RGlhcnlFbnRyaWVzEh0uZGlhcnkuR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBoeLmRpYXJ5LkdldERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdldERpYXJ5RW50cmllc0J5TW9udGgSJC5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBolLmRpYXJ5LkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRJZChJTZWFyY2hEaWFyeUVudHJpZXMSIC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNSZXF1ZXN0GiEuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVzcG9uc2USZQoWR2VuZXJhdGVNb250aGx5U3VtbWFyeRIkLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXF1ZXN0GiUuZGlhcnkuR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlc3BvbnNlElYKEUdldE1vbnRobHlTdW1tYXJ5Eh8uZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXF1ZXN0GiAuZGlhcnkuR2V0TW9udGhseVN1bW1hcnlSZXNwb25zZRJfChRHZW5lcmF0ZURhaWx5U3VtbWFyeRIiLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVxdWVzdBojLmRpYXJ5LkdlbmVyYXRlRGFpbHlTdW1tYXJ5UmVzcG9uc2USUAoPR2V0RGFpbHlTdW1tYXJ5Eh0uZGlhcnkuR2V0RGFpbHlTdW1tYXJ5UmVxdWVzdBoeLmRpYXJ5LkdldERhaWx5U3VtbWFyeVJlc3BvbnNlEk0KDkdldExhdGVzdFRyZW5kEhwuZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXF1ZXN0Gh0uZGlhcnkuR2V0TGF0ZXN0VHJlbmRSZXNwb25zZRJZChJUcmlnZ2VyTGF0ZXN0VHJlbmQSIC5kaWFyeS5UcmlnZ2VyTGF0ZXN0VHJlbmRSZXF1ZXN0GiEuZGlhcnkuVHJpZ2dlckxhdGVzdFRyZW5kUmVzcG9uc2UScQoaU2VhcmNoRGlhcnlFbnRyaWVzU2VtYW50aWMSKC5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1JlcXVlc3QaKS5kaWFyeS5TZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1Jlc3BvbnNlEmIKFVRyaWdnZXJEaWFyeUhpZ2hsaWdodBIjLmRpYXJ5LlRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlcXVlc3QaJC5kaWFyeS5UcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXNwb25zZRJWChFHZXREaWFyeUhpZ2hsaWdodBIfLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVxdWVzdBogLmRpYXJ5LkdldERpYXJ5SGlnaGxpZ2h0UmVzcG9uc2USaAoXUmVnZW5lcmF0ZUFsbEVtYmVkZGluZ3MSJS5kaWFyeS5SZWdlbmVyYXRlQWxsRW1iZWRkaW5nc1JlcXVlc3QaJi5kaWFyeS5SZWdlbmVyYXRlQWxsRW1iZWRkaW5nc1Jlc3BvbnNlEmgKF0dldERpYXJ5RW1iZWRkaW5nU3RhdHVzEiUuZGlhcnkuR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXF1ZXN0GiYuZGlhcnkuR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
+    "ChFkaWFyeS9kaWFyeS5wcm90bxIFZGlhcnkiLwoDWU1EEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0SCwoDZGF5GAMgASgNIiEKAllNEgwKBHllYXIYASABKA0SDQoFbW9udGgYAiABKA0iawoKRGlhcnlFbnRyeRIKCgJpZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB2NvbnRlbnQYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDIkQKF0NyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Eg8KB2NvbnRlbnQYASABKAkSGAoEZGF0ZRgCIAEoCzIKLmRpYXJ5LllNRCI8ChhDcmVhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IjAKFEdldERpYXJ5RW50cnlSZXF1ZXN0EhgKBGRhdGUYASABKAsyCi5kaWFyeS5ZTUQiMwoWR2V0RGlhcnlFbnRyaWVzUmVxdWVzdBIZCgVkYXRlcxgBIAMoCzIKLmRpYXJ5LllNRCI5Ch1HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIiwKGVNlYXJjaERpYXJ5RW50cmllc1JlcXVlc3QSDwoHa2V5d29yZBgBIAEoCSJ1ChpTZWFyY2hEaWFyeUVudHJpZXNSZXNwb25zZRIYChBzZWFyY2hlZF9rZXl3b3JkGAEgASgJEiIKB2VudHJpZXMYAiADKAsyES5kaWFyeS5EaWFyeUVudHJ5EhkKEWV4cGFuZGVkX2tleXdvcmRzGAMgAygJIj0KF0dldERpYXJ5RW50cmllc1Jlc3BvbnNlEiIKB2VudHJpZXMYASADKAsyES5kaWFyeS5EaWFyeUVudHJ5IkQKHkdldERpYXJ5RW50cmllc0J5TW9udGhSZXNwb25zZRIiCgdlbnRyaWVzGAEgAygLMhEuZGlhcnkuRGlhcnlFbnRyeSI5ChVHZXREaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5Il8KF1VwZGF0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEg8KB2NvbnRlbnQYAyABKAkSGAoEZGF0ZRgEIAEoCzIKLmRpYXJ5LllNRCI8ChhVcGRhdGVEaWFyeUVudHJ5UmVzcG9uc2USIAoFZW50cnkYASABKAsyES5kaWFyeS5EaWFyeUVudHJ5IiUKF0RlbGV0ZURpYXJ5RW50cnlSZXF1ZXN0EgoKAmlkGAEgASgJIisKGERlbGV0ZURpYXJ5RW50cnlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIoYBCg5Nb250aGx5U3VtbWFyeRIKCgJpZBgBIAEoCRIYCgVtb250aBgCIAEoCzIJLmRpYXJ5LllNEg8KB3N1bW1hcnkYAyABKAkSEgoKY3JlYXRlZF9hdBgEIAEoAxISCgp1cGRhdGVkX2F0GAUgASgDEhUKDW1vZGVsX3ZlcnNpb24YBiABKAkiOQodR2VuZXJhdGVNb250aGx5U3VtbWFyeVJlcXVlc3QSGAoFbW9udGgYASABKAsyCS5kaWFyeS5ZTSJICh5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IjQKGEdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBIYCgVtb250aBgBIAEoCzIJLmRpYXJ5LllNIkMKGUdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USJgoHc3VtbWFyeRgBIAEoCzIVLmRpYXJ5Lk1vbnRobHlTdW1tYXJ5IhcKFUdldExhdGVzdFRyZW5kUmVxdWVzdCLNAQoWR2V0TGF0ZXN0VHJlbmRSZXNwb25zZRIOCgZoZWFsdGgYASABKAkSFQoNaGVhbHRoX3JlYXNvbhgCIAEoCRIMCgRtb29kGAMgASgJEhMKC21vb2RfcmVhc29uGAQgASgJEhIKCmFjdGl2aXRpZXMYBSABKAkSFAoMcGVyaW9kX3N0YXJ0GAYgASgJEhIKCnBlcmlvZF9lbmQYByABKAkSFAoMZ2VuZXJhdGVkX2F0GAggASgJEhUKDW1vZGVsX3ZlcnNpb24YCSABKAkiGwoZVHJpZ2dlckxhdGVzdFRyZW5kUmVxdWVzdCI+ChpUcmlnZ2VyTGF0ZXN0VHJlbmRSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiQQohU2VhcmNoRGlhcnlFbnRyaWVzU2VtYW50aWNSZXF1ZXN0Eg0KBXF1ZXJ5GAEgASgJEg0KBWxpbWl0GAIgASgFIpMBChRTZW1hbnRpY1NlYXJjaFJlc3VsdBIQCghkaWFyeV9pZBgBIAEoCRIYCgRkYXRlGAIgASgLMgouZGlhcnkuWU1EEg8KB3NuaXBwZXQYAyABKAkSEgoKc2ltaWxhcml0eRgEIAEoAhIVCg1jaHVua19zdW1tYXJ5GAUgASgJEhMKC2NodW5rX2NvdW50GAYgASgFIoABCiJTZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpY1Jlc3BvbnNlEiwKB3Jlc3VsdHMYASADKAsyGy5kaWFyeS5TZW1hbnRpY1NlYXJjaFJlc3VsdBIXCg9lbWJlZGRpbmdfbW9kZWwYAiABKAkSEwoLY2h1bmtfbW9kZWwYAyABKAkiMAocVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0UmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSJACh1UcmlnZ2VyRGlhcnlIaWdobGlnaHRSZXNwb25zZRIOCgZxdWV1ZWQYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIsChhHZXREaWFyeUhpZ2hsaWdodFJlcXVlc3QSEAoIZGlhcnlfaWQYASABKAkiOgoOSGlnaGxpZ2h0UmFuZ2USDQoFc3RhcnQYASABKAUSCwoDZW5kGAIgASgFEgwKBHRleHQYAyABKAkibgoZR2V0RGlhcnlIaWdobGlnaHRSZXNwb25zZRIpCgpoaWdobGlnaHRzGAEgAygLMhUuZGlhcnkuSGlnaGxpZ2h0UmFuZ2USEgoKY3JlYXRlZF9hdBgCIAEoAxISCgp1cGRhdGVkX2F0GAMgASgDIiAKHlJlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVxdWVzdCJICh9SZWdlbmVyYXRlQWxsRW1iZWRkaW5nc1Jlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSFAoMcXVldWVkX2NvdW50GAIgASgFIjIKHkdldERpYXJ5RW1iZWRkaW5nU3RhdHVzUmVxdWVzdBIQCghkaWFyeV9pZBgBIAEoCSK8AQofR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXNSZXNwb25zZRIPCgdpbmRleGVkGAEgASgIEhUKDW1vZGVsX3ZlcnNpb24YAiABKAkSEgoKY3JlYXRlZF9hdBgDIAEoAxISCgp1cGRhdGVkX2F0GAQgASgDEhsKE2NodW5rX21vZGVsX3ZlcnNpb24YBiABKAkSEwoLY2h1bmtfY291bnQYByABKAUSFwoPY2h1bmtfc3VtbWFyaWVzGAggAygJMtkLCgxEaWFyeVNlcnZpY2USUwoQQ3JlYXRlRGlhcnlFbnRyeRIeLmRpYXJ5LkNyZWF0ZURpYXJ5RW50cnlSZXF1ZXN0Gh8uZGlhcnkuQ3JlYXRlRGlhcnlFbnRyeVJlc3BvbnNlElMKEFVwZGF0ZURpYXJ5RW50cnkSHi5kaWFyeS5VcGRhdGVEaWFyeUVudHJ5UmVxdWVzdBofLmRpYXJ5LlVwZGF0ZURpYXJ5RW50cnlSZXNwb25zZRJTChBEZWxldGVEaWFyeUVudHJ5Eh4uZGlhcnkuRGVsZXRlRGlhcnlFbnRyeVJlcXVlc3QaHy5kaWFyeS5EZWxldGVEaWFyeUVudHJ5UmVzcG9uc2USSgoNR2V0RGlhcnlFbnRyeRIbLmRpYXJ5LkdldERpYXJ5RW50cnlSZXF1ZXN0GhwuZGlhcnkuR2V0RGlhcnlFbnRyeVJlc3BvbnNlElAKD0dldERpYXJ5RW50cmllcxIdLmRpYXJ5LkdldERpYXJ5RW50cmllc1JlcXVlc3QaHi5kaWFyeS5HZXREaWFyeUVudHJpZXNSZXNwb25zZRJlChZHZXREaWFyeUVudHJpZXNCeU1vbnRoEiQuZGlhcnkuR2V0RGlhcnlFbnRyaWVzQnlNb250aFJlcXVlc3QaJS5kaWFyeS5HZXREaWFyeUVudHJpZXNCeU1vbnRoUmVzcG9uc2USWQoSU2VhcmNoRGlhcnlFbnRyaWVzEiAuZGlhcnkuU2VhcmNoRGlhcnlFbnRyaWVzUmVxdWVzdBohLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1Jlc3BvbnNlEmUKFkdlbmVyYXRlTW9udGhseVN1bW1hcnkSJC5kaWFyeS5HZW5lcmF0ZU1vbnRobHlTdW1tYXJ5UmVxdWVzdBolLmRpYXJ5LkdlbmVyYXRlTW9udGhseVN1bW1hcnlSZXNwb25zZRJWChFHZXRNb250aGx5U3VtbWFyeRIfLmRpYXJ5LkdldE1vbnRobHlTdW1tYXJ5UmVxdWVzdBogLmRpYXJ5LkdldE1vbnRobHlTdW1tYXJ5UmVzcG9uc2USTQoOR2V0TGF0ZXN0VHJlbmQSHC5kaWFyeS5HZXRMYXRlc3RUcmVuZFJlcXVlc3QaHS5kaWFyeS5HZXRMYXRlc3RUcmVuZFJlc3BvbnNlElkKElRyaWdnZXJMYXRlc3RUcmVuZBIgLmRpYXJ5LlRyaWdnZXJMYXRlc3RUcmVuZFJlcXVlc3QaIS5kaWFyeS5UcmlnZ2VyTGF0ZXN0VHJlbmRSZXNwb25zZRJxChpTZWFyY2hEaWFyeUVudHJpZXNTZW1hbnRpYxIoLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVxdWVzdBopLmRpYXJ5LlNlYXJjaERpYXJ5RW50cmllc1NlbWFudGljUmVzcG9uc2USYgoVVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0EiMuZGlhcnkuVHJpZ2dlckRpYXJ5SGlnaGxpZ2h0UmVxdWVzdBokLmRpYXJ5LlRyaWdnZXJEaWFyeUhpZ2hsaWdodFJlc3BvbnNlElYKEUdldERpYXJ5SGlnaGxpZ2h0Eh8uZGlhcnkuR2V0RGlhcnlIaWdobGlnaHRSZXF1ZXN0GiAuZGlhcnkuR2V0RGlhcnlIaWdobGlnaHRSZXNwb25zZRJoChdSZWdlbmVyYXRlQWxsRW1iZWRkaW5ncxIlLmRpYXJ5LlJlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVxdWVzdBomLmRpYXJ5LlJlZ2VuZXJhdGVBbGxFbWJlZGRpbmdzUmVzcG9uc2USaAoXR2V0RGlhcnlFbWJlZGRpbmdTdGF0dXMSJS5kaWFyeS5HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1JlcXVlc3QaJi5kaWFyeS5HZXREaWFyeUVtYmVkZGluZ1N0YXR1c1Jlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM",
   );
 
 /**
@@ -579,141 +579,6 @@ export const GetMonthlySummaryResponseSchema: GenMessage<GetMonthlySummaryRespon
   messageDesc(file_diary_diary, 21);
 
 /**
- * 日サマリー
- *
- * @generated from message diary.DailySummary
- */
-export type DailySummary = Message<"diary.DailySummary"> & {
-  /**
-   * @generated from field: string id = 1;
-   */
-  id: string;
-
-  /**
-   * @generated from field: string diary_id = 2;
-   */
-  diaryId: string;
-
-  /**
-   * @generated from field: diary.YMD date = 3;
-   */
-  date?: YMD;
-
-  /**
-   * @generated from field: string summary = 4;
-   */
-  summary: string;
-
-  /**
-   * @generated from field: int64 created_at = 5;
-   */
-  createdAt: bigint;
-
-  /**
-   * @generated from field: int64 updated_at = 6;
-   */
-  updatedAt: bigint;
-
-  /**
-   * サマリー生成に使用したLLMモデル
-   *
-   * @generated from field: string model_version = 7;
-   */
-  modelVersion: string;
-};
-
-/**
- * Describes the message diary.DailySummary.
- * Use `create(DailySummarySchema)` to create a new message.
- */
-export const DailySummarySchema: GenMessage<DailySummary> =
-  /*@__PURE__*/
-  messageDesc(file_diary_diary, 22);
-
-/**
- * 日ごとのサマリー生成リクエスト
- *
- * @generated from message diary.GenerateDailySummaryRequest
- */
-export type GenerateDailySummaryRequest =
-  Message<"diary.GenerateDailySummaryRequest"> & {
-    /**
-     * @generated from field: string diary_id = 1;
-     */
-    diaryId: string;
-  };
-
-/**
- * Describes the message diary.GenerateDailySummaryRequest.
- * Use `create(GenerateDailySummaryRequestSchema)` to create a new message.
- */
-export const GenerateDailySummaryRequestSchema: GenMessage<GenerateDailySummaryRequest> =
-  /*@__PURE__*/
-  messageDesc(file_diary_diary, 23);
-
-/**
- * 日ごとのサマリー生成レスポンス
- *
- * @generated from message diary.GenerateDailySummaryResponse
- */
-export type GenerateDailySummaryResponse =
-  Message<"diary.GenerateDailySummaryResponse"> & {
-    /**
-     * @generated from field: diary.DailySummary summary = 1;
-     */
-    summary?: DailySummary;
-  };
-
-/**
- * Describes the message diary.GenerateDailySummaryResponse.
- * Use `create(GenerateDailySummaryResponseSchema)` to create a new message.
- */
-export const GenerateDailySummaryResponseSchema: GenMessage<GenerateDailySummaryResponse> =
-  /*@__PURE__*/
-  messageDesc(file_diary_diary, 24);
-
-/**
- * 日ごとのサマリー取得リクエスト
- *
- * @generated from message diary.GetDailySummaryRequest
- */
-export type GetDailySummaryRequest = Message<"diary.GetDailySummaryRequest"> & {
-  /**
-   * @generated from field: diary.YMD date = 1;
-   */
-  date?: YMD;
-};
-
-/**
- * Describes the message diary.GetDailySummaryRequest.
- * Use `create(GetDailySummaryRequestSchema)` to create a new message.
- */
-export const GetDailySummaryRequestSchema: GenMessage<GetDailySummaryRequest> =
-  /*@__PURE__*/
-  messageDesc(file_diary_diary, 25);
-
-/**
- * 日ごとのサマリー取得レスポンス
- *
- * @generated from message diary.GetDailySummaryResponse
- */
-export type GetDailySummaryResponse =
-  Message<"diary.GetDailySummaryResponse"> & {
-    /**
-     * @generated from field: diary.DailySummary summary = 1;
-     */
-    summary?: DailySummary;
-  };
-
-/**
- * Describes the message diary.GetDailySummaryResponse.
- * Use `create(GetDailySummaryResponseSchema)` to create a new message.
- */
-export const GetDailySummaryResponseSchema: GenMessage<GetDailySummaryResponse> =
-  /*@__PURE__*/
-  messageDesc(file_diary_diary, 26);
-
-/**
  * 直近トレンド分析取得リクエスト
  *
  * user_id は認証情報から取得
@@ -728,7 +593,7 @@ export type GetLatestTrendRequest = Message<"diary.GetLatestTrendRequest"> & {};
  */
 export const GetLatestTrendRequestSchema: GenMessage<GetLatestTrendRequest> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 27);
+  messageDesc(file_diary_diary, 22);
 
 /**
  * 直近トレンド分析取得レスポンス
@@ -806,7 +671,7 @@ export type GetLatestTrendResponse = Message<"diary.GetLatestTrendResponse"> & {
  */
 export const GetLatestTrendResponseSchema: GenMessage<GetLatestTrendResponse> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 28);
+  messageDesc(file_diary_diary, 23);
 
 /**
  * 直近トレンド分析生成トリガーリクエスト（デバッグ用）
@@ -824,7 +689,7 @@ export type TriggerLatestTrendRequest =
  */
 export const TriggerLatestTrendRequestSchema: GenMessage<TriggerLatestTrendRequest> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 29);
+  messageDesc(file_diary_diary, 24);
 
 /**
  * 直近トレンド分析生成トリガーレスポンス（デバッグ用）
@@ -854,7 +719,7 @@ export type TriggerLatestTrendResponse =
  */
 export const TriggerLatestTrendResponseSchema: GenMessage<TriggerLatestTrendResponse> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 30);
+  messageDesc(file_diary_diary, 25);
 
 /**
  * 意味的検索リクエスト
@@ -884,7 +749,7 @@ export type SearchDiaryEntriesSemanticRequest =
  */
 export const SearchDiaryEntriesSemanticRequestSchema: GenMessage<SearchDiaryEntriesSemanticRequest> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 31);
+  messageDesc(file_diary_diary, 26);
 
 /**
  * 意味的検索の1件分の結果
@@ -937,7 +802,7 @@ export type SemanticSearchResult = Message<"diary.SemanticSearchResult"> & {
  */
 export const SemanticSearchResultSchema: GenMessage<SemanticSearchResult> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 32);
+  messageDesc(file_diary_diary, 27);
 
 /**
  * 意味的検索レスポンス
@@ -972,7 +837,7 @@ export type SearchDiaryEntriesSemanticResponse =
  */
 export const SearchDiaryEntriesSemanticResponseSchema: GenMessage<SearchDiaryEntriesSemanticResponse> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 33);
+  messageDesc(file_diary_diary, 28);
 
 /**
  * 日記ハイライト生成トリガーリクエスト
@@ -995,7 +860,7 @@ export type TriggerDiaryHighlightRequest =
  */
 export const TriggerDiaryHighlightRequestSchema: GenMessage<TriggerDiaryHighlightRequest> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 34);
+  messageDesc(file_diary_diary, 29);
 
 /**
  * 日記ハイライト生成トリガーレスポンス
@@ -1025,7 +890,7 @@ export type TriggerDiaryHighlightResponse =
  */
 export const TriggerDiaryHighlightResponseSchema: GenMessage<TriggerDiaryHighlightResponse> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 35);
+  messageDesc(file_diary_diary, 30);
 
 /**
  * 日記ハイライト取得リクエスト
@@ -1048,7 +913,7 @@ export type GetDiaryHighlightRequest =
  */
 export const GetDiaryHighlightRequestSchema: GenMessage<GetDiaryHighlightRequest> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 36);
+  messageDesc(file_diary_diary, 31);
 
 /**
  * ハイライト範囲
@@ -1084,7 +949,7 @@ export type HighlightRange = Message<"diary.HighlightRange"> & {
  */
 export const HighlightRangeSchema: GenMessage<HighlightRange> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 37);
+  messageDesc(file_diary_diary, 32);
 
 /**
  * 日記ハイライト取得レスポンス
@@ -1121,7 +986,7 @@ export type GetDiaryHighlightResponse =
  */
 export const GetDiaryHighlightResponseSchema: GenMessage<GetDiaryHighlightResponse> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 38);
+  messageDesc(file_diary_diary, 33);
 
 /**
  * 全日記のembedding再生成リクエスト
@@ -1139,7 +1004,7 @@ export type RegenerateAllEmbeddingsRequest =
  */
 export const RegenerateAllEmbeddingsRequestSchema: GenMessage<RegenerateAllEmbeddingsRequest> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 39);
+  messageDesc(file_diary_diary, 34);
 
 /**
  * 全日記のembedding再生成レスポンス
@@ -1167,7 +1032,7 @@ export type RegenerateAllEmbeddingsResponse =
  */
 export const RegenerateAllEmbeddingsResponseSchema: GenMessage<RegenerateAllEmbeddingsResponse> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 40);
+  messageDesc(file_diary_diary, 35);
 
 /**
  * 日記のRAGインデックス状態取得リクエスト
@@ -1190,7 +1055,7 @@ export type GetDiaryEmbeddingStatusRequest =
  */
 export const GetDiaryEmbeddingStatusRequestSchema: GenMessage<GetDiaryEmbeddingStatusRequest> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 41);
+  messageDesc(file_diary_diary, 36);
 
 /**
  * 日記のRAGインデックス状態取得レスポンス
@@ -1255,7 +1120,7 @@ export type GetDiaryEmbeddingStatusResponse =
  */
 export const GetDiaryEmbeddingStatusResponseSchema: GenMessage<GetDiaryEmbeddingStatusResponse> =
   /*@__PURE__*/
-  messageDesc(file_diary_diary, 42);
+  messageDesc(file_diary_diary, 37);
 
 /**
  * DiaryService は日記エントリの作成・読み取り・更新・削除（CRUD）と
@@ -1417,43 +1282,6 @@ export const DiaryService: GenService<{
     methodKind: "unary";
     input: typeof GetMonthlySummaryRequestSchema;
     output: typeof GetMonthlySummaryResponseSchema;
-  };
-  /**
-   * GenerateDailySummary は指定された日記をLLMで要約します。
-   * ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
-   *
-   * 例:
-   *   request: { diary_id: "uuid" }
-   *   response: { summary: { id: "uuid", diary_id: "uuid", summary: "今日は...", ... } }
-   *
-   * エラー:
-   *   - NotFound: LLMキーが設定されていない、または日記が存在しない
-   *   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-   *   - Internal: LLM API呼び出しエラー
-   *
-   * @generated from rpc diary.DiaryService.GenerateDailySummary
-   */
-  generateDailySummary: {
-    methodKind: "unary";
-    input: typeof GenerateDailySummaryRequestSchema;
-    output: typeof GenerateDailySummaryResponseSchema;
-  };
-  /**
-   * GetDailySummary は指定された日付のサマリーを取得します。
-   *
-   * 例:
-   *   request: { date: { year: 2025, month: 10, day: 9 } }
-   *   response: { summary: { id: "uuid", date: { year: 2025, month: 10, day: 9 }, summary: "今日は...", ... } }
-   *
-   * エラー:
-   *   - NotFound: サマリーが存在しない
-   *
-   * @generated from rpc diary.DiaryService.GetDailySummary
-   */
-  getDailySummary: {
-    methodKind: "unary";
-    input: typeof GetDailySummaryRequestSchema;
-    output: typeof GetDailySummaryResponseSchema;
   };
   /**
    * GetLatestTrend は直近の日記のトレンド分析を取得します（前日を中心に最大1週間程度を参考）。

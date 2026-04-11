@@ -98,29 +98,6 @@ service DiaryService {
   //   - NotFound: サマリーが存在しない
   rpc GetMonthlySummary(GetMonthlySummaryRequest) returns (GetMonthlySummaryResponse);
 
-  // GenerateDailySummary は指定された日記をLLMで要約します。
-  // ユーザーのLLMキー設定が必要です。既存のサマリーがある場合は上書きされます。
-  //
-  // 例:
-  //   request: { diary_id: "uuid" }
-  //   response: { summary: { id: "uuid", diary_id: "uuid", summary: "今日は...", ... } }
-  //
-  // エラー:
-  //   - NotFound: LLMキーが設定されていない、または日記が存在しない
-  //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
-  //   - Internal: LLM API呼び出しエラー
-  rpc GenerateDailySummary(GenerateDailySummaryRequest) returns (GenerateDailySummaryResponse);
-
-  // GetDailySummary は指定された日付のサマリーを取得します。
-  //
-  // 例:
-  //   request: { date: { year: 2025, month: 10, day: 9 } }
-  //   response: { summary: { id: "uuid", date: { year: 2025, month: 10, day: 9 }, summary: "今日は...", ... } }
-  //
-  // エラー:
-  //   - NotFound: サマリーが存在しない
-  rpc GetDailySummary(GetDailySummaryRequest) returns (GetDailySummaryResponse);
-
   // GetLatestTrend は直近の日記のトレンド分析を取得します（前日を中心に最大1週間程度を参考）。
   // Redisに保存された分析結果を返します。
   //
@@ -317,37 +294,6 @@ message GetMonthlySummaryRequest {
 // 月ごとのサマリー取得レスポンス
 message GetMonthlySummaryResponse {
   MonthlySummary summary = 1;
-}
-
-// 日サマリー
-message DailySummary {
-  string id = 1;
-  string diary_id = 2;
-  YMD date = 3;
-  string summary = 4;
-  int64 created_at = 5;
-  int64 updated_at = 6;
-  string model_version = 7; // サマリー生成に使用したLLMモデル
-}
-
-// 日ごとのサマリー生成リクエスト
-message GenerateDailySummaryRequest {
-  string diary_id = 1;
-}
-
-// 日ごとのサマリー生成レスポンス
-message GenerateDailySummaryResponse {
-  DailySummary summary = 1;
-}
-
-// 日ごとのサマリー取得リクエスト
-message GetDailySummaryRequest {
-  YMD date = 1;
-}
-
-// 日ごとのサマリー取得レスポンス
-message GetDailySummaryResponse {
-  DailySummary summary = 1;
 }
 
 // 直近トレンド分析取得リクエスト

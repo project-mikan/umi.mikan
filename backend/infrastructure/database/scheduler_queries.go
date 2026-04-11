@@ -12,39 +12,6 @@ type YearMonth struct {
 	Month int
 }
 
-// DiaryDatesNeedingDailySummary は指定ユーザーの日次サマリが未生成または古い日付を返す
-// 文字数1000以上の日記のみ対象（今日は除く）
-func DiaryDatesNeedingDailySummary(ctx context.Context, db DB, userID string) ([]time.Time, error) {
-	const sqlstr = `
-		SELECT d.date
-		FROM diaries d
-		LEFT JOIN diary_summary_days dsd ON d.user_id = dsd.user_id AND d.date = dsd.date
-		WHERE d.user_id = $1
-		  AND d.date < CURRENT_DATE
-		  AND LENGTH(d.content) >= 1000
-		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
-		ORDER BY d.date
-	`
-	rows, err := db.QueryContext(ctx, sqlstr, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query diary dates needing daily summary: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-
-	var dates []time.Time
-	for rows.Next() {
-		var date time.Time
-		if err := rows.Scan(&date); err != nil {
-			return nil, fmt.Errorf("failed to scan date: %w", err)
-		}
-		dates = append(dates, date)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error during rows iteration: %w", err)
-	}
-	return dates, nil
-}
-
 // MonthsNeedingMonthlySummary は指定ユーザーの月次サマリが未生成または古い年月を返す
 // 1件以上の日記がある月のみ対象（今月は除く）
 func MonthsNeedingMonthlySummary(ctx context.Context, db DB, userID string) ([]YearMonth, error) {

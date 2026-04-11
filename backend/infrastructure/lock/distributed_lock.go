@@ -154,11 +154,6 @@ func generateUniqueValue() string {
 
 // Helper functions for creating lock keys
 
-// DailySummaryLockKey creates a lock key for daily summary generation
-func DailySummaryLockKey(userID, date string) string {
-	return fmt.Sprintf("summary_lock:daily:%s:%s", userID, date)
-}
-
 // MonthlySummaryLockKey creates a lock key for monthly summary generation
 func MonthlySummaryLockKey(userID string, year, month int) string {
 	return fmt.Sprintf("summary_lock:monthly:%s:%d:%d", userID, year, month)

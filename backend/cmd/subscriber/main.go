@@ -95,12 +95,6 @@ func init() {
 	prometheus.MustRegister(connectionStatusGauge)
 }
 
-type SummaryGenerationMessage struct {
-	Type   string `json:"type"`
-	UserID string `json:"user_id"`
-	Date   string `json:"date"` // YYYY-MM-DD format
-}
-
 type MonthlySummaryGenerationMessage struct {
 	Type   string `json:"type"`
 	UserID string `json:"user_id"`
@@ -355,20 +349,6 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 
 	var err error
 	switch baseMessage.Type {
-	case "daily_summary":
-		processingDuration.WithLabelValues("daily_summary").Observe(time.Since(start).Seconds())
-		var message SummaryGenerationMessage
-		if unmarshalErr := json.Unmarshal([]byte(payload), &message); unmarshalErr != nil {
-			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
-			return fmt.Errorf("failed to unmarshal daily summary message: %w", unmarshalErr)
-		}
-		err = generateDailySummary(ctx, db, redisClient, llmFactory, lockService, message.UserID, message.Date, logger)
-		if err != nil {
-			messagesProcessedCounter.WithLabelValues("daily_summary", "error").Inc()
-		} else {
-			messagesProcessedCounter.WithLabelValues("daily_summary", "success").Inc()
-		}
-		return err
 	case "monthly_summary":
 		processingDuration.WithLabelValues("monthly_summary").Observe(time.Since(start).Seconds())
 		var message MonthlySummaryGenerationMessage
@@ -430,104 +410,6 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 		messagesProcessedCounter.WithLabelValues("unknown", "ignored").Inc()
 		return nil
 	}
-}
-
-func generateDailySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID, dateStr string, logger *logrus.Entry) error {
-	logger.WithFields(logrus.Fields{
-		"user_id": userID,
-		"date":    dateStr,
-	}).Info("Generating daily summary")
-
-	// 1. 分散ロックを取得
-	lockKey := fmt.Sprintf("summary_lock:daily:%s:%s", userID, dateStr)
-	distributedLock := lockService.NewDistributedLock(lockKey, 5*time.Minute)
-
-	locked, err := distributedLock.TryLock(ctx)
-	if err != nil {
-		lockOperationsCounter.WithLabelValues("acquire", "error", "daily").Inc()
-		return fmt.Errorf("failed to acquire lock: %w", err)
-	}
-
-	if !locked {
-		// Lock already held by another process, skip processing
-		lockOperationsCounter.WithLabelValues("acquire", "failed", "daily").Inc()
-		logger.WithFields(logrus.Fields{
-			"user_id": userID,
-			"date":    dateStr,
-		}).Info("Daily summary is already being processed by another instance, skipping")
-		return nil
-	}
-
-	lockOperationsCounter.WithLabelValues("acquire", "success", "daily").Inc()
-	logger.WithFields(logrus.Fields{
-		"user_id": userID,
-		"date":    dateStr,
-	}).Debug("Acquired lock for daily summary generation")
-
-	// タスクステータスを「処理中」に更新
-	taskKey := fmt.Sprintf("task:daily_summary:%s:%s", userID, dateStr)
-	setCmd := redisClient.B().Set().Key(taskKey).Value("processing").Ex(600 * time.Second).Build()
-	redisClient.Do(ctx, setCmd)
-
-	// Ensure lock is released when function exits
-	defer func() {
-		// タスクステータスを削除
-		delCmd := redisClient.B().Del().Key(taskKey).Build()
-		redisClient.Do(ctx, delCmd)
-
-		if unlockErr := distributedLock.Unlock(ctx); unlockErr != nil {
-			lockOperationsCounter.WithLabelValues("release", "error", "daily").Inc()
-			logger.WithError(unlockErr).WithFields(logrus.Fields{
-				"user_id": userID,
-				"date":    dateStr,
-			}).Error("Failed to release lock")
-		} else {
-			lockOperationsCounter.WithLabelValues("release", "success", "daily").Inc()
-			logger.WithFields(logrus.Fields{
-				"user_id": userID,
-				"date":    dateStr,
-			}).Debug("Released lock for daily summary generation")
-		}
-	}()
-
-	// 2. 指定された日の日記内容を取得
-	var diaryContent string
-	query := `SELECT content FROM diaries WHERE user_id = $1 AND date = $2`
-	err = db.QueryRowContext(ctx, query, userID, dateStr).Scan(&diaryContent)
-	if err != nil {
-		return fmt.Errorf("failed to get diary content: %w", err)
-	}
-
-	// 2. LLMで要約生成
-	summary, err := generateSummaryWithLLM(ctx, db, llmFactory, userID, diaryContent, logger)
-	if err != nil {
-		return fmt.Errorf("failed to generate summary with LLM: %w", err)
-	}
-
-	// 3. diary_summary_daysに保存
-	insertQuery := `
-		INSERT INTO diary_summary_days (id, user_id, date, summary, model_version, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		ON CONFLICT (user_id, date) DO UPDATE SET
-		summary = EXCLUDED.summary,
-		model_version = EXCLUDED.model_version,
-		updated_at = EXCLUDED.updated_at
-	`
-
-	now := time.Now().Unix()
-	summaryID := uuid.New()
-
-	_, err = db.ExecContext(ctx, insertQuery, summaryID, userID, dateStr, summary, llm.ModelGenerateContent, now, now)
-	if err != nil {
-		return fmt.Errorf("failed to save summary: %w", err)
-	}
-
-	summariesGeneratedCounter.WithLabelValues("daily").Inc()
-	logger.WithFields(logrus.Fields{
-		"user_id": userID,
-		"date":    dateStr,
-	}).Info("Successfully generated and saved daily summary")
-	return nil
 }
 
 func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, userID string, year, month int, logger *logrus.Entry) error {
@@ -637,39 +519,6 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	summariesGeneratedCounter.WithLabelValues("monthly").Inc()
 	logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Info("Successfully generated and saved monthly summary")
 	return nil
-}
-
-func generateSummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) (string, error) {
-	// ユーザーのGemini API keyをuser_llmsテーブルから取得
-	var apiKey string
-	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
-	if err != nil {
-		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
-	}
-
-	// Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
-	if err != nil {
-		logger.WithError(err).Error("Failed to create Gemini client")
-		return "", fmt.Errorf("failed to create Gemini client: %w", err)
-	}
-	defer func() {
-		if closeErr := geminiClient.Close(); closeErr != nil {
-			logger.WithError(closeErr).Error("Failed to close Gemini client")
-		}
-	}()
-
-	// 日次要約生成
-	summary, err := geminiClient.GenerateDailySummary(ctx, content)
-	if err != nil {
-		logger.WithError(err).Error("Failed to generate daily summary")
-		return "", fmt.Errorf("failed to generate daily summary: %w", err)
-	}
-
-	logger.Info("Successfully generated daily summary using Gemini API")
-	return summary, nil
 }
 
 func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {

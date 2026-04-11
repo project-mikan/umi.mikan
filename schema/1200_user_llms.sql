@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS user_llms (
     user_id UUID REFERENCES users(id) PRIMARY KEY,
     llm_provider  smallint NOT NULL, -- 1:Gemini
     key  VARCHAR(100) NOT NULL,
-    auto_summary_daily BOOLEAN NOT NULL DEFAULT FALSE, -- 日毎の自動要約生成を行うかどうか
     auto_summary_monthly BOOLEAN NOT NULL DEFAULT FALSE, -- 月毎の自動要約生成を行うかどうか
     auto_latest_trend_enabled BOOLEAN NOT NULL DEFAULT FALSE, -- 直近トレンド分析の自動生成を行うかどうか
     semantic_search_enabled BOOLEAN NOT NULL DEFAULT FALSE, -- 意味的検索（RAG）機能を有効にするかどうか

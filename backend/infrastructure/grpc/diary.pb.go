@@ -1149,279 +1149,6 @@ func (x *GetMonthlySummaryResponse) GetSummary() *MonthlySummary {
 	return nil
 }
 
-// 日サマリー
-type DailySummary struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	DiaryId       string                 `protobuf:"bytes,2,opt,name=diary_id,json=diaryId,proto3" json:"diary_id,omitempty"`
-	Date          *YMD                   `protobuf:"bytes,3,opt,name=date,proto3" json:"date,omitempty"`
-	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
-	CreatedAt     int64                  `protobuf:"varint,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     int64                  `protobuf:"varint,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	ModelVersion  string                 `protobuf:"bytes,7,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"` // サマリー生成に使用したLLMモデル
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DailySummary) Reset() {
-	*x = DailySummary{}
-	mi := &file_diary_diary_proto_msgTypes[22]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DailySummary) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DailySummary) ProtoMessage() {}
-
-func (x *DailySummary) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[22]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DailySummary.ProtoReflect.Descriptor instead.
-func (*DailySummary) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{22}
-}
-
-func (x *DailySummary) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *DailySummary) GetDiaryId() string {
-	if x != nil {
-		return x.DiaryId
-	}
-	return ""
-}
-
-func (x *DailySummary) GetDate() *YMD {
-	if x != nil {
-		return x.Date
-	}
-	return nil
-}
-
-func (x *DailySummary) GetSummary() string {
-	if x != nil {
-		return x.Summary
-	}
-	return ""
-}
-
-func (x *DailySummary) GetCreatedAt() int64 {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return 0
-}
-
-func (x *DailySummary) GetUpdatedAt() int64 {
-	if x != nil {
-		return x.UpdatedAt
-	}
-	return 0
-}
-
-func (x *DailySummary) GetModelVersion() string {
-	if x != nil {
-		return x.ModelVersion
-	}
-	return ""
-}
-
-// 日ごとのサマリー生成リクエスト
-type GenerateDailySummaryRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DiaryId       string                 `protobuf:"bytes,1,opt,name=diary_id,json=diaryId,proto3" json:"diary_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GenerateDailySummaryRequest) Reset() {
-	*x = GenerateDailySummaryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[23]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GenerateDailySummaryRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GenerateDailySummaryRequest) ProtoMessage() {}
-
-func (x *GenerateDailySummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[23]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GenerateDailySummaryRequest.ProtoReflect.Descriptor instead.
-func (*GenerateDailySummaryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *GenerateDailySummaryRequest) GetDiaryId() string {
-	if x != nil {
-		return x.DiaryId
-	}
-	return ""
-}
-
-// 日ごとのサマリー生成レスポンス
-type GenerateDailySummaryResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Summary       *DailySummary          `protobuf:"bytes,1,opt,name=summary,proto3" json:"summary,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GenerateDailySummaryResponse) Reset() {
-	*x = GenerateDailySummaryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[24]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GenerateDailySummaryResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GenerateDailySummaryResponse) ProtoMessage() {}
-
-func (x *GenerateDailySummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[24]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GenerateDailySummaryResponse.ProtoReflect.Descriptor instead.
-func (*GenerateDailySummaryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *GenerateDailySummaryResponse) GetSummary() *DailySummary {
-	if x != nil {
-		return x.Summary
-	}
-	return nil
-}
-
-// 日ごとのサマリー取得リクエスト
-type GetDailySummaryRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Date          *YMD                   `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetDailySummaryRequest) Reset() {
-	*x = GetDailySummaryRequest{}
-	mi := &file_diary_diary_proto_msgTypes[25]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetDailySummaryRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetDailySummaryRequest) ProtoMessage() {}
-
-func (x *GetDailySummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[25]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetDailySummaryRequest.ProtoReflect.Descriptor instead.
-func (*GetDailySummaryRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{25}
-}
-
-func (x *GetDailySummaryRequest) GetDate() *YMD {
-	if x != nil {
-		return x.Date
-	}
-	return nil
-}
-
-// 日ごとのサマリー取得レスポンス
-type GetDailySummaryResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Summary       *DailySummary          `protobuf:"bytes,1,opt,name=summary,proto3" json:"summary,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetDailySummaryResponse) Reset() {
-	*x = GetDailySummaryResponse{}
-	mi := &file_diary_diary_proto_msgTypes[26]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetDailySummaryResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetDailySummaryResponse) ProtoMessage() {}
-
-func (x *GetDailySummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[26]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetDailySummaryResponse.ProtoReflect.Descriptor instead.
-func (*GetDailySummaryResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{26}
-}
-
-func (x *GetDailySummaryResponse) GetSummary() *DailySummary {
-	if x != nil {
-		return x.Summary
-	}
-	return nil
-}
-
 // 直近トレンド分析取得リクエスト
 type GetLatestTrendRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1431,7 +1158,7 @@ type GetLatestTrendRequest struct {
 
 func (x *GetLatestTrendRequest) Reset() {
 	*x = GetLatestTrendRequest{}
-	mi := &file_diary_diary_proto_msgTypes[27]
+	mi := &file_diary_diary_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1443,7 +1170,7 @@ func (x *GetLatestTrendRequest) String() string {
 func (*GetLatestTrendRequest) ProtoMessage() {}
 
 func (x *GetLatestTrendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[27]
+	mi := &file_diary_diary_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1456,7 +1183,7 @@ func (x *GetLatestTrendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLatestTrendRequest.ProtoReflect.Descriptor instead.
 func (*GetLatestTrendRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{27}
+	return file_diary_diary_proto_rawDescGZIP(), []int{22}
 }
 
 // 直近トレンド分析取得レスポンス
@@ -1477,7 +1204,7 @@ type GetLatestTrendResponse struct {
 
 func (x *GetLatestTrendResponse) Reset() {
 	*x = GetLatestTrendResponse{}
-	mi := &file_diary_diary_proto_msgTypes[28]
+	mi := &file_diary_diary_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1489,7 +1216,7 @@ func (x *GetLatestTrendResponse) String() string {
 func (*GetLatestTrendResponse) ProtoMessage() {}
 
 func (x *GetLatestTrendResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[28]
+	mi := &file_diary_diary_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1502,7 +1229,7 @@ func (x *GetLatestTrendResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLatestTrendResponse.ProtoReflect.Descriptor instead.
 func (*GetLatestTrendResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{28}
+	return file_diary_diary_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetLatestTrendResponse) GetHealth() string {
@@ -1577,7 +1304,7 @@ type TriggerLatestTrendRequest struct {
 
 func (x *TriggerLatestTrendRequest) Reset() {
 	*x = TriggerLatestTrendRequest{}
-	mi := &file_diary_diary_proto_msgTypes[29]
+	mi := &file_diary_diary_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1589,7 +1316,7 @@ func (x *TriggerLatestTrendRequest) String() string {
 func (*TriggerLatestTrendRequest) ProtoMessage() {}
 
 func (x *TriggerLatestTrendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[29]
+	mi := &file_diary_diary_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1602,7 +1329,7 @@ func (x *TriggerLatestTrendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerLatestTrendRequest.ProtoReflect.Descriptor instead.
 func (*TriggerLatestTrendRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{29}
+	return file_diary_diary_proto_rawDescGZIP(), []int{24}
 }
 
 // 直近トレンド分析生成トリガーレスポンス（デバッグ用）
@@ -1616,7 +1343,7 @@ type TriggerLatestTrendResponse struct {
 
 func (x *TriggerLatestTrendResponse) Reset() {
 	*x = TriggerLatestTrendResponse{}
-	mi := &file_diary_diary_proto_msgTypes[30]
+	mi := &file_diary_diary_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1628,7 +1355,7 @@ func (x *TriggerLatestTrendResponse) String() string {
 func (*TriggerLatestTrendResponse) ProtoMessage() {}
 
 func (x *TriggerLatestTrendResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[30]
+	mi := &file_diary_diary_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1641,7 +1368,7 @@ func (x *TriggerLatestTrendResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerLatestTrendResponse.ProtoReflect.Descriptor instead.
 func (*TriggerLatestTrendResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{30}
+	return file_diary_diary_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *TriggerLatestTrendResponse) GetSuccess() bool {
@@ -1669,7 +1396,7 @@ type SearchDiaryEntriesSemanticRequest struct {
 
 func (x *SearchDiaryEntriesSemanticRequest) Reset() {
 	*x = SearchDiaryEntriesSemanticRequest{}
-	mi := &file_diary_diary_proto_msgTypes[31]
+	mi := &file_diary_diary_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1681,7 +1408,7 @@ func (x *SearchDiaryEntriesSemanticRequest) String() string {
 func (*SearchDiaryEntriesSemanticRequest) ProtoMessage() {}
 
 func (x *SearchDiaryEntriesSemanticRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[31]
+	mi := &file_diary_diary_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1694,7 +1421,7 @@ func (x *SearchDiaryEntriesSemanticRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use SearchDiaryEntriesSemanticRequest.ProtoReflect.Descriptor instead.
 func (*SearchDiaryEntriesSemanticRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{31}
+	return file_diary_diary_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *SearchDiaryEntriesSemanticRequest) GetQuery() string {
@@ -1726,7 +1453,7 @@ type SemanticSearchResult struct {
 
 func (x *SemanticSearchResult) Reset() {
 	*x = SemanticSearchResult{}
-	mi := &file_diary_diary_proto_msgTypes[32]
+	mi := &file_diary_diary_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1738,7 +1465,7 @@ func (x *SemanticSearchResult) String() string {
 func (*SemanticSearchResult) ProtoMessage() {}
 
 func (x *SemanticSearchResult) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[32]
+	mi := &file_diary_diary_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1751,7 +1478,7 @@ func (x *SemanticSearchResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SemanticSearchResult.ProtoReflect.Descriptor instead.
 func (*SemanticSearchResult) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{32}
+	return file_diary_diary_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *SemanticSearchResult) GetDiaryId() string {
@@ -1808,7 +1535,7 @@ type SearchDiaryEntriesSemanticResponse struct {
 
 func (x *SearchDiaryEntriesSemanticResponse) Reset() {
 	*x = SearchDiaryEntriesSemanticResponse{}
-	mi := &file_diary_diary_proto_msgTypes[33]
+	mi := &file_diary_diary_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1820,7 +1547,7 @@ func (x *SearchDiaryEntriesSemanticResponse) String() string {
 func (*SearchDiaryEntriesSemanticResponse) ProtoMessage() {}
 
 func (x *SearchDiaryEntriesSemanticResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[33]
+	mi := &file_diary_diary_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1833,7 +1560,7 @@ func (x *SearchDiaryEntriesSemanticResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use SearchDiaryEntriesSemanticResponse.ProtoReflect.Descriptor instead.
 func (*SearchDiaryEntriesSemanticResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{33}
+	return file_diary_diary_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *SearchDiaryEntriesSemanticResponse) GetResults() []*SemanticSearchResult {
@@ -1867,7 +1594,7 @@ type TriggerDiaryHighlightRequest struct {
 
 func (x *TriggerDiaryHighlightRequest) Reset() {
 	*x = TriggerDiaryHighlightRequest{}
-	mi := &file_diary_diary_proto_msgTypes[34]
+	mi := &file_diary_diary_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1879,7 +1606,7 @@ func (x *TriggerDiaryHighlightRequest) String() string {
 func (*TriggerDiaryHighlightRequest) ProtoMessage() {}
 
 func (x *TriggerDiaryHighlightRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[34]
+	mi := &file_diary_diary_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1892,7 +1619,7 @@ func (x *TriggerDiaryHighlightRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerDiaryHighlightRequest.ProtoReflect.Descriptor instead.
 func (*TriggerDiaryHighlightRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{34}
+	return file_diary_diary_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *TriggerDiaryHighlightRequest) GetDiaryId() string {
@@ -1913,7 +1640,7 @@ type TriggerDiaryHighlightResponse struct {
 
 func (x *TriggerDiaryHighlightResponse) Reset() {
 	*x = TriggerDiaryHighlightResponse{}
-	mi := &file_diary_diary_proto_msgTypes[35]
+	mi := &file_diary_diary_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1925,7 +1652,7 @@ func (x *TriggerDiaryHighlightResponse) String() string {
 func (*TriggerDiaryHighlightResponse) ProtoMessage() {}
 
 func (x *TriggerDiaryHighlightResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[35]
+	mi := &file_diary_diary_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1938,7 +1665,7 @@ func (x *TriggerDiaryHighlightResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerDiaryHighlightResponse.ProtoReflect.Descriptor instead.
 func (*TriggerDiaryHighlightResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{35}
+	return file_diary_diary_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *TriggerDiaryHighlightResponse) GetQueued() bool {
@@ -1965,7 +1692,7 @@ type GetDiaryHighlightRequest struct {
 
 func (x *GetDiaryHighlightRequest) Reset() {
 	*x = GetDiaryHighlightRequest{}
-	mi := &file_diary_diary_proto_msgTypes[36]
+	mi := &file_diary_diary_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1977,7 +1704,7 @@ func (x *GetDiaryHighlightRequest) String() string {
 func (*GetDiaryHighlightRequest) ProtoMessage() {}
 
 func (x *GetDiaryHighlightRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[36]
+	mi := &file_diary_diary_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1990,7 +1717,7 @@ func (x *GetDiaryHighlightRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryHighlightRequest.ProtoReflect.Descriptor instead.
 func (*GetDiaryHighlightRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{36}
+	return file_diary_diary_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetDiaryHighlightRequest) GetDiaryId() string {
@@ -2012,7 +1739,7 @@ type HighlightRange struct {
 
 func (x *HighlightRange) Reset() {
 	*x = HighlightRange{}
-	mi := &file_diary_diary_proto_msgTypes[37]
+	mi := &file_diary_diary_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2024,7 +1751,7 @@ func (x *HighlightRange) String() string {
 func (*HighlightRange) ProtoMessage() {}
 
 func (x *HighlightRange) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[37]
+	mi := &file_diary_diary_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2037,7 +1764,7 @@ func (x *HighlightRange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HighlightRange.ProtoReflect.Descriptor instead.
 func (*HighlightRange) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{37}
+	return file_diary_diary_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *HighlightRange) GetStart() int32 {
@@ -2073,7 +1800,7 @@ type GetDiaryHighlightResponse struct {
 
 func (x *GetDiaryHighlightResponse) Reset() {
 	*x = GetDiaryHighlightResponse{}
-	mi := &file_diary_diary_proto_msgTypes[38]
+	mi := &file_diary_diary_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2085,7 +1812,7 @@ func (x *GetDiaryHighlightResponse) String() string {
 func (*GetDiaryHighlightResponse) ProtoMessage() {}
 
 func (x *GetDiaryHighlightResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[38]
+	mi := &file_diary_diary_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2098,7 +1825,7 @@ func (x *GetDiaryHighlightResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryHighlightResponse.ProtoReflect.Descriptor instead.
 func (*GetDiaryHighlightResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{38}
+	return file_diary_diary_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetDiaryHighlightResponse) GetHighlights() []*HighlightRange {
@@ -2131,7 +1858,7 @@ type RegenerateAllEmbeddingsRequest struct {
 
 func (x *RegenerateAllEmbeddingsRequest) Reset() {
 	*x = RegenerateAllEmbeddingsRequest{}
-	mi := &file_diary_diary_proto_msgTypes[39]
+	mi := &file_diary_diary_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2143,7 +1870,7 @@ func (x *RegenerateAllEmbeddingsRequest) String() string {
 func (*RegenerateAllEmbeddingsRequest) ProtoMessage() {}
 
 func (x *RegenerateAllEmbeddingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[39]
+	mi := &file_diary_diary_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2156,7 +1883,7 @@ func (x *RegenerateAllEmbeddingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegenerateAllEmbeddingsRequest.ProtoReflect.Descriptor instead.
 func (*RegenerateAllEmbeddingsRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{39}
+	return file_diary_diary_proto_rawDescGZIP(), []int{34}
 }
 
 // 全日記のembedding再生成レスポンス
@@ -2170,7 +1897,7 @@ type RegenerateAllEmbeddingsResponse struct {
 
 func (x *RegenerateAllEmbeddingsResponse) Reset() {
 	*x = RegenerateAllEmbeddingsResponse{}
-	mi := &file_diary_diary_proto_msgTypes[40]
+	mi := &file_diary_diary_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2182,7 +1909,7 @@ func (x *RegenerateAllEmbeddingsResponse) String() string {
 func (*RegenerateAllEmbeddingsResponse) ProtoMessage() {}
 
 func (x *RegenerateAllEmbeddingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[40]
+	mi := &file_diary_diary_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2195,7 +1922,7 @@ func (x *RegenerateAllEmbeddingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegenerateAllEmbeddingsResponse.ProtoReflect.Descriptor instead.
 func (*RegenerateAllEmbeddingsResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{40}
+	return file_diary_diary_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *RegenerateAllEmbeddingsResponse) GetSuccess() bool {
@@ -2222,7 +1949,7 @@ type GetDiaryEmbeddingStatusRequest struct {
 
 func (x *GetDiaryEmbeddingStatusRequest) Reset() {
 	*x = GetDiaryEmbeddingStatusRequest{}
-	mi := &file_diary_diary_proto_msgTypes[41]
+	mi := &file_diary_diary_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2234,7 +1961,7 @@ func (x *GetDiaryEmbeddingStatusRequest) String() string {
 func (*GetDiaryEmbeddingStatusRequest) ProtoMessage() {}
 
 func (x *GetDiaryEmbeddingStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[41]
+	mi := &file_diary_diary_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2247,7 +1974,7 @@ func (x *GetDiaryEmbeddingStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEmbeddingStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetDiaryEmbeddingStatusRequest) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{41}
+	return file_diary_diary_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *GetDiaryEmbeddingStatusRequest) GetDiaryId() string {
@@ -2273,7 +2000,7 @@ type GetDiaryEmbeddingStatusResponse struct {
 
 func (x *GetDiaryEmbeddingStatusResponse) Reset() {
 	*x = GetDiaryEmbeddingStatusResponse{}
-	mi := &file_diary_diary_proto_msgTypes[42]
+	mi := &file_diary_diary_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2285,7 +2012,7 @@ func (x *GetDiaryEmbeddingStatusResponse) String() string {
 func (*GetDiaryEmbeddingStatusResponse) ProtoMessage() {}
 
 func (x *GetDiaryEmbeddingStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[42]
+	mi := &file_diary_diary_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2298,7 +2025,7 @@ func (x *GetDiaryEmbeddingStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEmbeddingStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetDiaryEmbeddingStatusResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{42}
+	return file_diary_diary_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *GetDiaryEmbeddingStatusResponse) GetIndexed() bool {
@@ -2426,27 +2153,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x18GetMonthlySummaryRequest\x12\x1f\n" +
 	"\x05month\x18\x01 \x01(\v2\t.diary.YMR\x05month\"L\n" +
 	"\x19GetMonthlySummaryResponse\x12/\n" +
-	"\asummary\x18\x01 \x01(\v2\x15.diary.MonthlySummaryR\asummary\"\xd6\x01\n" +
-	"\fDailySummary\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
-	"\bdiary_id\x18\x02 \x01(\tR\adiaryId\x12\x1e\n" +
-	"\x04date\x18\x03 \x01(\v2\n" +
-	".diary.YMDR\x04date\x12\x18\n" +
-	"\asummary\x18\x04 \x01(\tR\asummary\x12\x1d\n" +
-	"\n" +
-	"created_at\x18\x05 \x01(\x03R\tcreatedAt\x12\x1d\n" +
-	"\n" +
-	"updated_at\x18\x06 \x01(\x03R\tupdatedAt\x12#\n" +
-	"\rmodel_version\x18\a \x01(\tR\fmodelVersion\"8\n" +
-	"\x1bGenerateDailySummaryRequest\x12\x19\n" +
-	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"M\n" +
-	"\x1cGenerateDailySummaryResponse\x12-\n" +
-	"\asummary\x18\x01 \x01(\v2\x13.diary.DailySummaryR\asummary\"8\n" +
-	"\x16GetDailySummaryRequest\x12\x1e\n" +
-	"\x04date\x18\x01 \x01(\v2\n" +
-	".diary.YMDR\x04date\"H\n" +
-	"\x17GetDailySummaryResponse\x12-\n" +
-	"\asummary\x18\x01 \x01(\v2\x13.diary.DailySummaryR\asummary\"\x17\n" +
+	"\asummary\x18\x01 \x01(\v2\x15.diary.MonthlySummaryR\asummary\"\x17\n" +
 	"\x15GetLatestTrendRequest\"\xb4\x02\n" +
 	"\x16GetLatestTrendResponse\x12\x16\n" +
 	"\x06health\x18\x01 \x01(\tR\x06health\x12#\n" +
@@ -2520,7 +2227,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x13chunk_model_version\x18\x06 \x01(\tR\x11chunkModelVersion\x12\x1f\n" +
 	"\vchunk_count\x18\a \x01(\x05R\n" +
 	"chunkCount\x12'\n" +
-	"\x0fchunk_summaries\x18\b \x03(\tR\x0echunkSummaries2\x8c\r\n" +
+	"\x0fchunk_summaries\x18\b \x03(\tR\x0echunkSummaries2\xd9\v\n" +
 	"\fDiaryService\x12S\n" +
 	"\x10CreateDiaryEntry\x12\x1e.diary.CreateDiaryEntryRequest\x1a\x1f.diary.CreateDiaryEntryResponse\x12S\n" +
 	"\x10UpdateDiaryEntry\x12\x1e.diary.UpdateDiaryEntryRequest\x1a\x1f.diary.UpdateDiaryEntryResponse\x12S\n" +
@@ -2530,9 +2237,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x16GetDiaryEntriesByMonth\x12$.diary.GetDiaryEntriesByMonthRequest\x1a%.diary.GetDiaryEntriesByMonthResponse\x12Y\n" +
 	"\x12SearchDiaryEntries\x12 .diary.SearchDiaryEntriesRequest\x1a!.diary.SearchDiaryEntriesResponse\x12e\n" +
 	"\x16GenerateMonthlySummary\x12$.diary.GenerateMonthlySummaryRequest\x1a%.diary.GenerateMonthlySummaryResponse\x12V\n" +
-	"\x11GetMonthlySummary\x12\x1f.diary.GetMonthlySummaryRequest\x1a .diary.GetMonthlySummaryResponse\x12_\n" +
-	"\x14GenerateDailySummary\x12\".diary.GenerateDailySummaryRequest\x1a#.diary.GenerateDailySummaryResponse\x12P\n" +
-	"\x0fGetDailySummary\x12\x1d.diary.GetDailySummaryRequest\x1a\x1e.diary.GetDailySummaryResponse\x12M\n" +
+	"\x11GetMonthlySummary\x12\x1f.diary.GetMonthlySummaryRequest\x1a .diary.GetMonthlySummaryResponse\x12M\n" +
 	"\x0eGetLatestTrend\x12\x1c.diary.GetLatestTrendRequest\x1a\x1d.diary.GetLatestTrendResponse\x12Y\n" +
 	"\x12TriggerLatestTrend\x12 .diary.TriggerLatestTrendRequest\x1a!.diary.TriggerLatestTrendResponse\x12q\n" +
 	"\x1aSearchDiaryEntriesSemantic\x12(.diary.SearchDiaryEntriesSemanticRequest\x1a).diary.SearchDiaryEntriesSemanticResponse\x12b\n" +
@@ -2553,7 +2258,7 @@ func file_diary_diary_proto_rawDescGZIP() []byte {
 	return file_diary_diary_proto_rawDescData
 }
 
-var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
+var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_diary_diary_proto_goTypes = []any{
 	(*YMD)(nil),                                // 0: diary.YMD
 	(*YM)(nil),                                 // 1: diary.YM
@@ -2577,27 +2282,22 @@ var file_diary_diary_proto_goTypes = []any{
 	(*GenerateMonthlySummaryResponse)(nil),     // 19: diary.GenerateMonthlySummaryResponse
 	(*GetMonthlySummaryRequest)(nil),           // 20: diary.GetMonthlySummaryRequest
 	(*GetMonthlySummaryResponse)(nil),          // 21: diary.GetMonthlySummaryResponse
-	(*DailySummary)(nil),                       // 22: diary.DailySummary
-	(*GenerateDailySummaryRequest)(nil),        // 23: diary.GenerateDailySummaryRequest
-	(*GenerateDailySummaryResponse)(nil),       // 24: diary.GenerateDailySummaryResponse
-	(*GetDailySummaryRequest)(nil),             // 25: diary.GetDailySummaryRequest
-	(*GetDailySummaryResponse)(nil),            // 26: diary.GetDailySummaryResponse
-	(*GetLatestTrendRequest)(nil),              // 27: diary.GetLatestTrendRequest
-	(*GetLatestTrendResponse)(nil),             // 28: diary.GetLatestTrendResponse
-	(*TriggerLatestTrendRequest)(nil),          // 29: diary.TriggerLatestTrendRequest
-	(*TriggerLatestTrendResponse)(nil),         // 30: diary.TriggerLatestTrendResponse
-	(*SearchDiaryEntriesSemanticRequest)(nil),  // 31: diary.SearchDiaryEntriesSemanticRequest
-	(*SemanticSearchResult)(nil),               // 32: diary.SemanticSearchResult
-	(*SearchDiaryEntriesSemanticResponse)(nil), // 33: diary.SearchDiaryEntriesSemanticResponse
-	(*TriggerDiaryHighlightRequest)(nil),       // 34: diary.TriggerDiaryHighlightRequest
-	(*TriggerDiaryHighlightResponse)(nil),      // 35: diary.TriggerDiaryHighlightResponse
-	(*GetDiaryHighlightRequest)(nil),           // 36: diary.GetDiaryHighlightRequest
-	(*HighlightRange)(nil),                     // 37: diary.HighlightRange
-	(*GetDiaryHighlightResponse)(nil),          // 38: diary.GetDiaryHighlightResponse
-	(*RegenerateAllEmbeddingsRequest)(nil),     // 39: diary.RegenerateAllEmbeddingsRequest
-	(*RegenerateAllEmbeddingsResponse)(nil),    // 40: diary.RegenerateAllEmbeddingsResponse
-	(*GetDiaryEmbeddingStatusRequest)(nil),     // 41: diary.GetDiaryEmbeddingStatusRequest
-	(*GetDiaryEmbeddingStatusResponse)(nil),    // 42: diary.GetDiaryEmbeddingStatusResponse
+	(*GetLatestTrendRequest)(nil),              // 22: diary.GetLatestTrendRequest
+	(*GetLatestTrendResponse)(nil),             // 23: diary.GetLatestTrendResponse
+	(*TriggerLatestTrendRequest)(nil),          // 24: diary.TriggerLatestTrendRequest
+	(*TriggerLatestTrendResponse)(nil),         // 25: diary.TriggerLatestTrendResponse
+	(*SearchDiaryEntriesSemanticRequest)(nil),  // 26: diary.SearchDiaryEntriesSemanticRequest
+	(*SemanticSearchResult)(nil),               // 27: diary.SemanticSearchResult
+	(*SearchDiaryEntriesSemanticResponse)(nil), // 28: diary.SearchDiaryEntriesSemanticResponse
+	(*TriggerDiaryHighlightRequest)(nil),       // 29: diary.TriggerDiaryHighlightRequest
+	(*TriggerDiaryHighlightResponse)(nil),      // 30: diary.TriggerDiaryHighlightResponse
+	(*GetDiaryHighlightRequest)(nil),           // 31: diary.GetDiaryHighlightRequest
+	(*HighlightRange)(nil),                     // 32: diary.HighlightRange
+	(*GetDiaryHighlightResponse)(nil),          // 33: diary.GetDiaryHighlightResponse
+	(*RegenerateAllEmbeddingsRequest)(nil),     // 34: diary.RegenerateAllEmbeddingsRequest
+	(*RegenerateAllEmbeddingsResponse)(nil),    // 35: diary.RegenerateAllEmbeddingsResponse
+	(*GetDiaryEmbeddingStatusRequest)(nil),     // 36: diary.GetDiaryEmbeddingStatusRequest
+	(*GetDiaryEmbeddingStatusResponse)(nil),    // 37: diary.GetDiaryEmbeddingStatusResponse
 }
 var file_diary_diary_proto_depIdxs = []int32{
 	0,  // 0: diary.DiaryEntry.date:type_name -> diary.YMD
@@ -2617,54 +2317,46 @@ var file_diary_diary_proto_depIdxs = []int32{
 	17, // 14: diary.GenerateMonthlySummaryResponse.summary:type_name -> diary.MonthlySummary
 	1,  // 15: diary.GetMonthlySummaryRequest.month:type_name -> diary.YM
 	17, // 16: diary.GetMonthlySummaryResponse.summary:type_name -> diary.MonthlySummary
-	0,  // 17: diary.DailySummary.date:type_name -> diary.YMD
-	22, // 18: diary.GenerateDailySummaryResponse.summary:type_name -> diary.DailySummary
-	0,  // 19: diary.GetDailySummaryRequest.date:type_name -> diary.YMD
-	22, // 20: diary.GetDailySummaryResponse.summary:type_name -> diary.DailySummary
-	0,  // 21: diary.SemanticSearchResult.date:type_name -> diary.YMD
-	32, // 22: diary.SearchDiaryEntriesSemanticResponse.results:type_name -> diary.SemanticSearchResult
-	37, // 23: diary.GetDiaryHighlightResponse.highlights:type_name -> diary.HighlightRange
-	3,  // 24: diary.DiaryService.CreateDiaryEntry:input_type -> diary.CreateDiaryEntryRequest
-	13, // 25: diary.DiaryService.UpdateDiaryEntry:input_type -> diary.UpdateDiaryEntryRequest
-	15, // 26: diary.DiaryService.DeleteDiaryEntry:input_type -> diary.DeleteDiaryEntryRequest
-	5,  // 27: diary.DiaryService.GetDiaryEntry:input_type -> diary.GetDiaryEntryRequest
-	6,  // 28: diary.DiaryService.GetDiaryEntries:input_type -> diary.GetDiaryEntriesRequest
-	7,  // 29: diary.DiaryService.GetDiaryEntriesByMonth:input_type -> diary.GetDiaryEntriesByMonthRequest
-	8,  // 30: diary.DiaryService.SearchDiaryEntries:input_type -> diary.SearchDiaryEntriesRequest
-	18, // 31: diary.DiaryService.GenerateMonthlySummary:input_type -> diary.GenerateMonthlySummaryRequest
-	20, // 32: diary.DiaryService.GetMonthlySummary:input_type -> diary.GetMonthlySummaryRequest
-	23, // 33: diary.DiaryService.GenerateDailySummary:input_type -> diary.GenerateDailySummaryRequest
-	25, // 34: diary.DiaryService.GetDailySummary:input_type -> diary.GetDailySummaryRequest
-	27, // 35: diary.DiaryService.GetLatestTrend:input_type -> diary.GetLatestTrendRequest
-	29, // 36: diary.DiaryService.TriggerLatestTrend:input_type -> diary.TriggerLatestTrendRequest
-	31, // 37: diary.DiaryService.SearchDiaryEntriesSemantic:input_type -> diary.SearchDiaryEntriesSemanticRequest
-	34, // 38: diary.DiaryService.TriggerDiaryHighlight:input_type -> diary.TriggerDiaryHighlightRequest
-	36, // 39: diary.DiaryService.GetDiaryHighlight:input_type -> diary.GetDiaryHighlightRequest
-	39, // 40: diary.DiaryService.RegenerateAllEmbeddings:input_type -> diary.RegenerateAllEmbeddingsRequest
-	41, // 41: diary.DiaryService.GetDiaryEmbeddingStatus:input_type -> diary.GetDiaryEmbeddingStatusRequest
-	4,  // 42: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
-	14, // 43: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
-	16, // 44: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
-	12, // 45: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
-	10, // 46: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
-	11, // 47: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
-	9,  // 48: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
-	19, // 49: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
-	21, // 50: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
-	24, // 51: diary.DiaryService.GenerateDailySummary:output_type -> diary.GenerateDailySummaryResponse
-	26, // 52: diary.DiaryService.GetDailySummary:output_type -> diary.GetDailySummaryResponse
-	28, // 53: diary.DiaryService.GetLatestTrend:output_type -> diary.GetLatestTrendResponse
-	30, // 54: diary.DiaryService.TriggerLatestTrend:output_type -> diary.TriggerLatestTrendResponse
-	33, // 55: diary.DiaryService.SearchDiaryEntriesSemantic:output_type -> diary.SearchDiaryEntriesSemanticResponse
-	35, // 56: diary.DiaryService.TriggerDiaryHighlight:output_type -> diary.TriggerDiaryHighlightResponse
-	38, // 57: diary.DiaryService.GetDiaryHighlight:output_type -> diary.GetDiaryHighlightResponse
-	40, // 58: diary.DiaryService.RegenerateAllEmbeddings:output_type -> diary.RegenerateAllEmbeddingsResponse
-	42, // 59: diary.DiaryService.GetDiaryEmbeddingStatus:output_type -> diary.GetDiaryEmbeddingStatusResponse
-	42, // [42:60] is the sub-list for method output_type
-	24, // [24:42] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	0,  // 17: diary.SemanticSearchResult.date:type_name -> diary.YMD
+	27, // 18: diary.SearchDiaryEntriesSemanticResponse.results:type_name -> diary.SemanticSearchResult
+	32, // 19: diary.GetDiaryHighlightResponse.highlights:type_name -> diary.HighlightRange
+	3,  // 20: diary.DiaryService.CreateDiaryEntry:input_type -> diary.CreateDiaryEntryRequest
+	13, // 21: diary.DiaryService.UpdateDiaryEntry:input_type -> diary.UpdateDiaryEntryRequest
+	15, // 22: diary.DiaryService.DeleteDiaryEntry:input_type -> diary.DeleteDiaryEntryRequest
+	5,  // 23: diary.DiaryService.GetDiaryEntry:input_type -> diary.GetDiaryEntryRequest
+	6,  // 24: diary.DiaryService.GetDiaryEntries:input_type -> diary.GetDiaryEntriesRequest
+	7,  // 25: diary.DiaryService.GetDiaryEntriesByMonth:input_type -> diary.GetDiaryEntriesByMonthRequest
+	8,  // 26: diary.DiaryService.SearchDiaryEntries:input_type -> diary.SearchDiaryEntriesRequest
+	18, // 27: diary.DiaryService.GenerateMonthlySummary:input_type -> diary.GenerateMonthlySummaryRequest
+	20, // 28: diary.DiaryService.GetMonthlySummary:input_type -> diary.GetMonthlySummaryRequest
+	22, // 29: diary.DiaryService.GetLatestTrend:input_type -> diary.GetLatestTrendRequest
+	24, // 30: diary.DiaryService.TriggerLatestTrend:input_type -> diary.TriggerLatestTrendRequest
+	26, // 31: diary.DiaryService.SearchDiaryEntriesSemantic:input_type -> diary.SearchDiaryEntriesSemanticRequest
+	29, // 32: diary.DiaryService.TriggerDiaryHighlight:input_type -> diary.TriggerDiaryHighlightRequest
+	31, // 33: diary.DiaryService.GetDiaryHighlight:input_type -> diary.GetDiaryHighlightRequest
+	34, // 34: diary.DiaryService.RegenerateAllEmbeddings:input_type -> diary.RegenerateAllEmbeddingsRequest
+	36, // 35: diary.DiaryService.GetDiaryEmbeddingStatus:input_type -> diary.GetDiaryEmbeddingStatusRequest
+	4,  // 36: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
+	14, // 37: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
+	16, // 38: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
+	12, // 39: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
+	10, // 40: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
+	11, // 41: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
+	9,  // 42: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
+	19, // 43: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
+	21, // 44: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
+	23, // 45: diary.DiaryService.GetLatestTrend:output_type -> diary.GetLatestTrendResponse
+	25, // 46: diary.DiaryService.TriggerLatestTrend:output_type -> diary.TriggerLatestTrendResponse
+	28, // 47: diary.DiaryService.SearchDiaryEntriesSemantic:output_type -> diary.SearchDiaryEntriesSemanticResponse
+	30, // 48: diary.DiaryService.TriggerDiaryHighlight:output_type -> diary.TriggerDiaryHighlightResponse
+	33, // 49: diary.DiaryService.GetDiaryHighlight:output_type -> diary.GetDiaryHighlightResponse
+	35, // 50: diary.DiaryService.RegenerateAllEmbeddings:output_type -> diary.RegenerateAllEmbeddingsResponse
+	37, // 51: diary.DiaryService.GetDiaryEmbeddingStatus:output_type -> diary.GetDiaryEmbeddingStatusResponse
+	36, // [36:52] is the sub-list for method output_type
+	20, // [20:36] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_diary_diary_proto_init() }
@@ -2678,7 +2370,7 @@ func file_diary_diary_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_diary_diary_proto_rawDesc), len(file_diary_diary_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   43,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

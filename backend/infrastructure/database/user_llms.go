@@ -4,12 +4,6 @@ import (
 	"context"
 )
 
-// UserIDsWithAutoSummaryDaily はauto_summary_dailyがtrueのユーザーIDの一覧を返す
-func UserIDsWithAutoSummaryDaily(ctx context.Context, db DB) ([]string, error) {
-	const sqlstr = `SELECT user_id FROM user_llms WHERE auto_summary_daily = true`
-	return queryStringSlice(ctx, db, sqlstr)
-}
-
 // UserIDsWithAutoSummaryMonthly はauto_summary_monthlyがtrueのユーザーIDの一覧を返す
 func UserIDsWithAutoSummaryMonthly(ctx context.Context, db DB) ([]string, error) {
 	const sqlstr = `SELECT user_id FROM user_llms WHERE auto_summary_monthly = true`

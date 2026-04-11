@@ -15,7 +15,6 @@
   import Modal from "$lib/components/molecules/Modal.svelte";
   import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
   import DiaryChunkTimeline from "$lib/components/molecules/DiaryChunkTimeline.svelte";
-  import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
   import { getDayOfWeekKey } from "$lib/utils/date-utils";
   import { createSubmitHandler } from "$lib/utils/form-utils";
   import type { HighlightData } from "$lib/types/highlight";
@@ -53,19 +52,8 @@
   let _showDeleteConfirm = false;
   let loading = false;
   let saved = false;
-  let summary: {
-    id: string;
-    diaryId: string;
-    date: { year: number; month: number; day: number };
-    summary: string;
-    createdAt: number;
-    updatedAt: number;
-  } | null = data.dailySummary;
-  let summaryError: string | null = null;
   let isToday = false;
   let isFutureDate = false;
-  let isSummaryGenerating = false; // 要約生成中のフラグ
-  let lastSummaryUpdateTime = 0; // 最後に要約が更新された時刻（ミリ秒）
   let isHighlightOutdated = false; // ハイライトが古いかどうか
 
   // ハイライトデータ
@@ -112,52 +100,6 @@
     isToday = currentDate.getTime() === today.getTime();
     isFutureDate = currentDate.getTime() > today.getTime();
   }
-  $: autoSummaryDisabled = !existingLLMKey?.autoSummaryDaily;
-
-  // 無効化メッセージを取得
-  function getDisabledMessage(): string {
-    if (isFutureDate) {
-      return $_("diary.summaryNotAvailableFuture");
-    }
-    if (isToday) {
-      return $_("diary.summaryNotAvailableToday");
-    }
-    return "";
-  }
-
-  // Check if the diary date is not today (only allow summary generation for past entries)
-  $: isNotToday = (() => {
-    if (!data.today) return false;
-
-    return (
-      data.date.year < data.today.year ||
-      (data.date.year === data.today.year &&
-        data.date.month < data.today.month) ||
-      (data.date.year === data.today.year &&
-        data.date.month === data.today.month &&
-        data.date.day < data.today.day)
-    );
-  })();
-
-  // Check if summary is outdated (diary updatedAt > summary updatedAt)
-  $: isSummaryOutdated = (() => {
-    if (!summary || !data.entry) return false;
-
-    // 日記エントリは秒単位、サマリーはミリ秒単位なので統一
-    const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
-    const summaryUpdatedAt = Number(summary.updatedAt); // 既にミリ秒
-
-    // 要約が最近更新された場合（5秒以内）は古くないとみなす
-    const now = Date.now();
-    const recentlyUpdated =
-      lastSummaryUpdateTime > 0 && now - lastSummaryUpdateTime < 5000;
-
-    // 要約が日記よりも新しい場合、または最近更新された場合は古くない
-    const isOutdated = diaryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
-
-    return isOutdated;
-  })();
-
   // Check if highlight is outdated (diary updatedAt > highlight updatedAt)
   $: {
     if (!highlightData || !data.entry) {
@@ -194,10 +136,6 @@
     if (currentEntryId !== previousEntryId) {
       previousEntryId = currentEntryId;
 
-      // 要約とコンテンツを更新
-      summary = data.dailySummary;
-      isSummaryGenerating = false;
-
       // 初期コンテンツを設定
       initialContent = data.entry?.content || "";
 
@@ -209,37 +147,6 @@
       // 新しいページではallowNavigationをリセット
       allowNavigation = false;
     }
-  }
-
-  function handleSummaryUpdated(event: CustomEvent) {
-    const newSummary = event.detail.summary;
-    const oldSummary = summary;
-
-    // 要約が実際に変更されたかどうかを確認
-    const actuallyUpdated =
-      !oldSummary ||
-      oldSummary.updatedAt !== newSummary.updatedAt ||
-      oldSummary.summary !== newSummary.summary;
-
-    summary = newSummary;
-
-    // 要約が実際に更新された場合のみ時刻を記録
-    if (actuallyUpdated) {
-      lastSummaryUpdateTime = Date.now();
-    }
-  }
-
-  function handleSummaryError(event: CustomEvent) {
-    summaryError = event.detail.message;
-  }
-
-  function handleGenerationStarted() {
-    isSummaryGenerating = true;
-    summaryError = null;
-  }
-
-  function handleGenerationCompleted() {
-    isSummaryGenerating = false;
   }
 
   function handleHighlightUpdated(event: CustomEvent) {
@@ -378,45 +285,6 @@
 	<div class="space-y-6">
 		<DiaryNavigation currentDate={data.date} />
 
-		<!-- Summary display area -->
-		{#if data.entry && characterCount >= 1000}
-			<SummaryDisplay
-				type="daily"
-				{summary}
-				fetchUrl="/api/diary/summary/daily/{data.date.year}/{data.date.month}/{data.date.day}"
-				generateUrl="/api/diary/summary/generate-daily"
-				generatePayload={{
-					diaryId: data.entry.id,
-					content: data.entry.content,
-					date: data.date
-				}}
-				{hasLLMKey}
-				{isSummaryOutdated}
-				isDisabled={isToday || isFutureDate}
-				disabledMessage={getDisabledMessage()}
-				isGenerating={isSummaryGenerating}
-				on:summaryUpdated={handleSummaryUpdated}
-				on:error={handleSummaryError}
-				on:generationStarted={handleGenerationStarted}
-				on:generationCompleted={handleGenerationCompleted}
-			/>
-		{/if}
-
-		<!-- Summary error display -->
-		{#if summaryError}
-			<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 auto-phrase-target">
-				<div class="flex">
-					<div class="flex-shrink-0">
-						<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-						</svg>
-					</div>
-					<div class="ml-3">
-						<p class="text-sm text-red-800 dark:text-red-200">{summaryError}</p>
-					</div>
-				</div>
-			</div>
-		{/if}
 
 		<!-- チャンクタイムライン（embeddingがある場合のみ表示） -->
 		{#if data.semanticSearchEnabled && data.entry}

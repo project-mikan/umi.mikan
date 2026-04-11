@@ -210,7 +210,6 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **diaries**: One diary per user per date (unique constraint)
 - **user_password_authes**: Separate password authentication table
 - **user_llms**: LLM provider settings and auto-summary preferences
-- **diary_summary_days**: AI-generated daily summaries
 - **diary_summary_months**: AI-generated monthly summaries
 - **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)
 - **diary_embeddings**: Per-chunk vector embeddings for semantic search (pgvector halfvec)
@@ -235,7 +234,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 - **Redis Pub/Sub**: Message queue with `diary_events` channel
   - JSON message format with type-based routing
-  - Message types: `daily_summary`, `monthly_summary`, `latest_trend`, `diary_highlight`
+  - Message types: `monthly_summary`, `latest_trend`, `diary_highlight`, `diary_embedding`
   - Uses rueidis client for high performance
 
 - **Subscriber**: `backend/cmd/subscriber` - Async message processor
@@ -337,7 +336,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **Use auto-generated dbtpl functions when possible**: For simple CRUD operations, prefer the auto-generated functions from `*.dbtpl.go` files (e.g., `Entity.Insert()`, `EntityAlias.Delete()`). Write custom SQL functions only when the generated code is insufficient.
 - **One file per query domain**: Place queries in the appropriate file (e.g., `user_llms.go` for user_llms queries, `user_queries.go` for user service queries, `entity_queries.go` for entity queries, `scheduler_queries.go` for cross-table scheduler queries).
 - **Every new database file needs a `*_test.go`**: When adding query functions to `backend/infrastructure/database/`, always create matching tests in `package database_test`.
-- **Type-aware comparisons**: `diaries.updated_at` is BIGINT (milliseconds), while `diary_embeddings.updated_at` is TIMESTAMP. Use `to_timestamp(d.updated_at / 1000.0)` for cross-table comparisons. Also note `diary_summary_days.updated_at` and `diary_summary_months.updated_at` are BIGINT (milliseconds) — use millisecond values when inserting/comparing.
+- **Type-aware comparisons**: `diaries.updated_at` is BIGINT (milliseconds), while `diary_embeddings.updated_at` is TIMESTAMP. Use `to_timestamp(d.updated_at / 1000.0)` for cross-table comparisons. Also note `diary_summary_months.updated_at` is BIGINT (milliseconds) — use millisecond values when inserting/comparing.
 
 ### Port Usage
 
@@ -412,7 +411,6 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 Environment variables for controlling scheduler behavior:
 
 **Interval-based Jobs (Periodic Execution):**
-- `SCHEDULER_DAILY_INTERVAL`: Interval for daily summary job execution (default: `5m`)
 - `SCHEDULER_MONTHLY_INTERVAL`: Interval for monthly summary job execution (default: `5m`)
 
 **Time-based Jobs (Daily Execution at Specific Time):**
@@ -429,7 +427,6 @@ Examples:
 
 ```bash
 # Interval-based jobs
-SCHEDULER_DAILY_INTERVAL=10m    # Run daily summaries every 10 minutes
 SCHEDULER_MONTHLY_INTERVAL=1h   # Run monthly summaries every hour
 
 # Time-based jobs

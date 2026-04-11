@@ -46,9 +46,9 @@ func TestDeleteUserLLMsByUserID(t *testing.T) {
 
 	now := time.Now().Unix()
 	if _, err := db.ExecContext(ctx,
-		`INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_daily, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		userID, 1, "test-key", false, false, false, false, now, now,
+		`INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		userID, 1, "test-key", false, false, false, now, now,
 	); err != nil {
 		t.Fatalf("user_llmsの挿入に失敗: %v", err)
 	}
@@ -94,32 +94,6 @@ func TestDeleteUserPasswordAuthesByUserID(t *testing.T) {
 	})
 }
 
-func TestTotalDailySummaryCount(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	ctx := context.Background()
-	userID := testutil.CreateTestUser(t, db, "total-daily-summary@example.com", "User")
-
-	now := time.Now().Unix()
-	for _, date := range []string{"2020-01-01", "2020-01-02"} {
-		if _, err := db.ExecContext(ctx,
-			`INSERT INTO diary_summary_days (id, user_id, date, summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-			uuid.New(), userID, date, "サマリ", now, now,
-		); err != nil {
-			t.Fatalf("日次サマリーの挿入に失敗: %v", err)
-		}
-	}
-
-	t.Run("日次サマリーの総数を返す", func(t *testing.T) {
-		count, err := database.TotalDailySummaryCount(ctx, db, userID)
-		if err != nil {
-			t.Fatalf("TotalDailySummaryCount失敗: %v", err)
-		}
-		if count != 2 {
-			t.Errorf("期待 2, 実際 %d", count)
-		}
-	})
-}
-
 func TestTotalMonthlySummaryCount(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	ctx := context.Background()
@@ -140,50 +114,6 @@ func TestTotalMonthlySummaryCount(t *testing.T) {
 		}
 		if count != 1 {
 			t.Errorf("期待 1, 実際 %d", count)
-		}
-	})
-}
-
-func TestPendingDailySummaryCount(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	ctx := context.Background()
-	userID := testutil.CreateTestUser(t, db, "pending-daily-summary@example.com", "User")
-
-	now := time.Now().UnixMilli()
-	// 過去日付の日記（サマリー未作成）
-	if _, err := db.ExecContext(ctx,
-		`INSERT INTO diaries (id, user_id, content, date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-		uuid.New(), userID, "日記内容", "2020-01-01", now, now,
-	); err != nil {
-		t.Fatalf("日記の挿入に失敗: %v", err)
-	}
-
-	t.Run("未作成の日次サマリー件数を返す", func(t *testing.T) {
-		count, err := database.PendingDailySummaryCount(ctx, db, userID)
-		if err != nil {
-			t.Fatalf("PendingDailySummaryCount失敗: %v", err)
-		}
-		if count != 1 {
-			t.Errorf("期待 1, 実際 %d", count)
-		}
-	})
-
-	t.Run("サマリー作成済みの日記は含まない", func(t *testing.T) {
-		// diaries.updated_atはBIGINT（ミリ秒）のため、ミリ秒単位で比較する
-		summaryNow := time.Now().UnixMilli()
-		if _, err := db.ExecContext(ctx,
-			`INSERT INTO diary_summary_days (id, user_id, date, summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-			uuid.New(), userID, "2020-01-01", "サマリ", summaryNow+1, summaryNow+1,
-		); err != nil {
-			t.Fatalf("日次サマリーの挿入に失敗: %v", err)
-		}
-
-		count, err := database.PendingDailySummaryCount(ctx, db, userID)
-		if err != nil {
-			t.Fatalf("PendingDailySummaryCount失敗: %v", err)
-		}
-		if count != 0 {
-			t.Errorf("サマリー作成済みで 0 を期待したが %d", count)
 		}
 	})
 }
@@ -222,20 +152,17 @@ func TestUserLLMAutoSettingsByUserID(t *testing.T) {
 		if err != nil {
 			t.Fatalf("UserLLMAutoSettingsByUserID失敗: %v", err)
 		}
-		if settings.AutoSummaryDaily || settings.AutoSummaryMonthly || settings.AutoLatestTrend || settings.SemanticSearchEnabled {
+		if settings.AutoSummaryMonthly || settings.AutoLatestTrend || settings.SemanticSearchEnabled {
 			t.Errorf("設定なしで全てfalseを期待したが: %+v", settings)
 		}
 	})
 
 	t.Run("設定が存在する場合はその値を返す", func(t *testing.T) {
-		createUserLLMRow(t, db, userID, true, false, true, false)
+		createUserLLMRow(t, db, userID, false, true, false)
 
 		settings, err := database.UserLLMAutoSettingsByUserID(ctx, db, userID)
 		if err != nil {
 			t.Fatalf("UserLLMAutoSettingsByUserID失敗: %v", err)
-		}
-		if !settings.AutoSummaryDaily {
-			t.Errorf("AutoSummaryDaily: 期待 true, 実際 false")
 		}
 		if settings.AutoSummaryMonthly {
 			t.Errorf("AutoSummaryMonthly: 期待 false, 実際 true")
@@ -343,31 +270,13 @@ func TestHourlyPubSubMetrics(t *testing.T) {
 		}
 		// データがない場合は全てゼロ
 		for _, m := range metrics {
-			if m.DailySummariesProcessed != 0 || m.MonthlySummariesProcessed != 0 ||
+			if m.MonthlySummariesProcessed != 0 ||
 				m.EmbeddingsProcessed != 0 || m.SemanticSearchesProcessed != 0 {
 				t.Errorf("データなしで全ゼロを期待したが: %+v", m)
 			}
 		}
 	})
 
-	t.Run("日次サマリーデータが集計に反映される", func(t *testing.T) {
-		now := time.Now().Unix()
-		if _, err := db.ExecContext(ctx,
-			`INSERT INTO diary_summary_days (id, user_id, date, summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-			uuid.New(), userID, "2020-01-01", "サマリ", now, now,
-		); err != nil {
-			t.Fatalf("日次サマリーの挿入に失敗: %v", err)
-		}
-
-		// 直近1時間以内に挿入されたデータは集計に反映される
-		recentMetrics, err := database.HourlyPubSubMetrics(ctx, db, userID)
-		if err != nil {
-			t.Fatalf("HourlyPubSubMetrics失敗: %v", err)
-		}
-		if len(recentMetrics) != 24 {
-			t.Errorf("期待 24件, 実際 %d件", len(recentMetrics))
-		}
-	})
 }
 
 func TestInsertSemanticSearchLog(t *testing.T) {

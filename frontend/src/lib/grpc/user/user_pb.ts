@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_user_user: GenFile =
   /*@__PURE__*/
   fileDesc(
-    "Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8irQEKCkxMTUtleUluZm8SFAoMbGxtX3Byb3ZpZGVyGAEgASgFEgsKA2tleRgCIAEoCRIaChJhdXRvX3N1bW1hcnlfZGFpbHkYAyABKAgSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYBCABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgFIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgGIAEoCCIrChNEZWxldGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSI4ChREZWxldGVMTE1LZXlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiFgoURGVsZXRlQWNjb3VudFJlcXVlc3QiOQoVRGVsZXRlQWNjb3VudFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSK2AQogVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFEhoKEmF1dG9fc3VtbWFyeV9kYWlseRgCIAEoCBIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgDIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAQgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAUgASgIIkUKIVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiNQodR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIp4BCh5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USGgoSYXV0b19zdW1tYXJ5X2RhaWx5GAEgASgIEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAIgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYAyABKAgSHwoXc2VtYW50aWNfc2VhcmNoX2VuYWJsZWQYBCABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSLVAgoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIQoZZGFpbHlfc3VtbWFyaWVzX3Byb2Nlc3NlZBgCIAEoBRIjChttb250aGx5X3N1bW1hcmllc19wcm9jZXNzZWQYAyABKAUSHgoWZGFpbHlfc3VtbWFyaWVzX2ZhaWxlZBgEIAEoBRIgChhtb250aGx5X3N1bW1hcmllc19mYWlsZWQYBSABKAUSHwoXbGF0ZXN0X3RyZW5kc19wcm9jZXNzZWQYBiABKAUSHAoUbGF0ZXN0X3RyZW5kc19mYWlsZWQYByABKAUSIgoaZGlhcnlfZW1iZWRkaW5nc19wcm9jZXNzZWQYCCABKAUSHwoXZGlhcnlfZW1iZWRkaW5nc19mYWlsZWQYCSABKAUSIwobc2VtYW50aWNfc2VhcmNoZXNfcHJvY2Vzc2VkGAogASgFIkUKDlByb2Nlc3NpbmdUYXNrEhEKCXRhc2tfdHlwZRgBIAEoCRIMCgRkYXRlGAIgASgJEhIKCnN0YXJ0ZWRfYXQYAyABKAMinAMKDk1ldHJpY3NTdW1tYXJ5Eh0KFXRvdGFsX2RhaWx5X3N1bW1hcmllcxgBIAEoBRIfChd0b3RhbF9tb250aGx5X3N1bW1hcmllcxgCIAEoBRIfChdwZW5kaW5nX2RhaWx5X3N1bW1hcmllcxgDIAEoBRIhChlwZW5kaW5nX21vbnRobHlfc3VtbWFyaWVzGAQgASgFEiIKGmF1dG9fc3VtbWFyeV9kYWlseV9lbmFibGVkGAUgASgIEiQKHGF1dG9fc3VtbWFyeV9tb250aGx5X2VuYWJsZWQYBiABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgHIAEoCBIhChlsYXRlc3RfdHJlbmRfZ2VuZXJhdGVkX2F0GAggASgJEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAkgASgIEhgKEHRvdGFsX2VtYmVkZGluZ3MYCiABKAUSGgoScGVuZGluZ19lbWJlZGRpbmdzGAsgASgFEh8KF3RvdGFsX2VtYmVkZGluZ19kaWFyaWVzGAwgASgFMukFCgtVc2VyU2VydmljZRJLCg5VcGRhdGVVc2VyTmFtZRIbLnVzZXIuVXBkYXRlVXNlck5hbWVSZXF1ZXN0GhwudXNlci5VcGRhdGVVc2VyTmFtZVJlc3BvbnNlEksKDkNoYW5nZVBhc3N3b3JkEhsudXNlci5DaGFuZ2VQYXNzd29yZFJlcXVlc3QaHC51c2VyLkNoYW5nZVBhc3N3b3JkUmVzcG9uc2USRQoMVXBkYXRlTExNS2V5EhkudXNlci5VcGRhdGVMTE1LZXlSZXF1ZXN0GhoudXNlci5VcGRhdGVMTE1LZXlSZXNwb25zZRJCCgtHZXRVc2VySW5mbxIYLnVzZXIuR2V0VXNlckluZm9SZXF1ZXN0GhkudXNlci5HZXRVc2VySW5mb1Jlc3BvbnNlEkUKDERlbGV0ZUxMTUtleRIZLnVzZXIuRGVsZXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuRGVsZXRlTExNS2V5UmVzcG9uc2USSAoNRGVsZXRlQWNjb3VudBIaLnVzZXIuRGVsZXRlQWNjb3VudFJlcXVlc3QaGy51c2VyLkRlbGV0ZUFjY291bnRSZXNwb25zZRJsChlVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzEiYudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBonLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEmMKFkdldEF1dG9TdW1tYXJ5U2V0dGluZ3MSIy51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GiQudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USUQoQR2V0UHViU3ViTWV0cmljcxIdLnVzZXIuR2V0UHViU3ViTWV0cmljc1JlcXVlc3QaHi51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
+    "Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8ikQEKCkxMTUtleUluZm8SFAoMbGxtX3Byb3ZpZGVyGAEgASgFEgsKA2tleRgCIAEoCRIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgEIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAUgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAYgASgIIisKE0RlbGV0ZUxMTUtleVJlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIjgKFERlbGV0ZUxMTUtleVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIWChREZWxldGVBY2NvdW50UmVxdWVzdCI5ChVEZWxldGVBY2NvdW50UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIpoBCiBVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAyABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgEIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgFIAEoCCJFCiFVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIjUKHUdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSKCAQoeR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAIgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYAyABKAgSHwoXc2VtYW50aWNfc2VhcmNoX2VuYWJsZWQYBCABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSKSAgoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIwobbW9udGhseV9zdW1tYXJpZXNfcHJvY2Vzc2VkGAMgASgFEiAKGG1vbnRobHlfc3VtbWFyaWVzX2ZhaWxlZBgFIAEoBRIfChdsYXRlc3RfdHJlbmRzX3Byb2Nlc3NlZBgGIAEoBRIcChRsYXRlc3RfdHJlbmRzX2ZhaWxlZBgHIAEoBRIiChpkaWFyeV9lbWJlZGRpbmdzX3Byb2Nlc3NlZBgIIAEoBRIfChdkaWFyeV9lbWJlZGRpbmdzX2ZhaWxlZBgJIAEoBRIjChtzZW1hbnRpY19zZWFyY2hlc19wcm9jZXNzZWQYCiABKAUiRQoOUHJvY2Vzc2luZ1Rhc2sSEQoJdGFza190eXBlGAEgASgJEgwKBGRhdGUYAiABKAkSEgoKc3RhcnRlZF9hdBgDIAEoAyK4AgoOTWV0cmljc1N1bW1hcnkSHwoXdG90YWxfbW9udGhseV9zdW1tYXJpZXMYAiABKAUSIQoZcGVuZGluZ19tb250aGx5X3N1bW1hcmllcxgEIAEoBRIkChxhdXRvX3N1bW1hcnlfbW9udGhseV9lbmFibGVkGAYgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYByABKAgSIQoZbGF0ZXN0X3RyZW5kX2dlbmVyYXRlZF9hdBgIIAEoCRIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgJIAEoCBIYChB0b3RhbF9lbWJlZGRpbmdzGAogASgFEhoKEnBlbmRpbmdfZW1iZWRkaW5ncxgLIAEoBRIfChd0b3RhbF9lbWJlZGRpbmdfZGlhcmllcxgMIAEoBTLpBQoLVXNlclNlcnZpY2USSwoOVXBkYXRlVXNlck5hbWUSGy51c2VyLlVwZGF0ZVVzZXJOYW1lUmVxdWVzdBocLnVzZXIuVXBkYXRlVXNlck5hbWVSZXNwb25zZRJLCg5DaGFuZ2VQYXNzd29yZBIbLnVzZXIuQ2hhbmdlUGFzc3dvcmRSZXF1ZXN0GhwudXNlci5DaGFuZ2VQYXNzd29yZFJlc3BvbnNlEkUKDFVwZGF0ZUxMTUtleRIZLnVzZXIuVXBkYXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuVXBkYXRlTExNS2V5UmVzcG9uc2USQgoLR2V0VXNlckluZm8SGC51c2VyLkdldFVzZXJJbmZvUmVxdWVzdBoZLnVzZXIuR2V0VXNlckluZm9SZXNwb25zZRJFCgxEZWxldGVMTE1LZXkSGS51c2VyLkRlbGV0ZUxMTUtleVJlcXVlc3QaGi51c2VyLkRlbGV0ZUxMTUtleVJlc3BvbnNlEkgKDURlbGV0ZUFjY291bnQSGi51c2VyLkRlbGV0ZUFjY291bnRSZXF1ZXN0GhsudXNlci5EZWxldGVBY2NvdW50UmVzcG9uc2USbAoZVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5ncxImLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QaJy51c2VyLlVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRJjChZHZXRBdXRvU3VtbWFyeVNldHRpbmdzEiMudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBokLnVzZXIuR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlElEKEEdldFB1YlN1Yk1ldHJpY3MSHS51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXF1ZXN0Gh4udXNlci5HZXRQdWJTdWJNZXRyaWNzUmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
   );
 
 /**
@@ -238,13 +238,6 @@ export type LLMKeyInfo = Message<"user.LLMKeyInfo"> & {
   key: string;
 
   /**
-   * 日毎の自動要約生成
-   *
-   * @generated from field: bool auto_summary_daily = 3;
-   */
-  autoSummaryDaily: boolean;
-
-  /**
    * 月毎の自動要約生成
    *
    * @generated from field: bool auto_summary_monthly = 4;
@@ -378,13 +371,6 @@ export type UpdateAutoSummarySettingsRequest =
     llmProvider: number;
 
     /**
-     * 日毎の自動要約生成
-     *
-     * @generated from field: bool auto_summary_daily = 2;
-     */
-    autoSummaryDaily: boolean;
-
-    /**
      * 月毎の自動要約生成
      *
      * @generated from field: bool auto_summary_monthly = 3;
@@ -470,13 +456,6 @@ export const GetAutoSummarySettingsRequestSchema: GenMessage<GetAutoSummarySetti
  */
 export type GetAutoSummarySettingsResponse =
   Message<"user.GetAutoSummarySettingsResponse"> & {
-    /**
-     * 日毎の自動要約生成
-     *
-     * @generated from field: bool auto_summary_daily = 1;
-     */
-    autoSummaryDaily: boolean;
-
     /**
      * 月毎の自動要約生成
      *
@@ -576,25 +555,11 @@ export type HourlyMetrics = Message<"user.HourlyMetrics"> & {
   timestamp: bigint;
 
   /**
-   * 処理された日次要約数
-   *
-   * @generated from field: int32 daily_summaries_processed = 2;
-   */
-  dailySummariesProcessed: number;
-
-  /**
    * 処理された月次要約数
    *
    * @generated from field: int32 monthly_summaries_processed = 3;
    */
   monthlySummariesProcessed: number;
-
-  /**
-   * 失敗した日次要約数
-   *
-   * @generated from field: int32 daily_summaries_failed = 4;
-   */
-  dailySummariesFailed: number;
 
   /**
    * 失敗した月次要約数
@@ -654,14 +619,14 @@ export const HourlyMetricsSchema: GenMessage<HourlyMetrics> =
  */
 export type ProcessingTask = Message<"user.ProcessingTask"> & {
   /**
-   * タスク種別: "daily_summary" (日次要約), "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
+   * タスク種別: "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
    *
    * @generated from field: string task_type = 1;
    */
   taskType: string;
 
   /**
-   * 日付: 日次はYYYY-MM-DD形式, 月次はYYYY-MM形式, トレンドは期間説明
+   * 日付: 月次はYYYY-MM形式, トレンドは期間説明
    *
    * @generated from field: string date = 2;
    */
@@ -690,13 +655,6 @@ export const ProcessingTaskSchema: GenMessage<ProcessingTask> =
  */
 export type MetricsSummary = Message<"user.MetricsSummary"> & {
   /**
-   * 総日次要約数
-   *
-   * @generated from field: int32 total_daily_summaries = 1;
-   */
-  totalDailySummaries: number;
-
-  /**
    * 総月次要約数
    *
    * @generated from field: int32 total_monthly_summaries = 2;
@@ -704,25 +662,11 @@ export type MetricsSummary = Message<"user.MetricsSummary"> & {
   totalMonthlySummaries: number;
 
   /**
-   * 未作成の日次要約数
-   *
-   * @generated from field: int32 pending_daily_summaries = 3;
-   */
-  pendingDailySummaries: number;
-
-  /**
    * 未作成の月次要約数
    *
    * @generated from field: int32 pending_monthly_summaries = 4;
    */
   pendingMonthlySummaries: number;
-
-  /**
-   * 日次要約の自動生成が有効か
-   *
-   * @generated from field: bool auto_summary_daily_enabled = 5;
-   */
-  autoSummaryDailyEnabled: boolean;
 
   /**
    * 月次要約の自動生成が有効か
@@ -897,10 +841,10 @@ export const UserService: GenService<{
   };
   /**
    * UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-   * 日次要約と月次要約をそれぞれ有効/無効にできます。
+   * 月次要約を有効/無効にできます。
    *
    * 例:
-   *   request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
+   *   request: { llm_provider: 1, auto_summary_monthly: false }
    *   response: { success: true, message: "自動要約設定を更新しました" }
    *
    * エラー:
@@ -918,7 +862,7 @@ export const UserService: GenService<{
    *
    * 例:
    *   request: { llm_provider: 1 }
-   *   response: { auto_summary_daily: true, auto_summary_monthly: false }
+   *   response: { auto_summary_monthly: false }
    *
    * エラー:
    *   - NotFound: LLMキーが設定されていない

@@ -101,53 +101,6 @@ n日：箇条書き3
 	return "", fmt.Errorf("unexpected content type")
 }
 
-func (g *GeminiClient) GenerateDailySummary(ctx context.Context, diaryContent string) (string, error) {
-	prompt := fmt.Sprintf(`以下の1日の日記の内容を読んで、日次サマリーを生成してください。
-サマリーは以下の要件を満たしてください：
-- Markdownは非対応
-- 最大3つまで簡潔に要点を列挙(箇条書きは「- 」で始める)
-- 出てきた人物を文脈から重要な順に最大3人列挙(箇条書きは「- 」で始める)
-
-形式は以下の通りにしてください：
-- 箇条書き1
-- 箇条書き2
-- 箇条書き3
-
-重要そうな人
-- 人物1
-- 人物2
-- 人物3
-
-日記の内容:
-%s
-
-`, diaryContent)
-
-	contents := genai.Text(prompt)
-
-	zero := float32(0)
-	config := &genai.GenerateContentConfig{
-		Temperature:    &zero,
-		SafetySettings: noSafetySettings,
-	}
-
-	resp, err := g.client.Models.GenerateContent(ctx, ModelGenerateContent, contents, config)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate content: %w", err)
-	}
-
-	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("no content generated")
-	}
-
-	// The response parts contain the generated text
-	if textPart := resp.Candidates[0].Content.Parts[0]; textPart != nil {
-		return textPart.Text, nil
-	}
-
-	return "", fmt.Errorf("unexpected content type")
-}
-
 // LatestTrendAnalysis はトレンド分析のJSON構造体
 type LatestTrendAnalysis struct {
 	Health       string `json:"health"`        // 体調: "bad", "slight", "normal", "good"

@@ -113,9 +113,6 @@ func TestContainerDependencyResolution(t *testing.T) {
 				t.Error("SchedulerConfig should not be nil")
 				return
 			}
-			if config.DailySummaryInterval <= 0 {
-				t.Error("DailySummaryInterval should be positive")
-			}
 			if config.MonthlySummaryInterval <= 0 {
 				t.Error("MonthlySummaryInterval should be positive")
 			}
@@ -339,9 +336,6 @@ func TestConfigurationValues(t *testing.T) {
 		}
 
 		// Scheduler設定をテスト
-		if schedulerConfig.DailySummaryInterval <= 0 {
-			t.Error("Daily summary interval should be positive")
-		}
 		if schedulerConfig.MonthlySummaryInterval <= 0 {
 			t.Error("Monthly summary interval should be positive")
 		}

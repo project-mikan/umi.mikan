@@ -33,9 +33,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
       metrics: {
         hourlyMetrics: (response.hourlyMetrics || []).map((metric) => ({
           timestamp: Number(metric.timestamp),
-          dailySummariesProcessed: metric.dailySummariesProcessed,
           monthlySummariesProcessed: metric.monthlySummariesProcessed,
-          dailySummariesFailed: metric.dailySummariesFailed,
           monthlySummariesFailed: metric.monthlySummariesFailed,
           latestTrendsProcessed: metric.latestTrendsProcessed,
           latestTrendsFailed: metric.latestTrendsFailed,
@@ -50,11 +48,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
         })),
         summary: response.summary
           ? {
-              totalDailySummaries: response.summary.totalDailySummaries,
               totalMonthlySummaries: response.summary.totalMonthlySummaries,
-              pendingDailySummaries: response.summary.pendingDailySummaries,
               pendingMonthlySummaries: response.summary.pendingMonthlySummaries,
-              autoSummaryDailyEnabled: response.summary.autoSummaryDailyEnabled,
               autoSummaryMonthlyEnabled:
                 response.summary.autoSummaryMonthlyEnabled,
               autoLatestTrendEnabled: response.summary.autoLatestTrendEnabled,
@@ -65,11 +60,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
               pendingEmbeddings: response.summary.pendingEmbeddings,
             }
           : {
-              totalDailySummaries: 0,
               totalMonthlySummaries: 0,
-              pendingDailySummaries: 0,
               pendingMonthlySummaries: 0,
-              autoSummaryDailyEnabled: false,
               autoSummaryMonthlyEnabled: false,
               autoLatestTrendEnabled: false,
               latestTrendGeneratedAt: "",

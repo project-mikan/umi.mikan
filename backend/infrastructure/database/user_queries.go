@@ -11,7 +11,6 @@ import (
 // HourlyPubSubMetric は1時間ごとのPub/Sub処理件数を表す
 type HourlyPubSubMetric struct {
 	Hour                      time.Time
-	DailySummariesProcessed   int32
 	MonthlySummariesProcessed int32
 	EmbeddingsProcessed       int32
 	SemanticSearchesProcessed int32
@@ -19,7 +18,6 @@ type HourlyPubSubMetric struct {
 
 // UserLLMAutoSettings はユーザーの自動処理設定を表す
 type UserLLMAutoSettings struct {
-	AutoSummaryDaily      bool
 	AutoSummaryMonthly    bool
 	AutoLatestTrend       bool
 	SemanticSearchEnabled bool
@@ -62,15 +60,6 @@ func HourlyPubSubMetrics(ctx context.Context, db DB, userID uuid.UUID) ([]*Hourl
 				INTERVAL '1 hour'
 			) AS hour
 		),
-		daily_summaries AS (
-			SELECT
-				date_trunc('hour', to_timestamp(created_at)) as hour,
-				COUNT(*) as created_count
-			FROM diary_summary_days
-			WHERE user_id = $1
-			AND created_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '24 hours')
-			GROUP BY date_trunc('hour', to_timestamp(created_at))
-		),
 		monthly_summaries AS (
 			SELECT
 				date_trunc('hour', to_timestamp(created_at)) as hour,
@@ -100,12 +89,10 @@ func HourlyPubSubMetrics(ctx context.Context, db DB, userID uuid.UUID) ([]*Hourl
 		)
 		SELECT
 			h.hour,
-			COALESCE(ds.created_count, 0) as daily_summaries_processed,
 			COALESCE(ms.created_count, 0) as monthly_summaries_processed,
 			COALESCE(de.created_count, 0) as diary_embeddings_processed,
 			COALESCE(ss.created_count, 0) as semantic_searches_processed
 		FROM hours h
-		LEFT JOIN daily_summaries ds ON h.hour = ds.hour
 		LEFT JOIN monthly_summaries ms ON h.hour = ms.hour
 		LEFT JOIN diary_embeddings de ON h.hour = de.hour
 		LEFT JOIN semantic_searches ss ON h.hour = ss.hour
@@ -120,7 +107,7 @@ func HourlyPubSubMetrics(ctx context.Context, db DB, userID uuid.UUID) ([]*Hourl
 	var metrics []*HourlyPubSubMetric
 	for rows.Next() {
 		var m HourlyPubSubMetric
-		if err := rows.Scan(&m.Hour, &m.DailySummariesProcessed, &m.MonthlySummariesProcessed, &m.EmbeddingsProcessed, &m.SemanticSearchesProcessed); err != nil {
+		if err := rows.Scan(&m.Hour, &m.MonthlySummariesProcessed, &m.EmbeddingsProcessed, &m.SemanticSearchesProcessed); err != nil {
 			return nil, fmt.Errorf("failed to scan hourly metrics: %w", err)
 		}
 		metrics = append(metrics, &m)
@@ -131,30 +118,9 @@ func HourlyPubSubMetrics(ctx context.Context, db DB, userID uuid.UUID) ([]*Hourl
 	return metrics, nil
 }
 
-// TotalDailySummaryCount は指定ユーザーの日次サマリー総数を返す
-func TotalDailySummaryCount(ctx context.Context, db DB, userID uuid.UUID) (int32, error) {
-	const sqlstr = `SELECT COUNT(*) FROM diary_summary_days WHERE user_id = $1`
-	count, err := queryCount(ctx, db, sqlstr, userID)
-	return int32(count), err
-}
-
 // TotalMonthlySummaryCount は指定ユーザーの月次サマリー総数を返す
 func TotalMonthlySummaryCount(ctx context.Context, db DB, userID uuid.UUID) (int32, error) {
 	const sqlstr = `SELECT COUNT(*) FROM diary_summary_months WHERE user_id = $1`
-	count, err := queryCount(ctx, db, sqlstr, userID)
-	return int32(count), err
-}
-
-// PendingDailySummaryCount は指定ユーザーの未作成日次サマリー数を返す（今日を除く）
-func PendingDailySummaryCount(ctx context.Context, db DB, userID uuid.UUID) (int32, error) {
-	const sqlstr = `
-		SELECT COUNT(*)
-		FROM diaries d
-		LEFT JOIN diary_summary_days dsd ON d.user_id = dsd.user_id AND d.date = dsd.date
-		WHERE d.user_id = $1
-		  AND d.date < CURRENT_DATE
-		  AND (dsd.id IS NULL OR dsd.updated_at < d.updated_at)
-	`
 	count, err := queryCount(ctx, db, sqlstr, userID)
 	return int32(count), err
 }
@@ -193,7 +159,6 @@ func UserLLMAutoSettingsByUserID(ctx context.Context, db DB, userID uuid.UUID) (
 		return &UserLLMAutoSettings{}, nil
 	}
 	return &UserLLMAutoSettings{
-		AutoSummaryDaily:      ul.AutoSummaryDaily,
 		AutoSummaryMonthly:    ul.AutoSummaryMonthly,
 		AutoLatestTrend:       ul.AutoLatestTrendEnabled,
 		SemanticSearchEnabled: ul.SemanticSearchEnabled,
