@@ -42,22 +42,17 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
       },
     });
   } catch (err) {
-    console.error("Failed to load monthly summary:", err);
-    console.error("Error details:", {
-      message: (err as Error)?.message,
-      code: (err as { code?: string })?.code,
-      stack: (err as Error)?.stack,
-    });
-
-    // Handle different types of not found errors
+    if (err instanceof Response) {
+      throw err;
+    }
+    // NOT_FOUND は正常ケース（まだ要約が生成されていない）
     if (
-      (err as { code?: string })?.code === "NOT_FOUND" ||
-      (err as { code?: number })?.code === 5 || // gRPC NOT_FOUND code
-      (err as Error)?.message?.includes("not found") ||
-      (err as Error)?.message?.includes("no daily summaries")
+      (err as { code?: number })?.code === 5 ||
+      (err as Error)?.message?.toLowerCase().includes("not found")
     ) {
       throw error(404, "Summary not found");
     }
+    console.error("Failed to load monthly summary:", err);
     throw error(500, "Failed to load monthly summary");
   }
 };

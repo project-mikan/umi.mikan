@@ -17,9 +17,7 @@
     startedAt: number;
   }) {
     let type = "";
-    if (task.taskType === "daily_summary") {
-      type = $_("llm.metrics.dailySummary");
-    } else if (task.taskType === "monthly_summary") {
+    if (task.taskType === "monthly_summary") {
       type = $_("llm.metrics.monthlySummary");
     } else if (task.taskType === "latest_trend") {
       type = $_("llm.metrics.latestTrend");
@@ -31,19 +29,9 @@
   // 統計情報のカード用データ
   $: summaryCards = [
     {
-      title: $_("llm.metrics.totalDailySummaries"),
-      value: metrics.summary.totalDailySummaries,
-      color: "text-green-600 dark:text-green-400",
-    },
-    {
       title: $_("llm.metrics.totalMonthlySummaries"),
       value: metrics.summary.totalMonthlySummaries,
       color: "text-blue-600 dark:text-blue-400",
-    },
-    {
-      title: $_("llm.metrics.pendingDailySummaries"),
-      value: metrics.summary.pendingDailySummaries,
-      color: "text-yellow-600 dark:text-yellow-400",
     },
     {
       title: $_("llm.metrics.pendingMonthlySummaries"),
@@ -201,18 +189,6 @@
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 			<div class="flex items-center justify-between">
 				<span class="text-gray-700 dark:text-gray-300">
-					{$_("llm.metrics.dailyAutoSummary")}
-				</span>
-				<span class="px-2 py-1 rounded-full text-xs font-medium {
-					metrics.summary.autoSummaryDailyEnabled
-						? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-						: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-				}">
-					{metrics.summary.autoSummaryDailyEnabled ? $_("common.enabled") : $_("common.disabled")}
-				</span>
-			</div>
-			<div class="flex items-center justify-between">
-				<span class="text-gray-700 dark:text-gray-300">
 					{$_("llm.metrics.monthlyAutoSummary")}
 				</span>
 				<span class="px-2 py-1 rounded-full text-xs font-medium {
@@ -334,7 +310,6 @@
 				{$_("llm.metrics.aboutDescription")}
 			</p>
 			<ul class="text-gray-600 dark:text-gray-400 mt-2 auto-phrase-target">
-				<li>{$_("llm.metrics.dailySummaryExplanation")}</li>
 				<li>{$_("llm.metrics.monthlySummaryExplanation")}</li>
 				<li>{$_("llm.metrics.processingExplanation")}</li>
 			</ul>

@@ -435,7 +435,6 @@ type LLMKeyInfo struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
 	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
 	Key                    string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	AutoSummaryDaily       bool                   `protobuf:"varint,3,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,4,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,5,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
 	SemanticSearchEnabled  bool                   `protobuf:"varint,6,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
@@ -485,13 +484,6 @@ func (x *LLMKeyInfo) GetKey() string {
 		return x.Key
 	}
 	return ""
-}
-
-func (x *LLMKeyInfo) GetAutoSummaryDaily() bool {
-	if x != nil {
-		return x.AutoSummaryDaily
-	}
-	return false
 }
 
 func (x *LLMKeyInfo) GetAutoSummaryMonthly() bool {
@@ -707,7 +699,6 @@ func (x *DeleteAccountResponse) GetMessage() string {
 type UpdateAutoSummarySettingsRequest struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
 	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"`                                      // 1:Gemini
-	AutoSummaryDaily       bool                   `protobuf:"varint,2,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,3,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,4,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
 	SemanticSearchEnabled  bool                   `protobuf:"varint,5,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
@@ -750,13 +741,6 @@ func (x *UpdateAutoSummarySettingsRequest) GetLlmProvider() int32 {
 		return x.LlmProvider
 	}
 	return 0
-}
-
-func (x *UpdateAutoSummarySettingsRequest) GetAutoSummaryDaily() bool {
-	if x != nil {
-		return x.AutoSummaryDaily
-	}
-	return false
 }
 
 func (x *UpdateAutoSummarySettingsRequest) GetAutoSummaryMonthly() bool {
@@ -881,7 +865,6 @@ func (x *GetAutoSummarySettingsRequest) GetLlmProvider() int32 {
 // 自動要約設定取得用のレスポンス
 type GetAutoSummarySettingsResponse struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
-	AutoSummaryDaily       bool                   `protobuf:"varint,1,opt,name=auto_summary_daily,json=autoSummaryDaily,proto3" json:"auto_summary_daily,omitempty"`                     // 日毎の自動要約生成
 	AutoSummaryMonthly     bool                   `protobuf:"varint,2,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,3,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
 	SemanticSearchEnabled  bool                   `protobuf:"varint,4,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
@@ -917,13 +900,6 @@ func (x *GetAutoSummarySettingsResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetAutoSummarySettingsResponse.ProtoReflect.Descriptor instead.
 func (*GetAutoSummarySettingsResponse) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *GetAutoSummarySettingsResponse) GetAutoSummaryDaily() bool {
-	if x != nil {
-		return x.AutoSummaryDaily
-	}
-	return false
 }
 
 func (x *GetAutoSummarySettingsResponse) GetAutoSummaryMonthly() bool {
@@ -1052,9 +1028,7 @@ func (x *GetPubSubMetricsResponse) GetSummary() *MetricsSummary {
 type HourlyMetrics struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
 	Timestamp                 int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                                                     // 該当時間のUnixタイムスタンプ
-	DailySummariesProcessed   int32                  `protobuf:"varint,2,opt,name=daily_summaries_processed,json=dailySummariesProcessed,proto3" json:"daily_summaries_processed,omitempty"`        // 処理された日次要約数
 	MonthlySummariesProcessed int32                  `protobuf:"varint,3,opt,name=monthly_summaries_processed,json=monthlySummariesProcessed,proto3" json:"monthly_summaries_processed,omitempty"`  // 処理された月次要約数
-	DailySummariesFailed      int32                  `protobuf:"varint,4,opt,name=daily_summaries_failed,json=dailySummariesFailed,proto3" json:"daily_summaries_failed,omitempty"`                 // 失敗した日次要約数
 	MonthlySummariesFailed    int32                  `protobuf:"varint,5,opt,name=monthly_summaries_failed,json=monthlySummariesFailed,proto3" json:"monthly_summaries_failed,omitempty"`           // 失敗した月次要約数
 	LatestTrendsProcessed     int32                  `protobuf:"varint,6,opt,name=latest_trends_processed,json=latestTrendsProcessed,proto3" json:"latest_trends_processed,omitempty"`              // 処理されたトレンド分析数
 	LatestTrendsFailed        int32                  `protobuf:"varint,7,opt,name=latest_trends_failed,json=latestTrendsFailed,proto3" json:"latest_trends_failed,omitempty"`                       // 失敗したトレンド分析数
@@ -1102,23 +1076,9 @@ func (x *HourlyMetrics) GetTimestamp() int64 {
 	return 0
 }
 
-func (x *HourlyMetrics) GetDailySummariesProcessed() int32 {
-	if x != nil {
-		return x.DailySummariesProcessed
-	}
-	return 0
-}
-
 func (x *HourlyMetrics) GetMonthlySummariesProcessed() int32 {
 	if x != nil {
 		return x.MonthlySummariesProcessed
-	}
-	return 0
-}
-
-func (x *HourlyMetrics) GetDailySummariesFailed() int32 {
-	if x != nil {
-		return x.DailySummariesFailed
 	}
 	return 0
 }
@@ -1168,8 +1128,8 @@ func (x *HourlyMetrics) GetSemanticSearchesProcessed() int32 {
 // 処理中のタスク
 type ProcessingTask struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TaskType      string                 `protobuf:"bytes,1,opt,name=task_type,json=taskType,proto3" json:"task_type,omitempty"`     // タスク種別: "daily_summary" (日次要約), "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
-	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`                             // 日付: 日次はYYYY-MM-DD形式, 月次はYYYY-MM形式, トレンドは期間説明
+	TaskType      string                 `protobuf:"bytes,1,opt,name=task_type,json=taskType,proto3" json:"task_type,omitempty"`     // タスク種別: "monthly_summary" (月次要約), "latest_trend" (トレンド分析)
+	Date          string                 `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`                             // 日付: 月次はYYYY-MM形式, トレンドは期間説明
 	StartedAt     int64                  `protobuf:"varint,3,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"` // タスク開始時刻 (Unixタイムスタンプ)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1229,11 +1189,8 @@ func (x *ProcessingTask) GetStartedAt() int64 {
 // メトリクス統計情報
 type MetricsSummary struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
-	TotalDailySummaries       int32                  `protobuf:"varint,1,opt,name=total_daily_summaries,json=totalDailySummaries,proto3" json:"total_daily_summaries,omitempty"`                     // 総日次要約数
 	TotalMonthlySummaries     int32                  `protobuf:"varint,2,opt,name=total_monthly_summaries,json=totalMonthlySummaries,proto3" json:"total_monthly_summaries,omitempty"`               // 総月次要約数
-	PendingDailySummaries     int32                  `protobuf:"varint,3,opt,name=pending_daily_summaries,json=pendingDailySummaries,proto3" json:"pending_daily_summaries,omitempty"`               // 未作成の日次要約数
 	PendingMonthlySummaries   int32                  `protobuf:"varint,4,opt,name=pending_monthly_summaries,json=pendingMonthlySummaries,proto3" json:"pending_monthly_summaries,omitempty"`         // 未作成の月次要約数
-	AutoSummaryDailyEnabled   bool                   `protobuf:"varint,5,opt,name=auto_summary_daily_enabled,json=autoSummaryDailyEnabled,proto3" json:"auto_summary_daily_enabled,omitempty"`       // 日次要約の自動生成が有効か
 	AutoSummaryMonthlyEnabled bool                   `protobuf:"varint,6,opt,name=auto_summary_monthly_enabled,json=autoSummaryMonthlyEnabled,proto3" json:"auto_summary_monthly_enabled,omitempty"` // 月次要約の自動生成が有効か
 	AutoLatestTrendEnabled    bool                   `protobuf:"varint,7,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"`          // トレンド分析の自動生成が有効か
 	LatestTrendGeneratedAt    string                 `protobuf:"bytes,8,opt,name=latest_trend_generated_at,json=latestTrendGeneratedAt,proto3" json:"latest_trend_generated_at,omitempty"`           // 最後にトレンド分析が生成された日時 (ISO 8601形式)
@@ -1275,23 +1232,9 @@ func (*MetricsSummary) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *MetricsSummary) GetTotalDailySummaries() int32 {
-	if x != nil {
-		return x.TotalDailySummaries
-	}
-	return 0
-}
-
 func (x *MetricsSummary) GetTotalMonthlySummaries() int32 {
 	if x != nil {
 		return x.TotalMonthlySummaries
-	}
-	return 0
-}
-
-func (x *MetricsSummary) GetPendingDailySummaries() int32 {
-	if x != nil {
-		return x.PendingDailySummaries
 	}
 	return 0
 }
@@ -1301,13 +1244,6 @@ func (x *MetricsSummary) GetPendingMonthlySummaries() int32 {
 		return x.PendingMonthlySummaries
 	}
 	return 0
-}
-
-func (x *MetricsSummary) GetAutoSummaryDailyEnabled() bool {
-	if x != nil {
-		return x.AutoSummaryDailyEnabled
-	}
-	return false
 }
 
 func (x *MetricsSummary) GetAutoSummaryMonthlyEnabled() bool {
@@ -1385,12 +1321,11 @@ const file_user_user_proto_rawDesc = "" +
 	"\x13GetUserInfoResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12+\n" +
-	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\x94\x02\n" +
+	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\xe6\x01\n" +
 	"\n" +
 	"LLMKeyInfo\x12!\n" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12\x10\n" +
-	"\x03key\x18\x02 \x01(\tR\x03key\x12,\n" +
-	"\x12auto_summary_daily\x18\x03 \x01(\bR\x10autoSummaryDaily\x120\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\x120\n" +
 	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
 	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabled\"8\n" +
@@ -1402,10 +1337,9 @@ const file_user_user_proto_rawDesc = "" +
 	"\x14DeleteAccountRequest\"K\n" +
 	"\x15DeleteAccountResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x98\x02\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xea\x01\n" +
 	" UpdateAutoSummarySettingsRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12,\n" +
-	"\x12auto_summary_daily\x18\x02 \x01(\bR\x10autoSummaryDaily\x120\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x120\n" +
 	"\x14auto_summary_monthly\x18\x03 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x04 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
 	"\x17semantic_search_enabled\x18\x05 \x01(\bR\x15semanticSearchEnabled\"W\n" +
@@ -1413,9 +1347,8 @@ const file_user_user_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"B\n" +
 	"\x1dGetAutoSummarySettingsRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xf3\x01\n" +
-	"\x1eGetAutoSummarySettingsResponse\x12,\n" +
-	"\x12auto_summary_daily\x18\x01 \x01(\bR\x10autoSummaryDaily\x120\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xc5\x01\n" +
+	"\x1eGetAutoSummarySettingsResponse\x120\n" +
 	"\x14auto_summary_monthly\x18\x02 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x03 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
 	"\x17semantic_search_enabled\x18\x04 \x01(\bR\x15semanticSearchEnabled\"\x19\n" +
@@ -1423,12 +1356,10 @@ const file_user_user_proto_rawDesc = "" +
 	"\x18GetPubSubMetricsResponse\x12:\n" +
 	"\x0ehourly_metrics\x18\x01 \x03(\v2\x13.user.HourlyMetricsR\rhourlyMetrics\x12?\n" +
 	"\x10processing_tasks\x18\x02 \x03(\v2\x14.user.ProcessingTaskR\x0fprocessingTasks\x12.\n" +
-	"\asummary\x18\x03 \x01(\v2\x14.user.MetricsSummaryR\asummary\"\xb9\x04\n" +
+	"\asummary\x18\x03 \x01(\v2\x14.user.MetricsSummaryR\asummary\"\xc7\x03\n" +
 	"\rHourlyMetrics\x12\x1c\n" +
-	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12:\n" +
-	"\x19daily_summaries_processed\x18\x02 \x01(\x05R\x17dailySummariesProcessed\x12>\n" +
-	"\x1bmonthly_summaries_processed\x18\x03 \x01(\x05R\x19monthlySummariesProcessed\x124\n" +
-	"\x16daily_summaries_failed\x18\x04 \x01(\x05R\x14dailySummariesFailed\x128\n" +
+	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12>\n" +
+	"\x1bmonthly_summaries_processed\x18\x03 \x01(\x05R\x19monthlySummariesProcessed\x128\n" +
 	"\x18monthly_summaries_failed\x18\x05 \x01(\x05R\x16monthlySummariesFailed\x126\n" +
 	"\x17latest_trends_processed\x18\x06 \x01(\x05R\x15latestTrendsProcessed\x120\n" +
 	"\x14latest_trends_failed\x18\a \x01(\x05R\x12latestTrendsFailed\x12<\n" +
@@ -1440,13 +1371,10 @@ const file_user_user_proto_rawDesc = "" +
 	"\ttask_type\x18\x01 \x01(\tR\btaskType\x12\x12\n" +
 	"\x04date\x18\x02 \x01(\tR\x04date\x12\x1d\n" +
 	"\n" +
-	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\xae\x05\n" +
-	"\x0eMetricsSummary\x122\n" +
-	"\x15total_daily_summaries\x18\x01 \x01(\x05R\x13totalDailySummaries\x126\n" +
-	"\x17total_monthly_summaries\x18\x02 \x01(\x05R\x15totalMonthlySummaries\x126\n" +
-	"\x17pending_daily_summaries\x18\x03 \x01(\x05R\x15pendingDailySummaries\x12:\n" +
-	"\x19pending_monthly_summaries\x18\x04 \x01(\x05R\x17pendingMonthlySummaries\x12;\n" +
-	"\x1aauto_summary_daily_enabled\x18\x05 \x01(\bR\x17autoSummaryDailyEnabled\x12?\n" +
+	"started_at\x18\x03 \x01(\x03R\tstartedAt\"\x85\x04\n" +
+	"\x0eMetricsSummary\x126\n" +
+	"\x17total_monthly_summaries\x18\x02 \x01(\x05R\x15totalMonthlySummaries\x12:\n" +
+	"\x19pending_monthly_summaries\x18\x04 \x01(\x05R\x17pendingMonthlySummaries\x12?\n" +
 	"\x1cauto_summary_monthly_enabled\x18\x06 \x01(\bR\x19autoSummaryMonthlyEnabled\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\a \x01(\bR\x16autoLatestTrendEnabled\x129\n" +
 	"\x19latest_trend_generated_at\x18\b \x01(\tR\x16latestTrendGeneratedAt\x126\n" +

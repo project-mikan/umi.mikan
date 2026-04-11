@@ -8,26 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestSummaryGenerationMessage(t *testing.T) {
-	msg := SummaryGenerationMessage{
-		Type:   "daily_summary",
-		UserID: "test-user-id",
-		Date:   "2024-01-15",
-	}
-
-	if msg.Type != "daily_summary" {
-		t.Errorf("expected type 'daily_summary', got '%s'", msg.Type)
-	}
-
-	if msg.UserID != "test-user-id" {
-		t.Errorf("expected user ID 'test-user-id', got '%s'", msg.UserID)
-	}
-
-	if msg.Date != "2024-01-15" {
-		t.Errorf("expected date '2024-01-15', got '%s'", msg.Date)
-	}
-}
-
 func TestMonthlySummaryGenerationMessage(t *testing.T) {
 	msg := MonthlySummaryGenerationMessage{
 		Type:   "monthly_summary",

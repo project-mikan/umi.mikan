@@ -90,7 +90,6 @@
     "autoSummary": {
       "title": "自動まとめ設定",
       "description": "1000文字以上の日記に対して自動でまとめを生成する設定です。",
-      "dailyLabel": "日毎の自動まとめを有効にする",
       "monthlyLabel": "月毎の自動まとめを有効にする",
       "semanticSearchLabel": "自然言語検索（意味的検索）を有効にする",
       "semanticSearchDescription": "日記の内容をAIで解析し、意味・文脈に基づいた検索を可能にします。当日の日記は翌朝にインデックスが生成され、過去の日記は保存時に自動でインデックスが生成されます。",
@@ -446,12 +445,9 @@
     "title": "LLM処理状況",
     "description": "AIまとめの処理状況と統計情報を表示します",
     "metrics": {
-      "totalDailySummaries": "日次まとめ総数",
       "totalMonthlySummaries": "月次まとめ総数",
-      "pendingDailySummaries": "未処理日次まとめ",
       "pendingMonthlySummaries": "未処理月次まとめ",
       "autoSummarySettings": "自動まとめ設定",
-      "dailyAutoSummary": "日次自動まとめ",
       "monthlyAutoSummary": "月次自動まとめ",
       "latestTrendAutoGeneration": "トレンド分析自動生成",
       "latestTrendStatus": "トレンド分析生成状況",
@@ -462,11 +458,9 @@
       "processingActivity": "処理活動",
       "time": "時刻",
       "processedCount": "処理件数",
-      "dailySummaries": "日次まとめ",
       "monthlySummaries": "月次まとめ",
       "diaryEmbeddings": "embedding生成",
       "semanticSearches": "意味的検索",
-      "dailySummary": "日次まとめ",
       "monthlySummary": "月次まとめ",
       "latestTrend": "トレンド分析",
       "startedAt": "開始時刻",
@@ -481,8 +475,7 @@
       "ragDisabledNote": "設定ページでGemini APIキーを登録し、自然言語検索を有効にするとここに状況が表示されます。",
       "aboutTitle": "LLM処理について",
       "aboutDescription": "このページでは、AI（Gemini）による自動まとめ処理の状況を確認できます。",
-      "dailySummaryExplanation": "日次まとめ: 1000文字以上の日記に対して毎日自動で生成されるまとめ",
-      "monthlySummaryExplanation": "月次まとめ: 日次まとめから生成される月間の総合まとめ",
+      "monthlySummaryExplanation": "月次まとめ: 日記の内容から生成される月間の総合まとめ",
       "processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
     },
     "ragDiagram": {

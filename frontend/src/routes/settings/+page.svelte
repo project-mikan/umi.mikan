@@ -37,7 +37,6 @@
   $: existingLLMToken = existingLLMKey?.key || "";
 
   // Local state for checkbox values
-  let autoSummaryDaily = false;
   let autoSummaryMonthly = false;
   let autoLatestTrend = false;
   let semanticSearchEnabled = false;
@@ -45,7 +44,6 @@
   // Update local state when data changes
   $: {
     if (existingLLMKey) {
-      autoSummaryDaily = existingLLMKey.autoSummaryDaily || false;
       autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
       autoLatestTrend = existingLLMKey.autoLatestTrendEnabled || false;
       semanticSearchEnabled = existingLLMKey.semanticSearchEnabled || false;
@@ -522,19 +520,6 @@
 					<input type="hidden" name="llmProvider" value="1" />
 
 					<div class="space-y-3">
-						<label class="flex items-center">
-							<input
-								type="checkbox"
-								name="autoSummaryDaily"
-								bind:checked={autoSummaryDaily}
-								disabled={autoSummaryLoading}
-								class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:bg-gray-100"
-							/>
-							<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-								{$_("settings.autoSummary.dailyLabel")}
-							</span>
-						</label>
-
 						<label class="flex items-center">
 							<input
 								type="checkbox"

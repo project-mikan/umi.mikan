@@ -1,16 +1,13 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
   import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+  import { plainTextToHtml } from "$lib/utils/html-text-converter";
 
   export let daysInMonth: number;
   export let currentYear: number;
   export let currentMonth: number;
   export let entryMap: Map<number, DiaryEntry>;
   export let onNavigateToEntry: (day: number) => void;
-
-  function formatContentWithLineBreaks(content: string): string {
-    return content.replace(/\n/g, "<br>");
-  }
 </script>
 
 <div class="space-y-3">
@@ -39,7 +36,7 @@
 							{$_("monthly.entry")}
 						</div>
 						<div class="text-sm text-blue-600 dark:text-blue-400 leading-relaxed">
-							{@html formatContentWithLineBreaks(
+							{@html plainTextToHtml(
 								entry?.content
 									? entry.content.substring(0, 100) +
 											(entry.content.length > 100 ? "..." : "")

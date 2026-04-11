@@ -19,9 +19,7 @@
 
   export let hourlyMetrics: Array<{
     timestamp: number;
-    dailySummariesProcessed: number;
     monthlySummariesProcessed: number;
-    dailySummariesFailed: number;
     monthlySummariesFailed: number;
     diaryEmbeddingsProcessed: number;
     diaryEmbeddingsFailed: number;
@@ -34,9 +32,7 @@
   // 時間別データを準備
   $: chartData = (() => {
     const labels: string[] = [];
-    const dailyProcessed: number[] = [];
     const monthlyProcessed: number[] = [];
-    const dailyFailed: number[] = [];
     const monthlyFailed: number[] = [];
     const embeddingsProcessed: number[] = [];
     const semanticSearchesProcessed: number[] = [];
@@ -46,9 +42,7 @@
       const hour = date.getHours();
       const day = date.getDate();
       labels.push(`${day}日 ${hour}時`);
-      dailyProcessed.push(metric.dailySummariesProcessed);
       monthlyProcessed.push(metric.monthlySummariesProcessed);
-      dailyFailed.push(metric.dailySummariesFailed);
       monthlyFailed.push(metric.monthlySummariesFailed);
       embeddingsProcessed.push(metric.diaryEmbeddingsProcessed);
       semanticSearchesProcessed.push(metric.semanticSearchesProcessed);
@@ -56,9 +50,7 @@
 
     return {
       labels,
-      dailyProcessed,
       monthlyProcessed,
-      dailyFailed,
       monthlyFailed,
       embeddingsProcessed,
       semanticSearchesProcessed,
@@ -70,10 +62,9 @@
     if (!browser || !chart || !Chart) return;
 
     chart.data.labels = chartData.labels;
-    chart.data.datasets[0].data = chartData.dailyProcessed;
-    chart.data.datasets[1].data = chartData.monthlyProcessed;
-    chart.data.datasets[2].data = chartData.embeddingsProcessed;
-    chart.data.datasets[3].data = chartData.semanticSearchesProcessed;
+    chart.data.datasets[0].data = chartData.monthlyProcessed;
+    chart.data.datasets[1].data = chartData.embeddingsProcessed;
+    chart.data.datasets[2].data = chartData.semanticSearchesProcessed;
 
     // ラベルとタイトルを更新
     if (chart.options.plugins?.title) {
@@ -93,10 +84,9 @@
     ) {
       chart.options.scales.y.title.text = $_("llm.metrics.processedCount");
     }
-    chart.data.datasets[0].label = $_("llm.metrics.dailySummaries");
-    chart.data.datasets[1].label = $_("llm.metrics.monthlySummaries");
-    chart.data.datasets[2].label = $_("llm.metrics.diaryEmbeddings");
-    chart.data.datasets[3].label = $_("llm.metrics.semanticSearches");
+    chart.data.datasets[0].label = $_("llm.metrics.monthlySummaries");
+    chart.data.datasets[1].label = $_("llm.metrics.diaryEmbeddings");
+    chart.data.datasets[2].label = $_("llm.metrics.semanticSearches");
 
     chart.update();
   }
@@ -163,13 +153,6 @@
       data: {
         labels: chartData.labels,
         datasets: [
-          {
-            label: $_("llm.metrics.dailySummaries"),
-            data: chartData.dailyProcessed,
-            backgroundColor: "rgba(34, 197, 94, 0.6)",
-            borderColor: "rgb(34, 197, 94)",
-            borderWidth: 1,
-          },
           {
             label: $_("llm.metrics.monthlySummaries"),
             data: chartData.monthlyProcessed,

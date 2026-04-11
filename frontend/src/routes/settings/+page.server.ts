@@ -262,7 +262,6 @@ export const actions: Actions = {
 
     const data = await request.formData();
     const llmProvider = parseInt(data.get("llmProvider") as string, 10);
-    const autoSummaryDaily = data.get("autoSummaryDaily") === "on";
     const autoSummaryMonthly = data.get("autoSummaryMonthly") === "on";
     const autoLatestTrendEnabled = data.get("autoLatestTrendEnabled") === "on";
     const semanticSearchEnabled = data.get("semanticSearchEnabled") === "on";
@@ -279,7 +278,6 @@ export const actions: Actions = {
       const [response, userInfo] = await Promise.all([
         updateAutoSummarySettings({
           llmProvider,
-          autoSummaryDaily,
           autoSummaryMonthly,
           autoLatestTrendEnabled,
           semanticSearchEnabled,

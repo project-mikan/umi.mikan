@@ -3,12 +3,10 @@ import {
   createDiaryEntry,
   createYMD,
   deleteDiaryEntry,
-  getDailySummary,
   getDiaryEntry,
   updateDiaryEntry,
   getDiaryEmbeddingStatus,
 } from "$lib/server/diary-api";
-import { unixToMilliseconds } from "$lib/utils/token-utils";
 import { getUserInfo } from "$lib/server/auth-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { getPastSameDates } from "$lib/utils/date-utils";
@@ -101,10 +99,6 @@ export const load: PageServerLoad = async ({
     throw err;
   });
   const userInfoPromise = getUserInfo({ accessToken: authResult.accessToken });
-  const summaryPromise = getDailySummary({
-    date,
-    accessToken: authResult.accessToken,
-  }).catch(() => ({ summary: null }));
   const pastEntryPromises = pastDatesArray.map((pastDate) =>
     getDiaryEntry({
       date: createYMD(pastDate.year, pastDate.month, pastDate.day),
@@ -113,28 +107,10 @@ export const load: PageServerLoad = async ({
   );
 
   // 全リクエストを並列で待機（4回のシリアル round-trip → 1回に削減）
-  const [[entryResponse, userInfo, summaryResponse], pastEntriesResults] =
-    await Promise.all([
-      Promise.all([entryPromise, userInfoPromise, summaryPromise]),
-      Promise.all(pastEntryPromises),
-    ]);
-
-  // 要約を整形
-  let dailySummary = null;
-  if (summaryResponse.summary) {
-    dailySummary = {
-      id: summaryResponse.summary.id,
-      diaryId: summaryResponse.summary.diaryId,
-      date: {
-        year: summaryResponse.summary.date?.year || 0,
-        month: summaryResponse.summary.date?.month || 0,
-        day: summaryResponse.summary.date?.day || 0,
-      },
-      summary: summaryResponse.summary.summary,
-      createdAt: unixToMilliseconds(summaryResponse.summary.createdAt),
-      updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt),
-    };
-  }
+  const [[entryResponse, userInfo], pastEntriesResults] = await Promise.all([
+    Promise.all([entryPromise, userInfoPromise]),
+    Promise.all(pastEntryPromises),
+  ]);
 
   // RAGインデックス状態を取得（entry.id が必要なため第2フェーズ）
   // Promiseのまま返してストリーミングし、ページ表示をブロックしない
@@ -185,7 +161,6 @@ export const load: PageServerLoad = async ({
       email: userInfo.email,
       llmKeys: userInfo.llmKeys || [],
     },
-    dailySummary,
     today: {
       year: today.getFullYear(),
       month: today.getMonth() + 1,

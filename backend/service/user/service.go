@@ -221,7 +221,6 @@ func (s *UserEntry) UpdateLLMKey(ctx context.Context, req *g.UpdateLLMKeyRequest
 			UserID:             parsedUserID,
 			LlmProvider:        int16(req.GetLlmProvider()),
 			Key:                req.GetKey(),
-			AutoSummaryDaily:   false, // デフォルトは無効
 			AutoSummaryMonthly: false, // デフォルトは無効
 			CreatedAt:          currentTime,
 			UpdatedAt:          currentTime,
@@ -282,7 +281,6 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 		llmKeys = append(llmKeys, &g.LLMKeyInfo{
 			LlmProvider:            int32(userLLM.LlmProvider),
 			Key:                    userLLM.Key,
-			AutoSummaryDaily:       userLLM.AutoSummaryDaily,
 			AutoSummaryMonthly:     userLLM.AutoSummaryMonthly,
 			AutoLatestTrendEnabled: userLLM.AutoLatestTrendEnabled,
 			SemanticSearchEnabled:  userLLM.SemanticSearchEnabled,
@@ -463,7 +461,6 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 	}
 
 	// 自動要約設定を更新
-	userLLMDB.AutoSummaryDaily = req.GetAutoSummaryDaily()
 	userLLMDB.AutoSummaryMonthly = req.GetAutoSummaryMonthly()
 	userLLMDB.AutoLatestTrendEnabled = req.GetAutoLatestTrendEnabled()
 	userLLMDB.SemanticSearchEnabled = req.GetSemanticSearchEnabled()
@@ -486,7 +483,6 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	// プロバイダーの検証
 	if req.GetLlmProvider() < 0 {
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:       false,
 			AutoSummaryMonthly:     false,
 			AutoLatestTrendEnabled: false,
 		}, nil
@@ -496,7 +492,6 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:       false,
 			AutoSummaryMonthly:     false,
 			AutoLatestTrendEnabled: false,
 		}, nil
@@ -505,7 +500,6 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:       false,
 			AutoSummaryMonthly:     false,
 			AutoLatestTrendEnabled: false,
 		}, nil
@@ -516,14 +510,12 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	if err != nil {
 		// 設定が存在しない場合はデフォルト値を返す
 		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryDaily:       false,
 			AutoSummaryMonthly:     false,
 			AutoLatestTrendEnabled: false,
 		}, nil
 	}
 
 	return &g.GetAutoSummarySettingsResponse{
-		AutoSummaryDaily:       userLLMDB.AutoSummaryDaily,
 		AutoSummaryMonthly:     userLLMDB.AutoSummaryMonthly,
 		AutoLatestTrendEnabled: userLLMDB.AutoLatestTrendEnabled,
 		SemanticSearchEnabled:  userLLMDB.SemanticSearchEnabled,
@@ -580,9 +572,7 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 	for _, m := range rawMetrics {
 		metrics = append(metrics, &g.HourlyMetrics{
 			Timestamp:                 m.Hour.Unix(),
-			DailySummariesProcessed:   m.DailySummariesProcessed,
 			MonthlySummariesProcessed: m.MonthlySummariesProcessed,
-			DailySummariesFailed:      0, // TODO: 失敗ログを記録する仕組みを追加後に実装
 			MonthlySummariesFailed:    0, // TODO: 失敗ログを記録する仕組みを追加後に実装
 			LatestTrendsProcessed:     0, // トレンド生成履歴はDBに保存されていないため0
 			LatestTrendsFailed:        0, // トレンド生成履歴はDBに保存されていないため0
@@ -598,26 +588,6 @@ func (s *UserEntry) getHourlyMetrics(ctx context.Context, userID uuid.UUID) ([]*
 func (s *UserEntry) getProcessingTasks(ctx context.Context, userID string) ([]*g.ProcessingTask, error) {
 	// Redisから現在処理中のタスクを取得
 	var tasks []*g.ProcessingTask
-
-	// 日次サマリータスクの検索
-	dailyPattern := fmt.Sprintf("task:daily_summary:%s:*", userID)
-	dailyCmd := s.RedisClient.B().Keys().Pattern(dailyPattern).Build()
-	dailyKeys, err := s.RedisClient.Do(ctx, dailyCmd).AsStrSlice()
-	if err == nil {
-		for _, key := range dailyKeys {
-			// キーから日付を抽出: task:daily_summary:userID:YYYY-MM-DD
-			parts := strings.Split(key, ":")
-			if len(parts) >= 4 {
-				date := parts[3]
-				// タスクの開始時刻は現在時刻から推定（より正確には開始時刻をRedisに保存すべき）
-				tasks = append(tasks, &g.ProcessingTask{
-					TaskType:  "daily_summary",
-					Date:      date,
-					StartedAt: time.Now().Add(-time.Minute * 5).Unix(), // 推定値
-				})
-			}
-		}
-	}
 
 	// 月次サマリータスクの検索
 	monthlyPattern := fmt.Sprintf("task:monthly_summary:%s:*", userID)
@@ -665,20 +635,8 @@ func (s *UserEntry) getProcessingTasks(ctx context.Context, userID string) ([]*g
 }
 
 func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g.MetricsSummary, error) {
-	// 日次サマリー総数を取得
-	totalDaily, err := database.TotalDailySummaryCount(ctx, s.DB, userID)
-	if err != nil {
-		return nil, err
-	}
-
 	// 月次サマリー総数を取得
 	totalMonthly, err := database.TotalMonthlySummaryCount(ctx, s.DB, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	// 未作成の日次サマリー数を取得（今日を除く）
-	pendingDaily, err := database.PendingDailySummaryCount(ctx, s.DB, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -733,11 +691,8 @@ func (s *UserEntry) getMetricsSummary(ctx context.Context, userID uuid.UUID) (*g
 	}
 
 	return &g.MetricsSummary{
-		TotalDailySummaries:       totalDaily,
 		TotalMonthlySummaries:     totalMonthly,
-		PendingDailySummaries:     pendingDaily,
 		PendingMonthlySummaries:   pendingMonthly,
-		AutoSummaryDailyEnabled:   autoSettings.AutoSummaryDaily,
 		AutoSummaryMonthlyEnabled: autoSettings.AutoSummaryMonthly,
 		AutoLatestTrendEnabled:    autoSettings.AutoLatestTrend,
 		LatestTrendGeneratedAt:    latestTrendGeneratedAt,

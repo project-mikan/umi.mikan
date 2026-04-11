@@ -21,7 +21,6 @@ type RedisConfig struct {
 }
 
 type SchedulerConfig struct {
-	DailySummaryInterval       time.Duration
 	MonthlySummaryInterval     time.Duration
 	LatestTrendTargetHour      int
 	LatestTrendTargetMinute    int
@@ -120,11 +119,6 @@ func LoadRedisConfig() (*RedisConfig, error) {
 }
 
 func LoadSchedulerConfig() (*SchedulerConfig, error) {
-	dailyIntervalStr := os.Getenv("SCHEDULER_DAILY_INTERVAL")
-	if dailyIntervalStr == "" {
-		dailyIntervalStr = "5m" // Default to 5 minutes
-	}
-
 	monthlyIntervalStr := os.Getenv("SCHEDULER_MONTHLY_INTERVAL")
 	if monthlyIntervalStr == "" {
 		monthlyIntervalStr = "5m" // Default to 5 minutes
@@ -138,11 +132,6 @@ func LoadSchedulerConfig() (*SchedulerConfig, error) {
 	latestTrendMinuteStr := os.Getenv("SCHEDULER_LATEST_TREND_MINUTE")
 	if latestTrendMinuteStr == "" {
 		latestTrendMinuteStr = "0" // Default to 0 minutes
-	}
-
-	dailyInterval, err := time.ParseDuration(dailyIntervalStr)
-	if err != nil {
-		return nil, fmt.Errorf("invalid SCHEDULER_DAILY_INTERVAL format: %w", err)
 	}
 
 	monthlyInterval, err := time.ParseDuration(monthlyIntervalStr)
@@ -193,7 +182,6 @@ func LoadSchedulerConfig() (*SchedulerConfig, error) {
 	}
 
 	return &SchedulerConfig{
-		DailySummaryInterval:       dailyInterval,
 		MonthlySummaryInterval:     monthlyInterval,
 		LatestTrendTargetHour:      latestTrendHour,
 		LatestTrendTargetMinute:    latestTrendMinute,

@@ -369,7 +369,7 @@ func TestDiaryEntry_RegenerateAllEmbeddings_SemanticEnabled(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// semantic_search_enabled=trueでuser_llmsを挿入
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
 
 	redisClient := setupTestRedisForDiary(t)
 	svc := &DiaryEntry{DB: db, Redis: redisClient}
@@ -394,7 +394,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_EnrichedQuery(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// semantic_search_enabled=trueでuser_llmsを挿入
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
 
 	embedder := &mockGeminiEmbedder{}
 	svc := &DiaryEntry{

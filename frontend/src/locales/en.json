@@ -90,7 +90,6 @@
     "autoSummary": {
       "title": "Auto Summary Settings",
       "description": "Automatically generate summaries for diary entries over 1000 characters.",
-      "dailyLabel": "Enable daily auto summary",
       "monthlyLabel": "Enable monthly auto summary",
       "semanticSearchLabel": "Enable natural language search (semantic search)",
       "semanticSearchDescription": "Analyzes diary content with AI to enable meaning and context-based search. Today's diary will be indexed the following morning; past diaries are indexed automatically when saved.",
@@ -446,12 +445,9 @@
     "title": "LLM Processing Status",
     "description": "Display AI summary processing status and statistics",
     "metrics": {
-      "totalDailySummaries": "Total Daily Summaries",
       "totalMonthlySummaries": "Total Monthly Summaries",
-      "pendingDailySummaries": "Pending Daily Summaries",
       "pendingMonthlySummaries": "Pending Monthly Summaries",
       "autoSummarySettings": "Auto Summary Settings",
-      "dailyAutoSummary": "Daily Auto Summary",
       "monthlyAutoSummary": "Monthly Auto Summary",
       "latestTrendAutoGeneration": "Trend Analysis Auto Generation",
       "latestTrendStatus": "Trend Analysis Generation Status",
@@ -462,11 +458,9 @@
       "processingActivity": "Processing Activity",
       "time": "Time",
       "processedCount": "Processed Count",
-      "dailySummaries": "Daily Summaries",
       "monthlySummaries": "Monthly Summaries",
       "diaryEmbeddings": "Embedding Generation",
       "semanticSearches": "Semantic Searches",
-      "dailySummary": "Daily Summary",
       "monthlySummary": "Monthly Summary",
       "latestTrend": "Trend Analysis",
       "startedAt": "Started at",
@@ -481,8 +475,7 @@
       "ragDisabledNote": "Register a Gemini API key in settings and enable natural language search to see the status here.",
       "aboutTitle": "About LLM Processing",
       "aboutDescription": "This page shows the status of automated summary processing by AI (Gemini).",
-      "dailySummaryExplanation": "Daily Summary: Automatically generated summaries for diary entries over 1000 characters",
-      "monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from daily summaries",
+      "monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from diary entries",
       "processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
     },
     "ragDiagram": {

@@ -102,11 +102,11 @@ type UserServiceClient interface {
 	//   - Internal: 削除処理エラー
 	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
 	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 日次要約と月次要約をそれぞれ有効/無効にできます。
+	// 月次要約を有効/無効にできます。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
+	//	request: { llm_provider: 1, auto_summary_monthly: false }
 	//	response: { success: true, message: "自動要約設定を更新しました" }
 	//
 	// エラー:
@@ -117,7 +117,7 @@ type UserServiceClient interface {
 	// 例:
 	//
 	//	request: { llm_provider: 1 }
-	//	response: { auto_summary_daily: true, auto_summary_monthly: false }
+	//	response: { auto_summary_monthly: false }
 	//
 	// エラー:
 	//   - NotFound: LLMキーが設定されていない
@@ -304,11 +304,11 @@ type UserServiceServer interface {
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
 	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 日次要約と月次要約をそれぞれ有効/無効にできます。
+	// 月次要約を有効/無効にできます。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1, auto_summary_daily: true, auto_summary_monthly: false }
+	//	request: { llm_provider: 1, auto_summary_monthly: false }
 	//	response: { success: true, message: "自動要約設定を更新しました" }
 	//
 	// エラー:
@@ -319,7 +319,7 @@ type UserServiceServer interface {
 	// 例:
 	//
 	//	request: { llm_provider: 1 }
-	//	response: { auto_summary_daily: true, auto_summary_monthly: false }
+	//	response: { auto_summary_monthly: false }
 	//
 	// エラー:
 	//   - NotFound: LLMキーが設定されていない

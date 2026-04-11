@@ -355,7 +355,6 @@ func TestUserEntry_UpdateAutoSummarySettings(t *testing.T) {
 	t.Run("異常系：LLMキーが存在しない", func(t *testing.T) {
 		resp, err := svc.UpdateAutoSummarySettings(ctx, &g.UpdateAutoSummarySettingsRequest{
 			LlmProvider:        1,
-			AutoSummaryDaily:   true,
 			AutoSummaryMonthly: true,
 		})
 		if err != nil {
@@ -374,7 +373,6 @@ func TestUserEntry_UpdateAutoSummarySettings(t *testing.T) {
 
 		resp, err := svc.UpdateAutoSummarySettings(ctx, &g.UpdateAutoSummarySettingsRequest{
 			LlmProvider:           1,
-			AutoSummaryDaily:      true,
 			AutoSummaryMonthly:    false,
 			SemanticSearchEnabled: true,
 		})
@@ -401,7 +399,7 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
-		if resp.AutoSummaryDaily || resp.AutoSummaryMonthly {
+		if resp.AutoSummaryMonthly {
 			t.Error("LLMキーが存在しない場合はデフォルト値がfalseであるべき")
 		}
 	})
@@ -413,10 +411,7 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
-		// CreateTestUserLLMはauto_summary_daily=true, auto_summary_monthly=trueで設定する
-		if !resp.AutoSummaryDaily {
-			t.Error("AutoSummaryDailyがtrueであるべき")
-		}
+		// CreateTestUserLLMはauto_summary_monthly=trueで設定する
 		if !resp.AutoSummaryMonthly {
 			t.Error("AutoSummaryMonthlyがtrueであるべき")
 		}
@@ -473,9 +468,6 @@ func TestUserEntry_GetMetricsSummary(t *testing.T) {
 		summary, err := svc.getMetricsSummary(ctx, userID)
 		if err != nil {
 			t.Fatalf("getMetricsSummary失敗: %v", err)
-		}
-		if summary.TotalDailySummaries != 0 {
-			t.Errorf("TotalDailySummaries: 期待 0, 実際 %d", summary.TotalDailySummaries)
 		}
 		if summary.TotalMonthlySummaries != 0 {
 			t.Errorf("TotalMonthlySummaries: 期待 0, 実際 %d", summary.TotalMonthlySummaries)

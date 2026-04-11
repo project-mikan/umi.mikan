@@ -53,13 +53,9 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
       },
     });
   } catch (err) {
-    console.error("Failed to generate monthly summary:", err);
-    console.error("Error details:", {
-      message: (err as Error)?.message,
-      code: (err as { code?: string })?.code,
-      stack: (err as Error)?.stack,
-    });
-
+    if (err instanceof Response) {
+      throw err;
+    }
     if ((err as Error)?.message?.includes("API key")) {
       throw error(400, { message: "Gemini API key not configured" });
     }
@@ -71,14 +67,15 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
         message: "Monthly summary generation is only allowed for past months",
       });
     }
+    // NOT_FOUND は正常ケース（対象月に日記エントリが存在しない）
     if (
-      (err as { code?: string })?.code === "NOT_FOUND" ||
-      (err as { code?: number })?.code === 5 || // gRPC NOT_FOUND code
-      (err as Error)?.message?.includes("no diary entries") ||
-      (err as Error)?.message?.includes("no daily summaries")
+      (err as { code?: number })?.code === 5 ||
+      (err as Error)?.message?.toLowerCase().includes("not found") ||
+      (err as Error)?.message?.includes("no diary entries")
     ) {
       throw error(404, "No diary entries found for the specified month");
     }
+    console.error("Failed to generate monthly summary:", err);
     throw error(500, "Failed to generate monthly summary");
   }
 };

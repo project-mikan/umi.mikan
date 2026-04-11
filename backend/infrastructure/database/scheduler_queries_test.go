@@ -2,7 +2,6 @@ package database_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -10,63 +9,6 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
-
-func TestDiaryDatesNeedingDailySummary(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	ctx := context.Background()
-	userID := testutil.CreateTestUser(t, db, "scheduler-daily-summary@example.com", "User")
-
-	now := time.Now().UnixMilli()
-	pastDate := "2020-01-10"
-	// 1000文字以上の日記（対象）
-	content1000 := strings.Repeat("あ", 1000)
-	diaryID := uuid.New()
-	if _, err := db.ExecContext(ctx,
-		`INSERT INTO diaries (id, user_id, content, date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-		diaryID, userID, content1000, pastDate, now, now,
-	); err != nil {
-		t.Fatalf("日記の挿入に失敗: %v", err)
-	}
-
-	// 999文字の日記（対象外）
-	content999 := strings.Repeat("あ", 999)
-	if _, err := db.ExecContext(ctx,
-		`INSERT INTO diaries (id, user_id, content, date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-		uuid.New(), userID, content999, "2020-01-11", now, now,
-	); err != nil {
-		t.Fatalf("短い日記の挿入に失敗: %v", err)
-	}
-
-	t.Run("サマリ未生成の1000文字以上の日記日付を返す", func(t *testing.T) {
-		dates, err := database.DiaryDatesNeedingDailySummary(ctx, db, userID.String())
-		if err != nil {
-			t.Fatalf("DiaryDatesNeedingDailySummary失敗: %v", err)
-		}
-		if len(dates) != 1 {
-			t.Errorf("期待件数 1 に対して %d", len(dates))
-		}
-	})
-
-	t.Run("サマリ生成済みの日記は返さない", func(t *testing.T) {
-		// サマリを挿入（日記のupdated_atより新しい）
-		if _, err := db.ExecContext(ctx,
-			`INSERT INTO diary_summary_days (id, user_id, date, summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
-			uuid.New(), userID, pastDate, "サマリ内容", now+1, now+1,
-		); err != nil {
-			t.Fatalf("サマリの挿入に失敗: %v", err)
-		}
-
-		dates, err := database.DiaryDatesNeedingDailySummary(ctx, db, userID.String())
-		if err != nil {
-			t.Fatalf("DiaryDatesNeedingDailySummary失敗: %v", err)
-		}
-		for _, d := range dates {
-			if d.Format("2006-01-02") == pastDate {
-				t.Errorf("サマリ生成済みの日付が含まれている: %s", pastDate)
-			}
-		}
-	})
-}
 
 func TestMonthsNeedingMonthlySummary(t *testing.T) {
 	db := testutil.SetupTestDB(t)

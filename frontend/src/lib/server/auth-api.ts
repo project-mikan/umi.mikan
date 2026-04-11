@@ -194,7 +194,6 @@ export async function deleteAccount(
 
 export interface UpdateAutoSummarySettingsParams {
   llmProvider: number;
-  autoSummaryDaily: boolean;
   autoSummaryMonthly: boolean;
   autoLatestTrendEnabled: boolean;
   semanticSearchEnabled: boolean;
@@ -206,7 +205,6 @@ export async function updateAutoSummarySettings(
 ): Promise<UpdateAutoSummarySettingsResponse> {
   const request = create(UpdateAutoSummarySettingsRequestSchema, {
     llmProvider: params.llmProvider,
-    autoSummaryDaily: params.autoSummaryDaily,
     autoSummaryMonthly: params.autoSummaryMonthly,
     autoLatestTrendEnabled: params.autoLatestTrendEnabled,
     semanticSearchEnabled: params.semanticSearchEnabled,

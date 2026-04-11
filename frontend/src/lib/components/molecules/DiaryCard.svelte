@@ -35,7 +35,7 @@
 		<div
 			class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap auto-phrase-target"
 		>
-			{@html highlightedContent}
+			{highlightedContent}
 		</div>
 		{#if onView}
 			<div class="mt-4">

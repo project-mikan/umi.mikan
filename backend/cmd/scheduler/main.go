@@ -268,7 +268,6 @@ func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logge
 	}
 
 	// ジョブを追加
-	scheduler.AddJob(NewDailySummaryJob(app.SchedulerConfig.DailySummaryInterval))
 	scheduler.AddJob(NewMonthlySummaryJob(app.SchedulerConfig.MonthlySummaryInterval))
 	scheduler.AddDailyJob(NewLatestTrendJob(
 		app.SchedulerConfig.LatestTrendTargetHour,
@@ -308,95 +307,6 @@ func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logge
 	if err := cleanup.Close(); err != nil {
 		logger.WithError(err).Error("Error during cleanup")
 		return err
-	}
-
-	return nil
-}
-
-// DailySummaryJob handles daily summary generation
-type DailySummaryJob struct {
-	interval time.Duration
-}
-
-func NewDailySummaryJob(interval time.Duration) *DailySummaryJob {
-	return &DailySummaryJob{interval: interval}
-}
-
-func (j *DailySummaryJob) Name() string {
-	return "DailySummaryGeneration"
-}
-
-func (j *DailySummaryJob) Interval() time.Duration {
-	return j.interval
-}
-
-func (j *DailySummaryJob) Execute(ctx context.Context, s *Scheduler) error {
-	s.logger.Info("Checking for missing daily summaries...")
-
-	// 1. auto_summary_daily が true のユーザーを取得
-	userIDs, err := database.UserIDsWithAutoSummaryDaily(ctx, s.db)
-	if err != nil {
-		return fmt.Errorf("failed to query users with auto summary enabled: %w", err)
-	}
-
-	if len(userIDs) == 0 {
-		s.logger.Info("No users with auto daily summary enabled")
-		return nil
-	}
-
-	s.logger.WithField("count", len(userIDs)).Info("Found users with auto daily summary enabled")
-	usersWithAutoSummaryGauge.WithLabelValues("daily").Set(float64(len(userIDs)))
-
-	// 2. 各ユーザーについて、summaryが作られていない日を確認
-	for _, userID := range userIDs {
-		if err := j.processUserSummaries(ctx, s, userID); err != nil {
-			s.logger.WithError(err).WithField("user_id", userID).Error("Error processing summaries for user")
-			continue
-		}
-	}
-
-	return nil
-}
-
-func (j *DailySummaryJob) processUserSummaries(ctx context.Context, s *Scheduler, userID string) error {
-	// diariesテーブルから該当ユーザーの日記がある日を取得し、
-	// diary_summary_daysにsummaryがない日、または要約のupdated_atが日記のupdated_atより古い日を見つける（今日を除く）
-	// 文字数が1000以上の日記のみ対象とする
-	missingDates, err := database.DiaryDatesNeedingDailySummary(ctx, s.db, userID)
-	if err != nil {
-		return fmt.Errorf("failed to query missing summaries for user %s: %w", userID, err)
-	}
-
-	if len(missingDates) == 0 {
-		s.logger.WithField("user_id", userID).Debug("No missing summaries for user")
-		return nil
-	}
-
-	s.logger.WithFields(map[string]any{"user_id": userID, "count": len(missingDates)}).Info("Found missing summaries for user")
-
-	// 3. 各日付についてRedisキューにジョブを投入
-	for _, date := range missingDates {
-		message := map[string]any{
-			"type":    "daily_summary",
-			"user_id": userID,
-			"date":    date.Format("2006-01-02"),
-		}
-
-		messageBytes, err := json.Marshal(message)
-		if err != nil {
-			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to marshal message")
-			continue
-		}
-
-		// Redisにメッセージを送信
-		publishCmd := s.redis.B().Publish().Channel("diary_events").Message(string(messageBytes)).Build()
-		if err := s.redis.Do(ctx, publishCmd).Error(); err != nil {
-			s.logger.WithError(err).WithFields(map[string]any{"user_id": userID, "date": date.Format("2006-01-02")}).Error("Failed to publish message")
-			continue
-		}
-
-		queuedMessagesCounter.WithLabelValues("daily_summary").Inc()
-		s.logger.WithFields(map[string]any{"user_id": userID, "date": date.Format("2006-01-02")}).Debug("Queued summary generation")
 	}
 
 	return nil
