@@ -394,7 +394,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 ### Codecov / Test Coverage Guidelines
 
 - **Auto-generated files are excluded from coverage**: `backend/infrastructure/grpc/**` and `backend/infrastructure/database/*.dbtpl.go` are excluded via `codecov.yml` at the project root. Do not add coverage for generated files.
-- **New backend functions require tests**: When adding new functions to backend services, always add corresponding test cases to maintain patch coverage.
+- **New backend functions require tests**: When adding new functions to backend services, always add corresponding test cases to maintain patch coverage. This applies to **all new helper functions** (e.g., `isTodayJST`, `isYesterdayJST`, `isPastDiaryEmbeddingTime`) — not just public methods. Omitting tests for private helper functions is a recurring source of patch coverage failures.
+- **Time-dependent functions must accept `time.Time` as a parameter**: Functions that check the current time (e.g., `isPastDiaryEmbeddingTime`) must accept a `time.Time` argument instead of calling `time.Now()` internally. Call sites pass `time.Now()`. This makes boundary conditions testable with fixed timestamps.
 - **Coverage configuration**: `codecov.yml` at project root controls coverage settings and ignored paths.
 - **Database package tests must be in `package database_test`**: Tests in `backend/infrastructure/database/` must use `package database_test` (external test package) to avoid import cycles. The cycle is `database` → `testutil` → `domain/model` → `database`.
 - **Database layer functions need their own tests**: Functions added to `backend/infrastructure/database/` (e.g., new query functions) require test files in the same directory. Service-layer tests do NOT count as coverage for the database package — Go measures coverage per package separately.
