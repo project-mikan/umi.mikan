@@ -196,16 +196,28 @@ func TestPublishDiaryEmbeddingMessage_SkipConditions(t *testing.T) {
 		t.Fatalf("miniredis起動失敗: %v", err)
 	}
 	t.Cleanup(mr.Close)
-	redisClient, err := rueidis.NewClient(rueidis.ClientOption{
+
+	// 発行用クライアント（svcが使用）
+	publishClient, err := rueidis.NewClient(rueidis.ClientOption{
 		InitAddress:  []string{mr.Addr()},
 		DisableCache: true,
 	})
 	if err != nil {
-		t.Fatalf("rueidisクライアント作成失敗: %v", err)
+		t.Fatalf("rueidis発行クライアント作成失敗: %v", err)
 	}
-	t.Cleanup(redisClient.Close)
+	t.Cleanup(publishClient.Close)
 
-	svc := &DiaryEntry{DB: db, Redis: redisClient}
+	// 購読用クライアント（サブスクライブ専用。発行用と同一接続では使えないため分離）
+	subClient, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{mr.Addr()},
+		DisableCache: true,
+	})
+	if err != nil {
+		t.Fatalf("rueidis購読クライアント作成失敗: %v", err)
+	}
+	t.Cleanup(subClient.Close)
+
+	svc := &DiaryEntry{DB: db, Redis: publishClient}
 	ctx := context.Background()
 
 	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
@@ -219,7 +231,7 @@ func TestPublishDiaryEmbeddingMessage_SkipConditions(t *testing.T) {
 	t.Cleanup(cancelSub)
 	go func() {
 		//nolint:errcheck // サブスクライブはキャンセルで終了するためエラーは無視する
-		redisClient.Receive(subCtx, redisClient.B().Subscribe().Channel("diary_events").Build(), func(_ rueidis.PubSubMessage) {
+		subClient.Receive(subCtx, subClient.B().Subscribe().Channel("diary_events").Build(), func(_ rueidis.PubSubMessage) {
 			select {
 			case received <- struct{}{}:
 			default:
@@ -229,12 +241,23 @@ func TestPublishDiaryEmbeddingMessage_SkipConditions(t *testing.T) {
 	// サブスクリプションが確立されるまで待機
 	time.Sleep(20 * time.Millisecond)
 
-	t.Run("2日以上前の日記はメッセージを発行しない", func(t *testing.T) {
+	t.Run("2日以上前の日記はメッセージを発行する", func(t *testing.T) {
 		svc.publishDiaryEmbeddingMessage(ctx, "test-user-id", "test-diary-id", twoDaysAgoUTC)
+		// 100ms以内にメッセージが届くことを確認
+		select {
+		case <-received:
+			// 期待通りメッセージあり
+		case <-time.After(100 * time.Millisecond):
+			t.Error("2日以上前の日記でdiary_eventsにメッセージが発行されなかった")
+		}
+	})
+
+	t.Run("今日の日記はメッセージを発行しない", func(t *testing.T) {
+		svc.publishDiaryEmbeddingMessage(ctx, "test-user-id", "test-diary-id", todayUTC)
 		// 100ms待機してメッセージが届かないことを確認
 		select {
 		case <-received:
-			t.Error("2日以上前の日記でdiary_eventsにメッセージが発行された")
+			t.Error("今日の日記でdiary_eventsにメッセージが発行された")
 		case <-time.After(100 * time.Millisecond):
 			// 期待通りメッセージなし
 		}

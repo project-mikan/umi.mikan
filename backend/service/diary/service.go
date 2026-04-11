@@ -811,19 +811,19 @@ func isPastDiaryEmbeddingTime(now time.Time) bool {
 }
 
 // publishDiaryEmbeddingMessage は日記の埋め込みベクトル生成をRedis Pub/Sub経由でキューに追加する
-// インライン生成対象: 今日の日記 + 昨日の日記（JST 4:30前のみ）
-// 昨日の日記がJST 4:30以降の場合は DiaryEmbeddingJob が処理済みのためスキップ
+// スキップ対象: 今日の日記（明朝スケジューラーが処理）+ 昨日の日記でJST 4:30前（当日スケジューラーが処理）
+// インライン生成対象: 昨日の日記でJST 4:30以降（スケジューラー処理済み）+ 2日以上前（スケジューラー対象外）
 // エラーはログに記録するのみで、レスポンスには影響しない
 func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, diaryID string, diaryDate time.Time) {
 	if s.Redis == nil {
 		return
 	}
 
-	// 生成対象: 今日の日記 OR (昨日の日記 AND 4:30前)
-	// 昨日の日記で4:30以降はDiaryEmbeddingJobが処理済みのためスキップ
-	// それ以外の日付（2日以上前）はスキップ
-	isTarget := isTodayJST(diaryDate) || (isYesterdayJST(diaryDate, time.Now()) && !isPastDiaryEmbeddingTime(time.Now()))
-	if !isTarget {
+	// スキップ条件: 今日の日記 OR (昨日の日記 AND JST 4:30前)
+	// → どちらもスケジューラーが処理するためインライン生成不要
+	now := time.Now()
+	shouldSkip := isTodayJST(diaryDate) || (isYesterdayJST(diaryDate, now) && !isPastDiaryEmbeddingTime(now))
+	if shouldSkip {
 		return
 	}
 

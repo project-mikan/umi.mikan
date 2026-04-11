@@ -189,7 +189,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Scheduler Job Types**:
   - **IntervalScheduledJob**: Periodic execution at fixed intervals (e.g., every 5 minutes)
   - **DailyScheduledJob**: Daily execution at a specific hour (JST timezone)
-- **Diary Embedding Inline Generation Target**: On diary save/update, embedding is generated inline for today's diary (JST) and yesterday's diary if the current time is before 4:30 AM JST. Yesterday's diary at or after 4:30 AM JST and diaries older than 2 days are skipped (not generated inline). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
+- **Diary Embedding Inline Generation Target**: On diary save/update, embedding is skipped for today's diary (JST) and yesterday's diary if the current time is before 4:30 AM JST (both handled by the scheduler). Embedding IS generated inline for yesterday's diary at or after 4:30 AM JST (scheduler already ran and won't reprocess) and for diaries 2+ days old (scheduler never processes these). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Grafana Alloy, and cAdvisor
 
