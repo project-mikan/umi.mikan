@@ -797,12 +797,12 @@ func isYesterdayJST(diaryDate time.Time) bool {
 
 // isPastDiaryEmbeddingTime はJST 4:30（DiaryEmbeddingJobの実行時刻）を過ぎているかどうかを返す
 // 4:30以降は昨日の日記がスケジューラーによって処理済みとみなす
-func isPastDiaryEmbeddingTime() bool {
+func isPastDiaryEmbeddingTime(now time.Time) bool {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
 	}
-	nowJST := time.Now().In(jst)
+	nowJST := now.In(jst)
 	// DiaryEmbeddingJobのデフォルト実行時刻: 4:30 JST
 	return nowJST.Hour() > 4 || (nowJST.Hour() == 4 && nowJST.Minute() >= 30)
 }
@@ -819,7 +819,7 @@ func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, d
 	// 生成対象: 今日の日記 OR (昨日の日記 AND 4:30前)
 	// 昨日の日記で4:30以降はDiaryEmbeddingJobが処理済みのためスキップ
 	// それ以外の日付（2日以上前）はスキップ
-	isTarget := isTodayJST(diaryDate) || (isYesterdayJST(diaryDate) && !isPastDiaryEmbeddingTime())
+	isTarget := isTodayJST(diaryDate) || (isYesterdayJST(diaryDate) && !isPastDiaryEmbeddingTime(time.Now()))
 	if !isTarget {
 		return
 	}

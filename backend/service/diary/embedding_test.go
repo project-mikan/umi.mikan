@@ -131,13 +131,78 @@ func TestIsYesterdayJST(t *testing.T) {
 }
 
 func TestIsPastDiaryEmbeddingTime(t *testing.T) {
-	// isPastDiaryEmbeddingTime は現在時刻に依存するため、
-	// 関数が bool を返すことと境界条件のロジックを確認するテスト
-	// 実際の返り値は実行時刻によって変わる（4:30 JST 前後で異なる）
-	result := isPastDiaryEmbeddingTime()
-	// bool 型を返すことだけ確認（実行時刻依存のため値は検証しない）
-	_ = result
-	t.Log("isPastDiaryEmbeddingTime returned:", result)
+	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
+
+	tests := []struct {
+		name     string
+		nowJST   time.Time
+		expected bool
+	}{
+		{
+			name:     "4:29 JSTは4:30前のためfalseを返す",
+			nowJST:   time.Date(2024, 1, 15, 4, 29, 0, 0, jst),
+			expected: false,
+		},
+		{
+			name:     "4:30 JSTはちょうど実行時刻のためtrueを返す",
+			nowJST:   time.Date(2024, 1, 15, 4, 30, 0, 0, jst),
+			expected: true,
+		},
+		{
+			name:     "4:31 JSTは4:30以降のためtrueを返す",
+			nowJST:   time.Date(2024, 1, 15, 4, 31, 0, 0, jst),
+			expected: true,
+		},
+		{
+			name:     "5:00 JSTは4:30以降のためtrueを返す",
+			nowJST:   time.Date(2024, 1, 15, 5, 0, 0, 0, jst),
+			expected: true,
+		},
+		{
+			name:     "0:01 JSTは4:30前のためfalseを返す",
+			nowJST:   time.Date(2024, 1, 15, 0, 1, 0, 0, jst),
+			expected: false,
+		},
+		{
+			name:     "23:59 JSTは4:30以降のためtrueを返す",
+			nowJST:   time.Date(2024, 1, 15, 23, 59, 0, 0, jst),
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isPastDiaryEmbeddingTime(tt.nowJST)
+			if got != tt.expected {
+				t.Errorf("isPastDiaryEmbeddingTime(%v) = %v, want %v", tt.nowJST, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestPublishDiaryEmbeddingMessage_SkipConditions(t *testing.T) {
+	db := setupTestDB(t)
+	redisClient := setupTestRedisForDiary(t)
+	svc := &DiaryEntry{DB: db, Redis: redisClient}
+	ctx := context.Background()
+
+	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
+	nowJST := time.Now().In(jst)
+	todayUTC := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
+	twoDaysAgoUTC := todayUTC.AddDate(0, 0, -2)
+
+	t.Run("2日以上前の日記はメッセージを発行しない", func(t *testing.T) {
+		// publishDiaryEmbeddingMessage はエラーを返さず内部でスキップする
+		// Redis に何も発行されないことを確認（エラーが起きなければOK）
+		svc.publishDiaryEmbeddingMessage(ctx, "test-user-id", "test-diary-id", twoDaysAgoUTC)
+		// スキップされてもエラーなく完了することを確認
+	})
+
+	t.Run("Redisがnilの場合は何もしない", func(t *testing.T) {
+		svcNoRedis := &DiaryEntry{DB: db, Redis: nil}
+		svcNoRedis.publishDiaryEmbeddingMessage(ctx, "test-user-id", "test-diary-id", todayUTC)
+		// パニックなく完了することを確認
+	})
 }
 
 func TestGenerateSnippet(t *testing.T) {
