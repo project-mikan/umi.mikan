@@ -38,17 +38,14 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
       throw err;
     }
 
-    console.error("Failed to get diary highlight:", err);
-
-    // Handle specific gRPC errors
+    // NOT_FOUND は正常ケース（ハイライト未生成、または日記更新で無効化）
     if (err && typeof err === "object" && "code" in err) {
+      if (err.code === 5) {
+        throw error(404, "Highlight not found or diary has been updated");
+      }
       if (err.code === 7) {
         // PERMISSION_DENIED
         throw error(403, "Permission denied");
-      }
-      if (err.code === 5) {
-        // NOT_FOUND
-        throw error(404, "Highlight not found or diary has been updated");
       }
       if (err.code === 3) {
         // INVALID_ARGUMENT
@@ -56,6 +53,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
       }
     }
 
+    console.error("Failed to get diary highlight:", err);
     throw error(500, "Failed to get diary highlight");
   }
 };
