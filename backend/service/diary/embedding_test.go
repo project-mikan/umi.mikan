@@ -87,45 +87,52 @@ func TestIsTodayJST(t *testing.T) {
 }
 
 func TestIsYesterdayJST(t *testing.T) {
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		jst = time.FixedZone("Asia/Tokyo", 9*60*60)
-	}
+	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
 
-	nowJST := time.Now().In(jst)
-	todayUTC := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
+	// 固定の「今」を使い、実行日時に依存しないテストにする
+	fixedNow := time.Date(2024, 6, 15, 10, 0, 0, 0, jst)
+	todayUTC := time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)
 	yesterdayUTC := todayUTC.AddDate(0, 0, -1)
 	tomorrowUTC := todayUTC.AddDate(0, 0, 1)
 	twoDaysAgoUTC := todayUTC.AddDate(0, 0, -2)
 
 	t.Run("昨日の日記はtrueを返す", func(t *testing.T) {
-		if !isYesterdayJST(yesterdayUTC) {
+		if !isYesterdayJST(yesterdayUTC, fixedNow) {
 			t.Error("昨日の日記でisYesterdayJSTがfalseを返した")
 		}
 	})
 
 	t.Run("当日の日記はfalseを返す", func(t *testing.T) {
-		if isYesterdayJST(todayUTC) {
+		if isYesterdayJST(todayUTC, fixedNow) {
 			t.Error("当日の日記でisYesterdayJSTがtrueを返した")
 		}
 	})
 
 	t.Run("明日の日記はfalseを返す", func(t *testing.T) {
-		if isYesterdayJST(tomorrowUTC) {
+		if isYesterdayJST(tomorrowUTC, fixedNow) {
 			t.Error("明日の日記でisYesterdayJSTがtrueを返した")
 		}
 	})
 
 	t.Run("2日前の日記はfalseを返す", func(t *testing.T) {
-		if isYesterdayJST(twoDaysAgoUTC) {
+		if isYesterdayJST(twoDaysAgoUTC, fixedNow) {
 			t.Error("2日前の日記でisYesterdayJSTがtrueを返した")
 		}
 	})
 
 	t.Run("過去の固定日付はfalseを返す", func(t *testing.T) {
 		pastDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-		if isYesterdayJST(pastDate) {
+		if isYesterdayJST(pastDate, fixedNow) {
 			t.Error("過去の日付でisYesterdayJSTがtrueを返した")
+		}
+	})
+
+	t.Run("月初の場合に前月末日を正しく昨日と判定する", func(t *testing.T) {
+		// 月境界のテスト: 2024-07-01 10:00 JST のとき昨日は 2024-06-30
+		monthStartNow := time.Date(2024, 7, 1, 10, 0, 0, 0, jst)
+		lastDayOfJune := time.Date(2024, 6, 30, 0, 0, 0, 0, time.UTC)
+		if !isYesterdayJST(lastDayOfJune, monthStartNow) {
+			t.Error("月初のとき前月末日をisYesterdayJSTがfalseを返した")
 		}
 	})
 }
@@ -182,7 +189,22 @@ func TestIsPastDiaryEmbeddingTime(t *testing.T) {
 
 func TestPublishDiaryEmbeddingMessage_SkipConditions(t *testing.T) {
 	db := setupTestDB(t)
-	redisClient := setupTestRedisForDiary(t)
+
+	// miniredisを直接使用してパブリッシュを監視できるようにする
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("miniredis起動失敗: %v", err)
+	}
+	t.Cleanup(mr.Close)
+	redisClient, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{mr.Addr()},
+		DisableCache: true,
+	})
+	if err != nil {
+		t.Fatalf("rueidisクライアント作成失敗: %v", err)
+	}
+	t.Cleanup(redisClient.Close)
+
 	svc := &DiaryEntry{DB: db, Redis: redisClient}
 	ctx := context.Background()
 
@@ -191,11 +213,31 @@ func TestPublishDiaryEmbeddingMessage_SkipConditions(t *testing.T) {
 	todayUTC := time.Date(nowJST.Year(), nowJST.Month(), nowJST.Day(), 0, 0, 0, 0, time.UTC)
 	twoDaysAgoUTC := todayUTC.AddDate(0, 0, -2)
 
+	// diary_events チャンネルをサブスクライブしてメッセージ到着を監視する
+	received := make(chan struct{}, 1)
+	subCtx, cancelSub := context.WithCancel(context.Background())
+	t.Cleanup(cancelSub)
+	go func() {
+		//nolint:errcheck // サブスクライブはキャンセルで終了するためエラーは無視する
+		redisClient.Receive(subCtx, redisClient.B().Subscribe().Channel("diary_events").Build(), func(_ rueidis.PubSubMessage) {
+			select {
+			case received <- struct{}{}:
+			default:
+			}
+		})
+	}()
+	// サブスクリプションが確立されるまで待機
+	time.Sleep(20 * time.Millisecond)
+
 	t.Run("2日以上前の日記はメッセージを発行しない", func(t *testing.T) {
-		// publishDiaryEmbeddingMessage はエラーを返さず内部でスキップする
-		// Redis に何も発行されないことを確認（エラーが起きなければOK）
 		svc.publishDiaryEmbeddingMessage(ctx, "test-user-id", "test-diary-id", twoDaysAgoUTC)
-		// スキップされてもエラーなく完了することを確認
+		// 100ms待機してメッセージが届かないことを確認
+		select {
+		case <-received:
+			t.Error("2日以上前の日記でdiary_eventsにメッセージが発行された")
+		case <-time.After(100 * time.Millisecond):
+			// 期待通りメッセージなし
+		}
 	})
 
 	t.Run("Redisがnilの場合は何もしない", func(t *testing.T) {
