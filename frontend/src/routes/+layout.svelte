@@ -13,6 +13,7 @@
   import { autoPhraseEnabled } from "$lib/auto-phrase-store";
   import PWAInstallPrompt from "$lib/components/PWAInstallPrompt.svelte";
   import PWAUpdateNotification from "$lib/components/PWAUpdateNotification.svelte";
+  import OfflineBanner from "$lib/components/atoms/OfflineBanner.svelte";
   import type { LayoutData } from "./$types";
 
   export let data: LayoutData;
@@ -95,3 +96,4 @@
 <!-- PWA Components -->
 <PWAInstallPrompt />
 <PWAUpdateNotification />
+<OfflineBanner />

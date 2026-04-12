@@ -20,6 +20,10 @@ export default defineConfig({
         process.env.NODE_ENV === "development" ? "development" : "production",
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        // オフライン時にナビゲーションが失敗した場合のフォールバックページ
+        navigateFallback: "/offline",
+        // APIルートはフォールバック対象から除外
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             // SvelteKitのナビゲーションリクエスト(HTMLページ)をキャッシュ

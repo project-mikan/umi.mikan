@@ -30,7 +30,10 @@
     },
     "connectionStatus": "When connection is restored, click the button below to refresh the page.",
     "retryConnection": "Retry Connection",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "banner": {
+      "message": "You are offline. Previously visited pages are available from cache."
+    }
   },
   "pwa": {
     "install": {
