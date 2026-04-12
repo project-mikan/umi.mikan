@@ -16,7 +16,7 @@
           showUpdatePrompt = true;
         },
         onOfflineReady() {
-          // PWA is ready for offline use
+          // PWA はオフライン使用の準備が完了しました
         },
       });
     } catch (error) {

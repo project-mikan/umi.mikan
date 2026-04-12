@@ -1,10 +1,11 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import "$lib/i18n";
+  import { page } from "$app/stores";
   import { isOnline } from "$lib/online-store";
 </script>
 
-{#if !$isOnline}
+{#if !$isOnline && $page.url.pathname !== "/offline"}
 	<div
 		role="status"
 		aria-live="polite"
