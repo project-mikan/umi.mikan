@@ -30,10 +30,7 @@
     },
     "connectionStatus": "接続が復旧したら、下のボタンをクリックしてページを更新してください。",
     "retryConnection": "接続を再試行",
-    "backToHome": "ホームに戻る",
-    "banner": {
-      "message": "オフライン中です。過去に閲覧したページはキャッシュから表示されます。"
-    }
+    "backToHome": "ホームに戻る"
   },
   "pwa": {
     "install": {
