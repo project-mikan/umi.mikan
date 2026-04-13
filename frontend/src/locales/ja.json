@@ -421,7 +421,7 @@
     "home": "トップ",
     "monthly": "カレンダー",
     "search": "検索",
-    "entities": "人物",
+    "entities": "よびな",
     "settings": "設定",
     "debug": "デバッグ"
   },
@@ -517,11 +517,11 @@
     "description": "日本語の改行分節区切りモード。これを使用すると日本語での改行が自然な単位で改行されるようになります"
   },
   "entity": {
-    "title": "人物管理",
-    "description": "日記に登場する人物や場所などを登録・管理できます。登録した人物は日記本文内で自動的にハイライト表示され、そのひとが登場する日記を簡単に探すことができます。",
+    "title": "よびな管理",
+    "description": "日記に登場するひとや場所などのよびなを登録・管理できます。登録したよびなは日記本文内で自動的にハイライト表示され、そのよびなが登場する日記を簡単に探すことができます。よびなは検索時に固有名詞として扱われるほか、「他のよびかた」を登録することで複数のよびかたをまとめて検索することもできます。",
     "list": {
-      "title": "人物一覧",
-      "empty": "人物が登録されていません",
+      "title": "よびな一覧",
+      "empty": "よびなが登録されていません",
       "create": "新規作成",
       "category": {
         "all": "すべて",
@@ -530,7 +530,7 @@
       }
     },
     "detail": {
-      "title": "人物詳細",
+      "title": "よびな詳細",
       "name": "名前",
       "category": "カテゴリ",
       "memo": "メモ",
@@ -541,31 +541,31 @@
       "noDiaries": "紐づく日記がありません",
       "update": "更新",
       "delete": "削除",
-      "deleteConfirm": "人物を削除",
-      "deleteMessage": "この人物を削除してもよろしいですか？関連する日記の紐付けも削除されます。(日記は消えません)",
+      "deleteConfirm": "よびなを削除",
+      "deleteMessage": "このよびなを削除してもよろしいですか？関連する日記の紐付けも削除されます。(日記は消えません)",
       "deleteAliasConfirm": "他のよびかたを削除",
       "deleteAliasMessage": "このよびかたを削除してもよろしいですか?"
     },
     "create": {
-      "title": "人物作成",
+      "title": "よびな作成",
       "name": "名前",
-      "namePlaceholder": "人物名を入力",
+      "namePlaceholder": "よびなを入力",
       "category": "カテゴリ",
       "memo": "メモ",
       "memoPlaceholder": "メモを入力（任意）",
       "submit": "作成"
     },
     "messages": {
-      "createSuccess": "人物を作成しました",
-      "updateSuccess": "人物を更新しました",
-      "deleteSuccess": "人物を削除しました",
+      "createSuccess": "よびなを作成しました",
+      "updateSuccess": "よびなを更新しました",
+      "deleteSuccess": "よびなを削除しました",
       "aliasCreateSuccess": "別名を追加しました",
       "aliasUpdateSuccess": "別名を更新しました",
       "aliasDeleteSuccess": "別名を削除しました",
       "nameRequired": "名前は必須です",
-      "duplicateName": "同じ名前の人物が既に存在します",
+      "duplicateName": "同じ名前のよびなが既に存在します",
       "nameUsedAsAlias": "その名前は既に別名として使用されています",
-      "aliasUsedAsName": "その別名は既に人物名として使用されています",
+      "aliasUsedAsName": "その別名は既によびな名として使用されています",
       "aliasAlreadyExists": "その別名は既に使用されています",
       "error": "エラーが発生しました"
     }
