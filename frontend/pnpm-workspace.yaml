@@ -1,0 +1,13 @@
+settings:
+  onlyBuiltDependencies:
+    - esbuild
+    - "@bufbuild/buf"
+  ignoredBuiltDependencies:
+    # バイナリは optionalDependencies 経由で配布されるため postinstall は不要
+    - "@biomejs/biome"
+    # svelte-i18n → cli-color → memoizee → es5-extで入ってくるが無闇に実行され無くないのでやめる
+    - es5-ext
+  strictDepBuilds: true
+  minimumReleaseAge: 1440
+  blockExoticSubdeps: true
+  trustPolicy: no-downgrade
