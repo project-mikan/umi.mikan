@@ -1,0 +1,11 @@
+settings:
+  onlyBuiltDependencies:
+    - esbuild
+    - "@bufbuild/buf"
+  ignoredBuiltDependencies:
+    - "@biomejs/biome"
+    - es5-ext
+  strictDepBuilds: true
+  minimumReleaseAge: 1440
+  blockExoticSubdeps: true
+  trustPolicy: no-downgrade
