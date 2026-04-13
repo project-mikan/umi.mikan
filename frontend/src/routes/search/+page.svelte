@@ -111,14 +111,16 @@
     let prefix = "";
     let suffix = "";
 
-    if (firstMatchIndex === -1 || firstMatchIndex < WINDOW) {
-      // 1. キーワードが冒頭150文字内に存在する場合（または見つからない場合）は冒頭から表示
+    // キーワード直前に残す文字数（キーワードを先頭付近に配置してハイライト対象を確実に表示する）
+    const PREFIX = 30;
+
+    if (firstMatchIndex === -1 || firstMatchIndex < PREFIX) {
+      // 1. キーワードが冒頭PREFIX文字内に存在する場合（または見つからない場合）は冒頭から表示
       excerpt = text.length > WINDOW ? text.substring(0, WINDOW) : text;
       if (text.length > WINDOW) suffix = "...";
     } else {
-      // 2. キーワードが冒頭150文字以降にある場合：ハイライトが中央になるよう前後を切り出す
-      const half = Math.floor(WINDOW / 2);
-      const start = Math.max(0, firstMatchIndex - half);
+      // 2. キーワードがPREFIX文字以降にある場合：キーワードがPREFIX文字目付近に来るよう切り出す
+      const start = Math.max(0, firstMatchIndex - PREFIX);
       const end = Math.min(text.length, start + WINDOW);
       excerpt = text.substring(start, end);
       if (start > 0) prefix = "...";
@@ -269,7 +271,7 @@
 						<div
 							class="text-gray-700 dark:text-gray-300 text-sm auto-phrase-target"
 						>
-							<p class="line-clamp-3">
+							<p>
 								{#each _getSegments(entry.content, [data.searchResults?.searchedKeyword ?? '', ...(data.expandedKeywords ?? [])]) as segment}
 									{#if segment.isMatch}
 										<mark class="bg-yellow-200 dark:bg-yellow-800 text-gray-900 dark:text-gray-100 rounded px-0.5">{segment.text}</mark>
@@ -336,7 +338,7 @@
 							<p class="text-xs text-purple-500 dark:text-purple-400 mb-2 font-medium">{result.chunkSummary}</p>
 						{/if}
 						<div class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap auto-phrase-target">
-							<p class="line-clamp-3">{result.snippet}</p>
+							<p>{result.snippet}</p>
 						</div>
 					</div>
 				{/each}
@@ -359,13 +361,3 @@
 	{/if}
 
 </div>
-
-<style>
-	.line-clamp-3 {
-		display: -webkit-box;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-</style>
