@@ -14,6 +14,7 @@ func TestNewContainer(t *testing.T) {
 
 	if container == nil {
 		t.Fatal("expected container to be non-nil")
+		return
 	}
 
 	if container.container == nil {
@@ -160,6 +161,7 @@ func TestApplicationBundles(t *testing.T) {
 		err := container.Invoke(func(app *ServerApp) {
 			if app == nil {
 				t.Fatal("ServerApp should not be nil")
+				return
 			}
 			if app.DB == nil {
 				t.Error("ServerApp.DB should not be nil")
@@ -187,6 +189,7 @@ func TestApplicationBundles(t *testing.T) {
 		err := container.Invoke(func(app *SchedulerApp) {
 			if app == nil {
 				t.Fatal("SchedulerApp should not be nil")
+				return
 			}
 			if app.DB == nil {
 				t.Error("SchedulerApp.DB should not be nil")
@@ -208,6 +211,7 @@ func TestApplicationBundles(t *testing.T) {
 		err := container.Invoke(func(app *SubscriberApp) {
 			if app == nil {
 				t.Fatal("SubscriberApp should not be nil")
+				return
 			}
 			if app.DB == nil {
 				t.Error("SubscriberApp.DB should not be nil")
@@ -241,6 +245,7 @@ func TestCleanupFunction(t *testing.T) {
 	err = container.Invoke(func(cleanup *Cleanup) {
 		if cleanup == nil {
 			t.Fatal("Cleanup should not be nil")
+			return
 		}
 		if cleanup.db == nil {
 			t.Error("Cleanup.db should not be nil")
