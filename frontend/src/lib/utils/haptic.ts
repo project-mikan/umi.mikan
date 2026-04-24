@@ -13,7 +13,9 @@ function detectIOS(): boolean {
  * - iOS: input[switch] 要素を利用
  * - Android 等: Vibration API を利用
  */
-export function triggerHaptic(duration = 5): void {
+// duration: Android の Vibration API に渡すミリ秒数（iOS では無視される）
+// 5ms 未満はほぼ感知不能、20ms が軽いフィードバックとして適切
+export function triggerHaptic(duration = 20): void {
   if (typeof document === "undefined") return;
 
   if (detectIOS()) {
