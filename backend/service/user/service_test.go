@@ -489,6 +489,7 @@ func TestUserEntry_GetPubSubMetrics(t *testing.T) {
 		}
 		if resp == nil {
 			t.Fatal("レスポンスがnil")
+			return
 		}
 		if len(resp.HourlyMetrics) != 24 {
 			t.Errorf("HourlyMetrics: 期待 24件, 実際 %d件", len(resp.HourlyMetrics))

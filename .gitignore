@@ -15,3 +15,5 @@ backend/server
 backend/tmp-subscriber/
 
 documents/
+
+.claude/worktrees/

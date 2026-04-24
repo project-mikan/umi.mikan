@@ -101,6 +101,7 @@ func TestAuthEntry_RegisterByPassword(t *testing.T) {
 				}
 				if response == nil {
 					t.Fatal("Expected response but got nil")
+					return
 				}
 				if response.AccessToken == "" {
 					t.Error("Expected access token but got empty string")
@@ -206,6 +207,7 @@ func TestAuthEntry_LoginByPassword(t *testing.T) {
 				}
 				if response == nil {
 					t.Fatal("Expected response but got nil")
+					return
 				}
 				if response.AccessToken == "" {
 					t.Error("Expected access token but got empty string")
@@ -283,6 +285,7 @@ func TestAuthEntry_RefreshAccessToken(t *testing.T) {
 				}
 				if response == nil {
 					t.Fatal("Expected response but got nil")
+					return
 				}
 				if response.AccessToken == "" {
 					t.Error("Expected access token but got empty string")
@@ -369,6 +372,7 @@ func TestAuthEntry_GetRegistrationConfig(t *testing.T) {
 			}
 			if resp == nil {
 				t.Fatal("Expected response but got nil")
+				return
 			}
 			if resp.RegisterKeyRequired != tt.expectedKeyRequired {
 				t.Errorf("Expected RegisterKeyRequired=%v but got %v", tt.expectedKeyRequired, resp.RegisterKeyRequired)
@@ -464,6 +468,7 @@ func TestAuthEntry_RegisterByPasswordWithRegisterKey(t *testing.T) {
 				}
 				if resp == nil {
 					t.Fatal("Expected response but got nil")
+					return
 				}
 				if resp.AccessToken == "" {
 					t.Error("Expected access token but got empty string")
