@@ -101,7 +101,7 @@
   ].filter((pastEntry) => pastEntry.entry !== null);
 
   function _getEntryTitle(entry: DiaryEntry | null): string {
-    if (!entry || !entry.content) return $_("diary.noPastEntry");
+    if (!entry?.content) return $_("diary.noPastEntry");
 
     // 最初の30文字を取得してタイトルとする
     const firstLine = entry.content.split("\n")[0];
