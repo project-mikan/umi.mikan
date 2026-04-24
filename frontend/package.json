@@ -64,6 +64,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^4.1.0",
     "redis": "^5.12.1",
-    "svelte-i18n": "^4.0.1"
+    "svelte-i18n": "^4.0.1",
+    "use-haptic": "^1.1.13"
   }
 }

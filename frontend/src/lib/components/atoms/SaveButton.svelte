@@ -1,6 +1,8 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
+  import { afterUpdate } from "svelte";
   import Button from "./Button.svelte";
+  import { triggerHaptic } from "$lib/utils/haptic";
 
   export let loading = false;
   export let saved = false;
@@ -9,6 +11,15 @@
   export let label: string | null = null;
   // type="submit"か"button"かを選択可能にする
   export let type: "submit" | "button" = "submit";
+
+  // 前回のsaved値を保持し、false→trueへの変化で振動
+  let prevSaved = false;
+  afterUpdate(() => {
+    if (saved && !prevSaved) {
+      triggerHaptic();
+    }
+    prevSaved = saved;
+  });
 </script>
 
 <!--
