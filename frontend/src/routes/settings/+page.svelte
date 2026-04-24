@@ -3,6 +3,7 @@
   import "$lib/i18n";
   import { enhance } from "$app/forms";
   import { onMount } from "svelte";
+  import { triggerHaptic } from "$lib/utils/haptic";
   import Modal from "$lib/components/molecules/Modal.svelte";
   import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
   import type { ActionData, PageData } from "./$types";
@@ -209,8 +210,9 @@
 				class="space-y-4"
 				use:enhance={() => {
 					usernameLoading = true;
-					return async ({ update }) => {
+					return async ({ result, update }) => {
 						usernameLoading = false;
+						if (result.type === "success") triggerHaptic();
 						await update();
 					};
 				}}
@@ -261,8 +263,9 @@
 				class="space-y-4"
 				use:enhance={() => {
 					passwordLoading = true;
-					return async ({ update }) => {
+					return async ({ result, update }) => {
 						passwordLoading = false;
+						if (result.type === "success") triggerHaptic();
 						await update();
 					};
 				}}
@@ -407,8 +410,9 @@
 				class="space-y-4"
 				use:enhance={() => {
 					llmTokenLoading = true;
-					return async ({ update }) => {
+					return async ({ result, update }) => {
 						llmTokenLoading = false;
+						if (result.type === "success") triggerHaptic();
 						await update();
 					};
 				}}
@@ -509,9 +513,12 @@
 						autoSummaryLoading = true;
 						return async ({ result, update }) => {
 							autoSummaryLoading = false;
-							// If the action returned updated user data, use it
-							if (result.type === 'success' && result.data?.user) {
-								data = { ...data, user: result.data.user as typeof data.user };
+							if (result.type === "success") {
+								triggerHaptic();
+								// If the action returned updated user data, use it
+								if (result.data?.user) {
+									data = { ...data, user: result.data.user as typeof data.user };
+								}
 							}
 							await update({ reset: false });
 						};
