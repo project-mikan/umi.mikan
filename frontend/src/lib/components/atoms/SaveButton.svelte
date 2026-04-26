@@ -1,8 +1,8 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import { afterUpdate } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import Button from "./Button.svelte";
-  import { triggerHaptic } from "$lib/utils/haptic";
+  import { attachHapticToButton } from "$lib/utils/haptic";
 
   export let loading = false;
   export let saved = false;
@@ -12,13 +12,18 @@
   // type="submit"か"button"かを選択可能にする
   export let type: "submit" | "button" = "submit";
 
-  // 前回のsaved値を保持し、false→trueへの変化で振動
-  let prevSaved = false;
-  afterUpdate(() => {
-    if (saved && !prevSaved) {
-      triggerHaptic();
-    }
-    prevSaved = saved;
+  let buttonEl: HTMLElement;
+  let detach: (() => void) | null = null;
+
+  onMount(() => {
+    // ボタン押下（pointerdown）のタイミングで振動させる
+    // iOS Safari は非同期コールバック内では haptic が無効になる場合があるため、
+    // ユーザージェスチャーが確実に存在する pointerdown で発火する
+    detach = attachHapticToButton(buttonEl);
+  });
+
+  onDestroy(() => {
+    detach?.();
   });
 </script>
 
@@ -26,21 +31,23 @@
   on:clickイベントをバブルアップ
   親コンポーネントがtype="button"で独自のクリックハンドラを指定できるようにする
 -->
-<Button {type} variant={saved ? "success" : "primary"} {size} disabled={loading || saved} on:click>
-	<div class="flex items-center justify-center min-h-[1.25rem]">
-		{#if loading}
-			<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-				<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-			</svg>
-			<span class="ml-1">{$_("diary.saving")}</span>
-		{:else if saved}
-			<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-				<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
-			</svg>
-			<span class="ml-1">{$_("diary.saved")}</span>
-		{:else}
-			<span>{label !== null ? label : $_("diary.save")}</span>
-		{/if}
-	</div>
-</Button>
+<div bind:this={buttonEl}>
+	<Button {type} variant={saved ? "success" : "primary"} {size} disabled={loading || saved} on:click>
+		<div class="flex items-center justify-center min-h-[1.25rem]">
+			{#if loading}
+				<svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+				</svg>
+				<span class="ml-1">{$_("diary.saving")}</span>
+			{:else if saved}
+				<svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+					<path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+				</svg>
+				<span class="ml-1">{$_("diary.saved")}</span>
+			{:else}
+				<span>{label !== null ? label : $_("diary.save")}</span>
+			{/if}
+		</div>
+	</Button>
+</div>

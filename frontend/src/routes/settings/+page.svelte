@@ -3,10 +3,16 @@
   import "$lib/i18n";
   import { enhance } from "$app/forms";
   import { onMount } from "svelte";
-  import { triggerHaptic } from "$lib/utils/haptic";
+  import { attachHapticToButton } from "$lib/utils/haptic";
   import Modal from "$lib/components/molecules/Modal.svelte";
   import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
   import type { ActionData, PageData } from "./$types";
+
+  // Svelteアクション: ボタンに pointerdown で振動を付与する
+  function haptic(node: HTMLElement) {
+    const detach = attachHapticToButton(node);
+    return { destroy: detach };
+  }
 
   export let form: ActionData;
   export let data: PageData;
@@ -210,9 +216,8 @@
 				class="space-y-4"
 				use:enhance={() => {
 					usernameLoading = true;
-					return async ({ result, update }) => {
+					return async ({ update }) => {
 						usernameLoading = false;
-						if (result.type === "success") triggerHaptic();
 						await update();
 					};
 				}}
@@ -235,6 +240,7 @@
 				</div>
 				<button
 					type="submit"
+					use:haptic
 					disabled={usernameLoading}
 					class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 				>
@@ -263,9 +269,8 @@
 				class="space-y-4"
 				use:enhance={() => {
 					passwordLoading = true;
-					return async ({ result, update }) => {
+					return async ({ update }) => {
 						passwordLoading = false;
-						if (result.type === "success") triggerHaptic();
 						await update();
 					};
 				}}
@@ -373,6 +378,7 @@
 				</div>
 				<button
 					type="submit"
+					use:haptic
 					disabled={passwordLoading}
 					class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 				>
@@ -410,9 +416,8 @@
 				class="space-y-4"
 				use:enhance={() => {
 					llmTokenLoading = true;
-					return async ({ result, update }) => {
+					return async ({ update }) => {
 						llmTokenLoading = false;
-						if (result.type === "success") triggerHaptic();
 						await update();
 					};
 				}}
@@ -454,6 +459,7 @@
 				</div>
 				<button
 					type="submit"
+					use:haptic
 					disabled={llmTokenLoading}
 					class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 				>
@@ -513,12 +519,9 @@
 						autoSummaryLoading = true;
 						return async ({ result, update }) => {
 							autoSummaryLoading = false;
-							if (result.type === "success") {
-								triggerHaptic();
-								// If the action returned updated user data, use it
-								if (result.data?.user) {
-									data = { ...data, user: result.data.user as typeof data.user };
-								}
+							// If the action returned updated user data, use it
+							if (result.type === "success" && result.data?.user) {
+								data = { ...data, user: result.data.user as typeof data.user };
 							}
 							await update({ reset: false });
 						};
@@ -575,6 +578,7 @@
 
 					<button
 						type="submit"
+						use:haptic
 						disabled={autoSummaryLoading}
 						class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 					>
