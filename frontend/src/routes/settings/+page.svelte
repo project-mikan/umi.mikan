@@ -4,15 +4,15 @@
   import { enhance } from "$app/forms";
   import { onMount } from "svelte";
   import { attachHapticToButton } from "$lib/utils/haptic";
+  import Modal from "$lib/components/molecules/Modal.svelte";
+  import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
+  import type { ActionData, PageData } from "./$types";
 
   // Svelteアクション: ボタンに pointerdown で振動を付与する
   function haptic(node: HTMLElement) {
     const detach = attachHapticToButton(node);
     return { destroy: detach };
   }
-  import Modal from "$lib/components/molecules/Modal.svelte";
-  import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
-  import type { ActionData, PageData } from "./$types";
 
   export let form: ActionData;
   export let data: PageData;

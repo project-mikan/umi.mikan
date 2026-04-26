@@ -71,6 +71,12 @@ export function attachHapticToButton(
   duration = 20,
 ): () => void {
   function handler() {
+    // div ラッパーに attach した場合も含め、内包ボタンが disabled なら無視する
+    const btn =
+      button.tagName === "BUTTON"
+        ? (button as HTMLButtonElement)
+        : button.querySelector("button");
+    if (btn?.disabled) return;
     triggerHaptic(duration);
   }
   button.addEventListener("pointerdown", handler);
