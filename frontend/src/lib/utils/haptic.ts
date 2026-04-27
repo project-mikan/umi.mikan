@@ -2,10 +2,11 @@
  * 触覚フィードバック（バイブレーション）ユーティリティ。
  *
  * iOS Safari (17.4+):
- *   ユーザーのタッチが物理的に input[type=checkbox][switch] に当たるよう、
- *   ボタン上に透明なオーバーレイとして配置する。
- *   プログラマティックな click() ではなく、ユーザーが直接 UISwitch を触ることで
- *   Taptic Engine が起動する（iOS 26 でのプログラマティック haptic 制限に対応）。
+ *   input[type=checkbox][switch] を document.body に position:fixed で配置し、
+ *   ボタンの画面座標に合わせてオーバーレイとして表示する。
+ *   親要素の pointer-events:none や z-index の影響を受けないようにするため、
+ *   document.body 直下に配置する。
+ *   ユーザーが直接 UISwitch を触ることで Taptic Engine が起動する。
  *   switch の change イベントで実際のボタンのクリックを発火する。
  *
  * Android 等:
@@ -29,10 +30,11 @@ function detectIOS(): boolean {
  *   touchstart / pointerdown で navigator.vibrate(25) を呼び出す。
  *
  * iOS:
- *   ボタン上に透明な input[switch] オーバーレイを配置する。
- *   ボタンが <div> ラッパーの場合: div 内に inset:0 で配置する。
- *   ボタンが <button> 要素の場合: 親要素に position:relative を設定し、
- *   button の offsetLeft/Top/Width/Height に合わせた位置に配置する。
+ *   ボタンの画面座標に合わせた position:fixed の input[switch] を
+ *   document.body 直下に配置する。親要素の CSS の影響を受けないため、
+ *   pointer-events:none の親を持つ場合でも正しく動作する。
+ *   ボタンの位置変化（キーボード表示等）は ResizeObserver と
+ *   visualViewport イベントで追従する。
  *   change イベントで実際の <button> を click() して元のアクションを実行する。
  */
 export function attachHapticToButton(button: HTMLElement): () => void {
@@ -63,7 +65,7 @@ export function attachHapticToButton(button: HTMLElement): () => void {
     };
   }
 
-  // iOS: オーバーレイアプローチ
+  // iOS: document.body 直下に position:fixed オーバーレイを配置するアプローチ
   // 実際にクリックすべき <button> 要素を特定する
   const foundBtn =
     button.tagName === "BUTTON"
@@ -72,44 +74,36 @@ export function attachHapticToButton(button: HTMLElement): () => void {
   if (!foundBtn) return () => {};
   const actualBtn: HTMLButtonElement = foundBtn;
 
-  // オーバーレイを配置するコンテナを決定する
-  // <div> ラッパーの場合: ラッパー自身をコンテナにして inset:0 で覆う
-  // <button> 要素の場合: 親要素をコンテナにして button の位置・サイズに合わせる
-  const isDirectButton = button.tagName === "BUTTON";
-  const container = isDirectButton
-    ? (button.parentElement as HTMLElement)
-    : button;
-  if (!container) return () => {};
-
-  // コンテナに position:relative がなければ設定する（absolute 配置の基準にする）
-  const savedPosition = container.style.position;
-  if (getComputedStyle(container).position === "static") {
-    container.style.position = "relative";
-  }
-
   // オーバーレイ input を作成する
   const input = document.createElement("input");
   input.type = "checkbox";
   input.setAttribute("switch", "");
   input.setAttribute("tabindex", "-1");
   input.setAttribute("aria-hidden", "true");
-  input.style.cssText =
-    "position:absolute;opacity:0;cursor:pointer;appearance:auto;-webkit-appearance:auto;z-index:1;margin:0;";
 
-  // 位置・サイズを設定する
-  if (isDirectButton) {
-    // <button> の場合: 親内での offsetLeft/Top/Width/Height に合わせる
-    input.style.left = button.offsetLeft + "px";
-    input.style.top = button.offsetTop + "px";
-    input.style.width = button.offsetWidth + "px";
-    input.style.height = button.offsetHeight + "px";
-  } else {
-    // <div> ラッパーの場合: ラッパー全体を覆う
-    input.style.left = "0";
-    input.style.top = "0";
-    input.style.right = "0";
-    input.style.bottom = "0";
+  // ボタンの現在の画面座標に合わせてオーバーレイを配置する
+  function positionOverlay(): void {
+    const rect = actualBtn.getBoundingClientRect();
+    // ボタンが非表示（display:none 等）の場合はサイズが 0 になるため
+    // そのまま 0x0 の要素になり、タッチできない状態になる
+    input.style.cssText = [
+      "position:fixed",
+      `left:${rect.left}px`,
+      `top:${rect.top}px`,
+      `width:${rect.width}px`,
+      `height:${rect.height}px`,
+      "opacity:0",
+      "cursor:pointer",
+      "appearance:auto",
+      "-webkit-appearance:auto",
+      "z-index:2147483647",
+      "margin:0",
+      "padding:0",
+      "border:none",
+    ].join(";");
   }
+
+  positionOverlay();
 
   // disabled 状態を同期する（disabled のボタンでは haptic を発火させない）
   input.disabled = actualBtn.disabled;
@@ -121,6 +115,17 @@ export function attachHapticToButton(button: HTMLElement): () => void {
     attributeFilter: ["disabled"],
   });
 
+  // ボタンのサイズ変化を監視してオーバーレイ位置を更新する
+  const resizeObserver = new ResizeObserver(positionOverlay);
+  resizeObserver.observe(actualBtn);
+
+  // iOS キーボード表示時の画面座標変化に追従する
+  const vv = window.visualViewport;
+  if (vv) {
+    vv.addEventListener("resize", positionOverlay, { passive: true });
+    vv.addEventListener("scroll", positionOverlay, { passive: true });
+  }
+
   // change イベント: switch の toggle で実際のボタンをクリックする
   function onChange(): void {
     if (!actualBtn.disabled) {
@@ -128,15 +133,18 @@ export function attachHapticToButton(button: HTMLElement): () => void {
     }
   }
   input.addEventListener("change", onChange);
-  container.appendChild(input);
+
+  // document.body 直下に配置することで親要素の CSS の影響を受けない
+  document.body.appendChild(input);
 
   return () => {
     attrObserver.disconnect();
+    resizeObserver.disconnect();
+    if (vv) {
+      vv.removeEventListener("resize", positionOverlay);
+      vv.removeEventListener("scroll", positionOverlay);
+    }
     input.removeEventListener("change", onChange);
     input.remove();
-    // コンテナの position スタイルを元に戻す
-    if (isDirectButton) {
-      container.style.position = savedPosition;
-    }
   };
 }
