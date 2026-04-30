@@ -13,7 +13,18 @@
       updateServiceWorker = registerSW({
         immediate: true,
         onNeedRefresh() {
-          showUpdatePrompt = true;
+          // スタンドアロン（PWA）モードの場合は自動リロードして白画面を防ぐ
+          if (window.matchMedia("(display-mode: standalone)").matches) {
+            updateServiceWorker?.()
+              .then(() => {
+                window.location.reload();
+              })
+              .catch(() => {
+                window.location.reload();
+              });
+          } else {
+            showUpdatePrompt = true;
+          }
         },
         onOfflineReady() {
           // PWA はオフライン使用の準備が完了しました
