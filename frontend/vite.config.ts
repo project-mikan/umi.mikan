@@ -19,6 +19,10 @@ export default defineConfig({
         process.env.NODE_ENV === "development" ? "development" : "production",
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        // 新しいSWが即時アクティベートしてすべてのクライアントを制御する
+        // これにより久々に開いた際に古いキャッシュが残ることを防ぐ
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             // SvelteKitのナビゲーションリクエスト(HTMLページ)をキャッシュ

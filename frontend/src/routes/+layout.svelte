@@ -28,6 +28,11 @@
   function handleVisibilityChange() {
     if (browser && document.visibilityState === "visible") {
       const inactiveTime = Date.now() - lastActiveTime;
+      // 30分以上非アクティブだった場合、Service Workerのキャッシュが古くなっている可能性があるためリロード
+      if (inactiveTime > 30 * 60 * 1000) {
+        window.location.reload();
+        return;
+      }
       // 5分以上非アクティブだった場合、トークンをリフレッシュ
       if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
         invalidateAll();
@@ -40,6 +45,11 @@
   function handleFocus() {
     if (!browser) return;
     const inactiveTime = Date.now() - lastActiveTime;
+    // 30分以上非アクティブだった場合、Service Workerのキャッシュが古くなっている可能性があるためリロード
+    if (inactiveTime > 30 * 60 * 1000) {
+      window.location.reload();
+      return;
+    }
     // 5分以上非アクティブだった場合、トークンをリフレッシュ
     if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
       invalidateAll();
