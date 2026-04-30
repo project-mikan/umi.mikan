@@ -15,9 +15,13 @@
         onNeedRefresh() {
           // スタンドアロン（PWA）モードの場合は自動リロードして白画面を防ぐ
           if (window.matchMedia("(display-mode: standalone)").matches) {
-            updateServiceWorker?.().then(() => {
-              window.location.reload();
-            });
+            updateServiceWorker?.()
+              .then(() => {
+                window.location.reload();
+              })
+              .catch(() => {
+                window.location.reload();
+              });
           } else {
             showUpdatePrompt = true;
           }
