@@ -3,10 +3,7 @@ import { defineConfig } from "vitest/config";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    sveltekit(),
-  ],
+  plugins: [tailwindcss(), sveltekit()],
   server: {
     // DockerのボリュームマウントでHMRが動作するようにpollingを使用
     watch: {
