@@ -33,11 +33,8 @@ func TestUpsertMonthlySummaryError(t *testing.T) {
 		if err != nil {
 			t.Fatalf("DiarySummaryMonthByUserIDYearMonth失敗: %v", err)
 		}
-		if !summary.ErrorReason.Valid {
-			t.Error("error_reasonがNULLになっている")
-		}
-		if summary.ErrorReason.String != "PROHIBITED_CONTENT" {
-			t.Errorf("期待 PROHIBITED_CONTENT, 実際 %s", summary.ErrorReason.String)
+		if summary.ErrorReason != "PROHIBITED_CONTENT" {
+			t.Errorf("期待 PROHIBITED_CONTENT, 実際 %s", summary.ErrorReason)
 		}
 		if summary.Summary != "" {
 			t.Errorf("エラー時のsummaryは空文字であるべき, 実際 %s", summary.Summary)
@@ -54,8 +51,8 @@ func TestUpsertMonthlySummaryError(t *testing.T) {
 		if err != nil {
 			t.Fatalf("DiarySummaryMonthByUserIDYearMonth失敗: %v", err)
 		}
-		if summary.ErrorReason.String != "OTHER_ERROR" {
-			t.Errorf("期待 OTHER_ERROR, 実際 %s", summary.ErrorReason.String)
+		if summary.ErrorReason != "OTHER_ERROR" {
+			t.Errorf("期待 OTHER_ERROR, 実際 %s", summary.ErrorReason)
 		}
 	})
 
@@ -88,8 +85,8 @@ func TestUpsertMonthlySummaryError(t *testing.T) {
 		if summary.Summary != "5月のまとめ" {
 			t.Errorf("既存サマリーが保持されるべき, 実際 %q", summary.Summary)
 		}
-		if summary.ErrorReason.String != "PROHIBITED_CONTENT" {
-			t.Errorf("期待 PROHIBITED_CONTENT, 実際 %s", summary.ErrorReason.String)
+		if summary.ErrorReason != "PROHIBITED_CONTENT" {
+			t.Errorf("期待 PROHIBITED_CONTENT, 実際 %s", summary.ErrorReason)
 		}
 	})
 

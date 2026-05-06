@@ -893,7 +893,7 @@ type MonthlySummary struct {
 	CreatedAt     int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	ModelVersion  string                 `protobuf:"bytes,6,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"` // サマリー生成に使用したLLMモデル
-	ErrorReason   string                 `protobuf:"bytes,7,opt,name=error_reason,json=errorReason,proto3" json:"error_reason,omitempty"`    // LLMがコンテンツポリシー等で生成を拒否した場合の理由（空文字はエラーなし、DBのNULLに対応）
+	ErrorReason   string                 `protobuf:"bytes,7,opt,name=error_reason,json=errorReason,proto3" json:"error_reason,omitempty"`    // LLMがコンテンツポリシー等で生成を拒否した場合の理由（空文字は正常）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
