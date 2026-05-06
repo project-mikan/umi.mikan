@@ -259,24 +259,56 @@ func NewRateLimitConfig() (*RateLimitConfig, error) {
 	}, nil
 }
 
-// NewDatabase creates a database connection
+// NewDatabase creates a database connection with retry logic
 func NewDatabase(config *DBConfig) (*sql.DB, error) {
+	const maxRetries = 5
+	const baseDelay = 2 * time.Second
+
 	db := database.NewDB(config.Host, config.Port, config.User, config.Password, config.DBName)
-	log.Printf("Database connection established: %s:%d/%s", config.Host, config.Port, config.DBName)
-	return db, nil
+	ctx := context.Background()
+	var lastErr error
+	for i := range maxRetries {
+		if err := db.PingContext(ctx); err == nil {
+			log.Printf("Database connection established: %s:%d/%s", config.Host, config.Port, config.DBName)
+			return db, nil
+		} else {
+			lastErr = err
+		}
+		if i < maxRetries-1 {
+			delay := baseDelay * time.Duration(1<<i)
+			log.Printf("Database connection failed (attempt %d/%d): %v, retrying in %s...", i+1, maxRetries, lastErr, delay)
+			time.Sleep(delay)
+		}
+	}
+	if err := db.Close(); err != nil {
+		log.Printf("Failed to close database connection: %v", err)
+	}
+	return nil, fmt.Errorf("failed to connect to database: %w", lastErr)
 }
 
-// NewRedisClient creates a Redis client
+// NewRedisClient creates a Redis client with retry logic
 func NewRedisClient(config *RedisConfig) (rueidis.Client, error) {
-	client, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{fmt.Sprintf("%s:%d", config.Host, config.Port)},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Redis client: %w", err)
-	}
+	const maxRetries = 5
+	const baseDelay = 2 * time.Second
 
-	log.Printf("Redis connection established: %s:%d", config.Host, config.Port)
-	return client, nil
+	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
+	var lastErr error
+	for i := range maxRetries {
+		client, err := rueidis.NewClient(rueidis.ClientOption{
+			InitAddress: []string{addr},
+		})
+		if err == nil {
+			log.Printf("Redis connection established: %s", addr)
+			return client, nil
+		}
+		lastErr = err
+		if i < maxRetries-1 {
+			delay := baseDelay * time.Duration(1<<i)
+			log.Printf("Redis connection failed (attempt %d/%d): %v, retrying in %s...", i+1, maxRetries, err, delay)
+			time.Sleep(delay)
+		}
+	}
+	return nil, fmt.Errorf("failed to create Redis client: %w", lastErr)
 }
 
 // NewLLMClientFactory creates an LLM client factory

@@ -37,6 +37,12 @@ discovery.relabel "docker_logs" {
 
 // logfmtフォーマットのログからlevelラベルを抽出するパイプライン
 loki.process "extract_level" {
+	// Lokiのreject_old_samples_max_age（デフォルト7日）より古いログは送信前に破棄する
+	stage.drop {
+		older_than          = "168h"
+		drop_counter_reason = "too_old"
+	}
+
 	// scheduler/subscriberのみlogfmt形式でlevelを抽出（他サービスはJSONや独自フォーマットのためスキップ）
 	stage.match {
 		selector = `{service=~"scheduler|subscriber"}`
