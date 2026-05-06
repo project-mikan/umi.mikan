@@ -3,11 +3,15 @@ package llm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
 	"google.golang.org/genai"
 )
+
+// ErrContentBlocked はAPIのコンテンツポリシーによる永続的な生成ブロックを示すセンチネルエラー
+var ErrContentBlocked = errors.New("content blocked by API policy")
 
 const (
 	// ModelGenerateContent テキスト生成に使用するモデル
@@ -34,8 +38,8 @@ func buildBlockedContentError(resp *genai.GenerateContentResponse) error {
 				fmt.Fprintf(&safetyInfo, " [blocked category=%s probability=%s]", r.Category, r.Probability)
 			}
 		}
-		return fmt.Errorf("no content generated: prompt blocked (reason=%s message=%s%s)",
-			resp.PromptFeedback.BlockReason, resp.PromptFeedback.BlockReasonMessage, safetyInfo.String())
+		return fmt.Errorf("%w: prompt blocked (reason=%s message=%s%s)",
+			ErrContentBlocked, resp.PromptFeedback.BlockReason, resp.PromptFeedback.BlockReasonMessage, safetyInfo.String())
 	}
 	if len(resp.Candidates) > 0 && resp.Candidates[0].FinishReason != "" {
 		return fmt.Errorf("no content generated: finish_reason=%s", resp.Candidates[0].FinishReason)

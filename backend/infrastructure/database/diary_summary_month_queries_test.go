@@ -59,6 +59,40 @@ func TestUpsertMonthlySummaryError(t *testing.T) {
 		}
 	})
 
+	t.Run("既存サマリーがある場合はsummaryを保持してerror_reasonのみ更新する", func(t *testing.T) {
+		// 別の月(5月)に有効なサマリーを事前挿入
+		summaryNow := time.Now().UnixMilli()
+		if _, err := db.ExecContext(ctx,
+			`INSERT INTO diaries (id, user_id, content, date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+			uuid.New(), userID, "5月の日記", "2020-05-10", summaryNow, summaryNow,
+		); err != nil {
+			t.Fatalf("日記の挿入に失敗: %v", err)
+		}
+		if _, err := db.ExecContext(ctx,
+			`INSERT INTO diary_summary_months (id, user_id, year, month, summary, model_version, created_at, updated_at)
+			 VALUES ($1, $2, 2020, 5, '5月のまとめ', 'gemini-2.5-flash-lite', $3, $4)`,
+			uuid.New(), userID, summaryNow, summaryNow,
+		); err != nil {
+			t.Fatalf("サマリーの挿入に失敗: %v", err)
+		}
+
+		err := database.UpsertMonthlySummaryError(ctx, db, userID, 2020, 5, "PROHIBITED_CONTENT")
+		if err != nil {
+			t.Fatalf("UpsertMonthlySummaryError失敗: %v", err)
+		}
+
+		summary, err := database.DiarySummaryMonthByUserIDYearMonth(ctx, db, userID, 2020, 5)
+		if err != nil {
+			t.Fatalf("DiarySummaryMonthByUserIDYearMonth失敗: %v", err)
+		}
+		if summary.Summary != "5月のまとめ" {
+			t.Errorf("既存サマリーが保持されるべき, 実際 %q", summary.Summary)
+		}
+		if summary.ErrorReason.String != "PROHIBITED_CONTENT" {
+			t.Errorf("期待 PROHIBITED_CONTENT, 実際 %s", summary.ErrorReason.String)
+		}
+	})
+
 	t.Run("エラーがあった月はスケジューラー対象外になる", func(t *testing.T) {
 		months, err := database.MonthsNeedingMonthlySummary(ctx, db, userID.String())
 		if err != nil {

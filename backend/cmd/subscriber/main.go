@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -495,8 +496,8 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 		strings.Join(diaryEntries, "\n\n"))
 	monthlySummary, err := generateMonthlySummaryWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
 	if err != nil {
-		// PROHIBITED_CONTENTなど永続的なポリシーブロックはDBに記録してリトライを防ぐ
-		if strings.Contains(err.Error(), "PROHIBITED_CONTENT") {
+		// APIのコンテンツポリシーによる永続的なブロックはDBに記録してリトライを防ぐ
+		if errors.Is(err, llm.ErrContentBlocked) {
 			userUUID, parseErr := uuid.Parse(userID)
 			if parseErr != nil {
 				return fmt.Errorf("failed to parse user_id: %w", parseErr)
@@ -504,7 +505,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 			if saveErr := database.UpsertMonthlySummaryError(ctx, db, userUUID, year, month, "PROHIBITED_CONTENT"); saveErr != nil {
 				logger.WithError(saveErr).WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Error("Failed to save monthly summary error")
 			}
-			logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Warn("Monthly summary blocked by API content policy (PROHIBITED_CONTENT), saved to DB")
+			logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Warn("Monthly summary blocked by API content policy, saved to DB")
 			return nil
 		}
 		return fmt.Errorf("failed to generate monthly summary with LLM: %w", err)

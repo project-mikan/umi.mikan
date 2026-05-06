@@ -15,7 +15,6 @@ func UpsertMonthlySummaryError(ctx context.Context, db DB, userID uuid.UUID, yea
 		INSERT INTO diary_summary_months (id, user_id, year, month, summary, error_reason, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, '', $5, $6, $7)
 		ON CONFLICT (user_id, year, month) DO UPDATE SET
-			summary = '',
 			error_reason = EXCLUDED.error_reason,
 			updated_at = EXCLUDED.updated_at
 	`
