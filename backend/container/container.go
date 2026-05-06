@@ -274,10 +274,13 @@ func NewDatabase(config *DBConfig) (*sql.DB, error) {
 		} else {
 			lastErr = err
 		}
-		delay := baseDelay * time.Duration(1<<i)
-		log.Printf("Database connection failed (attempt %d/%d): %v, retrying in %s...", i+1, maxRetries, lastErr, delay)
-		time.Sleep(delay)
+		if i < maxRetries-1 {
+			delay := baseDelay * time.Duration(1<<i)
+			log.Printf("Database connection failed (attempt %d/%d): %v, retrying in %s...", i+1, maxRetries, lastErr, delay)
+			time.Sleep(delay)
+		}
 	}
+	db.Close()
 	return nil, fmt.Errorf("failed to connect to database: %w", lastErr)
 }
 
@@ -297,9 +300,11 @@ func NewRedisClient(config *RedisConfig) (rueidis.Client, error) {
 			return client, nil
 		}
 		lastErr = err
-		delay := baseDelay * time.Duration(1<<i)
-		log.Printf("Redis connection failed (attempt %d/%d): %v, retrying in %s...", i+1, maxRetries, err, delay)
-		time.Sleep(delay)
+		if i < maxRetries-1 {
+			delay := baseDelay * time.Duration(1<<i)
+			log.Printf("Redis connection failed (attempt %d/%d): %v, retrying in %s...", i+1, maxRetries, err, delay)
+			time.Sleep(delay)
+		}
 	}
 	return nil, fmt.Errorf("failed to create Redis client: %w", lastErr)
 }
