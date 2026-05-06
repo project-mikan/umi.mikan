@@ -486,7 +486,7 @@ export type MonthlySummary = Message<"diary.MonthlySummary"> & {
   modelVersion: string;
 
   /**
-   * LLMがコンテンツポリシー等で生成を拒否した場合の理由（空文字は正常）
+   * LLMがコンテンツポリシー等で生成を拒否した場合の理由（空文字はエラーなし、DBのNULLに対応）
    *
    * @generated from field: string error_reason = 7;
    */
