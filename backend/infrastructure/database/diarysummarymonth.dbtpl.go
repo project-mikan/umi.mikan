@@ -4,22 +4,21 @@ package database
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
 
 // DiarySummaryMonth represents a row from 'public.diary_summary_months'.
 type DiarySummaryMonth struct {
-	ID           uuid.UUID      `json:"id"`            // id
-	UserID       uuid.UUID      `json:"user_id"`       // user_id
-	Year         int            `json:"year"`          // year
-	Month        int            `json:"month"`         // month
-	Summary      string         `json:"summary"`       // summary
-	CreatedAt    int64          `json:"created_at"`    // created_at
-	UpdatedAt    int64          `json:"updated_at"`    // updated_at
-	ModelVersion string         `json:"model_version"` // model_version
-	ErrorReason  sql.NullString `json:"error_reason"`  // error_reason
+	ID           uuid.UUID `json:"id"`            // id
+	UserID       uuid.UUID `json:"user_id"`       // user_id
+	Year         int       `json:"year"`          // year
+	Month        int       `json:"month"`         // month
+	Summary      string    `json:"summary"`       // summary
+	CreatedAt    int64     `json:"created_at"`    // created_at
+	UpdatedAt    int64     `json:"updated_at"`    // updated_at
+	ModelVersion string    `json:"model_version"` // model_version
+	ErrorReason  string    `json:"error_reason"`  // error_reason
 	// xo fields
 	_exists, _deleted bool
 }

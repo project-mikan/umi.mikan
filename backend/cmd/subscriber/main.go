@@ -519,7 +519,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 		summary = EXCLUDED.summary,
 		model_version = EXCLUDED.model_version,
 		updated_at = EXCLUDED.updated_at,
-		error_reason = NULL
+		error_reason = ''
 	`
 
 	now := time.Now().Unix()

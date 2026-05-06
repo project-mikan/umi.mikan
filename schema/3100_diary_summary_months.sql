@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS diary_summary_months (
     model_version TEXT NOT NULL DEFAULT 'gemini-2.5-flash-lite',
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
-    -- LLMがコンテンツポリシーなどで生成を拒否した場合の理由（NULLは正常）
-    error_reason TEXT,
+    -- LLMがコンテンツポリシーなどで生成を拒否した場合の理由（空文字は正常）
+    error_reason TEXT NOT NULL DEFAULT '',
     CONSTRAINT unique_user_month UNIQUE (user_id, year, month),
     CONSTRAINT check_month CHECK (month >= 1 AND month <= 12)
 );
