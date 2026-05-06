@@ -37,17 +37,20 @@ discovery.relabel "docker_logs" {
 
 // logfmtフォーマットのログからlevelラベルを抽出するパイプライン
 loki.process "extract_level" {
-	// logfmt形式（scheduler/subscriber）のlevelフィールドを抽出
-	stage.logfmt {
-		mapping = {
-			"level" = "",
-		}
-	}
+	// scheduler/subscriberのみlogfmt形式でlevelを抽出（他サービスはJSONや独自フォーマットのためスキップ）
+	stage.match {
+		selector = `{service=~"scheduler|subscriber"}`
 
-	// 抽出したlevelをLokiラベルとして設定
-	stage.labels {
-		values = {
-			"level" = "",
+		stage.logfmt {
+			mapping = {
+				"level" = "",
+			}
+		}
+
+		stage.labels {
+			values = {
+				"level" = "",
+			}
 		}
 	}
 
