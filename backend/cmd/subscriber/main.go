@@ -495,17 +495,30 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 		strings.Join(diaryEntries, "\n\n"))
 	monthlySummary, err := generateMonthlySummaryWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
 	if err != nil {
+		// PROHIBITED_CONTENTなど永続的なポリシーブロックはDBに記録してリトライを防ぐ
+		if strings.Contains(err.Error(), "PROHIBITED_CONTENT") {
+			userUUID, parseErr := uuid.Parse(userID)
+			if parseErr != nil {
+				return fmt.Errorf("failed to parse user_id: %w", parseErr)
+			}
+			if saveErr := database.UpsertMonthlySummaryError(ctx, db, userUUID, year, month, "PROHIBITED_CONTENT"); saveErr != nil {
+				logger.WithError(saveErr).WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Error("Failed to save monthly summary error")
+			}
+			logger.WithFields(logrus.Fields{"user_id": userID, "year": year, "month": month}).Warn("Monthly summary blocked by API content policy (PROHIBITED_CONTENT), saved to DB")
+			return nil
+		}
 		return fmt.Errorf("failed to generate monthly summary with LLM: %w", err)
 	}
 
-	// 3. diary_summary_monthsに保存
+	// 3. diary_summary_monthsに保存（成功時はerror_reasonをクリア）
 	insertQuery := `
 		INSERT INTO diary_summary_months (id, user_id, year, month, summary, model_version, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (user_id, year, month) DO UPDATE SET
 		summary = EXCLUDED.summary,
 		model_version = EXCLUDED.model_version,
-		updated_at = EXCLUDED.updated_at
+		updated_at = EXCLUDED.updated_at,
+		error_reason = NULL
 	`
 
 	now := time.Now().Unix()

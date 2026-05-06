@@ -39,6 +39,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
         createdAt: unixToMilliseconds(summaryResponse.summary.createdAt || 0),
         updatedAt: unixToMilliseconds(summaryResponse.summary.updatedAt || 0),
         modelVersion: summaryResponse.summary.modelVersion,
+        errorReason: summaryResponse.summary.errorReason || "",
       },
     });
   } catch (err) {

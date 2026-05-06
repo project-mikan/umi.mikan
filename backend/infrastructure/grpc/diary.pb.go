@@ -893,6 +893,7 @@ type MonthlySummary struct {
 	CreatedAt     int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	ModelVersion  string                 `protobuf:"bytes,6,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"` // サマリー生成に使用したLLMモデル
+	ErrorReason   string                 `protobuf:"bytes,7,opt,name=error_reason,json=errorReason,proto3" json:"error_reason,omitempty"`    // LLMがコンテンツポリシー等で生成を拒否した場合の理由（空文字は正常）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -965,6 +966,13 @@ func (x *MonthlySummary) GetUpdatedAt() int64 {
 func (x *MonthlySummary) GetModelVersion() string {
 	if x != nil {
 		return x.ModelVersion
+	}
+	return ""
+}
+
+func (x *MonthlySummary) GetErrorReason() string {
+	if x != nil {
+		return x.ErrorReason
 	}
 	return ""
 }
@@ -2136,7 +2144,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x17DeleteDiaryEntryRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"4\n" +
 	"\x18DeleteDiaryEntryResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xbe\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xe1\x01\n" +
 	"\x0eMonthlySummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\x05month\x18\x02 \x01(\v2\t.diary.YMR\x05month\x12\x18\n" +
@@ -2145,7 +2153,8 @@ const file_diary_diary_proto_rawDesc = "" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12#\n" +
-	"\rmodel_version\x18\x06 \x01(\tR\fmodelVersion\"@\n" +
+	"\rmodel_version\x18\x06 \x01(\tR\fmodelVersion\x12!\n" +
+	"\ferror_reason\x18\a \x01(\tR\verrorReason\"@\n" +
 	"\x1dGenerateMonthlySummaryRequest\x12\x1f\n" +
 	"\x05month\x18\x01 \x01(\v2\t.diary.YMR\x05month\"Q\n" +
 	"\x1eGenerateMonthlySummaryResponse\x12/\n" +

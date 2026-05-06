@@ -26,11 +26,16 @@ var noSafetySettings = []*genai.SafetySetting{
 }
 
 // buildBlockedContentError はコンテンツが生成されなかった場合の診断情報付きエラーを生成する
-// BlockReasonMessageはGemini APIが返すシステムメッセージであり、ユーザー入力は含まれないが
-// 万が一のリスクを避けるためreasonコードのみをログに含める
 func buildBlockedContentError(resp *genai.GenerateContentResponse) error {
 	if resp.PromptFeedback != nil && resp.PromptFeedback.BlockReason != "" {
-		return fmt.Errorf("no content generated: prompt blocked (reason=%s)", resp.PromptFeedback.BlockReason)
+		var safetyInfo strings.Builder
+		for _, r := range resp.PromptFeedback.SafetyRatings {
+			if r.Blocked {
+				fmt.Fprintf(&safetyInfo, " [blocked category=%s probability=%s]", r.Category, r.Probability)
+			}
+		}
+		return fmt.Errorf("no content generated: prompt blocked (reason=%s message=%s%s)",
+			resp.PromptFeedback.BlockReason, resp.PromptFeedback.BlockReasonMessage, safetyInfo.String())
 	}
 	if len(resp.Candidates) > 0 && resp.Candidates[0].FinishReason != "" {
 		return fmt.Errorf("no content generated: finish_reason=%s", resp.Candidates[0].FinishReason)

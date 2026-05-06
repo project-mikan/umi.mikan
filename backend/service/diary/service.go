@@ -602,6 +602,11 @@ func (s *DiaryEntry) GetMonthlySummary(
 		return nil, status.Errorf(codes.NotFound, "summary not found for the specified month")
 	}
 
+	errorReason := ""
+	if summary.ErrorReason.Valid {
+		errorReason = summary.ErrorReason.String
+	}
+
 	return &g.GetMonthlySummaryResponse{
 		Summary: &g.MonthlySummary{
 			Id:           summary.ID.String(),
@@ -610,6 +615,7 @@ func (s *DiaryEntry) GetMonthlySummary(
 			CreatedAt:    summary.CreatedAt,
 			UpdatedAt:    summary.UpdatedAt,
 			ModelVersion: summary.ModelVersion,
+			ErrorReason:  errorReason,
 		},
 	}, nil
 }

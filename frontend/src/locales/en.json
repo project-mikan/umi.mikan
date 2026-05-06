@@ -363,7 +363,8 @@
       "currentMonthError": "Monthly summary can only be generated for past months. Current month cannot be processed.",
       "currentMonthNote": "Summary cannot be generated for current month",
       "futureMonthError": "Summary cannot be generated for future months.",
-      "noEntriesError": "No diary entries found for this month. Please write diary entries first to generate a summary."
+      "noEntriesError": "No diary entries found for this month. Please write diary entries first to generate a summary.",
+      "blockedContent": "AI declined to generate a summary for this month due to content policy. You can regenerate after editing your diary entries."
     }
   },
   "timeProgress": {
