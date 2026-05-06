@@ -23,6 +23,21 @@ var noSafetySettings = []*genai.SafetySetting{
 	{Category: genai.HarmCategoryDangerousContent, Threshold: genai.HarmBlockThresholdBlockNone},
 	{Category: genai.HarmCategorySexuallyExplicit, Threshold: genai.HarmBlockThresholdBlockNone},
 	{Category: genai.HarmCategoryHarassment, Threshold: genai.HarmBlockThresholdBlockNone},
+	{Category: genai.HarmCategoryCivicIntegrity, Threshold: genai.HarmBlockThresholdBlockNone},
+	{Category: genai.HarmCategoryJailbreak, Threshold: genai.HarmBlockThresholdBlockNone},
+}
+
+// buildBlockedContentError はコンテンツが生成されなかった場合の診断情報付きエラーを生成する
+// BlockReasonMessageはGemini APIが返すシステムメッセージであり、ユーザー入力は含まれないが
+// 万が一のリスクを避けるためreasonコードのみをログに含める
+func buildBlockedContentError(resp *genai.GenerateContentResponse) error {
+	if resp.PromptFeedback != nil && resp.PromptFeedback.BlockReason != "" {
+		return fmt.Errorf("no content generated: prompt blocked (reason=%s)", resp.PromptFeedback.BlockReason)
+	}
+	if len(resp.Candidates) > 0 && resp.Candidates[0].FinishReason != "" {
+		return fmt.Errorf("no content generated: finish_reason=%s", resp.Candidates[0].FinishReason)
+	}
+	return fmt.Errorf("no content generated: empty candidates")
 }
 
 // DiaryChunkData はLLMが生成したチャンクの内容と概要を保持する
@@ -90,7 +105,7 @@ n日：箇条書き3
 	}
 
 	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("no content generated")
+		return "", buildBlockedContentError(resp)
 	}
 
 	// The response parts contain the generated text
@@ -233,7 +248,7 @@ activities（活動・行動）:
 	}
 
 	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("no content generated")
+		return "", buildBlockedContentError(resp)
 	}
 
 	// The response parts contain the generated text
@@ -327,7 +342,7 @@ func (g *GeminiClient) SplitDiaryIntoChunks(ctx context.Context, content string)
 	}
 
 	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
-		return nil, fmt.Errorf("no content returned from chunk splitting")
+		return nil, buildBlockedContentError(resp)
 	}
 
 	textPart := resp.Candidates[0].Content.Parts[0]
@@ -433,7 +448,7 @@ func (g *GeminiClient) GenerateHighlights(ctx context.Context, diaryContent stri
 	}
 
 	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("no content generated")
+		return "", buildBlockedContentError(resp)
 	}
 
 	// The response parts contain the generated text
