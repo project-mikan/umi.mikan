@@ -23,7 +23,6 @@ var noSafetySettings = []*genai.SafetySetting{
 	{Category: genai.HarmCategoryDangerousContent, Threshold: genai.HarmBlockThresholdBlockNone},
 	{Category: genai.HarmCategorySexuallyExplicit, Threshold: genai.HarmBlockThresholdBlockNone},
 	{Category: genai.HarmCategoryHarassment, Threshold: genai.HarmBlockThresholdBlockNone},
-	{Category: genai.HarmCategoryJailbreak, Threshold: genai.HarmBlockThresholdBlockNone},
 }
 
 // buildBlockedContentError はコンテンツが生成されなかった場合の診断情報付きエラーを生成する
