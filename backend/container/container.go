@@ -280,7 +280,9 @@ func NewDatabase(config *DBConfig) (*sql.DB, error) {
 			time.Sleep(delay)
 		}
 	}
-	db.Close()
+	if err := db.Close(); err != nil {
+		log.Printf("Failed to close database connection: %v", err)
+	}
 	return nil, fmt.Errorf("failed to connect to database: %w", lastErr)
 }
 
