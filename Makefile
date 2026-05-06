@@ -91,6 +91,7 @@ grpc-ts:
 	docker compose exec frontend pnpm format
 
 
+# まとめてやると↓なんか動かない？
 grpc:
 	make grpc-go
 	make grpc-ts

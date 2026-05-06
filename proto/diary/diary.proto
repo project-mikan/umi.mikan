@@ -274,6 +274,7 @@ message MonthlySummary {
   int64 created_at = 4;
   int64 updated_at = 5;
   string model_version = 6; // サマリー生成に使用したLLMモデル
+  string error_reason = 7;  // LLMがコンテンツポリシー等で生成を拒否した場合の理由（空文字はエラーなし、DBのNULLに対応）
 }
 
 // 月ごとのサマリー生成リクエスト
