@@ -200,7 +200,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **State Management**: Svelte stores for user state and UI state
 - **Type Safety**: Full TypeScript with generated gRPC types
 - **Internationalization**: svelte-i18n with Japanese and English support
-- **Progressive Web App**: @vite-pwa/sveltekit with offline support and app installation
+- **Progressive Web App**: ホーム画面への追加対応（service worker・オフライン機能なし）
 - **Security Headers**: Content Security Policy (CSP), X-Frame-Options, X-Content-Type-Options, and Referrer Policy
 - **CSRF Protection**: Client-side CSRF token handling for form submissions
 
@@ -287,7 +287,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 8. **QA Testing**: After completing a feature, use Chrome MCP tools to perform QA testing on the frontend (http://localhost:2000)
    - Test normal functionality and user interactions
    - Perform a hard reload (Ctrl+Shift+R or Cmd+Shift+R) and verify that the behavior remains consistent
-   - Ensure PWA functionality works correctly after hard reload
+   - Verify that the behavior remains consistent after hard reload
 
 ## Key Files
 
@@ -304,9 +304,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `frontend/src/lib/server/csrf.ts`: CSRF protection utilities
 - `frontend/src/lib/utils/cookie-utils.ts`: Secure cookie configuration utilities
 - `frontend/src/locales/`: Internationalization files (ja.json, en.json)
-- `frontend/vite.config.ts`: PWA configuration with @vite-pwa/sveltekit
-- `frontend/src/lib/components/PWA*`: PWA install/update components
-- `frontend/static/icons/`: PWA app icons (72px-512px)
+- `frontend/vite.config.ts`: Vite configuration
+- `frontend/static/icons/`: App icons (72px-512px)
 - `adr/`: Architecture Decision Records
   - `0004-pubsub.md`: Redis Pub/Sub implementation details
   - `0005-scheduler.md`: Scheduler system architecture
@@ -370,7 +369,6 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - **New components must support i18n**: All user-facing text should be translatable
 - **Follow atomic design**: Place components in appropriate atoms/molecules/organisms directories
 - **Consistent imports**: Always include necessary i18n imports
-- **PWA considerations**: Ensure components work offline when cached data is available
 
 ### Security Guidelines
 
@@ -489,8 +487,7 @@ environment:
 - gRPC reflection is enabled in development (TODO: disable in production)
 - JWT_SECRET should be changed from "hogehoge" in production
 - Frontend builds with `docker compose exec frontend pnpm build`, backend builds with `docker compose exec backend go build`
-- PWA manifest and service worker are automatically generated during build
-- PWA icons are pre-generated in `frontend/static/icons/` directory
+- App icons are pre-generated in `frontend/static/icons/` directory
 
 ### Security in Production
 

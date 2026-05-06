@@ -14,7 +14,6 @@
   import RecentDiaryStreak from "$lib/components/molecules/RecentDiaryStreak.svelte";
   import LatestTrendDisplay from "$lib/components/molecules/LatestTrendDisplay.svelte";
   import CollapsibleSection from "$lib/components/molecules/CollapsibleSection.svelte";
-  import PWAInstallButton from "$lib/components/PWAInstallButton.svelte";
   import { createSubmitHandler } from "$lib/utils/form-utils";
   import type { DiaryEntry, YMD } from "$lib/grpc/diary/diary_pb";
   import type { PageData } from "./$types";
@@ -576,9 +575,6 @@ use:enhance={createSubmitHandler(
 		</DiaryCard>
 		</div>
 	</div>
-
-	<!-- PWA Install Button -->
-	<PWAInstallButton />
 
 	<!-- Fixed Save Button for Mobile (shows only the active section) -->
 	<div class="fixed left-0 right-0 p-4 sm:hidden z-10 pointer-events-none transition-[bottom] duration-150" style="bottom: {saveButtonBottom}">
