@@ -1,45 +1,11 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vitest/config";
 import tailwindcss from "@tailwindcss/vite";
-import { SvelteKitPWA } from "@vite-pwa/sveltekit";
-
-// Note: Manifest is now generated dynamically via API route at /manifest.webmanifest
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     sveltekit(),
-    SvelteKitPWA({
-      registerType: "autoUpdate",
-      devOptions: {
-        enabled: false,
-      },
-      injectRegister: "auto",
-      mode:
-        process.env.NODE_ENV === "development" ? "development" : "production",
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
-        // 新しいSWが即時アクティベートしてすべてのクライアントを制御する
-        // これにより久々に開いた際に古いキャッシュが残ることを防ぐ
-        skipWaiting: true,
-        clientsClaim: true,
-        runtimeCaching: [
-          {
-            // SvelteKitのナビゲーションリクエスト(HTMLページ)をキャッシュ
-            // SSRアプリのため navigateFallback は使用しない（SPA専用のためSSRと相性が悪い）
-            urlPattern: ({ request }) => request.mode === "navigate",
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "pages-cache",
-              cacheableResponse: { statuses: [0, 200] },
-              networkTimeoutSeconds: 10,
-            },
-          },
-        ],
-        cleanupOutdatedCaches: true,
-      },
-      manifest: false, // Disable static manifest generation - use dynamic API route instead
-    }),
   ],
   server: {
     // DockerのボリュームマウントでHMRが動作するようにpollingを使用

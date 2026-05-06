@@ -11,9 +11,6 @@
   import Footer from "$lib/components/organisms/Footer.svelte";
   import { summaryVisibility } from "$lib/summary-visibility-store";
   import { autoPhraseEnabled } from "$lib/auto-phrase-store";
-  import PWAInstallPrompt from "$lib/components/PWAInstallPrompt.svelte";
-  import PWAUpdateNotification from "$lib/components/PWAUpdateNotification.svelte";
-  import OfflineBanner from "$lib/components/atoms/OfflineBanner.svelte";
   import type { LayoutData } from "./$types";
 
   export let data: LayoutData;
@@ -24,38 +21,12 @@
 
   let lastActiveTime = Date.now();
 
-  const STALE_CACHE_THRESHOLD_MS = 30 * 60 * 1000;
-  const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
-
-  // フォーム入力中かどうかを確認（リロード前のデータロスを防ぐ）
-  function isEditingForm(): boolean {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tag = el.tagName.toLowerCase();
-    return (
-      tag === "input" ||
-      tag === "textarea" ||
-      tag === "select" ||
-      (el as HTMLElement).isContentEditable
-    );
-  }
-
-  // キャッシュが古くなっている場合にリロードする（フォーム編集中はスキップ）
-  function reloadIfStale(inactiveTime: number): boolean {
-    if (inactiveTime > STALE_CACHE_THRESHOLD_MS && !isEditingForm()) {
-      window.location.reload();
-      return true;
-    }
-    return false;
-  }
-
   // ページがフォーカスされた時にトークンをチェック
   function handleVisibilityChange() {
     if (browser && document.visibilityState === "visible") {
       const inactiveTime = Date.now() - lastActiveTime;
-      if (reloadIfStale(inactiveTime)) return;
       // 5分以上非アクティブだった場合、トークンをリフレッシュ
-      if (inactiveTime > TOKEN_REFRESH_THRESHOLD_MS && isAuthenticated && !isAuthPage) {
+      if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
         invalidateAll();
       }
       lastActiveTime = Date.now();
@@ -66,9 +37,8 @@
   function handleFocus() {
     if (!browser) return;
     const inactiveTime = Date.now() - lastActiveTime;
-    if (reloadIfStale(inactiveTime)) return;
     // 5分以上非アクティブだった場合、トークンをリフレッシュ
-    if (inactiveTime > TOKEN_REFRESH_THRESHOLD_MS && isAuthenticated && !isAuthPage) {
+    if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
       invalidateAll();
     }
     lastActiveTime = Date.now();
@@ -120,7 +90,3 @@
 	<Footer {isAuthenticated} />
 </div>
 
-<!-- PWA Components -->
-<PWAInstallPrompt />
-<PWAUpdateNotification />
-<OfflineBanner />
