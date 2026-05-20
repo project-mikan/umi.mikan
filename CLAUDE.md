@@ -15,8 +15,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Starting Development Environment
 
 ```bash
-dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, redis, scheduler, subscriber, prometheus, grafana, loki, promtail, cadvisor)
+make up              # Core services only (backend, frontend, postgres, postgres_test, redis)
+make up-async        # Core + async services (+ scheduler, subscriber)
+make up-monitoring   # Core + async + monitoring (+ prometheus, grafana, cadvisor, loki, alloy)
+make up-all          # All services (same as up-monitoring)
+make down            # Stop all services including profiled ones
 ```
+
+Services are grouped by Docker Compose profiles:
+- **core** (always started): backend, frontend, postgres, postgres_test, redis
+- **async** profile: scheduler, subscriber
+- **monitoring** profile: prometheus, grafana, cadvisor, loki, alloy
 
 **Service URLs:**
 

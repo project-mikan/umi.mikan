@@ -1,8 +1,7 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
   import { enhance } from "$app/forms";
-  import { goto, invalidateAll } from "$app/navigation";
-  import { beforeNavigate } from "$app/navigation";
+  import { goto, invalidate, beforeNavigate } from "$app/navigation";
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import "$lib/i18n";
@@ -16,7 +15,6 @@
   import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
   import DiaryChunkTimeline from "$lib/components/molecules/DiaryChunkTimeline.svelte";
   import { getDayOfWeekKey } from "$lib/utils/date-utils";
-  import { createSubmitHandler } from "$lib/utils/form-utils";
   import type { HighlightData } from "$lib/types/highlight";
   import type { ActionData, PageData } from "./$types";
 
@@ -302,20 +300,19 @@
 				bind:this={formElement}
 				method="POST"
 				action="?/save"
-use:enhance={createSubmitHandler(
-	(l) => loading = l,
-	async (s) => {
-		saved = s;
-		if (s) {
-			// 保存成功時にページデータを再読み込み（updatedAtを更新）
-			await invalidateAll();
-			// 保存成功時に初期コンテンツを更新
-			initialContent = content;
-			// hasUnsavedChangesの再計算に任せる
-			// ハイライトの古い/新しいの判定はリアクティブステートメントに任せる
-		}
-	}
-)}
+use:enhance={() => {
+				loading = true;
+				return async ({ result }) => {
+					loading = false;
+					if (result.type === "success") {
+						// layout.server.tsを再実行しないよう diary:entry のみ無効化
+						await invalidate("diary:entry");
+						initialContent = content;
+						saved = true;
+						setTimeout(() => (saved = false), 1000);
+					}
+				};
+			}}
 				slot="form"
 			>
 				<input type="hidden" name="date" value={_formatDateStr(data.date)} />

@@ -28,6 +28,11 @@ services:
     tty: true
     ports:
       - "2001:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768m
 
   frontend:
     build:
@@ -55,6 +60,11 @@ services:
     volumes:
       - postgres_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256m
 
   postgres_test:
     image: pgvector/pgvector:0.7.4-pg17
@@ -67,14 +77,25 @@ services:
     volumes:
       - postgres_test_volume:/var/lib/postgresql/data
       - ./schema:/docker-entrypoint-initdb.d
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128m
 
   redis:
     image: redis:8-alpine
     command: redis-server --appendonly yes
     volumes:
       - redis_volume:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64m
 
   subscriber:
+    profiles: [async]
     build:
       context: ./backend
       dockerfile: ../infra/dev/subscriber/Dockerfile
@@ -94,8 +115,14 @@ services:
     depends_on:
       - postgres
       - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256m
 
   scheduler:
+    profiles: [async]
     build:
       context: ./backend
       dockerfile: ../infra/dev/scheduler/Dockerfile
@@ -118,8 +145,14 @@ services:
     depends_on:
       - postgres
       - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256m
 
   prometheus:
+    profiles: [monitoring]
     image: prom/prometheus:latest
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -131,11 +164,14 @@ services:
       - "--web.console.templates=/etc/prometheus/consoles"
       - "--storage.tsdb.retention.time=200h"
       - "--web.enable-lifecycle"
-    depends_on:
-      - scheduler
-      - subscriber
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256m
 
   grafana:
+    profiles: [monitoring]
     image: grafana/grafana:latest
     ports:
       - "2008:3000"
@@ -149,8 +185,14 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256m
 
   cadvisor:
+    profiles: [monitoring]
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     volumes:
@@ -162,16 +204,31 @@ services:
     privileged: true
     devices:
       - /dev/kmsg
+    command:
+      - "--housekeeping_interval=30s"
+      - "--docker_only=true"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256m
 
   loki:
+    profiles: [monitoring]
     image: grafana/loki:latest
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
       - loki_volume:/loki
     command: -config.file=/etc/loki/local-config.yaml
     user: "0"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 256m
 
   alloy:
+    profiles: [monitoring]
     image: grafana/alloy:latest
     volumes:
       - ./monitoring/alloy/alloy-config.alloy:/etc/alloy/config.alloy
@@ -181,6 +238,11 @@ services:
     command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
     depends_on:
       - loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128m
 
 volumes:
   postgres_volume:
