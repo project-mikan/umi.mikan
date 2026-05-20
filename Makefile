@@ -1,3 +1,15 @@
+# 起動コマンド
+up:
+	docker compose up -d
+up-async:
+	docker compose --profile async up -d
+up-monitoring:
+	docker compose --profile async --profile monitoring up -d
+up-all:
+	docker compose --profile async --profile monitoring up -d
+down:
+	docker compose --profile async --profile monitoring down
+
 # フロントエンド
 f-sh:
 	docker compose exec frontend bash
