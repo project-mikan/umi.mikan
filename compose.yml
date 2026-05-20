@@ -52,7 +52,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512m
+          memory: 1g
 
   postgres:
     image: pgvector/pgvector:0.7.4-pg17
