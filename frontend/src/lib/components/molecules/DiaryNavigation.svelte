@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import type { DateInfo } from "$lib/utils/date-utils";
   import {
     formatDateToId,
@@ -12,18 +12,16 @@
 
   export let currentDate: DateInfo;
 
-  async function _goToPreviousDay() {
+  function _goToPreviousDay() {
     const previousDate = getPreviousDate(currentDate);
     const id = formatDateToId(previousDate);
-    await goto(`/${id}`);
-    await invalidateAll();
+    goto(`/${id}`);
   }
 
-  async function _goToNextDay() {
+  function _goToNextDay() {
     const nextDate = getNextDate(currentDate);
     const id = formatDateToId(nextDate);
-    await goto(`/${id}`);
-    await invalidateAll();
+    goto(`/${id}`);
   }
 </script>
 
