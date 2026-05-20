@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -86,12 +87,8 @@ func TestDiaryEntry_CreateDiaryEntry(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Expected success but got error: %v", err)
 				}
-				if response == nil {
-					t.Fatal("Expected response but got nil")
-				}
-				if response.Entry == nil {
-					t.Fatal("Expected entry but got nil")
-				}
+				require.NotNil(t, response)
+				require.NotNil(t, response.Entry)
 				if response.Entry.Id == "" {
 					t.Error("Expected entry ID but got empty string")
 				}
@@ -170,12 +167,8 @@ func TestDiaryEntry_GetDiaryEntry(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Expected success but got error: %v", err)
 				}
-				if response == nil {
-					t.Fatal("Expected response but got nil")
-				}
-				if response.Entry == nil {
-					t.Fatal("Expected entry but got nil")
-				}
+				require.NotNil(t, response)
+				require.NotNil(t, response.Entry)
 				if response.Entry.Content != createReq.Content {
 					t.Errorf("Expected content '%s' but got '%s'", createReq.Content, response.Entry.Content)
 				}
@@ -264,12 +257,8 @@ func TestDiaryEntry_UpdateDiaryEntry(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Expected success but got error: %v", err)
 				}
-				if response == nil {
-					t.Fatal("Expected response but got nil")
-				}
-				if response.Entry == nil {
-					t.Fatal("Expected entry but got nil")
-				}
+				require.NotNil(t, response)
+				require.NotNil(t, response.Entry)
 				if response.Entry.Content != tt.content {
 					t.Errorf("Expected content '%s' but got '%s'", tt.content, response.Entry.Content)
 				}
@@ -337,9 +326,7 @@ func TestDiaryEntry_DeleteDiaryEntry(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Expected success but got error: %v", err)
 				}
-				if response == nil {
-					t.Fatal("Expected response but got nil")
-				}
+				require.NotNil(t, response)
 				if !response.Success {
 					t.Error("Expected success to be true")
 				}
@@ -386,9 +373,7 @@ func TestDiaryEntry_GetDiaryEntries(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success but got error: %v", err)
 	}
-	if response == nil {
-		t.Fatal("Expected response but got nil")
-	}
+	require.NotNil(t, response)
 	if len(response.Entries) != len(dates) {
 		t.Errorf("Expected %d entries but got %d", len(dates), len(response.Entries))
 	}
@@ -423,9 +408,7 @@ func TestDiaryEntry_GetDiaryEntriesByMonth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success but got error: %v", err)
 	}
-	if response == nil {
-		t.Fatal("Expected response but got nil")
-	}
+	require.NotNil(t, response)
 	if len(response.Entries) != 5 {
 		t.Errorf("Expected 5 entries but got %d", len(response.Entries))
 	}
@@ -492,9 +475,7 @@ func TestDiaryEntry_SearchDiaryEntries(t *testing.T) {
 				if err != nil {
 					t.Fatalf("成功を期待したがエラーが発生: %v", err)
 				}
-				if response == nil {
-					t.Fatal("レスポンスがnilでした")
-				}
+				require.NotNil(t, response)
 				if len(response.Entries) != tt.expectedCount {
 					t.Errorf("期待件数 %d に対して %d 件取得", tt.expectedCount, len(response.Entries))
 				}
@@ -792,9 +773,7 @@ func TestDiaryEntry_GetDiaryHighlight_WithHighlight(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetDiaryHighlightが失敗: %v", err)
 	}
-	if resp == nil {
-		t.Fatal("レスポンスがnilです")
-	}
+	require.NotNil(t, resp)
 	if len(resp.Highlights) != 1 {
 		t.Errorf("ハイライト数が期待値と異なります: got %d, want 1", len(resp.Highlights))
 	}
