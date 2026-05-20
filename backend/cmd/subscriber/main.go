@@ -560,7 +560,7 @@ func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory c
 	// 月次要約生成
 	summary, err := geminiClient.GenerateSummary(ctx, combinedEntries)
 	if err != nil {
-		logger.WithError(err).Error("Failed to generate monthly summary")
+		logger.WithError(err).Warn("Failed to generate monthly summary")
 		return "", fmt.Errorf("failed to generate monthly summary: %w", err)
 	}
 
