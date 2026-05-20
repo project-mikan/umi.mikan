@@ -100,9 +100,10 @@ n日：箇条書き3
 
 	contents := genai.Text(prompt)
 
-	zero := float32(0)
+	// 文章として読むサマリーは適度な表現の多様性を持たせるため0より高い温度を使用
+	temp := float32(0.4)
 	config := &genai.GenerateContentConfig{
-		Temperature:    &zero,
+		Temperature:    &temp,
 		SafetySettings: noSafetySettings,
 	}
 
@@ -243,7 +244,10 @@ activities（活動・行動）:
 		Required: []string{"health", "health_reason", "mood", "mood_reason", "activities"},
 	}
 
+	// 解釈・分析を含むトレンド生成は適度な表現の多様性を持たせるため0より高い温度を使用
+	trendTemp := float32(0.4)
 	config := &genai.GenerateContentConfig{
+		Temperature:      &trendTemp,
 		ResponseMIMEType: "application/json",
 		ResponseSchema:   schema,
 		SafetySettings:   noSafetySettings,
