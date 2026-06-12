@@ -186,7 +186,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
   - **DailyScheduledJob**: Daily execution at a specific hour (JST timezone)
 - **Diary Embedding Inline Generation Target**: On diary save/update, embedding is skipped for today's diary (JST) and yesterday's diary if the current time is before 4:30 AM JST (both handled by the scheduler). Embedding IS generated inline for yesterday's diary at or after 4:30 AM JST (scheduler already ran and won't reprocess) and for diaries 2+ days old (scheduler never processes these). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
-- **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, Grafana Alloy, and cAdvisor
+- **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, and Grafana Alloy
 
 ### Frontend Structure
 
@@ -243,13 +243,12 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - Uses Lua scripts for atomic lock operations
   - Separate locks for daily and monthly summary generation
 
-- **Comprehensive Monitoring Stack**: Prometheus + Grafana + Loki + Alloy + cAdvisor
+- **Comprehensive Monitoring Stack**: Prometheus + Grafana + Loki + Alloy
   - **Prometheus**: Collects metrics from scheduler and subscriber services
-  - **Grafana**: Custom dashboards for pub/sub monitoring and container resource monitoring
+  - **Grafana**: Custom dashboards for pub/sub monitoring
   - **Loki**: Log aggregation system for centralized log management
   - **Grafana Alloy**: Modern log collection agent that ships logs to Loki (replacement for Promtail)
-  - **cAdvisor**: Container resource usage and performance metrics
-  - Tracks job execution rates, duration, success rates, container resources, and logs
+  - Tracks job execution rates, duration, success rates, and logs
 
 ## Security & Authentication Flow
 
@@ -313,7 +312,6 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `grafana/`: Dashboard and data source provisioning
     - `dashboards/umi-mikan-pubsub.json`: Pub/Sub monitoring dashboard
     - `dashboards/umi-mikan-rag.json`: RAG / semantic search monitoring dashboard
-    - `dashboards/container-monitoring.json`: Container resource monitoring dashboard
     - `dashboards/container-logs.json`: Container logs monitoring dashboard
     - `provisioning/datasources/`: Prometheus and Loki data source configurations
 - `backend/infrastructure/lock/`: Distributed locking system
@@ -346,7 +344,6 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - 2006: Scheduler Metrics
   - 2007: Prometheus
   - 2008: Grafana
-  - 2009: cAdvisor
   - 2010: Loki
   - 2011: Grafana Alloy
   - 2012: Backend Metrics
