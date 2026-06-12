@@ -17,4 +17,4 @@ RUN pnpm install --frozen-lockfile
 EXPOSE 5173
 
 # Always run pnpm install on startup to handle missing node_modules
-CMD ["sh", "-c", "pnpm install --frozen-lockfile && pnpm dev --host 0.0.0.0"]
+CMD ["sh", "-c", "pnpm install --frozen-lockfile && exec pnpm dev --host 0.0.0.0"]

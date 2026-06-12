@@ -42,6 +42,9 @@ services:
       NODE_ENV: development
     volumes:
       - ./frontend:/frontend
+      # macのDocker Desktopはバインドマウント(VirtioFS)のI/Oが遅く、
+      # node_modulesをホスト共有すると開発サーバーが極端に遅くなるためnamed volumeに分離
+      - frontend-node-modules:/frontend/node_modules
       - ./proto:/proto # 内部で解決できるようにマウント
 
   postgres:
@@ -183,6 +186,7 @@ services:
       - loki
 
 volumes:
+  frontend-node-modules:
   postgres_volume:
   postgres_test_volume:
   redis_volume:
