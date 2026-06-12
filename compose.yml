@@ -42,6 +42,9 @@ services:
       NODE_ENV: development
     volumes:
       - ./frontend:/frontend
+      # macのDocker Desktopはバインドマウント(VirtioFS)のI/Oが遅く、
+      # node_modulesをホスト共有すると開発サーバーが極端に遅くなるためnamed volumeに分離
+      - frontend-node-modules:/frontend/node_modules
       - ./proto:/proto # 内部で解決できるようにマウント
 
   postgres:
@@ -150,19 +153,6 @@ services:
     depends_on:
       - prometheus
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    privileged: true
-    devices:
-      - /dev/kmsg
-
   loki:
     image: grafana/loki:latest
     volumes:
@@ -183,6 +173,7 @@ services:
       - loki
 
 volumes:
+  frontend-node-modules:
   postgres_volume:
   postgres_test_volume:
   redis_volume:

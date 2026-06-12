@@ -11,10 +11,13 @@ RUN chown -R 1000:1000 /frontend
 
 USER 1000:1000
 
-COPY package.json pnpm-lock.yaml ./
+# pnpm-workspace.yamlと.npmrcもCOPYしないと、ビルド時と実行時(バインドマウント)で
+# インストール設定が不一致になりnode_modules再構築の対話プロンプトで起動が止まる
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
 EXPOSE 5173
 
 # Always run pnpm install on startup to handle missing node_modules
-CMD ["sh", "-c", "pnpm install --frozen-lockfile && pnpm dev --host 0.0.0.0"]
+# CI=1でpnpmの対話プロンプトを無効化（tty:trueでも起動が止まらないように）
+CMD ["sh", "-c", "CI=1 pnpm install --frozen-lockfile && exec pnpm dev --host 0.0.0.0"]

@@ -74,7 +74,7 @@ graph TB
 | **Subscriber**    | Go + Redis                                             | 要約の非同期生成       |
 | **Database**      | PostgreSQL 17                                          | 日記保存               |
 | **Message Queue** | Redis Pub/Sub                                          | 重たい処理の非同期実行 |
-| **Monitoring**    | Prometheus + Grafana + Loki + Grafana Alloy + cAdvisor | Pub/Subやログの監視    |
+| **Monitoring**    | Prometheus + Grafana + Loki + Grafana Alloy            | Pub/Subやログの監視    |
 
 ### データフロー
 
@@ -125,7 +125,7 @@ graph TB
 - **コンテナ**: Docker + Docker Compose
 - **DB**: PostgreSQL 17
 - **キャッシュ/キュー**: Redis 8
-- **監視**: Prometheus + Grafana + Loki + Grafana Alloy + cAdvisor
+- **監視**: Prometheus + Grafana + Loki + Grafana Alloy
 
 ## はじめに
 
@@ -157,7 +157,6 @@ dc up -d
 | **Scheduler Metrics**  | 2006   | http://localhost:2006/metrics | Prometheus メトリクス             |
 | **Prometheus**         | 2007   | http://localhost:2007         | メトリクス収集ダッシュボード      |
 | **Grafana**            | 2008   | http://localhost:2008         | 監視ダッシュボード（admin/admin） |
-| **cAdvisor**           | 2009   | http://localhost:2009         | コンテナメトリクス収集            |
 | **Loki**               | 2010   | http://localhost:2010         | ログ集約システム                  |
 | **Grafana Alloy**      | 2011   | http://localhost:2011         | ログ収集エージェント              |
 
