@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Starting Development Environment
 
 ```bash
-dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, redis, scheduler, subscriber, prometheus, grafana, loki, promtail, cadvisor)
+dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, redis, scheduler, subscriber, prometheus, grafana, loki, alloy)
 ```
 
 **Service URLs:**
@@ -29,7 +29,6 @@ dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, red
 - Scheduler Metrics: http://localhost:2006/metrics
 - Prometheus: http://localhost:2007
 - Grafana: http://localhost:2008 (admin/admin)
-- cAdvisor: http://localhost:2009
 - Loki: http://localhost:2010
 - Grafana Alloy: http://localhost:2011
 - Backend Metrics: http://localhost:2012/metrics
@@ -124,13 +123,9 @@ docker compose exec loki sh          # Access Loki container
 docker compose logs alloy            # View Alloy logs
 docker compose exec alloy sh         # Access Alloy container
 
-# cAdvisor (container metrics)
-docker compose logs cadvisor         # View cAdvisor logs
-
 # Access monitoring endpoints
 curl http://localhost:2005/metrics   # Subscriber metrics
 curl http://localhost:2006/metrics   # Scheduler metrics
-curl http://localhost:2009/metrics   # cAdvisor metrics
 curl http://localhost:2010/ready     # Loki health check
 curl http://localhost:2011/metrics   # Grafana Alloy metrics
 ```
