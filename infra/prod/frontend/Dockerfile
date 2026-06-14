@@ -24,35 +24,25 @@ RUN --mount=type=cache,target=/root/.pnpm-store \
     pnpm prepare && \
     pnpm build
 
+# deps stage: package.jsonのdependenciesをnpmでインストール（シンボリックリンクなし）
+# pnpmのnode_modulesはシンボリックリンク構造のためCOPYで解決できないため、npmを使用
+FROM node:22-alpine AS deps
+
+WORKDIR /deps
+
+COPY package.json ./
+RUN npm install --omit=dev --ignore-scripts
+
 # Production stage
 FROM node:22-alpine AS production
 
 WORKDIR /frontend
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S sveltekit -u 1001
+RUN addgroup -g 1001 -S nodejs && adduser -S sveltekit -u 1001
 
-# Copy built application and node_modules from builder stage
-COPY --from=builder /frontend/build ./build
-COPY --from=builder /frontend/package.json ./package.json
-
-# 本番環境で必要な依存関係をpackage.jsonに基づいてインストール
-# pnpmのキャッシュマウントを使用しているため、node_modulesは永続化されない
-# package.jsonとpnpm-lock.yamlを使用して一貫性のある依存関係管理を行う
-RUN npm install -g pnpm@latest
-
-# pnpm-lock.yamlもコピーしてロックファイルを使用
-COPY --from=builder /frontend/pnpm-lock.yaml ./pnpm-lock.yaml
-
-# 本番依存関係のみをインストール（devDependenciesを除外）
-# --ignore-scriptsを使用してprepareスクリプトをスキップ（ビルド済み成果物を使用するため不要）
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
-
-
-
-# Change ownership of the app directory
-RUN chown -R sveltekit:nodejs /frontend
+# --chownでCOPY時に所有権を設定し、chown -R レイヤーのコピーコストを回避
+COPY --from=builder --chown=sveltekit:nodejs /frontend/build ./build
+COPY --from=deps --chown=sveltekit:nodejs /deps/node_modules ./node_modules
 
 USER sveltekit
 

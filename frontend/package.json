@@ -21,28 +21,28 @@
     "test:run": "vitest run"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
-    "@bufbuild/buf": "^1.69.0",
+    "@biomejs/biome": "^2.5.0",
+    "@bufbuild/buf": "^1.70.0",
     "@bufbuild/protoc-gen-es": "^2.12.0",
     "@sveltejs/adapter-auto": "^7.0.1",
     "@sveltejs/adapter-node": "^5.5.4",
-    "@sveltejs/kit": "^2.60.1",
+    "@sveltejs/kit": "^2.65.1",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
-    "@tailwindcss/typography": "^0.5.19",
-    "@tailwindcss/vite": "^4.3.0",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/svelte": "^5.3.1",
-    "@types/node": "^25.9.1",
-    "@vitest/ui": "^4.1.7",
+    "@types/node": "^25.9.3",
+    "@vitest/ui": "^4.1.8",
     "autoprefixer": "^10.5.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.5.15",
-    "svelte": "^5.55.9",
-    "svelte-check": "^4.4.8",
-    "tailwindcss": "^4.3.0",
+    "svelte": "^5.56.3",
+    "svelte-check": "^4.6.0",
+    "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
-    "vite": "^8.0.13",
-    "vitest": "^4.1.7"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -56,11 +56,11 @@
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.12.0",
-    "@connectrpc/connect": "^2.1.1",
-    "@connectrpc/connect-node": "^2.1.1",
+    "@connectrpc/connect": "^2.1.2",
+    "@connectrpc/connect-node": "^2.1.2",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
-    "date-fns": "^4.2.1",
+    "date-fns": "^4.4.0",
     "redis": "^5.12.1",
     "svelte-i18n": "^4.0.1"
   }
