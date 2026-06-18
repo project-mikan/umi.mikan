@@ -1,44 +1,19 @@
-import { refreshAccessToken, getUserInfo } from "$lib/server/auth-api";
+import { getUserInfo } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
-import {
-  ACCESS_TOKEN_COOKIE_OPTIONS,
-  REFRESH_TOKEN_COOKIE_OPTIONS,
-} from "$lib/utils/cookie-utils";
 import { setCSRFToken, getCSRFToken } from "$lib/server/csrf";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ cookies, url }) => {
-  let accessToken = cookies.get("accessToken");
+  // ここではリフレッシュを行わない。
+  // invalidateAll() で +layout と +page が並行実行されるとき、
+  // 両方が refreshAccessToken() を呼ぶと同じ refreshToken を二重消費して競合が起きる。
+  // リフレッシュは各 +page.server.ts の ensureValidAccessToken に任せる。
+  const accessToken = cookies.get("accessToken");
   const refreshToken = cookies.get("refreshToken");
-  let isAuthenticated = !!accessToken;
 
-  if (refreshToken && (!accessToken || isTokenExpiringSoon(accessToken))) {
-    try {
-      const response = await refreshAccessToken(refreshToken);
-
-      cookies.set(
-        "accessToken",
-        response.accessToken,
-        ACCESS_TOKEN_COOKIE_OPTIONS,
-      );
-
-      if (response.refreshToken) {
-        cookies.set(
-          "refreshToken",
-          response.refreshToken,
-          REFRESH_TOKEN_COOKIE_OPTIONS,
-        );
-      }
-
-      accessToken = response.accessToken;
-      isAuthenticated = true;
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      cookies.delete("accessToken", { path: "/" });
-      cookies.delete("refreshToken", { path: "/" });
-      isAuthenticated = false;
-    }
-  }
+  // accessToken がなくても refreshToken があれば認証済みとみなす。
+  // 実際のトークン更新は +page.server.ts の ensureValidAccessToken が担う。
+  const isAuthenticated = !!(accessToken || refreshToken);
 
   // CSRFトークンを設定・取得
   let csrfToken = getCSRFToken(cookies);
@@ -46,17 +21,23 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
     csrfToken = setCSRFToken(cookies);
   }
 
-  // ユーザー情報を取得
+  // ユーザー情報を取得（accessToken が有効な場合のみ）
+  // accessToken が期限切れ・未取得のケースは null を返してレイアウトだけ壊さないようにする
   let userName: string | null = null;
   let autoLatestTrendEnabled = false;
-  if (isAuthenticated && accessToken) {
+  const hasValidAccessToken =
+    !!accessToken && !isTokenExpiringSoon(accessToken);
+  if (hasValidAccessToken) {
     try {
-      const userInfo = await getUserInfo({ accessToken });
+      const userInfo = await getUserInfo({
+        accessToken: accessToken as string,
+      });
       userName = userInfo.name;
       // LLMキー情報から autoLatestTrendEnabled を取得（Gemini provider=1のみ）
       const geminiKey = userInfo.llmKeys?.find((key) => key.llmProvider === 1);
       autoLatestTrendEnabled = geminiKey?.autoLatestTrendEnabled || false;
     } catch (error) {
+      // バックエンド一時エラーでログアウトさせないようエラーは吸収する
       console.error("Failed to get user info:", error);
     }
   }

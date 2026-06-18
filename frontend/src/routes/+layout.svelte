@@ -20,28 +20,28 @@
     $page.url.pathname === "/login" || $page.url.pathname === "/register";
 
   let lastActiveTime = Date.now();
+  // invalidateAll() の重複実行を防ぐフラグ
+  let isRefreshing = false;
 
-  // ページがフォーカスされた時にトークンをチェック
+  // visibilitychange のみでトークンチェックを行う。
+  // focus イベントと併用すると「タブを戻した時」に両方が同時に発火して
+  // invalidateAll() が2回呼ばれ、並行リフレッシュ競合が起きるため focus は使わない。
   function handleVisibilityChange() {
-    if (browser && document.visibilityState === "visible") {
-      const inactiveTime = Date.now() - lastActiveTime;
-      // 5分以上非アクティブだった場合、トークンをリフレッシュ
-      if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
-        invalidateAll();
-      }
-      lastActiveTime = Date.now();
-    }
-  }
-
-  // ページがフォーカスされた時
-  function handleFocus() {
-    if (!browser) return;
+    if (!browser || document.visibilityState !== "visible") return;
     const inactiveTime = Date.now() - lastActiveTime;
-    // 5分以上非アクティブだった場合、トークンをリフレッシュ
-    if (inactiveTime > 5 * 60 * 1000 && isAuthenticated && !isAuthPage) {
-      invalidateAll();
-    }
     lastActiveTime = Date.now();
+    // 5分以上非アクティブかつ認証済みの場合のみリフレッシュ
+    if (
+      inactiveTime > 5 * 60 * 1000 &&
+      isAuthenticated &&
+      !isAuthPage &&
+      !isRefreshing
+    ) {
+      isRefreshing = true;
+      invalidateAll().finally(() => {
+        isRefreshing = false;
+      });
+    }
   }
 
   onMount(() => {
@@ -62,14 +62,11 @@
       }
     });
 
-    // visibilitychangeイベントをリッスン
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
 
     return () => {
       unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
     };
   });
 </script>
