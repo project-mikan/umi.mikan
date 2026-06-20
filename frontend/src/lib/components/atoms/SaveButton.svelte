@@ -57,7 +57,6 @@
       // 楕円上の発生位置
       const px = cx + rx * Math.cos(angle);
       const py = cy + ry * Math.sin(angle);
-      // 拡散範囲を0.7倍に抑えた速度
       const speed = 1.5 + Math.random() * 2;
       return {
         id: particleId++,
@@ -137,21 +136,38 @@
 
   <div bind:this={buttonEl}>
     <Button {type} variant={saved ? "success" : "primary"} {size} disabled={loading || saved} on:click>
-      <div class="flex items-center justify-center min-h-[1.25rem] min-w-[4.5rem]">
-        {#if loading}
-          <svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-          </svg>
-          <span class="ml-1">{$_("diary.saving")}</span>
-        {:else if saved}
+      <!--
+        display:grid + place-items:center で全状態を同じセルに重ね、
+        非表示のスペーサー行が常に最大幅を確保することでサイズを固定する
+      -->
+      <div class="grid place-items-center min-h-[1.25rem]">
+        <!-- 通常ラベルとsaved時ラベルを両方不可視で重ねて、広い方の幅を確保するスペーサー -->
+        <span class="invisible col-start-1 row-start-1 flex items-center" aria-hidden="true">
+          {label !== null ? label : $_("diary.save")}
+        </span>
+        <span class="invisible col-start-1 row-start-1 flex items-center" aria-hidden="true">
           <svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
             <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
           </svg>
           <span class="ml-1">{$_("diary.saved")}</span>
-        {:else}
-          <span>{label !== null ? label : $_("diary.save")}</span>
-        {/if}
+        </span>
+        <!-- 実際に表示するコンテンツ（同セルに重ねる） -->
+        <span class="col-start-1 row-start-1 flex items-center">
+          {#if loading}
+            <svg class="animate-spin -mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <span class="ml-1">{$_("diary.saving")}</span>
+          {:else if saved}
+            <svg class="-mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+            </svg>
+            <span class="ml-1">{$_("diary.saved")}</span>
+          {:else}
+            {label !== null ? label : $_("diary.save")}
+          {/if}
+        </span>
       </div>
     </Button>
   </div>
