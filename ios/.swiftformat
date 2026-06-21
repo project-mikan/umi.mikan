@@ -1,0 +1,15 @@
+--swiftversion 5.10
+--exclude Sources/Proto
+--indent 4
+--tabwidth 4
+--indentcase false
+--allman false
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--wrapreturntype preserve
+--maxwidth 150
+
+# 無効にするルール
+--disable redundantReturn,unusedArguments

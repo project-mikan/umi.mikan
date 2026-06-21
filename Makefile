@@ -139,8 +139,31 @@ b-test-semantic-eval:
 
 b-test-race:
 	docker compose exec backend go test -race ./...
+
+# iOS
+IOS_PROJECT = ios/umi.mikan.xcodeproj
+IOS_SCHEME = umi.mikan
+IOS_DESTINATION = platform=iOS Simulator,name=iPhone 17
+
+ios-format:
+	cd ios && swiftformat --config .swiftformat Sources/
+
+ios-lint:
+	make ios-format
+	cd ios && swiftlint lint --config .swiftlint.yml
+
+ios-build:
+	xcodebuild build -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet
+
+ios-test:
+	xcodebuild test -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet
+
+ios-log:
+	xcrun simctl spawn booted log stream --predicate 'processImagePath contains "umi.mikan"' 2>/dev/null || echo "アプリが起動していません"
+
 1:
 	make b-lint
 	make f-lint
+	make ios-lint
 	make b-test
 	make f-test
