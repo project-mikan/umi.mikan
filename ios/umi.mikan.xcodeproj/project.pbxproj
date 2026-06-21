@@ -13,14 +13,38 @@
 		5DB4E8352FE7CA6800DB1E50 /* GRPCProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 5DB4E8342FE7CA6800DB1E50 /* GRPCProtobuf */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		5DB4E90B2FE8000000DB1E50 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5DB4E7CD2FE6687200DB1E50 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5DB4E7D42FE6687200DB1E50;
+			remoteInfo = "umi.mikan";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		5DB4E90A2FE8000000DB1E50 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5DB4E7D42FE6687200DB1E50 /* umi.mikan */;
+			targetProxy = 5DB4E90B2FE8000000DB1E50 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXFileReference section */
 		5DB4E7D52FE6687200DB1E50 /* umi.mikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = umi.mikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "umi.mikanTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5DB4E7D72FE6687200DB1E50 /* Sources */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		5DB4E9022FE8000000DB1E50 /* Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -37,6 +61,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DB4E9032FE8000000DB1E50 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -44,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				5DB4E7D72FE6687200DB1E50 /* Sources */,
+				5DB4E9022FE8000000DB1E50 /* Tests */,
 				5DB4E7D62FE6687200DB1E50 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				5DB4E7D52FE6687200DB1E50 /* umi.mikan.app */,
+				5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,6 +118,27 @@
 			productReference = 5DB4E7D52FE6687200DB1E50 /* umi.mikan.app */;
 			productType = "com.apple.product-type.application";
 		};
+		5DB4E8FF2FE8000000DB1E50 /* umi.mikanTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5DB4E9062FE8000000DB1E50 /* Build configuration list for PBXNativeTarget "umi.mikanTests" */;
+			buildPhases = (
+				5DB4E9032FE8000000DB1E50 /* Frameworks */,
+				5DB4E9042FE8000000DB1E50 /* Sources */,
+				5DB4E9052FE8000000DB1E50 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5DB4E90A2FE8000000DB1E50 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				5DB4E9022FE8000000DB1E50 /* Tests */,
+			);
+			name = "umi.mikanTests";
+			productName = "umi.mikanTests";
+			productReference = 5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -97,6 +151,10 @@
 				TargetAttributes = {
 					5DB4E7D42FE6687200DB1E50 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					5DB4E8FF2FE8000000DB1E50 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 5DB4E7D42FE6687200DB1E50;
 					};
 				};
 			};
@@ -119,6 +177,7 @@
 			projectRoot = "";
 			targets = (
 				5DB4E7D42FE6687200DB1E50 /* umi.mikan */,
+				5DB4E8FF2FE8000000DB1E50 /* umi.mikanTests */,
 			);
 		};
 /* End PBXProject section */
@@ -131,10 +190,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DB4E9052FE8000000DB1E50 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5DB4E7D12FE6687200DB1E50 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5DB4E9042FE8000000DB1E50 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -325,6 +398,43 @@
 			};
 			name = Release;
 		};
+		5DB4E9072FE8000000DB1E50 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.usuyuki.umi-mikan.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/umi.mikan.app/umi.mikan";
+			};
+			name = Debug;
+		};
+		5DB4E9082FE8000000DB1E50 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.usuyuki.umi-mikan.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/umi.mikan.app/umi.mikan";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -342,6 +452,15 @@
 			buildConfigurations = (
 				5DB4E7E12FE6687400DB1E50 /* Debug */,
 				5DB4E7E22FE6687400DB1E50 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5DB4E9062FE8000000DB1E50 /* Build configuration list for PBXNativeTarget "umi.mikanTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DB4E9072FE8000000DB1E50 /* Debug */,
+				5DB4E9082FE8000000DB1E50 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,0 +1,29 @@
+name: 【iOS】Unit Tests
+
+on:
+  pull_request:
+    paths:
+      - "ios/**"
+      - "proto/**"
+      - ".github/**"
+
+jobs:
+  test:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install protoc plugins
+        run: brew install swift-protobuf protoc-gen-grpc-swift
+
+      - name: Generate Swift gRPC code
+        run: make grpc-swift
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -project ios/umi.mikan.xcodeproj \
+            -scheme "umi.mikan" \
+            -destination "platform=iOS Simulator,name=iPhone 17" \
+            -quiet
