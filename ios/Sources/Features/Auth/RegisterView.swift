@@ -143,8 +143,7 @@ struct RegisterView: View {
 /// ガラス風テキストフィールドのスタイルを適用するViewExtension
 private extension View {
     func glassTextField() -> some View {
-        self
-            .padding()
+        padding()
             .background(.white.opacity(0.15))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))

@@ -13,3 +13,7 @@
 
 # 無効にするルール
 --disable redundantReturn,unusedArguments
+
+# SwiftLintのtrailing_commaルールに合わせてtrailing commaを除去
+--enable trailingCommas
+--trailingCommas never
