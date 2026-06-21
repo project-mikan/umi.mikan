@@ -6,6 +6,10 @@ backend:
 - changed-files:
   - any-glob-to-any-file: 'backend/**/*'
 
+ios:
+- changed-files:
+  - any-glob-to-any-file: 'ios/**/*'
+
 proto:
 - changed-files:
   - any-glob-to-any-file: 'proto/**/*'
