@@ -23,7 +23,7 @@ jobs:
         working-directory: ./ios
         run: |
           swiftformat --config .swiftformat Sources/ --dryrun 2>&1 | tee /tmp/swiftformat.log
-          if grep -q "would have been formatted" /tmp/swiftformat.log; then
+          if grep -qE "^[1-9][0-9]*/[0-9]+ files would have been formatted" /tmp/swiftformat.log; then
             echo "SwiftFormat の差分があります。ローカルで 'make ios-format' を実行して修正してください:"
             cat /tmp/swiftformat.log
             exit 1
