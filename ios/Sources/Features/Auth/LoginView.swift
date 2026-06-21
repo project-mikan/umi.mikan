@@ -23,13 +23,28 @@ struct LoginView: View {
                         Spacer()
                             .frame(height: 60)
 
-                        // アプリタイトル - Liquid Glassエフェクト
-                        Text("umi.mikan")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 32)
-                            .padding(.vertical, 20)
-                            .glassEffect(.regular.tint(.blue).interactive())
+                        // アプリロゴとタイトル - Liquid Glassエフェクト
+                        VStack(spacing: 16) {
+                            // ロゴアイコン
+                            Image(systemName: "drop.circle.fill")
+                                .font(.system(size: 80))
+                                .foregroundStyle(
+                                    .linearGradient(
+                                        colors: [.blue, .cyan],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .shadow(color: .blue.opacity(0.5), radius: 10)
+
+                            // アプリタイトル
+                            Text("umi.mikan")
+                                .font(.system(size: 48, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 20)
+                        .glassEffect(.regular.tint(.blue).interactive())
 
                         // ログインフォーム - GlassEffectContainer使用
                         GlassEffectContainer(spacing: 20.0) {
