@@ -1,24 +1,22 @@
-//
-//  ContentView.swift
-//  umi.mikan
-//
-//  Created by usuyuki on 2026/06/20.
-//
-
 import SwiftUI
 
+/// 認証状態に応じてログイン画面とメイン画面を切り替えるルートビュー
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
+    @State private var authViewModel = AuthViewModel()
 
-#Preview {
-    ContentView()
+    var body: some View {
+        if authViewModel.isLoggedIn {
+            // TODO: 日記一覧画面に置き換える
+            Text("ログイン済み")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("ログアウト") {
+                            authViewModel.logout()
+                        }
+                    }
+                }
+        } else {
+            LoginView(viewModel: authViewModel)
+        }
+    }
 }
