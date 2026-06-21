@@ -19,24 +19,25 @@ final class AuthViewModel {
     func login(email: String, password: String) async {
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
 
         do {
-            try await GRPCClient.shared.withClient { client in
+            let response = try await GRPCClient.shared.withClient { client in
                 let authClient = Auth_AuthService.Client(wrapping: client)
                 var request = Auth_LoginByPasswordRequest()
                 request.email = email
                 request.password = password
 
-                let response = try await authClient.loginByPassword(request)
-                await MainActor.run {
-                    KeychainStore.save(response.accessToken, for: .accessToken)
-                    KeychainStore.save(response.refreshToken, for: .refreshToken)
-                    self.isLoggedIn = true
-                }
+                return try await authClient.loginByPassword(request)
             }
+            
+            // MainActorに戻ってUIを更新
+            KeychainStore.save(response.accessToken, for: .accessToken)
+            KeychainStore.save(response.refreshToken, for: .refreshToken)
+            isLoggedIn = true
+            isLoading = false
         } catch {
             errorMessage = errorDescription(error)
+            isLoading = false
         }
     }
 
@@ -44,10 +45,9 @@ final class AuthViewModel {
     func register(email: String, password: String, name: String, registerKey: String) async {
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
 
         do {
-            try await GRPCClient.shared.withClient { client in
+            let response = try await GRPCClient.shared.withClient { client in
                 let authClient = Auth_AuthService.Client(wrapping: client)
                 var request = Auth_RegisterByPasswordRequest()
                 request.email = email
@@ -55,15 +55,17 @@ final class AuthViewModel {
                 request.name = name
                 request.registerKey = registerKey
 
-                let response = try await authClient.registerByPassword(request)
-                await MainActor.run {
-                    KeychainStore.save(response.accessToken, for: .accessToken)
-                    KeychainStore.save(response.refreshToken, for: .refreshToken)
-                    self.isLoggedIn = true
-                }
+                return try await authClient.registerByPassword(request)
             }
+            
+            // MainActorに戻ってUIを更新
+            KeychainStore.save(response.accessToken, for: .accessToken)
+            KeychainStore.save(response.refreshToken, for: .refreshToken)
+            isLoggedIn = true
+            isLoading = false
         } catch {
             errorMessage = errorDescription(error)
+            isLoading = false
         }
     }
 

@@ -2,8 +2,7 @@ import GRPCCore
 import GRPCNIOTransportHTTP2TransportServices
 
 /// gRPCチャンネルとサービスクライアントを管理するシングルトン
-@MainActor
-final class GRPCClient {
+final class GRPCClient: Sendable {
     static let shared = GRPCClient()
 
     // 開発環境ではlocalhostのバックエンドに接続

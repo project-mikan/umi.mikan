@@ -19,21 +19,13 @@
 			containerPortal = 5DB4E7CD2FE6687200DB1E50 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 5DB4E7D42FE6687200DB1E50;
-			remoteInfo = "umi.mikan";
+			remoteInfo = umi.mikan;
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXTargetDependency section */
-		5DB4E90A2FE8000000DB1E50 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 5DB4E7D42FE6687200DB1E50 /* umi.mikan */;
-			targetProxy = 5DB4E90B2FE8000000DB1E50 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin PBXFileReference section */
 		5DB4E7D52FE6687200DB1E50 /* umi.mikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = umi.mikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "umi.mikanTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = umi.mikanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -134,8 +126,8 @@
 			fileSystemSynchronizedGroups = (
 				5DB4E9022FE8000000DB1E50 /* Tests */,
 			);
-			name = "umi.mikanTests";
-			productName = "umi.mikanTests";
+			name = umi.mikanTests;
+			productName = umi.mikanTests;
 			productReference = 5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
@@ -215,6 +207,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5DB4E90A2FE8000000DB1E50 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5DB4E7D42FE6687200DB1E50 /* umi.mikan */;
+			targetProxy = 5DB4E90B2FE8000000DB1E50 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5DB4E7DE2FE6687400DB1E50 /* Debug */ = {
