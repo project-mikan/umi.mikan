@@ -92,6 +92,16 @@ grpc-ts:
 
 
 # まとめてやると↓なんか動かない？
+grpc-swift:
+	# 削除分は反映されないのでrm -rfしてから実行
+	rm -rf ios/Sources/Generated/*
+	mkdir -p ios/Sources/Generated
+	protoc --proto_path=proto \
+	--swift_out=ios/Sources/Generated \
+	--grpc-swift2_out=ios/Sources/Generated \
+	--plugin=protoc-gen-grpc-swift2=$(shell brew --prefix)/bin/protoc-gen-grpc-swift-2 \
+	proto/auth/auth.proto proto/diary/diary.proto proto/user/user.proto proto/entity/entity.proto
+
 grpc:
 	make grpc-go
 	make grpc-ts
