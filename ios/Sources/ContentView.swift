@@ -19,55 +19,64 @@ struct MainView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                // 背景のグラデーション
-                LinearGradient(
-                    colors: [.blue.opacity(0.2), .cyan.opacity(0.2)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+            mainContent
+                .navigationTitle("umi.mikan")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .toolbar { logoutButton }
+        }
+    }
 
-                VStack(spacing: 32) {
-                    Spacer()
-
-                    // ログイン成功メッセージ
-                    VStack(spacing: 16) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundStyle(.green)
-                            .glassEffect(.regular.tint(.green).interactive())
-
-                        Text("ログイン成功")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
-
-                        Text("日記一覧画面は準備中です")
-                            .font(.body)
-                            .foregroundStyle(.white.opacity(0.8))
-                    }
-                    .padding(40)
-                    .glassEffect(.regular.tint(.blue), in: .rect(cornerRadius: 24))
-
-                    Spacer()
-                }
-                .padding()
+    private var mainContent: some View {
+        ZStack {
+            mainBackground
+            VStack(spacing: 32) {
+                Spacer()
+                loginSuccessCard
+                Spacer()
             }
-            .navigationTitle("umi.mikan")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        authViewModel.logout()
-                    } label: {
-                        Label("ログアウト", systemImage: "rectangle.portrait.and.arrow.right")
-                            .foregroundStyle(.white)
-                    }
-                    .buttonStyle(.glass)
-                }
+            .padding()
+        }
+    }
+
+    private var mainBackground: some View {
+        LinearGradient(
+            colors: [.blue.opacity(0.2), .cyan.opacity(0.2)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+
+    private var loginSuccessCard: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 80))
+                .foregroundStyle(.green)
+                .glassEffect(.regular.tint(.green).interactive())
+
+            Text("ログイン成功")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+
+            Text("日記一覧画面は準備中です")
+                .font(.body)
+                .foregroundStyle(.white.opacity(0.8))
+        }
+        .padding(40)
+        .glassEffect(.regular.tint(.blue), in: .rect(cornerRadius: 24))
+    }
+
+    @ToolbarContentBuilder private var logoutButton: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                authViewModel.logout()
+            } label: {
+                Label("ログアウト", systemImage: "rectangle.portrait.and.arrow.right")
+                    .foregroundStyle(.white)
             }
+            .buttonStyle(.glass)
         }
     }
 }

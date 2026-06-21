@@ -3,12 +3,12 @@ import Security
 
 /// Keychainへのトークン保存・取得・削除を管理する
 enum KeychainStore {
-    private static let service = "com.usuyuki.umi-mikan"
-
     enum Key: String {
         case accessToken = "access_token"
         case refreshToken = "refresh_token"
     }
+
+    private static let service = "com.usuyuki.umi-mikan"
 
     /// 指定したキーで値をKeychainに保存する
     static func save(_ value: String, for key: Key) {
@@ -16,7 +16,7 @@ enum KeychainStore {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
-            kSecAttrAccount: key.rawValue,
+            kSecAttrAccount: key.rawValue
         ]
         SecItemDelete(query as CFDictionary)
         var addQuery = query
@@ -31,7 +31,7 @@ enum KeychainStore {
             kSecAttrService: service,
             kSecAttrAccount: key.rawValue,
             kSecReturnData: true,
-            kSecMatchLimit: kSecMatchLimitOne,
+            kSecMatchLimit: kSecMatchLimitOne
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
@@ -44,7 +44,7 @@ enum KeychainStore {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
-            kSecAttrAccount: key.rawValue,
+            kSecAttrAccount: key.rawValue
         ]
         SecItemDelete(query as CFDictionary)
     }

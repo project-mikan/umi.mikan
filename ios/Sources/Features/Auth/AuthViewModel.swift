@@ -30,7 +30,6 @@ final class AuthViewModel {
                 return try await authClient.loginByPassword(request)
             }
 
-            // MainActorに戻ってUIを更新
             KeychainStore.save(response.accessToken, for: .accessToken)
             KeychainStore.save(response.refreshToken, for: .refreshToken)
             isLoggedIn = true
@@ -58,7 +57,6 @@ final class AuthViewModel {
                 return try await authClient.registerByPassword(request)
             }
 
-            // MainActorに戻ってUIを更新
             KeychainStore.save(response.accessToken, for: .accessToken)
             KeychainStore.save(response.refreshToken, for: .refreshToken)
             isLoggedIn = true
@@ -81,14 +79,19 @@ final class AuthViewModel {
             switch rpcError.code {
             case .unauthenticated:
                 return "メールアドレスまたはパスワードが正しくありません"
+
             case .notFound:
                 return "ユーザーが見つかりません"
+
             case .alreadyExists:
                 return "このメールアドレスは既に登録されています"
+
             case .permissionDenied:
                 return "登録キーが正しくありません"
+
             case .invalidArgument:
                 return "入力内容を確認してください"
+
             default:
                 return "エラーが発生しました"
             }
