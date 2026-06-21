@@ -29,7 +29,7 @@ final class AuthViewModel {
 
                 return try await authClient.loginByPassword(request)
             }
-            
+
             // MainActorに戻ってUIを更新
             KeychainStore.save(response.accessToken, for: .accessToken)
             KeychainStore.save(response.refreshToken, for: .refreshToken)
@@ -57,7 +57,7 @@ final class AuthViewModel {
 
                 return try await authClient.registerByPassword(request)
             }
-            
+
             // MainActorに戻ってUIを更新
             KeychainStore.save(response.accessToken, for: .accessToken)
             KeychainStore.save(response.refreshToken, for: .refreshToken)

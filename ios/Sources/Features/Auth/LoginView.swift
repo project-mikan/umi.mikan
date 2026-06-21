@@ -6,7 +6,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var showRegister = false
     @Bindable var viewModel: AuthViewModel
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -17,12 +17,12 @@ struct LoginView: View {
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 32) {
                         Spacer()
                             .frame(height: 60)
-                        
+
                         // アプリタイトル - Liquid Glassエフェクト
                         Text("umi.mikan")
                             .font(.system(size: 48, weight: .bold, design: .rounded))
@@ -30,7 +30,7 @@ struct LoginView: View {
                             .padding(.horizontal, 32)
                             .padding(.vertical, 20)
                             .glassEffect(.regular.tint(.blue).interactive())
-                        
+
                         // ログインフォーム - GlassEffectContainer使用
                         GlassEffectContainer(spacing: 20.0) {
                             VStack(spacing: 20) {
@@ -40,7 +40,7 @@ struct LoginView: View {
                                         .font(.caption)
                                         .foregroundStyle(.white.opacity(0.8))
                                         .padding(.leading, 4)
-                                    
+
                                     TextField("mail@example.com", text: $email)
                                         .textContentType(.emailAddress)
                                         .keyboardType(.emailAddress)
@@ -51,14 +51,14 @@ struct LoginView: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                         .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
                                 }
-                                
+
                                 // パスワード入力フィールド
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("パスワード")
                                         .font(.caption)
                                         .foregroundStyle(.white.opacity(0.8))
                                         .padding(.leading, 4)
-                                    
+
                                     SecureField("••••••••", text: $password)
                                         .textContentType(.password)
                                         .padding()
@@ -69,7 +69,7 @@ struct LoginView: View {
                             }
                             .padding(.horizontal, 24)
                         }
-                        
+
                         // エラーメッセージ
                         if let error = viewModel.errorMessage {
                             Text(error)
@@ -82,13 +82,13 @@ struct LoginView: View {
                                 .glassEffect(.regular.tint(.red), in: .rect(cornerRadius: 12))
                                 .padding(.horizontal, 24)
                         }
-                        
+
                         // ボタン群
                         VStack(spacing: 16) {
                             // ログインボタン
                             Button {
-                                Task { 
-                                    await viewModel.login(email: email, password: password) 
+                                Task {
+                                    await viewModel.login(email: email, password: password)
                                 }
                             } label: {
                                 Group {
@@ -105,7 +105,7 @@ struct LoginView: View {
                             }
                             .buttonStyle(.glassProminent)
                             .disabled(viewModel.isLoading || email.isEmpty || password.isEmpty)
-                            
+
                             // 新規登録ボタン
                             Button {
                                 showRegister = true
@@ -118,7 +118,7 @@ struct LoginView: View {
                             .buttonStyle(.glass)
                         }
                         .padding(.horizontal, 24)
-                        
+
                         Spacer()
                             .frame(height: 60)
                     }
@@ -130,7 +130,7 @@ struct LoginView: View {
         }
     }
 }
+
 #Preview {
     LoginView(viewModel: AuthViewModel())
 }
-

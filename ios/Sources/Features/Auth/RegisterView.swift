@@ -8,7 +8,7 @@ struct RegisterView: View {
     @State private var registerKey = ""
     @Environment(\.dismiss) private var dismiss
     @Bindable var viewModel: AuthViewModel
-    
+
     var body: some View {
         ZStack {
             // 背景のグラデーション
@@ -18,12 +18,12 @@ struct RegisterView: View {
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
-            
+
             ScrollView {
                 VStack(spacing: 32) {
                     Spacer()
                         .frame(height: 40)
-                    
+
                     // 登録フォーム - GlassEffectContainer使用
                     GlassEffectContainer(spacing: 20.0) {
                         VStack(spacing: 20) {
@@ -33,7 +33,7 @@ struct RegisterView: View {
                                     .font(.caption)
                                     .foregroundStyle(.white.opacity(0.8))
                                     .padding(.leading, 4)
-                                
+
                                 TextField("田中太郎", text: $name)
                                     .textContentType(.name)
                                     .padding()
@@ -41,14 +41,14 @@ struct RegisterView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
                             }
-                            
+
                             // メールアドレス入力フィールド
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("メールアドレス")
                                     .font(.caption)
                                     .foregroundStyle(.white.opacity(0.8))
                                     .padding(.leading, 4)
-                                
+
                                 TextField("mail@example.com", text: $email)
                                     .textContentType(.emailAddress)
                                     .keyboardType(.emailAddress)
@@ -59,14 +59,14 @@ struct RegisterView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
                             }
-                            
+
                             // パスワード入力フィールド
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("パスワード")
                                     .font(.caption)
                                     .foregroundStyle(.white.opacity(0.8))
                                     .padding(.leading, 4)
-                                
+
                                 SecureField("••••••••", text: $password)
                                     .textContentType(.newPassword)
                                     .padding()
@@ -74,14 +74,14 @@ struct RegisterView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
                             }
-                            
+
                             // 登録キー入力フィールド
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("登録キー（任意）")
                                     .font(.caption)
                                     .foregroundStyle(.white.opacity(0.8))
                                     .padding(.leading, 4)
-                                
+
                                 TextField("登録キー", text: $registerKey)
                                     .autocapitalization(.none)
                                     .textInputAutocapitalization(.never)
@@ -93,7 +93,7 @@ struct RegisterView: View {
                         }
                         .padding(.horizontal, 24)
                     }
-                    
+
                     // エラーメッセージ
                     if let error = viewModel.errorMessage {
                         Text(error)
@@ -106,7 +106,7 @@ struct RegisterView: View {
                             .glassEffect(.regular.tint(.red), in: .rect(cornerRadius: 12))
                             .padding(.horizontal, 24)
                     }
-                    
+
                     // 登録ボタン
                     Button {
                         Task {
@@ -134,7 +134,7 @@ struct RegisterView: View {
                     .buttonStyle(.glassProminent)
                     .disabled(viewModel.isLoading || email.isEmpty || password.isEmpty || name.isEmpty)
                     .padding(.horizontal, 24)
-                    
+
                     Spacer()
                         .frame(height: 60)
                 }
@@ -145,9 +145,9 @@ struct RegisterView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
     }
 }
+
 #Preview {
     NavigationStack {
         RegisterView(viewModel: AuthViewModel())
     }
 }
-
