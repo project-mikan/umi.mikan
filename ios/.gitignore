@@ -1,0 +1,99 @@
+# Xcode
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-to-trash
+*.xcuserstate
+*.xcscmblueprint
+project.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.pins
+Package.resolved
+
+# CocoaPods
+Pods/
+*.xcworkspace
+!*.xcodeproj/*.xcworkspace
+
+# Carthage
+Carthage/Build/
+Carthage/Checkouts/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/*.cer
+fastlane/*.p12
+fastlane/*.mobileprovision
+
+# Code signing
+*.cer
+*.p12
+*.mobileprovision
+*.p8
+AuthKey_*.p8
+
+# Derived data
+DerivedData/
+
+# Archives
+*.xcarchive
+
+# Build artifacts
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Simulator
+iossim/
+*.app
+
+# Instruments
+*.trace
+
+# AppCode
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Crashlytics
+crashlytics-build.properties
+fabric.properties
+
+# Env files
+.env
+.env.local

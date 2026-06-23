@@ -92,6 +92,16 @@ grpc-ts:
 
 
 # まとめてやると↓なんか動かない？
+grpc-swift:
+	# 削除分は反映されないのでrm -rfしてから実行
+	rm -rf ios/Sources/Proto/*
+	mkdir -p ios/Sources/Proto
+	protoc --proto_path=proto \
+	--swift_out=ios/Sources/Proto \
+	--grpc-swift2_out=ios/Sources/Proto \
+	--plugin=protoc-gen-grpc-swift2=$(shell brew --prefix)/bin/protoc-gen-grpc-swift-2 \
+	proto/auth/auth.proto proto/diary/diary.proto proto/user/user.proto proto/entity/entity.proto
+
 grpc:
 	make grpc-go
 	make grpc-ts
@@ -129,8 +139,31 @@ b-test-semantic-eval:
 
 b-test-race:
 	docker compose exec backend go test -race ./...
+
+# iOS
+IOS_PROJECT = ios/umi.mikan.xcodeproj
+IOS_SCHEME = umi.mikan
+IOS_DESTINATION = platform=iOS Simulator,name=iPhone 17
+
+ios-format:
+	cd ios && swiftformat --config .swiftformat Sources/
+
+ios-lint:
+	make ios-format
+	cd ios && swiftlint lint --config .swiftlint.yml
+
+ios-build:
+	xcodebuild build -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet
+
+ios-test:
+	xcodebuild test -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet
+
+ios-log:
+	xcrun simctl spawn booted log stream --predicate 'processImagePath contains "umi.mikan"' 2>/dev/null || echo "アプリが起動していません"
+
 1:
 	make b-lint
 	make f-lint
+	make ios-lint
 	make b-test
 	make f-test
