@@ -4,7 +4,7 @@
   <img src="frontend/static/favicon.png" alt="umi.mikan logo" width="120" height="120">
 </div>
 
-**umi.mikan** はシンプルなWeb日記アプリです。
+**umi.mikan** はシンプルな日記アプリです。WebアプリとiOSアプリに対応しています。
 
 外部LLMを用いたまとめ機能もあります。
 
@@ -38,7 +38,10 @@ services:
 ```mermaid
 graph TB
     User[ユーザー] --> Frontend[Frontend<br/>SvelteKit + TypeScript]
+    User --> iOS[iOS App<br/>Swift]
     Frontend --> Backend[Backend<br/>gRPC Server]
+    iOS --> Cloudflare[Cloudflare Tunnel<br/>umi-mikan-api.usuyuki.net]
+    Cloudflare --> Backend
     Backend --> DB[(PostgreSQL<br/>Database)]
 
     Scheduler[Scheduler<br/>定期タスク] --> Redis[Redis Pub/Sub<br/>Message Queue]
@@ -69,6 +72,7 @@ graph TB
 | コンポーネント    | 技術                                                   | 目的                   |
 | ----------------- | ------------------------------------------------------ | ---------------------- |
 | **Frontend**      | SvelteKit + TypeScript + PWA                           | WebUI（PWA対応）       |
+| **iOS**           | Swift + SwiftUI                                        | iOSネイティブアプリ    |
 | **Backend**       | Go + gRPC                                              | 認証とAPIサーバ        |
 | **Scheduler**     | Go                                                     | 要約の定期ディスパッチ |
 | **Subscriber**    | Go + Redis                                             | 要約の非同期生成       |
