@@ -7,9 +7,6 @@ struct RegisterView: View {
     @State private var name = ""
     @State private var registerKey = ""
 
-    @Environment(\.dismiss)
-    private var dismiss
-
     @Bindable var viewModel: AuthViewModel
 
     var body: some View {
@@ -114,7 +111,8 @@ struct RegisterView: View {
                     name: name,
                     registerKey: registerKey
                 )
-                if viewModel.isLoggedIn { dismiss() }
+                // isLoggedIn=trueになるとContentViewがMainViewに切り替えるため
+                // dismissは不要（破棄済みNavigationStack上での呼び出しを避ける）
             }
         } label: {
             Group {

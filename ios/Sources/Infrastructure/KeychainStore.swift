@@ -10,8 +10,9 @@ enum KeychainStore {
 
     private static let service = "com.usuyuki.umi-mikan"
 
-    /// 指定したキーで値をKeychainに保存する
-    static func save(_ value: String, for key: Key) {
+    /// 指定したキーで値をKeychainに保存する。書き込み成功時はtrueを返す
+    @discardableResult
+    static func save(_ value: String, for key: Key) -> Bool {
         let data = Data(value.utf8)
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
@@ -21,7 +22,8 @@ enum KeychainStore {
         SecItemDelete(query as CFDictionary)
         var addQuery = query
         addQuery[kSecValueData] = data
-        SecItemAdd(addQuery as CFDictionary, nil)
+        let status = SecItemAdd(addQuery as CFDictionary, nil)
+        return status == errSecSuccess
     }
 
     /// 指定したキーの値をKeychainから取得する

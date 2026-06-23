@@ -11,14 +11,16 @@ struct KeychainStoreTests {
 
     @Test("正常系: トークンを保存して取得できる")
     func saveAndLoad() {
-        KeychainStore.save("test-access-token", for: .accessToken)
+        let saved = KeychainStore.save("test-access-token", for: .accessToken)
+        #expect(saved == true)
         #expect(KeychainStore.load(.accessToken) == "test-access-token")
     }
 
     @Test("正常系: 上書き保存が反映される")
     func overwrite() {
         KeychainStore.save("first", for: .accessToken)
-        KeychainStore.save("second", for: .accessToken)
+        let saved = KeychainStore.save("second", for: .accessToken)
+        #expect(saved == true)
         #expect(KeychainStore.load(.accessToken) == "second")
     }
 

@@ -11,7 +11,9 @@ final class AuthViewModel {
     var errorMessage: String?
 
     init() {
-        // 起動時にKeychainにトークンがあればログイン済みとみなす
+        // 起動時にKeychainにトークンがあればログイン済みとみなす。
+        // アクセストークンは15分で期限切れになるため、次のAPI呼び出し時に
+        // refreshAccessTokenで自動更新される。
         isLoggedIn = KeychainStore.load(.accessToken) != nil
     }
 
@@ -30,12 +32,18 @@ final class AuthViewModel {
                 return try await authClient.loginByPassword(request)
             }
 
-            KeychainStore.save(response.accessToken, for: .accessToken)
-            KeychainStore.save(response.refreshToken, for: .refreshToken)
-            isLoggedIn = true
+            guard
+                KeychainStore.save(response.accessToken, for: .accessToken),
+                KeychainStore.save(response.refreshToken, for: .refreshToken)
+            else {
+                errorMessage = "トークンの保存に失敗しました。再度お試しください。"
+                isLoading = false
+                return
+            }
             isLoading = false
+            isLoggedIn = true
         } catch {
-            errorMessage = errorDescription(error)
+            errorMessage = errorDescription(error, isAuthEndpoint: true)
             isLoading = false
         }
     }
@@ -57,13 +65,45 @@ final class AuthViewModel {
                 return try await authClient.registerByPassword(request)
             }
 
-            KeychainStore.save(response.accessToken, for: .accessToken)
-            KeychainStore.save(response.refreshToken, for: .refreshToken)
+            guard
+                KeychainStore.save(response.accessToken, for: .accessToken),
+                KeychainStore.save(response.refreshToken, for: .refreshToken)
+            else {
+                errorMessage = "トークンの保存に失敗しました。再度お試しください。"
+                isLoading = false
+                return
+            }
+            isLoading = false
             isLoggedIn = true
-            isLoading = false
         } catch {
-            errorMessage = errorDescription(error)
+            errorMessage = errorDescription(error, isAuthEndpoint: true)
             isLoading = false
+        }
+    }
+
+    /// リフレッシュトークンを使ってアクセストークンを更新する
+    /// アクセストークン期限切れ（UNAUTHENTICATED）発生時に呼び出す
+    func refreshAccessToken() async throws {
+        guard let refreshToken = KeychainStore.load(.refreshToken) else {
+            // リフレッシュトークンがない場合はログアウトして再ログインを促す
+            logout()
+            return
+        }
+
+        let response = try await GRPCClient.shared.withClient { client in
+            let authClient = Auth_AuthService.Client(wrapping: client)
+            var request = Auth_RefreshAccessTokenRequest()
+            request.refreshToken = refreshToken
+
+            return try await authClient.refreshAccessToken(request)
+        }
+
+        guard
+            KeychainStore.save(response.accessToken, for: .accessToken),
+            KeychainStore.save(response.refreshToken, for: .refreshToken)
+        else {
+            logout()
+            return
         }
     }
 
@@ -74,11 +114,16 @@ final class AuthViewModel {
     }
 
     /// gRPCエラーを日本語メッセージに変換する
-    private func errorDescription(_ error: Error) -> String {
+    /// - Parameter isAuthEndpoint: ログイン・登録エンドポイントかどうか（UNAUTHENTICATEDの解釈が変わる）
+    func errorDescription(_ error: Error, isAuthEndpoint: Bool = false) -> String {
         if let rpcError = error as? RPCError {
             switch rpcError.code {
             case .unauthenticated:
-                return "メールアドレスまたはパスワードが正しくありません"
+                // ログイン・登録エンドポイントでは認証情報の誤り、それ以外はセッション期限切れ
+                if isAuthEndpoint {
+                    return "メールアドレスまたはパスワードが正しくありません"
+                }
+                return "セッションの有効期限が切れました。再ログインしてください。"
 
             case .notFound:
                 return "ユーザーが見つかりません"
