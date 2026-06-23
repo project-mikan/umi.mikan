@@ -13,6 +13,10 @@ struct LoginView: View {
                 .navigationDestination(isPresented: $showRegister) {
                     RegisterView(viewModel: viewModel)
                 }
+                .onAppear {
+                    // 登録画面から戻った際に前のエラーをクリアする
+                    viewModel.errorMessage = nil
+                }
         }
     }
 

@@ -5,9 +5,8 @@ import GRPCNIOTransportHTTP2TransportServices
 final class GRPCClient: Sendable {
     static let shared = GRPCClient()
 
-    // 開発環境ではlocalhostのバックエンドに接続
-    private let host = "localhost"
-    private let port = 2001
+    private let host = "umi-mikan-api.usuyuki.net"
+    private let port = 443
 
     private init() {}
 
@@ -25,8 +24,8 @@ final class GRPCClient: Sendable {
         _ body: @Sendable (GRPCCore.GRPCClient<HTTP2ClientTransport.TransportServices>) async throws -> T
     ) async throws -> T {
         let transport = try HTTP2ClientTransport.TransportServices(
-            target: .ipv4(address: host, port: port),
-            transportSecurity: .plaintext
+            target: .dns(host: host, port: port),
+            transportSecurity: .tls
         )
         let client = GRPCCore.GRPCClient(transport: transport)
         return try await withThrowingDiscardingTaskGroup { group in

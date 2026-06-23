@@ -9,9 +9,20 @@ import SwiftUI
 
 @main
 struct umi_mikanApp: App {
+    /// スプラッシュアニメーションの表示状態
+    @State private var showSplash = true
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if showSplash {
+                SplashView {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showSplash = false
+                    }
+                }
+            } else {
+                ContentView()
+            }
         }
     }
 }
