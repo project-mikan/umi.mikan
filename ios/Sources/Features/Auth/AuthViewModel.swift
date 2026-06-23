@@ -1,6 +1,5 @@
+import Connect
 import Foundation
-import GRPCCore
-import GRPCNIOTransportHTTP2TransportServices
 
 /// ログイン・登録の状態と操作を管理するViewModel
 @MainActor
@@ -22,30 +21,33 @@ final class AuthViewModel {
         isLoading = true
         errorMessage = nil
 
-        do {
-            let response = try await GRPCClient.shared.withClient { client in
-                let authClient = Auth_AuthService.Client(wrapping: client)
-                var request = Auth_LoginByPasswordRequest()
-                request.email = email
-                request.password = password
+        let authClient = Auth_AuthServiceClient(client: ConnectClient.shared.protocolClient)
+        var request = Auth_LoginByPasswordRequest()
+        request.email = email
+        request.password = password
 
-                return try await authClient.loginByPassword(request)
-            }
-
-            guard
-                KeychainStore.save(response.accessToken, for: .accessToken),
-                KeychainStore.save(response.refreshToken, for: .refreshToken)
-            else {
-                errorMessage = "トークンの保存に失敗しました。再度お試しください。"
-                isLoading = false
-                return
-            }
-            isLoading = false
-            isLoggedIn = true
-        } catch {
+        let response = await authClient.loginByPassword(request: request, headers: ConnectClient.shared.headers())
+        if let error = response.error {
             errorMessage = errorDescription(error, isAuthEndpoint: true)
             isLoading = false
+            return
         }
+        guard let message = response.message else {
+            errorMessage = "レスポンスが空です"
+            isLoading = false
+            return
+        }
+
+        guard
+            KeychainStore.save(message.accessToken, for: .accessToken),
+            KeychainStore.save(message.refreshToken, for: .refreshToken)
+        else {
+            errorMessage = "トークンの保存に失敗しました。再度お試しください。"
+            isLoading = false
+            return
+        }
+        isLoading = false
+        isLoggedIn = true
     }
 
     /// メールアドレス・パスワード・名前で新規登録する
@@ -53,32 +55,35 @@ final class AuthViewModel {
         isLoading = true
         errorMessage = nil
 
-        do {
-            let response = try await GRPCClient.shared.withClient { client in
-                let authClient = Auth_AuthService.Client(wrapping: client)
-                var request = Auth_RegisterByPasswordRequest()
-                request.email = email
-                request.password = password
-                request.name = name
-                request.registerKey = registerKey
+        let authClient = Auth_AuthServiceClient(client: ConnectClient.shared.protocolClient)
+        var request = Auth_RegisterByPasswordRequest()
+        request.email = email
+        request.password = password
+        request.name = name
+        request.registerKey = registerKey
 
-                return try await authClient.registerByPassword(request)
-            }
-
-            guard
-                KeychainStore.save(response.accessToken, for: .accessToken),
-                KeychainStore.save(response.refreshToken, for: .refreshToken)
-            else {
-                errorMessage = "トークンの保存に失敗しました。再度お試しください。"
-                isLoading = false
-                return
-            }
-            isLoading = false
-            isLoggedIn = true
-        } catch {
+        let response = await authClient.registerByPassword(request: request, headers: ConnectClient.shared.headers())
+        if let error = response.error {
             errorMessage = errorDescription(error, isAuthEndpoint: true)
             isLoading = false
+            return
         }
+        guard let message = response.message else {
+            errorMessage = "レスポンスが空です"
+            isLoading = false
+            return
+        }
+
+        guard
+            KeychainStore.save(message.accessToken, for: .accessToken),
+            KeychainStore.save(message.refreshToken, for: .refreshToken)
+        else {
+            errorMessage = "トークンの保存に失敗しました。再度お試しください。"
+            isLoading = false
+            return
+        }
+        isLoading = false
+        isLoggedIn = true
     }
 
     /// リフレッシュトークンを使ってアクセストークンを更新する
@@ -90,17 +95,23 @@ final class AuthViewModel {
             return
         }
 
-        let response = try await GRPCClient.shared.withClient { client in
-            let authClient = Auth_AuthService.Client(wrapping: client)
-            var request = Auth_RefreshAccessTokenRequest()
-            request.refreshToken = refreshToken
+        let authClient = Auth_AuthServiceClient(client: ConnectClient.shared.protocolClient)
+        var request = Auth_RefreshAccessTokenRequest()
+        request.refreshToken = refreshToken
 
-            return try await authClient.refreshAccessToken(request)
+        let response = await authClient.refreshAccessToken(request: request, headers: ConnectClient.shared.headers())
+        if let error = response.error {
+            logout()
+            throw error
+        }
+        guard let message = response.message else {
+            logout()
+            return
         }
 
         guard
-            KeychainStore.save(response.accessToken, for: .accessToken),
-            KeychainStore.save(response.refreshToken, for: .refreshToken)
+            KeychainStore.save(message.accessToken, for: .accessToken),
+            KeychainStore.save(message.refreshToken, for: .refreshToken)
         else {
             logout()
             return
@@ -113,34 +124,31 @@ final class AuthViewModel {
         isLoggedIn = false
     }
 
-    /// gRPCエラーを日本語メッセージに変換する
+    /// ConnectRPC エラーを日本語メッセージに変換する
     /// - Parameter isAuthEndpoint: ログイン・登録エンドポイントかどうか（UNAUTHENTICATEDの解釈が変わる）
-    func errorDescription(_ error: Error, isAuthEndpoint: Bool = false) -> String {
-        if let rpcError = error as? RPCError {
-            switch rpcError.code {
-            case .unauthenticated:
-                // ログイン・登録エンドポイントでは認証情報の誤り、それ以外はセッション期限切れ
-                if isAuthEndpoint {
-                    return "メールアドレスまたはパスワードが正しくありません"
-                }
-                return "セッションの有効期限が切れました。再ログインしてください。"
-
-            case .notFound:
-                return "ユーザーが見つかりません"
-
-            case .alreadyExists:
-                return "このメールアドレスは既に登録されています"
-
-            case .permissionDenied:
-                return "登録キーが正しくありません"
-
-            case .invalidArgument:
-                return "入力内容を確認してください"
-
-            default:
-                return "エラーが発生しました"
+    func errorDescription(_ error: ConnectError, isAuthEndpoint: Bool = false) -> String {
+        switch error.code {
+        case .unauthenticated:
+            // ログイン・登録エンドポイントでは認証情報の誤り、それ以外はセッション期限切れ
+            if isAuthEndpoint {
+                return "メールアドレスまたはパスワードが正しくありません"
             }
+            return "セッションの有効期限が切れました。再ログインしてください。"
+
+        case .notFound:
+            return "ユーザーが見つかりません"
+
+        case .alreadyExists:
+            return "このメールアドレスは既に登録されています"
+
+        case .permissionDenied:
+            return "登録キーが正しくありません"
+
+        case .invalidArgument:
+            return "入力内容を確認してください"
+
+        default:
+            return "エラーが発生しました"
         }
-        return "接続エラーが発生しました"
     }
 }
