@@ -14,7 +14,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
-	connectadapter "github.com/project-mikan/umi.mikan/backend/infrastructure/connect"
+	connectadapter "github.com/project-mikan/umi.mikan/backend/infrastructure/connectrpc"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/grpc/grpcconnect"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
