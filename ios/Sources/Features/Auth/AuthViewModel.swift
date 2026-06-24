@@ -109,10 +109,14 @@ final class AuthViewModel {
             return
         }
 
-        guard
-            KeychainStore.save(message.accessToken, for: .accessToken),
-            KeychainStore.save(message.refreshToken, for: .refreshToken)
-        else {
+        // アクセストークンを更新する。
+        // RefreshAccessToken レスポンスの refresh_token は空文字列の場合があるため、
+        // 空のときは既存のリフレッシュトークンをそのまま維持する。
+        var accessTokenSaved = KeychainStore.save(message.accessToken, for: .accessToken)
+        if !message.refreshToken.isEmpty {
+            accessTokenSaved = accessTokenSaved && KeychainStore.save(message.refreshToken, for: .refreshToken)
+        }
+        guard accessTokenSaved else {
             logout()
             return
         }
