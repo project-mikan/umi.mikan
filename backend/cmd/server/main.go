@@ -11,9 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
+	connectadapter "github.com/project-mikan/umi.mikan/backend/infrastructure/connect"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/grpc/grpcconnect"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -103,10 +106,35 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 		}
 	}()
 
+	// ConnectRPC HTTP サーバーを起動（iOS/外部クライアント向け）
+	connectMux := http.NewServeMux()
+	authInterceptor := connect.WithInterceptors(connectadapter.NewAuthInterceptor())
+	connectMux.Handle(grpcconnect.NewAuthServiceHandler(connectadapter.NewAuthServiceAdapter(app.AuthService), authInterceptor))
+	connectMux.Handle(grpcconnect.NewDiaryServiceHandler(connectadapter.NewDiaryServiceAdapter(app.DiaryService), authInterceptor))
+	connectMux.Handle(grpcconnect.NewEntityServiceHandler(connectadapter.NewEntityServiceAdapter(app.EntityService), authInterceptor))
+	connectMux.Handle(grpcconnect.NewUserServiceHandler(connectadapter.NewUserServiceAdapter(app.UserService), authInterceptor))
+	// Protocols フィールドで HTTP/1.1 と HTTP/2 をクリアテキスト（h2c）で有効にする。
+	// 本番環境では Cloudflare がTLS終端するため、バックエンドはプレーン HTTP で受け取る。
+	connectServer := &http.Server{
+		Addr:      ":8013",
+		Handler:   connectMux,
+		Protocols: new(http.Protocols),
+	}
+	connectServer.Protocols.SetHTTP1(true)
+	connectServer.Protocols.SetUnencryptedHTTP2(true)
+
 	// Start gRPC server in goroutine
 	serverErrChan := make(chan error, 1)
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
+			serverErrChan <- err
+		}
+	}()
+	// ConnectRPC サーバーの起動エラーも同じチャンネルで検知する
+	go func() {
+		log.Print("ConnectRPC server listening on :8013")
+		if err := connectServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("ConnectRPC server error: %v", err)
 			serverErrChan <- err
 		}
 	}()
@@ -116,9 +144,9 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	case sig := <-sigChan:
 		log.Printf("Received signal %v, initiating graceful shutdown...", sig)
 
-		// Create context with timeout for graceful shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
+		// gRPC GracefulStop 用のコンテキスト（最大 30 秒）
+		grpcCtx, grpcCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer grpcCancel()
 
 		// Gracefully stop the gRPC server
 		stopped := make(chan struct{})
@@ -131,13 +159,23 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 		select {
 		case <-stopped:
 			log.Print("gRPC server gracefully stopped")
-		case <-ctx.Done():
+		case <-grpcCtx.Done():
 			log.Print("Graceful shutdown timeout, forcing stop")
 			grpcServer.Stop()
 		}
 
+		// HTTP サーバー停止用のコンテキストを独立して生成する。
+		// gRPC の停止で時間を消費しても ConnectRPC/メトリクスが十分な猶予を持てるようにする。
+		httpCtx, httpCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer httpCancel()
+
+		// ConnectRPC サーバーを停止
+		if err := connectServer.Shutdown(httpCtx); err != nil {
+			log.Printf("Error shutting down ConnectRPC server: %v", err)
+		}
+
 		// メトリクスサーバーを停止
-		if err := metricsServer.Shutdown(ctx); err != nil {
+		if err := metricsServer.Shutdown(httpCtx); err != nil {
 			log.Printf("Error shutting down metrics server: %v", err)
 		}
 

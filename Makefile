@@ -77,11 +77,15 @@ p-log:
 grpc-go:
 	# 削除分は反映されないのでrm -rfしてから実行
 	rm -rf backend/infrastructure/grpc/*
+	# protoc-gen-connect-go は protoc-gen-connect-go@latest で /go/bin に入れておく
 	docker compose exec backend protoc --proto_path=/proto \
 	--go_out=. \
 	--go_opt=module=github.com/project-mikan/umi.mikan/backend \
 	--go-grpc_out=. \
 	--go-grpc_opt=module=github.com/project-mikan/umi.mikan/backend \
+	--connect-go_out=. \
+	--connect-go_opt=module=github.com/project-mikan/umi.mikan/backend \
+	--plugin=protoc-gen-connect-go=/go/bin/protoc-gen-connect-go \
 	auth/auth.proto diary/diary.proto user/user.proto entity/entity.proto
 
 grpc-ts:
@@ -96,15 +100,19 @@ grpc-swift:
 	# 削除分は反映されないのでrm -rfしてから実行
 	rm -rf ios/Sources/Proto/*
 	mkdir -p ios/Sources/Proto
+	# connect-swift用: protoc-gen-swift（protobufメッセージ）+ protoc-gen-connect-swift（ConnectRPCクライアント）
+	# protoc-gen-connect-swift は connect-swift のリリースページからダウンロードして brew --prefix/bin に配置する
+	# https://github.com/connectrpc/connect-swift/releases
 	protoc --proto_path=proto \
 	--swift_out=ios/Sources/Proto \
-	--grpc-swift2_out=ios/Sources/Proto \
-	--plugin=protoc-gen-grpc-swift2=$(shell brew --prefix)/bin/protoc-gen-grpc-swift-2 \
+	--connect-swift_out=ios/Sources/Proto \
+	--plugin=protoc-gen-connect-swift=$(shell brew --prefix)/bin/protoc-gen-connect-swift \
 	proto/auth/auth.proto proto/diary/diary.proto proto/user/user.proto proto/entity/entity.proto
 
 grpc:
 	make grpc-go
 	make grpc-ts
+	make grpc-swift
 
 f-test:
 	docker compose exec frontend pnpm test:run

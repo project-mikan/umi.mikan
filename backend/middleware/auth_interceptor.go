@@ -15,7 +15,13 @@ import (
 
 type contextKey string
 
-const UserIDKey contextKey = "userID"
+const (
+	UserIDKey contextKey = "userID"
+	// ConnectRPCインターセプターがHTTPヘッダーから抽出したクライアントIPを格納するキー
+	ConnectClientIPKey contextKey = "connectClientIP"
+	// ConnectRPCインターセプターがHTTPヘッダーから抽出したUser-Agentを格納するキー
+	ConnectUserAgentKey contextKey = "connectUserAgent"
+)
 
 // AuthInterceptor gRPCの認証インターセプター
 func AuthInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {

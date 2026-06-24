@@ -13,6 +13,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/ratelimiter"
+	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -111,8 +112,14 @@ func (s *AuthEntry) getClientIdentifier(ctx context.Context) string {
 	return fmt.Sprintf("%s:%s", clientIP, userAgent)
 }
 
-// getClientIP X-Forwarded-Forヘッダーを考慮してクライアントIPを取得
+// getClientIP X-Forwarded-Forヘッダーを考慮してクライアントIPを取得。
+// ConnectRPC 経由の場合はインターセプターがコンテキストに注入した値を優先する。
 func (s *AuthEntry) getClientIP(ctx context.Context) string {
+	// ConnectRPC インターセプターが注入したIPを優先する（gRPC metadata は使えないため）
+	if ip, ok := ctx.Value(middleware.ConnectClientIPKey).(string); ok && ip != "" {
+		return ip
+	}
+
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		// X-Forwarded-Forヘッダーをチェック（プロキシ/ロードバランサー経由の場合）
 		if xff := md.Get("x-forwarded-for"); len(xff) > 0 {
@@ -139,8 +146,14 @@ func (s *AuthEntry) getClientIP(ctx context.Context) string {
 	return "unknown"
 }
 
-// getUserAgent 複数のヘッダー形式からUser-Agentを取得
+// getUserAgent 複数のヘッダー形式からUser-Agentを取得。
+// ConnectRPC 経由の場合はインターセプターがコンテキストに注入した値を優先する。
 func (s *AuthEntry) getUserAgent(ctx context.Context) string {
+	// ConnectRPC インターセプターが注入したUser-Agentを優先する
+	if ua, ok := ctx.Value(middleware.ConnectUserAgentKey).(string); ok && ua != "" {
+		return ua
+	}
+
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		// 標準的なUser-Agentヘッダー
 		if ua := md.Get("user-agent"); len(ua) > 0 && ua[0] != "" {
