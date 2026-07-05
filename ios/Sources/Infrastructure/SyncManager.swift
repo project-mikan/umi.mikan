@@ -108,7 +108,7 @@ final class SyncManager {
             }
             if let error = response.error {
                 if error.code == .alreadyExists {
-                    await resolveConflictAndUpdate(local: local, date: date)
+                    await resolveConflictAndUpdate(local: local, pushedContent: pushedContent, date: date)
                 }
                 return
             }
@@ -128,8 +128,10 @@ final class SyncManager {
         }
     }
 
-    /// 作成時にサーバー側に既存エントリがあった場合、IDを取得して更新で上書きする
-    private func resolveConflictAndUpdate(local: LocalDiaryEntry, date: Diary_YMD) async {
+    /// 作成時にサーバー側に既存エントリがあった場合、IDを取得して更新で上書きする。
+    /// pushedContent は syncEntry でスナップショットした内容を引き継ぎ、
+    /// 同期中の再編集チェックが正しく機能するようにする。
+    private func resolveConflictAndUpdate(local: LocalDiaryEntry, pushedContent: String, date: Diary_YMD) async {
         let client = Diary_DiaryServiceClient(client: ConnectClient.shared.protocolClient)
         var getRequest = Diary_GetDiaryEntryRequest()
         getRequest.date = date
@@ -147,13 +149,14 @@ final class SyncManager {
 
         var updateRequest = Diary_UpdateDiaryEntryRequest()
         updateRequest.id = serverEntry.id
-        updateRequest.content = local.content
+        updateRequest.content = pushedContent
         updateRequest.date = date
 
         let updateResponse = await APIHelper.withTokenRefresh(authViewModel) {
             await client.updateDiaryEntry(request: updateRequest, headers: ConnectClient.shared.headers())
         }
         guard updateResponse.error == nil, let updated = updateResponse.message?.entry else { return }
-        store.completeSync(dateKey: local.dateKey, pushedContent: local.content, serverEntry: updated)
+        // pushedContent を渡すことで、同期中にユーザーが再編集した場合に needsSync が正しく維持される
+        store.completeSync(dateKey: local.dateKey, pushedContent: pushedContent, serverEntry: updated)
     }
 }

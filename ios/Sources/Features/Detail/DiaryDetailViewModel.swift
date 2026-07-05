@@ -83,12 +83,13 @@ final class DiaryDetailViewModel {
         store.saveLocalEdit(date: date, content: content)
         lastLoadedContent = content
         syncManager.refreshPendingCount()
-        isSaved = true
 
+        // ローカル保存＋同期の完了後に「保存済み」を表示する（同期失敗でも表示するが、エラーバナーで区別する）
         await syncManager.syncPending()
         if let local = store.entry(for: date) {
             entry = local.toProto()
         }
+        isSaved = true
 
         // 2秒後に保存済み表示をリセット
         Task {

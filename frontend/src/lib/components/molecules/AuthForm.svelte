@@ -45,7 +45,7 @@
 			<div class="flex justify-center mb-4">
 				<img src="/favicon.png" alt="umi.mikan" class="h-20 w-20" />
 			</div>
-			<p class="text-center text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">umi.mikan</p>
+			<p class="text-center text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{$_('common.appName')}</p>
 			<h2 class="text-center text-xl font-semibold text-gray-900 dark:text-white">
 				{title}
 			</h2>

@@ -22,7 +22,9 @@ final class MonthlyViewModel {
         var components = DateComponents()
         components.year = year
         components.month = month
-        let calendar = Calendar.current
+        // JST 固定カレンダーで月の日数を計算する
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
         guard
             let date = calendar.date(from: components),
             let range = calendar.range(of: .day, in: .month, for: date)
@@ -34,12 +36,23 @@ final class MonthlyViewModel {
 
     private let authViewModel: AuthViewModel
     private let store: LocalDiaryStore
+    /// 曜日名フォーマット用（毎回生成するとスクロール時に高コストになるためキャッシュする）
+    private let weekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        // バックエンドが JST 基準で日付を管理するため JST 固定にする
+        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.dateFormat = "E"
+        return formatter
+    }()
 
     init(authViewModel: AuthViewModel, store: LocalDiaryStore = .shared) {
         self.authViewModel = authViewModel
         self.store = store
+        // バックエンドが JST 基準で日付を管理するため JST 固定にする
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
         let now = Date()
-        let calendar = Calendar.current
         year = calendar.component(.year, from: now)
         month = calendar.component(.month, from: now)
     }
@@ -133,8 +146,10 @@ final class MonthlyViewModel {
 
     /// 今月へ移動する
     func goToToday() async {
+        // バックエンドが JST 基準で日付を管理するため JST 固定にする
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
         let now = Date()
-        let calendar = Calendar.current
         year = calendar.component(.year, from: now)
         month = calendar.component(.month, from: now)
         await fetch()
@@ -155,12 +170,11 @@ final class MonthlyViewModel {
         components.year = year
         components.month = month
         components.day = day
-        let calendar = Calendar.current
+        // JST 固定カレンダーで日付を生成する
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
         guard let date = calendar.date(from: components) else { return "" }
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "E"
-        return formatter.string(from: date)
+        return weekdayFormatter.string(from: date)
     }
 
     // MARK: - Private

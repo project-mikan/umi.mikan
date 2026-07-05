@@ -216,13 +216,18 @@ struct DiaryDetailView: View {
         .padding(.bottom, 14)
     }
 
-    /// Unix秒を日時文字列に変換する
-    private func formatTimestamp(_ timestamp: Int64) -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+    /// Unix秒を日時文字列に変換する（DateFormatter は再生成コストが高いため static にキャッシュする）
+    private static let timestampFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
+        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatTimestamp(_ timestamp: Int64) -> String {
+        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+        return Self.timestampFormatter.string(from: date)
     }
 
     private func errorBanner(message: String) -> some View {

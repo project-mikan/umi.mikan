@@ -45,13 +45,15 @@ final class DiaryViewModel {
         self.store = store
     }
 
-    /// 今日・昨日・一昨日の日付を計算して初期化する
+    /// 今日・昨日・一昨日の日付を計算して初期化する。
+    /// バックエンドが JST 基準で日付を管理するため、カレンダーも JST 固定にする。
     func setup() {
-        let calendar = Calendar.current
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
         let now = Date()
-        today = DiaryDayData(date: ymd(from: now))
-        yesterday = DiaryDayData(date: ymd(from: calendar.date(byAdding: .day, value: -1, to: now)!))
-        dayBeforeYesterday = DiaryDayData(date: ymd(from: calendar.date(byAdding: .day, value: -2, to: now)!))
+        today = DiaryDayData(date: ymd(from: now, calendar: calendar))
+        yesterday = DiaryDayData(date: ymd(from: calendar.date(byAdding: .day, value: -1, to: now)!, calendar: calendar))
+        dayBeforeYesterday = DiaryDayData(date: ymd(from: calendar.date(byAdding: .day, value: -2, to: now)!, calendar: calendar))
         reloadFromStore()
     }
 
@@ -143,8 +145,7 @@ final class DiaryViewModel {
     }
 
     /// Date を Diary_YMD に変換する
-    private func ymd(from date: Date) -> Diary_YMD {
-        let calendar = Calendar.current
+    private func ymd(from date: Date, calendar: Calendar) -> Diary_YMD {
         var ymd = Diary_YMD()
         ymd.year = UInt32(calendar.component(.year, from: date))
         ymd.month = UInt32(calendar.component(.month, from: date))
