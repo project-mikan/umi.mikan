@@ -100,7 +100,7 @@ are OK.
 
 The iOS app connects to the backend via `https://umi-mikan-api.usuyuki.net` (Cloudflare Tunnel) using TLS and **ConnectRPC** protocol. See `adr/0012-ios-grpc-transport.md` for transport protocol decisions.
 
-**iOS Offline Support**: The iOS app is offline-first. Diary entries are persisted locally as JSON (`ios/Sources/Infrastructure/LocalDiaryStore.swift`) and edits made offline are marked `needsSync`. `SyncManager` (`ios/Sources/Infrastructure/SyncManager.swift`) watches network state with `NWPathMonitor` and pushes pending edits to the server when connectivity returns, on app foreground, and after each save. Server data never overwrites unsynced local edits (local wins until pushed). The splash screen (`SplashView`) acts purely as a loading indicator — it is dismissed as soon as local data is available.
+**iOS Offline Support**: The iOS app is offline-first. Diary entries are persisted locally as JSON (`ios/Sources/Infrastructure/LocalDiaryStore.swift`) and edits made offline are marked `needsSync`. `SyncManager` (`ios/Sources/Infrastructure/SyncManager.swift`) watches network state with `NWPathMonitor` and pushes pending edits to the server when connectivity returns, on app foreground, and after each save. Server data never overwrites unsynced local edits (local wins until pushed). The splash screen (`SplashView`) plays its launch animation to completion (`onComplete`) and is dismissed once BOTH the animation and the initial load have finished — the load usually completes first, so the animation duration (~2s) is the effective splash time.
 
 **iOS UX Features**:
 

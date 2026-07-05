@@ -12,7 +12,6 @@ struct DiaryCardView: View {
     let title: String
     let date: Diary_YMD
     @Binding var content: String
-    let isSaving: Bool
     let isSaved: Bool
     /// このカードのフォーカス識別子
     let focusValue: DiaryCardFocus
@@ -20,7 +19,6 @@ struct DiaryCardView: View {
     @FocusState.Binding var focusedCard: DiaryCardFocus?
     /// タイトル・日付タップで日記詳細（ハーフモーダル）を開く
     let onOpenDetail: () -> Void
-    let onSave: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -55,7 +53,13 @@ struct DiaryCardView: View {
             }
             .buttonStyle(.plain)
             Spacer()
-            saveButton
+            // 保存ボタンは置かず（保存はキーボードツールバーから行う）、保存完了の表示だけ出す
+            if isSaved {
+                Label("保存済み", systemImage: "checkmark")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.twGreen)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -86,39 +90,6 @@ struct DiaryCardView: View {
             }
         }
         .padding(12)
-    }
-
-    private var saveButton: some View {
-        Group {
-            if isSaved {
-                Button { onSave() } label: {
-                    Label("保存済み", systemImage: "checkmark")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .frame(height: 32)
-                        .padding(.horizontal, 12)
-                }
-                .buttonStyle(.glass)
-            } else {
-                Button { onSave() } label: {
-                    Group {
-                        if isSaving {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(.white)
-                        } else {
-                            Label("保存", systemImage: "square.and.arrow.down")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                    }
-                    .frame(height: 32)
-                    .padding(.horizontal, 12)
-                }
-                .buttonStyle(.glassProminent)
-                .disabled(isSaving)
-            }
-        }
     }
 
     /// Diary_YMD を "YYYY/MM/DD" 形式の文字列に変換する

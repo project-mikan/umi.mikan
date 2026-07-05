@@ -171,11 +171,17 @@ struct DiaryDetailView: View {
     @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
+            // 閉じるボタンと見分けやすいよう、チェックマーク＋青の塗りつぶしボタンにする
             Button {
                 Task { await viewModel.save() }
             } label: {
-                Label("保存", systemImage: "square.and.arrow.down")
+                Label("保存", systemImage: "checkmark.circle.fill")
+                    .labelStyle(.titleAndIcon)
+                    .fontWeight(.semibold)
             }
+            .buttonStyle(.borderedProminent)
+            .tint(Color.twBlue)
+            .controlSize(.small)
             .disabled(viewModel.isSaving)
             Button {
                 isEditorFocused = false

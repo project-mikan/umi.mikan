@@ -91,11 +91,20 @@ struct HomeView: View {
     @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
+            // 閉じるボタンと見分けやすいよう、チェックマーク＋青の塗りつぶしボタンにする
             Button {
                 saveFocusedCard()
             } label: {
-                Label("保存", systemImage: "square.and.arrow.down")
+                Label(
+                    isFocusedCardSaved ? "保存済み" : "保存",
+                    systemImage: isFocusedCardSaved ? "checkmark" : "checkmark.circle.fill"
+                )
+                .labelStyle(.titleAndIcon)
+                .fontWeight(.semibold)
             }
+            .buttonStyle(.borderedProminent)
+            .tint(Color.twBlue)
+            .controlSize(.small)
             Button {
                 focusedCard = nil
             } label: {
@@ -169,17 +178,10 @@ struct HomeView: View {
             title: "今日",
             date: viewModel.today.date,
             content: $todayContent,
-            isSaving: viewModel.todaySaving,
             isSaved: viewModel.todaySaved,
             focusValue: .today,
             focusedCard: $focusedCard,
-            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.today.date) },
-            onSave: {
-                Task {
-                    await viewModel.saveToday(content: todayContent)
-                    lastAppliedToday = todayContent
-                }
-            }
+            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.today.date) }
         )
     }
 
@@ -188,17 +190,10 @@ struct HomeView: View {
             title: "昨日",
             date: viewModel.yesterday.date,
             content: $yesterdayContent,
-            isSaving: viewModel.yesterdaySaving,
             isSaved: viewModel.yesterdaySaved,
             focusValue: .yesterday,
             focusedCard: $focusedCard,
-            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.yesterday.date) },
-            onSave: {
-                Task {
-                    await viewModel.saveYesterday(content: yesterdayContent)
-                    lastAppliedYesterday = yesterdayContent
-                }
-            }
+            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.yesterday.date) }
         )
     }
 
@@ -207,18 +202,21 @@ struct HomeView: View {
             title: "一昨日",
             date: viewModel.dayBeforeYesterday.date,
             content: $dayBeforeYesterdayContent,
-            isSaving: viewModel.dayBeforeYesterdaySaving,
             isSaved: viewModel.dayBeforeYesterdaySaved,
             focusValue: .dayBeforeYesterday,
             focusedCard: $focusedCard,
-            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.dayBeforeYesterday.date) },
-            onSave: {
-                Task {
-                    await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
-                    lastAppliedDayBefore = dayBeforeYesterdayContent
-                }
-            }
+            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.dayBeforeYesterday.date) }
         )
+    }
+
+    /// フォーカス中のカードが保存済み表示中かどうか（キーボードツールバーの表示用）
+    private var isFocusedCardSaved: Bool {
+        switch focusedCard {
+        case .today: viewModel.todaySaved
+        case .yesterday: viewModel.yesterdaySaved
+        case .dayBeforeYesterday: viewModel.dayBeforeYesterdaySaved
+        case nil: false
+        }
     }
 
     /// フォーカス中のカードの日記を保存する（キーボードツールバーの保存ボタン用）
