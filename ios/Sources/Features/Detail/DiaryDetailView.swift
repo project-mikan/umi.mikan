@@ -2,6 +2,15 @@ import SwiftUI
 
 /// 日付ごとの日記詳細・編集画面
 struct DiaryDetailView: View {
+    /// Unix秒を日時文字列に変換する（DateFormatter は再生成コストが高いため static にキャッシュする）
+    private static let timestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.dateFormat = "yyyy/MM/dd HH:mm"
+        return formatter
+    }()
+
     @State private var viewModel: DiaryDetailViewModel
     /// 「この日記の概要」カーテンの開閉状態（デフォルトは閉じる）
     @State private var isTimelineExpanded = false
@@ -215,15 +224,6 @@ struct DiaryDetailView: View {
         .padding(.horizontal, 14)
         .padding(.bottom, 14)
     }
-
-    /// Unix秒を日時文字列に変換する（DateFormatter は再生成コストが高いため static にキャッシュする）
-    private static let timestampFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
-        formatter.dateFormat = "yyyy/MM/dd HH:mm"
-        return formatter
-    }()
 
     private func formatTimestamp(_ timestamp: Int64) -> String {
         let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
