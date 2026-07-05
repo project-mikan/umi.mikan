@@ -33,10 +33,7 @@ struct DiaryDetailView: View {
     var body: some View {
         ScrollViewReader { proxy in
             scrollContent
-                .toolbar {
-                    saveToolbarButton
-                    keyboardToolbar
-                }
+                .toolbar { keyboardToolbar }
                 .task {
                     await viewModel.fetch()
                     await scrollToFirstHighlight(proxy)
@@ -175,9 +172,12 @@ struct DiaryDetailView: View {
             Button {
                 Task { await viewModel.save() }
             } label: {
-                Label("保存", systemImage: "checkmark.circle.fill")
-                    .labelStyle(.titleAndIcon)
-                    .fontWeight(.semibold)
+                Label(
+                    viewModel.isSaved ? "保存済み" : "保存",
+                    systemImage: viewModel.isSaved ? "checkmark" : "checkmark.circle.fill"
+                )
+                .labelStyle(.titleAndIcon)
+                .fontWeight(.semibold)
             }
             .buttonStyle(.borderedProminent)
             .tint(Color.twBlue)
@@ -188,25 +188,6 @@ struct DiaryDetailView: View {
             } label: {
                 Image(systemName: "keyboard.chevron.compact.down")
             }
-        }
-    }
-
-    @ToolbarContentBuilder private var saveToolbarButton: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                Task { await viewModel.save() }
-            } label: {
-                if viewModel.isSaving {
-                    ProgressView()
-                        .controlSize(.small)
-                } else if viewModel.isSaved {
-                    Label("保存済み", systemImage: "checkmark")
-                } else {
-                    Label("保存", systemImage: "square.and.arrow.down")
-                }
-            }
-            .buttonStyle(.glassProminent)
-            .disabled(viewModel.isSaving || viewModel.isLoading)
         }
     }
 
