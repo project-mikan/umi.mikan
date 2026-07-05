@@ -15,6 +15,9 @@ on:
       - "proto/**"
       - ".github/**"
 
+env:
+  CONNECT_SWIFT_VERSION: "1.2.3"
+
 jobs:
   test:
     runs-on: macos-26
@@ -22,28 +25,53 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # boot は非同期に進むので、ビルド中にシミュレータ起動を済ませておく
+      # boot は非同期に進むので、キャッシュ復元・ツールインストール中にシミュレータ起動を済ませておく
       - name: Boot simulator
         run: xcrun simctl boot "iPhone 17" || true
 
-      - name: Install protoc plugins
-        run: brew install swift-protobuf protoc-gen-grpc-swift
+      # Homebrew でインストールされるパッケージをキャッシュして brew install の時間を短縮する
+      - name: Cache Homebrew packages
+        id: cache-brew
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/Cellar/swift-protobuf
+            /opt/homebrew/Cellar/grpc-swift
+          key: ${{ runner.os }}-brew-swift-protobuf-grpc-swift-v1
+
+      - name: Install protoc plugins (swift-protobuf, grpc-swift)
+        if: steps.cache-brew.outputs.cache-hit != 'true'
+        run: brew install swift-protobuf grpc-swift
+
+      - name: Relink protoc plugins after cache restore
+        if: steps.cache-brew.outputs.cache-hit == 'true'
+        run: brew link --overwrite swift-protobuf grpc-swift 2>/dev/null || brew install swift-protobuf grpc-swift
+
+      # protoc-gen-connect-swift バイナリをキャッシュして毎回のダウンロードを回避する
+      - name: Cache protoc-gen-connect-swift
+        id: cache-connect-swift
+        uses: actions/cache@v4
+        with:
+          path: /opt/homebrew/bin/protoc-gen-connect-swift
+          key: ${{ runner.os }}-protoc-gen-connect-swift-${{ env.CONNECT_SWIFT_VERSION }}
 
       - name: Install protoc-gen-connect-swift
-        run: curl -sL https://github.com/connectrpc/connect-swift/releases/download/1.2.3/protoc-gen-connect-swift.tar.gz | tar -xz -C $(brew --prefix)/bin/
+        if: steps.cache-connect-swift.outputs.cache-hit != 'true'
+        run: curl -sL https://github.com/connectrpc/connect-swift/releases/download/${{ env.CONNECT_SWIFT_VERSION }}/protoc-gen-connect-swift.tar.gz | tar -xz -C $(brew --prefix)/bin/
 
       - name: Generate Swift gRPC code
         run: make grpc-swift
 
       # SPM 依存の取得とビルド成果物を再利用してビルド時間を短縮する
+      # キーに github.sha を含めないことで同一 Package.resolved のビルドを PR をまたいで再利用できる
       # 完全一致しない場合も restore-keys で直近のキャッシュから差分ビルドする
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
           path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ github.sha }}
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-deriveddata-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
             ${{ runner.os }}-deriveddata-
 
       # テストは数秒で終わるため並列テスト(シミュレータのクローン作成)は無効化し、
