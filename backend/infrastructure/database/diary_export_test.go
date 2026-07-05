@@ -79,3 +79,18 @@ func TestDiariesByUserIDAndDateRange(t *testing.T) {
 		}
 	})
 }
+
+func TestDiariesByUserIDAndDateRange_DBError(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	ctx := context.Background()
+
+	// DBを閉じてクエリエラーを発生させる
+	if err := db.Close(); err != nil {
+		t.Fatalf("DB クローズに失敗: %v", err)
+	}
+
+	_, err := database.DiariesByUserIDAndDateRange(ctx, db, "00000000-0000-0000-0000-000000000001", 2024, 1, 2024, 12)
+	if err == nil {
+		t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
+	}
+}

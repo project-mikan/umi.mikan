@@ -635,10 +635,38 @@ func TestDiaryEntry_ExportDiaryEntries(t *testing.T) {
 		}
 	})
 
-	t.Run("異常系: 開始が終了より後の場合はInvalidArgumentエラー", func(t *testing.T) {
+	t.Run("異常系: toがnilの場合はInvalidArgumentエラー", func(t *testing.T) {
+		_, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
+			From: &g.YM{Year: 2024, Month: 1},
+			To:   nil,
+		})
+		if err == nil {
+			t.Fatal("エラーが期待されたが nilが返った")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("InvalidArgument エラーを期待したが: %v", err)
+		}
+	})
+
+	t.Run("異常系: 開始が終了より後の場合はInvalidArgumentエラー（同年、開始月>終了月）", func(t *testing.T) {
 		_, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
 			From: &g.YM{Year: 2024, Month: 6},
 			To:   &g.YM{Year: 2024, Month: 3},
+		})
+		if err == nil {
+			t.Fatal("エラーが期待されたが nilが返った")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("InvalidArgument エラーを期待したが: %v", err)
+		}
+	})
+
+	t.Run("異常系: 開始が終了より後の場合はInvalidArgumentエラー（開始年>終了年）", func(t *testing.T) {
+		_, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
+			From: &g.YM{Year: 2025, Month: 1},
+			To:   &g.YM{Year: 2024, Month: 12},
 		})
 		if err == nil {
 			t.Fatal("エラーが期待されたが nilが返った")
