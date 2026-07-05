@@ -59,31 +59,12 @@ final class LocalDiaryStore {
 
     /// テスト用に保存先ファイルを指定できるイニシャライザ
     ///
-    /// nonisolated にすることで nonisolated(unsafe) static let から呼び出せる。
-    /// init 内では静的ヘルパーのみ使用し、@MainActor のプロパティは stored property の初期化のみ行う。
+    /// nonisolated init にすることで static let shared の初期化時に呼び出せる。
+    /// ファイルアクセスはクラス外のファイルスコープ関数で行うため @MainActor isolation の影響を受けない。
     nonisolated init(fileURL: URL? = nil) {
-        let resolvedURL = Self.resolveFileURL(fileURL)
+        let resolvedURL = _resolveLocalDiaryStoreFileURL(fileURL)
         self.fileURL = resolvedURL
-        entries = Self.loadEntries(from: resolvedURL)
-    }
-
-    // MARK: - Private static helpers
-
-    // nonisolated を明示することで @MainActor クラス内でも nonisolated init から呼び出せる。
-    // modifier_order: nonisolated は private より前（SwiftLint ルール準拠）
-
-    /// 保存先 URL を解決する
-    private nonisolated static func resolveFileURL(_ override: URL?) -> URL {
-        if let override { return override }
-        let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
-        return supportDir.appendingPathComponent("diary_store.json")
-    }
-
-    /// ファイルからエントリを読み込む
-    private nonisolated static func loadEntries(from url: URL) -> [String: LocalDiaryEntry] {
-        let data = try? Data(contentsOf: url)
-        return data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
+        entries = _loadLocalDiaryEntries(from: resolvedURL)
     }
 
     /// 指定日付のエントリを取得する
@@ -185,3 +166,20 @@ final class LocalDiaryStore {
         try? data.write(to: fileURL, options: .atomic)
     }
 }
+
+// MARK: - File-scope helpers（@MainActor の外なので nonisolated 修飾子が不要）
+
+/// LocalDiaryStore の保存先 URL を解決する
+private func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL {
+    if let override { return override }
+    let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
+    return supportDir.appendingPathComponent("diary_store.json")
+}
+
+/// LocalDiaryStore のエントリをファイルから読み込む
+private func _loadLocalDiaryEntries(from url: URL) -> [String: LocalDiaryEntry] {
+    let data = try? Data(contentsOf: url)
+    return data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
+}
+
