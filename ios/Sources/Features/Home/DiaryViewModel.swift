@@ -38,6 +38,10 @@ final class DiaryViewModel {
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let store: LocalDiaryStore
+    /// 保存済みフラグリセットタスク（協調キャンセルのため保持する）
+    private var todaySavedResetTask: Task<Void, Never>?
+    private var yesterdaySavedResetTask: Task<Void, Never>?
+    private var dayBeforeSavedResetTask: Task<Void, Never>?
 
     init(authViewModel: AuthViewModel, syncManager: SyncManager, store: LocalDiaryStore = .shared) {
         self.authViewModel = authViewModel
@@ -98,7 +102,7 @@ final class DiaryViewModel {
         defer { todaySaving = false }
         today.entry = await saveLocally(date: today.date, content: content)
         todaySaved = true
-        resetSavedFlagLater { self.todaySaved = false }
+        resetSavedFlagLater(task: &todaySavedResetTask) { self.todaySaved = false }
     }
 
     /// 昨日の日記を保存する
@@ -107,7 +111,7 @@ final class DiaryViewModel {
         defer { yesterdaySaving = false }
         yesterday.entry = await saveLocally(date: yesterday.date, content: content)
         yesterdaySaved = true
-        resetSavedFlagLater { self.yesterdaySaved = false }
+        resetSavedFlagLater(task: &yesterdaySavedResetTask) { self.yesterdaySaved = false }
     }
 
     /// 一昨日の日記を保存する
@@ -116,7 +120,7 @@ final class DiaryViewModel {
         defer { dayBeforeYesterdaySaving = false }
         dayBeforeYesterday.entry = await saveLocally(date: dayBeforeYesterday.date, content: content)
         dayBeforeYesterdaySaved = true
-        resetSavedFlagLater { self.dayBeforeYesterdaySaved = false }
+        resetSavedFlagLater(task: &dayBeforeSavedResetTask) { self.dayBeforeYesterdaySaved = false }
     }
 
     // MARK: - Private
@@ -136,11 +140,16 @@ final class DiaryViewModel {
         dayBeforeYesterday.entry = store.entry(for: dayBeforeYesterday.date)?.toProto()
     }
 
-    /// 2秒後に保存済みフラグをリセットする
-    private func resetSavedFlagLater(_ reset: @escaping @MainActor () -> Void) {
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            reset()
+    /// 2秒後に保存済みフラグをリセットする（協調キャンセル可能なタスクとして保持する）
+    private func resetSavedFlagLater(task: inout Task<Void, Never>?, _ reset: @escaping @MainActor () -> Void) {
+        task?.cancel()
+        task = Task {
+            do {
+                try await Task.sleep(for: .seconds(2))
+                reset()
+            } catch {
+                // キャンセル時は何もしない
+            }
         }
     }
 

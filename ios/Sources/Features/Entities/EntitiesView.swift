@@ -45,7 +45,7 @@ struct EntitiesView: View {
         }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
-                errorBanner(message: error)
+                ErrorBannerView(message: error) { viewModel.errorMessage = nil }
             }
         }
     }
@@ -157,26 +157,5 @@ struct EntitiesView: View {
                 }
             }
         }
-    }
-
-    private func errorBanner(message: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.circle.fill")
-            Text(message)
-                .font(.subheadline)
-            Spacer()
-            Button {
-                viewModel.errorMessage = nil
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.caption)
-            }
-        }
-        .padding(16)
-        .background(.red.opacity(0.15))
-        .foregroundStyle(Color.twRed)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .glassEffect(.regular.tint(.red), in: .rect(cornerRadius: 12))
-        .padding(16)
     }
 }

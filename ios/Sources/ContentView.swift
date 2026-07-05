@@ -2,14 +2,15 @@ import SwiftUI
 
 /// 認証状態に応じてログイン画面とメイン画面を切り替えるルートビュー
 struct ContentView: View {
-    @State private var authViewModel = AuthViewModel()
+    let authViewModel: AuthViewModel
+    let syncManager: SyncManager
 
     /// 初期読み込み状態（スプラッシュ表示の制御、Preview等ではnil可）
     var launchState: AppLaunchState?
 
     var body: some View {
         if authViewModel.isLoggedIn {
-            MainView(authViewModel: authViewModel, launchState: launchState)
+            MainView(authViewModel: authViewModel, syncManager: syncManager, launchState: launchState)
         } else {
             LoginView(viewModel: authViewModel)
                 .onAppear {
@@ -23,19 +24,11 @@ struct ContentView: View {
 /// メイン画面 - ホーム・月ごと・検索タブを持つTabView
 struct MainView: View {
     let authViewModel: AuthViewModel
+    let syncManager: SyncManager
     let launchState: AppLaunchState?
-
-    @State private var syncManager: SyncManager
 
     @Environment(\.scenePhase)
     private var scenePhase
-
-    // swiftlint:disable:next type_contents_order
-    init(authViewModel: AuthViewModel, launchState: AppLaunchState? = nil) {
-        self.authViewModel = authViewModel
-        self.launchState = launchState
-        _syncManager = State(initialValue: SyncManager(authViewModel: authViewModel))
-    }
 
     var body: some View {
         TabView {

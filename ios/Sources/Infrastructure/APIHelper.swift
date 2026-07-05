@@ -3,18 +3,22 @@ import Foundation
 
 /// ConnectRPC API呼び出しの共通ヘルパー
 enum APIHelper {
-    /// アクセストークン期限切れ（UNAUTHENTICATED）時にリフレッシュしてリトライする
+    /// アクセストークン期限切れ（UNAUTHENTICATED）時にリフレッシュしてリトライする。
+    /// リフレッシュ自体が失敗した場合（リフレッシュトークンも期限切れ等）はリトライせず元のエラーを返す。
     @MainActor
     static func withTokenRefresh<T>(
         _ authViewModel: AuthViewModel,
         _ operation: () async -> ResponseMessage<T>
     ) async -> ResponseMessage<T> {
         let response = await operation()
-        if response.error?.code == .unauthenticated {
-            try? await authViewModel.refreshAccessToken()
-            return await operation()
+        guard response.error?.code == .unauthenticated else { return response }
+        do {
+            try await authViewModel.refreshAccessToken()
+        } catch {
+            // リフレッシュ失敗（リフレッシュトークン期限切れ等）はログアウト済みのため再試行しない
+            return response
         }
-        return response
+        return await operation()
     }
 
     /// ネットワーク起因のエラーかどうかを判定する。

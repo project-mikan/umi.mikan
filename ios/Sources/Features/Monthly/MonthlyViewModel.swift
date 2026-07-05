@@ -22,12 +22,10 @@ final class MonthlyViewModel {
         var components = DateComponents()
         components.year = year
         components.month = month
-        // JST 固定カレンダーで月の日数を計算する
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        // キャッシュした JST 固定カレンダーで月の日数を計算する
         guard
-            let date = calendar.date(from: components),
-            let range = calendar.range(of: .day, in: .month, for: date)
+            let date = jstCalendar.date(from: components),
+            let range = jstCalendar.range(of: .day, in: .month, for: date)
         else {
             return 30
         }
@@ -44,6 +42,13 @@ final class MonthlyViewModel {
         formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
         formatter.dateFormat = "E"
         return formatter
+    }()
+
+    /// JST 固定カレンダー（毎回生成するとスクロール時に高コストになるためキャッシュする）
+    private let jstCalendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        return calendar
     }()
 
     init(authViewModel: AuthViewModel, store: LocalDiaryStore = .shared) {
@@ -146,12 +151,10 @@ final class MonthlyViewModel {
 
     /// 今月へ移動する
     func goToToday() async {
-        // バックエンドが JST 基準で日付を管理するため JST 固定にする
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        // キャッシュした JST 固定カレンダーで現在の年月を取得する
         let now = Date()
-        year = calendar.component(.year, from: now)
-        month = calendar.component(.month, from: now)
+        year = jstCalendar.component(.year, from: now)
+        month = jstCalendar.component(.month, from: now)
         await fetch()
     }
 
@@ -170,10 +173,8 @@ final class MonthlyViewModel {
         components.year = year
         components.month = month
         components.day = day
-        // JST 固定カレンダーで日付を生成する
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
-        guard let date = calendar.date(from: components) else { return "" }
+        // キャッシュした JST 固定カレンダーで日付を生成する
+        guard let date = jstCalendar.date(from: components) else { return "" }
         return weekdayFormatter.string(from: date)
     }
 

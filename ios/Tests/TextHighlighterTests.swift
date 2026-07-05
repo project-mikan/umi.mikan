@@ -6,7 +6,7 @@ import Testing
 /// TextHighlighterのテスト
 struct TextHighlighterTests {
     /// highlight のテーブル駆動テスト用ケース
-    struct HighlightCase: Sendable {
+    struct HighlightCase {
         let name: String
         let text: String
         let keywords: [String]

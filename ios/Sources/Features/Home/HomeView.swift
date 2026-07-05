@@ -38,16 +38,13 @@ struct HomeView: View {
             .padding(.vertical, 16)
         }
         .task {
-            // ローカルストアから即座に表示し、読み込み済みならスプラッシュを終了する
+            // ローカルストアから即座に表示する。データの有無によらず即座にスプラッシュを終了する
             viewModel.loadLocal()
             applyLoadedContents()
-            if viewModel.hasLocalData {
-                launchState?.isInitialLoading = false
-            }
+            launchState?.isInitialLoading = false
             // サーバーから最新を取得して反映する
             await viewModel.refreshFromServer()
             applyLoadedContents(preservingEdits: true)
-            launchState?.isInitialLoading = false
         }
         .onAppear {
             // 詳細画面から戻った時などにローカルの最新を反映する（入力途中の内容は保持）
@@ -61,9 +58,9 @@ struct HomeView: View {
         .navigationDestination(for: Diary_YMD.self) { date in
             DiaryDetailView(date: date, authViewModel: authViewModel, syncManager: syncManager)
         }
-        .overlay {
+        .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
-                errorBanner(message: error)
+                ErrorBannerView(message: error) { viewModel.errorMessage = nil }
             }
         }
     }
@@ -183,31 +180,6 @@ struct HomeView: View {
         if !preservingEdits || dayBeforeYesterdayContent == lastAppliedDayBefore {
             dayBeforeYesterdayContent = newDayBefore
             lastAppliedDayBefore = newDayBefore
-        }
-    }
-
-    private func errorBanner(message: String) -> some View {
-        VStack {
-            Spacer()
-            HStack(spacing: 8) {
-                Image(systemName: "exclamationmark.circle.fill")
-                Text(message)
-                    .font(.subheadline)
-                Spacer()
-                Button {
-                    viewModel.errorMessage = nil
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption)
-                }
-            }
-            .padding(16)
-            .background(.red.opacity(0.15))
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .glassEffect(.regular.tint(.red), in: .rect(cornerRadius: 12))
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
         }
     }
 }

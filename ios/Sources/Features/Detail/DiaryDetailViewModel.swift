@@ -23,6 +23,8 @@ final class DiaryDetailViewModel {
     private let store: LocalDiaryStore
     /// 最後にストアから読み込んだ内容（ユーザーの入力途中の上書きを防ぐ）
     private var lastLoadedContent: String = ""
+    /// isSaved を 2 秒後にリセットするタスク（ViewModel 破棄時にキャンセルできるよう保持する）
+    private var savedResetTask: Task<Void, Never>?
 
     init(date: Diary_YMD, authViewModel: AuthViewModel, syncManager: SyncManager, store: LocalDiaryStore = .shared) {
         self.date = date
@@ -91,10 +93,15 @@ final class DiaryDetailViewModel {
         }
         isSaved = true
 
-        // 2秒後に保存済み表示をリセット
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            isSaved = false
+        // 2秒後に保存済み表示をリセット（協調キャンセル可能なタスクとして保持する）
+        savedResetTask?.cancel()
+        savedResetTask = Task {
+            do {
+                try await Task.sleep(for: .seconds(2))
+                isSaved = false
+            } catch {
+                // キャンセル時は何もしない
+            }
         }
     }
 
