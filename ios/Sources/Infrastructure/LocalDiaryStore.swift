@@ -182,4 +182,3 @@ private func _loadLocalDiaryEntries(from url: URL) -> [String: LocalDiaryEntry] 
     let data = try? Data(contentsOf: url)
     return data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
 }
-
