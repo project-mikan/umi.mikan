@@ -6,6 +6,14 @@ on:
       - "ios/**"
       - "proto/**"
       - ".github/**"
+  # main のキャッシュは全 PR から参照できるため、push でキャッシュを温めておく
+  push:
+    branches:
+      - main
+    paths:
+      - "ios/**"
+      - "proto/**"
+      - ".github/**"
 
 jobs:
   test:
@@ -13,6 +21,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+
+      # boot は非同期に進むので、ビルド中にシミュレータ起動を済ませておく
+      - name: Boot simulator
+        run: xcrun simctl boot "iPhone 17" || true
 
       - name: Install protoc plugins
         run: brew install swift-protobuf protoc-gen-grpc-swift
@@ -23,10 +35,27 @@ jobs:
       - name: Generate Swift gRPC code
         run: make grpc-swift
 
+      # SPM 依存の取得とビルド成果物を再利用してビルド時間を短縮する
+      # 完全一致しない場合も restore-keys で直近のキャッシュから差分ビルドする
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+            ${{ runner.os }}-deriveddata-
+
+      # テストは数秒で終わるため並列テスト(シミュレータのクローン作成)は無効化し、
+      # 事前ブート済みのシミュレータをそのまま使う
+      # シミュレータ向けビルドのためコード署名とインデックス生成は不要
       - name: Run tests
         run: |
           xcodebuild test \
             -project ios/umi.mikan.xcodeproj \
             -scheme "umi.mikan" \
-            -destination "platform=iOS Simulator,name=iPhone 17" \
-            -quiet
+            -destination "platform=iOS Simulator,name=iPhone 17,arch=arm64" \
+            -parallel-testing-enabled NO \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
