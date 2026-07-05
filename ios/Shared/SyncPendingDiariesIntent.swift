@@ -3,7 +3,7 @@ import Foundation
 
 extension Notification.Name {
     /// Live Activityの同期ボタンから同期実行を要求する通知
-    static let syncPendingDiariesRequested = Notification.Name("net.usuyuki.umi-mikan.syncPendingDiariesRequested")
+    nonisolated static let syncPendingDiariesRequested = Notification.Name("net.usuyuki.umi-mikan.syncPendingDiariesRequested")
 }
 
 /// Live Activityの「今すぐ同期」ボタンで実行されるインテント。

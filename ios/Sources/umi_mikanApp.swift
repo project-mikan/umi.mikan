@@ -14,22 +14,19 @@ struct umi_mikanApp: App {
     /// 認証状態（アプリライフサイクル全体で共有する）
     @State private var authViewModel = AuthViewModel()
     /// 同期マネージャー（アプリ起動直後から存在させ、Live Activity Intent を確実に受け取る）
-    @State private var syncManager: SyncManager?
+    @State private var syncManager: SyncManager
+
+    // swiftlint:disable:next type_contents_order
+    init() {
+        let auth = AuthViewModel()
+        _authViewModel = State(initialValue: auth)
+        _syncManager = State(initialValue: SyncManager(authViewModel: auth))
+    }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                Group {
-                    if let syncManager {
-                        ContentView(authViewModel: authViewModel, syncManager: syncManager, launchState: launchState)
-                    }
-                }
-                .task {
-                    // SyncManager はアプリ起動直後に作成し、Live Activity Intent の通知を受け取れるようにする
-                    if syncManager == nil {
-                        syncManager = SyncManager(authViewModel: authViewModel)
-                    }
-                }
+                ContentView(authViewModel: authViewModel, syncManager: syncManager, launchState: launchState)
 
                 // スプラッシュは読み込み中インジケーター。読み込みが終わったら出さない
                 if launchState.isInitialLoading {

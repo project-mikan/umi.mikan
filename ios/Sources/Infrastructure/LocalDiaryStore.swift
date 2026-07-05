@@ -49,14 +49,14 @@ struct LocalDiaryEntry: Codable, Equatable {
 /// オフライン編集は needsSync フラグで管理し、SyncManager がオンライン復帰時にサーバーへ送信する。
 @MainActor
 final class LocalDiaryStore {
-    static let shared = LocalDiaryStore()
+    nonisolated static let shared = LocalDiaryStore()
 
     /// dateKey（"YYYY-MM-DD"）をキーとしたエントリのマップ
     private var entries: [String: LocalDiaryEntry] = [:]
     private let fileURL: URL
 
     /// テスト用に保存先ファイルを指定できるイニシャライザ
-    init(fileURL: URL? = nil) {
+    nonisolated init(fileURL: URL? = nil) {
         if let fileURL {
             self.fileURL = fileURL
         } else {
@@ -64,7 +64,9 @@ final class LocalDiaryStore {
             try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
             self.fileURL = supportDir.appendingPathComponent("diary_store.json")
         }
-        load()
+        let data = try? Data(contentsOf: self.fileURL)
+        let loaded = data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
+        entries = loaded
     }
 
     /// 指定日付のエントリを取得する
@@ -159,12 +161,6 @@ final class LocalDiaryStore {
     }
 
     // MARK: - Private
-
-    /// ファイルからエントリを読み込む
-    private func load() {
-        guard let data = try? Data(contentsOf: fileURL) else { return }
-        entries = (try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: data)) ?? [:]
-    }
 
     /// エントリをファイルへ書き込む
     private func persist() {
