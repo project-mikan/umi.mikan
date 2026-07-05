@@ -180,9 +180,10 @@ struct HomeView: View {
             content: $todayContent,
             isSaved: viewModel.todaySaved,
             focusValue: .today,
-            focusedCard: $focusedCard,
-            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.today.date) }
-        )
+            focusedCard: $focusedCard
+        ) {
+            selectedItem = DiarySheetItem(date: viewModel.today.date)
+        }
     }
 
     private var yesterdayCard: some View {
@@ -192,9 +193,10 @@ struct HomeView: View {
             content: $yesterdayContent,
             isSaved: viewModel.yesterdaySaved,
             focusValue: .yesterday,
-            focusedCard: $focusedCard,
-            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.yesterday.date) }
-        )
+            focusedCard: $focusedCard
+        ) {
+            selectedItem = DiarySheetItem(date: viewModel.yesterday.date)
+        }
     }
 
     private var dayBeforeYesterdayCard: some View {
@@ -204,9 +206,10 @@ struct HomeView: View {
             content: $dayBeforeYesterdayContent,
             isSaved: viewModel.dayBeforeYesterdaySaved,
             focusValue: .dayBeforeYesterday,
-            focusedCard: $focusedCard,
-            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.dayBeforeYesterday.date) }
-        )
+            focusedCard: $focusedCard
+        ) {
+            selectedItem = DiarySheetItem(date: viewModel.dayBeforeYesterday.date)
+        }
     }
 
     /// フォーカス中のカードが保存済み表示中かどうか（キーボードツールバーの表示用）
