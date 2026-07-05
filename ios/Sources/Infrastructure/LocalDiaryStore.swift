@@ -64,7 +64,7 @@ final class LocalDiaryStore {
     init(fileURL: URL? = nil) {
         let resolvedURL = Self.resolveFileURL(fileURL)
         self.fileURL = resolvedURL
-        self.entries = Self.loadEntries(from: resolvedURL)
+        entries = Self.loadEntries(from: resolvedURL)
     }
 
     // MARK: - nonisolated helpers（ファイルIO は MainActor 不要）
