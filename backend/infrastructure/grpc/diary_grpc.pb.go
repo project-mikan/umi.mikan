@@ -35,6 +35,7 @@ const (
 	DiaryService_GetDiaryHighlight_FullMethodName          = "/diary.DiaryService/GetDiaryHighlight"
 	DiaryService_RegenerateAllEmbeddings_FullMethodName    = "/diary.DiaryService/RegenerateAllEmbeddings"
 	DiaryService_GetDiaryEmbeddingStatus_FullMethodName    = "/diary.DiaryService/GetDiaryEmbeddingStatus"
+	DiaryService_ExportDiaryEntries_FullMethodName         = "/diary.DiaryService/ExportDiaryEntries"
 )
 
 // DiaryServiceClient is the client API for DiaryService service.
@@ -209,6 +210,17 @@ type DiaryServiceClient interface {
 	// エラー:
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryEmbeddingStatus(ctx context.Context, in *GetDiaryEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetDiaryEmbeddingStatusResponse, error)
+	// ExportDiaryEntries は指定期間（開始年月〜終了年月）の全日記をエクスポートします。
+	// 大量データにも対応するため1回のDBクエリで取得します。
+	//
+	// 例:
+	//
+	//	request: { from: { year: 2024, month: 4 }, to: { year: 2026, month: 6 } }
+	//	response: { entries: [...], total_count: 123 }
+	//
+	// エラー:
+	//   - InvalidArgument: 開始年月が終了年月より後の場合
+	ExportDiaryEntries(ctx context.Context, in *ExportDiaryEntriesRequest, opts ...grpc.CallOption) (*ExportDiaryEntriesResponse, error)
 }
 
 type diaryServiceClient struct {
@@ -373,6 +385,16 @@ func (c *diaryServiceClient) GetDiaryEmbeddingStatus(ctx context.Context, in *Ge
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDiaryEmbeddingStatusResponse)
 	err := c.cc.Invoke(ctx, DiaryService_GetDiaryEmbeddingStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diaryServiceClient) ExportDiaryEntries(ctx context.Context, in *ExportDiaryEntriesRequest, opts ...grpc.CallOption) (*ExportDiaryEntriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExportDiaryEntriesResponse)
+	err := c.cc.Invoke(ctx, DiaryService_ExportDiaryEntries_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -551,6 +573,17 @@ type DiaryServiceServer interface {
 	// エラー:
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryEmbeddingStatus(context.Context, *GetDiaryEmbeddingStatusRequest) (*GetDiaryEmbeddingStatusResponse, error)
+	// ExportDiaryEntries は指定期間（開始年月〜終了年月）の全日記をエクスポートします。
+	// 大量データにも対応するため1回のDBクエリで取得します。
+	//
+	// 例:
+	//
+	//	request: { from: { year: 2024, month: 4 }, to: { year: 2026, month: 6 } }
+	//	response: { entries: [...], total_count: 123 }
+	//
+	// エラー:
+	//   - InvalidArgument: 開始年月が終了年月より後の場合
+	ExportDiaryEntries(context.Context, *ExportDiaryEntriesRequest) (*ExportDiaryEntriesResponse, error)
 	mustEmbedUnimplementedDiaryServiceServer()
 }
 
@@ -608,6 +641,9 @@ func (UnimplementedDiaryServiceServer) RegenerateAllEmbeddings(context.Context, 
 }
 func (UnimplementedDiaryServiceServer) GetDiaryEmbeddingStatus(context.Context, *GetDiaryEmbeddingStatusRequest) (*GetDiaryEmbeddingStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDiaryEmbeddingStatus not implemented")
+}
+func (UnimplementedDiaryServiceServer) ExportDiaryEntries(context.Context, *ExportDiaryEntriesRequest) (*ExportDiaryEntriesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExportDiaryEntries not implemented")
 }
 func (UnimplementedDiaryServiceServer) mustEmbedUnimplementedDiaryServiceServer() {}
 func (UnimplementedDiaryServiceServer) testEmbeddedByValue()                      {}
@@ -918,6 +954,24 @@ func _DiaryService_GetDiaryEmbeddingStatus_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiaryService_ExportDiaryEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportDiaryEntriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiaryServiceServer).ExportDiaryEntries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DiaryService_ExportDiaryEntries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiaryServiceServer).ExportDiaryEntries(ctx, req.(*ExportDiaryEntriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiaryService_ServiceDesc is the grpc.ServiceDesc for DiaryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -988,6 +1042,10 @@ var DiaryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDiaryEmbeddingStatus",
 			Handler:    _DiaryService_GetDiaryEmbeddingStatus_Handler,
+		},
+		{
+			MethodName: "ExportDiaryEntries",
+			Handler:    _DiaryService_ExportDiaryEntries_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -146,3 +146,11 @@ func (a *DiaryServiceAdapter) GetDiaryEmbeddingStatus(ctx context.Context, req *
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (a *DiaryServiceAdapter) ExportDiaryEntries(ctx context.Context, req *connect.Request[g.ExportDiaryEntriesRequest]) (*connect.Response[g.ExportDiaryEntriesResponse], error) {
+	resp, err := a.svc.ExportDiaryEntries(ctx, req.Msg)
+	if err != nil {
+		return nil, grpcStatusToConnectError(err)
+	}
+	return connect.NewResponse(resp), nil
+}

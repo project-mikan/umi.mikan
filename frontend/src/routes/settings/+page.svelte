@@ -142,6 +142,73 @@
     form.submit();
   }
 
+  // エクスポート関連の状態
+  const currentDate = new Date();
+  let exportFromYear = currentDate.getFullYear() - 1;
+  let exportFromMonth = currentDate.getMonth() + 1; // 0始まりなので+1
+  let exportToYear = currentDate.getFullYear();
+  let exportToMonth = currentDate.getMonth() + 1;
+  let exportLoading = false;
+  let exportError = "";
+
+  // 年の選択肢（2000年〜現在年）
+  const yearOptions = Array.from(
+    { length: currentDate.getFullYear() - 2000 + 1 },
+    (_, i) => 2000 + i,
+  );
+  // 月の選択肢
+  const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  // 日記をJSONでエクスポートする
+  async function handleExport() {
+    exportError = "";
+
+    // 開始が終了より後の場合はエラー
+    if (
+      exportFromYear > exportToYear ||
+      (exportFromYear === exportToYear && exportFromMonth > exportToMonth)
+    ) {
+      exportError = $_("settings.export.periodError");
+      return;
+    }
+
+    exportLoading = true;
+    try {
+      const params = new URLSearchParams({
+        fromYear: String(exportFromYear),
+        fromMonth: String(exportFromMonth),
+        toYear: String(exportToYear),
+        toMonth: String(exportToMonth),
+      });
+
+      const response = await fetch(`/api/diary/export?${params.toString()}`);
+      if (!response.ok) {
+        exportError = $_("settings.export.failed");
+        return;
+      }
+
+      // Content-DispositionヘッダからファイルをBlobでDLする
+      const blob = await response.blob();
+      const contentDisposition =
+        response.headers.get("Content-Disposition") ?? "";
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      const filename = filenameMatch ? filenameMatch[1] : "diary_export.json";
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      exportError = $_("settings.export.failed");
+    } finally {
+      exportLoading = false;
+    }
+  }
+
   function confirmDeleteAccount() {
     showDeleteAccountConfirm = true;
   }
@@ -667,6 +734,97 @@
 								</a>
 						</section>
 					{/if}
+				</div>
+			</div>
+
+			<!-- エクスポートセクション -->
+			<div class="space-y-8">
+				<div>
+					<h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+						{$_("settings.export.title")}
+					</h2>
+
+					<section id="export" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+						<h3 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+							{$_("settings.export.jsonTitle")}
+						</h3>
+						<p class="text-gray-700 dark:text-gray-300 mb-4 auto-phrase-target">
+							{$_("settings.export.description")}
+						</p>
+
+						<div class="flex flex-wrap gap-4 items-end">
+							<!-- 開始年月 -->
+							<div>
+								<label for="export-from-year" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+									{$_("settings.export.from")}
+								</label>
+								<div class="flex gap-2">
+									<select
+										id="export-from-year"
+										bind:value={exportFromYear}
+										class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+									>
+										{#each yearOptions as year}
+											<option value={year}>{year}</option>
+										{/each}
+									</select>
+									<label for="export-from-month" class="sr-only">{$_("settings.export.from")} 月</label>
+									<select
+										id="export-from-month"
+										bind:value={exportFromMonth}
+										class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+									>
+										{#each monthOptions as month}
+											<option value={month}>{month}</option>
+										{/each}
+									</select>
+								</div>
+							</div>
+
+							<span class="text-gray-500 dark:text-gray-400 pb-2">〜</span>
+
+							<!-- 終了年月 -->
+							<div>
+								<label for="export-to-year" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+									{$_("settings.export.to")}
+								</label>
+								<div class="flex gap-2">
+									<select
+										id="export-to-year"
+										bind:value={exportToYear}
+										class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+									>
+										{#each yearOptions as year}
+											<option value={year}>{year}</option>
+										{/each}
+									</select>
+									<label for="export-to-month" class="sr-only">{$_("settings.export.to")} 月</label>
+									<select
+										id="export-to-month"
+										bind:value={exportToMonth}
+										class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+									>
+										{#each monthOptions as month}
+											<option value={month}>{month}</option>
+										{/each}
+									</select>
+								</div>
+							</div>
+
+							<button
+								type="button"
+								disabled={exportLoading}
+								on:click={handleExport}
+								class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+							>
+								{exportLoading ? $_("common.loading") : $_("settings.export.button")}
+							</button>
+						</div>
+
+						{#if exportError}
+							<p class="mt-3 text-sm text-red-600 dark:text-red-400 auto-phrase-target">{exportError}</p>
+						{/if}
+					</section>
 				</div>
 			</div>
 

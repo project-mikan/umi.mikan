@@ -37,6 +37,8 @@ import {
   type RegenerateAllEmbeddingsResponse,
   GetDiaryEmbeddingStatusRequestSchema,
   type GetDiaryEmbeddingStatusResponse,
+  ExportDiaryEntriesRequestSchema,
+  type ExportDiaryEntriesResponse,
 } from "$lib/grpc/diary/diary_pb";
 
 // モジュールレベルで Transport と Client を共有する（リクエストごとの生成コストを排除）
@@ -323,6 +325,28 @@ export async function getDiaryEmbeddingStatus(
     diaryId: params.diaryId,
   });
   return await diaryClient.getDiaryEmbeddingStatus(
+    request,
+    authHeader(params.accessToken),
+  );
+}
+
+export interface ExportDiaryEntriesParams {
+  fromYear: number;
+  fromMonth: number;
+  toYear: number;
+  toMonth: number;
+  accessToken: string;
+}
+
+// exportDiaryEntries は指定期間の日記をgRPC経由で取得する
+export async function exportDiaryEntries(
+  params: ExportDiaryEntriesParams,
+): Promise<ExportDiaryEntriesResponse> {
+  const request = create(ExportDiaryEntriesRequestSchema, {
+    from: create(YMSchema, { year: params.fromYear, month: params.fromMonth }),
+    to: create(YMSchema, { year: params.toYear, month: params.toMonth }),
+  });
+  return await diaryClient.exportDiaryEntries(
     request,
     authHeader(params.accessToken),
   );

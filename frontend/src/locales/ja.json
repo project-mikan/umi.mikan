@@ -71,6 +71,16 @@
       "description": "AIまとめの処理状況とパフォーマンスメトリクスを確認できます。",
       "viewButton": "処理状況を表示"
     },
+    "export": {
+      "title": "エクスポート",
+      "jsonTitle": "日記をJSONでダウンロード",
+      "description": "指定した期間の日記をJSONファイルとしてダウンロードできます。",
+      "from": "開始年月",
+      "to": "終了年月",
+      "button": "ダウンロード",
+      "periodError": "開始年月は終了年月以前に設定してください",
+      "failed": "エクスポートに失敗しました"
+    },
     "deleteAccount": {
       "title": "アカウント削除",
       "button": "アカウントを削除",

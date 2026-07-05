@@ -555,6 +555,101 @@ func TestDiaryEntry_UnauthorizedAccess(t *testing.T) {
 	}
 }
 
+func TestDiaryEntry_ExportDiaryEntries(t *testing.T) {
+	db := setupTestDB(t)
+
+	userID := createTestUser(t, db)
+	diaryService := &DiaryEntry{DB: db}
+	ctx := createAuthenticatedContext(userID)
+
+	// テスト用日記を複数月にわたって作成する
+	testDates := []*g.YMD{
+		{Year: 2024, Month: 1, Day: 10},
+		{Year: 2024, Month: 3, Day: 15},
+		{Year: 2024, Month: 6, Day: 20},
+		{Year: 2024, Month: 12, Day: 31},
+	}
+	for i, date := range testDates {
+		_, err := diaryService.CreateDiaryEntry(ctx, &g.CreateDiaryEntryRequest{
+			Content: fmt.Sprintf("エクスポートテスト日記 %d", i+1),
+			Date:    date,
+		})
+		if err != nil {
+			t.Fatalf("日記作成に失敗: %v", err)
+		}
+	}
+
+	t.Run("正常系: 指定期間の日記を取得する", func(t *testing.T) {
+		resp, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
+			From: &g.YM{Year: 2024, Month: 3},
+			To:   &g.YM{Year: 2024, Month: 6},
+		})
+		if err != nil {
+			t.Fatalf("予期しないエラー: %v", err)
+		}
+		if len(resp.Entries) != 2 {
+			t.Errorf("期待件数 2 に対して %d 件取得", len(resp.Entries))
+		}
+		if resp.TotalCount != 2 {
+			t.Errorf("TotalCount 2 を期待したが %d", resp.TotalCount)
+		}
+	})
+
+	t.Run("正常系: 1ヶ月分の日記を取得する", func(t *testing.T) {
+		resp, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
+			From: &g.YM{Year: 2024, Month: 1},
+			To:   &g.YM{Year: 2024, Month: 1},
+		})
+		if err != nil {
+			t.Fatalf("予期しないエラー: %v", err)
+		}
+		if len(resp.Entries) != 1 {
+			t.Errorf("期待件数 1 に対して %d 件取得", len(resp.Entries))
+		}
+	})
+
+	t.Run("正常系: 期間外は空を返す", func(t *testing.T) {
+		resp, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
+			From: &g.YM{Year: 2025, Month: 1},
+			To:   &g.YM{Year: 2025, Month: 12},
+		})
+		if err != nil {
+			t.Fatalf("予期しないエラー: %v", err)
+		}
+		if len(resp.Entries) != 0 {
+			t.Errorf("期間外は0件を期待したが %d 件取得", len(resp.Entries))
+		}
+	})
+
+	t.Run("異常系: fromがnilの場合はInvalidArgumentエラー", func(t *testing.T) {
+		_, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
+			From: nil,
+			To:   &g.YM{Year: 2024, Month: 6},
+		})
+		if err == nil {
+			t.Fatal("エラーが期待されたが nilが返った")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("InvalidArgument エラーを期待したが: %v", err)
+		}
+	})
+
+	t.Run("異常系: 開始が終了より後の場合はInvalidArgumentエラー", func(t *testing.T) {
+		_, err := diaryService.ExportDiaryEntries(ctx, &g.ExportDiaryEntriesRequest{
+			From: &g.YM{Year: 2024, Month: 6},
+			To:   &g.YM{Year: 2024, Month: 3},
+		})
+		if err == nil {
+			t.Fatal("エラーが期待されたが nilが返った")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("InvalidArgument エラーを期待したが: %v", err)
+		}
+	})
+}
+
 func TestDiaryEntry_UnauthenticatedAccess(t *testing.T) {
 	db := setupTestDB(t)
 
