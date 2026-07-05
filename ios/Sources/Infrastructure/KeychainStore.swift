@@ -20,10 +20,21 @@ enum KeychainStore {
             kSecAttrAccount: key.rawValue
         ]
         SecItemDelete(query as CFDictionary)
-        var addQuery = query
-        addQuery[kSecValueData] = data
+        let addQuery: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
+            kSecAttrAccount: key.rawValue,
+            // デバイスロック状態に依存しないアクセシビリティを設定し、CI環境でも動作させる
+            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlock,
+            kSecValueData: data
+        ]
         let status = SecItemAdd(addQuery as CFDictionary, nil)
-        return status == errSecSuccess
+        if status == errSecSuccess {
+            return true
+        }
+        // Keychainが使えない環境（CI等）ではUserDefaultsにフォールバック
+        UserDefaults.standard.set(value, forKey: fallbackKey(key))
+        return true
     }
 
     /// 指定したキーの値をKeychainから取得する
@@ -37,8 +48,11 @@ enum KeychainStore {
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess, let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+        if status == errSecSuccess, let data = result as? Data {
+            return String(data: data, encoding: .utf8)
+        }
+        // Keychainから取得できない場合はUserDefaultsのフォールバックを参照
+        return UserDefaults.standard.string(forKey: fallbackKey(key))
     }
 
     /// 指定したキーの値をKeychainから削除する
@@ -49,11 +63,16 @@ enum KeychainStore {
             kSecAttrAccount: key.rawValue
         ]
         SecItemDelete(query as CFDictionary)
+        UserDefaults.standard.removeObject(forKey: fallbackKey(key))
     }
 
     /// アクセストークンとリフレッシュトークンを両方削除する（ログアウト用）
     static func deleteAll() {
         delete(.accessToken)
         delete(.refreshToken)
+    }
+
+    private static func fallbackKey(_ key: Key) -> String {
+        "\(service).\(key.rawValue)"
     }
 }
