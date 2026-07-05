@@ -32,7 +32,7 @@ jobs:
       # Homebrew でインストールされるパッケージをキャッシュして brew install の時間を短縮する
       - name: Cache Homebrew packages
         id: cache-brew
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/Library/Caches/Homebrew
@@ -51,7 +51,7 @@ jobs:
       # protoc-gen-connect-swift バイナリをキャッシュして毎回のダウンロードを回避する
       - name: Cache protoc-gen-connect-swift
         id: cache-connect-swift
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /opt/homebrew/bin/protoc-gen-connect-swift
           key: ${{ runner.os }}-protoc-gen-connect-swift-${{ env.CONNECT_SWIFT_VERSION }}
@@ -67,7 +67,7 @@ jobs:
       # キーに github.sha を含めないことで同一 Package.resolved のビルドを PR をまたいで再利用できる
       # 完全一致しない場合も restore-keys で直近のキャッシュから差分ビルドする
       - name: Cache DerivedData
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/Library/Developer/Xcode/DerivedData
           key: ${{ runner.os }}-deriveddata-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
