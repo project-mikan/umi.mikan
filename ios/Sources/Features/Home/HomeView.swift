@@ -15,6 +15,9 @@ struct HomeView: View {
     /// ハーフモーダルで表示する日記の日付
     @State private var selectedItem: DiarySheetItem?
 
+    /// フォーカス中のカード（キーボードツールバーの保存対象）
+    @FocusState private var focusedCard: DiaryCardFocus?
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let launchState: AppLaunchState?
@@ -79,6 +82,24 @@ struct HomeView: View {
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
                 ErrorBannerView(message: error) { viewModel.errorMessage = nil }
+            }
+        }
+        .toolbar { keyboardToolbar }
+    }
+
+    /// キーボードの上に表示するツールバー（保存・キーボードを閉じる）
+    @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button {
+                saveFocusedCard()
+            } label: {
+                Label("保存", systemImage: "square.and.arrow.down")
+            }
+            Button {
+                focusedCard = nil
+            } label: {
+                Image(systemName: "keyboard.chevron.compact.down")
             }
         }
     }
@@ -150,6 +171,8 @@ struct HomeView: View {
             content: $todayContent,
             isSaving: viewModel.todaySaving,
             isSaved: viewModel.todaySaved,
+            focusValue: .today,
+            focusedCard: $focusedCard,
             onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.today.date) },
             onSave: {
                 Task {
@@ -167,6 +190,8 @@ struct HomeView: View {
             content: $yesterdayContent,
             isSaving: viewModel.yesterdaySaving,
             isSaved: viewModel.yesterdaySaved,
+            focusValue: .yesterday,
+            focusedCard: $focusedCard,
             onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.yesterday.date) },
             onSave: {
                 Task {
@@ -184,6 +209,8 @@ struct HomeView: View {
             content: $dayBeforeYesterdayContent,
             isSaving: viewModel.dayBeforeYesterdaySaving,
             isSaved: viewModel.dayBeforeYesterdaySaved,
+            focusValue: .dayBeforeYesterday,
+            focusedCard: $focusedCard,
             onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.dayBeforeYesterday.date) },
             onSave: {
                 Task {
@@ -192,6 +219,32 @@ struct HomeView: View {
                 }
             }
         )
+    }
+
+    /// フォーカス中のカードの日記を保存する（キーボードツールバーの保存ボタン用）
+    private func saveFocusedCard() {
+        switch focusedCard {
+        case .today:
+            Task {
+                await viewModel.saveToday(content: todayContent)
+                lastAppliedToday = todayContent
+            }
+
+        case .yesterday:
+            Task {
+                await viewModel.saveYesterday(content: yesterdayContent)
+                lastAppliedYesterday = yesterdayContent
+            }
+
+        case .dayBeforeYesterday:
+            Task {
+                await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
+                lastAppliedDayBefore = dayBeforeYesterdayContent
+            }
+
+        case nil:
+            break
+        }
     }
 
     /// ViewModelのエントリ内容をテキスト欄へ反映する。

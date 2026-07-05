@@ -31,10 +31,11 @@ struct umi_mikanApp: App {
                 // スプラッシュは読み込み中インジケーター。読み込みが終わったら出さない
                 if launchState.isInitialLoading {
                     SplashView()
-                        .transition(.opacity)
+                        // コンテナの animation(value:) は起動直後の変更で効かないことがあるため、
+                        // transition 自体にアニメーションを付けて確実にフェードアウトさせる
+                        .transition(.opacity.animation(.easeInOut(duration: 0.3)))
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: launchState.isInitialLoading)
         }
     }
 }

@@ -1,5 +1,12 @@
 import SwiftUI
 
+/// フォーカス中のカードの識別子（キーボードツールバーの保存対象の判定に使う）
+enum DiaryCardFocus: Hashable {
+    case today
+    case yesterday
+    case dayBeforeYesterday
+}
+
 /// 日記カード - 日付ラベル・テキストエリア・保存ボタンをまとめたコンポーネント
 struct DiaryCardView: View {
     let title: String
@@ -7,6 +14,10 @@ struct DiaryCardView: View {
     @Binding var content: String
     let isSaving: Bool
     let isSaved: Bool
+    /// このカードのフォーカス識別子
+    let focusValue: DiaryCardFocus
+    /// 親（HomeView）と共有するフォーカス状態
+    @FocusState.Binding var focusedCard: DiaryCardFocus?
     /// タイトル・日付タップで日記詳細（ハーフモーダル）を開く
     let onOpenDetail: () -> Void
     let onSave: () -> Void
@@ -54,6 +65,7 @@ struct DiaryCardView: View {
     private var cardEditor: some View {
         VStack(alignment: .leading, spacing: 8) {
             TextEditor(text: $content)
+                .focused($focusedCard, equals: focusValue)
                 .frame(minHeight: 160)
                 .scrollContentBackground(.hidden)
                 .background(.clear)

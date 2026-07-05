@@ -16,6 +16,8 @@ struct DiaryDetailView: View {
     @State private var isTimelineExpanded = false
     /// ハイライト表示から編集モードへ切り替えたかどうか
     @State private var isEditing = false
+    /// 本文エディタのフォーカス状態（キーボードツールバーの閉じるボタン用）
+    @FocusState private var isEditorFocused: Bool
 
     /// 検索結果から開いた場合にハイライトするキーワード
     private let highlightKeywords: [String]
@@ -30,36 +32,44 @@ struct DiaryDetailView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if viewModel.isLoading {
-                        loadingView
+            scrollContent
+                .toolbar {
+                    saveToolbarButton
+                    keyboardToolbar
+                }
+                .task {
+                    await viewModel.fetch()
+                    await scrollToFirstHighlight(proxy)
+                }
+        }
+    }
+
+    /// 本文のスクロールビュー（ツールバー・fetch以外の共通修飾込み）
+    private var scrollContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if viewModel.isLoading {
+                    loadingView
+                } else {
+                    if let status = viewModel.embeddingStatus {
+                        chunkTimelineCurtain(status)
+                    }
+                    if showsHighlight {
+                        highlightCard
                     } else {
-                        if let status = viewModel.embeddingStatus {
-                            chunkTimelineCurtain(status)
-                        }
-                        if showsHighlight {
-                            highlightCard
-                        } else {
-                            editorCard
-                        }
+                        editorCard
                     }
                 }
-                .padding(16)
             }
-            .navigationTitle(dateTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { saveToolbarButton }
-            .task {
-                await viewModel.fetch()
-                await scrollToFirstHighlight(proxy)
-            }
-            // 保存完了時に成功の触覚フィードバックを鳴らす
-            .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, newValue in newValue }
-            .overlay(alignment: .bottom) {
-                if let error = viewModel.errorMessage {
-                    ErrorBannerView(message: error) { viewModel.errorMessage = nil }
-                }
+            .padding(16)
+        }
+        .navigationTitle(dateTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        // 保存完了時に成功の触覚フィードバックを鳴らす
+        .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, newValue in newValue }
+        .overlay(alignment: .bottom) {
+            if let error = viewModel.errorMessage {
+                ErrorBannerView(message: error) { viewModel.errorMessage = nil }
             }
         }
     }
@@ -93,6 +103,7 @@ struct DiaryDetailView: View {
     private var editorCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             TextEditor(text: $viewModel.content)
+                .focused($isEditorFocused)
                 .frame(minHeight: 300)
                 .scrollContentBackground(.hidden)
                 .background(.clear)
@@ -154,6 +165,24 @@ struct DiaryDetailView: View {
         .padding(12)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
+    }
+
+    /// キーボードの上に表示するツールバー（保存・キーボードを閉じる）
+    @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button {
+                Task { await viewModel.save() }
+            } label: {
+                Label("保存", systemImage: "square.and.arrow.down")
+            }
+            .disabled(viewModel.isSaving)
+            Button {
+                isEditorFocused = false
+            } label: {
+                Image(systemName: "keyboard.chevron.compact.down")
+            }
+        }
     }
 
     @ToolbarContentBuilder private var saveToolbarButton: some ToolbarContent {

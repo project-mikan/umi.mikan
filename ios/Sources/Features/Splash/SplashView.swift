@@ -49,7 +49,14 @@ struct SplashView: View {
                 finalLogoView
             }
         }
-        .onAppear { startAnimation() }
+        .onAppear {
+            // コールドローンチ直後は初回描画が確定する前に withAnimation を呼んでも
+            // アニメーションされず最終状態へジャンプするため、
+            // 描画確定後（次のランループ）まで遅らせてから開始する
+            DispatchQueue.main.async {
+                startAnimation()
+            }
+        }
     }
 
     // MARK: - 転がりフェーズ
