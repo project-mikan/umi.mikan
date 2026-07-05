@@ -50,7 +50,6 @@ struct LocalDiaryEntry: Codable, Equatable {
 @MainActor
 final class LocalDiaryStore {
     // nonisolated(unsafe): シングルトンはアプリ起動時（MainActor 確立前）に参照される場合があるため
-    // 実際の書き込みはすべて @MainActor init / メソッド内で行われるため安全
     nonisolated(unsafe) static let shared = LocalDiaryStore()
 
     /// dateKey（"YYYY-MM-DD"）をキーとしたエントリのマップ
@@ -59,9 +58,9 @@ final class LocalDiaryStore {
 
     /// テスト用に保存先ファイルを指定できるイニシャライザ
     ///
-    /// ファイルの解決・読み込みは nonisolated ヘルパーで行い、
-    /// @MainActor プロパティへの代入はこの init 内でのみ実施する。
-    init(fileURL: URL? = nil) {
+    /// nonisolated にすることで nonisolated(unsafe) static let から呼び出せる。
+    /// init 内では静的ヘルパーのみ使用し、@MainActor のプロパティは stored property の初期化のみ行う。
+    nonisolated init(fileURL: URL? = nil) {
         let resolvedURL = Self.resolveFileURL(fileURL)
         self.fileURL = resolvedURL
         entries = Self.loadEntries(from: resolvedURL)
