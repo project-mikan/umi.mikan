@@ -70,7 +70,7 @@ final class LocalDiaryStore {
     // MARK: - nonisolated helpers（ファイルIO は MainActor 不要）
 
     /// 保存先 URL を解決する（nonisolated なので init の前段で安全に呼べる）
-    nonisolated private static func resolveFileURL(_ override: URL?) -> URL {
+    private nonisolated static func resolveFileURL(_ override: URL?) -> URL {
         if let override { return override }
         let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
@@ -78,7 +78,7 @@ final class LocalDiaryStore {
     }
 
     /// ファイルからエントリを読み込む（nonisolated なので init の前段で安全に呼べる）
-    nonisolated private static func loadEntries(from url: URL) -> [String: LocalDiaryEntry] {
+    private nonisolated static func loadEntries(from url: URL) -> [String: LocalDiaryEntry] {
         let data = try? Data(contentsOf: url)
         return data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
     }
