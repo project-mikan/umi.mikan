@@ -47,13 +47,20 @@ struct MonthlyView: View {
             item: $selectedItem,
             onDismiss: { Task { await viewModel.fetch() } },
             content: { item in
-                NavigationStack {
-                    DiaryDetailView(date: item.date, authViewModel: authViewModel, syncManager: syncManager)
-                }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                // 左右スワイプでその月の各日付を行き来できるよう1ヶ月分を渡す
+                DiaryDetailSheet(
+                    items: monthSheetItems,
+                    initialIndex: monthSheetItems.firstIndex { $0.id == item.id } ?? 0,
+                    authViewModel: authViewModel,
+                    syncManager: syncManager
+                )
             }
         )
+    }
+
+    /// 左右スワイプ用にその月の全日付をまとめたリスト
+    private var monthSheetItems: [DiarySheetItem] {
+        (1 ... viewModel.daysInMonth).map { DiarySheetItem(date: viewModel.ymd(day: $0)) }
     }
 
     // MARK: - 月ナビゲーション

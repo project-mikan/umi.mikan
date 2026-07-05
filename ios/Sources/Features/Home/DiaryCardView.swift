@@ -7,6 +7,8 @@ struct DiaryCardView: View {
     @Binding var content: String
     let isSaving: Bool
     let isSaved: Bool
+    /// タイトル・日付タップで日記詳細（ハーフモーダル）を開く
+    let onOpenDetail: () -> Void
     let onSave: () -> Void
 
     var body: some View {
@@ -22,8 +24,8 @@ struct DiaryCardView: View {
 
     private var cardHeader: some View {
         HStack {
-            // タイトル・日付をタップすると日記詳細へ遷移する
-            NavigationLink(value: date) {
+            // タイトル・日付をタップすると日記詳細をハーフモーダルで開く
+            Button(action: onOpenDetail) {
                 HStack(spacing: 6) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)

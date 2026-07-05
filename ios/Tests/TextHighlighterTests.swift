@@ -13,6 +13,14 @@ struct TextHighlighterTests {
         let expected: [String]
     }
 
+    /// firstMatchLineIndex のテーブル駆動テスト用ケース
+    struct FirstMatchLineCase {
+        let name: String
+        let lines: [String]
+        let keywords: [String]
+        let expected: Int?
+    }
+
     /// AttributedString から背景色が設定された部分文字列の一覧を取り出す
     private func highlightedSubstrings(_ text: AttributedString) -> [String] {
         text.runs.compactMap { run in
@@ -106,6 +114,54 @@ struct TextHighlighterTests {
         let text = String(result.characters)
         #expect(text == String(repeating: "あ", count: 150) + "...")
         #expect(highlightedSubstrings(result).isEmpty)
+    }
+
+    // MARK: - firstMatchLineIndex
+
+    @Test(
+        "firstMatchLineIndex: 最初にキーワードが出現する行番号を返す",
+        arguments: [
+            FirstMatchLineCase(
+                name: "正常系: 先頭行にマッチすると0を返す",
+                lines: ["海に行った", "楽しかった"],
+                keywords: ["海"],
+                expected: 0
+            ),
+            FirstMatchLineCase(
+                name: "正常系: 途中の行にマッチするとその行番号を返す",
+                lines: ["今日の日記", "", "海に行った", "海は広かった"],
+                keywords: ["海"],
+                expected: 2
+            ),
+            FirstMatchLineCase(
+                name: "正常系: 複数キーワードのうち最初に出現する行を返す",
+                lines: ["みかんを食べた", "海に行った"],
+                keywords: ["海", "みかん"],
+                expected: 0
+            ),
+            FirstMatchLineCase(
+                name: "正常系: 英字キーワードは大文字小文字を無視してマッチする",
+                lines: ["今日はSwiftを書いた"],
+                keywords: ["swift"],
+                expected: 0
+            ),
+            FirstMatchLineCase(
+                name: "正常系: どの行にもマッチしない場合はnilを返す",
+                lines: ["山に行った"],
+                keywords: ["海"],
+                expected: nil
+            ),
+            FirstMatchLineCase(
+                name: "正常系: 空・空白のみのキーワードは無視されnilを返す",
+                lines: ["海に行った"],
+                keywords: ["", "  "],
+                expected: nil
+            )
+        ]
+    )
+    func firstMatchLineIndex(testCase: FirstMatchLineCase) {
+        let result = TextHighlighter.firstMatchLineIndex(lines: testCase.lines, keywords: testCase.keywords)
+        #expect(result == testCase.expected, "\(testCase.name)")
     }
 
     @Test("正常系: 改行は空白に正規化されて1行のスニペットになる")

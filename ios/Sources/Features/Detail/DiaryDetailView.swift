@@ -29,34 +29,37 @@ struct DiaryDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if viewModel.isLoading {
-                    loadingView
-                } else {
-                    if let status = viewModel.embeddingStatus {
-                        chunkTimelineCurtain(status)
-                    }
-                    if showsHighlight {
-                        highlightCard
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if viewModel.isLoading {
+                        loadingView
                     } else {
-                        editorCard
+                        if let status = viewModel.embeddingStatus {
+                            chunkTimelineCurtain(status)
+                        }
+                        if showsHighlight {
+                            highlightCard
+                        } else {
+                            editorCard
+                        }
                     }
                 }
+                .padding(16)
             }
-            .padding(16)
-        }
-        .navigationTitle(dateTitle)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar { saveToolbarButton }
-        .task {
-            await viewModel.fetch()
-        }
-        // 保存完了時に成功の触覚フィードバックを鳴らす
-        .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, newValue in newValue }
-        .overlay(alignment: .bottom) {
-            if let error = viewModel.errorMessage {
-                ErrorBannerView(message: error) { viewModel.errorMessage = nil }
+            .navigationTitle(dateTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { saveToolbarButton }
+            .task {
+                await viewModel.fetch()
+                await scrollToFirstHighlight(proxy)
+            }
+            // 保存完了時に成功の触覚フィードバックを鳴らす
+            .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, newValue in newValue }
+            .overlay(alignment: .bottom) {
+                if let error = viewModel.errorMessage {
+                    ErrorBannerView(message: error) { viewModel.errorMessage = nil }
+                }
             }
         }
     }
@@ -64,6 +67,11 @@ struct DiaryDetailView: View {
     /// 検索キーワードのハイライト表示（読み取り専用）を出すかどうか
     private var showsHighlight: Bool {
         !highlightKeywords.isEmpty && !isEditing && !viewModel.content.isEmpty
+    }
+
+    /// ハイライト表示用に本文を行単位に分割したもの（自動スクロールの行IDに使う）
+    private var highlightLines: [String] {
+        viewModel.content.components(separatedBy: "\n")
     }
 
     private var dateTitle: String {
@@ -130,12 +138,18 @@ struct DiaryDetailView: View {
                 .buttonStyle(.glass)
             }
 
-            Text(TextHighlighter.highlight(text: viewModel.content, keywords: highlightKeywords))
-                .font(.body)
-                .foregroundStyle(Color.twBody)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 4)
+            // 自動スクロールできるよう行単位でレンダリングし、各行にIDを振る
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(highlightLines.enumerated()), id: \.offset) { lineIndex, line in
+                    Text(TextHighlighter.highlight(text: line.isEmpty ? " " : line, keywords: highlightKeywords))
+                        .font(.body)
+                        .foregroundStyle(Color.twBody)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .id("highlight-line-\(lineIndex)")
+                }
+            }
+            .textSelection(.enabled)
+            .padding(.horizontal, 4)
         }
         .padding(12)
         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -187,6 +201,19 @@ struct DiaryDetailView: View {
 
     /// この日記の概要（チャンク一覧）カーテン。
     /// ヘッダーをタップすると上から下へカーテンのように開閉する。
+    /// 最初にキーワードがマッチした行まで自動スクロールする。
+    /// レイアウト確定を待つため少し遅らせてから実行する。
+    private func scrollToFirstHighlight(_ proxy: ScrollViewProxy) async {
+        guard showsHighlight else { return }
+        guard let line = TextHighlighter.firstMatchLineIndex(lines: highlightLines, keywords: highlightKeywords) else {
+            return
+        }
+        try? await Task.sleep(for: .milliseconds(300))
+        withAnimation(.easeInOut(duration: 0.4)) {
+            proxy.scrollTo("highlight-line-\(line)", anchor: .center)
+        }
+    }
+
     private func chunkTimelineCurtain(_ status: Diary_GetDiaryEmbeddingStatusResponse) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             curtainHeader

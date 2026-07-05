@@ -38,17 +38,32 @@ struct SearchView: View {
         .sensoryFeedback(.success, trigger: viewModel.completedSearchCount) { old, new in new > old }
         // 日記詳細を検索キーワードのハイライト付きハーフモーダルで表示する
         .sheet(item: $selectedItem) { item in
-            NavigationStack {
-                DiaryDetailView(
-                    date: item.date,
-                    authViewModel: authViewModel,
-                    syncManager: syncManager,
-                    highlightKeywords: item.highlightKeywords
-                )
-            }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            // 左右スワイプで前後の検索結果を行き来できるよう結果一覧を渡す
+            let items = searchSheetItems ?? [item]
+            DiaryDetailSheet(
+                items: items,
+                initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
+                authViewModel: authViewModel,
+                syncManager: syncManager
+            )
         }
+    }
+
+    /// 左右スワイプ用に現在の検索結果をシート項目へ変換したリスト（結果表示順）
+    private var searchSheetItems: [DiarySheetItem]? {
+        if let results = viewModel.keywordResults {
+            let keywords = [results.searchedKeyword] + results.expandedKeywords
+            return results.entries.map { DiarySheetItem(date: $0.date, highlightKeywords: keywords) }
+        }
+        if let results = viewModel.semanticResults {
+            // 同じ日記の複数チャンクがヒットした場合に備えて日付を重複排除する（順序は維持）
+            let query = viewModel.keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+            var seenKeys = Set<String>()
+            return results.results
+                .filter { seenKeys.insert(LocalDiaryEntry.dateKey($0.date)).inserted }
+                .map { DiarySheetItem(date: $0.date, highlightKeywords: [query]) }
+        }
+        return nil
     }
 
     // MARK: - 検索フォーム

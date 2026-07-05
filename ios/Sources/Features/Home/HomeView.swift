@@ -12,6 +12,9 @@ struct HomeView: View {
     @State private var lastAppliedYesterday = ""
     @State private var lastAppliedDayBefore = ""
 
+    /// ハーフモーダルで表示する日記の日付
+    @State private var selectedItem: DiarySheetItem?
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let launchState: AppLaunchState?
@@ -47,7 +50,7 @@ struct HomeView: View {
             applyLoadedContents(preservingEdits: true)
         }
         .onAppear {
-            // 詳細画面から戻った時などにローカルの最新を反映する（入力途中の内容は保持）
+            // タブ切替などで戻った時にローカルの最新を反映する（入力途中の内容は保持）
             viewModel.loadLocal()
             applyLoadedContents(preservingEdits: true)
         }
@@ -55,14 +58,38 @@ struct HomeView: View {
             await viewModel.refreshFromServer()
             applyLoadedContents(preservingEdits: true)
         }
-        .navigationDestination(for: Diary_YMD.self) { date in
-            DiaryDetailView(date: date, authViewModel: authViewModel, syncManager: syncManager)
-        }
+        // 日記詳細をハーフモーダルで表示する（閉じたら編集内容をカードへ反映する）
+        .sheet(
+            item: $selectedItem,
+            onDismiss: {
+                viewModel.loadLocal()
+                applyLoadedContents(preservingEdits: true)
+            },
+            content: { item in
+                // 左右スワイプで今日・昨日・一昨日を行き来できるよう3日分を渡す
+                let items = homeSheetItems
+                DiaryDetailSheet(
+                    items: items,
+                    initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
+                    authViewModel: authViewModel,
+                    syncManager: syncManager
+                )
+            }
+        )
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
                 ErrorBannerView(message: error) { viewModel.errorMessage = nil }
             }
         }
+    }
+
+    /// 左右スワイプ用に今日・昨日・一昨日の3日分をまとめたリスト
+    private var homeSheetItems: [DiarySheetItem] {
+        [
+            DiarySheetItem(date: viewModel.today.date),
+            DiarySheetItem(date: viewModel.yesterday.date),
+            DiarySheetItem(date: viewModel.dayBeforeYesterday.date)
+        ]
     }
 
     /// オフライン・同期待ちの状態表示バナー
@@ -122,13 +149,15 @@ struct HomeView: View {
             date: viewModel.today.date,
             content: $todayContent,
             isSaving: viewModel.todaySaving,
-            isSaved: viewModel.todaySaved
-        ) {
-            Task {
-                await viewModel.saveToday(content: todayContent)
-                lastAppliedToday = todayContent
+            isSaved: viewModel.todaySaved,
+            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.today.date) },
+            onSave: {
+                Task {
+                    await viewModel.saveToday(content: todayContent)
+                    lastAppliedToday = todayContent
+                }
             }
-        }
+        )
     }
 
     private var yesterdayCard: some View {
@@ -137,13 +166,15 @@ struct HomeView: View {
             date: viewModel.yesterday.date,
             content: $yesterdayContent,
             isSaving: viewModel.yesterdaySaving,
-            isSaved: viewModel.yesterdaySaved
-        ) {
-            Task {
-                await viewModel.saveYesterday(content: yesterdayContent)
-                lastAppliedYesterday = yesterdayContent
+            isSaved: viewModel.yesterdaySaved,
+            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.yesterday.date) },
+            onSave: {
+                Task {
+                    await viewModel.saveYesterday(content: yesterdayContent)
+                    lastAppliedYesterday = yesterdayContent
+                }
             }
-        }
+        )
     }
 
     private var dayBeforeYesterdayCard: some View {
@@ -152,13 +183,15 @@ struct HomeView: View {
             date: viewModel.dayBeforeYesterday.date,
             content: $dayBeforeYesterdayContent,
             isSaving: viewModel.dayBeforeYesterdaySaving,
-            isSaved: viewModel.dayBeforeYesterdaySaved
-        ) {
-            Task {
-                await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
-                lastAppliedDayBefore = dayBeforeYesterdayContent
+            isSaved: viewModel.dayBeforeYesterdaySaved,
+            onOpenDetail: { selectedItem = DiarySheetItem(date: viewModel.dayBeforeYesterday.date) },
+            onSave: {
+                Task {
+                    await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
+                    lastAppliedDayBefore = dayBeforeYesterdayContent
+                }
             }
-        }
+        )
     }
 
     /// ViewModelのエントリ内容をテキスト欄へ反映する。

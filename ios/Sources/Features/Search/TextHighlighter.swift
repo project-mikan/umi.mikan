@@ -57,6 +57,19 @@ enum TextHighlighter {
         return applyHighlights(to: AttributedString(prefix + excerpt + suffix), keywords: activeKeywords)
     }
 
+    /// 複数行テキストの中で最初にキーワードが出現する行番号を返す（マッチなしは nil）。
+    /// ハイライト表示で最初のマッチ行まで自動スクロールするために使う。
+    static func firstMatchLineIndex(lines: [String], keywords: [String]) -> Int? {
+        let activeKeywords = normalizedKeywords(keywords)
+        guard !activeKeywords.isEmpty else { return nil }
+        for (index, line) in lines.enumerated() {
+            for kw in activeKeywords where line.range(of: kw, options: .caseInsensitive) != nil {
+                return index
+            }
+        }
+        return nil
+    }
+
     // MARK: - Private
 
     /// 前後の空白を除去し、空のキーワードを除外する
