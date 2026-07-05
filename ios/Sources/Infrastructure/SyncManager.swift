@@ -25,15 +25,19 @@ final class SyncManager {
         self.store = store
         pendingCount = store.pendingEntries().count
         startMonitoring()
+        startSyncRequestObserver()
+        updateLiveActivity()
     }
 
     /// 同期待ちのエントリをすべてサーバーへ送信する
     func syncPending() async {
         guard !isSyncing else { return }
         isSyncing = true
+        updateLiveActivity()
         defer {
             isSyncing = false
             pendingCount = store.pendingEntries().count
+            updateLiveActivity()
         }
 
         for local in store.pendingEntries() {
@@ -44,6 +48,7 @@ final class SyncManager {
     /// 同期待ち件数を最新化する
     func refreshPendingCount() {
         pendingCount = store.pendingEntries().count
+        updateLiveActivity()
     }
 
     // MARK: - Private
@@ -63,6 +68,24 @@ final class SyncManager {
             }
         }
         monitor.start(queue: DispatchQueue(label: "net.usuyuki.umi-mikan.network-monitor"))
+    }
+
+    /// Live Activityの「今すぐ同期」ボタンからの同期要求を監視する
+    private func startSyncRequestObserver() {
+        NotificationCenter.default.addObserver(
+            forName: .syncPendingDiariesRequested,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.syncPending()
+            }
+        }
+    }
+
+    /// 未同期件数と同期状態をLive Activityへ反映する
+    private func updateLiveActivity() {
+        LiveActivityManager.shared.update(pendingCount: pendingCount, isSyncing: isSyncing)
     }
 
     /// 1件のエントリをサーバーへ送信する

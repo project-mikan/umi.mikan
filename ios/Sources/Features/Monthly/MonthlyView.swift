@@ -3,6 +3,8 @@ import SwiftUI
 /// 月毎ページ - 月ナビゲーションと日ごとの日記リストを表示する
 struct MonthlyView: View {
     @State private var viewModel: MonthlyViewModel
+    /// ハーフモーダルで表示する日記の日付
+    @State private var selectedItem: DiarySheetItem?
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
@@ -40,6 +42,18 @@ struct MonthlyView: View {
                 errorBanner(message: error)
             }
         }
+        // 日記詳細をハーフモーダルで表示する（閉じたら編集内容を一覧へ反映する）
+        .sheet(
+            item: $selectedItem,
+            onDismiss: { Task { await viewModel.fetch() } },
+            content: { item in
+                NavigationStack {
+                    DiaryDetailView(date: item.date, authViewModel: authViewModel, syncManager: syncManager)
+                }
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+        )
     }
 
     // MARK: - 月ナビゲーション
@@ -84,8 +98,8 @@ struct MonthlyView: View {
 
     private var dayList: some View {
         ForEach(1 ... viewModel.daysInMonth, id: \.self) { day in
-            NavigationLink {
-                DiaryDetailView(date: viewModel.ymd(day: day), authViewModel: authViewModel, syncManager: syncManager)
+            Button {
+                selectedItem = DiarySheetItem(date: viewModel.ymd(day: day))
             } label: {
                 dayRow(day: day)
             }

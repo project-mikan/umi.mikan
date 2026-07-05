@@ -3,6 +3,8 @@ import SwiftUI
 /// 検索ページ - キーワード検索と意味的検索に対応する
 struct SearchView: View {
     @State private var viewModel: SearchViewModel
+    /// ハーフモーダルで表示する日記（ハイライトするキーワード付き）
+    @State private var selectedItem: DiarySheetItem?
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
@@ -31,6 +33,21 @@ struct SearchView: View {
             if let error = viewModel.errorMessage {
                 errorBanner(message: error)
             }
+        }
+        // 検索完了時に成功の触覚フィードバックを鳴らす
+        .sensoryFeedback(.success, trigger: viewModel.completedSearchCount) { old, new in new > old }
+        // 日記詳細を検索キーワードのハイライト付きハーフモーダルで表示する
+        .sheet(item: $selectedItem) { item in
+            NavigationStack {
+                DiaryDetailView(
+                    date: item.date,
+                    authViewModel: authViewModel,
+                    syncManager: syncManager,
+                    highlightKeywords: item.highlightKeywords
+                )
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
     }
 
@@ -128,8 +145,11 @@ struct SearchView: View {
             emptyStateView(message: "検索結果が見つかりませんでした")
         } else {
             ForEach(results.entries, id: \.id) { entry in
-                NavigationLink {
-                    DiaryDetailView(date: entry.date, authViewModel: authViewModel, syncManager: syncManager)
+                Button {
+                    selectedItem = DiarySheetItem(
+                        date: entry.date,
+                        highlightKeywords: [results.searchedKeyword] + results.expandedKeywords
+                    )
                 } label: {
                     keywordResultRow(entry: entry, results: results)
                 }
@@ -144,7 +164,7 @@ struct SearchView: View {
                 .font(.headline)
                 .foregroundStyle(Color.twBlue)
 
-            Text(viewModel.highlightedSnippet(
+            Text(TextHighlighter.snippet(
                 content: entry.content,
                 keywords: [results.searchedKeyword] + results.expandedKeywords
             ))
@@ -167,8 +187,12 @@ struct SearchView: View {
             emptyStateView(message: "検索結果が見つかりませんでした")
         } else {
             ForEach(results.results, id: \.diaryID) { result in
-                NavigationLink {
-                    DiaryDetailView(date: result.date, authViewModel: authViewModel, syncManager: syncManager)
+                Button {
+                    // 意味的検索は自然文クエリのため、本文に一致した場合のみハイライトされる
+                    selectedItem = DiarySheetItem(
+                        date: result.date,
+                        highlightKeywords: [viewModel.keyword.trimmingCharacters(in: .whitespacesAndNewlines)]
+                    )
                 } label: {
                     semanticResultRow(result: result)
                 }

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5DB4E8362FE7CC0000DB1E50 /* Connect in Frameworks */ = {isa = PBXBuildFile; productRef = 5DB4E8372FE7CC0000DB1E50 /* Connect */; };
+		5DB4EB0E2FE9000000DB1E50 /* umi.mikanWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5DB4EB012FE9000000DB1E50 /* umi.mikanWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -18,12 +19,44 @@
 			remoteGlobalIDString = 5DB4E7D42FE6687200DB1E50;
 			remoteInfo = umi.mikan;
 		};
+		5DB4EB0B2FE9000000DB1E50 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5DB4E7CD2FE6687200DB1E50 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5DB4EB042FE9000000DB1E50;
+			remoteInfo = umi.mikanWidgets;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5DB4EB0D2FE9000000DB1E50 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5DB4EB0E2FE9000000DB1E50 /* umi.mikanWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		5DB4E7D52FE6687200DB1E50 /* umi.mikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = umi.mikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = umi.mikanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DB4EB012FE9000000DB1E50 /* umi.mikanWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = umi.mikanWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		5DB4EB0F2FE9000000DB1E50 /* Exceptions for "Widgets" folder in "umi.mikanWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 5DB4EB042FE9000000DB1E50 /* umi.mikanWidgets */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5DB4E7D72FE6687200DB1E50 /* Sources */ = {
@@ -34,6 +67,19 @@
 		5DB4E9022FE8000000DB1E50 /* Tests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Tests;
+			sourceTree = "<group>";
+		};
+		5DB4EB022FE9000000DB1E50 /* Widgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5DB4EB0F2FE9000000DB1E50 /* Exceptions for "Widgets" folder in "umi.mikanWidgets" target */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		5DB4EB032FE9000000DB1E50 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -54,6 +100,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DB4EB062FE9000000DB1E50 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -61,6 +114,8 @@
 			isa = PBXGroup;
 			children = (
 				5DB4E7D72FE6687200DB1E50 /* Sources */,
+				5DB4EB032FE9000000DB1E50 /* Shared */,
+				5DB4EB022FE9000000DB1E50 /* Widgets */,
 				5DB4E9022FE8000000DB1E50 /* Tests */,
 				5DB4E7D62FE6687200DB1E50 /* Products */,
 			);
@@ -71,6 +126,7 @@
 			children = (
 				5DB4E7D52FE6687200DB1E50 /* umi.mikan.app */,
 				5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */,
+				5DB4EB012FE9000000DB1E50 /* umi.mikanWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,13 +141,16 @@
 				5DB4E7D12FE6687200DB1E50 /* Sources */,
 				5DB4E7D22FE6687200DB1E50 /* Frameworks */,
 				5DB4E7D32FE6687200DB1E50 /* Resources */,
+				5DB4EB0D2FE9000000DB1E50 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5DB4EB0C2FE9000000DB1E50 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				5DB4E7D72FE6687200DB1E50 /* Sources */,
+				5DB4EB032FE9000000DB1E50 /* Shared */,
 			);
 			name = umi.mikan;
 			packageProductDependencies = (
@@ -122,6 +181,27 @@
 			productReference = 5DB4E9002FE8000000DB1E50 /* umi.mikanTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		5DB4EB042FE9000000DB1E50 /* umi.mikanWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5DB4EB082FE9000000DB1E50 /* Build configuration list for PBXNativeTarget "umi.mikanWidgets" */;
+			buildPhases = (
+				5DB4EB052FE9000000DB1E50 /* Sources */,
+				5DB4EB062FE9000000DB1E50 /* Frameworks */,
+				5DB4EB072FE9000000DB1E50 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5DB4EB022FE9000000DB1E50 /* Widgets */,
+				5DB4EB032FE9000000DB1E50 /* Shared */,
+			);
+			name = umi.mikanWidgets;
+			productName = umi.mikanWidgets;
+			productReference = 5DB4EB012FE9000000DB1E50 /* umi.mikanWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -138,6 +218,9 @@
 					5DB4E8FF2FE8000000DB1E50 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 5DB4E7D42FE6687200DB1E50;
+					};
+					5DB4EB042FE9000000DB1E50 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -160,6 +243,7 @@
 			targets = (
 				5DB4E7D42FE6687200DB1E50 /* umi.mikan */,
 				5DB4E8FF2FE8000000DB1E50 /* umi.mikanTests */,
+				5DB4EB042FE9000000DB1E50 /* umi.mikanWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -173,6 +257,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		5DB4E9052FE8000000DB1E50 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5DB4EB072FE9000000DB1E50 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -196,6 +287,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DB4EB052FE9000000DB1E50 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -203,6 +301,11 @@
 			isa = PBXTargetDependency;
 			target = 5DB4E7D42FE6687200DB1E50 /* umi.mikan */;
 			targetProxy = 5DB4E90B2FE8000000DB1E50 /* PBXContainerItemProxy */;
+		};
+		5DB4EB0C2FE9000000DB1E50 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5DB4EB042FE9000000DB1E50 /* umi.mikanWidgets */;
+			targetProxy = 5DB4EB0B2FE9000000DB1E50 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -338,6 +441,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -370,6 +474,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -427,6 +532,60 @@
 			};
 			name = Release;
 		};
+		5DB4EB092FE9000000DB1E50 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3R99W2KX4S;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "umi.mikan Widgets";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.usuyuki.umi-mikan.Widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5DB4EB0A2FE9000000DB1E50 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3R99W2KX4S;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "umi.mikan Widgets";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.usuyuki.umi-mikan.Widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -453,6 +612,15 @@
 			buildConfigurations = (
 				5DB4E9072FE8000000DB1E50 /* Debug */,
 				5DB4E9082FE8000000DB1E50 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5DB4EB082FE9000000DB1E50 /* Build configuration list for PBXNativeTarget "umi.mikanWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DB4EB092FE9000000DB1E50 /* Debug */,
+				5DB4EB0A2FE9000000DB1E50 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

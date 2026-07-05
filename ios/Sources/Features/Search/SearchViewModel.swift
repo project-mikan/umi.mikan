@@ -1,6 +1,5 @@
 import Connect
 import Foundation
-import SwiftUI
 
 /// 検索ページのViewModel - キーワード検索と意味的検索を管理する
 @MainActor
@@ -23,6 +22,8 @@ final class SearchViewModel {
     var semanticResults: Diary_SearchDiaryEntriesSemanticResponse?
     /// 検索実行済みかどうか（結果0件と未検索を区別する）
     var hasSearched: Bool = false
+    /// 検索が完了した回数（完了時の触覚フィードバックのトリガーに使う）
+    var completedSearchCount: Int = 0
 
     private let authViewModel: AuthViewModel
 
@@ -57,6 +58,7 @@ final class SearchViewModel {
             }
             keywordResults = response.message
             hasSearched = true
+            completedSearchCount += 1
 
         case .semantic:
             var request = Diary_SearchDiaryEntriesSemanticRequest()
@@ -72,66 +74,7 @@ final class SearchViewModel {
             }
             semanticResults = response.message
             hasSearched = true
+            completedSearchCount += 1
         }
-    }
-
-    /// キーワード検索結果のスニペットをハイライト付きで生成する。
-    ///
-    /// フロントエンドと同様に、最初のマッチ位置がスニペットの先頭30文字付近に
-    /// 来るよう150文字の窓で切り出し、全キーワードの出現箇所をハイライトする。
-    func highlightedSnippet(content: String, keywords: [String]) -> AttributedString {
-        // 改行を空白に置換して1行化し、連続スペースを正規化する
-        let normalized = content
-            .replacingOccurrences(of: "\r\n", with: " ")
-            .replacingOccurrences(of: "\r", with: " ")
-            .replacingOccurrences(of: "\n", with: " ")
-            .replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespaces)
-
-        let window = 150
-        let prefixLength = 30
-        let activeKeywords = keywords
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-
-        // 全キーワードから最初のマッチ位置を検索する（大文字小文字無視）
-        var firstMatchIndex: String.Index?
-        for kw in activeKeywords {
-            if let range = normalized.range(of: kw, options: .caseInsensitive) {
-                if firstMatchIndex == nil || range.lowerBound < firstMatchIndex! {
-                    firstMatchIndex = range.lowerBound
-                }
-            }
-        }
-
-        // マッチ位置に応じてスニペットを切り出す
-        var excerpt: String
-        var prefix = ""
-        var suffix = ""
-        let matchOffset = firstMatchIndex.map { normalized.distance(from: normalized.startIndex, to: $0) } ?? -1
-
-        if matchOffset == -1 || matchOffset < prefixLength {
-            excerpt = String(normalized.prefix(window))
-            if normalized.count > window { suffix = "..." }
-        } else {
-            let start = max(0, matchOffset - prefixLength)
-            let startIndex = normalized.index(normalized.startIndex, offsetBy: start)
-            let endOffset = min(normalized.count, start + window)
-            let endIndex = normalized.index(normalized.startIndex, offsetBy: endOffset)
-            excerpt = String(normalized[startIndex ..< endIndex])
-            if start > 0 { prefix = "..." }
-            if endOffset < normalized.count { suffix = "..." }
-        }
-
-        // スニペット内のキーワード出現箇所をハイライトする
-        var attributed = AttributedString(prefix + excerpt + suffix)
-        for kw in activeKeywords {
-            var searchStart = attributed.startIndex
-            while let range = attributed[searchStart...].range(of: kw, options: .caseInsensitive) {
-                attributed[range].backgroundColor = .yellow.opacity(0.5)
-                searchStart = range.upperBound
-            }
-        }
-        return attributed
     }
 }

@@ -154,7 +154,7 @@ IOS_SCHEME = umi.mikan
 IOS_DESTINATION = platform=iOS Simulator,name=iPhone 17
 
 ios-format:
-	cd ios && swiftformat --config .swiftformat Sources/
+	cd ios && swiftformat --config .swiftformat Sources/ Shared/ Widgets/
 
 ios-lint:
 	make ios-format

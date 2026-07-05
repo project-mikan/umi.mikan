@@ -102,6 +102,17 @@ The iOS app connects to the backend via `https://umi-mikan-api.usuyuki.net` (Clo
 
 **iOS Offline Support**: The iOS app is offline-first. Diary entries are persisted locally as JSON (`ios/Sources/Infrastructure/LocalDiaryStore.swift`) and edits made offline are marked `needsSync`. `SyncManager` (`ios/Sources/Infrastructure/SyncManager.swift`) watches network state with `NWPathMonitor` and pushes pending edits to the server when connectivity returns, on app foreground, and after each save. Server data never overwrites unsynced local edits (local wins until pushed). The splash screen (`SplashView`) acts purely as a loading indicator — it is dismissed as soon as local data is available.
 
+**iOS UX Features**:
+
+- **Half-modal detail**: Tapping a diary in the Monthly list or Search results opens `DiaryDetailView` in a sheet with `presentationDetents([.medium, .large])` (`DiarySheetItem` carries the date and highlight keywords).
+- **Haptic feedback**: `sensoryFeedback(.success)` fires on diary save (Home cards and detail view) and when search results arrive.
+- **Search keyword highlight**: Opening a diary from search results shows a read-only view with keyword occurrences highlighted (same behavior as the web frontend); an 編集 button switches to the editor. Highlight logic lives in `ios/Sources/Features/Search/TextHighlighter.swift` (tested in `ios/Tests/TextHighlighterTests.swift`).
+- **Live Activity for unsynced diaries**: When `needsSync` entries exist, an interactive Live Activity (Lock Screen + Dynamic Island) shows the pending count with a 「今すぐ同期」 button. Structure:
+  - `ios/Shared/` — code compiled into BOTH the app and the widget extension (`DiaryActivityAttributes`, `SyncPendingDiariesIntent`). The intent runs in the app process and requests sync via `NotificationCenter` (`.syncPendingDiariesRequested`).
+  - `ios/Widgets/` — `umi.mikanWidgets` widget extension target (Live Activity UI). `Widgets/Info.plist` declares the WidgetKit extension point.
+  - `ios/Sources/Infrastructure/LiveActivityManager.swift` — starts/updates/ends the activity; called by `SyncManager` whenever the pending count or syncing state changes.
+  - The app target sets `INFOPLIST_KEY_NSSupportsLiveActivities = YES`.
+
 **Prerequisites for `make grpc-swift`** — `protoc-gen-connect-swift` must be installed in `$(brew --prefix)/bin/`:
 
 ```bash

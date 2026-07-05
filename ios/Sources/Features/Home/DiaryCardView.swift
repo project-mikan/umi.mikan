@@ -16,6 +16,8 @@ struct DiaryCardView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        // 保存完了時に成功の触覚フィードバックを鳴らす
+        .sensoryFeedback(.success, trigger: isSaved) { _, newValue in newValue }
     }
 
     private var cardHeader: some View {

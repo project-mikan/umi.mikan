@@ -5,9 +5,15 @@ struct DiaryDetailView: View {
     @State private var viewModel: DiaryDetailViewModel
     /// 「この日記の概要」カーテンの開閉状態（デフォルトは閉じる）
     @State private var isTimelineExpanded = false
+    /// ハイライト表示から編集モードへ切り替えたかどうか
+    @State private var isEditing = false
+
+    /// 検索結果から開いた場合にハイライトするキーワード
+    private let highlightKeywords: [String]
 
     // swiftlint:disable:next type_contents_order
-    init(date: Diary_YMD, authViewModel: AuthViewModel, syncManager: SyncManager) {
+    init(date: Diary_YMD, authViewModel: AuthViewModel, syncManager: SyncManager, highlightKeywords: [String] = []) {
+        self.highlightKeywords = highlightKeywords
         _viewModel = State(
             initialValue: DiaryDetailViewModel(date: date, authViewModel: authViewModel, syncManager: syncManager)
         )
@@ -22,7 +28,11 @@ struct DiaryDetailView: View {
                     if let status = viewModel.embeddingStatus {
                         chunkTimelineCurtain(status)
                     }
-                    editorCard
+                    if showsHighlight {
+                        highlightCard
+                    } else {
+                        editorCard
+                    }
                 }
             }
             .padding(16)
@@ -33,11 +43,18 @@ struct DiaryDetailView: View {
         .task {
             await viewModel.fetch()
         }
+        // 保存完了時に成功の触覚フィードバックを鳴らす
+        .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, newValue in newValue }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
                 errorBanner(message: error)
             }
         }
+    }
+
+    /// 検索キーワードのハイライト表示（読み取り専用）を出すかどうか
+    private var showsHighlight: Bool {
+        !highlightKeywords.isEmpty && !isEditing && !viewModel.content.isEmpty
     }
 
     private var dateTitle: String {
@@ -77,6 +94,39 @@ struct DiaryDetailView: View {
                 }
                 Spacer()
             }
+        }
+        .padding(12)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+    }
+
+    /// 検索キーワードをハイライトした読み取り専用の本文カード。
+    /// 「編集」を押すと通常のエディタへ切り替わる。
+    private var highlightCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("検索キーワードをハイライト表示中", systemImage: "highlighter")
+                    .font(.caption)
+                    .foregroundStyle(Color.twSecondary)
+                Spacer()
+                Button {
+                    isEditing = true
+                } label: {
+                    Label("編集", systemImage: "pencil")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .frame(height: 28)
+                        .padding(.horizontal, 8)
+                }
+                .buttonStyle(.glass)
+            }
+
+            Text(TextHighlighter.highlight(text: viewModel.content, keywords: highlightKeywords))
+                .font(.body)
+                .foregroundStyle(Color.twBody)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 4)
         }
         .padding(12)
         .clipShape(RoundedRectangle(cornerRadius: 16))
