@@ -47,16 +47,12 @@ struct LoginView: View {
 
     private var loginLogo: some View {
         VStack(spacing: 16) {
-            Image(systemName: "drop.circle.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(
-                    .linearGradient(
-                        colors: [.blue, .cyan],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .shadow(color: .blue.opacity(0.5), radius: 10)
+            Image("Logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 22))
+                .shadow(color: .black.opacity(0.3), radius: 10)
 
             Text("umi.mikan")
                 .font(.system(size: 48, weight: .bold, design: .rounded))

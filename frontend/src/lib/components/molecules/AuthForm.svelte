@@ -42,7 +42,11 @@
 <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
 	<div class="max-w-md w-full space-y-8">
 		<div>
-			<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+			<div class="flex justify-center mb-4">
+				<img src="/favicon.png" alt="umi.mikan" class="h-20 w-20" />
+			</div>
+			<p class="text-center text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">umi.mikan</p>
+			<h2 class="text-center text-xl font-semibold text-gray-900 dark:text-white">
 				{title}
 			</h2>
 		</div>

@@ -100,6 +100,8 @@ are OK.
 
 The iOS app connects to the backend via `https://umi-mikan-api.usuyuki.net` (Cloudflare Tunnel) using TLS and **ConnectRPC** protocol. See `adr/0012-ios-grpc-transport.md` for transport protocol decisions.
 
+**iOS Offline Support**: The iOS app is offline-first. Diary entries are persisted locally as JSON (`ios/Sources/Infrastructure/LocalDiaryStore.swift`) and edits made offline are marked `needsSync`. `SyncManager` (`ios/Sources/Infrastructure/SyncManager.swift`) watches network state with `NWPathMonitor` and pushes pending edits to the server when connectivity returns, on app foreground, and after each save. Server data never overwrites unsynced local edits (local wins until pushed). The splash screen (`SplashView`) acts purely as a loading indicator — it is dismissed as soon as local data is available.
+
 **Prerequisites for `make grpc-swift`** — `protoc-gen-connect-swift` must be installed in `$(brew --prefix)/bin/`:
 
 ```bash

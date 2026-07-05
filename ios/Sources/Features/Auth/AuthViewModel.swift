@@ -122,9 +122,10 @@ final class AuthViewModel {
         }
     }
 
-    /// ログアウトしてKeychainのトークンを削除する
+    /// ログアウトしてKeychainのトークンとローカルの日記データを削除する
     func logout() {
         KeychainStore.deleteAll()
+        LocalDiaryStore.shared.clear()
         isLoggedIn = false
     }
 

@@ -9,20 +9,21 @@ import SwiftUI
 
 @main
 struct umi_mikanApp: App {
-    /// スプラッシュアニメーションの表示状態
-    @State private var showSplash = true
+    /// 初期読み込み状態（スプラッシュ表示の制御）
+    @State private var launchState = AppLaunchState()
 
     var body: some Scene {
         WindowGroup {
-            if showSplash {
-                SplashView {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showSplash = false
-                    }
+            ZStack {
+                ContentView(launchState: launchState)
+
+                // スプラッシュは読み込み中インジケーター。読み込みが終わったら出さない
+                if launchState.isInitialLoading {
+                    SplashView()
+                        .transition(.opacity)
                 }
-            } else {
-                ContentView()
             }
+            .animation(.easeInOut(duration: 0.3), value: launchState.isInitialLoading)
         }
     }
 }
