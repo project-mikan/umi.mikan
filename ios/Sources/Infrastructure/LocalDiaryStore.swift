@@ -49,8 +49,9 @@ struct LocalDiaryEntry: Codable, Equatable {
 /// オフライン編集は needsSync フラグで管理し、SyncManager がオンライン復帰時にサーバーへ送信する。
 @MainActor
 final class LocalDiaryStore {
-    // nonisolated(unsafe): シングルトンはアプリ起動時（MainActor 確立前）に参照される場合があるため
-    nonisolated(unsafe) static let shared = LocalDiaryStore()
+    // init が nonisolated なので @MainActor 外からも生成可能。
+    // LocalDiaryStore は Sendable なため nonisolated(unsafe) は不要。
+    static let shared = LocalDiaryStore()
 
     /// dateKey（"YYYY-MM-DD"）をキーとしたエントリのマップ
     private var entries: [String: LocalDiaryEntry]
@@ -66,10 +67,12 @@ final class LocalDiaryStore {
         entries = Self.loadEntries(from: resolvedURL)
     }
 
-    // MARK: - Private static helpers（static func は暗黙的に nonisolated なので init 内から安全に呼べる）
+    // MARK: - Private static helpers
+    // nonisolated を明示することで @MainActor クラス内でも nonisolated init から呼び出せる。
+    // modifier_order: nonisolated は private より前（SwiftLint ルール準拠）
 
     /// 保存先 URL を解決する
-    private static func resolveFileURL(_ override: URL?) -> URL {
+    nonisolated private static func resolveFileURL(_ override: URL?) -> URL {
         if let override { return override }
         let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
@@ -77,7 +80,7 @@ final class LocalDiaryStore {
     }
 
     /// ファイルからエントリを読み込む
-    private static func loadEntries(from url: URL) -> [String: LocalDiaryEntry] {
+    nonisolated private static func loadEntries(from url: URL) -> [String: LocalDiaryEntry] {
         let data = try? Data(contentsOf: url)
         return data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
     }
