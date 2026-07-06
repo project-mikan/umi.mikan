@@ -1,5 +1,7 @@
 included:
   - Sources
+  - Shared
+  - Widgets
   - Tests
 
 excluded:

@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "umi.mikan",
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",

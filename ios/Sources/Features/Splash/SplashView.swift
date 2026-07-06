@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// 起動アニメーションビュー
-/// みかんが上から落ちて転がり、棒とロゴにブラーをかけた後に完成形を表示する
+/// 起動アニメーションビュー（読み込み中インジケーター）
+/// みかんが上から落ちて転がり、棒とロゴにブラーをかけた後に完成形を表示する。
+/// 親ビューは onComplete（アニメーション完了）と初期読み込み完了の両方が揃ってからこのビューを取り除く。
 struct SplashView: View {
-    /// アニメーション終了後に呼ばれるコールバック
-    var onComplete: () -> Void
+    /// アニメーション終了後に呼ばれるコールバック（省略可）
+    var onComplete: () -> Void = {}
 
     // MARK: - アニメーション状態
 
@@ -24,8 +25,8 @@ struct SplashView: View {
     @State private var logoOpacity: Double = 0
     /// 完成形ロゴのスケール
     @State private var logoScale: CGFloat = 0.7
-    /// 転がりフェーズかどうか
-    @State private var isRolling: Bool = false
+    /// 転がりフェーズかどうか（初期状態から転がりフェーズにして最初のフレームから絵を出す）
+    @State private var isRolling: Bool = true
     /// 棒の上を転がる開始位置（penWidthに対する比率）
     @State private var rollProgress: CGFloat = -0.6
 
@@ -48,7 +49,14 @@ struct SplashView: View {
                 finalLogoView
             }
         }
-        .onAppear { startAnimation() }
+        .onAppear {
+            // コールドローンチ直後は初回描画が確定する前に withAnimation を呼んでも
+            // アニメーションされず最終状態へジャンプするため、
+            // 描画確定後（次のランループ）まで遅らせてから開始する
+            DispatchQueue.main.async {
+                startAnimation()
+            }
+        }
     }
 
     // MARK: - 転がりフェーズ
@@ -133,7 +141,6 @@ struct SplashView: View {
 
     /// 起動アニメーション全体のシーケンス
     private func startAnimation() {
-        isRolling = true
         dropMikan()
     }
 

@@ -1,0 +1,99 @@
+import SwiftUI
+
+/// フォーカス中のカードの識別子（キーボードツールバーの保存対象の判定に使う）
+enum DiaryCardFocus: Hashable {
+    case today
+    case yesterday
+    case dayBeforeYesterday
+}
+
+/// 日記カード - 日付ラベル・テキストエリア・保存ボタンをまとめたコンポーネント
+struct DiaryCardView: View {
+    let title: String
+    let date: Diary_YMD
+    @Binding var content: String
+    let isSaved: Bool
+    /// このカードのフォーカス識別子
+    let focusValue: DiaryCardFocus
+    /// 親（HomeView）と共有するフォーカス状態
+    @FocusState.Binding var focusedCard: DiaryCardFocus?
+    /// タイトル・日付タップで日記詳細（ハーフモーダル）を開く
+    let onOpenDetail: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            cardHeader
+            cardEditor
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        // 保存完了時に成功の触覚フィードバックを鳴らす
+        .sensoryFeedback(.success, trigger: isSaved) { _, newValue in newValue }
+    }
+
+    private var cardHeader: some View {
+        HStack {
+            // タイトル・日付をタップすると日記詳細をハーフモーダルで開く
+            Button(action: onOpenDetail) {
+                HStack(spacing: 6) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.twHeading)
+                        Text(dateString)
+                            .font(.caption)
+                            .foregroundStyle(Color.twSecondary)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(Color.twSecondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Spacer()
+            // 保存ボタンは置かず（保存はキーボードツールバーから行う）、保存完了の表示だけ出す
+            if isSaved {
+                Label("保存済み", systemImage: "checkmark")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.twGreen)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial)
+    }
+
+    private var cardEditor: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextEditor(text: $content)
+                .focused($focusedCard, equals: focusValue)
+                .frame(minHeight: 160)
+                .scrollContentBackground(.hidden)
+                .background(.clear)
+                .font(.body)
+                .foregroundStyle(Color.twBody)
+                .padding(.horizontal, 4)
+
+            HStack {
+                Text("\(content.count)文字")
+                    .font(.caption2)
+                    .foregroundStyle(Color.twSecondary)
+                if content.count >= 1000 {
+                    Text("自動要約対象")
+                        .font(.caption2)
+                        .foregroundStyle(Color.twBlue)
+                }
+                Spacer()
+            }
+        }
+        .padding(12)
+    }
+
+    /// Diary_YMD を "YYYY/MM/DD" 形式の文字列に変換する
+    private var dateString: String {
+        String(format: "%d/%02d/%02d", date.year, date.month, date.day)
+    }
+}
