@@ -5,6 +5,12 @@ struct MonthlyView: View {
     @State private var viewModel: MonthlyViewModel
     /// ハーフモーダルで表示する日記の日付
     @State private var selectedItem: DiarySheetItem?
+    /// 年月選択シートの表示状態
+    @State private var isMonthPickerPresented = false
+    /// 年月選択シートで選択中の年
+    @State private var pickerYear = 2000
+    /// 年月選択シートで選択中の月
+    @State private var pickerMonth = 1
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
@@ -56,6 +62,10 @@ struct MonthlyView: View {
                 )
             }
         )
+        // 年月選択シート（任意の年・月へジャンプする）
+        .sheet(isPresented: $isMonthPickerPresented) {
+            monthPickerSheet
+        }
     }
 
     /// 左右スワイプ用にその月の全日付をまとめたリスト
@@ -75,11 +85,7 @@ struct MonthlyView: View {
             }
             .buttonStyle(.glass)
 
-            Text(String(format: "%d年%d月", viewModel.year, viewModel.month))
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.twHeading)
-                .frame(maxWidth: .infinity)
+            yearMonthButton
 
             Button {
                 Task { await viewModel.goToToday() }
@@ -99,6 +105,82 @@ struct MonthlyView: View {
             }
             .buttonStyle(.glass)
         }
+    }
+
+    /// 年月ラベルのボタン。タップすると任意の年・月を選べるピッカーを開く
+    private var yearMonthButton: some View {
+        Button {
+            pickerYear = viewModel.year
+            pickerMonth = viewModel.month
+            isMonthPickerPresented = true
+        } label: {
+            HStack(spacing: 4) {
+                Text(String(format: "%d年%d月", viewModel.year, viewModel.month))
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.twHeading)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(Color.twSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// 年月選択シート。ホイールで年・月を選んで任意の月へ移動できる（数年前へ遡る時のショートカット）
+    private var monthPickerSheet: some View {
+        VStack(spacing: 16) {
+            Text("表示する年月を選択")
+                .font(.headline)
+                .foregroundStyle(Color.twHeading)
+                .padding(.top, 24)
+
+            monthPickerWheels
+
+            Button {
+                isMonthPickerPresented = false
+                Task { await viewModel.goTo(year: pickerYear, month: pickerMonth) }
+            } label: {
+                Text("この年月へ移動")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.glassProminent)
+            .padding(.horizontal, 16)
+
+            Spacer(minLength: 0)
+        }
+        .presentationDetents([.height(380)])
+        .presentationDragIndicator(.visible)
+    }
+
+    /// 年・月のホイールピッカー
+    private var monthPickerWheels: some View {
+        HStack(spacing: 0) {
+            Picker("年", selection: $pickerYear) {
+                ForEach(selectableYears, id: \.self) { year in
+                    Text(String(format: "%d年", year)).tag(year)
+                }
+            }
+            .pickerStyle(.wheel)
+
+            Picker("月", selection: $pickerMonth) {
+                ForEach(1 ... 12, id: \.self) { month in
+                    Text("\(month)月").tag(month)
+                }
+            }
+            .pickerStyle(.wheel)
+        }
+        .padding(.horizontal, 16)
+    }
+
+    /// 年ピッカーで選択できる年の範囲（1980年〜現在の年）
+    private var selectableYears: [Int] {
+        let currentYear = Calendar.current.component(.year, from: Date())
+        return Array(1980 ... max(currentYear, 1980))
     }
 
     // MARK: - 日リスト

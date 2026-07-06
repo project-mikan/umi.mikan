@@ -18,6 +18,11 @@ struct HomeView: View {
     /// フォーカス中のカード（キーボードツールバーの保存対象）
     @FocusState private var focusedCard: DiaryCardFocus?
 
+    /// スクロール位置の制御用（キーボードを閉じた時に元の位置へ戻すために使う）
+    @State private var scrollPosition = ScrollPosition()
+    /// 現在のスクロールオフセット（キーボードを閉じる直前の位置の記録に使う）
+    @State private var currentScrollOffset: CGFloat = 0
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let launchState: AppLaunchState?
@@ -85,10 +90,21 @@ struct HomeView: View {
             }
         }
         .toolbar { keyboardToolbar }
+        // スクロール位置を常時追跡し、キーボードを閉じた時の位置復元に備える
+        .scrollPosition($scrollPosition)
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentOffset.y
+        } action: { _, newValue in
+            currentScrollOffset = newValue
+        }
         // カードからカーソル（フォーカス）が外れたら、未保存の変更を自動保存する
         .onChange(of: focusedCard) { oldValue, newValue in
             if let oldValue, oldValue != newValue {
                 autoSaveIfChanged(card: oldValue)
+            }
+            // キーボードが閉じられた場合は、閉じる直前のスクロール位置を復元する
+            if oldValue != nil, newValue == nil {
+                restoreScrollOffset(currentScrollOffset)
             }
         }
     }
@@ -225,6 +241,16 @@ struct HomeView: View {
         case .yesterday: viewModel.yesterdaySaved
         case .dayBeforeYesterday: viewModel.dayBeforeYesterdaySaved
         case nil: false
+        }
+    }
+
+    /// キーボードが閉じてレイアウトが確定した後に、指定オフセットへスクロール位置を戻す。
+    /// キーボードのインセット変化による自動スクロールを上書きして、編集時の表示位置を保つ。
+    private func restoreScrollOffset(_ offset: CGFloat) {
+        Task {
+            // キーボードの閉じるアニメーション（約0.25秒）の完了を待ってから戻す
+            try? await Task.sleep(for: .milliseconds(300))
+            scrollPosition.scrollTo(point: CGPoint(x: 0, y: offset))
         }
     }
 

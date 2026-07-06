@@ -2,11 +2,8 @@ import SwiftUI
 
 /// 起動アニメーションビュー（読み込み中インジケーター）
 /// みかんが上から落ちて転がり、棒とロゴにブラーをかけた後に完成形を表示する。
-/// 親ビューは onComplete（アニメーション完了）と初期読み込み完了の両方が揃ってからこのビューを取り除く。
+/// 親ビューは初期読み込みが完了し次第このビューを取り除く（アニメーションは途中でもスキップされる）。
 struct SplashView: View {
-    /// アニメーション終了後に呼ばれるコールバック（省略可）
-    var onComplete: () -> Void = {}
-
     // MARK: - アニメーション状態
 
     /// みかんのY軸オフセット（落下位置）
@@ -191,6 +188,5 @@ struct SplashView: View {
             logoOpacity = 1.0
             logoScale = 1.0
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { onComplete() }
     }
 }

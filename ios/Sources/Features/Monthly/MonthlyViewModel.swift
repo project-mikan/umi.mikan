@@ -149,6 +149,13 @@ final class MonthlyViewModel {
         await fetch()
     }
 
+    /// 指定した年月へ移動する（年月ピッカーからのジャンプ用）
+    func goTo(year: Int, month: Int) async {
+        self.year = year
+        self.month = month
+        await fetch()
+    }
+
     /// 今月へ移動する
     func goToToday() async {
         // キャッシュした JST 固定カレンダーで現在の年月を取得する
