@@ -174,7 +174,7 @@ final class LocalDiaryStore {
 // nonisolated init から呼べるよう明示的に nonisolated を付ける
 
 /// LocalDiaryStore の保存先 URL を解決する
-nonisolated private func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL {
+private nonisolated func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL {
     if let override { return override }
     let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
@@ -182,7 +182,7 @@ nonisolated private func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL
 }
 
 /// LocalDiaryStore のエントリをファイルから読み込む
-nonisolated private func _loadLocalDiaryEntries(from url: URL) -> [String: LocalDiaryEntry] {
+private nonisolated func _loadLocalDiaryEntries(from url: URL) -> [String: LocalDiaryEntry] {
     let data = try? Data(contentsOf: url)
     return data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
 }
