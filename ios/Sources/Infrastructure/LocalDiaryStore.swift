@@ -50,8 +50,9 @@ struct LocalDiaryEntry: Codable, Equatable {
 @MainActor
 final class LocalDiaryStore {
     /// init が nonisolated なので @MainActor 外からも生成可能。
-    /// LocalDiaryStore は Sendable なため nonisolated(unsafe) は不要。
-    static let shared = LocalDiaryStore()
+    /// @MainActor クラスは暗黙に Sendable なため、nonisolated にして
+    /// ViewModel の init のデフォルト引数（nonisolated コンテキスト）からも参照できるようにする。
+    nonisolated static let shared = LocalDiaryStore()
 
     /// dateKey（"YYYY-MM-DD"）をキーとしたエントリのマップ
     private var entries: [String: LocalDiaryEntry]
@@ -167,10 +168,13 @@ final class LocalDiaryStore {
     }
 }
 
-// MARK: - File-scope helpers（@MainActor の外なので nonisolated 修飾子が不要）
+// MARK: - File-scope helpers
+
+// プロジェクトのデフォルトアクター隔離が MainActor のため、
+// nonisolated init から呼べるよう明示的に nonisolated を付ける
 
 /// LocalDiaryStore の保存先 URL を解決する
-private func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL {
+nonisolated private func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL {
     if let override { return override }
     let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
@@ -178,7 +182,7 @@ private func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL {
 }
 
 /// LocalDiaryStore のエントリをファイルから読み込む
-private func _loadLocalDiaryEntries(from url: URL) -> [String: LocalDiaryEntry] {
+nonisolated private func _loadLocalDiaryEntries(from url: URL) -> [String: LocalDiaryEntry] {
     let data = try? Data(contentsOf: url)
     return data.flatMap { try? JSONDecoder().decode([String: LocalDiaryEntry].self, from: $0) } ?? [:]
 }
