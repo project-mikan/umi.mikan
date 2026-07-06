@@ -26,6 +26,11 @@ final class DiaryDetailViewModel {
     /// isSaved を 2 秒後にリセットするタスク（ViewModel 破棄時にキャンセルできるよう保持する）
     private var savedResetTask: Task<Void, Never>?
 
+    /// 編集中の本文に未保存の変更があるかどうか（フォーカスが外れた時の自動保存の判定に使う）
+    var hasUnsavedChanges: Bool {
+        content != lastLoadedContent
+    }
+
     init(date: Diary_YMD, authViewModel: AuthViewModel, syncManager: SyncManager, store: LocalDiaryStore = .shared) {
         self.date = date
         self.authViewModel = authViewModel

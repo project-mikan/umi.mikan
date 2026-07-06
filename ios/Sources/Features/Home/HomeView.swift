@@ -85,6 +85,12 @@ struct HomeView: View {
             }
         }
         .toolbar { keyboardToolbar }
+        // カードからカーソル（フォーカス）が外れたら、未保存の変更を自動保存する
+        .onChange(of: focusedCard) { oldValue, newValue in
+            if let oldValue, oldValue != newValue {
+                autoSaveIfChanged(card: oldValue)
+            }
+        }
     }
 
     /// キーボードの上に表示するツールバー（保存・キーボードを閉じる）
@@ -224,7 +230,24 @@ struct HomeView: View {
 
     /// フォーカス中のカードの日記を保存する（キーボードツールバーの保存ボタン用）
     private func saveFocusedCard() {
-        switch focusedCard {
+        guard let focusedCard else { return }
+        save(card: focusedCard)
+    }
+
+    /// 指定カードに未保存の変更がある場合のみ保存する（フォーカスが外れた時の自動保存用）
+    private func autoSaveIfChanged(card: DiaryCardFocus) {
+        let hasChanges = switch card {
+        case .today: todayContent != lastAppliedToday
+        case .yesterday: yesterdayContent != lastAppliedYesterday
+        case .dayBeforeYesterday: dayBeforeYesterdayContent != lastAppliedDayBefore
+        }
+        guard hasChanges else { return }
+        save(card: card)
+    }
+
+    /// 指定カードの日記を保存する
+    private func save(card: DiaryCardFocus) {
+        switch card {
         case .today:
             Task {
                 await viewModel.saveToday(content: todayContent)
@@ -242,9 +265,6 @@ struct HomeView: View {
                 await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
                 lastAppliedDayBefore = dayBeforeYesterdayContent
             }
-
-        case nil:
-            break
         }
     }
 

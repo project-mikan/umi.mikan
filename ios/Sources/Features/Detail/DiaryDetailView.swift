@@ -38,6 +38,12 @@ struct DiaryDetailView: View {
                     await viewModel.fetch()
                     await scrollToFirstHighlight(proxy)
                 }
+                // カーソル（フォーカス）が外れたら未保存の変更を自動保存する
+                .onChange(of: isEditorFocused) { _, focused in
+                    if !focused, viewModel.hasUnsavedChanges {
+                        Task { await viewModel.save() }
+                    }
+                }
         }
     }
 
