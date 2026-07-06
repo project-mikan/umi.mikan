@@ -81,6 +81,9 @@ const (
 	// DiaryServiceGetDiaryEmbeddingStatusProcedure is the fully-qualified name of the DiaryService's
 	// GetDiaryEmbeddingStatus RPC.
 	DiaryServiceGetDiaryEmbeddingStatusProcedure = "/diary.DiaryService/GetDiaryEmbeddingStatus"
+	// DiaryServiceExportDiaryEntriesProcedure is the fully-qualified name of the DiaryService's
+	// ExportDiaryEntries RPC.
+	DiaryServiceExportDiaryEntriesProcedure = "/diary.DiaryService/ExportDiaryEntries"
 )
 
 // DiaryServiceClient is a client for the diary.DiaryService service.
@@ -250,6 +253,17 @@ type DiaryServiceClient interface {
 	// エラー:
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryEmbeddingStatus(context.Context, *connect.Request[grpc.GetDiaryEmbeddingStatusRequest]) (*connect.Response[grpc.GetDiaryEmbeddingStatusResponse], error)
+	// ExportDiaryEntries は指定期間（開始年月〜終了年月）の全日記をエクスポートします。
+	// 大量データにも対応するため1回のDBクエリで取得します。
+	//
+	// 例:
+	//
+	//	request: { from: { year: 2024, month: 4 }, to: { year: 2026, month: 6 } }
+	//	response: { entries: [...], total_count: 123 }
+	//
+	// エラー:
+	//   - InvalidArgument: 開始年月が終了年月より後の場合
+	ExportDiaryEntries(context.Context, *connect.Request[grpc.ExportDiaryEntriesRequest]) (*connect.Response[grpc.ExportDiaryEntriesResponse], error)
 }
 
 // NewDiaryServiceClient constructs a client for the diary.DiaryService service. By default, it uses
@@ -359,6 +373,12 @@ func NewDiaryServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(diaryServiceMethods.ByName("GetDiaryEmbeddingStatus")),
 			connect.WithClientOptions(opts...),
 		),
+		exportDiaryEntries: connect.NewClient[grpc.ExportDiaryEntriesRequest, grpc.ExportDiaryEntriesResponse](
+			httpClient,
+			baseURL+DiaryServiceExportDiaryEntriesProcedure,
+			connect.WithSchema(diaryServiceMethods.ByName("ExportDiaryEntries")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -380,6 +400,7 @@ type diaryServiceClient struct {
 	getDiaryHighlight          *connect.Client[grpc.GetDiaryHighlightRequest, grpc.GetDiaryHighlightResponse]
 	regenerateAllEmbeddings    *connect.Client[grpc.RegenerateAllEmbeddingsRequest, grpc.RegenerateAllEmbeddingsResponse]
 	getDiaryEmbeddingStatus    *connect.Client[grpc.GetDiaryEmbeddingStatusRequest, grpc.GetDiaryEmbeddingStatusResponse]
+	exportDiaryEntries         *connect.Client[grpc.ExportDiaryEntriesRequest, grpc.ExportDiaryEntriesResponse]
 }
 
 // CreateDiaryEntry calls diary.DiaryService.CreateDiaryEntry.
@@ -460,6 +481,11 @@ func (c *diaryServiceClient) RegenerateAllEmbeddings(ctx context.Context, req *c
 // GetDiaryEmbeddingStatus calls diary.DiaryService.GetDiaryEmbeddingStatus.
 func (c *diaryServiceClient) GetDiaryEmbeddingStatus(ctx context.Context, req *connect.Request[grpc.GetDiaryEmbeddingStatusRequest]) (*connect.Response[grpc.GetDiaryEmbeddingStatusResponse], error) {
 	return c.getDiaryEmbeddingStatus.CallUnary(ctx, req)
+}
+
+// ExportDiaryEntries calls diary.DiaryService.ExportDiaryEntries.
+func (c *diaryServiceClient) ExportDiaryEntries(ctx context.Context, req *connect.Request[grpc.ExportDiaryEntriesRequest]) (*connect.Response[grpc.ExportDiaryEntriesResponse], error) {
+	return c.exportDiaryEntries.CallUnary(ctx, req)
 }
 
 // DiaryServiceHandler is an implementation of the diary.DiaryService service.
@@ -629,6 +655,17 @@ type DiaryServiceHandler interface {
 	// エラー:
 	//   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
 	GetDiaryEmbeddingStatus(context.Context, *connect.Request[grpc.GetDiaryEmbeddingStatusRequest]) (*connect.Response[grpc.GetDiaryEmbeddingStatusResponse], error)
+	// ExportDiaryEntries は指定期間（開始年月〜終了年月）の全日記をエクスポートします。
+	// 大量データにも対応するため1回のDBクエリで取得します。
+	//
+	// 例:
+	//
+	//	request: { from: { year: 2024, month: 4 }, to: { year: 2026, month: 6 } }
+	//	response: { entries: [...], total_count: 123 }
+	//
+	// エラー:
+	//   - InvalidArgument: 開始年月が終了年月より後の場合
+	ExportDiaryEntries(context.Context, *connect.Request[grpc.ExportDiaryEntriesRequest]) (*connect.Response[grpc.ExportDiaryEntriesResponse], error)
 }
 
 // NewDiaryServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -734,6 +771,12 @@ func NewDiaryServiceHandler(svc DiaryServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(diaryServiceMethods.ByName("GetDiaryEmbeddingStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
+	diaryServiceExportDiaryEntriesHandler := connect.NewUnaryHandler(
+		DiaryServiceExportDiaryEntriesProcedure,
+		svc.ExportDiaryEntries,
+		connect.WithSchema(diaryServiceMethods.ByName("ExportDiaryEntries")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/diary.DiaryService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case DiaryServiceCreateDiaryEntryProcedure:
@@ -768,6 +811,8 @@ func NewDiaryServiceHandler(svc DiaryServiceHandler, opts ...connect.HandlerOpti
 			diaryServiceRegenerateAllEmbeddingsHandler.ServeHTTP(w, r)
 		case DiaryServiceGetDiaryEmbeddingStatusProcedure:
 			diaryServiceGetDiaryEmbeddingStatusHandler.ServeHTTP(w, r)
+		case DiaryServiceExportDiaryEntriesProcedure:
+			diaryServiceExportDiaryEntriesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -839,4 +884,8 @@ func (UnimplementedDiaryServiceHandler) RegenerateAllEmbeddings(context.Context,
 
 func (UnimplementedDiaryServiceHandler) GetDiaryEmbeddingStatus(context.Context, *connect.Request[grpc.GetDiaryEmbeddingStatusRequest]) (*connect.Response[grpc.GetDiaryEmbeddingStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("diary.DiaryService.GetDiaryEmbeddingStatus is not implemented"))
+}
+
+func (UnimplementedDiaryServiceHandler) ExportDiaryEntries(context.Context, *connect.Request[grpc.ExportDiaryEntriesRequest]) (*connect.Response[grpc.ExportDiaryEntriesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("diary.DiaryService.ExportDiaryEntries is not implemented"))
 }

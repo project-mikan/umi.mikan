@@ -1992,6 +1992,112 @@ func (x *GetDiaryEmbeddingStatusRequest) GetDiaryId() string {
 	return ""
 }
 
+// 日記エクスポートリクエスト
+type ExportDiaryEntriesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	From          *YM                    `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"` // 開始年月（その月の1日から）
+	To            *YM                    `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`     // 終了年月（その月の末日まで）
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportDiaryEntriesRequest) Reset() {
+	*x = ExportDiaryEntriesRequest{}
+	mi := &file_diary_diary_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportDiaryEntriesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportDiaryEntriesRequest) ProtoMessage() {}
+
+func (x *ExportDiaryEntriesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_diary_diary_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportDiaryEntriesRequest.ProtoReflect.Descriptor instead.
+func (*ExportDiaryEntriesRequest) Descriptor() ([]byte, []int) {
+	return file_diary_diary_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *ExportDiaryEntriesRequest) GetFrom() *YM {
+	if x != nil {
+		return x.From
+	}
+	return nil
+}
+
+func (x *ExportDiaryEntriesRequest) GetTo() *YM {
+	if x != nil {
+		return x.To
+	}
+	return nil
+}
+
+// 日記エクスポートレスポンス
+type ExportDiaryEntriesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entries       []*DiaryEntry          `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	TotalCount    int32                  `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"` // 取得した日記の総件数
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportDiaryEntriesResponse) Reset() {
+	*x = ExportDiaryEntriesResponse{}
+	mi := &file_diary_diary_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportDiaryEntriesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportDiaryEntriesResponse) ProtoMessage() {}
+
+func (x *ExportDiaryEntriesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_diary_diary_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportDiaryEntriesResponse.ProtoReflect.Descriptor instead.
+func (*ExportDiaryEntriesResponse) Descriptor() ([]byte, []int) {
+	return file_diary_diary_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *ExportDiaryEntriesResponse) GetEntries() []*DiaryEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+func (x *ExportDiaryEntriesResponse) GetTotalCount() int32 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
 // 日記のRAGインデックス状態取得レスポンス
 type GetDiaryEmbeddingStatusResponse struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
@@ -2008,7 +2114,7 @@ type GetDiaryEmbeddingStatusResponse struct {
 
 func (x *GetDiaryEmbeddingStatusResponse) Reset() {
 	*x = GetDiaryEmbeddingStatusResponse{}
-	mi := &file_diary_diary_proto_msgTypes[37]
+	mi := &file_diary_diary_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2020,7 +2126,7 @@ func (x *GetDiaryEmbeddingStatusResponse) String() string {
 func (*GetDiaryEmbeddingStatusResponse) ProtoMessage() {}
 
 func (x *GetDiaryEmbeddingStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_diary_diary_proto_msgTypes[37]
+	mi := &file_diary_diary_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2033,7 +2139,7 @@ func (x *GetDiaryEmbeddingStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiaryEmbeddingStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetDiaryEmbeddingStatusResponse) Descriptor() ([]byte, []int) {
-	return file_diary_diary_proto_rawDescGZIP(), []int{37}
+	return file_diary_diary_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *GetDiaryEmbeddingStatusResponse) GetIndexed() bool {
@@ -2225,7 +2331,14 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
 	"\fqueued_count\x18\x02 \x01(\x05R\vqueuedCount\";\n" +
 	"\x1eGetDiaryEmbeddingStatusRequest\x12\x19\n" +
-	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"\x98\x02\n" +
+	"\bdiary_id\x18\x01 \x01(\tR\adiaryId\"U\n" +
+	"\x19ExportDiaryEntriesRequest\x12\x1d\n" +
+	"\x04from\x18\x01 \x01(\v2\t.diary.YMR\x04from\x12\x19\n" +
+	"\x02to\x18\x02 \x01(\v2\t.diary.YMR\x02to\"j\n" +
+	"\x1aExportDiaryEntriesResponse\x12+\n" +
+	"\aentries\x18\x01 \x03(\v2\x11.diary.DiaryEntryR\aentries\x12\x1f\n" +
+	"\vtotal_count\x18\x02 \x01(\x05R\n" +
+	"totalCount\"\x98\x02\n" +
 	"\x1fGetDiaryEmbeddingStatusResponse\x12\x18\n" +
 	"\aindexed\x18\x01 \x01(\bR\aindexed\x12#\n" +
 	"\rmodel_version\x18\x02 \x01(\tR\fmodelVersion\x12\x1d\n" +
@@ -2236,7 +2349,7 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x13chunk_model_version\x18\x06 \x01(\tR\x11chunkModelVersion\x12\x1f\n" +
 	"\vchunk_count\x18\a \x01(\x05R\n" +
 	"chunkCount\x12'\n" +
-	"\x0fchunk_summaries\x18\b \x03(\tR\x0echunkSummaries2\xd9\v\n" +
+	"\x0fchunk_summaries\x18\b \x03(\tR\x0echunkSummaries2\xb4\f\n" +
 	"\fDiaryService\x12S\n" +
 	"\x10CreateDiaryEntry\x12\x1e.diary.CreateDiaryEntryRequest\x1a\x1f.diary.CreateDiaryEntryResponse\x12S\n" +
 	"\x10UpdateDiaryEntry\x12\x1e.diary.UpdateDiaryEntryRequest\x1a\x1f.diary.UpdateDiaryEntryResponse\x12S\n" +
@@ -2253,7 +2366,8 @@ const file_diary_diary_proto_rawDesc = "" +
 	"\x15TriggerDiaryHighlight\x12#.diary.TriggerDiaryHighlightRequest\x1a$.diary.TriggerDiaryHighlightResponse\x12V\n" +
 	"\x11GetDiaryHighlight\x12\x1f.diary.GetDiaryHighlightRequest\x1a .diary.GetDiaryHighlightResponse\x12h\n" +
 	"\x17RegenerateAllEmbeddings\x12%.diary.RegenerateAllEmbeddingsRequest\x1a&.diary.RegenerateAllEmbeddingsResponse\x12h\n" +
-	"\x17GetDiaryEmbeddingStatus\x12%.diary.GetDiaryEmbeddingStatusRequest\x1a&.diary.GetDiaryEmbeddingStatusResponseB@Z>github.com/project-mikan/umi.mikan/backend/infrastructure/grpcb\x06proto3"
+	"\x17GetDiaryEmbeddingStatus\x12%.diary.GetDiaryEmbeddingStatusRequest\x1a&.diary.GetDiaryEmbeddingStatusResponse\x12Y\n" +
+	"\x12ExportDiaryEntries\x12 .diary.ExportDiaryEntriesRequest\x1a!.diary.ExportDiaryEntriesResponseB@Z>github.com/project-mikan/umi.mikan/backend/infrastructure/grpcb\x06proto3"
 
 var (
 	file_diary_diary_proto_rawDescOnce sync.Once
@@ -2267,7 +2381,7 @@ func file_diary_diary_proto_rawDescGZIP() []byte {
 	return file_diary_diary_proto_rawDescData
 }
 
-var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
+var file_diary_diary_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_diary_diary_proto_goTypes = []any{
 	(*YMD)(nil),                                // 0: diary.YMD
 	(*YM)(nil),                                 // 1: diary.YM
@@ -2306,7 +2420,9 @@ var file_diary_diary_proto_goTypes = []any{
 	(*RegenerateAllEmbeddingsRequest)(nil),     // 34: diary.RegenerateAllEmbeddingsRequest
 	(*RegenerateAllEmbeddingsResponse)(nil),    // 35: diary.RegenerateAllEmbeddingsResponse
 	(*GetDiaryEmbeddingStatusRequest)(nil),     // 36: diary.GetDiaryEmbeddingStatusRequest
-	(*GetDiaryEmbeddingStatusResponse)(nil),    // 37: diary.GetDiaryEmbeddingStatusResponse
+	(*ExportDiaryEntriesRequest)(nil),          // 37: diary.ExportDiaryEntriesRequest
+	(*ExportDiaryEntriesResponse)(nil),         // 38: diary.ExportDiaryEntriesResponse
+	(*GetDiaryEmbeddingStatusResponse)(nil),    // 39: diary.GetDiaryEmbeddingStatusResponse
 }
 var file_diary_diary_proto_depIdxs = []int32{
 	0,  // 0: diary.DiaryEntry.date:type_name -> diary.YMD
@@ -2329,43 +2445,48 @@ var file_diary_diary_proto_depIdxs = []int32{
 	0,  // 17: diary.SemanticSearchResult.date:type_name -> diary.YMD
 	27, // 18: diary.SearchDiaryEntriesSemanticResponse.results:type_name -> diary.SemanticSearchResult
 	32, // 19: diary.GetDiaryHighlightResponse.highlights:type_name -> diary.HighlightRange
-	3,  // 20: diary.DiaryService.CreateDiaryEntry:input_type -> diary.CreateDiaryEntryRequest
-	13, // 21: diary.DiaryService.UpdateDiaryEntry:input_type -> diary.UpdateDiaryEntryRequest
-	15, // 22: diary.DiaryService.DeleteDiaryEntry:input_type -> diary.DeleteDiaryEntryRequest
-	5,  // 23: diary.DiaryService.GetDiaryEntry:input_type -> diary.GetDiaryEntryRequest
-	6,  // 24: diary.DiaryService.GetDiaryEntries:input_type -> diary.GetDiaryEntriesRequest
-	7,  // 25: diary.DiaryService.GetDiaryEntriesByMonth:input_type -> diary.GetDiaryEntriesByMonthRequest
-	8,  // 26: diary.DiaryService.SearchDiaryEntries:input_type -> diary.SearchDiaryEntriesRequest
-	18, // 27: diary.DiaryService.GenerateMonthlySummary:input_type -> diary.GenerateMonthlySummaryRequest
-	20, // 28: diary.DiaryService.GetMonthlySummary:input_type -> diary.GetMonthlySummaryRequest
-	22, // 29: diary.DiaryService.GetLatestTrend:input_type -> diary.GetLatestTrendRequest
-	24, // 30: diary.DiaryService.TriggerLatestTrend:input_type -> diary.TriggerLatestTrendRequest
-	26, // 31: diary.DiaryService.SearchDiaryEntriesSemantic:input_type -> diary.SearchDiaryEntriesSemanticRequest
-	29, // 32: diary.DiaryService.TriggerDiaryHighlight:input_type -> diary.TriggerDiaryHighlightRequest
-	31, // 33: diary.DiaryService.GetDiaryHighlight:input_type -> diary.GetDiaryHighlightRequest
-	34, // 34: diary.DiaryService.RegenerateAllEmbeddings:input_type -> diary.RegenerateAllEmbeddingsRequest
-	36, // 35: diary.DiaryService.GetDiaryEmbeddingStatus:input_type -> diary.GetDiaryEmbeddingStatusRequest
-	4,  // 36: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
-	14, // 37: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
-	16, // 38: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
-	12, // 39: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
-	10, // 40: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
-	11, // 41: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
-	9,  // 42: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
-	19, // 43: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
-	21, // 44: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
-	23, // 45: diary.DiaryService.GetLatestTrend:output_type -> diary.GetLatestTrendResponse
-	25, // 46: diary.DiaryService.TriggerLatestTrend:output_type -> diary.TriggerLatestTrendResponse
-	28, // 47: diary.DiaryService.SearchDiaryEntriesSemantic:output_type -> diary.SearchDiaryEntriesSemanticResponse
-	30, // 48: diary.DiaryService.TriggerDiaryHighlight:output_type -> diary.TriggerDiaryHighlightResponse
-	33, // 49: diary.DiaryService.GetDiaryHighlight:output_type -> diary.GetDiaryHighlightResponse
-	35, // 50: diary.DiaryService.RegenerateAllEmbeddings:output_type -> diary.RegenerateAllEmbeddingsResponse
-	37, // 51: diary.DiaryService.GetDiaryEmbeddingStatus:output_type -> diary.GetDiaryEmbeddingStatusResponse
-	36, // [36:52] is the sub-list for method output_type
-	20, // [20:36] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	1,  // 20: diary.ExportDiaryEntriesRequest.from:type_name -> diary.YM
+	1,  // 21: diary.ExportDiaryEntriesRequest.to:type_name -> diary.YM
+	2,  // 22: diary.ExportDiaryEntriesResponse.entries:type_name -> diary.DiaryEntry
+	3,  // 23: diary.DiaryService.CreateDiaryEntry:input_type -> diary.CreateDiaryEntryRequest
+	13, // 24: diary.DiaryService.UpdateDiaryEntry:input_type -> diary.UpdateDiaryEntryRequest
+	15, // 25: diary.DiaryService.DeleteDiaryEntry:input_type -> diary.DeleteDiaryEntryRequest
+	5,  // 26: diary.DiaryService.GetDiaryEntry:input_type -> diary.GetDiaryEntryRequest
+	6,  // 27: diary.DiaryService.GetDiaryEntries:input_type -> diary.GetDiaryEntriesRequest
+	7,  // 28: diary.DiaryService.GetDiaryEntriesByMonth:input_type -> diary.GetDiaryEntriesByMonthRequest
+	8,  // 29: diary.DiaryService.SearchDiaryEntries:input_type -> diary.SearchDiaryEntriesRequest
+	18, // 30: diary.DiaryService.GenerateMonthlySummary:input_type -> diary.GenerateMonthlySummaryRequest
+	20, // 31: diary.DiaryService.GetMonthlySummary:input_type -> diary.GetMonthlySummaryRequest
+	22, // 32: diary.DiaryService.GetLatestTrend:input_type -> diary.GetLatestTrendRequest
+	24, // 33: diary.DiaryService.TriggerLatestTrend:input_type -> diary.TriggerLatestTrendRequest
+	26, // 34: diary.DiaryService.SearchDiaryEntriesSemantic:input_type -> diary.SearchDiaryEntriesSemanticRequest
+	29, // 35: diary.DiaryService.TriggerDiaryHighlight:input_type -> diary.TriggerDiaryHighlightRequest
+	31, // 36: diary.DiaryService.GetDiaryHighlight:input_type -> diary.GetDiaryHighlightRequest
+	34, // 37: diary.DiaryService.RegenerateAllEmbeddings:input_type -> diary.RegenerateAllEmbeddingsRequest
+	36, // 38: diary.DiaryService.GetDiaryEmbeddingStatus:input_type -> diary.GetDiaryEmbeddingStatusRequest
+	37, // 39: diary.DiaryService.ExportDiaryEntries:input_type -> diary.ExportDiaryEntriesRequest
+	4,  // 40: diary.DiaryService.CreateDiaryEntry:output_type -> diary.CreateDiaryEntryResponse
+	14, // 41: diary.DiaryService.UpdateDiaryEntry:output_type -> diary.UpdateDiaryEntryResponse
+	16, // 42: diary.DiaryService.DeleteDiaryEntry:output_type -> diary.DeleteDiaryEntryResponse
+	12, // 43: diary.DiaryService.GetDiaryEntry:output_type -> diary.GetDiaryEntryResponse
+	10, // 44: diary.DiaryService.GetDiaryEntries:output_type -> diary.GetDiaryEntriesResponse
+	11, // 45: diary.DiaryService.GetDiaryEntriesByMonth:output_type -> diary.GetDiaryEntriesByMonthResponse
+	9,  // 46: diary.DiaryService.SearchDiaryEntries:output_type -> diary.SearchDiaryEntriesResponse
+	19, // 47: diary.DiaryService.GenerateMonthlySummary:output_type -> diary.GenerateMonthlySummaryResponse
+	21, // 48: diary.DiaryService.GetMonthlySummary:output_type -> diary.GetMonthlySummaryResponse
+	23, // 49: diary.DiaryService.GetLatestTrend:output_type -> diary.GetLatestTrendResponse
+	25, // 50: diary.DiaryService.TriggerLatestTrend:output_type -> diary.TriggerLatestTrendResponse
+	28, // 51: diary.DiaryService.SearchDiaryEntriesSemantic:output_type -> diary.SearchDiaryEntriesSemanticResponse
+	30, // 52: diary.DiaryService.TriggerDiaryHighlight:output_type -> diary.TriggerDiaryHighlightResponse
+	33, // 53: diary.DiaryService.GetDiaryHighlight:output_type -> diary.GetDiaryHighlightResponse
+	35, // 54: diary.DiaryService.RegenerateAllEmbeddings:output_type -> diary.RegenerateAllEmbeddingsResponse
+	39, // 55: diary.DiaryService.GetDiaryEmbeddingStatus:output_type -> diary.GetDiaryEmbeddingStatusResponse
+	38, // 56: diary.DiaryService.ExportDiaryEntries:output_type -> diary.ExportDiaryEntriesResponse
+	40, // [40:57] is the sub-list for method output_type
+	23, // [23:40] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_diary_diary_proto_init() }
@@ -2379,7 +2500,7 @@ func file_diary_diary_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_diary_diary_proto_rawDesc), len(file_diary_diary_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   38,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

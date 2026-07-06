@@ -71,6 +71,16 @@
       "description": "View AI summary processing status and performance metrics.",
       "viewButton": "View Processing Status"
     },
+    "export": {
+      "title": "Export",
+      "jsonTitle": "Download Diaries as JSON",
+      "description": "Download your diary entries for a specified period as a JSON file.",
+      "from": "From",
+      "to": "To",
+      "button": "Download",
+      "periodError": "Start date must be before or equal to end date",
+      "failed": "Export failed"
+    },
     "deleteAccount": {
       "title": "Delete Account",
       "button": "Delete Account",

@@ -346,6 +346,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `backend/cmd/scheduler/main.go`: Scheduler service entry point (uses DI container)
 - `backend/cmd/subscriber/main.go`: Subscriber service entry point (uses DI container)
 - `backend/container/container.go`: Central dependency injection configuration
+- `backend/infrastructure/database/diary_export.go`: 期間指定日記一括取得クエリ（エクスポート用）
+- `frontend/src/routes/api/diary/export/+server.ts`: 日記エクスポートAPIエンドポイント
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
 - `frontend/src/hooks.server.ts`: Security headers and CSP configuration
 - `frontend/src/lib/server/csrf.ts`: CSRF protection utilities

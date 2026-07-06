@@ -173,6 +173,17 @@ service DiaryService {
   // エラー:
   //   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
   rpc GetDiaryEmbeddingStatus(GetDiaryEmbeddingStatusRequest) returns (GetDiaryEmbeddingStatusResponse);
+
+  // ExportDiaryEntries は指定期間（開始年月〜終了年月）の全日記をエクスポートします。
+  // 大量データにも対応するため1回のDBクエリで取得します。
+  //
+  // 例:
+  //   request: { from: { year: 2024, month: 4 }, to: { year: 2026, month: 6 } }
+  //   response: { entries: [...], total_count: 123 }
+  //
+  // エラー:
+  //   - InvalidArgument: 開始年月が終了年月より後の場合
+  rpc ExportDiaryEntries(ExportDiaryEntriesRequest) returns (ExportDiaryEntriesResponse);
 }
 
 message YMD {
@@ -396,6 +407,18 @@ message RegenerateAllEmbeddingsResponse {
 // 日記のRAGインデックス状態取得リクエスト
 message GetDiaryEmbeddingStatusRequest {
   string diary_id = 1; // 日記ID
+}
+
+// 日記エクスポートリクエスト
+message ExportDiaryEntriesRequest {
+  YM from = 1; // 開始年月（その月の1日から）
+  YM to = 2;   // 終了年月（その月の末日まで）
+}
+
+// 日記エクスポートレスポンス
+message ExportDiaryEntriesResponse {
+  repeated DiaryEntry entries = 1;
+  int32 total_count = 2; // 取得した日記の総件数
 }
 
 // 日記のRAGインデックス状態取得レスポンス

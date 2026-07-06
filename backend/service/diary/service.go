@@ -1146,6 +1146,57 @@ func (s *DiaryEntry) GetDiaryEmbeddingStatus(
 	return resp, nil
 }
 
+// ExportDiaryEntries は指定期間（開始年月〜終了年月）の全日記をエクスポートする。
+// 大量データ対応のため1回のDBクエリで取得する。
+func (s *DiaryEntry) ExportDiaryEntries(
+	ctx context.Context,
+	req *g.ExportDiaryEntriesRequest,
+) (*g.ExportDiaryEntriesResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 開始・終了年月のバリデーション
+	if req.From == nil || req.To == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "from and to are required")
+	}
+	fromYear := int(req.From.Year)
+	fromMonth := int(req.From.Month)
+	toYear := int(req.To.Year)
+	toMonth := int(req.To.Month)
+
+	// 開始が終了より後の場合はエラー
+	if fromYear > toYear || (fromYear == toYear && fromMonth > toMonth) {
+		return nil, status.Errorf(codes.InvalidArgument, "from must be before or equal to to")
+	}
+
+	diaries, err := database.DiariesByUserIDAndDateRange(ctx, s.DB, userIDStr, fromYear, fromMonth, toYear, toMonth)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to export diary entries: %v", err)
+	}
+
+	entries := make([]*g.DiaryEntry, 0, len(diaries))
+	for _, d := range diaries {
+		entries = append(entries, &g.DiaryEntry{
+			Id: d.ID.String(),
+			Date: &g.YMD{
+				Year:  uint32(d.Date.Year()),
+				Month: uint32(d.Date.Month()),
+				Day:   uint32(d.Date.Day()),
+			},
+			Content:   d.Content,
+			CreatedAt: d.CreatedAt,
+			UpdatedAt: d.UpdatedAt,
+		})
+	}
+
+	return &g.ExportDiaryEntriesResponse{
+		Entries:    entries,
+		TotalCount: int32(len(entries)),
+	}, nil
+}
+
 // generateSnippet はコンテンツから最大maxLen文字のスニペットを生成する
 func generateSnippet(content string, maxLen int) string {
 	runes := []rune(content)

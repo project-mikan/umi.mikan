@@ -195,6 +195,18 @@ internal protocol Diary_DiaryServiceClientInterface: Sendable {
     ///   - PermissionDenied: 他のユーザーの日記にアクセスしようとした
     @available(iOS 13, *)
     func `getDiaryEmbeddingStatus`(request: Diary_GetDiaryEmbeddingStatusRequest, headers: Connect.Headers) async -> ResponseMessage<Diary_GetDiaryEmbeddingStatusResponse>
+
+    /// ExportDiaryEntries は指定期間（開始年月〜終了年月）の全日記をエクスポートします。
+    /// 大量データにも対応するため1回のDBクエリで取得します。
+    ///
+    /// 例:
+    ///   request: { from: { year: 2024, month: 4 }, to: { year: 2026, month: 6 } }
+    ///   response: { entries: [...], total_count: 123 }
+    ///
+    /// エラー:
+    ///   - InvalidArgument: 開始年月が終了年月より後の場合
+    @available(iOS 13, *)
+    func `exportDiaryEntries`(request: Diary_ExportDiaryEntriesRequest, headers: Connect.Headers) async -> ResponseMessage<Diary_ExportDiaryEntriesResponse>
 }
 
 /// Concrete implementation of `Diary_DiaryServiceClientInterface`.
@@ -285,6 +297,11 @@ internal final class Diary_DiaryServiceClient: Diary_DiaryServiceClientInterface
         return await self.client.unary(path: "/diary.DiaryService/GetDiaryEmbeddingStatus", idempotencyLevel: .unknown, request: request, headers: headers)
     }
 
+    @available(iOS 13, *)
+    internal func `exportDiaryEntries`(request: Diary_ExportDiaryEntriesRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Diary_ExportDiaryEntriesResponse> {
+        return await self.client.unary(path: "/diary.DiaryService/ExportDiaryEntries", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
     internal enum Metadata {
         internal enum Methods {
             internal static let createDiaryEntry = Connect.MethodSpec(name: "CreateDiaryEntry", service: "diary.DiaryService", type: .unary)
@@ -303,6 +320,7 @@ internal final class Diary_DiaryServiceClient: Diary_DiaryServiceClientInterface
             internal static let getDiaryHighlight = Connect.MethodSpec(name: "GetDiaryHighlight", service: "diary.DiaryService", type: .unary)
             internal static let regenerateAllEmbeddings = Connect.MethodSpec(name: "RegenerateAllEmbeddings", service: "diary.DiaryService", type: .unary)
             internal static let getDiaryEmbeddingStatus = Connect.MethodSpec(name: "GetDiaryEmbeddingStatus", service: "diary.DiaryService", type: .unary)
+            internal static let exportDiaryEntries = Connect.MethodSpec(name: "ExportDiaryEntries", service: "diary.DiaryService", type: .unary)
         }
     }
 }

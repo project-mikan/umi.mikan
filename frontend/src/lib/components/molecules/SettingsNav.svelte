@@ -34,6 +34,11 @@
       ],
     },
     {
+      id: "export-section",
+      title: $_("settings.export.title"),
+      children: [{ id: "export", title: $_("settings.export.jsonTitle") }],
+    },
+    {
       id: "danger-zone",
       title: $_("settings.nav.dangerZone"),
       children: [
