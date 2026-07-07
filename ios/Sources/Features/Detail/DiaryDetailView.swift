@@ -240,9 +240,12 @@ struct DiaryDetailView: View {
             }
 
         case .background:
-            // 書きかけを失わないようにローカルへ自動保存する
+            // 書きかけを失わないようにローカルへ自動保存し、保存完了後に書きかけフラグを解除する
             if viewModel.hasUnsavedChanges {
-                Task { await viewModel.save() }
+                Task {
+                    await viewModel.save()
+                    LiveActivityManager.shared.setDraft(false)
+                }
             }
 
         case .active:

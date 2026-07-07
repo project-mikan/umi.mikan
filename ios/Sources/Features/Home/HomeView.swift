@@ -22,6 +22,8 @@ struct HomeView: View {
     @State private var scrollPosition = ScrollPosition()
     /// 現在のスクロールオフセット（キーボードを閉じる直前の位置の記録に使う）
     @State private var currentScrollOffset: CGFloat = 0
+    /// スクロール復元 Task（前の Task をキャンセルするために保持する）
+    @State private var scrollRestoreTask: Task<Void, Never>?
 
     /// アプリのフォアグラウンド状態（書きかけのLive Activity制御に使う）
     @Environment(\.scenePhase)
@@ -252,44 +254,13 @@ struct HomeView: View {
         }
     }
 
-    /// 書きかけ（保存していない編集途中の内容）があるかどうか
-    private var hasDraftInProgress: Bool {
-        todayContent != lastAppliedToday
-            || yesterdayContent != lastAppliedYesterday
-            || dayBeforeYesterdayContent != lastAppliedDayBefore
-    }
-
-    /// アプリのフォアグラウンド状態の変化に応じて、書きかけの保存とLive Activityを制御する
-    private func handleScenePhase(_ phase: ScenePhase) {
-        switch phase {
-        case .inactive:
-            // Live Activityの開始はフォアグラウンド中しかできないため、
-            // バックグラウンド移行直前の inactive の時点で開始する
-            if hasDraftInProgress {
-                LiveActivityManager.shared.setDraft(true)
-            }
-
-        case .background:
-            // 書きかけを失わないようにローカルへ自動保存する
-            for card in [DiaryCardFocus.today, .yesterday, .dayBeforeYesterday] {
-                autoSaveIfChanged(card: card)
-            }
-
-        case .active:
-            // フォアグラウンド復帰したら書きかけのLive Activityを終了する
-            LiveActivityManager.shared.setDraft(false)
-
-        @unknown default:
-            break
-        }
-    }
-
-    /// キーボードが閉じてレイアウトが確定した後に、指定オフセットへスクロール位置を戻す。
-    /// キーボードのインセット変化による自動スクロールを上書きして、編集時の表示位置を保つ。
+    /// キーボードが閉じた後に指定オフセットへスクロール位置を戻す。
+    /// 前回の Task をキャンセルして上書きし、連続開閉でも最後の位置のみ反映する。
     private func restoreScrollOffset(_ offset: CGFloat) {
-        Task {
-            // キーボードの閉じるアニメーション（約0.25秒）の完了を待ってから戻す
+        scrollRestoreTask?.cancel()
+        scrollRestoreTask = Task {
             try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
             scrollPosition.scrollTo(point: CGPoint(x: 0, y: offset))
         }
     }
@@ -354,6 +325,57 @@ struct HomeView: View {
             dayBeforeYesterdayContent = newDayBefore
             lastAppliedDayBefore = newDayBefore
         }
+    }
+}
+
+// MARK: - バックグラウンド移行時の書きかけ保存・Live Activity制御
+
+extension HomeView {
+    /// 書きかけ（保存していない編集途中の内容）があるかどうか
+    private var hasDraftInProgress: Bool {
+        todayContent != lastAppliedToday
+            || yesterdayContent != lastAppliedYesterday
+            || dayBeforeYesterdayContent != lastAppliedDayBefore
+    }
+
+    /// アプリのフォアグラウンド状態の変化に応じて、書きかけの保存とLive Activityを制御する
+    func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .inactive:
+            // Live Activityの開始はフォアグラウンド中しかできないため、
+            // バックグラウンド移行直前の inactive の時点で開始する
+            if hasDraftInProgress {
+                LiveActivityManager.shared.setDraft(true)
+            }
+
+        case .background:
+            // 書きかけを失わないようにローカルへ自動保存し、全カード保存後に書きかけフラグを解除する
+            Task { await backgroundSaveAndClearDraft() }
+
+        case .active:
+            // フォアグラウンド復帰したら書きかけのLive Activityを終了する
+            LiveActivityManager.shared.setDraft(false)
+
+        @unknown default:
+            break
+        }
+    }
+
+    /// 全カードを await 可能な形で順番に保存し、完了後に書きかけフラグを解除する（バックグラウンド移行時用）
+    private func backgroundSaveAndClearDraft() async {
+        if todayContent != lastAppliedToday {
+            await viewModel.saveToday(content: todayContent)
+            lastAppliedToday = todayContent
+        }
+        if yesterdayContent != lastAppliedYesterday {
+            await viewModel.saveYesterday(content: yesterdayContent)
+            lastAppliedYesterday = yesterdayContent
+        }
+        if dayBeforeYesterdayContent != lastAppliedDayBefore {
+            await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
+            lastAppliedDayBefore = dayBeforeYesterdayContent
+        }
+        LiveActivityManager.shared.setDraft(false)
     }
 }
 

@@ -35,8 +35,11 @@ final class LiveActivityManager {
         refresh()
     }
 
-    /// Live Activityを即座に終了する
-    func end() {
+    // MARK: - Private
+
+    /// Live Activityを即座に終了する。pendingCount も hasDraft も不要になった時だけ呼ばれる。
+    /// 外部から直接呼ぶと hasDraft チェックをバイパスするため private にしている。
+    private func end() {
         guard let activity else { return }
         self.activity = nil
         let content = ActivityContent(
@@ -45,8 +48,6 @@ final class LiveActivityManager {
         )
         Task { await activity.end(content, dismissalPolicy: .immediate) }
     }
-
-    // MARK: - Private
 
     /// 現在の状態に応じてLive Activityを開始・更新・終了する
     private func refresh() {

@@ -177,11 +177,13 @@ struct MonthlyView: View {
         .padding(.horizontal, 16)
     }
 
-    /// 年ピッカーで選択できる年の範囲（1980年〜現在の年）
-    private var selectableYears: [Int] {
-        let currentYear = Calendar.current.component(.year, from: Date())
+    /// 年ピッカーで選択できる年の範囲（1980年〜現在の年）。
+    /// デバイスの暦設定が和暦などに変わっても正しいグレゴリオ年を使うため Calendar.gregorian を明示する。
+    /// また computed var にすると Picker スクロールのたびに再計算されるため let で一度だけ生成する。
+    private let selectableYears: [Int] = {
+        let currentYear = Calendar(identifier: .gregorian).component(.year, from: Date())
         return Array(1980 ... max(currentYear, 1980))
-    }
+    }()
 
     // MARK: - 日リスト
 
