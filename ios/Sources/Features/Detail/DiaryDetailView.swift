@@ -19,6 +19,10 @@ struct DiaryDetailView: View {
     /// 本文エディタのフォーカス状態（キーボードツールバーの閉じるボタン用）
     @FocusState private var isEditorFocused: Bool
 
+    /// アプリのフォアグラウンド状態（書きかけのLive Activity制御に使う）
+    @Environment(\.scenePhase)
+    private var scenePhase
+
     /// 検索結果から開いた場合にハイライトするキーワード
     private let highlightKeywords: [String]
 
@@ -43,6 +47,10 @@ struct DiaryDetailView: View {
                     if !focused, viewModel.hasUnsavedChanges {
                         Task { await viewModel.save() }
                     }
+                }
+                // バックグラウンド移行時の書きかけ保存とLive Activity制御
+                .onChange(of: scenePhase) { _, newPhase in
+                    handleScenePhase(newPhase)
                 }
         }
     }
@@ -221,8 +229,31 @@ struct DiaryDetailView: View {
         .buttonStyle(.plain)
     }
 
-    /// この日記の概要（チャンク一覧）カーテン。
-    /// ヘッダーをタップすると上から下へカーテンのように開閉する。
+    /// アプリのフォアグラウンド状態の変化に応じて、書きかけの保存とLive Activityを制御する
+    private func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .inactive:
+            // Live Activityの開始はフォアグラウンド中しかできないため、
+            // バックグラウンド移行直前の inactive の時点で開始する
+            if viewModel.hasUnsavedChanges {
+                LiveActivityManager.shared.setDraft(true)
+            }
+
+        case .background:
+            // 書きかけを失わないようにローカルへ自動保存する
+            if viewModel.hasUnsavedChanges {
+                Task { await viewModel.save() }
+            }
+
+        case .active:
+            // フォアグラウンド復帰したら書きかけのLive Activityを終了する
+            LiveActivityManager.shared.setDraft(false)
+
+        @unknown default:
+            break
+        }
+    }
+
     /// 最初にキーワードがマッチした行まで自動スクロールする。
     /// レイアウト確定を待つため少し遅らせてから実行する。
     private func scrollToFirstHighlight(_ proxy: ScrollViewProxy) async {

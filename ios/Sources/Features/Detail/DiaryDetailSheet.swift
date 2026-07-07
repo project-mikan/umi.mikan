@@ -26,15 +26,20 @@ struct DiaryDetailSheet: View {
 
     var body: some View {
         NavigationStack {
-            DiaryDetailView(
-                date: items[index].date,
-                authViewModel: authViewModel,
-                syncManager: syncManager,
-                highlightKeywords: items[index].highlightKeywords
-            )
-            // 日付が変わったらViewModelごと作り直してスライドアニメーションさせる
-            .id(items[index].id)
-            .transition(.push(from: pushEdge))
+            // NavigationStack 直下では .transition が反映されないため、
+            // ZStack で包んでコンテナ側のアニメーションでスライド遷移させる
+            ZStack {
+                DiaryDetailView(
+                    date: items[index].date,
+                    authViewModel: authViewModel,
+                    syncManager: syncManager,
+                    highlightKeywords: items[index].highlightKeywords
+                )
+                // 日付が変わったらViewModelごと作り直してスライドアニメーションさせる
+                .id(items[index].id)
+                .transition(.push(from: pushEdge))
+            }
+            .animation(.easeInOut(duration: 0.25), value: index)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

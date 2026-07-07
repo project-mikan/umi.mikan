@@ -23,6 +23,10 @@ struct HomeView: View {
     /// 現在のスクロールオフセット（キーボードを閉じる直前の位置の記録に使う）
     @State private var currentScrollOffset: CGFloat = 0
 
+    /// アプリのフォアグラウンド状態（書きかけのLive Activity制御に使う）
+    @Environment(\.scenePhase)
+    private var scenePhase
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let launchState: AppLaunchState?
@@ -106,6 +110,10 @@ struct HomeView: View {
             if oldValue != nil, newValue == nil {
                 restoreScrollOffset(currentScrollOffset)
             }
+        }
+        // バックグラウンド移行時の書きかけ保存とLive Activity制御
+        .onChange(of: scenePhase) { _, newPhase in
+            handleScenePhase(newPhase)
         }
     }
 
@@ -241,6 +249,38 @@ struct HomeView: View {
         case .yesterday: viewModel.yesterdaySaved
         case .dayBeforeYesterday: viewModel.dayBeforeYesterdaySaved
         case nil: false
+        }
+    }
+
+    /// 書きかけ（保存していない編集途中の内容）があるかどうか
+    private var hasDraftInProgress: Bool {
+        todayContent != lastAppliedToday
+            || yesterdayContent != lastAppliedYesterday
+            || dayBeforeYesterdayContent != lastAppliedDayBefore
+    }
+
+    /// アプリのフォアグラウンド状態の変化に応じて、書きかけの保存とLive Activityを制御する
+    private func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .inactive:
+            // Live Activityの開始はフォアグラウンド中しかできないため、
+            // バックグラウンド移行直前の inactive の時点で開始する
+            if hasDraftInProgress {
+                LiveActivityManager.shared.setDraft(true)
+            }
+
+        case .background:
+            // 書きかけを失わないようにローカルへ自動保存する
+            for card in [DiaryCardFocus.today, .yesterday, .dayBeforeYesterday] {
+                autoSaveIfChanged(card: card)
+            }
+
+        case .active:
+            // フォアグラウンド復帰したら書きかけのLive Activityを終了する
+            LiveActivityManager.shared.setDraft(false)
+
+        @unknown default:
+            break
         }
     }
 

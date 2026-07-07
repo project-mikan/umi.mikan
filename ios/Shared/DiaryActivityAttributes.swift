@@ -1,7 +1,7 @@
 import ActivityKit
 import Foundation
 
-/// 未同期の日記を知らせるLive Activityの属性。
+/// 未同期・書きかけの日記を知らせるLive Activityの属性。
 /// アプリ本体とウィジェット拡張の両方でコンパイルされる共有コード。
 struct DiaryActivityAttributes: ActivityAttributes {
     /// 動的に更新される状態
@@ -10,5 +10,7 @@ struct DiaryActivityAttributes: ActivityAttributes {
         var pendingCount: Int
         /// 同期処理を実行中かどうか
         var isSyncing: Bool
+        /// 書きかけ（未保存の編集途中）の日記があるかどうか（バックグラウンド移行時にtrue）
+        var hasDraft: Bool = false
     }
 }
