@@ -6,7 +6,7 @@ on:
       - "ios/**"
       - "proto/**"
       - ".github/**"
-  # main のキャッシュは全 PR から参照できるため、push でキャッシュを温めておく
+  # main の DerivedData キャッシュは全 PR から参照できるため、push でキャッシュを温めておく
   push:
     branches:
       - main
@@ -19,17 +19,40 @@ env:
   CONNECT_SWIFT_VERSION: "1.2.3"
 
 jobs:
-  test:
-    runs-on: macos-26
+  # Proto 生成物(ios/Sources/Proto/*)はコミット済みなので、テストジョブでは再生成しない。
+  # これによりテストジョブから brew install / connect-swift DL / grpc-swift(合計3.5分超)を排除できる。
+  # 代わりに proto/** を変更した時だけ生成物のコミット漏れ(diff が出ないか)を検証する。
+  # まず安価な ubuntu で proto 変更の有無を判定し、変更時のみ高コストな macos で検証する。
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      proto: ${{ steps.filter.outputs.proto }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Detect proto changes
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            base="${{ github.event.before }}"
+          else
+            base="${{ github.event.pull_request.base.sha }}"
+            git fetch --no-tags --depth=1 origin "$base"
+          fi
+          if git diff --name-only "$base" HEAD | grep -qE '^proto/'; then
+            echo "proto=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "proto=false" >> "$GITHUB_OUTPUT"
+          fi
 
+  verify-proto:
+    needs: changes
+    if: needs.changes.outputs.proto == 'true'
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v6
 
-      # boot は非同期に進むので、キャッシュ復元・ツールインストール中にシミュレータ起動を済ませておく
-      - name: Boot simulator
-        run: xcrun simctl boot "iPhone 17" || true
-
-      # Homebrew でインストールされるパッケージをキャッシュして brew install の時間を短縮する
       - name: Cache Homebrew packages
         id: cache-brew
         uses: actions/cache@v6
@@ -48,7 +71,6 @@ jobs:
         if: steps.cache-brew.outputs.cache-hit == 'true'
         run: brew link --overwrite swift-protobuf grpc-swift 2>/dev/null || brew install swift-protobuf grpc-swift
 
-      # protoc-gen-connect-swift バイナリをキャッシュして毎回のダウンロードを回避する
       - name: Cache protoc-gen-connect-swift
         id: cache-connect-swift
         uses: actions/cache@v6
@@ -60,8 +82,27 @@ jobs:
         if: steps.cache-connect-swift.outputs.cache-hit != 'true'
         run: curl -sL https://github.com/connectrpc/connect-swift/releases/download/${{ env.CONNECT_SWIFT_VERSION }}/protoc-gen-connect-swift.tar.gz | tar -xz -C $(brew --prefix)/bin/
 
-      - name: Generate Swift gRPC code
+      - name: Regenerate Swift gRPC code
         run: make grpc-swift
+
+      # コミット済みの生成物と再生成結果が一致しなければ、生成物のコミット漏れとして失敗させる
+      - name: Verify generated code is committed
+        run: |
+          if ! git diff --quiet ios/Sources/Proto/; then
+            echo "::error::ios/Sources/Proto/ の生成物が最新ではありません。'make grpc-swift' を実行してコミットしてください。"
+            git diff --stat ios/Sources/Proto/
+            exit 1
+          fi
+
+  test:
+    runs-on: macos-26
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # boot は非同期に進むので、キャッシュ復元中にシミュレータ起動を済ませておく
+      - name: Boot simulator
+        run: xcrun simctl boot "iPhone 17" || true
 
       # SPM 依存の取得とビルド成果物を再利用してビルド時間を短縮する
       # キーに github.sha を含めないことで同一 Package.resolved のビルドを PR をまたいで再利用できる
@@ -77,6 +118,7 @@ jobs:
       # テストは数秒で終わるため並列テスト(シミュレータのクローン作成)は無効化し、
       # 事前ブート済みのシミュレータをそのまま使う
       # シミュレータ向けビルドのためコード署名とインデックス生成は不要
+      # 生成物(ios/Sources/Proto/*)はコミット済みなのでここでは再生成しない(verify-proto で検証)
       - name: Run tests
         run: |
           xcodebuild test \
