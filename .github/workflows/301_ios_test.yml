@@ -108,6 +108,7 @@ jobs:
       # キーに github.sha を含めないことで同一 Package.resolved のビルドを PR をまたいで再利用できる
       # 完全一致しない場合も restore-keys で直近のキャッシュから差分ビルドする
       - name: Cache DerivedData
+        id: cache-deriveddata
         uses: actions/cache@v6
         with:
           path: ~/Library/Developer/Xcode/DerivedData
@@ -115,13 +116,38 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deriveddata-
 
+      # Xcode の増分ビルドは mtime 比較(成果物 > ソースなら再ビルド不要)で判定する。
+      # actions/checkout はソースの mtime を「今」に設定し、キャッシュ復元された DerivedData も
+      # 「今」付近になるため、成果物がソースより新しいと判定されず全再コンパイルが起きる。
+      # そこでソースの mtime を過去に、DerivedData をそれより新しい時刻に明示的に揃え、
+      # 変更のないファイルの増分ビルドを効かせる。
+      - name: Normalize timestamps for incremental build
+        if: steps.cache-deriveddata.outputs.cache-hit == 'true'
+        run: |
+          # ソースを古い時刻に統一する
+          find ios -type f \( -name '*.swift' -o -name '*.plist' -o -name '*.pbxproj' -o -name '*.xcconfig' \) -exec touch -t 202001010000 {} +
+          # 成果物(DerivedData)はソースより新しい時刻に統一する
+          find ~/Library/Developer/Xcode/DerivedData -exec touch -t 202001020000 {} + 2>/dev/null || true
+
+      # ビルドとテスト実行を分離する。ビルド(build-for-testing)は DerivedData キャッシュで
+      # 増分化され、テスト実行(test-without-building)はビルドを伴わないため高速。
+      # 生成物(ios/Sources/Proto/*)はコミット済みなのでここでは再生成しない(verify-proto で検証)
+      # シミュレータ向けビルドのためコード署名とインデックス生成は不要
+      - name: Build for testing
+        run: |
+          xcodebuild build-for-testing \
+            -project ios/umi.mikan.xcodeproj \
+            -scheme "umi.mikan" \
+            -destination "platform=iOS Simulator,name=iPhone 17,arch=arm64" \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
       # テストは数秒で終わるため並列テスト(シミュレータのクローン作成)は無効化し、
       # 事前ブート済みのシミュレータをそのまま使う
-      # シミュレータ向けビルドのためコード署名とインデックス生成は不要
-      # 生成物(ios/Sources/Proto/*)はコミット済みなのでここでは再生成しない(verify-proto で検証)
       - name: Run tests
         run: |
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project ios/umi.mikan.xcodeproj \
             -scheme "umi.mikan" \
             -destination "platform=iOS Simulator,name=iPhone 17,arch=arm64" \
