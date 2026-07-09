@@ -184,8 +184,7 @@ struct HomeView: View {
         .padding(.vertical, 60)
     }
 
-    @ViewBuilder
-    private var diaryCards: some View {
+    @ViewBuilder private var diaryCards: some View {
         todayCard
         yesterdayCard
         dayBeforeYesterdayCard
