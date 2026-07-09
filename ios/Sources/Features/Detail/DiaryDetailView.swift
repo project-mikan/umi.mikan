@@ -178,25 +178,11 @@ struct DiaryDetailView: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
     }
 
-    /// キーボードの上に表示するツールバー（保存・キーボードを閉じる）
+    /// キーボードの上に表示するツールバー（キーボードを閉じる）
+    /// 保存はキーボードが閉じた際（フォーカス喪失）に自動保存されるため、保存ボタンは表示しない
     @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
-            // 閉じるボタンと見分けやすいよう、チェックマーク＋青の塗りつぶしボタンにする
-            Button {
-                Task { await viewModel.save() }
-            } label: {
-                Label(
-                    viewModel.isSaved ? "保存済み" : "保存",
-                    systemImage: viewModel.isSaved ? "checkmark" : "checkmark.circle.fill"
-                )
-                .labelStyle(.titleAndIcon)
-                .fontWeight(.semibold)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.twBlue)
-            .controlSize(.small)
-            .disabled(viewModel.isSaving)
             Button {
                 isEditorFocused = false
             } label: {

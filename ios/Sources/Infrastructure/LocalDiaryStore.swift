@@ -175,7 +175,9 @@ final class LocalDiaryStore {
 
 /// LocalDiaryStore の保存先 URL を解決する
 private nonisolated func _resolveLocalDiaryStoreFileURL(_ override: URL?) -> URL {
-    if let override { return override }
+    if let override {
+        return override
+    }
     let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     try? FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
     return supportDir.appendingPathComponent("diary_store.json")

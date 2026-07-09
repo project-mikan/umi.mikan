@@ -119,24 +119,11 @@ struct HomeView: View {
         }
     }
 
-    /// キーボードの上に表示するツールバー（保存・キーボードを閉じる）
+    /// キーボードの上に表示するツールバー（キーボードを閉じる）
+    /// 保存はキーボードが閉じた際（フォーカス喪失）に自動保存されるため、保存ボタンは表示しない
     @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
-            // 閉じるボタンと見分けやすいよう、チェックマーク＋青の塗りつぶしボタンにする
-            Button {
-                saveFocusedCard()
-            } label: {
-                Label(
-                    isFocusedCardSaved ? "保存済み" : "保存",
-                    systemImage: isFocusedCardSaved ? "checkmark" : "checkmark.circle.fill"
-                )
-                .labelStyle(.titleAndIcon)
-                .fontWeight(.semibold)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.twBlue)
-            .controlSize(.small)
             Button {
                 focusedCard = nil
             } label: {
@@ -197,12 +184,11 @@ struct HomeView: View {
         .padding(.vertical, 60)
     }
 
+    @ViewBuilder
     private var diaryCards: some View {
-        Group {
-            todayCard
-            yesterdayCard
-            dayBeforeYesterdayCard
-        }
+        todayCard
+        yesterdayCard
+        dayBeforeYesterdayCard
     }
 
     private var todayCard: some View {
@@ -241,16 +227,6 @@ struct HomeView: View {
             focusedCard: $focusedCard
         ) {
             selectedItem = DiarySheetItem(date: viewModel.dayBeforeYesterday.date)
-        }
-    }
-
-    /// フォーカス中のカードが保存済み表示中かどうか（キーボードツールバーの表示用）
-    private var isFocusedCardSaved: Bool {
-        switch focusedCard {
-        case .today: viewModel.todaySaved
-        case .yesterday: viewModel.yesterdaySaved
-        case .dayBeforeYesterday: viewModel.dayBeforeYesterdaySaved
-        case nil: false
         }
     }
 
