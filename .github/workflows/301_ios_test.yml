@@ -104,27 +104,43 @@ jobs:
       - name: Boot simulator
         run: xcrun simctl boot "iPhone 17" || true
 
-      # DerivedData 全体のキャッシュは、復元/保存の往復(合計5分超)が重いうえ、
-      # checkout による mtime リセットで Xcode の増分ビルドが効かず全再コンパイルになり
-      # 割に合わなかったため廃止した。代わりに SPM 依存(swift-nio 等、ビルドが重い)の
-      # チェックアウト先だけをキャッシュし、依存の再取得を避ける。
-      # -derivedDataPath でパスを固定し、SourcePackages の場所を安定させる。
-      # SourcePackages は mtime 依存の増分判定を持たないためキャッシュしても壊れにくい。
-      - name: Cache SPM dependencies
+      # SPM 依存(SwiftProtobuf/Connect 等)のソースとビルド中間成果物をキャッシュする。
+      # ビルド時間の大半はこれら依存のコンパイルで、Package.resolved が同じなら不変。
+      # -derivedDataPath で DerivedData の場所を固定し、キャッシュパスを安定させる。
+      #   - SourcePackages           : 依存のチェックアウト(再取得を回避)
+      #   - Build/Intermediates.noindex/SwiftExplicitPrecompiledModules : 依存のプリコンパイルモジュール
+      #   - Build/Products           : ビルド済みプロダクト
+      # アプリ本体(umi.mikan.build)や XCBuildData はソース変更で毎回変わり、
+      # mtime リセットで増分判定が壊れるためキャッシュ対象から外す。
+      - name: Cache SPM build products
         uses: actions/cache@v6
         with:
-          path: DerivedData/SourcePackages
-          key: ${{ runner.os }}-spm-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: |
+            DerivedData/SourcePackages
+            DerivedData/Build/Intermediates.noindex/SwiftProtobuf.build
+            DerivedData/Build/Intermediates.noindex/Connect.build
+            DerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+            DerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator
+            DerivedData/Build/Products
+          key: ${{ runner.os }}-spm-build-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-spm-
+            ${{ runner.os }}-spm-build-
+
+      # キャッシュ復元後、依存の中間成果物(復元物)をソースより新しい mtime に揃え、
+      # Xcode が「依存は最新」と判定して再コンパイルをスキップするようにする。
+      # ソースは checkout で「今」に設定されるため、依存成果物をそれより新しくする。
+      - name: Touch cached build products
+        run: |
+          if [ -d DerivedData/Build ]; then
+            find DerivedData -exec touch {} + 2>/dev/null || true
+          fi
 
       # ビルドとテスト実行を分離する(ビルドエラーとテスト失敗を切り分けやすくする)。
-      # 毎回フルビルドになるため、ビルド自体を高速化する:
       #   ONLY_ACTIVE_ARCH=YES  : シミュレータの arm64 のみビルド(不要アーキを削る)
       #   -jobs                 : 論理CPU数まで並列コンパイル
       #   COMPILER_INDEX_STORE_ENABLE=NO : インデックス生成を無効化
       #   CODE_SIGNING_ALLOWED=NO        : シミュレータ向けは署名不要
-      # -derivedDataPath は SPM キャッシュ(SourcePackages)の位置を固定するため明示する
+      # -derivedDataPath は依存ビルド成果物キャッシュの位置を固定するため明示する
       # 生成物(ios/Sources/Proto/*)はコミット済みなのでここでは再生成しない(verify-proto で検証)
       - name: Build for testing
         run: |
