@@ -96,9 +96,20 @@ final class MonthlyViewModel {
         }
         loadLocalMonth()
         isLoading = false
+        requestOnDeviceSummaries()
 
         // 月間まとめは取得できなくてもページ表示に影響させない
         await fetchMonthlySummary()
+    }
+
+    /// 表示中の月の全日について、日付（1日〜）の昇順でオンデバイス要約をまとめてリクエストする。
+    /// 「月の上から順に」生成が開始されるよう、View 側の描画順に頼らずここで順序を確定させる。
+    private func requestOnDeviceSummaries() {
+        let requests = entryMap.keys.sorted().compactMap { day -> DiarySummaryRequest? in
+            guard let entry = entryMap[day] else { return nil }
+            return DiarySummaryRequest(key: LocalDiaryEntry.dateKey(entry.date), content: entry.content)
+        }
+        DiarySummaryStore.shared.requestSummaries(requests)
     }
 
     /// 月間まとめを取得する（未生成・エラー時は非表示にするだけ）

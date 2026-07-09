@@ -271,23 +271,31 @@ struct MonthlyView: View {
     }
 
     /// 日記本文のプレビュー表示。
-    /// オンデバイス要約が利用可能な端末では生成をリクエストし、完了したらフェードで要約へ切り替える。
+    /// オンデバイス要約（重要なこと最大3点の箇条書き）が生成済みならそれを表示し、
+    /// 完了直後は一瞬だけ虹色グラデーション＋ブラーを光らせてAI生成であることを示す。
     /// 生成中・非対応端末では従来通りの100文字カットプレビューを表示する。
+    /// リクエスト自体は MonthlyViewModel.requestOnDeviceSummaries が月の日付昇順でまとめて発行する。
     private func dayPreview(day: Int, entry: Diary_DiaryEntry) -> some View {
         let key = LocalDiaryEntry.dateKey(entry.date)
-        let summary = summaryStore.summaries[key]
+        let points = summaryStore.summaries[key]
+        let justCompleted = summaryStore.justCompletedKeys.contains(key)
         return Group {
-            if let summary {
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: "sparkles")
-                        .font(.caption2)
-                        .foregroundStyle(Color.twGreen)
-                    Text(summary)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.twBody)
-                        .lineLimit(3)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            if let points, !points.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(points, id: \.self) { point in
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.caption2)
+                                .foregroundStyle(Color.twGreen)
+                            Text(point)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.twBody)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 Text(contentPreview(entry.content))
                     .font(.subheadline)
@@ -297,12 +305,35 @@ struct MonthlyView: View {
             }
         }
         .contentTransition(.opacity)
-        .animation(.easeInOut(duration: 0.4), value: summary)
+        .animation(.easeInOut(duration: 0.4), value: points)
         .padding(10)
         .background(.blue.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .task(id: key) {
-            summaryStore.requestSummary(key: key, content: entry.content)
+        .overlay {
+            if justCompleted {
+                summaryCompletionFlash(key: key)
+            }
+        }
+    }
+
+    /// 要約生成完了の瞬間だけ虹色グラデーション＋ブラーを光らせて消えるフラッシュ演出。
+    /// 表示から一定時間後に自身で DiarySummaryStore へ完了を伝え、演出が再トリガーされないようにする。
+    private func summaryCompletionFlash(key: String) -> some View {
+        LinearGradient(
+            colors: [.red, .orange, .yellow, .green, .blue, .purple],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+        .opacity(0.55)
+        .blur(radius: 12)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .transition(.opacity)
+        .task {
+            // 光ってから静かにフェードアウトする時間を確保してから完了扱いにする
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            withAnimation(.easeOut(duration: 0.4)) {
+                summaryStore.consumeJustCompleted(key: key)
+            }
         }
     }
 

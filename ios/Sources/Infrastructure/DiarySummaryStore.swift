@@ -7,11 +7,19 @@ import Foundation
 struct DiarySummaryCacheEntry: Codable, Equatable {
     /// 要約元本文のハッシュ値（本文が変わったら再生成させるための判定に使う）
     var contentHash: Int
-    /// 生成された要約テキスト
-    var summary: String
+    /// 生成された要約の箇条書き（最大3件、各10文字以内を想定）
+    var points: [String]
 }
 
-/// 月ごとの日記画面向けに、オンデバイスLLMで日記本文を1〜2文へ要約するストア。
+/// requestSummaries に渡す1件分の要約対象
+struct DiarySummaryRequest {
+    /// dateKey（"YYYY-MM-DD"）
+    let key: String
+    /// 要約元の日記本文
+    let content: String
+}
+
+/// 月ごとの日記画面向けに、オンデバイスLLMで日記本文を箇条書き（重要なこと最大3点、各10文字以内）へ要約するストア。
 ///
 /// サーバーには一切通信せず、Apple の Foundation Models framework でオンデバイス生成する。
 /// 生成結果は日付キー＋本文ハッシュでキャッシュし、本文が変わらない限り再生成しない。
@@ -22,17 +30,20 @@ final class DiarySummaryStore {
     /// LocalDiaryStore と同じ理由で nonisolated static let にする。
     nonisolated static let shared = DiarySummaryStore()
 
-    /// dateKey（"YYYY-MM-DD"）をキーとした要約のマップ。生成中のキーはこのマップに含まれない。
-    private(set) var summaries: [String: String] = [:]
+    /// dateKey（"YYYY-MM-DD"）をキーとした要約箇条書きのマップ。生成中のキーはこのマップに含まれない。
+    private(set) var summaries: [String: [String]] = [:]
     /// 生成中の dateKey の集合（View 側で生成中かどうかを判定するために使う）
     private(set) var pendingKeys: Set<String> = []
+    /// 直前に生成が完了した dateKey の集合。虹色フラッシュ演出を一度だけ再生するために使い、
+    /// 演出開始後に View 側が consumeJustCompleted で消費する。
+    private(set) var justCompletedKeys: Set<String> = []
 
     @ObservationIgnored private var cache: [String: DiarySummaryCacheEntry]
     private let fileURL: URL
     private let maxConcurrent = 3
     /// 同時生成数を制限するためのセマフォ的カウンタ
     @ObservationIgnored private var runningCount = 0
-    /// 同時実行数を超えた際に待機させるキュー
+    /// 開始待ちのリクエストキュー（呼び出し側が渡した順序を保証するため、日付昇順で積まれる想定）
     @ObservationIgnored private var waitQueue: [() -> Void] = []
 
     /// 現在の端末・OS設定でオンデバイス要約が利用可能かどうか
@@ -61,6 +72,29 @@ final class DiarySummaryStore {
         return hasher.finalize()
     }
 
+    /// モデルの生出力を箇条書き配列にパースする。
+    /// 改行区切りを箇条書き1件とみなし、先頭の「・」「-」「*」等の記号・空白を取り除く。
+    /// 最大3件、各10文字を超える場合は10文字で切り詰める（表示が枠に収まらなくなるのを防ぐ）。
+    static func parsePoints(_ raw: String) -> [String] {
+        let bulletCharacters = CharacterSet(charactersIn: "・-*•‣◦ 　")
+        return raw
+            .split { $0.isNewline }
+            .map { $0.trimmingCharacters(in: bulletCharacters) }
+            .filter { !$0.isEmpty }
+            .prefix(3)
+            .map { $0.count > 10 ? String($0.prefix(10)) : $0 }
+    }
+
+    /// 複数日分の要約をまとめてリクエストする。
+    /// 呼び出し側が渡した配列の順序どおりにキューへ積むため、日付昇順の配列を渡せば
+    /// 「月の上（1日）から順に」生成が開始される（同時実行数 maxConcurrent の範囲で並列実行はされる）。
+    /// キャッシュ済み・生成中のキーは自動的にスキップされる。
+    func requestSummaries(_ requests: [DiarySummaryRequest]) {
+        for request in requests {
+            requestSummary(key: request.key, content: request.content)
+        }
+    }
+
     /// 指定日の要約をリクエストする。
     /// キャッシュ済み（本文ハッシュ一致）なら summaries に即座に反映する。
     /// 未キャッシュ・本文変更時は非同期生成をキューイングする（同時実行数は maxConcurrent で制限）。
@@ -69,7 +103,7 @@ final class DiarySummaryStore {
 
         let hash = Self.contentHash(content)
         if let cached = cache[key], cached.contentHash == hash {
-            summaries[key] = cached.summary
+            summaries[key] = cached.points
             return
         }
 
@@ -79,18 +113,25 @@ final class DiarySummaryStore {
 
         enqueue { [weak self] in
             guard let self else { return }
-            let result = await generate(content: content)
+            let points = await generate(content: content)
             pendingKeys.remove(key)
-            guard let result else { return }
-            cache[key] = DiarySummaryCacheEntry(contentHash: hash, summary: result)
-            summaries[key] = result
+            guard let points, !points.isEmpty else { return }
+            cache[key] = DiarySummaryCacheEntry(contentHash: hash, points: points)
+            summaries[key] = points
+            justCompletedKeys.insert(key)
             persist()
         }
     }
 
+    /// 虹色フラッシュ演出を再生し終えた View から呼ばれ、演出の再トリガーを防ぐ
+    func consumeJustCompleted(key: String) {
+        justCompletedKeys.remove(key)
+    }
+
     // MARK: - Private
 
-    /// 同時実行数を制限しつつ非同期タスクを実行する
+    /// 同時実行数を制限しつつ非同期タスクを実行する。
+    /// waitQueue は FIFO で消費するため、呼び出し順（= requestSummaries に渡した順）どおりに開始される。
     private func enqueue(_ task: @escaping () async -> Void) {
         let work: () -> Void = { [weak self] in
             let runner = Task { @MainActor in
@@ -117,17 +158,21 @@ final class DiarySummaryStore {
         next()
     }
 
-    /// Foundation Models で本文を1〜2文に要約する。失敗時は nil を返す。
-    private func generate(content: String) async -> String? {
+    /// Foundation Models で本文から重要な点を最大3つ、各10文字以内の箇条書きにする。失敗時は nil を返す。
+    private func generate(content: String) async -> [String]? {
         #if canImport(FoundationModels)
             guard #available(iOS 26.0, *) else { return nil }
             do {
                 let session = LanguageModelSession(
-                    instructions: "あなたは日記アプリの要約アシスタントです。与えられた日記本文を、日本語で1〜2文の簡潔な要約にしてください。要約以外の文章（前置きや解説）は出力しないでください。"
+                    instructions: """
+                    あなたは日記アプリの要約アシスタントです。与えられた日記本文から重要なことを最大3つ選び、\
+                    それぞれ日本語10文字以内の体言止めの短いフレーズにしてください。\
+                    出力は1行につき1項目、改行区切りで最大3行のみとし、番号・記号・前置き・解説は一切付けないでください。
+                    """
                 )
                 let response = try await session.respond(to: content)
-                let trimmed = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
-                return trimmed.isEmpty ? nil : trimmed
+                let points = Self.parsePoints(response.content)
+                return points.isEmpty ? nil : points
             } catch {
                 return nil
             }

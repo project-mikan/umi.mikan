@@ -13,6 +13,13 @@ struct DiarySummaryStoreTests {
         let expectSame: Bool
     }
 
+    /// parsePoints のテーブル駆動テスト用ケース
+    struct ParsePointsCase {
+        let name: String
+        let raw: String
+        let expected: [String]
+    }
+
     /// テスト用に一時ファイルへ保存するストアを生成する
     private func makeStore() -> DiarySummaryStore {
         let url = FileManager.default.temporaryDirectory
@@ -51,6 +58,48 @@ struct DiarySummaryStoreTests {
         #expect((lhsHash == rhsHash) == testCase.expectSame, Comment(rawValue: testCase.name))
     }
 
+    // MARK: - parsePoints
+
+    @Test(
+        "parsePoints: モデル出力を箇条書き配列にパースする",
+        arguments: [
+            ParsePointsCase(
+                name: "正常系: 改行区切りの3行がそのまま3件の箇条書きになる",
+                raw: "海に行った\n友人と再会\n天気が良い",
+                expected: ["海に行った", "友人と再会", "天気が良い"]
+            ),
+            ParsePointsCase(
+                name: "正常系: 先頭の箇条書き記号が取り除かれる",
+                raw: "・海に行った\n- 友人と再会\n* 天気が良い",
+                expected: ["海に行った", "友人と再会", "天気が良い"]
+            ),
+            ParsePointsCase(
+                name: "正常系: 4件以上出力されても先頭3件だけ採用される",
+                raw: "1つ目\n2つ目\n3つ目\n4つ目",
+                expected: ["1つ目", "2つ目", "3つ目"]
+            ),
+            ParsePointsCase(
+                name: "正常系: 空行は無視される",
+                raw: "海に行った\n\n友人と再会",
+                expected: ["海に行った", "友人と再会"]
+            ),
+            ParsePointsCase(
+                name: "異常系: 10文字を超える行があると10文字に切り詰められる",
+                raw: "とても長い箇条書きの一文はここで切り詰められる",
+                expected: ["とても長い箇条書きの"]
+            ),
+            ParsePointsCase(
+                name: "異常系: 空文字を渡すと空配列になる",
+                raw: "",
+                expected: []
+            )
+        ]
+    )
+    func parsePoints(testCase: ParsePointsCase) {
+        let result = DiarySummaryStore.parsePoints(testCase.raw)
+        #expect(result == testCase.expected, Comment(rawValue: testCase.name))
+    }
+
     // MARK: - requestSummary
 
     @Test("異常系: オンデバイスLLMが利用不可な環境（CI等）ではrequestSummaryを呼んでも要約が生成されない")
@@ -75,5 +124,31 @@ struct DiarySummaryStoreTests {
 
         #expect(store.summaries["2026-07-05"] == nil)
         #expect(store.pendingKeys.isEmpty)
+    }
+
+    @Test("異常系: オンデバイスLLMが利用不可な環境ではrequestSummariesを複数件渡しても何も生成されない")
+    func requestSummariesDoesNothingWhenUnavailable() {
+        let store = makeStore()
+
+        store.requestSummaries([
+            DiarySummaryRequest(key: "2026-07-01", content: "1日目の日記"),
+            DiarySummaryRequest(key: "2026-07-02", content: "2日目の日記")
+        ])
+
+        if !store.isAvailable {
+            #expect(store.summaries.isEmpty)
+            #expect(store.pendingKeys.isEmpty)
+        }
+    }
+
+    // MARK: - consumeJustCompleted
+
+    @Test("正常系: 生成完了していないキーに対してconsumeJustCompletedを呼んでも何も起きない")
+    func consumeJustCompletedIsNoOpForUnknownKey() {
+        let store = makeStore()
+
+        store.consumeJustCompleted(key: "2026-07-05")
+
+        #expect(store.justCompletedKeys.isEmpty)
     }
 }
