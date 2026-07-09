@@ -7,7 +7,10 @@ struct SettingsView: View {
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel) {
-        _viewModel = State(initialValue: SettingsViewModel(authViewModel: authViewModel))
+        _viewModel = State(initialValue: SettingsViewModel(
+            authViewModel: authViewModel,
+            notificationManager: OnThisDayNotificationManager.shared
+        ))
     }
 
     var body: some View {
@@ -17,6 +20,7 @@ struct SettingsView: View {
                     loadingView
                 } else {
                     accountCard
+                    notificationCard
                     logoutCard
                 }
             }
@@ -24,9 +28,11 @@ struct SettingsView: View {
         }
         .task {
             await viewModel.fetch()
+            await viewModel.refreshNotificationAuthorizationState()
         }
         .refreshable {
             await viewModel.fetch()
+            await viewModel.refreshNotificationAuthorizationState()
         }
         .confirmationDialog("ログアウトしますか？", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
             Button("ログアウトする", role: .destructive) {
@@ -96,6 +102,35 @@ struct SettingsView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.twBody)
         }
+    }
+
+    /// 「n年前の今日」通知のON/OFFトグル
+    private var notificationCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("通知")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.twHeading)
+            Toggle(isOn: Binding(
+                get: { viewModel.onThisDayNotificationEnabled },
+                set: { newValue in
+                    Task { await viewModel.setOnThisDayNotificationEnabled(newValue) }
+                }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("n年前の今日 通知")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.twBody)
+                    Text("毎日決まった時刻に振り返りを通知します")
+                        .font(.caption2)
+                        .foregroundStyle(Color.twSecondary)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .glassEffect(.regular, in: .rect(cornerRadius: 14))
     }
 
     private var logoutCard: some View {

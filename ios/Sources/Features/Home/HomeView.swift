@@ -3,6 +3,7 @@ import SwiftUI
 /// ホーム画面 - 今日・昨日・一昨日の日記を表示・編集する
 struct HomeView: View {
     @State private var viewModel: DiaryViewModel
+    @State private var onThisDayViewModel: OnThisDayViewModel
     @State private var todayContent: String = ""
     @State private var yesterdayContent: String = ""
     @State private var dayBeforeYesterdayContent: String = ""
@@ -14,6 +15,8 @@ struct HomeView: View {
 
     /// ハーフモーダルで表示する日記の日付
     @State private var selectedItem: DiarySheetItem?
+    /// 「n年前の今日」セクションでタップされた項目（このセクション内でのスワイプ切り替えに使う）
+    @State private var selectedOnThisDayItem: DiarySheetItem?
 
     /// フォーカス中のカード（キーボードツールバーの保存対象）
     @FocusState private var focusedCard: DiaryCardFocus?
@@ -39,6 +42,7 @@ struct HomeView: View {
         self.syncManager = syncManager
         self.launchState = launchState
         _viewModel = State(initialValue: DiaryViewModel(authViewModel: authViewModel, syncManager: syncManager))
+        _onThisDayViewModel = State(initialValue: OnThisDayViewModel(authViewModel: authViewModel))
     }
 
     var body: some View {
@@ -49,6 +53,9 @@ struct HomeView: View {
                     loadingView
                 } else {
                     diaryCards
+                    OnThisDaySectionView(items: onThisDayViewModel.items) { item in
+                        selectedOnThisDayItem = DiarySheetItem(date: item.entry.date)
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -62,6 +69,8 @@ struct HomeView: View {
             // サーバーから最新を取得して反映する
             await viewModel.refreshFromServer()
             applyLoadedContents(preservingEdits: true)
+            // 「n年前の今日」はオンライン専用・付加的な導線のため、失敗しても通常表示は妨げない
+            await onThisDayViewModel.load()
         }
         .onAppear {
             // タブ切替などで戻った時にローカルの最新を反映する（入力途中の内容は保持）
@@ -71,6 +80,7 @@ struct HomeView: View {
         .refreshable {
             await viewModel.refreshFromServer()
             applyLoadedContents(preservingEdits: true)
+            await onThisDayViewModel.load()
         }
         // 日記詳細をハーフモーダルで表示する（閉じたら編集内容をカードへ反映する）
         .sheet(
@@ -90,6 +100,16 @@ struct HomeView: View {
                 )
             }
         )
+        // 「n年前の今日」をタップした場合は、そのセクション内でスワイプできるようにする
+        .sheet(item: $selectedOnThisDayItem) { item in
+            let items = onThisDaySheetItems
+            DiaryDetailSheet(
+                items: items,
+                initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
+                authViewModel: authViewModel,
+                syncManager: syncManager
+            )
+        }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
                 ErrorBannerView(message: error) { viewModel.errorMessage = nil }
@@ -139,6 +159,11 @@ struct HomeView: View {
             DiarySheetItem(date: viewModel.yesterday.date),
             DiarySheetItem(date: viewModel.dayBeforeYesterday.date)
         ]
+    }
+
+    /// 「n年前の今日」セクション内でのスワイプ用リスト（表示順=直近年から）
+    private var onThisDaySheetItems: [DiarySheetItem] {
+        onThisDayViewModel.items.map { DiarySheetItem(date: $0.entry.date) }
     }
 
     /// オフライン・同期待ちの状態表示バナー
