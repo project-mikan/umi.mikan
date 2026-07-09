@@ -100,57 +100,55 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # boot は非同期に進むので、キャッシュ復元中にシミュレータ起動を済ませておく
+      # boot は非同期に進むので、依存キャッシュ復元中にシミュレータ起動を済ませておく
       - name: Boot simulator
         run: xcrun simctl boot "iPhone 17" || true
 
-      # SPM 依存の取得とビルド成果物を再利用してビルド時間を短縮する
-      # キーに github.sha を含めないことで同一 Package.resolved のビルドを PR をまたいで再利用できる
-      # 完全一致しない場合も restore-keys で直近のキャッシュから差分ビルドする
-      - name: Cache DerivedData
-        id: cache-deriveddata
+      # DerivedData 全体のキャッシュは、復元/保存の往復(合計5分超)が重いうえ、
+      # checkout による mtime リセットで Xcode の増分ビルドが効かず全再コンパイルになり
+      # 割に合わなかったため廃止した。代わりに SPM 依存(swift-nio 等、ビルドが重い)の
+      # チェックアウト先だけをキャッシュし、依存の再取得を避ける。
+      # -derivedDataPath でパスを固定し、SourcePackages の場所を安定させる。
+      # SourcePackages は mtime 依存の増分判定を持たないためキャッシュしても壊れにくい。
+      - name: Cache SPM dependencies
         uses: actions/cache@v6
         with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: DerivedData/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-deriveddata-
+            ${{ runner.os }}-spm-
 
-      # Xcode の増分ビルドは mtime 比較(成果物 > ソースなら再ビルド不要)で判定する。
-      # actions/checkout はソースの mtime を「今」に設定し、キャッシュ復元された DerivedData も
-      # 「今」付近になるため、成果物がソースより新しいと判定されず全再コンパイルが起きる。
-      # そこでソースの mtime を過去に、DerivedData をそれより新しい時刻に明示的に揃え、
-      # 変更のないファイルの増分ビルドを効かせる。
-      - name: Normalize timestamps for incremental build
-        if: steps.cache-deriveddata.outputs.cache-hit == 'true'
-        run: |
-          # ソースを古い時刻に統一する
-          find ios -type f \( -name '*.swift' -o -name '*.plist' -o -name '*.pbxproj' -o -name '*.xcconfig' \) -exec touch -t 202001010000 {} +
-          # 成果物(DerivedData)はソースより新しい時刻に統一する
-          find ~/Library/Developer/Xcode/DerivedData -exec touch -t 202001020000 {} + 2>/dev/null || true
-
-      # ビルドとテスト実行を分離する。ビルド(build-for-testing)は DerivedData キャッシュで
-      # 増分化され、テスト実行(test-without-building)はビルドを伴わないため高速。
+      # ビルドとテスト実行を分離する(ビルドエラーとテスト失敗を切り分けやすくする)。
+      # 毎回フルビルドになるため、ビルド自体を高速化する:
+      #   ONLY_ACTIVE_ARCH=YES  : シミュレータの arm64 のみビルド(不要アーキを削る)
+      #   -jobs                 : 論理CPU数まで並列コンパイル
+      #   COMPILER_INDEX_STORE_ENABLE=NO : インデックス生成を無効化
+      #   CODE_SIGNING_ALLOWED=NO        : シミュレータ向けは署名不要
+      # -derivedDataPath は SPM キャッシュ(SourcePackages)の位置を固定するため明示する
       # 生成物(ios/Sources/Proto/*)はコミット済みなのでここでは再生成しない(verify-proto で検証)
-      # シミュレータ向けビルドのためコード署名とインデックス生成は不要
       - name: Build for testing
         run: |
           xcodebuild build-for-testing \
             -project ios/umi.mikan.xcodeproj \
             -scheme "umi.mikan" \
             -destination "platform=iOS Simulator,name=iPhone 17,arch=arm64" \
+            -derivedDataPath DerivedData \
+            -jobs $(sysctl -n hw.ncpu) \
             -quiet \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
 
       # テストは数秒で終わるため並列テスト(シミュレータのクローン作成)は無効化し、
       # 事前ブート済みのシミュレータをそのまま使う
+      # ビルド成果物を使うため build-for-testing と同じ -derivedDataPath を指定する
       - name: Run tests
         run: |
           xcodebuild test-without-building \
             -project ios/umi.mikan.xcodeproj \
             -scheme "umi.mikan" \
             -destination "platform=iOS Simulator,name=iPhone 17,arch=arm64" \
+            -derivedDataPath DerivedData \
             -parallel-testing-enabled NO \
             -quiet \
             CODE_SIGNING_ALLOWED=NO \
