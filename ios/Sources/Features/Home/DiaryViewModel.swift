@@ -126,10 +126,12 @@ final class DiaryViewModel {
     // MARK: - Private
 
     /// ローカルへ保存して同期を試みる。オフラインでも保存自体は必ず成功する。
+    /// 同期はバックグラウンドで実行し、保存操作自体は同期完了を待たない
+    /// （ネットワーク不調時に同期が長引いて保存操作がブロックされるのを防ぐため）。
     private func saveLocally(date: Diary_YMD, content: String) async -> Diary_DiaryEntry? {
         store.saveLocalEdit(date: date, content: content)
         syncManager.refreshPendingCount()
-        await syncManager.syncPending()
+        Task { await syncManager.syncPending() }
         return store.entry(for: date)?.toProto()
     }
 

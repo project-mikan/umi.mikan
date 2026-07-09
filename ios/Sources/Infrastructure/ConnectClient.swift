@@ -20,7 +20,10 @@ final class ConnectClient: Sendable {
             config: ProtocolClientConfig(
                 host: host,
                 networkProtocol: .connect,
-                codec: ProtoCodec()
+                codec: ProtoCodec(),
+                // バックグラウンド放置後の復帰直後などネットワークが不安定な状況で
+                // リクエストが長時間（デフォルトの約60秒）ハングするのを防ぐ
+                timeout: 15
             )
         )
         protocolClient = client
