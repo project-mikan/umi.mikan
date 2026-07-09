@@ -14,6 +14,8 @@ struct MonthlyView: View {
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
+    /// オンデバイスLLMによる日記要約ストア（非対応端末では isAvailable が false になり機能全体が非表示になる）
+    private let summaryStore = DiarySummaryStore.shared
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel, syncManager: SyncManager) {
@@ -254,14 +256,7 @@ struct MonthlyView: View {
             }
 
             if let entry {
-                Text(contentPreview(entry.content))
-                    .font(.subheadline)
-                    .foregroundStyle(Color.twBody)
-                    .lineLimit(3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(10)
-                    .background(.blue.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                dayPreview(day: day, entry: entry)
             } else {
                 Text("日記がありません")
                     .font(.caption)
@@ -273,6 +268,42 @@ struct MonthlyView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .glassEffect(.regular, in: .rect(cornerRadius: 14))
+    }
+
+    /// 日記本文のプレビュー表示。
+    /// オンデバイス要約が利用可能な端末では生成をリクエストし、完了したらフェードで要約へ切り替える。
+    /// 生成中・非対応端末では従来通りの100文字カットプレビューを表示する。
+    private func dayPreview(day: Int, entry: Diary_DiaryEntry) -> some View {
+        let key = LocalDiaryEntry.dateKey(entry.date)
+        let summary = summaryStore.summaries[key]
+        return Group {
+            if let summary {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.caption2)
+                        .foregroundStyle(Color.twGreen)
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.twBody)
+                        .lineLimit(3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                Text(contentPreview(entry.content))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.twBody)
+                    .lineLimit(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .contentTransition(.opacity)
+        .animation(.easeInOut(duration: 0.4), value: summary)
+        .padding(10)
+        .background(.blue.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .task(id: key) {
+            summaryStore.requestSummary(key: key, content: entry.content)
+        }
     }
 
     /// 内容のプレビュー文字列（100文字まで）を返す

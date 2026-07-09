@@ -9,7 +9,7 @@ struct SettingsView: View {
     init(authViewModel: AuthViewModel) {
         _viewModel = State(initialValue: SettingsViewModel(
             authViewModel: authViewModel,
-            notificationManager: OnThisDayNotificationManager.shared
+            notificationManager: MemoryNotificationManager.shared
         ))
     }
 
@@ -104,7 +104,7 @@ struct SettingsView: View {
         }
     }
 
-    /// 「n年前の今日」通知のON/OFFトグル
+    /// 「おもいで」通知のON/OFFトグル
     private var notificationCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("通知")
@@ -112,13 +112,13 @@ struct SettingsView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(Color.twHeading)
             Toggle(isOn: Binding(
-                get: { viewModel.onThisDayNotificationEnabled },
+                get: { viewModel.memoryNotificationEnabled },
                 set: { newValue in
-                    Task { await viewModel.setOnThisDayNotificationEnabled(newValue) }
+                    Task { await viewModel.setMemoryNotificationEnabled(newValue) }
                 }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("n年前の今日 通知")
+                    Text("おもいで 通知")
                         .font(.subheadline)
                         .foregroundStyle(Color.twBody)
                     Text("毎日決まった時刻に振り返りを通知します")

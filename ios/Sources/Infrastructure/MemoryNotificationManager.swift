@@ -1,22 +1,22 @@
 import Foundation
 import UserNotifications
 
-/// 「n年前の今日」ローカル通知の設定・スケジューリングを管理する。
+/// 「おもいで」（n年前の今日）ローカル通知の設定・スケジューリングを管理する。
 ///
 /// 通知はデフォルトOFFで、設定画面のトグルからのみONにできる（ユーザーの明示的なオプトインを必須にする）。
 /// サーバー側で該当日記の有無を判定しないため、通知本文は誘導文言に留める。
 @MainActor
-final class OnThisDayNotificationManager {
-    static let shared = OnThisDayNotificationManager()
+final class MemoryNotificationManager {
+    static let shared = MemoryNotificationManager()
 
     /// 通知を毎日発火させる時刻
     static let notificationHour = 8
     static let notificationMinute = 0
 
     /// スケジュール済み通知の識別子
-    private static let notificationIdentifier = "on_this_day_daily_notification"
+    private static let notificationIdentifier = "memory_daily_notification"
     /// 設定トグルの永続化キー
-    private static let enabledDefaultsKey = "onThisDayNotificationEnabled"
+    private static let enabledDefaultsKey = "memoryNotificationEnabled"
 
     private let notificationCenter: UNUserNotificationCenter
     private let userDefaults: UserDefaults
@@ -68,7 +68,7 @@ final class OnThisDayNotificationManager {
     /// 毎日決まった時刻に繰り返し発火するローカル通知をスケジュールする
     private func scheduleDailyNotification() {
         let content = UNMutableNotificationContent()
-        content.title = "n年前の今日"
+        content.title = "おもいで"
         content.body = "n年前の今日の日記を振り返りましょう"
         content.sound = .default
 

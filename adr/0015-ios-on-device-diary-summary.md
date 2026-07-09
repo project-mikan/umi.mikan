@@ -2,7 +2,7 @@
 
 ## ステータス
 
-Proposed
+Accepted
 
 ## コンテキスト
 
@@ -162,18 +162,18 @@ Text(displayText(for: day))
 
 ### iOS
 
-- [ ] `ios/Sources/Infrastructure/DiarySummaryStore.swift` 新規作成（キャッシュ付き非同期要約生成）
-- [ ] `SystemLanguageModel.default.availability` による対応端末判定ロジック実装
-- [ ] Foundation Models 向け要約プロンプト作成（1〜2文程度、日本語）
-- [ ] 同時実行数の制限（3並列など）を実装
-- [ ] `MonthlyView` の `dayRow` に要約表示 + `contentTransition(.opacity)` によるフェード切り替え実装
-- [ ] 生成中/未生成時は既存の `contentPreview` にフォールバック
-- [ ] 非対応端末では要約UIを完全に非表示にするフォールバック確認
-- [ ] キャッシュの永続化（本文ハッシュによる無効化判定含む）
-- [ ] 単体テスト: キャッシュキー生成、本文ハッシュ変化時の再生成判定（正常系/異常系を日本語で記述）
-- [ ] `make ios-lint`（`--strict`）/ `make ios-build` / `make ios-test` の確認
+- [x] `ios/Sources/Infrastructure/DiarySummaryStore.swift` 新規作成（キャッシュ付き非同期要約生成）
+- [x] `SystemLanguageModel.default.availability` による対応端末判定ロジック実装
+- [x] Foundation Models 向け要約プロンプト作成（1〜2文程度、日本語）
+- [x] 同時実行数の制限（3並列など）を実装
+- [x] `MonthlyView` の `dayRow` に要約表示 + `contentTransition(.opacity)` によるフェード切り替え実装
+- [x] 生成中/未生成時は既存の `contentPreview` にフォールバック
+- [x] 非対応端末では要約が生成されず、既存の `contentPreview` 表示が継続されることを確認（要約UI自体は同じ `dayPreview` 内で条件分岐しており、非対応端末でも `sparkles` アイコン等は表示されない）
+- [x] キャッシュの永続化（本文ハッシュによる無効化判定含む）
+- [x] 単体テスト: `contentHash` の一致/不一致判定、`isAvailable == false` 環境での `requestSummary` no-op 確認（正常系/異常系を日本語で記述、`ios/Tests/DiarySummaryStoreTests.swift`）
+- [x] `make ios-lint`（`--strict`）/ `make ios-build` / `make ios-test` の確認
 
 ### ドキュメント
 
-- [ ] CLAUDE.md の iOS UX Features に本機能の概要を追記
+- [x] CLAUDE.md の iOS UX Features に本機能の概要を追記
 - [ ] ADR 0013 の機能候補一覧に本ADRへの参照を追加（該当する場合）

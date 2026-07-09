@@ -12,39 +12,39 @@ final class SettingsViewModel {
     var nameSaved: Bool = false
     var errorMessage: String?
 
-    /// 「n年前の今日」通知のトグル状態
-    var onThisDayNotificationEnabled: Bool = false
+    /// 「おもいで」通知のトグル状態
+    var memoryNotificationEnabled: Bool = false
 
     private let authViewModel: AuthViewModel
-    private let notificationManager: OnThisDayNotificationManager
+    private let notificationManager: MemoryNotificationManager
 
-    init(authViewModel: AuthViewModel, notificationManager: OnThisDayNotificationManager) {
+    init(authViewModel: AuthViewModel, notificationManager: MemoryNotificationManager) {
         self.authViewModel = authViewModel
         self.notificationManager = notificationManager
-        onThisDayNotificationEnabled = notificationManager.isEnabled
+        memoryNotificationEnabled = notificationManager.isEnabled
     }
 
     /// システム側の通知許可状態を確認し、拒否されていた場合はトグル表示をOFFへ補正する
     func refreshNotificationAuthorizationState() async {
         guard notificationManager.isEnabled else {
-            onThisDayNotificationEnabled = false
+            memoryNotificationEnabled = false
             return
         }
         let authorized = await notificationManager.isSystemAuthorized()
         if !authorized {
             notificationManager.disable()
         }
-        onThisDayNotificationEnabled = notificationManager.isEnabled
+        memoryNotificationEnabled = notificationManager.isEnabled
     }
 
-    /// 「n年前の今日」通知のトグルが変更された時の処理
-    func setOnThisDayNotificationEnabled(_ enabled: Bool) async {
+    /// 「おもいで」通知のトグルが変更された時の処理
+    func setMemoryNotificationEnabled(_ enabled: Bool) async {
         if enabled {
             let granted = await notificationManager.enable()
-            onThisDayNotificationEnabled = granted
+            memoryNotificationEnabled = granted
         } else {
             notificationManager.disable()
-            onThisDayNotificationEnabled = false
+            memoryNotificationEnabled = false
         }
     }
 

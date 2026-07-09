@@ -1,15 +1,15 @@
 import SwiftUI
 
-/// ホーム画面の「n年前の今日」セクション。
+/// ホーム画面の「おもいで」セクション（今日カードと昨日カードの間に配置する）。
 /// 該当する日記が1件もない場合はセクションごと非表示にする。
-struct OnThisDaySectionView: View {
-    let items: [OnThisDayItem]
-    let onSelect: (OnThisDayItem) -> Void
+struct MemorySectionView: View {
+    let items: [MemoryItem]
+    let onSelect: (MemoryItem) -> Void
 
     var body: some View {
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                Text("n年前の今日")
+                Text("おもいで")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Color.twHeading)
@@ -17,7 +17,7 @@ struct OnThisDaySectionView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(items) { item in
-                            OnThisDayCardView(item: item) {
+                            MemoryCardView(item: item) {
                                 onSelect(item)
                             }
                         }
@@ -29,9 +29,9 @@ struct OnThisDaySectionView: View {
     }
 }
 
-/// 「n年前の今日」1件分のカード
-private struct OnThisDayCardView: View {
-    let item: OnThisDayItem
+/// 「おもいで」1件分のカード
+private struct MemoryCardView: View {
+    let item: MemoryItem
     let onTap: () -> Void
 
     var body: some View {

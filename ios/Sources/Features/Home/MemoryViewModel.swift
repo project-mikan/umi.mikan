@@ -1,8 +1,8 @@
 import Connect
 import Foundation
 
-/// 「n年前の今日」の1件分の表示データ
-struct OnThisDayItem: Identifiable {
+/// 「おもいで」（n年前の今日）の1件分の表示データ
+struct MemoryItem: Identifiable {
     let yearsAgo: Int
     let entry: Diary_DiaryEntry
 
@@ -11,18 +11,18 @@ struct OnThisDayItem: Identifiable {
     }
 }
 
-/// ホーム画面の「n年前の今日」セクション用ViewModel。
+/// ホーム画面の「おもいで」セクション用ViewModel。
 ///
 /// 過去の同月同日（当年を除く）の日記を GetDiaryEntries でまとめて取得する。
 /// 付加的な導線のため、オフライン時・取得失敗時はローカルキャッシュを持たず単に空表示にする。
 @MainActor
 @Observable
-final class OnThisDayViewModel {
+final class MemoryViewModel {
     /// 遡る年数の上限（何年前まで問い合わせるか）。
     /// デフォルト引数（nonisolated コンテキスト）から参照できるよう nonisolated にする。
     nonisolated static let maxYearsToLookBack = 30
 
-    var items: [OnThisDayItem] = []
+    var items: [MemoryItem] = []
 
     private let authViewModel: AuthViewModel
 
@@ -56,7 +56,7 @@ final class OnThisDayViewModel {
         }
     }
 
-    /// サーバーから「n年前の今日」の日記を取得する。
+    /// サーバーから「おもいで」（n年前の今日）の日記を取得する。
     /// オフライン時・エラー時は静かに失敗し items を空のままにする（付加的な導線のため通常表示を妨げない）。
     func load(today: Date = Date()) async {
         var calendar = Calendar(identifier: .gregorian)
@@ -85,9 +85,9 @@ final class OnThisDayViewModel {
         let yearsAgoByYear = Dictionary(uniqueKeysWithValues: dates.map { ($0.ymd.year, $0.yearsAgo) })
 
         items = entries
-            .compactMap { entry -> OnThisDayItem? in
+            .compactMap { entry -> MemoryItem? in
                 guard let yearsAgo = yearsAgoByYear[entry.date.year] else { return nil }
-                return OnThisDayItem(yearsAgo: yearsAgo, entry: entry)
+                return MemoryItem(yearsAgo: yearsAgo, entry: entry)
             }
             .sorted { $0.yearsAgo < $1.yearsAgo }
     }

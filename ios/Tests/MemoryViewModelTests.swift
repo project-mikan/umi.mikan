@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import umi_mikan
 
-/// OnThisDayViewModel.pastYearsSameDayDates のテスト
-struct OnThisDayViewModelTests {
+/// MemoryViewModel.pastYearsSameDayDates のテスト
+struct MemoryViewModelTests {
     /// JST固定のカレンダーを生成する
     private func jstCalendar() -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -24,7 +24,7 @@ struct OnThisDayViewModelTests {
     @Test("正常系: 通常日は指定年数分すべて過去の同月同日を返す")
     func normalDayReturnsAllYears() {
         let today = jstDate(2026, 7, 10)
-        let result = OnThisDayViewModel.pastYearsSameDayDates(
+        let result = MemoryViewModel.pastYearsSameDayDates(
             today: today,
             calendar: jstCalendar(),
             maxYearsToLookBack: 3
@@ -43,7 +43,7 @@ struct OnThisDayViewModelTests {
     func leapDaySkipsNonLeapYears() {
         // 2024/2/29 を基準に3年分遡る（2023, 2022, 2021はいずれも非うるう年）
         let today = jstDate(2024, 2, 29)
-        let result = OnThisDayViewModel.pastYearsSameDayDates(
+        let result = MemoryViewModel.pastYearsSameDayDates(
             today: today,
             calendar: jstCalendar(),
             maxYearsToLookBack: 4
@@ -60,7 +60,7 @@ struct OnThisDayViewModelTests {
     @Test("正常系: maxYearsToLookBackが0の場合は空配列を返す")
     func zeroLookBackReturnsEmpty() {
         let today = jstDate(2026, 7, 10)
-        let result = OnThisDayViewModel.pastYearsSameDayDates(
+        let result = MemoryViewModel.pastYearsSameDayDates(
             today: today,
             calendar: jstCalendar(),
             maxYearsToLookBack: 0
@@ -72,7 +72,7 @@ struct OnThisDayViewModelTests {
     @Test("正常系: 結果は年降順（直近年から）で並ぶ")
     func resultsAreOrderedByMostRecentYearFirst() {
         let today = jstDate(2026, 1, 1)
-        let result = OnThisDayViewModel.pastYearsSameDayDates(
+        let result = MemoryViewModel.pastYearsSameDayDates(
             today: today,
             calendar: jstCalendar(),
             maxYearsToLookBack: 5
