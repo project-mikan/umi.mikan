@@ -1,7 +1,6 @@
 package mcpserver
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -69,26 +68,17 @@ func TestAuthMiddleware(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			server := httptest.NewServer(AuthMiddleware(next))
-			defer server.Close()
-
-			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL, nil)
-			if err != nil {
-				t.Fatalf("リクエスト作成失敗: %v", err)
-			}
+			// HTTPクライアント経由だとヘッダー末尾の空白がトリムされ「Bearer 」のケースを
+			// 検証できないため、ハンドラーを直接呼び出す
+			req := httptest.NewRequest(http.MethodPost, "/", nil)
 			if tt.authHeader != "" {
 				req.Header.Set("Authorization", tt.authHeader)
 			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("リクエスト送信失敗: %v", err)
-			}
-			defer func() {
-				_ = resp.Body.Close()
-			}()
+			rec := httptest.NewRecorder()
+			AuthMiddleware(next).ServeHTTP(rec, req)
 
-			if resp.StatusCode != tt.expectedStatus {
-				t.Errorf("ステータスコード: 期待 %d, 実際 %d", tt.expectedStatus, resp.StatusCode)
+			if rec.Code != tt.expectedStatus {
+				t.Errorf("ステータスコード: 期待 %d, 実際 %d", tt.expectedStatus, rec.Code)
 			}
 			if tt.expectUserID {
 				if !nextCalled {

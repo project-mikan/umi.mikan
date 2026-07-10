@@ -86,3 +86,21 @@ func TestGetDiaryEntriesByRangeHandler_Success(t *testing.T) {
 		t.Errorf("日付が正しくフォーマットされていない: %+v", out.Entries)
 	}
 }
+
+func TestGetDiaryEntriesByRangeHandler_DBError(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "mcp-range-dberror@example.com", "MCPRangeDBErrorUser")
+	diaryService := &diary.DiaryEntry{DB: db}
+	ctx := testutil.CreateAuthenticatedContext(userID)
+
+	// DBを閉じてクエリエラーを発生させる
+	if err := db.Close(); err != nil {
+		t.Fatalf("DB クローズに失敗: %v", err)
+	}
+
+	handler := getDiaryEntriesByRangeHandler(diaryService)
+	_, _, err := handler(ctx, nil, GetDiaryEntriesByRangeInput{From: "2024-05-01", To: "2024-05-31"})
+	if err == nil {
+		t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
+	}
+}
