@@ -19,7 +19,7 @@ func TestNewServer_RegistersTools(t *testing.T) {
 }
 
 func TestNewHTTPHandler_RequiresAuth(t *testing.T) {
-	handler := NewHTTPHandler(&diary.DiaryEntry{})
+	handler := NewHTTPHandler(&diary.DiaryEntry{}, nil)
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
@@ -37,7 +37,7 @@ func TestNewHTTPHandler_RequiresAuth(t *testing.T) {
 }
 
 func TestNewHTTPHandler_AuthenticatedInitialize(t *testing.T) {
-	handler := NewHTTPHandler(&diary.DiaryEntry{})
+	handler := NewHTTPHandler(&diary.DiaryEntry{}, nil)
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 

@@ -128,7 +128,7 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	// AIクライアント（Claude Desktopなど）向けに日記取得・検索ツールを公開する
 	mcpServer := &http.Server{
 		Addr:    ":8014",
-		Handler: mcpserver.NewHTTPHandler(app.DiaryService),
+		Handler: mcpserver.NewHTTPHandler(app.DiaryService, app.DB),
 	}
 
 	// Start gRPC server in goroutine

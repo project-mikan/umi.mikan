@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_user_user: GenFile =
   /*@__PURE__*/
   fileDesc(
-    "Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8ikQEKCkxMTUtleUluZm8SFAoMbGxtX3Byb3ZpZGVyGAEgASgFEgsKA2tleRgCIAEoCRIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgEIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAUgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAYgASgIIisKE0RlbGV0ZUxMTUtleVJlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIjgKFERlbGV0ZUxMTUtleVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIWChREZWxldGVBY2NvdW50UmVxdWVzdCI5ChVEZWxldGVBY2NvdW50UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIpoBCiBVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAyABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgEIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgFIAEoCCJFCiFVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIjUKHUdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSKCAQoeR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAIgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYAyABKAgSHwoXc2VtYW50aWNfc2VhcmNoX2VuYWJsZWQYBCABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSKSAgoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIwobbW9udGhseV9zdW1tYXJpZXNfcHJvY2Vzc2VkGAMgASgFEiAKGG1vbnRobHlfc3VtbWFyaWVzX2ZhaWxlZBgFIAEoBRIfChdsYXRlc3RfdHJlbmRzX3Byb2Nlc3NlZBgGIAEoBRIcChRsYXRlc3RfdHJlbmRzX2ZhaWxlZBgHIAEoBRIiChpkaWFyeV9lbWJlZGRpbmdzX3Byb2Nlc3NlZBgIIAEoBRIfChdkaWFyeV9lbWJlZGRpbmdzX2ZhaWxlZBgJIAEoBRIjChtzZW1hbnRpY19zZWFyY2hlc19wcm9jZXNzZWQYCiABKAUiRQoOUHJvY2Vzc2luZ1Rhc2sSEQoJdGFza190eXBlGAEgASgJEgwKBGRhdGUYAiABKAkSEgoKc3RhcnRlZF9hdBgDIAEoAyK4AgoOTWV0cmljc1N1bW1hcnkSHwoXdG90YWxfbW9udGhseV9zdW1tYXJpZXMYAiABKAUSIQoZcGVuZGluZ19tb250aGx5X3N1bW1hcmllcxgEIAEoBRIkChxhdXRvX3N1bW1hcnlfbW9udGhseV9lbmFibGVkGAYgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYByABKAgSIQoZbGF0ZXN0X3RyZW5kX2dlbmVyYXRlZF9hdBgIIAEoCRIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgJIAEoCBIYChB0b3RhbF9lbWJlZGRpbmdzGAogASgFEhoKEnBlbmRpbmdfZW1iZWRkaW5ncxgLIAEoBRIfChd0b3RhbF9lbWJlZGRpbmdfZGlhcmllcxgMIAEoBTLpBQoLVXNlclNlcnZpY2USSwoOVXBkYXRlVXNlck5hbWUSGy51c2VyLlVwZGF0ZVVzZXJOYW1lUmVxdWVzdBocLnVzZXIuVXBkYXRlVXNlck5hbWVSZXNwb25zZRJLCg5DaGFuZ2VQYXNzd29yZBIbLnVzZXIuQ2hhbmdlUGFzc3dvcmRSZXF1ZXN0GhwudXNlci5DaGFuZ2VQYXNzd29yZFJlc3BvbnNlEkUKDFVwZGF0ZUxMTUtleRIZLnVzZXIuVXBkYXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuVXBkYXRlTExNS2V5UmVzcG9uc2USQgoLR2V0VXNlckluZm8SGC51c2VyLkdldFVzZXJJbmZvUmVxdWVzdBoZLnVzZXIuR2V0VXNlckluZm9SZXNwb25zZRJFCgxEZWxldGVMTE1LZXkSGS51c2VyLkRlbGV0ZUxMTUtleVJlcXVlc3QaGi51c2VyLkRlbGV0ZUxMTUtleVJlc3BvbnNlEkgKDURlbGV0ZUFjY291bnQSGi51c2VyLkRlbGV0ZUFjY291bnRSZXF1ZXN0GhsudXNlci5EZWxldGVBY2NvdW50UmVzcG9uc2USbAoZVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5ncxImLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QaJy51c2VyLlVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRJjChZHZXRBdXRvU3VtbWFyeVNldHRpbmdzEiMudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBokLnVzZXIuR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlElEKEEdldFB1YlN1Yk1ldHJpY3MSHS51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXF1ZXN0Gh4udXNlci5HZXRQdWJTdWJNZXRyaWNzUmVzcG9uc2VCQFo+Z2l0aHViLmNvbS9wcm9qZWN0LW1pa2FuL3VtaS5taWthbi9iYWNrZW5kL2luZnJhc3RydWN0dXJlL2dycGNiBnByb3RvMw",
+    "Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSI4ChNVcGRhdGVMTE1LZXlSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRILCgNrZXkYAiABKAkiOAoUVXBkYXRlTExNS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIhQKEkdldFVzZXJJbmZvUmVxdWVzdCJWChNHZXRVc2VySW5mb1Jlc3BvbnNlEgwKBG5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSIgoIbGxtX2tleXMYAyADKAsyEC51c2VyLkxMTUtleUluZm8ikQEKCkxMTUtleUluZm8SFAoMbGxtX3Byb3ZpZGVyGAEgASgFEgsKA2tleRgCIAEoCRIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgEIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAUgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAYgASgIIisKE0RlbGV0ZUxMTUtleVJlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIjgKFERlbGV0ZUxMTUtleVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIWChREZWxldGVBY2NvdW50UmVxdWVzdCI5ChVEZWxldGVBY2NvdW50UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIpoBCiBVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAyABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgEIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgFIAEoCCJFCiFVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIjUKHUdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSKCAQoeR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAIgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYAyABKAgSHwoXc2VtYW50aWNfc2VhcmNoX2VuYWJsZWQYBCABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSKSAgoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIwobbW9udGhseV9zdW1tYXJpZXNfcHJvY2Vzc2VkGAMgASgFEiAKGG1vbnRobHlfc3VtbWFyaWVzX2ZhaWxlZBgFIAEoBRIfChdsYXRlc3RfdHJlbmRzX3Byb2Nlc3NlZBgGIAEoBRIcChRsYXRlc3RfdHJlbmRzX2ZhaWxlZBgHIAEoBRIiChpkaWFyeV9lbWJlZGRpbmdzX3Byb2Nlc3NlZBgIIAEoBRIfChdkaWFyeV9lbWJlZGRpbmdzX2ZhaWxlZBgJIAEoBRIjChtzZW1hbnRpY19zZWFyY2hlc19wcm9jZXNzZWQYCiABKAUiRQoOUHJvY2Vzc2luZ1Rhc2sSEQoJdGFza190eXBlGAEgASgJEgwKBGRhdGUYAiABKAkSEgoKc3RhcnRlZF9hdBgDIAEoAyK4AgoOTWV0cmljc1N1bW1hcnkSHwoXdG90YWxfbW9udGhseV9zdW1tYXJpZXMYAiABKAUSIQoZcGVuZGluZ19tb250aGx5X3N1bW1hcmllcxgEIAEoBRIkChxhdXRvX3N1bW1hcnlfbW9udGhseV9lbmFibGVkGAYgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYByABKAgSIQoZbGF0ZXN0X3RyZW5kX2dlbmVyYXRlZF9hdBgIIAEoCRIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgJIAEoCBIYChB0b3RhbF9lbWJlZGRpbmdzGAogASgFEhoKEnBlbmRpbmdfZW1iZWRkaW5ncxgLIAEoBRIfChd0b3RhbF9lbWJlZGRpbmdfZGlhcmllcxgMIAEoBSJkCgpBcGlLZXlJbmZvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEgoKa2V5X3ByZWZpeBgDIAEoCRIUCgxsYXN0X3VzZWRfYXQYBCABKAMSEgoKY3JlYXRlZF9hdBgFIAEoAyIjChNDcmVhdGVBcGlLZXlSZXF1ZXN0EgwKBG5hbWUYASABKAkiRwoUQ3JlYXRlQXBpS2V5UmVzcG9uc2USDwoHYXBpX2tleRgBIAEoCRIeCgRpbmZvGAIgASgLMhAudXNlci5BcGlLZXlJbmZvIhQKEkxpc3RBcGlLZXlzUmVxdWVzdCI5ChNMaXN0QXBpS2V5c1Jlc3BvbnNlEiIKCGFwaV9rZXlzGAEgAygLMhAudXNlci5BcGlLZXlJbmZvIiEKE0RlbGV0ZUFwaUtleVJlcXVlc3QSCgoCaWQYASABKAkiOAoURGVsZXRlQXBpS2V5UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJMrsHCgtVc2VyU2VydmljZRJLCg5VcGRhdGVVc2VyTmFtZRIbLnVzZXIuVXBkYXRlVXNlck5hbWVSZXF1ZXN0GhwudXNlci5VcGRhdGVVc2VyTmFtZVJlc3BvbnNlEksKDkNoYW5nZVBhc3N3b3JkEhsudXNlci5DaGFuZ2VQYXNzd29yZFJlcXVlc3QaHC51c2VyLkNoYW5nZVBhc3N3b3JkUmVzcG9uc2USRQoMVXBkYXRlTExNS2V5EhkudXNlci5VcGRhdGVMTE1LZXlSZXF1ZXN0GhoudXNlci5VcGRhdGVMTE1LZXlSZXNwb25zZRJCCgtHZXRVc2VySW5mbxIYLnVzZXIuR2V0VXNlckluZm9SZXF1ZXN0GhkudXNlci5HZXRVc2VySW5mb1Jlc3BvbnNlEkUKDERlbGV0ZUxMTUtleRIZLnVzZXIuRGVsZXRlTExNS2V5UmVxdWVzdBoaLnVzZXIuRGVsZXRlTExNS2V5UmVzcG9uc2USSAoNRGVsZXRlQWNjb3VudBIaLnVzZXIuRGVsZXRlQWNjb3VudFJlcXVlc3QaGy51c2VyLkRlbGV0ZUFjY291bnRSZXNwb25zZRJsChlVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzEiYudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBonLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEmMKFkdldEF1dG9TdW1tYXJ5U2V0dGluZ3MSIy51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GiQudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USUQoQR2V0UHViU3ViTWV0cmljcxIdLnVzZXIuR2V0UHViU3ViTWV0cmljc1JlcXVlc3QaHi51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRJFCgxDcmVhdGVBcGlLZXkSGS51c2VyLkNyZWF0ZUFwaUtleVJlcXVlc3QaGi51c2VyLkNyZWF0ZUFwaUtleVJlc3BvbnNlEkIKC0xpc3RBcGlLZXlzEhgudXNlci5MaXN0QXBpS2V5c1JlcXVlc3QaGS51c2VyLkxpc3RBcGlLZXlzUmVzcG9uc2USRQoMRGVsZXRlQXBpS2V5EhkudXNlci5EZWxldGVBcGlLZXlSZXF1ZXN0GhoudXNlci5EZWxldGVBcGlLZXlSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
   );
 
 /**
@@ -727,6 +727,183 @@ export const MetricsSummarySchema: GenMessage<MetricsSummary> =
   messageDesc(file_user_user, 21);
 
 /**
+ * APIキー情報（キー本体は含まない）
+ *
+ * @generated from message user.ApiKeyInfo
+ */
+export type ApiKeyInfo = Message<"user.ApiKeyInfo"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * キーの用途を示すラベル
+   *
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * 一覧表示用のキー先頭部分（例: umi_a1b2c3d4）
+   *
+   * @generated from field: string key_prefix = 3;
+   */
+  keyPrefix: string;
+
+  /**
+   * 最終使用日時（Unix秒、未使用の場合は0）
+   *
+   * @generated from field: int64 last_used_at = 4;
+   */
+  lastUsedAt: bigint;
+
+  /**
+   * @generated from field: int64 created_at = 5;
+   */
+  createdAt: bigint;
+};
+
+/**
+ * Describes the message user.ApiKeyInfo.
+ * Use `create(ApiKeyInfoSchema)` to create a new message.
+ */
+export const ApiKeyInfoSchema: GenMessage<ApiKeyInfo> =
+  /*@__PURE__*/
+  messageDesc(file_user_user, 22);
+
+/**
+ * APIキー発行用のリクエスト
+ *
+ * @generated from message user.CreateApiKeyRequest
+ */
+export type CreateApiKeyRequest = Message<"user.CreateApiKeyRequest"> & {
+  /**
+   * キーの用途を示すラベル
+   *
+   * @generated from field: string name = 1;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message user.CreateApiKeyRequest.
+ * Use `create(CreateApiKeyRequestSchema)` to create a new message.
+ */
+export const CreateApiKeyRequestSchema: GenMessage<CreateApiKeyRequest> =
+  /*@__PURE__*/
+  messageDesc(file_user_user, 23);
+
+/**
+ * APIキー発行用のレスポンス
+ *
+ * @generated from message user.CreateApiKeyResponse
+ */
+export type CreateApiKeyResponse = Message<"user.CreateApiKeyResponse"> & {
+  /**
+   * キー本体（この発行時にのみ返される）
+   *
+   * @generated from field: string api_key = 1;
+   */
+  apiKey: string;
+
+  /**
+   * @generated from field: user.ApiKeyInfo info = 2;
+   */
+  info?: ApiKeyInfo | undefined;
+};
+
+/**
+ * Describes the message user.CreateApiKeyResponse.
+ * Use `create(CreateApiKeyResponseSchema)` to create a new message.
+ */
+export const CreateApiKeyResponseSchema: GenMessage<CreateApiKeyResponse> =
+  /*@__PURE__*/
+  messageDesc(file_user_user, 24);
+
+/**
+ * APIキー一覧取得用のリクエスト
+ *
+ * 空のリクエスト（認証はヘッダーから）
+ *
+ * @generated from message user.ListApiKeysRequest
+ */
+export type ListApiKeysRequest = Message<"user.ListApiKeysRequest"> & {};
+
+/**
+ * Describes the message user.ListApiKeysRequest.
+ * Use `create(ListApiKeysRequestSchema)` to create a new message.
+ */
+export const ListApiKeysRequestSchema: GenMessage<ListApiKeysRequest> =
+  /*@__PURE__*/
+  messageDesc(file_user_user, 25);
+
+/**
+ * APIキー一覧取得用のレスポンス
+ *
+ * @generated from message user.ListApiKeysResponse
+ */
+export type ListApiKeysResponse = Message<"user.ListApiKeysResponse"> & {
+  /**
+   * @generated from field: repeated user.ApiKeyInfo api_keys = 1;
+   */
+  apiKeys: ApiKeyInfo[];
+};
+
+/**
+ * Describes the message user.ListApiKeysResponse.
+ * Use `create(ListApiKeysResponseSchema)` to create a new message.
+ */
+export const ListApiKeysResponseSchema: GenMessage<ListApiKeysResponse> =
+  /*@__PURE__*/
+  messageDesc(file_user_user, 26);
+
+/**
+ * APIキー削除用のリクエスト
+ *
+ * @generated from message user.DeleteApiKeyRequest
+ */
+export type DeleteApiKeyRequest = Message<"user.DeleteApiKeyRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message user.DeleteApiKeyRequest.
+ * Use `create(DeleteApiKeyRequestSchema)` to create a new message.
+ */
+export const DeleteApiKeyRequestSchema: GenMessage<DeleteApiKeyRequest> =
+  /*@__PURE__*/
+  messageDesc(file_user_user, 27);
+
+/**
+ * APIキー削除用のレスポンス
+ *
+ * @generated from message user.DeleteApiKeyResponse
+ */
+export type DeleteApiKeyResponse = Message<"user.DeleteApiKeyResponse"> & {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
+
+  /**
+   * @generated from field: string message = 2;
+   */
+  message: string;
+};
+
+/**
+ * Describes the message user.DeleteApiKeyResponse.
+ * Use `create(DeleteApiKeyResponseSchema)` to create a new message.
+ */
+export const DeleteApiKeyResponseSchema: GenMessage<DeleteApiKeyResponse> =
+  /*@__PURE__*/
+  messageDesc(file_user_user, 28);
+
+/**
  * UserService はユーザー設定とアカウント管理を提供するサービスです。
  * ユーザー情報の更新、LLMキー管理、自動要約設定、Pub/Subメトリクス取得などの機能があります。
  *
@@ -890,5 +1067,57 @@ export const UserService: GenService<{
     methodKind: "unary";
     input: typeof GetPubSubMetricsRequestSchema;
     output: typeof GetPubSubMetricsResponseSchema;
+  };
+  /**
+   * CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行します。
+   * キー本体はレスポンスで一度だけ返され、サーバーにはハッシュのみ保存されます。
+   *
+   * 例:
+   *   request: { name: "Claude Desktop" }
+   *   response: { api_key: "umi_...", info: { id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... } }
+   *
+   * エラー:
+   *   - InvalidArgument: 名前が空または長すぎる
+   *   - Internal: データベースエラー
+   *
+   * @generated from rpc user.UserService.CreateApiKey
+   */
+  createApiKey: {
+    methodKind: "unary";
+    input: typeof CreateApiKeyRequestSchema;
+    output: typeof CreateApiKeyResponseSchema;
+  };
+  /**
+   * ListApiKeys は発行済みAPIキーの一覧を返します（キー本体は含まれません）。
+   *
+   * 例:
+   *   request: {}
+   *   response: { api_keys: [{ id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... }] }
+   *
+   * エラー: なし（キーがない場合は空配列）
+   *
+   * @generated from rpc user.UserService.ListApiKeys
+   */
+  listApiKeys: {
+    methodKind: "unary";
+    input: typeof ListApiKeysRequestSchema;
+    output: typeof ListApiKeysResponseSchema;
+  };
+  /**
+   * DeleteApiKey は指定されたAPIキーを失効させます。
+   *
+   * 例:
+   *   request: { id: "..." }
+   *   response: { success: true, message: "APIキーを削除しました" }
+   *
+   * エラー:
+   *   - NotFound: 指定されたキーが存在しない、または他ユーザーのキー
+   *
+   * @generated from rpc user.UserService.DeleteApiKey
+   */
+  deleteApiKey: {
+    methodKind: "unary";
+    input: typeof DeleteApiKeyRequestSchema;
+    output: typeof DeleteApiKeyResponseSchema;
   };
 }> = /*@__PURE__*/ serviceDesc(file_user_user, 0);

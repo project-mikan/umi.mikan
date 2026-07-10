@@ -7,7 +7,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
+	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
+	"github.com/project-mikan/umi.mikan/backend/service/user"
+	"github.com/project-mikan/umi.mikan/backend/testutil"
 )
 
 func generateValidTokenForTest(t *testing.T, userID string) string {
@@ -70,12 +73,13 @@ func TestAuthMiddleware(t *testing.T) {
 
 			// HTTPクライアント経由だとヘッダー末尾の空白がトリムされ「Bearer 」のケースを
 			// 検証できないため、ハンドラーを直接呼び出す
+			// JWT認証のみのケースなのでDBは使用されない（nilを渡す）
 			req := httptest.NewRequest(http.MethodPost, "/", nil)
 			if tt.authHeader != "" {
 				req.Header.Set("Authorization", tt.authHeader)
 			}
 			rec := httptest.NewRecorder()
-			AuthMiddleware(next).ServeHTTP(rec, req)
+			AuthMiddleware(nil, next).ServeHTTP(rec, req)
 
 			if rec.Code != tt.expectedStatus {
 				t.Errorf("ステータスコード: 期待 %d, 実際 %d", tt.expectedStatus, rec.Code)
@@ -92,4 +96,73 @@ func TestAuthMiddleware(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAuthMiddleware_APIKey(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "mcp-api-key-auth@example.com", "MCPAPIKeyUser")
+	userService := &user.UserEntry{DB: db}
+	ctx := testutil.CreateAuthenticatedContext(userID)
+
+	created, err := userService.CreateApiKey(ctx, &g.CreateApiKeyRequest{Name: "MCP認証テスト用キー"})
+	if err != nil {
+		t.Fatalf("APIキー発行に失敗: %v", err)
+	}
+
+	callWithToken := func(t *testing.T, token string) (int, string) {
+		t.Helper()
+		var capturedUserID string
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if val, ok := r.Context().Value(middleware.UserIDKey).(string); ok {
+				capturedUserID = val
+			}
+			w.WriteHeader(http.StatusOK)
+		})
+		req := httptest.NewRequest(http.MethodPost, "/", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		AuthMiddleware(db, next).ServeHTTP(rec, req)
+		return rec.Code, capturedUserID
+	}
+
+	t.Run("正常系: 有効なAPIキーで認証されユーザーIDが注入される", func(t *testing.T) {
+		status, capturedUserID := callWithToken(t, created.ApiKey)
+		if status != http.StatusOK {
+			t.Fatalf("ステータスコード: 期待 200, 実際 %d", status)
+		}
+		if capturedUserID != userID.String() {
+			t.Errorf("ユーザーID: 期待 %v, 実際 %v", userID, capturedUserID)
+		}
+
+		// 最終使用日時が更新されている
+		listResp, err := userService.ListApiKeys(ctx, &g.ListApiKeysRequest{})
+		if err != nil {
+			t.Fatalf("一覧取得に失敗: %v", err)
+		}
+		if len(listResp.ApiKeys) != 1 || listResp.ApiKeys[0].LastUsedAt == 0 {
+			t.Errorf("認証後にLastUsedAtが更新されていない: %+v", listResp.ApiKeys)
+		}
+	})
+
+	t.Run("異常系: 存在しないAPIキーは401", func(t *testing.T) {
+		status, _ := callWithToken(t, "umi_0000000000000000000000000000000000000000000000000000000000000000")
+		if status != http.StatusUnauthorized {
+			t.Errorf("ステータスコード: 期待 401, 実際 %d", status)
+		}
+	})
+
+	t.Run("異常系: 削除済みAPIキーは401", func(t *testing.T) {
+		toDelete, err := userService.CreateApiKey(ctx, &g.CreateApiKeyRequest{Name: "削除予定キー"})
+		if err != nil {
+			t.Fatalf("APIキー発行に失敗: %v", err)
+		}
+		if _, err := userService.DeleteApiKey(ctx, &g.DeleteApiKeyRequest{Id: toDelete.Info.Id}); err != nil {
+			t.Fatalf("APIキー削除に失敗: %v", err)
+		}
+
+		status, _ := callWithToken(t, toDelete.ApiKey)
+		if status != http.StatusUnauthorized {
+			t.Errorf("ステータスコード: 期待 401, 実際 %d", status)
+		}
+	})
 }

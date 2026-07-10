@@ -101,6 +101,37 @@ service UserService {
   //
   // エラー: なし（データがない場合は空配列）
   rpc GetPubSubMetrics(GetPubSubMetricsRequest) returns (GetPubSubMetricsResponse);
+
+  // CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行します。
+  // キー本体はレスポンスで一度だけ返され、サーバーにはハッシュのみ保存されます。
+  //
+  // 例:
+  //   request: { name: "Claude Desktop" }
+  //   response: { api_key: "umi_...", info: { id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... } }
+  //
+  // エラー:
+  //   - InvalidArgument: 名前が空または長すぎる
+  //   - Internal: データベースエラー
+  rpc CreateApiKey(CreateApiKeyRequest) returns (CreateApiKeyResponse);
+
+  // ListApiKeys は発行済みAPIキーの一覧を返します（キー本体は含まれません）。
+  //
+  // 例:
+  //   request: {}
+  //   response: { api_keys: [{ id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... }] }
+  //
+  // エラー: なし（キーがない場合は空配列）
+  rpc ListApiKeys(ListApiKeysRequest) returns (ListApiKeysResponse);
+
+  // DeleteApiKey は指定されたAPIキーを失効させます。
+  //
+  // 例:
+  //   request: { id: "..." }
+  //   response: { success: true, message: "APIキーを削除しました" }
+  //
+  // エラー:
+  //   - NotFound: 指定されたキーが存在しない、または他ユーザーのキー
+  rpc DeleteApiKey(DeleteApiKeyRequest) returns (DeleteApiKeyResponse);
 }
 
 // ユーザー名更新用のリクエスト
@@ -253,4 +284,44 @@ message MetricsSummary {
   int32 total_embeddings = 10; // 生成済みのembeddingチャンク数
   int32 pending_embeddings = 11; // 未生成のembedding数（日記数 - embedding済み日記数）
   int32 total_embedding_diaries = 12; // embedding生成済みの日記数
+}
+// APIキー情報（キー本体は含まない）
+message ApiKeyInfo {
+  string id = 1;
+  string name = 2; // キーの用途を示すラベル
+  string key_prefix = 3; // 一覧表示用のキー先頭部分（例: umi_a1b2c3d4）
+  int64 last_used_at = 4; // 最終使用日時（Unix秒、未使用の場合は0）
+  int64 created_at = 5;
+}
+
+// APIキー発行用のリクエスト
+message CreateApiKeyRequest {
+  string name = 1; // キーの用途を示すラベル
+}
+
+// APIキー発行用のレスポンス
+message CreateApiKeyResponse {
+  string api_key = 1; // キー本体（この発行時にのみ返される）
+  ApiKeyInfo info = 2;
+}
+
+// APIキー一覧取得用のリクエスト
+message ListApiKeysRequest {
+  // 空のリクエスト（認証はヘッダーから）
+}
+
+// APIキー一覧取得用のレスポンス
+message ListApiKeysResponse {
+  repeated ApiKeyInfo api_keys = 1;
+}
+
+// APIキー削除用のリクエスト
+message DeleteApiKeyRequest {
+  string id = 1;
+}
+
+// APIキー削除用のレスポンス
+message DeleteApiKeyResponse {
+  bool success = 1;
+  string message = 2;
 }

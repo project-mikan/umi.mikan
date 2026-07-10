@@ -28,6 +28,9 @@ const (
 	UserService_UpdateAutoSummarySettings_FullMethodName = "/user.UserService/UpdateAutoSummarySettings"
 	UserService_GetAutoSummarySettings_FullMethodName    = "/user.UserService/GetAutoSummarySettings"
 	UserService_GetPubSubMetrics_FullMethodName          = "/user.UserService/GetPubSubMetrics"
+	UserService_CreateApiKey_FullMethodName              = "/user.UserService/CreateApiKey"
+	UserService_ListApiKeys_FullMethodName               = "/user.UserService/ListApiKeys"
+	UserService_DeleteApiKey_FullMethodName              = "/user.UserService/DeleteApiKey"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -132,6 +135,37 @@ type UserServiceClient interface {
 	//
 	// エラー: なし（データがない場合は空配列）
 	GetPubSubMetrics(ctx context.Context, in *GetPubSubMetricsRequest, opts ...grpc.CallOption) (*GetPubSubMetricsResponse, error)
+	// CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行します。
+	// キー本体はレスポンスで一度だけ返され、サーバーにはハッシュのみ保存されます。
+	//
+	// 例:
+	//
+	//	request: { name: "Claude Desktop" }
+	//	response: { api_key: "umi_...", info: { id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... } }
+	//
+	// エラー:
+	//   - InvalidArgument: 名前が空または長すぎる
+	//   - Internal: データベースエラー
+	CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error)
+	// ListApiKeys は発行済みAPIキーの一覧を返します（キー本体は含まれません）。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { api_keys: [{ id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... }] }
+	//
+	// エラー: なし（キーがない場合は空配列）
+	ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error)
+	// DeleteApiKey は指定されたAPIキーを失効させます。
+	//
+	// 例:
+	//
+	//	request: { id: "..." }
+	//	response: { success: true, message: "APIキーを削除しました" }
+	//
+	// エラー:
+	//   - NotFound: 指定されたキーが存在しない、または他ユーザーのキー
+	DeleteApiKey(ctx context.Context, in *DeleteApiKeyRequest, opts ...grpc.CallOption) (*DeleteApiKeyResponse, error)
 }
 
 type userServiceClient struct {
@@ -226,6 +260,36 @@ func (c *userServiceClient) GetPubSubMetrics(ctx context.Context, in *GetPubSubM
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetPubSubMetricsResponse)
 	err := c.cc.Invoke(ctx, UserService_GetPubSubMetrics_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateApiKeyResponse)
+	err := c.cc.Invoke(ctx, UserService_CreateApiKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListApiKeysResponse)
+	err := c.cc.Invoke(ctx, UserService_ListApiKeys_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteApiKey(ctx context.Context, in *DeleteApiKeyRequest, opts ...grpc.CallOption) (*DeleteApiKeyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteApiKeyResponse)
+	err := c.cc.Invoke(ctx, UserService_DeleteApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -334,6 +398,37 @@ type UserServiceServer interface {
 	//
 	// エラー: なし（データがない場合は空配列）
 	GetPubSubMetrics(context.Context, *GetPubSubMetricsRequest) (*GetPubSubMetricsResponse, error)
+	// CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行します。
+	// キー本体はレスポンスで一度だけ返され、サーバーにはハッシュのみ保存されます。
+	//
+	// 例:
+	//
+	//	request: { name: "Claude Desktop" }
+	//	response: { api_key: "umi_...", info: { id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... } }
+	//
+	// エラー:
+	//   - InvalidArgument: 名前が空または長すぎる
+	//   - Internal: データベースエラー
+	CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
+	// ListApiKeys は発行済みAPIキーの一覧を返します（キー本体は含まれません）。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { api_keys: [{ id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... }] }
+	//
+	// エラー: なし（キーがない場合は空配列）
+	ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error)
+	// DeleteApiKey は指定されたAPIキーを失効させます。
+	//
+	// 例:
+	//
+	//	request: { id: "..." }
+	//	response: { success: true, message: "APIキーを削除しました" }
+	//
+	// エラー:
+	//   - NotFound: 指定されたキーが存在しない、または他ユーザーのキー
+	DeleteApiKey(context.Context, *DeleteApiKeyRequest) (*DeleteApiKeyResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -370,6 +465,15 @@ func (UnimplementedUserServiceServer) GetAutoSummarySettings(context.Context, *G
 }
 func (UnimplementedUserServiceServer) GetPubSubMetrics(context.Context, *GetPubSubMetricsRequest) (*GetPubSubMetricsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPubSubMetrics not implemented")
+}
+func (UnimplementedUserServiceServer) CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateApiKey not implemented")
+}
+func (UnimplementedUserServiceServer) ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListApiKeys not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteApiKey(context.Context, *DeleteApiKeyRequest) (*DeleteApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteApiKey not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -554,6 +658,60 @@ func _UserService_GetPubSubMetrics_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_CreateApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateApiKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateApiKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateApiKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateApiKey(ctx, req.(*CreateApiKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ListApiKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListApiKeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListApiKeys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ListApiKeys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListApiKeys(ctx, req.(*ListApiKeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteApiKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteApiKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeleteApiKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteApiKey(ctx, req.(*DeleteApiKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -596,6 +754,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPubSubMetrics",
 			Handler:    _UserService_GetPubSubMetrics_Handler,
+		},
+		{
+			MethodName: "CreateApiKey",
+			Handler:    _UserService_CreateApiKey_Handler,
+		},
+		{
+			MethodName: "ListApiKeys",
+			Handler:    _UserService_ListApiKeys_Handler,
+		},
+		{
+			MethodName: "DeleteApiKey",
+			Handler:    _UserService_DeleteApiKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

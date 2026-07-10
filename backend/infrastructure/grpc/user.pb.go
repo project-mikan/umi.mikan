@@ -1295,6 +1295,361 @@ func (x *MetricsSummary) GetTotalEmbeddingDiaries() int32 {
 	return 0
 }
 
+// APIキー情報（キー本体は含まない）
+type ApiKeyInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                  // キーの用途を示すラベル
+	KeyPrefix     string                 `protobuf:"bytes,3,opt,name=key_prefix,json=keyPrefix,proto3" json:"key_prefix,omitempty"`       // 一覧表示用のキー先頭部分（例: umi_a1b2c3d4）
+	LastUsedAt    int64                  `protobuf:"varint,4,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"` // 最終使用日時（Unix秒、未使用の場合は0）
+	CreatedAt     int64                  `protobuf:"varint,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApiKeyInfo) Reset() {
+	*x = ApiKeyInfo{}
+	mi := &file_user_user_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApiKeyInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApiKeyInfo) ProtoMessage() {}
+
+func (x *ApiKeyInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApiKeyInfo.ProtoReflect.Descriptor instead.
+func (*ApiKeyInfo) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ApiKeyInfo) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ApiKeyInfo) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ApiKeyInfo) GetKeyPrefix() string {
+	if x != nil {
+		return x.KeyPrefix
+	}
+	return ""
+}
+
+func (x *ApiKeyInfo) GetLastUsedAt() int64 {
+	if x != nil {
+		return x.LastUsedAt
+	}
+	return 0
+}
+
+func (x *ApiKeyInfo) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
+// APIキー発行用のリクエスト
+type CreateApiKeyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"` // キーの用途を示すラベル
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateApiKeyRequest) Reset() {
+	*x = CreateApiKeyRequest{}
+	mi := &file_user_user_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateApiKeyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateApiKeyRequest) ProtoMessage() {}
+
+func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*CreateApiKeyRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *CreateApiKeyRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+// APIキー発行用のレスポンス
+type CreateApiKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApiKey        string                 `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"` // キー本体（この発行時にのみ返される）
+	Info          *ApiKeyInfo            `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateApiKeyResponse) Reset() {
+	*x = CreateApiKeyResponse{}
+	mi := &file_user_user_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateApiKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateApiKeyResponse) ProtoMessage() {}
+
+func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*CreateApiKeyResponse) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *CreateApiKeyResponse) GetApiKey() string {
+	if x != nil {
+		return x.ApiKey
+	}
+	return ""
+}
+
+func (x *CreateApiKeyResponse) GetInfo() *ApiKeyInfo {
+	if x != nil {
+		return x.Info
+	}
+	return nil
+}
+
+// APIキー一覧取得用のリクエスト
+type ListApiKeysRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListApiKeysRequest) Reset() {
+	*x = ListApiKeysRequest{}
+	mi := &file_user_user_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListApiKeysRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListApiKeysRequest) ProtoMessage() {}
+
+func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListApiKeysRequest.ProtoReflect.Descriptor instead.
+func (*ListApiKeysRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{25}
+}
+
+// APIキー一覧取得用のレスポンス
+type ListApiKeysResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApiKeys       []*ApiKeyInfo          `protobuf:"bytes,1,rep,name=api_keys,json=apiKeys,proto3" json:"api_keys,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListApiKeysResponse) Reset() {
+	*x = ListApiKeysResponse{}
+	mi := &file_user_user_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListApiKeysResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListApiKeysResponse) ProtoMessage() {}
+
+func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListApiKeysResponse.ProtoReflect.Descriptor instead.
+func (*ListApiKeysResponse) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *ListApiKeysResponse) GetApiKeys() []*ApiKeyInfo {
+	if x != nil {
+		return x.ApiKeys
+	}
+	return nil
+}
+
+// APIキー削除用のリクエスト
+type DeleteApiKeyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteApiKeyRequest) Reset() {
+	*x = DeleteApiKeyRequest{}
+	mi := &file_user_user_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteApiKeyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteApiKeyRequest) ProtoMessage() {}
+
+func (x *DeleteApiKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*DeleteApiKeyRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *DeleteApiKeyRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+// APIキー削除用のレスポンス
+type DeleteApiKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteApiKeyResponse) Reset() {
+	*x = DeleteApiKeyResponse{}
+	mi := &file_user_user_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteApiKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteApiKeyResponse) ProtoMessage() {}
+
+func (x *DeleteApiKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*DeleteApiKeyResponse) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *DeleteApiKeyResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *DeleteApiKeyResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_user_user_proto protoreflect.FileDescriptor
 
 const file_user_user_proto_rawDesc = "" +
@@ -1382,7 +1737,30 @@ const file_user_user_proto_rawDesc = "" +
 	"\x10total_embeddings\x18\n" +
 	" \x01(\x05R\x0ftotalEmbeddings\x12-\n" +
 	"\x12pending_embeddings\x18\v \x01(\x05R\x11pendingEmbeddings\x126\n" +
-	"\x17total_embedding_diaries\x18\f \x01(\x05R\x15totalEmbeddingDiaries2\xe9\x05\n" +
+	"\x17total_embedding_diaries\x18\f \x01(\x05R\x15totalEmbeddingDiaries\"\x90\x01\n" +
+	"\n" +
+	"ApiKeyInfo\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"key_prefix\x18\x03 \x01(\tR\tkeyPrefix\x12 \n" +
+	"\flast_used_at\x18\x04 \x01(\x03R\n" +
+	"lastUsedAt\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\x03R\tcreatedAt\")\n" +
+	"\x13CreateApiKeyRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"U\n" +
+	"\x14CreateApiKeyResponse\x12\x17\n" +
+	"\aapi_key\x18\x01 \x01(\tR\x06apiKey\x12$\n" +
+	"\x04info\x18\x02 \x01(\v2\x10.user.ApiKeyInfoR\x04info\"\x14\n" +
+	"\x12ListApiKeysRequest\"B\n" +
+	"\x13ListApiKeysResponse\x12+\n" +
+	"\bapi_keys\x18\x01 \x03(\v2\x10.user.ApiKeyInfoR\aapiKeys\"%\n" +
+	"\x13DeleteApiKeyRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"J\n" +
+	"\x14DeleteApiKeyResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xbb\a\n" +
 	"\vUserService\x12K\n" +
 	"\x0eUpdateUserName\x12\x1b.user.UpdateUserNameRequest\x1a\x1c.user.UpdateUserNameResponse\x12K\n" +
 	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12E\n" +
@@ -1392,7 +1770,10 @@ const file_user_user_proto_rawDesc = "" +
 	"\rDeleteAccount\x12\x1a.user.DeleteAccountRequest\x1a\x1b.user.DeleteAccountResponse\x12l\n" +
 	"\x19UpdateAutoSummarySettings\x12&.user.UpdateAutoSummarySettingsRequest\x1a'.user.UpdateAutoSummarySettingsResponse\x12c\n" +
 	"\x16GetAutoSummarySettings\x12#.user.GetAutoSummarySettingsRequest\x1a$.user.GetAutoSummarySettingsResponse\x12Q\n" +
-	"\x10GetPubSubMetrics\x12\x1d.user.GetPubSubMetricsRequest\x1a\x1e.user.GetPubSubMetricsResponseB@Z>github.com/project-mikan/umi.mikan/backend/infrastructure/grpcb\x06proto3"
+	"\x10GetPubSubMetrics\x12\x1d.user.GetPubSubMetricsRequest\x1a\x1e.user.GetPubSubMetricsResponse\x12E\n" +
+	"\fCreateApiKey\x12\x19.user.CreateApiKeyRequest\x1a\x1a.user.CreateApiKeyResponse\x12B\n" +
+	"\vListApiKeys\x12\x18.user.ListApiKeysRequest\x1a\x19.user.ListApiKeysResponse\x12E\n" +
+	"\fDeleteApiKey\x12\x19.user.DeleteApiKeyRequest\x1a\x1a.user.DeleteApiKeyResponseB@Z>github.com/project-mikan/umi.mikan/backend/infrastructure/grpcb\x06proto3"
 
 var (
 	file_user_user_proto_rawDescOnce sync.Once
@@ -1406,7 +1787,7 @@ func file_user_user_proto_rawDescGZIP() []byte {
 	return file_user_user_proto_rawDescData
 }
 
-var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_user_user_proto_goTypes = []any{
 	(*UpdateUserNameRequest)(nil),             // 0: user.UpdateUserNameRequest
 	(*UpdateUserNameResponse)(nil),            // 1: user.UpdateUserNameResponse
@@ -1430,35 +1811,50 @@ var file_user_user_proto_goTypes = []any{
 	(*HourlyMetrics)(nil),                     // 19: user.HourlyMetrics
 	(*ProcessingTask)(nil),                    // 20: user.ProcessingTask
 	(*MetricsSummary)(nil),                    // 21: user.MetricsSummary
+	(*ApiKeyInfo)(nil),                        // 22: user.ApiKeyInfo
+	(*CreateApiKeyRequest)(nil),               // 23: user.CreateApiKeyRequest
+	(*CreateApiKeyResponse)(nil),              // 24: user.CreateApiKeyResponse
+	(*ListApiKeysRequest)(nil),                // 25: user.ListApiKeysRequest
+	(*ListApiKeysResponse)(nil),               // 26: user.ListApiKeysResponse
+	(*DeleteApiKeyRequest)(nil),               // 27: user.DeleteApiKeyRequest
+	(*DeleteApiKeyResponse)(nil),              // 28: user.DeleteApiKeyResponse
 }
 var file_user_user_proto_depIdxs = []int32{
 	8,  // 0: user.GetUserInfoResponse.llm_keys:type_name -> user.LLMKeyInfo
 	19, // 1: user.GetPubSubMetricsResponse.hourly_metrics:type_name -> user.HourlyMetrics
 	20, // 2: user.GetPubSubMetricsResponse.processing_tasks:type_name -> user.ProcessingTask
 	21, // 3: user.GetPubSubMetricsResponse.summary:type_name -> user.MetricsSummary
-	0,  // 4: user.UserService.UpdateUserName:input_type -> user.UpdateUserNameRequest
-	2,  // 5: user.UserService.ChangePassword:input_type -> user.ChangePasswordRequest
-	4,  // 6: user.UserService.UpdateLLMKey:input_type -> user.UpdateLLMKeyRequest
-	6,  // 7: user.UserService.GetUserInfo:input_type -> user.GetUserInfoRequest
-	9,  // 8: user.UserService.DeleteLLMKey:input_type -> user.DeleteLLMKeyRequest
-	11, // 9: user.UserService.DeleteAccount:input_type -> user.DeleteAccountRequest
-	13, // 10: user.UserService.UpdateAutoSummarySettings:input_type -> user.UpdateAutoSummarySettingsRequest
-	15, // 11: user.UserService.GetAutoSummarySettings:input_type -> user.GetAutoSummarySettingsRequest
-	17, // 12: user.UserService.GetPubSubMetrics:input_type -> user.GetPubSubMetricsRequest
-	1,  // 13: user.UserService.UpdateUserName:output_type -> user.UpdateUserNameResponse
-	3,  // 14: user.UserService.ChangePassword:output_type -> user.ChangePasswordResponse
-	5,  // 15: user.UserService.UpdateLLMKey:output_type -> user.UpdateLLMKeyResponse
-	7,  // 16: user.UserService.GetUserInfo:output_type -> user.GetUserInfoResponse
-	10, // 17: user.UserService.DeleteLLMKey:output_type -> user.DeleteLLMKeyResponse
-	12, // 18: user.UserService.DeleteAccount:output_type -> user.DeleteAccountResponse
-	14, // 19: user.UserService.UpdateAutoSummarySettings:output_type -> user.UpdateAutoSummarySettingsResponse
-	16, // 20: user.UserService.GetAutoSummarySettings:output_type -> user.GetAutoSummarySettingsResponse
-	18, // 21: user.UserService.GetPubSubMetrics:output_type -> user.GetPubSubMetricsResponse
-	13, // [13:22] is the sub-list for method output_type
-	4,  // [4:13] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	22, // 4: user.CreateApiKeyResponse.info:type_name -> user.ApiKeyInfo
+	22, // 5: user.ListApiKeysResponse.api_keys:type_name -> user.ApiKeyInfo
+	0,  // 6: user.UserService.UpdateUserName:input_type -> user.UpdateUserNameRequest
+	2,  // 7: user.UserService.ChangePassword:input_type -> user.ChangePasswordRequest
+	4,  // 8: user.UserService.UpdateLLMKey:input_type -> user.UpdateLLMKeyRequest
+	6,  // 9: user.UserService.GetUserInfo:input_type -> user.GetUserInfoRequest
+	9,  // 10: user.UserService.DeleteLLMKey:input_type -> user.DeleteLLMKeyRequest
+	11, // 11: user.UserService.DeleteAccount:input_type -> user.DeleteAccountRequest
+	13, // 12: user.UserService.UpdateAutoSummarySettings:input_type -> user.UpdateAutoSummarySettingsRequest
+	15, // 13: user.UserService.GetAutoSummarySettings:input_type -> user.GetAutoSummarySettingsRequest
+	17, // 14: user.UserService.GetPubSubMetrics:input_type -> user.GetPubSubMetricsRequest
+	23, // 15: user.UserService.CreateApiKey:input_type -> user.CreateApiKeyRequest
+	25, // 16: user.UserService.ListApiKeys:input_type -> user.ListApiKeysRequest
+	27, // 17: user.UserService.DeleteApiKey:input_type -> user.DeleteApiKeyRequest
+	1,  // 18: user.UserService.UpdateUserName:output_type -> user.UpdateUserNameResponse
+	3,  // 19: user.UserService.ChangePassword:output_type -> user.ChangePasswordResponse
+	5,  // 20: user.UserService.UpdateLLMKey:output_type -> user.UpdateLLMKeyResponse
+	7,  // 21: user.UserService.GetUserInfo:output_type -> user.GetUserInfoResponse
+	10, // 22: user.UserService.DeleteLLMKey:output_type -> user.DeleteLLMKeyResponse
+	12, // 23: user.UserService.DeleteAccount:output_type -> user.DeleteAccountResponse
+	14, // 24: user.UserService.UpdateAutoSummarySettings:output_type -> user.UpdateAutoSummarySettingsResponse
+	16, // 25: user.UserService.GetAutoSummarySettings:output_type -> user.GetAutoSummarySettingsResponse
+	18, // 26: user.UserService.GetPubSubMetrics:output_type -> user.GetPubSubMetricsResponse
+	24, // 27: user.UserService.CreateApiKey:output_type -> user.CreateApiKeyResponse
+	26, // 28: user.UserService.ListApiKeys:output_type -> user.ListApiKeysResponse
+	28, // 29: user.UserService.DeleteApiKey:output_type -> user.DeleteApiKeyResponse
+	18, // [18:30] is the sub-list for method output_type
+	6,  // [6:18] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_user_user_proto_init() }
@@ -1472,7 +1868,7 @@ func file_user_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_user_proto_rawDesc), len(file_user_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

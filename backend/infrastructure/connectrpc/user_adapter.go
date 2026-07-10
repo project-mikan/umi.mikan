@@ -90,3 +90,27 @@ func (a *UserServiceAdapter) GetPubSubMetrics(ctx context.Context, req *connect.
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (a *UserServiceAdapter) CreateApiKey(ctx context.Context, req *connect.Request[g.CreateApiKeyRequest]) (*connect.Response[g.CreateApiKeyResponse], error) {
+	resp, err := a.svc.CreateApiKey(ctx, req.Msg)
+	if err != nil {
+		return nil, grpcStatusToConnectError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *UserServiceAdapter) ListApiKeys(ctx context.Context, req *connect.Request[g.ListApiKeysRequest]) (*connect.Response[g.ListApiKeysResponse], error) {
+	resp, err := a.svc.ListApiKeys(ctx, req.Msg)
+	if err != nil {
+		return nil, grpcStatusToConnectError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *UserServiceAdapter) DeleteApiKey(ctx context.Context, req *connect.Request[g.DeleteApiKeyRequest]) (*connect.Response[g.DeleteApiKeyResponse], error) {
+	resp, err := a.svc.DeleteApiKey(ctx, req.Msg)
+	if err != nil {
+		return nil, grpcStatusToConnectError(err)
+	}
+	return connect.NewResponse(resp), nil
+}

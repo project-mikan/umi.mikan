@@ -39,6 +39,11 @@
       children: [{ id: "export", title: $_("settings.export.jsonTitle") }],
     },
     {
+      id: "api-keys-section",
+      title: $_("settings.apiKeys.sectionTitle"),
+      children: [{ id: "api-keys", title: $_("settings.apiKeys.title") }],
+    },
+    {
       id: "danger-zone",
       title: $_("settings.nav.dangerZone"),
       children: [

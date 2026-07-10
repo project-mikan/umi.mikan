@@ -209,6 +209,61 @@
     }
   }
 
+  // APIキー関連の状態
+  let apiKeyLoading = false;
+  let deleteApiKeyLoading = false;
+  let showDeleteApiKeyConfirm = false;
+  let apiKeyToDelete: { id: string; name: string } | null = null;
+  let apiKeyCopied = false;
+
+  function confirmDeleteApiKey(id: string, name: string) {
+    apiKeyToDelete = { id, name };
+    showDeleteApiKeyConfirm = true;
+  }
+
+  function cancelDeleteApiKey() {
+    showDeleteApiKeyConfirm = false;
+    apiKeyToDelete = null;
+  }
+
+  function handleDeleteApiKey() {
+    if (!apiKeyToDelete) return;
+    showDeleteApiKeyConfirm = false;
+    // Submit the delete form
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "?/deleteApiKey";
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "apiKeyId";
+    input.value = apiKeyToDelete.id;
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    deleteApiKeyLoading = true;
+    form.submit();
+  }
+
+  // 発行直後のAPIキーをクリップボードにコピーする
+  async function copyApiKey(key: string) {
+    try {
+      await navigator.clipboard.writeText(key);
+      apiKeyCopied = true;
+      setTimeout(() => {
+        apiKeyCopied = false;
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy API key:", error);
+    }
+  }
+
+  // Unix秒をローカル日付文字列に変換する
+  function formatApiKeyDate(unixSeconds: number): string {
+    if (!unixSeconds) return "";
+    return new Date(unixSeconds * 1000).toLocaleDateString();
+  }
+
   function confirmDeleteAccount() {
     showDeleteAccountConfirm = true;
   }
@@ -828,6 +883,144 @@
 				</div>
 			</div>
 
+			<!-- API連携セクション -->
+			<div class="space-y-8">
+				<div>
+					<h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+						{$_("settings.apiKeys.sectionTitle")}
+					</h2>
+
+					<section id="api-keys" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+						<h3 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+							{$_("settings.apiKeys.title")}
+						</h3>
+						<p class="text-gray-700 dark:text-gray-300 mb-4 auto-phrase-target">
+							{$_("settings.apiKeys.description")}
+						</p>
+
+						<!-- 発行フォーム -->
+						<form
+							method="POST"
+							action="?/createApiKey"
+							use:enhance={() => {
+								apiKeyLoading = true;
+								return async ({ update }) => {
+									apiKeyLoading = false;
+									await update();
+								};
+							}}
+							class="flex flex-wrap gap-3 items-end mb-6"
+						>
+							<div class="flex-1 min-w-48">
+								<label for="api-key-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+									{$_("settings.apiKeys.nameLabel")}
+								</label>
+								<input
+									type="text"
+									id="api-key-name"
+									name="apiKeyName"
+									maxlength="100"
+									placeholder={$_("settings.apiKeys.namePlaceholder")}
+									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+								/>
+							</div>
+							<button
+								type="submit"
+								use:haptic
+								disabled={apiKeyLoading}
+								class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+							>
+								{apiKeyLoading ? $_("common.loading") : $_("settings.apiKeys.createButton")}
+							</button>
+						</form>
+
+						<!-- 発行直後のキー表示（この画面でのみ表示、再表示不可） -->
+						{#if form?.success && isMessageForAction("createApiKey") && form.createdApiKey}
+							<div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 rounded-md p-4">
+								<p class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+									{$_("settings.apiKeys.createdTitle")}
+								</p>
+								<p class="text-sm text-yellow-700 dark:text-yellow-300 mb-3 auto-phrase-target">
+									{$_("settings.apiKeys.createdWarning")}
+								</p>
+								<div class="flex flex-wrap gap-2 items-center">
+									<code class="flex-1 min-w-0 break-all px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-gray-100">
+										{form.createdApiKey}
+									</code>
+									<button
+										type="button"
+										use:haptic
+										on:click={() => copyApiKey(String(form?.createdApiKey ?? ""))}
+										class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+									>
+										{apiKeyCopied ? $_("settings.apiKeys.copied") : $_("settings.apiKeys.copyButton")}
+									</button>
+								</div>
+							</div>
+						{/if}
+
+						<!-- エラーメッセージ -->
+						{#if form?.error && (isMessageForAction("createApiKey") || isMessageForAction("deleteApiKey"))}
+							<div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
+								{$_(`settings.messages.${form.error}`) || form.error}
+							</div>
+						{/if}
+
+						<!-- 発行済みキー一覧 -->
+						{#if data.apiKeys && data.apiKeys.length > 0}
+							<div class="overflow-x-auto">
+								<table class="w-full text-sm text-left">
+									<thead>
+										<tr class="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colName")}</th>
+											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colKey")}</th>
+											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colCreated")}</th>
+											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colLastUsed")}</th>
+											<th class="py-2"></th>
+										</tr>
+									</thead>
+									<tbody>
+										{#each data.apiKeys as apiKey (apiKey.id)}
+											<tr class="border-b border-gray-100 dark:border-gray-700/50 text-gray-900 dark:text-gray-100">
+												<td class="py-3 pr-4">{apiKey.name}</td>
+												<td class="py-3 pr-4"><code class="text-xs">{apiKey.keyPrefix}...</code></td>
+												<td class="py-3 pr-4">{formatApiKeyDate(apiKey.createdAt)}</td>
+												<td class="py-3 pr-4">
+													{apiKey.lastUsedAt ? formatApiKeyDate(apiKey.lastUsedAt) : $_("settings.apiKeys.neverUsed")}
+												</td>
+												<td class="py-3 text-right">
+													<button
+														type="button"
+														use:haptic
+														disabled={deleteApiKeyLoading}
+														on:click={() => confirmDeleteApiKey(apiKey.id, apiKey.name)}
+														class="px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors text-sm font-medium"
+													>
+														{$_("settings.apiKeys.deleteButton")}
+													</button>
+												</td>
+											</tr>
+										{/each}
+									</tbody>
+								</table>
+							</div>
+						{:else}
+							<p class="text-sm text-gray-500 dark:text-gray-400">
+								{$_("settings.apiKeys.listEmpty")}
+							</p>
+						{/if}
+
+						<!-- MCPでの使い方 -->
+						<div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+							<p class="auto-phrase-target">{$_("settings.apiKeys.usage")}</p>
+							<code class="block mt-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded text-xs break-all">
+								Authorization: Bearer umi_xxxx...
+							</code>
+						</div>
+					</section>
+				</div>
+			</div>
+
 			<!-- 危険な操作セクション -->
 			<div class="space-y-8">
 				<div>
@@ -883,6 +1076,23 @@
 >
 	<p class="text-sm text-gray-500 dark:text-gray-400 auto-phrase-target">
 		{$_("settings.deleteToken.confirmMessage")}
+	</p>
+</Modal>
+
+<!-- API Key Delete Confirmation Modal -->
+<Modal
+	isOpen={showDeleteApiKeyConfirm}
+	title={$_("settings.apiKeys.deleteConfirm")}
+	confirmText={$_("settings.apiKeys.deleteButton")}
+	cancelText={$_("diary.cancel")}
+	variant="danger"
+	onConfirm={handleDeleteApiKey}
+	onCancel={cancelDeleteApiKey}
+>
+	<p class="text-sm text-gray-500 dark:text-gray-400 auto-phrase-target">
+		{$_("settings.apiKeys.deleteConfirmMessage", {
+			values: { name: apiKeyToDelete?.name ?? "" },
+		})}
 	</p>
 </Modal>
 

@@ -4,6 +4,7 @@
 package mcpserver
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -36,12 +37,13 @@ func NewServer(diaryService *diary.DiaryEntry) *mcp.Server {
 	return server
 }
 
-// NewHTTPHandler はJWT認証付きのMCP Streamable HTTPハンドラーを作成する
-func NewHTTPHandler(diaryService *diary.DiaryEntry) http.Handler {
+// NewHTTPHandler は認証（APIキーまたはJWT）付きのMCP Streamable HTTPハンドラーを作成する。
+// dbはAPIキーの照合に使用する。
+func NewHTTPHandler(diaryService *diary.DiaryEntry, db *sql.DB) http.Handler {
 	server := NewServer(diaryService)
 	mcpHandler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 		return server
 	}, &mcp.StreamableHTTPOptions{Stateless: true})
 
-	return AuthMiddleware(mcpHandler)
+	return AuthMiddleware(db, mcpHandler)
 }

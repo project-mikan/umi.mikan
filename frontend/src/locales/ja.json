@@ -81,6 +81,28 @@
       "periodError": "開始年月は終了年月以前に設定してください",
       "failed": "エクスポートに失敗しました"
     },
+    "apiKeys": {
+      "sectionTitle": "API連携",
+      "title": "APIキー",
+      "description": "MCPサーバー（Claude DesktopなどのAIクライアント）から日記にアクセスするためのAPIキーを発行できます。",
+      "nameLabel": "キーの名前",
+      "namePlaceholder": "例: Claude Desktop",
+      "createButton": "発行",
+      "createdTitle": "APIキーを発行しました",
+      "createdWarning": "このキーは再表示できません。今すぐコピーして安全な場所に保管してください。",
+      "copyButton": "コピー",
+      "copied": "コピーしました",
+      "colName": "名前",
+      "colKey": "キー",
+      "colCreated": "作成日",
+      "colLastUsed": "最終使用",
+      "neverUsed": "未使用",
+      "deleteButton": "削除",
+      "deleteConfirm": "APIキーの削除",
+      "deleteConfirmMessage": "APIキー「{name}」を削除しますか？このキーを使用しているクライアントは接続できなくなります。",
+      "listEmpty": "発行済みのAPIキーはありません",
+      "usage": "発行したキーはMCPサーバーへのリクエストのAuthorizationヘッダーに設定して使用します。"
+    },
     "deleteAccount": {
       "title": "アカウント削除",
       "button": "アカウントを削除",
@@ -108,7 +130,14 @@
       "tokenTooLong": "トークンは100文字以内で入力してください",
       "tokenNotFound": "トークンが見つかりません",
       "invalidProvider": "無効なLLMプロバイダーです",
-      "updateFailed": "更新に失敗しました"
+      "updateFailed": "更新に失敗しました",
+      "apiKeyNameRequired": "キーの名前は必須です",
+      "apiKeyNameTooLong": "キーの名前は100文字以内で入力してください",
+      "apiKeyCreateFailed": "APIキーの発行に失敗しました",
+      "apiKeyDeleteFailed": "APIキーの削除に失敗しました",
+      "apiKeyDeleted": "APIキーを削除しました",
+      "apiKeyIdRequired": "APIキーIDが指定されていません",
+      "keyNotFound": "APIキーが見つかりません"
     }
   },
   "auth": {
