@@ -29,6 +29,8 @@ final class DiarySummaryStore {
     /// init が nonisolated なので @MainActor 外からも生成可能。
     /// LocalDiaryStore と同じ理由で nonisolated static let にする。
     nonisolated static let shared = DiarySummaryStore()
+    /// 箇条書き1件あたりの最大文字数（1行の表示枠に収まる目安）
+    static let maxPointLength = 16
 
     /// dateKey（"YYYY-MM-DD"）をキーとした要約箇条書きのマップ。生成中のキーはこのマップに含まれない。
     private(set) var summaries: [String: [String]] = [:]
@@ -74,7 +76,7 @@ final class DiarySummaryStore {
 
     /// モデルの生出力を箇条書き配列にパースする。
     /// 改行区切りを箇条書き1件とみなし、先頭の「・」「-」「*」等の記号・空白を取り除く。
-    /// 最大3件、各10文字を超える場合は10文字で切り詰める（表示が枠に収まらなくなるのを防ぐ）。
+    /// 最大3件、各 maxPointLength 文字を超える場合は切り詰める（表示が枠に収まらなくなるのを防ぐ）。
     static func parsePoints(_ raw: String) -> [String] {
         let bulletCharacters = CharacterSet(charactersIn: "・-*•‣◦ 　")
         return raw
@@ -82,7 +84,7 @@ final class DiarySummaryStore {
             .map { $0.trimmingCharacters(in: bulletCharacters) }
             .filter { !$0.isEmpty }
             .prefix(3)
-            .map { $0.count > 10 ? String($0.prefix(10)) : $0 }
+            .map { $0.count > maxPointLength ? String($0.prefix(maxPointLength)) : $0 }
     }
 
     /// 複数日分の要約をまとめてリクエストする。
@@ -158,7 +160,7 @@ final class DiarySummaryStore {
         next()
     }
 
-    /// Foundation Models で本文から重要な点を最大3つ、各10文字以内の箇条書きにする。失敗時は nil を返す。
+    /// Foundation Models で本文から重要な点を最大3つ、各 maxPointLength 文字程度の箇条書きにする。失敗時は nil を返す。
     private func generate(content: String) async -> [String]? {
         #if canImport(FoundationModels)
             guard #available(iOS 26.0, *) else { return nil }
@@ -166,7 +168,7 @@ final class DiarySummaryStore {
                 let session = LanguageModelSession(
                     instructions: """
                     あなたは日記アプリの要約アシスタントです。与えられた日記本文から重要なことを最大3つ選び、\
-                    それぞれ日本語10文字以内の体言止めの短いフレーズにしてください。\
+                    それぞれ日本語12〜16文字程度の体言止めの短いフレーズにしてください。短すぎず、字数の目安まで内容を詰めてください。\
                     出力は1行につき1項目、改行区切りで最大3行のみとし、番号・記号・前置き・解説は一切付けないでください。
                     """
                 )

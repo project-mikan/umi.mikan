@@ -15,11 +15,12 @@ Accepted
 
 ### 要件
 
-- 月ごとの日記画面で、各日の日記本文をオンデバイスLLMで1〜2文程度に要約し、`dayRow` のプレビュー部分に表示する
-- 要約は非同期に生成し、生成中は元の本文プレビュー（先頭100文字カット）を表示し続け、生成完了時に要約テキストへアニメーション付きで切り替える（「文字がおしゃれに切り替わる」というUX要望）
+- 月ごとの日記画面で、各日の日記本文をオンデバイスLLMで「重要なこと最大3点、各16文字程度の箇条書き」に要約し、`dayRow` のプレビュー部分に表示する
+- 要約は月の1日目から順に（日付昇順で）生成を開始する。SwiftUIの行描画順に依存させず、`MonthlyViewModel` 側で明示的に日付昇順のリクエスト列を組み立てる
+- 要約は非同期に生成し、生成中は元の本文プレビュー（先頭100文字カット）を表示し続け、生成完了の瞬間だけ虹色グラデーション＋ブラーを一瞬光らせてから要約表示へ切り替える（「AIらしく虹色のブラーをかけて、変わったことが見えるようにしてほしい」というUX要望）
 - サーバのDB・API・Pub/Subは一切使わない。既存のバックエンドアーキテクチャ（ADR 0003, 0008）とは独立した、iOSアプリ内で完結する機能とする
 - 要約結果はローカルにキャッシュし、日記本文が変わらない限り再生成しない（オンデバイスとはいえ推論はCPU/GPU/ANEを使うため、無駄な再計算を避ける）
-- Foundation Models が利用不可の端末・OSバージョン（非対応デバイス、Apple Intelligence 無効設定、モデル未ダウンロード等）では機能ごと非表示にし、既存の `contentPreview` 表示にフォールバックする
+- Foundation Models が利用不可の端末・OSバージョン（非対応デバイス、Apple Intelligence 無効設定、モデル未ダウンロード等）では要約が生成されず、既存の `contentPreview` 表示が継続する
 
 ## 決定
 
@@ -28,10 +29,13 @@ Accepted
 ```
 MonthlyView 表示 / 月送り
   → MonthlyViewModel.fetch() で entryMap 確定（既存フロー）
-  → 各 dayRow の表示時、DiarySummaryStore にオンデバイス要約をリクエスト（画面内で完結、ネットワークなし）
-       ├─ キャッシュ命中（本文ハッシュ一致）→ 即座に要約を返す
-       └─ キャッシュ未命中 → Foundation Models で非同期生成 → キャッシュ保存 → 完了通知
-  → dayRow は「本文プレビュー」→「要約」への切り替えを contentTransition でアニメーション表示
+  → MonthlyViewModel.requestOnDeviceSummaries() が日付昇順（1日→末日）のリクエスト列を組み立てて
+    DiarySummaryStore.requestSummaries(_:) へ一括発行（画面内で完結、ネットワークなし）
+       ├─ キャッシュ命中（本文ハッシュ一致）→ 即座に要約（箇条書き配列）を返す
+       └─ キャッシュ未命中 → 日付昇順でキューイングし、同時実行数3件の枠内で Foundation Models が順次生成
+            → キャッシュ保存 → justCompletedKeys に完了マーク
+  → dayRow は完了マークを検知した瞬間だけ虹色グラデーション＋ブラーを光らせ、
+    「本文プレビュー」→「箇条書き要約」への切り替えを演出する
 ```
 
 サーバサイドの関与はゼロ。既存の `GetDiaryEntriesByMonth` で取得済みの本文（`entryMap`）を入力にするだけなので、新規RPC・新規テーブル・Pub/Subメッセージタイプは不要。
@@ -76,43 +80,69 @@ enum DiarySummaryAvailability {
 
 `ios/Sources/Infrastructure/DiarySummaryStore.swift`（新規）
 
-- 役割: 日記本文 → オンデバイス要約のキャッシュ付き非同期生成を担当する、`MonthlyViewModel` から独立したシングルトンストア（`LocalDiaryStore` と同様の位置づけ）
-- キャッシュキー: `"\(year)-\(month)-\(day)"` + 本文の内容ハッシュ（本文が変わったら再生成させるため、日付キーだけでなくハッシュも突き合わせる）
-- キャッシュ永続化: `UserDefaults` または軽量JSONファイル（`LocalDiaryStore` の永続化方式に合わせる）。要約は失っても再生成できる派生データなので、`LocalDiaryStore` 本体ほど厳密な永続化は不要
-- 生成処理: `LanguageModelSession` に1〜2文程度の要約を指示するプロンプトを渡し、`respond(to:)` で結果を取得する（ストリーミング表示までは行わず、完成した要約をまとめて受け取ってから切り替えアニメーションを開始する。ストリーミング途中経過の表示は本ADRのスコープ外）
-- 同時実行制御: 月表示ではダウンロードキャッシュ次第で最大31日分のリクエストが並行しうるため、`AsyncStream` かセマフォ的な仕組みで同時生成数を制限する（例: 3並列まで）。Foundation Modelsのセッションは軽量とはいえ、31件を無制限に並列実行するとメモリ・レイテンシが悪化するため
+- 役割: 日記本文 → オンデバイス要約（箇条書き配列）のキャッシュ付き非同期生成を担当する、`MonthlyViewModel` から独立したシングルトンストア（`LocalDiaryStore` と同様の位置づけ）
+- キャッシュキー: `LocalDiaryEntry.dateKey`（`"YYYY-MM-DD"`）+ 本文の内容ハッシュ（本文が変わったら再生成させるため、日付キーだけでなくハッシュも突き合わせる）
+- キャッシュ永続化: 軽量JSONファイル（`LocalDiaryStore` の永続化方式に合わせる）。要約は失っても再生成できる派生データなので、`LocalDiaryStore` 本体ほど厳密な永続化は不要
+- 生成処理: `LanguageModelSession` に「重要なことを最大3つ、各12〜16文字程度の体言止めフレーズ、改行区切りで出力」を指示するプロンプトを渡し、`respond(to:)` で結果を取得後 `parsePoints` で箇条書き配列にパースする（先頭の記号除去、最大3件、各 `maxPointLength`（16）文字で切り詰め）。ストリーミング表示は行わず、完成した箇条書きをまとめて受け取ってから演出を開始する
+- 同時実行制御: 月表示では最大31日分のリクエストが発生しうるため、内部の FIFO キューで同時生成数を3件に制限する。Foundation Modelsのセッションは軽量とはいえ、31件を無制限に並列実行するとメモリ・レイテンシが悪化するため
+- 生成順序の保証: `requestSummaries(_:)` は渡された配列の順序どおりにキューへ積む。呼び出し側（`MonthlyViewModel`）が日付昇順の配列を渡すことで、「月の上（1日）から順に」生成が開始される（同時実行数3件の範囲内では並列実行される）
+- 完了通知: `justCompletedKeys`（`Set<String>`）に完了した dateKey を追加し、View 側が虹色フラッシュ演出を再生した後 `consumeJustCompleted(key:)` で消費する
 
 ```swift
 @Observable
 final class DiarySummaryStore {
     static let shared = DiarySummaryStore()
 
-    /// 日付キー → 要約テキストのキャッシュ（生成中は nil のまま、完了後に値が入る）
-    private(set) var summaries: [String: String] = [:]
+    /// 日付キー → 要約箇条書き配列のキャッシュ（生成中はマップに含まれない）
+    private(set) var summaries: [String: [String]] = [:]
+    /// 直前に生成が完了した日付キーの集合（虹色フラッシュ演出のトリガーに使う）
+    private(set) var justCompletedKeys: Set<String> = []
 
-    /// 指定日の要約をリクエストする（キャッシュ済みなら即座に反映、未済なら非同期生成をキューイングする）
+    /// 呼び出し順（= 渡した配列の順序）どおりにキューへ積み、日付昇順で処理を開始させる
+    func requestSummaries(_ requests: [DiarySummaryRequest]) { ... }
     func requestSummary(key: String, content: String) { ... }
+    func consumeJustCompleted(key: String) { ... }
 }
 ```
 
 #### `MonthlyViewModel` への組み込み
 
-- `dayRow` 表示時（`.onAppear` 相当、または `MonthlyView` が `entryMap` 確定後にまとめて要求）に `DiarySummaryStore.shared.requestSummary(key:content:)` を呼ぶ
-- `MonthlyViewModel` 自体は `DiarySummaryStore` の判定・生成ロジックを持たず、Viewから直接 `DiarySummaryStore.shared` を参照する薄い依存とする（既存の `LocalDiaryStore` 参照パターンと同様）
+- `fetch()` が `entryMap` を確定させた直後（`loadLocalMonth()` 後）に `requestOnDeviceSummaries()` を1回呼ぶ。このメソッドが `entryMap.keys.sorted()`（日付昇順）でリクエスト配列を組み立て、`DiarySummaryStore.shared.requestSummaries(_:)` へまとめて渡す
+- 個々の `dayRow`/`dayPreview` は要約リクエストを一切トリガーしない（以前は `.task(id:)` で行単位にリクエストしていたが、SwiftUIの描画順に依存し「上から順」を保証できないためやめた）
+- `MonthlyViewModel` 自体は `DiarySummaryStore` の判定・生成ロジックを持たず、日付昇順のリクエスト列を組み立てる薄い依存とする
 
 #### `dayRow` のUI変更
 
-- 対応端末では、本文プレビューの代わりに要約（取得できていれば）を表示する
-- 要約未生成〜生成中は既存の `contentPreview`（先頭100文字カット）を表示し続ける。生成が完了した瞬間に要約テキストへ切り替える
-- 切り替えアニメーション: SwiftUIの `contentTransition(.opacity)` + `withAnimation` を用いて、テキストがフェード切り替わるようにする（「おしゃれに切り替わる」要望への対応）。文字ごとのタイプライター演出のような凝った実装は本ADRのスコープ外とし、まずはフェードトランジションのみとする
+- 対応端末では、本文プレビューの代わりに要約の箇条書き（取得できていれば、最大3行）を表示する。各行は `sparkles` アイコン + 短いフレーズ（`lineLimit(1)` + `truncationMode(.tail)`）
+- 要約未生成〜生成中は既存の `contentPreview`（先頭100文字カット）を表示し続ける
+- 生成完了の瞬間: `justCompletedKeys` にキーが含まれる間、`dayRow` の上に虹色 `LinearGradient`（red〜purple）+ `.blur(radius: 12)` を `.opacity(0.55)` でオーバーレイし、「AIが生成した」ことを一瞬で示す。約0.5秒後に自身が `consumeJustCompleted` を呼びフェードアウトする
+- 切り替えアニメーション: `contentTransition(.opacity)` + `withAnimation` でプレビュー→要約のフェードも維持する
 
 ```swift
-Text(displayText(for: day))
-    .contentTransition(.opacity)
-    .animation(.easeInOut(duration: 0.4), value: displayText(for: day))
+Group {
+    if let points, !points.isEmpty {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(points, id: \.self) { point in
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles").foregroundStyle(Color.twGreen)
+                    Text(point).lineLimit(1).truncationMode(.tail)
+                }
+            }
+        }
+    } else {
+        Text(contentPreview(entry.content)).lineLimit(3)
+    }
+}
+.contentTransition(.opacity)
+.animation(.easeInOut(duration: 0.4), value: points)
+.overlay {
+    if justCompleted {
+        LinearGradient(colors: [.red, .orange, .yellow, .green, .blue, .purple], startPoint: .leading, endPoint: .trailing)
+            .opacity(0.55)
+            .blur(radius: 12)
+    }
+}
 ```
-
-- `sparkles` アイコン（既存の「月間まとめ」カードで使用中）を要約テキストの先頭に小さく添え、AI生成であることを視覚的に示す（生成中はアイコンを表示しない、または控えめなプレースホルダーとする）
 
 ### スコープ外（将来拡張）
 
@@ -142,8 +172,12 @@ Text(displayText(for: day))
 
 - **生成主体**: オンデバイス（Foundation Models）を選択（Gemini API方式は不採用）
   - 理由: 高頻度・低コスト志向の用途にオンデバイスの特性が合う。ADR 0008のような重い非同期処理はコスト・レイテンシの面で月表示には不向き
-- **切り替え演出**: シンプルなフェードトランジション（`contentTransition(.opacity)`）を選択（タイプライター演出等の凝ったアニメーションは不採用）
-  - 理由: まず最小実装で「おしゃれな切り替わり」の要件を満たし、演出の作り込みは反応を見てから拡張する
+- **要約の形式**: 「重要なこと最大3点、各16文字程度の箇条書き」を選択（1〜2文の文章要約は不採用）
+  - 理由: `dayRow` は3行分の表示枠があり、文章よりも箇条書きの方が短時間で要点を把握しやすいというフィードバックに基づく
+- **生成順序**: `MonthlyViewModel` 側で日付昇順のリクエスト列を明示的に組み立てて一括発行（View の描画順に任せる方式は不採用）
+  - 理由: SwiftUIの行描画順は保証されず、「月の上（1日）から順に」処理してほしいという要望を満たせないため
+- **完了演出**: 虹色グラデーション＋ブラーの一瞬のフラッシュを選択（シンプルなフェードのみ、タイプライター演出は不採用）
+  - 理由: 「AIらしく」「変わったことが見える」という要望に対し、フェードだけでは変化に気づきにくかったため、視覚的に強いシグナルを一瞬だけ入れる方式にした
 - **非対応端末の扱い**: 機能を静かに非表示にしてフォールバック表示（エラー表示や代替オンライン生成は不採用）
   - 理由: ADR 0014と同じ方針。付加的な機能が非対応環境で目立ったエラーを出すと体験を損なう
 - **要約対象**: 月ごとの日記画面の各日プレビューに限定（日記詳細画面や検索結果への展開は不採用、将来拡張として保留）
@@ -162,15 +196,17 @@ Text(displayText(for: day))
 
 ### iOS
 
-- [x] `ios/Sources/Infrastructure/DiarySummaryStore.swift` 新規作成（キャッシュ付き非同期要約生成）
+- [x] `ios/Sources/Infrastructure/DiarySummaryStore.swift` 新規作成（キャッシュ付き非同期要約生成、箇条書きパース `parsePoints`、完了通知 `justCompletedKeys`）
 - [x] `SystemLanguageModel.default.availability` による対応端末判定ロジック実装
-- [x] Foundation Models 向け要約プロンプト作成（1〜2文程度、日本語）
-- [x] 同時実行数の制限（3並列など）を実装
-- [x] `MonthlyView` の `dayRow` に要約表示 + `contentTransition(.opacity)` によるフェード切り替え実装
+- [x] Foundation Models 向け要約プロンプト作成（重要な点を最大3つ、各12〜16文字程度、日本語）
+- [x] 同時実行数の制限（3並列）を維持しつつ、`requestSummaries(_:)` で呼び出し順（日付昇順）どおりにキューへ積むよう実装
+- [x] `MonthlyViewModel.requestOnDeviceSummaries()` で `entryMap` を日付昇順に並べ替えて一括リクエスト発行
+- [x] `MonthlyView` の `dayRow` に箇条書き要約表示（最大3行、各16文字目安、`lineLimit(1)`）を実装
+- [x] 生成完了の瞬間に虹色グラデーション＋ブラーのフラッシュ演出（`summaryCompletionFlash`）を実装
 - [x] 生成中/未生成時は既存の `contentPreview` にフォールバック
 - [x] 非対応端末では要約が生成されず、既存の `contentPreview` 表示が継続されることを確認（要約UI自体は同じ `dayPreview` 内で条件分岐しており、非対応端末でも `sparkles` アイコン等は表示されない）
-- [x] キャッシュの永続化（本文ハッシュによる無効化判定含む）
-- [x] 単体テスト: `contentHash` の一致/不一致判定、`isAvailable == false` 環境での `requestSummary` no-op 確認（正常系/異常系を日本語で記述、`ios/Tests/DiarySummaryStoreTests.swift`）
+- [x] キャッシュの永続化（本文ハッシュによる無効化判定含む、キャッシュ値は箇条書き配列）
+- [x] 単体テスト: `contentHash` の一致/不一致判定、`parsePoints` のパース・切り詰めロジック、`isAvailable == false` 環境での `requestSummary`/`requestSummaries` no-op 確認、`consumeJustCompleted` の安全性（正常系/異常系を日本語で記述、`ios/Tests/DiarySummaryStoreTests.swift`）
 - [x] `make ios-lint`（`--strict`）/ `make ios-build` / `make ios-test` の確認
 
 ### ドキュメント

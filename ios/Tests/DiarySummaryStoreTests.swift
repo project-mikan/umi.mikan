@@ -84,9 +84,9 @@ struct DiarySummaryStoreTests {
                 expected: ["海に行った", "友人と再会"]
             ),
             ParsePointsCase(
-                name: "異常系: 10文字を超える行があると10文字に切り詰められる",
+                name: "異常系: 16文字を超える行があると16文字に切り詰められる",
                 raw: "とても長い箇条書きの一文はここで切り詰められる",
-                expected: ["とても長い箇条書きの"]
+                expected: ["とても長い箇条書きの一文はここで"]
             ),
             ParsePointsCase(
                 name: "異常系: 空文字を渡すと空配列になる",
