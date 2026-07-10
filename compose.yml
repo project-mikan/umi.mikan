@@ -29,6 +29,7 @@ services:
     ports:
       - "2001:8080"
       - "2013:8013"
+      - "2014:8014"
 
   frontend:
     build:

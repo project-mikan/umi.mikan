@@ -15,6 +15,11 @@ func DiariesByUserIDAndDateRange(ctx context.Context, db DB, userID string, from
 	// 翌月の1日から1日引いて月末を取得する
 	toDate := time.Date(toYear, time.Month(toMonth)+1, 0, 0, 0, 0, 0, time.UTC)
 
+	return diariesByUserIDAndDateRange(ctx, db, userID, fromDate, toDate)
+}
+
+// diariesByUserIDAndDateRange は指定ユーザーの指定日付範囲（両端含む）の全日記をdate昇順で返す。
+func diariesByUserIDAndDateRange(ctx context.Context, db DB, userID string, fromDate, toDate time.Time) ([]*Diary, error) {
 	const sqlstr = `
 		SELECT id, user_id, content, date, created_at, updated_at
 		FROM diaries
