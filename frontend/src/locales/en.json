@@ -81,6 +81,29 @@
       "periodError": "Start date must be before or equal to end date",
       "failed": "Export failed"
     },
+    "apiKeys": {
+      "sectionTitle": "API Integration",
+      "title": "API Keys",
+      "description": "Issue API keys to access your diary from the MCP server (AI clients such as Claude Desktop).",
+      "nameLabel": "Key name",
+      "namePlaceholder": "e.g. Claude Desktop",
+      "createButton": "Create",
+      "createdTitle": "API key created",
+      "createdWarning": "This key will not be shown again. Copy it now and store it in a safe place.",
+      "copyButton": "Copy",
+      "copied": "Copied",
+      "colName": "Name",
+      "colKey": "Key",
+      "colCreated": "Created",
+      "colLastUsed": "Last used",
+      "colExpires": "Expires",
+      "neverUsed": "Never",
+      "deleteButton": "Delete",
+      "deleteConfirm": "Delete API key",
+      "deleteConfirmMessage": "Delete the API key \"{name}\"? Clients using this key will no longer be able to connect.",
+      "listEmpty": "No API keys have been created yet",
+      "usage": "Use the issued key in the Authorization header of requests to the MCP server."
+    },
     "deleteAccount": {
       "title": "Delete Account",
       "button": "Delete Account",
@@ -108,7 +131,14 @@
       "tokenTooLong": "Token must be 100 characters or less",
       "tokenNotFound": "Token not found",
       "invalidProvider": "Invalid LLM provider",
-      "updateFailed": "Update failed"
+      "updateFailed": "Update failed",
+      "apiKeyNameRequired": "Key name is required",
+      "apiKeyNameTooLong": "Key name must be 100 characters or less",
+      "apiKeyCreateFailed": "Failed to create API key",
+      "apiKeyDeleteFailed": "Failed to delete API key",
+      "apiKeyDeleted": "API key deleted",
+      "apiKeyIdRequired": "API key ID is required",
+      "keyNotFound": "API key not found"
     }
   },
   "auth": {

@@ -33,6 +33,7 @@ dc up -d  # Starts all services (backend, frontend, postgres, postgres_test, red
 - Grafana Alloy: http://localhost:2011
 - Backend Metrics: http://localhost:2012/metrics
 - ConnectRPC: http://localhost:2013 (iOS/外部クライアント向け ConnectRPC エンドポイント)
+- MCP Server: http://localhost:2014 (AIクライアント向け Model Context Protocol エンドポイント)
 
 ## Common Development Commands
 
@@ -250,6 +251,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Diary Embedding Inline Generation Target**: On diary save/update, embedding is skipped for today's diary (JST) and yesterday's diary if the current time is before 4:30 AM JST (both handled by the scheduler). Embedding IS generated inline for yesterday's diary at or after 4:30 AM JST (scheduler already ran and won't reprocess) and for diaries 2+ days old (scheduler never processes these). `DiaryEmbeddingJob` runs at 4:30 AM JST to process yesterday's diary embeddings for users with `semantic_search_enabled = true`.
 - **Distributed Locking**: Redis-based locks with Lua scripts for task coordination
 - **Monitoring**: Comprehensive monitoring stack with Prometheus, Grafana, Loki, and Grafana Alloy
+- **MCP Server**: `backend/infrastructure/mcpserver` exposes diary read tools (`get_diary_entries_by_range`, `search_diary_entries_fulltext`, `search_diary_entries_fuzzy`) over MCP Streamable HTTP (port 8014, host port 2014) for AI clients (e.g. Claude Desktop). Uses `github.com/modelcontextprotocol/go-sdk`, runs in the same process as `cmd/server`. Auth accepts two Bearer token types in the `Authorization` header: long-lived API keys (`umi_` prefix, recommended for MCP clients, 90-day expiry — see `apiKeyValidityDuration` in `backend/service/user/api_key.go`) and short-lived JWT access tokens (refresh tokens are rejected via `model.ParseAccessToken`, which checks the `TokenUse` claim) — see `adr/0014-mcp-server.md`. Bearer header parsing (`model.ExtractBearerToken`) is shared across the gRPC, ConnectRPC, and MCP auth middlewares. API keys are issued/revoked from the frontend settings page (`/settings` API連携 section) via `UserService.CreateApiKey`/`ListApiKeys`/`DeleteApiKey`; only the SHA-256 hash is stored (`user_api_keys` table, key generation in `backend/domain/model/api_key.go`). Search/date-range business logic is shared with the gRPC handlers via `diary.DiaryEntry.SearchDiaryEntriesByUserID`, `SearchDiaryEntriesSemanticByUserID`, and `GetDiaryEntriesByDateRange` (`backend/service/diary/service.go`, `range.go`).
 
 ### Frontend Structure
 
@@ -268,6 +270,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **diaries**: One diary per user per date (unique constraint)
 - **user_password_authes**: Separate password authentication table
 - **user_llms**: LLM provider settings and auto-summary preferences
+- **user_api_keys**: Long-lived API keys for MCP clients (SHA-256 hash only, plaintext never stored; `expires_at` enforces a 90-day expiry)
 - **diary_summary_months**: AI-generated monthly summaries
 - **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)
 - **diary_embeddings**: Per-chunk vector embeddings for semantic search (pgvector halfvec)
@@ -357,6 +360,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 - `backend/cmd/subscriber/main.go`: Subscriber service entry point (uses DI container)
 - `backend/container/container.go`: Central dependency injection configuration
 - `backend/infrastructure/database/diary_export.go`: 期間指定日記一括取得クエリ（エクスポート用）
+- `backend/infrastructure/database/diary_range.go`: 日単位の期間指定日記取得クエリ（MCPサーバー用）
+- `backend/infrastructure/mcpserver/`: MCPサーバー（日記の範囲取得・全文検索・あいまい検索ツールをAIクライアントに公開）
 - `frontend/src/routes/api/diary/export/+server.ts`: 日記エクスポートAPIエンドポイント
 - `frontend/src/routes/+layout.server.ts`: Authentication logic
 - `frontend/src/hooks.server.ts`: Security headers and CSP configuration
@@ -370,6 +375,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `0005-scheduler.md`: Scheduler system architecture
   - `0008-diary-highlight.md`: Diary highlight generation with LLM
   - `0009-natural-language-search.md`: Semantic search (RAG) with pgvector + Gemini Embedding
+  - `0014-mcp-server.md`: MCP server transport and authentication decisions
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
   - `loki/loki-config.yml`: Loki log aggregation configuration
@@ -413,7 +419,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - 2011: Grafana Alloy
   - 2012: Backend Metrics
   - 2013: ConnectRPC (iOS/外部クライアント向け)
-- **Custom services**: New services should use available ports in the 2000 range (e.g., 2014+)
+  - 2014: MCP Server (AIクライアント向け)
+- **Custom services**: New services should use available ports in the 2000 range (e.g., 2015+)
 
 ### Internationalization (i18n)
 

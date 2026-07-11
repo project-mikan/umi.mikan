@@ -19,12 +19,17 @@ import (
 type mockGeminiEmbedder struct {
 	capturedText string
 	returnErr    error
+	// returnVec が設定されている場合はそのベクトルを返す（未設定時はダミーの3次元ベクトル）
+	returnVec []float32
 }
 
 func (m *mockGeminiEmbedder) GenerateEmbedding(_ context.Context, text string, _ bool) ([]float32, error) {
 	m.capturedText = text
 	if m.returnErr != nil {
 		return nil, m.returnErr
+	}
+	if m.returnVec != nil {
+		return m.returnVec, nil
 	}
 	return []float32{0.1, 0.2, 0.3}, nil
 }

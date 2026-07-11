@@ -59,6 +59,14 @@ const (
 	// UserServiceGetPubSubMetricsProcedure is the fully-qualified name of the UserService's
 	// GetPubSubMetrics RPC.
 	UserServiceGetPubSubMetricsProcedure = "/user.UserService/GetPubSubMetrics"
+	// UserServiceCreateApiKeyProcedure is the fully-qualified name of the UserService's CreateApiKey
+	// RPC.
+	UserServiceCreateApiKeyProcedure = "/user.UserService/CreateApiKey"
+	// UserServiceListApiKeysProcedure is the fully-qualified name of the UserService's ListApiKeys RPC.
+	UserServiceListApiKeysProcedure = "/user.UserService/ListApiKeys"
+	// UserServiceDeleteApiKeyProcedure is the fully-qualified name of the UserService's DeleteApiKey
+	// RPC.
+	UserServiceDeleteApiKeyProcedure = "/user.UserService/DeleteApiKey"
 )
 
 // UserServiceClient is a client for the user.UserService service.
@@ -158,6 +166,37 @@ type UserServiceClient interface {
 	//
 	// エラー: なし（データがない場合は空配列）
 	GetPubSubMetrics(context.Context, *connect.Request[grpc.GetPubSubMetricsRequest]) (*connect.Response[grpc.GetPubSubMetricsResponse], error)
+	// CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行します。
+	// キー本体はレスポンスで一度だけ返され、サーバーにはハッシュのみ保存されます。
+	//
+	// 例:
+	//
+	//	request: { name: "Claude Desktop" }
+	//	response: { api_key: "umi_...", info: { id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... } }
+	//
+	// エラー:
+	//   - InvalidArgument: 名前が空または長すぎる
+	//   - Internal: データベースエラー
+	CreateApiKey(context.Context, *connect.Request[grpc.CreateApiKeyRequest]) (*connect.Response[grpc.CreateApiKeyResponse], error)
+	// ListApiKeys は発行済みAPIキーの一覧を返します（キー本体は含まれません）。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { api_keys: [{ id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... }] }
+	//
+	// エラー: なし（キーがない場合は空配列）
+	ListApiKeys(context.Context, *connect.Request[grpc.ListApiKeysRequest]) (*connect.Response[grpc.ListApiKeysResponse], error)
+	// DeleteApiKey は指定されたAPIキーを失効させます。
+	//
+	// 例:
+	//
+	//	request: { id: "..." }
+	//	response: { success: true, message: "APIキーを削除しました" }
+	//
+	// エラー:
+	//   - NotFound: 指定されたキーが存在しない、または他ユーザーのキー
+	DeleteApiKey(context.Context, *connect.Request[grpc.DeleteApiKeyRequest]) (*connect.Response[grpc.DeleteApiKeyResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the user.UserService service. By default, it uses
@@ -225,6 +264,24 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(userServiceMethods.ByName("GetPubSubMetrics")),
 			connect.WithClientOptions(opts...),
 		),
+		createApiKey: connect.NewClient[grpc.CreateApiKeyRequest, grpc.CreateApiKeyResponse](
+			httpClient,
+			baseURL+UserServiceCreateApiKeyProcedure,
+			connect.WithSchema(userServiceMethods.ByName("CreateApiKey")),
+			connect.WithClientOptions(opts...),
+		),
+		listApiKeys: connect.NewClient[grpc.ListApiKeysRequest, grpc.ListApiKeysResponse](
+			httpClient,
+			baseURL+UserServiceListApiKeysProcedure,
+			connect.WithSchema(userServiceMethods.ByName("ListApiKeys")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteApiKey: connect.NewClient[grpc.DeleteApiKeyRequest, grpc.DeleteApiKeyResponse](
+			httpClient,
+			baseURL+UserServiceDeleteApiKeyProcedure,
+			connect.WithSchema(userServiceMethods.ByName("DeleteApiKey")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -239,6 +296,9 @@ type userServiceClient struct {
 	updateAutoSummarySettings *connect.Client[grpc.UpdateAutoSummarySettingsRequest, grpc.UpdateAutoSummarySettingsResponse]
 	getAutoSummarySettings    *connect.Client[grpc.GetAutoSummarySettingsRequest, grpc.GetAutoSummarySettingsResponse]
 	getPubSubMetrics          *connect.Client[grpc.GetPubSubMetricsRequest, grpc.GetPubSubMetricsResponse]
+	createApiKey              *connect.Client[grpc.CreateApiKeyRequest, grpc.CreateApiKeyResponse]
+	listApiKeys               *connect.Client[grpc.ListApiKeysRequest, grpc.ListApiKeysResponse]
+	deleteApiKey              *connect.Client[grpc.DeleteApiKeyRequest, grpc.DeleteApiKeyResponse]
 }
 
 // UpdateUserName calls user.UserService.UpdateUserName.
@@ -284,6 +344,21 @@ func (c *userServiceClient) GetAutoSummarySettings(ctx context.Context, req *con
 // GetPubSubMetrics calls user.UserService.GetPubSubMetrics.
 func (c *userServiceClient) GetPubSubMetrics(ctx context.Context, req *connect.Request[grpc.GetPubSubMetricsRequest]) (*connect.Response[grpc.GetPubSubMetricsResponse], error) {
 	return c.getPubSubMetrics.CallUnary(ctx, req)
+}
+
+// CreateApiKey calls user.UserService.CreateApiKey.
+func (c *userServiceClient) CreateApiKey(ctx context.Context, req *connect.Request[grpc.CreateApiKeyRequest]) (*connect.Response[grpc.CreateApiKeyResponse], error) {
+	return c.createApiKey.CallUnary(ctx, req)
+}
+
+// ListApiKeys calls user.UserService.ListApiKeys.
+func (c *userServiceClient) ListApiKeys(ctx context.Context, req *connect.Request[grpc.ListApiKeysRequest]) (*connect.Response[grpc.ListApiKeysResponse], error) {
+	return c.listApiKeys.CallUnary(ctx, req)
+}
+
+// DeleteApiKey calls user.UserService.DeleteApiKey.
+func (c *userServiceClient) DeleteApiKey(ctx context.Context, req *connect.Request[grpc.DeleteApiKeyRequest]) (*connect.Response[grpc.DeleteApiKeyResponse], error) {
+	return c.deleteApiKey.CallUnary(ctx, req)
 }
 
 // UserServiceHandler is an implementation of the user.UserService service.
@@ -383,6 +458,37 @@ type UserServiceHandler interface {
 	//
 	// エラー: なし（データがない場合は空配列）
 	GetPubSubMetrics(context.Context, *connect.Request[grpc.GetPubSubMetricsRequest]) (*connect.Response[grpc.GetPubSubMetricsResponse], error)
+	// CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行します。
+	// キー本体はレスポンスで一度だけ返され、サーバーにはハッシュのみ保存されます。
+	//
+	// 例:
+	//
+	//	request: { name: "Claude Desktop" }
+	//	response: { api_key: "umi_...", info: { id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... } }
+	//
+	// エラー:
+	//   - InvalidArgument: 名前が空または長すぎる
+	//   - Internal: データベースエラー
+	CreateApiKey(context.Context, *connect.Request[grpc.CreateApiKeyRequest]) (*connect.Response[grpc.CreateApiKeyResponse], error)
+	// ListApiKeys は発行済みAPIキーの一覧を返します（キー本体は含まれません）。
+	//
+	// 例:
+	//
+	//	request: {}
+	//	response: { api_keys: [{ id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... }] }
+	//
+	// エラー: なし（キーがない場合は空配列）
+	ListApiKeys(context.Context, *connect.Request[grpc.ListApiKeysRequest]) (*connect.Response[grpc.ListApiKeysResponse], error)
+	// DeleteApiKey は指定されたAPIキーを失効させます。
+	//
+	// 例:
+	//
+	//	request: { id: "..." }
+	//	response: { success: true, message: "APIキーを削除しました" }
+	//
+	// エラー:
+	//   - NotFound: 指定されたキーが存在しない、または他ユーザーのキー
+	DeleteApiKey(context.Context, *connect.Request[grpc.DeleteApiKeyRequest]) (*connect.Response[grpc.DeleteApiKeyResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -446,6 +552,24 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(userServiceMethods.ByName("GetPubSubMetrics")),
 		connect.WithHandlerOptions(opts...),
 	)
+	userServiceCreateApiKeyHandler := connect.NewUnaryHandler(
+		UserServiceCreateApiKeyProcedure,
+		svc.CreateApiKey,
+		connect.WithSchema(userServiceMethods.ByName("CreateApiKey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceListApiKeysHandler := connect.NewUnaryHandler(
+		UserServiceListApiKeysProcedure,
+		svc.ListApiKeys,
+		connect.WithSchema(userServiceMethods.ByName("ListApiKeys")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceDeleteApiKeyHandler := connect.NewUnaryHandler(
+		UserServiceDeleteApiKeyProcedure,
+		svc.DeleteApiKey,
+		connect.WithSchema(userServiceMethods.ByName("DeleteApiKey")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/user.UserService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case UserServiceUpdateUserNameProcedure:
@@ -466,6 +590,12 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 			userServiceGetAutoSummarySettingsHandler.ServeHTTP(w, r)
 		case UserServiceGetPubSubMetricsProcedure:
 			userServiceGetPubSubMetricsHandler.ServeHTTP(w, r)
+		case UserServiceCreateApiKeyProcedure:
+			userServiceCreateApiKeyHandler.ServeHTTP(w, r)
+		case UserServiceListApiKeysProcedure:
+			userServiceListApiKeysHandler.ServeHTTP(w, r)
+		case UserServiceDeleteApiKeyProcedure:
+			userServiceDeleteApiKeyHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -509,4 +639,16 @@ func (UnimplementedUserServiceHandler) GetAutoSummarySettings(context.Context, *
 
 func (UnimplementedUserServiceHandler) GetPubSubMetrics(context.Context, *connect.Request[grpc.GetPubSubMetricsRequest]) (*connect.Response[grpc.GetPubSubMetricsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.GetPubSubMetrics is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) CreateApiKey(context.Context, *connect.Request[grpc.CreateApiKeyRequest]) (*connect.Response[grpc.CreateApiKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.CreateApiKey is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) ListApiKeys(context.Context, *connect.Request[grpc.ListApiKeysRequest]) (*connect.Response[grpc.ListApiKeysResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.ListApiKeys is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) DeleteApiKey(context.Context, *connect.Request[grpc.DeleteApiKeyRequest]) (*connect.Response[grpc.DeleteApiKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.DeleteApiKey is not implemented"))
 }

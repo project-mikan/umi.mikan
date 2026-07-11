@@ -19,6 +19,9 @@ import {
   DeleteLLMKeyRequestSchema,
   DeleteAccountRequestSchema,
   UpdateAutoSummarySettingsRequestSchema,
+  CreateApiKeyRequestSchema,
+  ListApiKeysRequestSchema,
+  DeleteApiKeyRequestSchema,
   type UpdateUserNameResponse,
   type ChangePasswordResponse,
   type UpdateLLMKeyResponse,
@@ -26,6 +29,9 @@ import {
   type DeleteLLMKeyResponse,
   type DeleteAccountResponse,
   type UpdateAutoSummarySettingsResponse,
+  type CreateApiKeyResponse,
+  type ListApiKeysResponse,
+  type DeleteApiKeyResponse,
 } from "$lib/grpc/user/user_pb";
 
 // モジュールレベルで Transport と Client を共有する（リクエストごとの生成コストを排除）
@@ -214,4 +220,46 @@ export async function updateAutoSummarySettings(
     request,
     authHeader(params.accessToken),
   );
+}
+
+export interface CreateApiKeyParams {
+  name: string;
+  accessToken: string;
+}
+
+export async function createApiKey(
+  params: CreateApiKeyParams,
+): Promise<CreateApiKeyResponse> {
+  const request = create(CreateApiKeyRequestSchema, {
+    name: params.name,
+  });
+
+  return await userClient.createApiKey(request, authHeader(params.accessToken));
+}
+
+export interface ListApiKeysParams {
+  accessToken: string;
+}
+
+export async function listApiKeys(
+  params: ListApiKeysParams,
+): Promise<ListApiKeysResponse> {
+  const request = create(ListApiKeysRequestSchema, {});
+
+  return await userClient.listApiKeys(request, authHeader(params.accessToken));
+}
+
+export interface DeleteApiKeyParams {
+  id: string;
+  accessToken: string;
+}
+
+export async function deleteApiKey(
+  params: DeleteApiKeyParams,
+): Promise<DeleteApiKeyResponse> {
+  const request = create(DeleteApiKeyRequestSchema, {
+    id: params.id,
+  });
+
+  return await userClient.deleteApiKey(request, authHeader(params.accessToken));
 }

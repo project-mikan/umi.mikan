@@ -7,6 +7,9 @@ import {
   deleteLLMKey,
   deleteAccount,
   updateAutoSummarySettings,
+  createApiKey,
+  listApiKeys,
+  deleteApiKey,
 } from "$lib/server/auth-api";
 import { regenerateAllEmbeddings } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
@@ -20,13 +23,25 @@ export const load: PageServerLoad = async ({ cookies }) => {
   }
 
   try {
-    const userInfo = await getUserInfo({ accessToken: authResult.accessToken });
+    // ユーザー情報とAPIキー一覧を並列取得する
+    const [userInfo, apiKeysResponse] = await Promise.all([
+      getUserInfo({ accessToken: authResult.accessToken }),
+      listApiKeys({ accessToken: authResult.accessToken }),
+    ]);
     return {
       user: {
         name: userInfo.name,
         email: userInfo.email,
         llmKeys: userInfo.llmKeys || [],
       },
+      apiKeys: (apiKeysResponse.apiKeys || []).map((key) => ({
+        id: key.id,
+        name: key.name,
+        keyPrefix: key.keyPrefix,
+        lastUsedAt: Number(key.lastUsedAt),
+        createdAt: Number(key.createdAt),
+        expiresAt: Number(key.expiresAt),
+      })),
     };
   } catch (error) {
     console.error("Failed to get user info:", error);
@@ -309,6 +324,73 @@ export const actions: Actions = {
         error: "updateFailed",
         action: "updateAutoSummarySettings",
       });
+    }
+  },
+
+  createApiKey: async ({ request, cookies }) => {
+    const accessToken = cookies.get("accessToken");
+    if (!accessToken) {
+      return fail(401, { error: "unauthorized", action: "createApiKey" });
+    }
+
+    const data = await request.formData();
+    const name = data.get("apiKeyName") as string;
+
+    if (!name || name.trim() === "") {
+      return fail(400, { error: "apiKeyNameRequired", action: "createApiKey" });
+    }
+
+    if ([...name.trim()].length > 100) {
+      return fail(400, { error: "apiKeyNameTooLong", action: "createApiKey" });
+    }
+
+    try {
+      const response = await createApiKey({
+        name: name.trim(),
+        accessToken,
+      });
+
+      return {
+        success: true,
+        action: "createApiKey",
+        // キー本体はこのレスポンスでのみ返される（再表示不可）
+        createdApiKey: response.apiKey,
+        createdApiKeyName: response.info?.name ?? name.trim(),
+      };
+    } catch (error) {
+      console.error("Create API key error:", error);
+      return fail(500, { error: "apiKeyCreateFailed", action: "createApiKey" });
+    }
+  },
+
+  deleteApiKey: async ({ request, cookies }) => {
+    const accessToken = cookies.get("accessToken");
+    if (!accessToken) {
+      return fail(401, { error: "unauthorized", action: "deleteApiKey" });
+    }
+
+    const data = await request.formData();
+    const id = data.get("apiKeyId") as string;
+
+    if (!id) {
+      return fail(400, { error: "apiKeyIdRequired", action: "deleteApiKey" });
+    }
+
+    try {
+      const response = await deleteApiKey({ id, accessToken });
+
+      if (!response.success) {
+        return fail(400, { error: response.message, action: "deleteApiKey" });
+      }
+
+      return {
+        success: true,
+        message: response.message,
+        action: "deleteApiKey",
+      };
+    } catch (error) {
+      console.error("Delete API key error:", error);
+      return fail(500, { error: "apiKeyDeleteFailed", action: "deleteApiKey" });
     }
   },
 

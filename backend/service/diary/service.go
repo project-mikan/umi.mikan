@@ -379,6 +379,37 @@ func (s *DiaryEntry) DeleteDiaryEntry(
 	}, nil
 }
 
+// SearchDiaryEntriesResult は全文検索（キーワード展開含む）の結果
+type SearchDiaryEntriesResult struct {
+	Entries          []*database.Diary
+	ExpandedKeywords []string
+}
+
+// SearchDiaryEntriesByUserID は指定ユーザーの日記をキーワードで全文検索する。
+// エンティティ名・エイリアスに基づく関連キーワード展開を含む。gRPC/MCPどちらからも利用する共通ロジック。
+func (s *DiaryEntry) SearchDiaryEntriesByUserID(ctx context.Context, userID uuid.UUID, keyword string) (*SearchDiaryEntriesResult, error) {
+	// エンティティ名・エイリアスに基づいて関連キーワードを展開
+	expandedKeywords, err := database.RelatedKeywordsByUserIDAndKeyword(ctx, s.DB, userID.String(), keyword)
+	if err != nil {
+		return nil, err
+	}
+
+	var ds []*database.Diary
+	if len(expandedKeywords) == 0 {
+		// 展開キーワードがない場合は通常検索
+		ds, err = database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), keyword)
+	} else {
+		// 展開キーワードがある場合は全キーワードでOR検索
+		allKeywords := append([]string{keyword}, expandedKeywords...)
+		ds, err = database.DiariesByUserIDAndKeywords(ctx, s.DB, userID.String(), allKeywords)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &SearchDiaryEntriesResult{Entries: ds, ExpandedKeywords: expandedKeywords}, nil
+}
+
 func (s *DiaryEntry) SearchDiaryEntries(
 	ctx context.Context,
 	message *g.SearchDiaryEntriesRequest,
@@ -393,27 +424,13 @@ func (s *DiaryEntry) SearchDiaryEntries(
 		return nil, err
 	}
 
-	// エンティティ名・エイリアスに基づいて関連キーワードを展開
-	expandedKeywords, err := database.RelatedKeywordsByUserIDAndKeyword(ctx, s.DB, userID.String(), message.Keyword)
+	result, err := s.SearchDiaryEntriesByUserID(ctx, userID, message.Keyword)
 	if err != nil {
 		return nil, err
 	}
 
-	var ds []*database.Diary
-	if len(expandedKeywords) == 0 {
-		// 展開キーワードがない場合は通常検索
-		ds, err = database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), message.Keyword)
-	} else {
-		// 展開キーワードがある場合は全キーワードでOR検索
-		allKeywords := append([]string{message.Keyword}, expandedKeywords...)
-		ds, err = database.DiariesByUserIDAndKeywords(ctx, s.DB, userID.String(), allKeywords)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	entries := make([]*g.DiaryEntry, 0, len(ds))
-	for _, d := range ds {
+	entries := make([]*g.DiaryEntry, 0, len(result.Entries))
+	for _, d := range result.Entries {
 		entries = append(entries, &g.DiaryEntry{
 			Id:        d.ID.String(),
 			Content:   d.Content,
@@ -425,7 +442,7 @@ func (s *DiaryEntry) SearchDiaryEntries(
 	return &g.SearchDiaryEntriesResponse{
 		SearchedKeyword:  message.Keyword,
 		Entries:          entries,
-		ExpandedKeywords: expandedKeywords,
+		ExpandedKeywords: result.ExpandedKeywords,
 	}, nil
 }
 
@@ -845,24 +862,30 @@ func (s *DiaryEntry) publishDiaryEmbeddingMessage(ctx context.Context, userID, d
 	}
 }
 
-// SearchDiaryEntriesSemantic 自然言語クエリで日記を意味的に検索する
-func (s *DiaryEntry) SearchDiaryEntriesSemantic(
-	ctx context.Context,
-	req *g.SearchDiaryEntriesSemanticRequest,
-) (*g.SearchDiaryEntriesSemanticResponse, error) {
+// SemanticSearchResultItem は意味的検索1件分の結果
+type SemanticSearchResultItem struct {
+	DiaryID      uuid.UUID
+	Date         time.Time
+	Snippet      string
+	Similarity   float32
+	ChunkSummary string
+	ChunkCount   int
+}
+
+// SemanticSearchOutcome は意味的検索の結果一式
+type SemanticSearchOutcome struct {
+	Results        []SemanticSearchResultItem
+	EmbeddingModel string
+	ChunkModel     string
+}
+
+// SearchDiaryEntriesSemanticByUserID は指定ユーザーの日記を自然言語クエリで意味的に検索する。
+// gRPC/MCPどちらからも利用する共通ロジック。
+func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, userID uuid.UUID, query string, limit int) (*SemanticSearchOutcome, error) {
 	startTime := time.Now()
 
-	userIDStr, err := middleware.GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, err
-	}
-
 	// クエリ検証
-	if req.Query == "" {
+	if query == "" {
 		return nil, status.Error(codes.InvalidArgument, "Query is required")
 	}
 
@@ -895,7 +918,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	// クエリにも現在日付を付与することで「最近」などの時間的表現を正しく解釈させる
 	jst := time.FixedZone("JST", 9*60*60)
 	now := time.Now().In(jst)
-	enrichedQuery := fmt.Sprintf("今日は%d年%d月%d日。\n%s", now.Year(), int(now.Month()), now.Day(), req.Query)
+	enrichedQuery := fmt.Sprintf("今日は%d年%d月%d日。\n%s", now.Year(), int(now.Month()), now.Day(), query)
 
 	// クエリをベクトル化（クエリ用タスクタイプ）
 	queryEmbedding, err := geminiClient.GenerateEmbedding(ctx, enrichedQuery, false)
@@ -903,9 +926,10 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		return nil, status.Errorf(codes.Internal, "Failed to generate query embedding: %v", err)
 	}
 
-	// 検索件数を決定
-	limit := int(req.Limit)
-	if limit <= 0 {
+	// 検索件数を決定。0件を明示的に要求された場合はそのまま0件で返す
+	// （gRPC の uint32 由来の未指定=0 とMCPの「limit省略」はどちらも呼び出し側で
+	// デフォルト値10に解決してからこの関数に渡される前提のため、ここでは負値のみ補正する）。
+	if limit < 0 {
 		limit = 10
 	}
 	if limit > 50 {
@@ -934,7 +958,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}
 	kwResultCh := make(chan keywordSearchResult, 1)
 	go func() {
-		ds, err := database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), req.Query)
+		ds, err := database.DiariesByUserIDAndContent(ctx, s.DB, userID.String(), query)
 		kwResultCh <- keywordSearchResult{diaries: ds, err: err}
 	}()
 
@@ -955,6 +979,11 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 		vectorIDs[sr.DiaryID] = true
 	}
 	for _, d := range kwResult.diaries {
+		// limitで指定された件数を超えたら打ち切る（limit=0で「0件」を明示指定された場合も含む）。
+		// このガードがないとキーワード検索の補完がlimitを無視して結果に追加され続けてしまう。
+		if len(searchResults) >= limit {
+			break
+		}
 		if !vectorIDs[d.ID] {
 			searchResults = append(searchResults, &database.DiaryEmbeddingSearchResult{
 				DiaryID:    d.ID,
@@ -971,25 +1000,20 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	}
 
 	// 結果を変換
-	results := make([]*g.SemanticSearchResult, 0, len(searchResults))
+	results := make([]SemanticSearchResultItem, 0, len(searchResults))
 	for _, sr := range searchResults {
 		// チャンク内容があればそれをスニペットに使用し、なければ日記全文から生成する
 		snippetSource := sr.ChunkContent
 		if snippetSource == "" {
 			snippetSource = sr.Content
 		}
-		snippet := generateSnippet(snippetSource, 200)
-		results = append(results, &g.SemanticSearchResult{
-			DiaryId: sr.DiaryID.String(),
-			Date: &g.YMD{
-				Year:  uint32(sr.Date.Year()),
-				Month: uint32(sr.Date.Month()),
-				Day:   uint32(sr.Date.Day()),
-			},
-			Snippet:      snippet,
+		results = append(results, SemanticSearchResultItem{
+			DiaryID:      sr.DiaryID,
+			Date:         sr.Date,
+			Snippet:      generateSnippet(snippetSource, 200),
 			Similarity:   float32(sr.Similarity),
 			ChunkSummary: sr.ChunkSummary,
-			ChunkCount:   int32(sr.ChunkCount),
+			ChunkCount:   sr.ChunkCount,
 		})
 	}
 
@@ -1007,10 +1031,52 @@ func (s *DiaryEntry) SearchDiaryEntriesSemantic(
 	semanticSearchDuration.WithLabelValues("success").Observe(elapsed)
 	semanticSearchResultsCount.WithLabelValues().Observe(float64(len(results)))
 
-	return &g.SearchDiaryEntriesSemanticResponse{
+	return &SemanticSearchOutcome{
 		Results:        results,
 		EmbeddingModel: embeddingModel,
 		ChunkModel:     chunkModel,
+	}, nil
+}
+
+// SearchDiaryEntriesSemantic 自然言語クエリで日記を意味的に検索する
+func (s *DiaryEntry) SearchDiaryEntriesSemantic(
+	ctx context.Context,
+	req *g.SearchDiaryEntriesSemanticRequest,
+) (*g.SearchDiaryEntriesSemanticResponse, error) {
+	userIDStr, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	outcome, err := s.SearchDiaryEntriesSemanticByUserID(ctx, userID, req.Query, int(req.Limit))
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*g.SemanticSearchResult, 0, len(outcome.Results))
+	for _, sr := range outcome.Results {
+		results = append(results, &g.SemanticSearchResult{
+			DiaryId: sr.DiaryID.String(),
+			Date: &g.YMD{
+				Year:  uint32(sr.Date.Year()),
+				Month: uint32(sr.Date.Month()),
+				Day:   uint32(sr.Date.Day()),
+			},
+			Snippet:      sr.Snippet,
+			Similarity:   sr.Similarity,
+			ChunkSummary: sr.ChunkSummary,
+			ChunkCount:   int32(sr.ChunkCount),
+		})
+	}
+
+	return &g.SearchDiaryEntriesSemanticResponse{
+		Results:        results,
+		EmbeddingModel: outcome.EmbeddingModel,
+		ChunkModel:     outcome.ChunkModel,
 	}, nil
 }
 

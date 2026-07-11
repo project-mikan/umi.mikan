@@ -17,6 +17,7 @@ import (
 	connectadapter "github.com/project-mikan/umi.mikan/backend/infrastructure/connectrpc"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/grpc/grpcconnect"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/mcpserver"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -123,6 +124,16 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	connectServer.Protocols.SetHTTP1(true)
 	connectServer.Protocols.SetUnencryptedHTTP2(true)
 
+	// MCP（Model Context Protocol）サーバーを起動
+	// AIクライアント（Claude Desktopなど）向けに日記取得・検索ツールを公開する
+	mcpServer := &http.Server{
+		Addr:         ":8014",
+		Handler:      mcpserver.NewHTTPHandler(app.DiaryService, app.DB),
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
 	// Start gRPC server in goroutine
 	serverErrChan := make(chan error, 1)
 	go func() {
@@ -135,6 +146,14 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 		log.Print("ConnectRPC server listening on :8013")
 		if err := connectServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("ConnectRPC server error: %v", err)
+			serverErrChan <- err
+		}
+	}()
+	// MCP サーバーの起動エラーも同じチャンネルで検知する
+	go func() {
+		log.Print("MCP server listening on :8014")
+		if err := mcpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("MCP server error: %v", err)
 			serverErrChan <- err
 		}
 	}()
@@ -172,6 +191,11 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 		// ConnectRPC サーバーを停止
 		if err := connectServer.Shutdown(httpCtx); err != nil {
 			log.Printf("Error shutting down ConnectRPC server: %v", err)
+		}
+
+		// MCP サーバーを停止
+		if err := mcpServer.Shutdown(httpCtx); err != nil {
+			log.Printf("Error shutting down MCP server: %v", err)
 		}
 
 		// メトリクスサーバーを停止
