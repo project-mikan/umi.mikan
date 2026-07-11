@@ -271,29 +271,25 @@ struct MonthlyView: View {
     }
 
     /// 日記本文のプレビュー表示。
-    /// オンデバイス要約（重要なこと最大3点の箇条書き）が生成済みならそれを表示し、
+    /// オンデバイス要約（「xxでyyでzz」のように接続した簡潔な1文）が生成済みならそれを表示し、
     /// 完了直後は一瞬だけ虹色グラデーション＋ブラーを光らせてAI生成であることを示す。
     /// 生成中・非対応端末では従来通りの100文字カットプレビューを表示する。
     /// リクエスト自体は MonthlyViewModel.requestOnDeviceSummaries が月の日付昇順でまとめて発行する。
     private func dayPreview(day: Int, entry: Diary_DiaryEntry) -> some View {
         let key = LocalDiaryEntry.dateKey(entry.date)
-        let points = summaryStore.summaries[key]
+        let summary = summaryStore.summaries[key]
         let justCompleted = summaryStore.justCompletedKeys.contains(key)
         return Group {
-            if let points, !points.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(points, id: \.self) { point in
-                        HStack(alignment: .top, spacing: 6) {
-                            Image(systemName: "sparkles")
-                                .font(.caption2)
-                                .foregroundStyle(Color.twGreen)
-                            Text(point)
-                                .font(.subheadline)
-                                .foregroundStyle(Color.twBody)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                        }
-                    }
+            if let summary, !summary.isEmpty {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.caption2)
+                        .foregroundStyle(Color.twGreen)
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.twBody)
+                        .lineLimit(3)
+                        .truncationMode(.tail)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else {
@@ -305,7 +301,7 @@ struct MonthlyView: View {
             }
         }
         .contentTransition(.opacity)
-        .animation(.easeInOut(duration: 0.4), value: points)
+        .animation(.easeInOut(duration: 0.4), value: summary)
         .padding(10)
         .background(.blue.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 10))

@@ -14,6 +14,8 @@ final class SettingsViewModel {
 
     /// 「おもいで」通知のトグル状態
     var memoryNotificationEnabled: Bool = false
+    /// 「おもいで」通知の発火時刻（時分のみ使用するDate）
+    var memoryNotificationTime: Date
 
     private let authViewModel: AuthViewModel
     private let notificationManager: MemoryNotificationManager
@@ -22,6 +24,26 @@ final class SettingsViewModel {
         self.authViewModel = authViewModel
         self.notificationManager = notificationManager
         memoryNotificationEnabled = notificationManager.isEnabled
+        memoryNotificationTime = Self.makeTime(
+            hour: notificationManager.notificationHour,
+            minute: notificationManager.notificationMinute
+        )
+    }
+
+    /// hour/minuteからPicker表示用のDateを組み立てる
+    private static func makeTime(hour: Int, minute: Int) -> Date {
+        var components = DateComponents()
+        components.hour = hour
+        components.minute = minute
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    /// 通知時刻が変更された時の処理。ONの場合は新しい時刻で再スケジュールする。
+    func setMemoryNotificationTime(_ date: Date) {
+        memoryNotificationTime = date
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        guard let hour = components.hour, let minute = components.minute else { return }
+        notificationManager.updateNotificationTime(hour: hour, minute: minute)
     }
 
     /// システム側の通知許可状態を確認し、拒否されていた場合はトグル表示をOFFへ補正する

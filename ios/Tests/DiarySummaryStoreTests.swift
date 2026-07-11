@@ -13,11 +13,11 @@ struct DiarySummaryStoreTests {
         let expectSame: Bool
     }
 
-    /// parsePoints のテーブル駆動テスト用ケース
-    struct ParsePointsCase {
+    /// parseSummary のテーブル駆動テスト用ケース
+    struct ParseSummaryCase {
         let name: String
         let raw: String
-        let expected: [String]
+        let expected: String
     }
 
     /// テスト用に一時ファイルへ保存するストアを生成する
@@ -58,45 +58,45 @@ struct DiarySummaryStoreTests {
         #expect((lhsHash == rhsHash) == testCase.expectSame, Comment(rawValue: testCase.name))
     }
 
-    // MARK: - parsePoints
+    // MARK: - parseSummary
 
     @Test(
-        "parsePoints: モデル出力を箇条書き配列にパースする",
+        "parseSummary: モデル出力を1行の要約文にパースする",
         arguments: [
-            ParsePointsCase(
-                name: "正常系: 改行区切りの3行がそのまま3件の箇条書きになる",
-                raw: "海に行った\n友人と再会\n天気が良い",
-                expected: ["海に行った", "友人と再会", "天気が良い"]
+            ParseSummaryCase(
+                name: "正常系: 1行の出力がそのまま要約文になる",
+                raw: "海に行って友人と再会し天気も良かった",
+                expected: "海に行って友人と再会し天気も良かった"
             ),
-            ParsePointsCase(
+            ParseSummaryCase(
                 name: "正常系: 先頭の箇条書き記号が取り除かれる",
-                raw: "・海に行った\n- 友人と再会\n* 天気が良い",
-                expected: ["海に行った", "友人と再会", "天気が良い"]
+                raw: "・海に行って友人と再会した",
+                expected: "海に行って友人と再会した"
             ),
-            ParsePointsCase(
-                name: "正常系: 4件以上出力されても先頭3件だけ採用される",
-                raw: "1つ目\n2つ目\n3つ目\n4つ目",
-                expected: ["1つ目", "2つ目", "3つ目"]
+            ParseSummaryCase(
+                name: "正常系: 複数行返ってきても先頭の非空行だけが採用される",
+                raw: "海に行って友人と再会した\n天気が良い一日だった",
+                expected: "海に行って友人と再会した"
             ),
-            ParsePointsCase(
-                name: "正常系: 空行は無視される",
-                raw: "海に行った\n\n友人と再会",
-                expected: ["海に行った", "友人と再会"]
+            ParseSummaryCase(
+                name: "正常系: 先頭が空行の場合は次の非空行が採用される",
+                raw: "\n海に行って友人と再会した",
+                expected: "海に行って友人と再会した"
             ),
-            ParsePointsCase(
-                name: "異常系: 16文字を超える行があると16文字に切り詰められる",
-                raw: "とても長い箇条書きの一文はここで切り詰められる",
-                expected: ["とても長い箇条書きの一文はここで"]
+            ParseSummaryCase(
+                name: "異常系: 60文字を超える行があると60文字に切り詰められる",
+                raw: String(repeating: "あ", count: 80),
+                expected: String(repeating: "あ", count: 60)
             ),
-            ParsePointsCase(
-                name: "異常系: 空文字を渡すと空配列になる",
+            ParseSummaryCase(
+                name: "異常系: 空文字を渡すと空文字になる",
                 raw: "",
-                expected: []
+                expected: ""
             )
         ]
     )
-    func parsePoints(testCase: ParsePointsCase) {
-        let result = DiarySummaryStore.parsePoints(testCase.raw)
+    func parseSummary(testCase: ParseSummaryCase) {
+        let result = DiarySummaryStore.parseSummary(testCase.raw)
         #expect(result == testCase.expected, Comment(rawValue: testCase.name))
     }
 

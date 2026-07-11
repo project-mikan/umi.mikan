@@ -6,12 +6,18 @@ import Foundation
 
 /// オンデバイスLLM（Foundation Models）による日記要約のキャッシュエントリ
 struct DiarySummaryCacheEntry: Codable, Equatable {
+    /// 要約形式の現行バージョン。プロンプトや想定文字数など「本文が同じでも生成し直したい変更」をしたら上げる。
+    /// 旧バージョンのエントリはキャッシュ不一致として扱われ、再生成される。
+    static let currentVersion = 2
+
     /// 要約元本文のハッシュ値（本文が変わったら再生成させるための判定に使う）。
     /// ディスクへ永続化し次回起動時にも比較するため、プロセスごとに値が変わる Hasher ではなく
     /// SHA256 のような安定したハッシュを使う必要がある。
     var contentHash: String
-    /// 生成された要約の箇条書き（最大3件、各10文字以内を想定）
-    var points: [String]
+    /// 生成された要約文（主な出来事2〜3個をつないだ1文、全角40〜55文字程度を想定）
+    var summary: String
+    /// このエントリを生成した時点の要約形式バージョン
+    var version: Int
 }
 
 /// requestSummaries に渡す1件分の要約対象
@@ -22,7 +28,8 @@ struct DiarySummaryRequest {
     let content: String
 }
 
-/// 月ごとの日記画面向けに、オンデバイスLLMで日記本文を箇条書き（重要なこと最大3点、各10文字以内）へ要約するストア。
+/// 月ごとの日記画面向けに、オンデバイスLLMで日記本文を「どんな日だったか」がパッと分かる1文
+/// （主な出来事2〜3個をつないだ、表示枠の2〜3行に収まる要約）へ要約するストア。
 ///
 /// サーバーには一切通信せず、Apple の Foundation Models framework でオンデバイス生成する。
 /// 生成結果は日付キー＋本文ハッシュでキャッシュし、本文が変わらない限り再生成しない。
@@ -32,11 +39,11 @@ final class DiarySummaryStore {
     /// init が nonisolated なので @MainActor 外からも生成可能。
     /// LocalDiaryStore と同じ理由で nonisolated static let にする。
     nonisolated static let shared = DiarySummaryStore()
-    /// 箇条書き1件あたりの最大文字数（1行の表示枠に収まる目安）
-    static let maxPointLength = 16
+    /// 要約文の最大文字数（2〜3行の折り返し表示枠に収まる目安）
+    static let maxSummaryLength = 60
 
-    /// dateKey（"YYYY-MM-DD"）をキーとした要約箇条書きのマップ。生成中のキーはこのマップに含まれない。
-    private(set) var summaries: [String: [String]] = [:]
+    /// dateKey（"YYYY-MM-DD"）をキーとした要約文のマップ。生成中のキーはこのマップに含まれない。
+    private(set) var summaries: [String: String] = [:]
     /// 生成中の dateKey の集合（View 側で生成中かどうかを判定するために使う）
     private(set) var pendingKeys: Set<String> = []
     /// 直前に生成が完了した dateKey の集合。虹色フラッシュ演出を一度だけ再生するために使い、
@@ -79,17 +86,17 @@ final class DiarySummaryStore {
         return digest.map { String(format: "%02x", $0) }.joined()
     }
 
-    /// モデルの生出力を箇条書き配列にパースする。
-    /// 改行区切りを箇条書き1件とみなし、先頭の「・」「-」「*」等の記号・空白を取り除く。
-    /// 最大3件、各 maxPointLength 文字を超える場合は切り詰める（表示が枠に収まらなくなるのを防ぐ）。
-    static func parsePoints(_ raw: String) -> [String] {
+    /// モデルの生出力を1行の要約文にパースする。
+    /// 複数行返ってきた場合は先頭の非空行のみを採用し、前後の空白・箇条書き記号を取り除く。
+    /// maxSummaryLength 文字を超える場合は切り詰める（2〜3行の表示枠に収まらなくなるのを防ぐ）。
+    static func parseSummary(_ raw: String) -> String {
         let bulletCharacters = CharacterSet(charactersIn: "・-*•‣◦ 　")
-        return raw
-            .split { $0.isNewline }
-            .map { $0.trimmingCharacters(in: bulletCharacters) }
-            .filter { !$0.isEmpty }
-            .prefix(3)
-            .map { $0.count > maxPointLength ? String($0.prefix(maxPointLength)) : $0 }
+        let lines = raw.split { $0.isNewline }
+        let trimmedLines = lines.map { $0.trimmingCharacters(in: bulletCharacters) }
+        guard let firstLine = trimmedLines.first(where: { !$0.isEmpty }) else {
+            return ""
+        }
+        return firstLine.count > maxSummaryLength ? String(firstLine.prefix(maxSummaryLength)) : firstLine
     }
 
     /// 複数日分の要約をまとめてリクエストする。
@@ -109,8 +116,10 @@ final class DiarySummaryStore {
         guard isAvailable, !content.isEmpty else { return }
 
         let hash = Self.contentHash(content)
-        if let cached = cache[key], cached.contentHash == hash {
-            summaries[key] = cached.points
+        // 本文ハッシュに加えて要約形式バージョンも一致した場合のみキャッシュを使う
+        // （プロンプト変更などで形式が変わった旧要約を表示し続けないようにするため）
+        if let cached = cache[key], cached.contentHash == hash, cached.version == DiarySummaryCacheEntry.currentVersion {
+            summaries[key] = cached.summary
             return
         }
 
@@ -120,11 +129,15 @@ final class DiarySummaryStore {
 
         enqueue { [weak self] in
             guard let self else { return }
-            let points = await generate(content: content)
+            let summary = await generate(content: content)
             pendingKeys.remove(key)
-            guard let points, !points.isEmpty else { return }
-            cache[key] = DiarySummaryCacheEntry(contentHash: hash, points: points)
-            summaries[key] = points
+            guard let summary, !summary.isEmpty else { return }
+            cache[key] = DiarySummaryCacheEntry(
+                contentHash: hash,
+                summary: summary,
+                version: DiarySummaryCacheEntry.currentVersion
+            )
+            summaries[key] = summary
             justCompletedKeys.insert(key)
             persist()
         }
@@ -139,13 +152,13 @@ final class DiarySummaryStore {
 
     /// 同時実行数を制限しつつ非同期タスクを実行する。
     /// waitQueue は FIFO で消費するため、呼び出し順（= requestSummaries に渡した順）どおりに開始される。
+    /// task 内で早期 return しても runningCount が狂わないよう、defer で必ず runNext を呼ぶ。
     private func enqueue(_ task: @escaping () async -> Void) {
         let work: () -> Void = { [weak self] in
-            let runner = Task { @MainActor in
+            Task { @MainActor in
+                defer { self?.runNext() }
                 await task()
-                self?.runNext()
             }
-            _ = runner
         }
         if runningCount < maxConcurrent {
             runningCount += 1
@@ -165,21 +178,23 @@ final class DiarySummaryStore {
         next()
     }
 
-    /// Foundation Models で本文から重要な点を最大3つ、各 maxPointLength 文字程度の箇条書きにする。失敗時は nil を返す。
-    private func generate(content: String) async -> [String]? {
+    /// Foundation Models で本文からその日の主な出来事を複数拾い、「どんな日だったか」がパッと分かる
+    /// 全角40〜55文字程度の1文（表示枠の2〜3行に収まる長さ）に要約する。失敗時は nil を返す。
+    private func generate(content: String) async -> String? {
         #if canImport(FoundationModels)
             guard #available(iOS 26.0, *) else { return nil }
             do {
                 let session = LanguageModelSession(
                     instructions: """
-                    あなたは日記アプリの要約アシスタントです。与えられた日記本文から重要なことを最大3つ選び、\
-                    それぞれ日本語12〜16文字程度の体言止めの短いフレーズにしてください。短すぎず、字数の目安まで内容を詰めてください。\
-                    出力は1行につき1項目、改行区切りで最大3行のみとし、番号・記号・前置き・解説は一切付けないでください。
+                    あなたは日記アプリの要約アシスタントです。与えられた日記本文から主な出来事を2〜3個拾い、\
+                    「〜して、〜で、〜だった」のように自然につないで、どんな日だったかがひと目で分かる日本語40〜55文字程度の1文にまとめてください。\
+                    出来事が1つしかない場合はその内容を字数の目安まで具体的にまとめてください。\
+                    箇条書きや改行、番号、記号は使わず、前置きや解説も付けず、要約の1文だけを出力してください。
                     """
                 )
                 let response = try await session.respond(to: content)
-                let points = Self.parsePoints(response.content)
-                return points.isEmpty ? nil : points
+                let summary = Self.parseSummary(response.content)
+                return summary.isEmpty ? nil : summary
             } catch {
                 return nil
             }

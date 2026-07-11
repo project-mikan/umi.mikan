@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 @main
 struct umi_mikanApp: App {
@@ -21,6 +22,12 @@ struct umi_mikanApp: App {
         let auth = AuthViewModel()
         _authViewModel = State(initialValue: auth)
         _syncManager = State(initialValue: SyncManager(authViewModel: auth))
+
+        // フォアグラウンド中も通知バナーを表示させる
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        // リネーム前（OnThisDayNotificationManager）が残した孤児通知を一度だけ削除する。
+        // 放置すると新しい「おもいで」通知と二重に発火し続けるため起動時に必ず実行する。
+        MemoryNotificationManager.shared.migrateLegacyNotification()
     }
 
     var body: some Scene {
