@@ -130,4 +130,21 @@ type_name:
   excluded:
     - umi_mikanApp
 
+# SwiftFormat の modifierOrder（acl → isolation の順）と競合しないよう、
+# デフォルトの isolation → acl から入れ替える（例: private nonisolated func）
+modifier_order:
+  preferred_modifier_order:
+    - override
+    - acl
+    - setterACL
+    - dynamic
+    - mutators
+    - isolation
+    - lazy
+    - final
+    - required
+    - convenience
+    - typeMethods
+    - owned
+
 reporter: "xcode"

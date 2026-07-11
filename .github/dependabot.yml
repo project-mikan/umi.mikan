@@ -7,7 +7,6 @@ updates:
       timezone: "Asia/Tokyo"
     groups:
       frontend:
-        applies-to: security-updates
         patterns:
           - "*"
 
@@ -18,7 +17,6 @@ updates:
       timezone: "Asia/Tokyo"
     groups:
       docker:
-        applies-to: security-updates
         patterns:
           - "*"
 
@@ -29,7 +27,6 @@ updates:
       timezone: "Asia/Tokyo"
     groups:
       backend:
-        applies-to: security-updates
         patterns:
           - "*"
 
@@ -40,7 +37,6 @@ updates:
       timezone: "Asia/Tokyo"
     groups:
       ios:
-        applies-to: security-updates
         patterns:
           - "*"
 
@@ -51,6 +47,5 @@ updates:
       timezone: "Asia/Tokyo"
     groups:
       github-actions:
-        applies-to: security-updates
         patterns:
           - "*"

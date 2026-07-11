@@ -158,7 +158,7 @@ ios-format:
 
 ios-lint:
 	make ios-format
-	cd ios && swiftlint lint --config .swiftlint.yml
+	cd ios && swiftlint lint --config .swiftlint.yml --strict
 
 ios-build:
 	xcodebuild build -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet

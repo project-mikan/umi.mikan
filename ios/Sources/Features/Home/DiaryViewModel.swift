@@ -52,8 +52,7 @@ final class DiaryViewModel {
     /// 今日・昨日・一昨日の日付を計算して初期化する。
     /// バックエンドが JST 基準で日付を管理するため、カレンダーも JST 固定にする。
     func setup() {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let calendar = Calendar.jst
         let now = Date()
         today = DiaryDayData(date: ymd(from: now, calendar: calendar))
         yesterday = DiaryDayData(date: ymd(from: calendar.date(byAdding: .day, value: -1, to: now)!, calendar: calendar))
@@ -126,10 +125,12 @@ final class DiaryViewModel {
     // MARK: - Private
 
     /// ローカルへ保存して同期を試みる。オフラインでも保存自体は必ず成功する。
+    /// 同期はバックグラウンドで実行し、保存操作自体は同期完了を待たない
+    /// （ネットワーク不調時に同期が長引いて保存操作がブロックされるのを防ぐため）。
     private func saveLocally(date: Diary_YMD, content: String) async -> Diary_DiaryEntry? {
         store.saveLocalEdit(date: date, content: content)
         syncManager.refreshPendingCount()
-        await syncManager.syncPending()
+        Task { await syncManager.syncPending() }
         return store.entry(for: date)?.toProto()
     }
 

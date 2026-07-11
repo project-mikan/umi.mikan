@@ -5,6 +5,8 @@ struct SearchView: View {
     @State private var viewModel: SearchViewModel
     /// ハーフモーダルで表示する日記（ハイライトするキーワード付き）
     @State private var selectedItem: DiarySheetItem?
+    /// 検索フィールドのフォーカス状態（検索実行時にキーボードを閉じるために使う）
+    @FocusState private var isSearchFieldFocused: Bool
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
@@ -83,16 +85,17 @@ struct SearchView: View {
                 text: $viewModel.keyword
             )
             .textFieldStyle(.plain)
+            .focused($isSearchFieldFocused)
             .submitLabel(.search)
             .onSubmit {
-                Task { await viewModel.search() }
+                performSearch()
             }
             .padding(12)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
 
             Button {
-                Task { await viewModel.search() }
+                performSearch()
             } label: {
                 Image(systemName: "magnifyingglass")
                     .frame(width: 44, height: 44)
@@ -127,6 +130,12 @@ struct SearchView: View {
     }
 
     // MARK: - コンポーネント生成
+
+    /// キーボードを閉じてから検索を実行する（検索後に入力フォーカスが残らないようにする）
+    private func performSearch() {
+        isSearchFieldFocused = false
+        Task { await viewModel.search() }
+    }
 
     private func modeButton(title: String, mode: SearchViewModel.Mode, tint: Color) -> some View {
         Button {

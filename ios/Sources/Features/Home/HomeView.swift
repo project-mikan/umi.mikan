@@ -2,7 +2,11 @@ import SwiftUI
 
 /// ホーム画面 - 今日・昨日・一昨日の日記を表示・編集する
 struct HomeView: View {
+    /// 「おもいで」セクションへスクロールする際に参照するID（通知タップ時の遷移用）
+    private static let memorySectionID = "memorySection"
+
     @State private var viewModel: DiaryViewModel
+    @State private var memoryViewModel: MemoryViewModel
     @State private var todayContent: String = ""
     @State private var yesterdayContent: String = ""
     @State private var dayBeforeYesterdayContent: String = ""
@@ -14,9 +18,22 @@ struct HomeView: View {
 
     /// ハーフモーダルで表示する日記の日付
     @State private var selectedItem: DiarySheetItem?
+    /// 「おもいで」セクションでタップされた項目（このセクション内でのスワイプ切り替えに使う）
+    @State private var selectedMemoryItem: DiarySheetItem?
 
     /// フォーカス中のカード（キーボードツールバーの保存対象）
     @FocusState private var focusedCard: DiaryCardFocus?
+
+    /// スクロール位置の制御用（キーボードを閉じた時に元の位置へ戻すために使う）
+    @State private var scrollPosition = ScrollPosition()
+    /// 現在のスクロールオフセット（キーボードを閉じる直前の位置の記録に使う）
+    @State private var currentScrollOffset: CGFloat = 0
+    /// スクロール復元 Task（前の Task をキャンセルするために保持する）
+    @State private var scrollRestoreTask: Task<Void, Never>?
+
+    /// アプリのフォアグラウンド状態（書きかけのLive Activity制御に使う）
+    @Environment(\.scenePhase)
+    private var scenePhase
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
@@ -28,20 +45,35 @@ struct HomeView: View {
         self.syncManager = syncManager
         self.launchState = launchState
         _viewModel = State(initialValue: DiaryViewModel(authViewModel: authViewModel, syncManager: syncManager))
+        _memoryViewModel = State(initialValue: MemoryViewModel(authViewModel: authViewModel))
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                syncStatusBanner
-                if viewModel.isLoading {
-                    loadingView
-                } else {
-                    diaryCards
+        ScrollViewReader { scrollProxy in
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    syncStatusBanner
+                    if viewModel.isLoading {
+                        loadingView
+                    } else {
+                        todayCard
+                        MemorySectionView(items: memoryViewModel.items) { item in
+                            selectedMemoryItem = DiarySheetItem(date: item.entry.date)
+                        }
+                        .id(Self.memorySectionID)
+                        yesterdayCard
+                        dayBeforeYesterdayCard
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .memoryNotificationTapped)) { _ in
+                guard !memoryViewModel.items.isEmpty else { return }
+                withAnimation {
+                    scrollProxy.scrollTo(Self.memorySectionID, anchor: .top)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
         }
         .task {
             // ローカルストアから即座に表示する。データの有無によらず即座にスプラッシュを終了する
@@ -51,6 +83,8 @@ struct HomeView: View {
             // サーバーから最新を取得して反映する
             await viewModel.refreshFromServer()
             applyLoadedContents(preservingEdits: true)
+            // 「おもいで」はオンライン専用・付加的な導線のため、失敗しても通常表示は妨げない
+            await memoryViewModel.load()
         }
         .onAppear {
             // タブ切替などで戻った時にローカルの最新を反映する（入力途中の内容は保持）
@@ -60,6 +94,7 @@ struct HomeView: View {
         .refreshable {
             await viewModel.refreshFromServer()
             applyLoadedContents(preservingEdits: true)
+            await memoryViewModel.load()
         }
         // 日記詳細をハーフモーダルで表示する（閉じたら編集内容をカードへ反映する）
         .sheet(
@@ -79,32 +114,50 @@ struct HomeView: View {
                 )
             }
         )
+        // 「おもいで」をタップした場合は、そのセクション内でスワイプできるようにする
+        .sheet(item: $selectedMemoryItem) { item in
+            let items = memorySheetItems
+            DiaryDetailSheet(
+                items: items,
+                initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
+                authViewModel: authViewModel,
+                syncManager: syncManager
+            )
+        }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
                 ErrorBannerView(message: error) { viewModel.errorMessage = nil }
             }
         }
         .toolbar { keyboardToolbar }
+        // スクロール位置を常時追跡し、キーボードを閉じた時の位置復元に備える
+        .scrollPosition($scrollPosition)
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentOffset.y
+        } action: { _, newValue in
+            currentScrollOffset = newValue
+        }
+        // カードからカーソル（フォーカス）が外れたら、未保存の変更を自動保存する
+        .onChange(of: focusedCard) { oldValue, newValue in
+            if let oldValue, oldValue != newValue {
+                autoSaveIfChanged(card: oldValue)
+            }
+            // キーボードが閉じられた場合は、閉じる直前のスクロール位置を復元する
+            if oldValue != nil, newValue == nil {
+                restoreScrollOffset(currentScrollOffset)
+            }
+        }
+        // バックグラウンド移行時の書きかけ保存とLive Activity制御
+        .onChange(of: scenePhase) { _, newPhase in
+            handleDraftScenePhase(newPhase)
+        }
     }
 
-    /// キーボードの上に表示するツールバー（保存・キーボードを閉じる）
+    /// キーボードの上に表示するツールバー（キーボードを閉じる）
+    /// 保存はキーボードが閉じた際（フォーカス喪失）に自動保存されるため、保存ボタンは表示しない
     @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
-            // 閉じるボタンと見分けやすいよう、チェックマーク＋青の塗りつぶしボタンにする
-            Button {
-                saveFocusedCard()
-            } label: {
-                Label(
-                    isFocusedCardSaved ? "保存済み" : "保存",
-                    systemImage: isFocusedCardSaved ? "checkmark" : "checkmark.circle.fill"
-                )
-                .labelStyle(.titleAndIcon)
-                .fontWeight(.semibold)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.twBlue)
-            .controlSize(.small)
             Button {
                 focusedCard = nil
             } label: {
@@ -120,6 +173,11 @@ struct HomeView: View {
             DiarySheetItem(date: viewModel.yesterday.date),
             DiarySheetItem(date: viewModel.dayBeforeYesterday.date)
         ]
+    }
+
+    /// 「おもいで」セクション内でのスワイプ用リスト（表示順=直近年から）
+    private var memorySheetItems: [DiarySheetItem] {
+        memoryViewModel.items.map { DiarySheetItem(date: $0.entry.date) }
     }
 
     /// オフライン・同期待ちの状態表示バナー
@@ -165,14 +223,6 @@ struct HomeView: View {
         .padding(.vertical, 60)
     }
 
-    private var diaryCards: some View {
-        Group {
-            todayCard
-            yesterdayCard
-            dayBeforeYesterdayCard
-        }
-    }
-
     private var todayCard: some View {
         DiaryCardView(
             title: "今日",
@@ -212,19 +262,31 @@ struct HomeView: View {
         }
     }
 
-    /// フォーカス中のカードが保存済み表示中かどうか（キーボードツールバーの表示用）
-    private var isFocusedCardSaved: Bool {
-        switch focusedCard {
-        case .today: viewModel.todaySaved
-        case .yesterday: viewModel.yesterdaySaved
-        case .dayBeforeYesterday: viewModel.dayBeforeYesterdaySaved
-        case nil: false
+    /// キーボードが閉じた後に指定オフセットへスクロール位置を戻す。
+    /// 前回の Task をキャンセルして上書きし、連続開閉でも最後の位置のみ反映する。
+    private func restoreScrollOffset(_ offset: CGFloat) {
+        scrollRestoreTask?.cancel()
+        scrollRestoreTask = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            scrollPosition.scrollTo(point: CGPoint(x: 0, y: offset))
         }
     }
 
-    /// フォーカス中のカードの日記を保存する（キーボードツールバーの保存ボタン用）
-    private func saveFocusedCard() {
-        switch focusedCard {
+    /// 指定カードに未保存の変更がある場合のみ保存する（フォーカスが外れた時の自動保存用）
+    private func autoSaveIfChanged(card: DiaryCardFocus) {
+        let hasChanges = switch card {
+        case .today: todayContent != lastAppliedToday
+        case .yesterday: yesterdayContent != lastAppliedYesterday
+        case .dayBeforeYesterday: dayBeforeYesterdayContent != lastAppliedDayBefore
+        }
+        guard hasChanges else { return }
+        save(card: card)
+    }
+
+    /// 指定カードの日記を保存する
+    private func save(card: DiaryCardFocus) {
+        switch card {
         case .today:
             Task {
                 await viewModel.saveToday(content: todayContent)
@@ -242,9 +304,6 @@ struct HomeView: View {
                 await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
                 lastAppliedDayBefore = dayBeforeYesterdayContent
             }
-
-        case nil:
-            break
         }
     }
 
@@ -267,6 +326,34 @@ struct HomeView: View {
         if !preservingEdits || dayBeforeYesterdayContent == lastAppliedDayBefore {
             dayBeforeYesterdayContent = newDayBefore
             lastAppliedDayBefore = newDayBefore
+        }
+    }
+}
+
+// MARK: - バックグラウンド移行時の書きかけ保存・Live Activity制御
+
+extension HomeView: DraftAutoSaving {
+    /// 書きかけ（保存していない編集途中の内容）があるかどうか
+    var hasDraftInProgress: Bool {
+        todayContent != lastAppliedToday
+            || yesterdayContent != lastAppliedYesterday
+            || dayBeforeYesterdayContent != lastAppliedDayBefore
+    }
+
+    /// 3枚のカードのうち未保存の変更があるものだけを順番に保存する（バックグラウンド移行時用）。
+    /// setDraft(false) の呼び出しは共通実装（DraftAutoSaving.handleDraftScenePhase）側で行う。
+    func performDraftSave() async {
+        if todayContent != lastAppliedToday {
+            await viewModel.saveToday(content: todayContent)
+            lastAppliedToday = todayContent
+        }
+        if yesterdayContent != lastAppliedYesterday {
+            await viewModel.saveYesterday(content: yesterdayContent)
+            lastAppliedYesterday = yesterdayContent
+        }
+        if dayBeforeYesterdayContent != lastAppliedDayBefore {
+            await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
+            lastAppliedDayBefore = dayBeforeYesterdayContent
         }
     }
 }

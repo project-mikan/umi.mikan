@@ -7,7 +7,10 @@ struct SettingsView: View {
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel) {
-        _viewModel = State(initialValue: SettingsViewModel(authViewModel: authViewModel))
+        _viewModel = State(initialValue: SettingsViewModel(
+            authViewModel: authViewModel,
+            notificationManager: MemoryNotificationManager.shared
+        ))
     }
 
     var body: some View {
@@ -17,6 +20,7 @@ struct SettingsView: View {
                     loadingView
                 } else {
                     accountCard
+                    notificationCard
                     logoutCard
                 }
             }
@@ -24,9 +28,11 @@ struct SettingsView: View {
         }
         .task {
             await viewModel.fetch()
+            await viewModel.refreshNotificationAuthorizationState()
         }
         .refreshable {
             await viewModel.fetch()
+            await viewModel.refreshNotificationAuthorizationState()
         }
         .confirmationDialog("ログアウトしますか？", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
             Button("ログアウトする", role: .destructive) {
@@ -96,6 +102,57 @@ struct SettingsView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.twBody)
         }
+    }
+
+    /// 「おもいで」通知のON/OFFトグルと通知時刻の指定
+    private var notificationCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("通知")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.twHeading)
+            notificationToggleRow
+            if viewModel.memoryNotificationEnabled {
+                notificationTimePicker
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .glassEffect(.regular, in: .rect(cornerRadius: 14))
+    }
+
+    /// 「おもいで」通知のON/OFFトグル
+    private var notificationToggleRow: some View {
+        Toggle(isOn: Binding(
+            get: { viewModel.memoryNotificationEnabled },
+            set: { newValue in
+                Task { await viewModel.setMemoryNotificationEnabled(newValue) }
+            }
+        )) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("おもいで 通知")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.twBody)
+                Text("毎日決まった時刻に振り返りを通知します")
+                    .font(.caption2)
+                    .foregroundStyle(Color.twSecondary)
+            }
+        }
+    }
+
+    /// 通知時刻を指定するピッカー
+    private var notificationTimePicker: some View {
+        DatePicker(
+            "通知時刻",
+            selection: Binding(
+                get: { viewModel.memoryNotificationTime },
+                set: { newValue in viewModel.setMemoryNotificationTime(newValue) }
+            ),
+            displayedComponents: .hourAndMinute
+        )
+        .font(.subheadline)
+        .foregroundStyle(Color.twBody)
     }
 
     private var logoutCard: some View {

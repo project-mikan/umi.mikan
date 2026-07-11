@@ -5,15 +5,34 @@ struct MonthlyView: View {
     @State private var viewModel: MonthlyViewModel
     /// ハーフモーダルで表示する日記の日付
     @State private var selectedItem: DiarySheetItem?
+    /// 年月選択シートの表示状態
+    @State private var isMonthPickerPresented = false
+    /// 年月選択シートで選択中の年
+    @State private var pickerYear = 2000
+    /// 年月選択シートで選択中の月
+    @State private var pickerMonth = 1
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
+    /// オンデバイスLLMによる日記要約ストア（非対応端末では isAvailable が false になり機能全体が非表示になる）
+    private let summaryStore = DiarySummaryStore.shared
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel, syncManager: SyncManager) {
         self.authViewModel = authViewModel
         self.syncManager = syncManager
         _viewModel = State(initialValue: MonthlyViewModel(authViewModel: authViewModel))
+    }
+
+    /// 年ピッカーで選択できる年の範囲（1980年〜現在の年）。
+    /// デバイスの暦設定が和暦などに変わっても正しいグレゴリオ年を使うため Calendar.gregorian を明示する。
+    /// SwiftUIの body 再評価（状態変化時）でのみ再評価される computed property のため、
+    /// 「ボタンをタップして開く」以外の経路（goToToday() など）で年が変わった場合でも
+    /// 常に最新の年範囲を返す。年をまたぐ判定はDateの生成コストのみで、
+    /// Pickerのスクロール操作自体はView再描画を伴わないため実行コストは無視できる。
+    private var selectableYears: [Int] {
+        let currentYear = Calendar(identifier: .gregorian).component(.year, from: Date())
+        return Array(1980 ... max(currentYear, 1980))
     }
 
     var body: some View {
@@ -56,6 +75,10 @@ struct MonthlyView: View {
                 )
             }
         )
+        // 年月選択シート（任意の年・月へジャンプする）
+        .sheet(isPresented: $isMonthPickerPresented) {
+            monthPickerSheet
+        }
     }
 
     /// 左右スワイプ用にその月の全日付をまとめたリスト
@@ -75,11 +98,7 @@ struct MonthlyView: View {
             }
             .buttonStyle(.glass)
 
-            Text(String(format: "%d年%d月", viewModel.year, viewModel.month))
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.twHeading)
-                .frame(maxWidth: .infinity)
+            yearMonthButton
 
             Button {
                 Task { await viewModel.goToToday() }
@@ -99,6 +118,76 @@ struct MonthlyView: View {
             }
             .buttonStyle(.glass)
         }
+    }
+
+    /// 年月ラベルのボタン。タップすると任意の年・月を選べるピッカーを開く
+    private var yearMonthButton: some View {
+        Button {
+            pickerYear = viewModel.year
+            pickerMonth = viewModel.month
+            isMonthPickerPresented = true
+        } label: {
+            HStack(spacing: 4) {
+                Text(String(format: "%d年%d月", viewModel.year, viewModel.month))
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.twHeading)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(Color.twSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// 年月選択シート。ホイールで年・月を選んで任意の月へ移動できる（数年前へ遡る時のショートカット）
+    private var monthPickerSheet: some View {
+        VStack(spacing: 16) {
+            Text("表示する年月を選択")
+                .font(.headline)
+                .foregroundStyle(Color.twHeading)
+                .padding(.top, 24)
+
+            monthPickerWheels
+
+            Button {
+                isMonthPickerPresented = false
+                Task { await viewModel.goTo(year: pickerYear, month: pickerMonth) }
+            } label: {
+                Text("この年月へ移動")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.glassProminent)
+            .padding(.horizontal, 16)
+
+            Spacer(minLength: 0)
+        }
+        .presentationDetents([.height(380)])
+        .presentationDragIndicator(.visible)
+    }
+
+    /// 年・月のホイールピッカー
+    private var monthPickerWheels: some View {
+        HStack(spacing: 0) {
+            Picker("年", selection: $pickerYear) {
+                ForEach(selectableYears, id: \.self) { year in
+                    Text(String(format: "%d年", year)).tag(year)
+                }
+            }
+            .pickerStyle(.wheel)
+
+            Picker("月", selection: $pickerMonth) {
+                ForEach(1 ... 12, id: \.self) { month in
+                    Text("\(month)月").tag(month)
+                }
+            }
+            .pickerStyle(.wheel)
+        }
+        .padding(.horizontal, 16)
     }
 
     // MARK: - 日リスト
@@ -170,14 +259,7 @@ struct MonthlyView: View {
             }
 
             if let entry {
-                Text(contentPreview(entry.content))
-                    .font(.subheadline)
-                    .foregroundStyle(Color.twBody)
-                    .lineLimit(3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(10)
-                    .background(.blue.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                dayPreview(day: day, entry: entry)
             } else {
                 Text("日記がありません")
                     .font(.caption)
@@ -189,6 +271,69 @@ struct MonthlyView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .glassEffect(.regular, in: .rect(cornerRadius: 14))
+    }
+
+    /// 日記本文のプレビュー表示。
+    /// オンデバイス要約（「xxでyyでzz」のように接続した簡潔な1文）が生成済みならそれを表示し、
+    /// 完了直後は一瞬だけ虹色グラデーション＋ブラーを光らせてAI生成であることを示す。
+    /// 生成中・非対応端末では従来通りの100文字カットプレビューを表示する。
+    /// リクエスト自体は MonthlyViewModel.requestOnDeviceSummaries が月の日付昇順でまとめて発行する。
+    private func dayPreview(day: Int, entry: Diary_DiaryEntry) -> some View {
+        let key = LocalDiaryEntry.dateKey(entry.date)
+        let summary = summaryStore.summaries[key]
+        let justCompleted = summaryStore.justCompletedKeys.contains(key)
+        return Group {
+            if let summary, !summary.isEmpty {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.caption2)
+                        .foregroundStyle(Color.twGreen)
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.twBody)
+                        .lineLimit(3)
+                        .truncationMode(.tail)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Text(contentPreview(entry.content))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.twBody)
+                    .lineLimit(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .contentTransition(.opacity)
+        .animation(.easeInOut(duration: 0.4), value: summary)
+        .padding(10)
+        .background(.blue.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay {
+            if justCompleted {
+                summaryCompletionFlash(key: key)
+            }
+        }
+    }
+
+    /// 要約生成完了の瞬間だけ虹色グラデーション＋ブラーを光らせて消えるフラッシュ演出。
+    /// 表示から一定時間後に自身で DiarySummaryStore へ完了を伝え、演出が再トリガーされないようにする。
+    private func summaryCompletionFlash(key: String) -> some View {
+        LinearGradient(
+            colors: [.red, .orange, .yellow, .green, .blue, .purple],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+        .opacity(0.55)
+        .blur(radius: 12)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .transition(.opacity)
+        .task {
+            // 光ってから静かにフェードアウトする時間を確保してから完了扱いにする
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            withAnimation(.easeOut(duration: 0.4)) {
+                summaryStore.consumeJustCompleted(key: key)
+            }
+        }
     }
 
     /// 内容のプレビュー文字列（100文字まで）を返す
