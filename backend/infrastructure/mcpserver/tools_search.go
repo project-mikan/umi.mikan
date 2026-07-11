@@ -67,6 +67,10 @@ type SearchDiaryEntriesFuzzyOutput struct {
 	ChunkModel     string                       `json:"chunkModel" jsonschema:"チャンク分割に使用されたモデル"`
 }
 
+// maxFuzzyLimit は search_diary_entries_fuzzy ツールで返せる件数の上限。
+// embedding API への過大なリクエストを防ぐため、jsonschema の記述とコードを一致させる。
+const maxFuzzyLimit = 50
+
 func searchDiaryEntriesFuzzyHandler(diaryService *diary.DiaryEntry) mcp.ToolHandlerFor[SearchDiaryEntriesFuzzyInput, SearchDiaryEntriesFuzzyOutput] {
 	return func(ctx context.Context, _ *mcp.CallToolRequest, input SearchDiaryEntriesFuzzyInput) (*mcp.CallToolResult, SearchDiaryEntriesFuzzyOutput, error) {
 		userID, err := userIDFromContext(ctx)
@@ -77,10 +81,17 @@ func searchDiaryEntriesFuzzyHandler(diaryService *diary.DiaryEntry) mcp.ToolHand
 			return nil, SearchDiaryEntriesFuzzyOutput{}, fmt.Errorf("query is required")
 		}
 
-		// limit省略時（nil）はデフォルト10件、明示的な指定（0件を含む）はその値をそのまま使う
+		// limit省略時（nil）はデフォルト10件、明示的な指定（0件を含む）はその値をそのまま使う。
+		// ただしjsonschemaの「最大50」をコードでも強制する（0未満は0に正規化）。
 		limit := 10
 		if input.Limit != nil {
 			limit = *input.Limit
+			if limit < 0 {
+				limit = 0
+			}
+			if limit > maxFuzzyLimit {
+				limit = maxFuzzyLimit
+			}
 		}
 		outcome, err := diaryService.SearchDiaryEntriesSemanticByUserID(ctx, userID, input.Query, limit)
 		if err != nil {

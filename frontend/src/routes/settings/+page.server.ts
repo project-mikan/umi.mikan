@@ -340,7 +340,7 @@ export const actions: Actions = {
       return fail(400, { error: "apiKeyNameRequired", action: "createApiKey" });
     }
 
-    if (name.trim().length > 100) {
+    if ([...name.trim()].length > 100) {
       return fail(400, { error: "apiKeyNameTooLong", action: "createApiKey" });
     }
 

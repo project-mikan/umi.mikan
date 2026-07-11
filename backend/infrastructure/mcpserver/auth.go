@@ -14,10 +14,9 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 )
 
-// afterLastUsedUpdate はlast_used_at非同期更新の完了を検知するためのテスト専用フック。
-// 本番では常にnilで、goroutine内の処理を待つ必要はない。
-// テストでは差し替えてsync.WaitGroup等でgoroutineの完了を待機できるようにする。
-var afterLastUsedUpdate func(err error)
+// notifyLastUsedUpdate はlast_used_at更新goroutineの完了をテストに通知するフック。
+// テストビルド時はauth_hook_test.goで上書きされる。本番では何もしない。
+var notifyLastUsedUpdate = func(err error) {}
 
 // AuthMiddleware は Authorization: Bearer <トークン> ヘッダーを検証し、ユーザーIDをコンテキストに注入する。
 // トークンは2種類を受け付ける:
@@ -59,9 +58,7 @@ func AuthMiddleware(db *sql.DB, next http.Handler) http.Handler {
 				if updateErr != nil {
 					log.Printf("failed to update api key last_used_at: %v", updateErr)
 				}
-				if afterLastUsedUpdate != nil {
-					afterLastUsedUpdate(updateErr)
-				}
+				notifyLastUsedUpdate(updateErr)
 			}(apiKey.ID)
 		} else {
 			// JWTアクセストークン認証（リフレッシュトークンは拒否する）
