@@ -116,6 +116,40 @@ internal protocol User_UserServiceClientInterface: Sendable {
     /// エラー: なし（データがない場合は空配列）
     @available(iOS 13, *)
     func `getPubSubMetrics`(request: User_GetPubSubMetricsRequest, headers: Connect.Headers) async -> ResponseMessage<User_GetPubSubMetricsResponse>
+
+    /// CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行します。
+    /// キー本体はレスポンスで一度だけ返され、サーバーにはハッシュのみ保存されます。
+    ///
+    /// 例:
+    ///   request: { name: "Claude Desktop" }
+    ///   response: { api_key: "umi_...", info: { id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... } }
+    ///
+    /// エラー:
+    ///   - InvalidArgument: 名前が空または長すぎる
+    ///   - Internal: データベースエラー
+    @available(iOS 13, *)
+    func `createApiKey`(request: User_CreateApiKeyRequest, headers: Connect.Headers) async -> ResponseMessage<User_CreateApiKeyResponse>
+
+    /// ListApiKeys は発行済みAPIキーの一覧を返します（キー本体は含まれません）。
+    ///
+    /// 例:
+    ///   request: {}
+    ///   response: { api_keys: [{ id: "...", name: "Claude Desktop", key_prefix: "umi_a1b2c3d4", ... }] }
+    ///
+    /// エラー: なし（キーがない場合は空配列）
+    @available(iOS 13, *)
+    func `listApiKeys`(request: User_ListApiKeysRequest, headers: Connect.Headers) async -> ResponseMessage<User_ListApiKeysResponse>
+
+    /// DeleteApiKey は指定されたAPIキーを失効させます。
+    ///
+    /// 例:
+    ///   request: { id: "..." }
+    ///   response: { success: true, message: "APIキーを削除しました" }
+    ///
+    /// エラー:
+    ///   - NotFound: 指定されたキーが存在しない、または他ユーザーのキー
+    @available(iOS 13, *)
+    func `deleteApiKey`(request: User_DeleteApiKeyRequest, headers: Connect.Headers) async -> ResponseMessage<User_DeleteApiKeyResponse>
 }
 
 /// Concrete implementation of `User_UserServiceClientInterface`.
@@ -171,6 +205,21 @@ internal final class User_UserServiceClient: User_UserServiceClientInterface, Se
         return await self.client.unary(path: "/user.UserService/GetPubSubMetrics", idempotencyLevel: .unknown, request: request, headers: headers)
     }
 
+    @available(iOS 13, *)
+    internal func `createApiKey`(request: User_CreateApiKeyRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_CreateApiKeyResponse> {
+        return await self.client.unary(path: "/user.UserService/CreateApiKey", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
+    @available(iOS 13, *)
+    internal func `listApiKeys`(request: User_ListApiKeysRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_ListApiKeysResponse> {
+        return await self.client.unary(path: "/user.UserService/ListApiKeys", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
+    @available(iOS 13, *)
+    internal func `deleteApiKey`(request: User_DeleteApiKeyRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_DeleteApiKeyResponse> {
+        return await self.client.unary(path: "/user.UserService/DeleteApiKey", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
     internal enum Metadata {
         internal enum Methods {
             internal static let updateUserName = Connect.MethodSpec(name: "UpdateUserName", service: "user.UserService", type: .unary)
@@ -182,6 +231,9 @@ internal final class User_UserServiceClient: User_UserServiceClientInterface, Se
             internal static let updateAutoSummarySettings = Connect.MethodSpec(name: "UpdateAutoSummarySettings", service: "user.UserService", type: .unary)
             internal static let getAutoSummarySettings = Connect.MethodSpec(name: "GetAutoSummarySettings", service: "user.UserService", type: .unary)
             internal static let getPubSubMetrics = Connect.MethodSpec(name: "GetPubSubMetrics", service: "user.UserService", type: .unary)
+            internal static let createApiKey = Connect.MethodSpec(name: "CreateApiKey", service: "user.UserService", type: .unary)
+            internal static let listApiKeys = Connect.MethodSpec(name: "ListApiKeys", service: "user.UserService", type: .unary)
+            internal static let deleteApiKey = Connect.MethodSpec(name: "DeleteApiKey", service: "user.UserService", type: .unary)
         }
     }
 }
