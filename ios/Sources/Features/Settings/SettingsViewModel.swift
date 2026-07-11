@@ -12,10 +12,62 @@ final class SettingsViewModel {
     var nameSaved: Bool = false
     var errorMessage: String?
 
-    private let authViewModel: AuthViewModel
+    /// 「おもいで」通知のトグル状態
+    var memoryNotificationEnabled: Bool = false
+    /// 「おもいで」通知の発火時刻（時分のみ使用するDate）
+    var memoryNotificationTime: Date
 
-    init(authViewModel: AuthViewModel) {
+    private let authViewModel: AuthViewModel
+    private let notificationManager: MemoryNotificationManager
+
+    init(authViewModel: AuthViewModel, notificationManager: MemoryNotificationManager) {
         self.authViewModel = authViewModel
+        self.notificationManager = notificationManager
+        memoryNotificationEnabled = notificationManager.isEnabled
+        memoryNotificationTime = Self.makeTime(
+            hour: notificationManager.notificationHour,
+            minute: notificationManager.notificationMinute
+        )
+    }
+
+    /// hour/minuteからPicker表示用のDateを組み立てる
+    private static func makeTime(hour: Int, minute: Int) -> Date {
+        var components = DateComponents()
+        components.hour = hour
+        components.minute = minute
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    /// 通知時刻が変更された時の処理。ONの場合は新しい時刻で再スケジュールする。
+    func setMemoryNotificationTime(_ date: Date) {
+        memoryNotificationTime = date
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        guard let hour = components.hour, let minute = components.minute else { return }
+        notificationManager.updateNotificationTime(hour: hour, minute: minute)
+    }
+
+    /// システム側の通知許可状態を確認し、拒否されていた場合はトグル表示をOFFへ補正する
+    func refreshNotificationAuthorizationState() async {
+        guard notificationManager.isEnabled else {
+            memoryNotificationEnabled = false
+            return
+        }
+        let authorized = await notificationManager.isSystemAuthorized()
+        if !authorized {
+            notificationManager.disable()
+        }
+        memoryNotificationEnabled = notificationManager.isEnabled
+    }
+
+    /// 「おもいで」通知のトグルが変更された時の処理
+    func setMemoryNotificationEnabled(_ enabled: Bool) async {
+        if enabled {
+            let granted = await notificationManager.enable()
+            memoryNotificationEnabled = granted
+        } else {
+            notificationManager.disable()
+            memoryNotificationEnabled = false
+        }
     }
 
     /// ユーザー情報を取得する

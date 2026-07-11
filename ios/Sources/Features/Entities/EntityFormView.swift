@@ -81,7 +81,9 @@ struct EntityFormView: View {
     }
 
     private var isCreate: Bool {
-        if case .create = mode { return true }
+        if case .create = mode {
+            return true
+        }
         return false
     }
 

@@ -39,27 +39,21 @@ final class MonthlyViewModel {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
         // バックエンドが JST 基準で日付を管理するため JST 固定にする
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.timeZone = .jst
         formatter.dateFormat = "E"
         return formatter
     }()
 
     /// JST 固定カレンダー（毎回生成するとスクロール時に高コストになるためキャッシュする）
-    private let jstCalendar: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
-        return calendar
-    }()
+    private let jstCalendar: Calendar = .jst
 
     init(authViewModel: AuthViewModel, store: LocalDiaryStore = .shared) {
         self.authViewModel = authViewModel
         self.store = store
         // バックエンドが JST 基準で日付を管理するため JST 固定にする
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
         let now = Date()
-        year = calendar.component(.year, from: now)
-        month = calendar.component(.month, from: now)
+        year = jstCalendar.component(.year, from: now)
+        month = jstCalendar.component(.month, from: now)
     }
 
     /// 表示中の月の日記エントリを取得する（ローカル優先＋サーバー同期）
@@ -88,6 +82,9 @@ final class MonthlyViewModel {
                 errorMessage = APIHelper.errorMessage(error)
             }
             isLoading = false
+            // ローカルキャッシュのエントリは loadLocalMonth() で既に entryMap に反映済みのため、
+            // サーバー同期が失敗してもオンデバイス要約の生成は継続する
+            requestOnDeviceSummaries()
             return
         }
 
@@ -96,9 +93,20 @@ final class MonthlyViewModel {
         }
         loadLocalMonth()
         isLoading = false
+        requestOnDeviceSummaries()
 
         // 月間まとめは取得できなくてもページ表示に影響させない
         await fetchMonthlySummary()
+    }
+
+    /// 表示中の月の全日について、日付（1日〜）の昇順でオンデバイス要約をまとめてリクエストする。
+    /// 「月の上から順に」生成が開始されるよう、View 側の描画順に頼らずここで順序を確定させる。
+    private func requestOnDeviceSummaries() {
+        let requests = entryMap.keys.sorted().compactMap { day -> DiarySummaryRequest? in
+            guard let entry = entryMap[day] else { return nil }
+            return DiarySummaryRequest(key: LocalDiaryEntry.dateKey(entry.date), content: entry.content)
+        }
+        DiarySummaryStore.shared.requestSummaries(requests)
     }
 
     /// 月間まとめを取得する（未生成・エラー時は非表示にするだけ）
@@ -146,6 +154,13 @@ final class MonthlyViewModel {
         } else {
             month += 1
         }
+        await fetch()
+    }
+
+    /// 指定した年月へ移動する（年月ピッカーからのジャンプ用）
+    func goTo(year: Int, month: Int) async {
+        self.year = year
+        self.month = month
         await fetch()
     }
 

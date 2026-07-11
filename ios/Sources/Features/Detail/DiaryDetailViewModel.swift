@@ -26,6 +26,11 @@ final class DiaryDetailViewModel {
     /// isSaved を 2 秒後にリセットするタスク（ViewModel 破棄時にキャンセルできるよう保持する）
     private var savedResetTask: Task<Void, Never>?
 
+    /// 編集中の本文に未保存の変更があるかどうか（フォーカスが外れた時の自動保存の判定に使う）
+    var hasUnsavedChanges: Bool {
+        content != lastLoadedContent
+    }
+
     init(date: Diary_YMD, authViewModel: AuthViewModel, syncManager: SyncManager, store: LocalDiaryStore = .shared) {
         self.date = date
         self.authViewModel = authViewModel
@@ -85,13 +90,14 @@ final class DiaryDetailViewModel {
         store.saveLocalEdit(date: date, content: content)
         lastLoadedContent = content
         syncManager.refreshPendingCount()
-
-        // ローカル保存＋同期の完了後に「保存済み」を表示する（同期失敗でも表示するが、エラーバナーで区別する）
-        await syncManager.syncPending()
         if let local = store.entry(for: date) {
             entry = local.toProto()
         }
         isSaved = true
+
+        // 同期はバックグラウンドで実行し、保存操作自体は同期完了を待たない
+        // （ネットワーク不調時に同期が長引いて保存操作がブロックされるのを防ぐため）
+        Task { await syncManager.syncPending() }
 
         // 2秒後に保存済み表示をリセット（協調キャンセル可能なタスクとして保持する）
         savedResetTask?.cancel()

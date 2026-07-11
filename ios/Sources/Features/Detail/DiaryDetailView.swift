@@ -6,12 +6,14 @@ struct DiaryDetailView: View {
     private static let timestampFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.timeZone = .jst
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
         return formatter
     }()
 
-    @State private var viewModel: DiaryDetailViewModel
+    /// 表示中の日記のViewModel。スワイプ切り替え前に呼び出し元（DiaryDetailSheet）が
+    /// 未保存の変更を保存できるよう、所有権は呼び出し元に持たせて Bindable で受け取る。
+    @Bindable var viewModel: DiaryDetailViewModel
     /// 「この日記の概要」カーテンの開閉状態（デフォルトは閉じる）
     @State private var isTimelineExpanded = false
     /// ハイライト表示から編集モードへ切り替えたかどうか
@@ -19,15 +21,17 @@ struct DiaryDetailView: View {
     /// 本文エディタのフォーカス状態（キーボードツールバーの閉じるボタン用）
     @FocusState private var isEditorFocused: Bool
 
+    /// アプリのフォアグラウンド状態（書きかけのLive Activity制御に使う）
+    @Environment(\.scenePhase)
+    private var scenePhase
+
     /// 検索結果から開いた場合にハイライトするキーワード
     private let highlightKeywords: [String]
 
     // swiftlint:disable:next type_contents_order
-    init(date: Diary_YMD, authViewModel: AuthViewModel, syncManager: SyncManager, highlightKeywords: [String] = []) {
+    init(viewModel: DiaryDetailViewModel, highlightKeywords: [String] = []) {
+        self.viewModel = viewModel
         self.highlightKeywords = highlightKeywords
-        _viewModel = State(
-            initialValue: DiaryDetailViewModel(date: date, authViewModel: authViewModel, syncManager: syncManager)
-        )
     }
 
     var body: some View {
@@ -37,6 +41,16 @@ struct DiaryDetailView: View {
                 .task {
                     await viewModel.fetch()
                     await scrollToFirstHighlight(proxy)
+                }
+                // カーソル（フォーカス）が外れたら未保存の変更を自動保存する
+                .onChange(of: isEditorFocused) { _, focused in
+                    if !focused, viewModel.hasUnsavedChanges {
+                        Task { await viewModel.save() }
+                    }
+                }
+                // バックグラウンド移行時の書きかけ保存とLive Activity制御
+                .onChange(of: scenePhase) { _, newPhase in
+                    handleDraftScenePhase(newPhase)
                 }
         }
     }
@@ -164,25 +178,11 @@ struct DiaryDetailView: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
     }
 
-    /// キーボードの上に表示するツールバー（保存・キーボードを閉じる）
+    /// キーボードの上に表示するツールバー（キーボードを閉じる）
+    /// 保存はキーボードが閉じた際（フォーカス喪失）に自動保存されるため、保存ボタンは表示しない
     @ToolbarContentBuilder private var keyboardToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
-            // 閉じるボタンと見分けやすいよう、チェックマーク＋青の塗りつぶしボタンにする
-            Button {
-                Task { await viewModel.save() }
-            } label: {
-                Label(
-                    viewModel.isSaved ? "保存済み" : "保存",
-                    systemImage: viewModel.isSaved ? "checkmark" : "checkmark.circle.fill"
-                )
-                .labelStyle(.titleAndIcon)
-                .fontWeight(.semibold)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.twBlue)
-            .controlSize(.small)
-            .disabled(viewModel.isSaving)
             Button {
                 isEditorFocused = false
             } label: {
@@ -215,8 +215,6 @@ struct DiaryDetailView: View {
         .buttonStyle(.plain)
     }
 
-    /// この日記の概要（チャンク一覧）カーテン。
-    /// ヘッダーをタップすると上から下へカーテンのように開閉する。
     /// 最初にキーワードがマッチした行まで自動スクロールする。
     /// レイアウト確定を待つため少し遅らせてから実行する。
     private func scrollToFirstHighlight(_ proxy: ScrollViewProxy) async {
@@ -271,5 +269,17 @@ struct DiaryDetailView: View {
     private func formatTimestamp(_ timestamp: Int64) -> String {
         let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
         return Self.timestampFormatter.string(from: date)
+    }
+}
+
+// MARK: - DraftAutoSaving
+
+extension DiaryDetailView: DraftAutoSaving {
+    var hasDraftInProgress: Bool {
+        viewModel.hasUnsavedChanges
+    }
+
+    func performDraftSave() async {
+        await viewModel.save()
     }
 }

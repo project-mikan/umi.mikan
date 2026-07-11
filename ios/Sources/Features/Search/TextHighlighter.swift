@@ -43,15 +43,21 @@ enum TextHighlighter {
 
         if matchOffset == -1 || matchOffset < prefixLength {
             excerpt = String(normalized.prefix(window))
-            if normalized.count > window { suffix = "..." }
+            if normalized.count > window {
+                suffix = "..."
+            }
         } else {
             let start = max(0, matchOffset - prefixLength)
             let startIndex = normalized.index(normalized.startIndex, offsetBy: start)
             let endOffset = min(normalized.count, start + window)
             let endIndex = normalized.index(normalized.startIndex, offsetBy: endOffset)
             excerpt = String(normalized[startIndex ..< endIndex])
-            if start > 0 { prefix = "..." }
-            if endOffset < normalized.count { suffix = "..." }
+            if start > 0 {
+                prefix = "..."
+            }
+            if endOffset < normalized.count {
+                suffix = "..."
+            }
         }
 
         return applyHighlights(to: AttributedString(prefix + excerpt + suffix), keywords: activeKeywords)
