@@ -85,10 +85,7 @@ func searchDiaryEntriesFuzzyHandler(diaryService *diary.DiaryEntry) mcp.ToolHand
 		// ただしjsonschemaの「最大50」をコードでも強制する（0未満は0に正規化）。
 		limit := 10
 		if input.Limit != nil {
-			limit = *input.Limit
-			if limit < 0 {
-				limit = 0
-			}
+			limit = max(*input.Limit, 0)
 			if limit > maxFuzzyLimit {
 				limit = maxFuzzyLimit
 			}
