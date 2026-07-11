@@ -20,6 +20,7 @@ func insertTestAPIKey(t *testing.T, db *sql.DB, userID uuid.UUID) uuid.UUID {
 		Name:      "テストキー",
 		KeyHash:   "test-hash-" + uuid.New().String(),
 		KeyPrefix: "umi_test1234",
+		ExpiresAt: 1800000000, // 十分未来のUnix秒（テスト実行時点では期限切れにならない値）
 		CreatedAt: 1700000000,
 		UpdatedAt: 1700000000,
 	}
@@ -60,15 +61,17 @@ func TestUpdateUserAPIKeyLastUsed(t *testing.T) {
 }
 
 func TestUpdateUserAPIKeyLastUsed_DBError(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	ctx := context.Background()
+	t.Run("異常系: DBがクローズされている場合はエラー", func(t *testing.T) {
+		db := testutil.SetupTestDB(t)
+		ctx := context.Background()
 
-	// DBを閉じてクエリエラーを発生させる
-	if err := db.Close(); err != nil {
-		t.Fatalf("DB クローズに失敗: %v", err)
-	}
+		// DBを閉じてクエリエラーを発生させる
+		if err := db.Close(); err != nil {
+			t.Fatalf("DB クローズに失敗: %v", err)
+		}
 
-	if err := database.UpdateUserAPIKeyLastUsed(ctx, db, uuid.New(), 1700001234); err == nil {
-		t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
-	}
+		if err := database.UpdateUserAPIKeyLastUsed(ctx, db, uuid.New(), 1700001234); err == nil {
+			t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
+		}
+	})
 }

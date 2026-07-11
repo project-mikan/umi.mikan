@@ -258,9 +258,11 @@
     }
   }
 
-  // Unix秒をローカル日付文字列に変換する
-  function formatApiKeyDate(unixSeconds: number): string {
-    if (!unixSeconds) return "";
+  // Unix秒をローカル日付文字列に変換する。
+  // 0は「未使用」等の意味を持つ正当な値になり得るため、!unixSecondsのようなfalsy判定ではなく
+  // null/undefinedのみを「値なし」として扱う。
+  function formatApiKeyDate(unixSeconds: number | null | undefined): string {
+    if (unixSeconds === null || unixSeconds === undefined) return "";
     return new Date(unixSeconds * 1000).toLocaleDateString();
   }
 
@@ -976,6 +978,7 @@
 											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colKey")}</th>
 											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colCreated")}</th>
 											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colLastUsed")}</th>
+											<th class="py-2 pr-4 font-medium">{$_("settings.apiKeys.colExpires")}</th>
 											<th class="py-2"></th>
 										</tr>
 									</thead>
@@ -988,6 +991,7 @@
 												<td class="py-3 pr-4">
 													{apiKey.lastUsedAt ? formatApiKeyDate(apiKey.lastUsedAt) : $_("settings.apiKeys.neverUsed")}
 												</td>
+												<td class="py-3 pr-4">{formatApiKeyDate(apiKey.expiresAt)}</td>
 												<td class="py-3 text-right">
 													<button
 														type="button"

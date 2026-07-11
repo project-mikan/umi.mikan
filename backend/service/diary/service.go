@@ -926,8 +926,10 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 		return nil, status.Errorf(codes.Internal, "Failed to generate query embedding: %v", err)
 	}
 
-	// 検索件数を決定
-	if limit <= 0 {
+	// 検索件数を決定。0件を明示的に要求された場合はそのまま0件で返す
+	// （gRPC の uint32 由来の未指定=0 とMCPの「limit省略」はどちらも呼び出し側で
+	// デフォルト値10に解決してからこの関数に渡される前提のため、ここでは負値のみ補正する）。
+	if limit < 0 {
 		limit = 10
 	}
 	if limit > 50 {
@@ -977,6 +979,11 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 		vectorIDs[sr.DiaryID] = true
 	}
 	for _, d := range kwResult.diaries {
+		// limitで指定された件数を超えたら打ち切る（limit=0で「0件」を明示指定された場合も含む）。
+		// このガードがないとキーワード検索の補完がlimitを無視して結果に追加され続けてしまう。
+		if len(searchResults) >= limit {
+			break
+		}
 		if !vectorIDs[d.ID] {
 			searchResults = append(searchResults, &database.DiaryEmbeddingSearchResult{
 				DiaryID:    d.ID,

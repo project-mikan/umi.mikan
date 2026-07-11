@@ -39,34 +39,26 @@ func TestUserEntry_CreateApiKey(t *testing.T) {
 		}
 	})
 
-	t.Run("異常系: 名前が空の場合はエラー", func(t *testing.T) {
-		_, err := svc.CreateApiKey(ctx, &g.CreateApiKeyRequest{Name: ""})
-		if err == nil {
-			t.Fatal("名前が空でエラーを期待したがnilが返った")
-		}
-	})
-
-	t.Run("異常系: 名前が長すぎる場合はエラー", func(t *testing.T) {
-		_, err := svc.CreateApiKey(ctx, &g.CreateApiKeyRequest{Name: strings.Repeat("あ", 101)})
-		if err == nil {
-			t.Fatal("名前が長すぎる場合にエラーを期待したがnilが返った")
-		}
-	})
-
-	t.Run("異常系: 未認証の場合はエラー", func(t *testing.T) {
-		_, err := svc.CreateApiKey(context.Background(), &g.CreateApiKeyRequest{Name: "key"})
-		if err == nil {
-			t.Fatal("未認証でエラーを期待したがnilが返った")
-		}
-	})
-
-	t.Run("異常系: ユーザーIDがUUID形式でない場合はエラー", func(t *testing.T) {
-		badCtx := context.WithValue(context.Background(), middleware.UserIDKey, "not-a-uuid")
-		_, err := svc.CreateApiKey(badCtx, &g.CreateApiKeyRequest{Name: "key"})
-		if err == nil {
-			t.Fatal("不正なユーザーIDでエラーを期待したがnilが返った")
-		}
-	})
+	// 異常系はいずれも「エラーが返ることだけ」を確認すればよいのでテーブル駆動にまとめる
+	badUUIDCtx := context.WithValue(context.Background(), middleware.UserIDKey, "not-a-uuid")
+	errorCases := []struct {
+		name string
+		ctx  context.Context
+		req  *g.CreateApiKeyRequest
+	}{
+		{"異常系: 名前が空の場合はエラー", ctx, &g.CreateApiKeyRequest{Name: ""}},
+		{"異常系: 名前が長すぎる場合はエラー", ctx, &g.CreateApiKeyRequest{Name: strings.Repeat("あ", 101)}},
+		{"異常系: 未認証の場合はエラー", context.Background(), &g.CreateApiKeyRequest{Name: "key"}},
+		{"異常系: ユーザーIDがUUID形式でない場合はエラー", badUUIDCtx, &g.CreateApiKeyRequest{Name: "key"}},
+	}
+	for _, tc := range errorCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := svc.CreateApiKey(tc.ctx, tc.req)
+			if err == nil {
+				t.Fatal("エラーを期待したがnilが返った")
+			}
+		})
+	}
 }
 
 func TestUserEntry_ListApiKeys(t *testing.T) {
@@ -122,20 +114,23 @@ func TestUserEntry_ListApiKeys(t *testing.T) {
 		}
 	})
 
-	t.Run("異常系: 未認証の場合はエラー", func(t *testing.T) {
-		_, err := svc.ListApiKeys(context.Background(), &g.ListApiKeysRequest{})
-		if err == nil {
-			t.Fatal("未認証でエラーを期待したがnilが返った")
-		}
-	})
-
-	t.Run("異常系: ユーザーIDがUUID形式でない場合はエラー", func(t *testing.T) {
-		badCtx := context.WithValue(context.Background(), middleware.UserIDKey, "not-a-uuid")
-		_, err := svc.ListApiKeys(badCtx, &g.ListApiKeysRequest{})
-		if err == nil {
-			t.Fatal("不正なユーザーIDでエラーを期待したがnilが返った")
-		}
-	})
+	// 異常系はいずれも「エラーが返ることだけ」を確認すればよいのでテーブル駆動にまとめる
+	badUUIDCtx := context.WithValue(context.Background(), middleware.UserIDKey, "not-a-uuid")
+	errorCases := []struct {
+		name string
+		ctx  context.Context
+	}{
+		{"異常系: 未認証の場合はエラー", context.Background()},
+		{"異常系: ユーザーIDがUUID形式でない場合はエラー", badUUIDCtx},
+	}
+	for _, tc := range errorCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := svc.ListApiKeys(tc.ctx, &g.ListApiKeysRequest{})
+			if err == nil {
+				t.Fatal("エラーを期待したがnilが返った")
+			}
+		})
+	}
 }
 
 func TestUserEntry_DeleteApiKey(t *testing.T) {
@@ -170,13 +165,6 @@ func TestUserEntry_DeleteApiKey(t *testing.T) {
 		}
 	})
 
-	t.Run("異常系: 存在しないキーIDはNotFound", func(t *testing.T) {
-		_, err := svc.DeleteApiKey(ctx, &g.DeleteApiKeyRequest{Id: "00000000-0000-0000-0000-000000000001"})
-		if err == nil {
-			t.Fatal("存在しないキーでエラーを期待したがnilが返った")
-		}
-	})
-
 	t.Run("異常系: 他ユーザーのキーは削除できない（NotFound）", func(t *testing.T) {
 		created, err := svc.CreateApiKey(ctx, &g.CreateApiKeyRequest{Name: "他ユーザー削除防止テスト"})
 		if err != nil {
@@ -206,25 +194,24 @@ func TestUserEntry_DeleteApiKey(t *testing.T) {
 		}
 	})
 
-	t.Run("異常系: キーIDがUUID形式でない場合はエラー", func(t *testing.T) {
-		_, err := svc.DeleteApiKey(ctx, &g.DeleteApiKeyRequest{Id: "not-a-uuid"})
-		if err == nil {
-			t.Fatal("不正なキーIDでエラーを期待したがnilが返った")
-		}
-	})
-
-	t.Run("異常系: 未認証の場合はエラー", func(t *testing.T) {
-		_, err := svc.DeleteApiKey(context.Background(), &g.DeleteApiKeyRequest{Id: "00000000-0000-0000-0000-000000000001"})
-		if err == nil {
-			t.Fatal("未認証でエラーを期待したがnilが返った")
-		}
-	})
-
-	t.Run("異常系: ユーザーIDがUUID形式でない場合はエラー", func(t *testing.T) {
-		badCtx := context.WithValue(context.Background(), middleware.UserIDKey, "not-a-uuid")
-		_, err := svc.DeleteApiKey(badCtx, &g.DeleteApiKeyRequest{Id: "00000000-0000-0000-0000-000000000001"})
-		if err == nil {
-			t.Fatal("不正なユーザーIDでエラーを期待したがnilが返った")
-		}
-	})
+	// 異常系はいずれも「エラーが返ることだけ」を確認すればよいのでテーブル駆動にまとめる
+	badUUIDCtx := context.WithValue(context.Background(), middleware.UserIDKey, "not-a-uuid")
+	errorCases := []struct {
+		name string
+		ctx  context.Context
+		req  *g.DeleteApiKeyRequest
+	}{
+		{"異常系: 存在しないキーIDはNotFound", ctx, &g.DeleteApiKeyRequest{Id: "00000000-0000-0000-0000-000000000001"}},
+		{"異常系: キーIDがUUID形式でない場合はエラー", ctx, &g.DeleteApiKeyRequest{Id: "not-a-uuid"}},
+		{"異常系: 未認証の場合はエラー", context.Background(), &g.DeleteApiKeyRequest{Id: "00000000-0000-0000-0000-000000000001"}},
+		{"異常系: ユーザーIDがUUID形式でない場合はエラー", badUUIDCtx, &g.DeleteApiKeyRequest{Id: "00000000-0000-0000-0000-000000000001"}},
+	}
+	for _, tc := range errorCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := svc.DeleteApiKey(tc.ctx, tc.req)
+			if err == nil {
+				t.Fatal("エラーを期待したがnilが返った")
+			}
+		})
+	}
 }

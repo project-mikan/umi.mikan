@@ -62,17 +62,6 @@ func getDiaryEntriesByRangeHandler(diaryService *diary.DiaryEntry) mcp.ToolHandl
 			return nil, GetDiaryEntriesByRangeOutput{}, friendlyError(err)
 		}
 
-		entries := make([]DiaryEntryOutput, 0, len(diaries))
-		for _, d := range diaries {
-			entries = append(entries, DiaryEntryOutput{
-				ID:        d.ID.String(),
-				Date:      d.Date.Format(dateLayout),
-				Content:   d.Content,
-				CreatedAt: d.CreatedAt,
-				UpdatedAt: d.UpdatedAt,
-			})
-		}
-
-		return nil, GetDiaryEntriesByRangeOutput{Entries: entries}, nil
+		return nil, GetDiaryEntriesByRangeOutput{Entries: toDiaryEntryOutputs(diaries)}, nil
 	}
 }

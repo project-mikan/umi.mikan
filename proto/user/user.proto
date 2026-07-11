@@ -292,6 +292,7 @@ message ApiKeyInfo {
   string key_prefix = 3; // 一覧表示用のキー先頭部分（例: umi_a1b2c3d4）
   int64 last_used_at = 4; // 最終使用日時（Unix秒、未使用の場合は0）
   int64 created_at = 5;
+  int64 expires_at = 6; // 有効期限（Unix秒）
 }
 
 // APIキー発行用のリクエスト

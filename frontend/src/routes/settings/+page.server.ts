@@ -40,6 +40,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
         keyPrefix: key.keyPrefix,
         lastUsedAt: Number(key.lastUsedAt),
         createdAt: Number(key.createdAt),
+        expiresAt: Number(key.expiresAt),
       })),
     };
   } catch (error) {

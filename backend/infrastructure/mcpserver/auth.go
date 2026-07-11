@@ -3,36 +3,31 @@ package mcpserver
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 )
 
+// afterLastUsedUpdate はlast_used_at非同期更新の完了を検知するためのテスト専用フック。
+// 本番では常にnilで、goroutine内の処理を待つ必要はない。
+// テストでは差し替えてsync.WaitGroup等でgoroutineの完了を待機できるようにする。
+var afterLastUsedUpdate func(err error)
+
 // AuthMiddleware は Authorization: Bearer <トークン> ヘッダーを検証し、ユーザーIDをコンテキストに注入する。
 // トークンは2種類を受け付ける:
 //   - APIキー（umi_プレフィックス）: DBのSHA-256ハッシュと照合する。MCPクライアント向けの長期キー。
-//   - JWTアクセストークン: gRPC/ConnectRPCの認証インターセプターと同じロジックで検証する。
+//   - JWTアクセストークン: gRPC/ConnectRPCの認証インターセプターと同じロジックで検証する（リフレッシュトークンは拒否）。
 func AuthMiddleware(db *sql.DB, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "missing authorization header", http.StatusUnauthorized)
-			return
-		}
-
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "invalid authorization format", http.StatusUnauthorized)
-			return
-		}
-
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		if token == "" {
-			http.Error(w, "empty access token", http.StatusUnauthorized)
+		token, err := model.ExtractBearerToken(r.Header.Get("Authorization"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -41,18 +36,36 @@ func AuthMiddleware(db *sql.DB, next http.Handler) http.Handler {
 			// APIキー認証: ハッシュでDB照合する
 			apiKey, err := database.UserAPIKeyByKeyHash(r.Context(), db, model.HashAPIKey(token))
 			if err != nil {
-				http.Error(w, "invalid api key", http.StatusUnauthorized)
+				if errors.Is(err, sql.ErrNoRows) {
+					http.Error(w, "invalid api key", http.StatusUnauthorized)
+					return
+				}
+				// DB接続断など、キーの正当性とは無関係な障害はUnauthorizedと区別する。
+				// 401のままだとクライアントが「キーが失効した」と誤解し不要なローテーションを招くため。
+				log.Printf("failed to look up api key: %v", err)
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			if time.Now().Unix() >= apiKey.ExpiresAt {
+				http.Error(w, "api key expired", http.StatusUnauthorized)
 				return
 			}
 			userID = apiKey.UserID.String()
 
-			// 最終使用日時を更新する（失敗しても認証は継続する）
-			if err := database.UpdateUserAPIKeyLastUsed(r.Context(), db, apiKey.ID, time.Now().Unix()); err != nil {
-				log.Printf("failed to update api key last_used_at: %v", err)
-			}
+			// 最終使用日時の更新は認証結果に影響しないbest-effort処理なので、
+			// レスポンスを遅延させないよう非同期化する（毎リクエストの同期DB書き込みを避ける）。
+			go func(keyID uuid.UUID) {
+				updateErr := database.UpdateUserAPIKeyLastUsed(context.Background(), db, keyID, time.Now().Unix())
+				if updateErr != nil {
+					log.Printf("failed to update api key last_used_at: %v", updateErr)
+				}
+				if afterLastUsedUpdate != nil {
+					afterLastUsedUpdate(updateErr)
+				}
+			}(apiKey.ID)
 		} else {
-			// JWTアクセストークン認証
-			_, jwtUserID, err := model.ParseAuthTokens(token)
+			// JWTアクセストークン認証（リフレッシュトークンは拒否する）
+			_, jwtUserID, err := model.ParseAccessToken(token)
 			if err != nil {
 				http.Error(w, "invalid access token", http.StatusUnauthorized)
 				return

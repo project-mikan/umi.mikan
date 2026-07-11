@@ -1303,6 +1303,7 @@ type ApiKeyInfo struct {
 	KeyPrefix     string                 `protobuf:"bytes,3,opt,name=key_prefix,json=keyPrefix,proto3" json:"key_prefix,omitempty"`       // 一覧表示用のキー先頭部分（例: umi_a1b2c3d4）
 	LastUsedAt    int64                  `protobuf:"varint,4,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"` // 最終使用日時（Unix秒、未使用の場合は0）
 	CreatedAt     int64                  `protobuf:"varint,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"` // 有効期限（Unix秒）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1368,6 +1369,13 @@ func (x *ApiKeyInfo) GetLastUsedAt() int64 {
 func (x *ApiKeyInfo) GetCreatedAt() int64 {
 	if x != nil {
 		return x.CreatedAt
+	}
+	return 0
+}
+
+func (x *ApiKeyInfo) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
 	}
 	return 0
 }
@@ -1737,7 +1745,7 @@ const file_user_user_proto_rawDesc = "" +
 	"\x10total_embeddings\x18\n" +
 	" \x01(\x05R\x0ftotalEmbeddings\x12-\n" +
 	"\x12pending_embeddings\x18\v \x01(\x05R\x11pendingEmbeddings\x126\n" +
-	"\x17total_embedding_diaries\x18\f \x01(\x05R\x15totalEmbeddingDiaries\"\x90\x01\n" +
+	"\x17total_embedding_diaries\x18\f \x01(\x05R\x15totalEmbeddingDiaries\"\xaf\x01\n" +
 	"\n" +
 	"ApiKeyInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -1747,7 +1755,9 @@ const file_user_user_proto_rawDesc = "" +
 	"\flast_used_at\x18\x04 \x01(\x03R\n" +
 	"lastUsedAt\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\x03R\tcreatedAt\")\n" +
+	"created_at\x18\x05 \x01(\x03R\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"expires_at\x18\x06 \x01(\x03R\texpiresAt\")\n" +
 	"\x13CreateApiKeyRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"U\n" +
 	"\x14CreateApiKeyResponse\x12\x17\n" +

@@ -96,6 +96,7 @@
       "colKey": "Key",
       "colCreated": "Created",
       "colLastUsed": "Last used",
+      "colExpires": "Expires",
       "neverUsed": "Never",
       "deleteButton": "Delete",
       "deleteConfirm": "Delete API key",

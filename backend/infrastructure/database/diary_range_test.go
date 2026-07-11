@@ -73,17 +73,19 @@ func TestDiariesByUserIDAndDateRangeDays(t *testing.T) {
 }
 
 func TestDiariesByUserIDAndDateRangeDays_DBError(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	ctx := context.Background()
+	t.Run("異常系: DBがクローズされている場合はエラー", func(t *testing.T) {
+		db := testutil.SetupTestDB(t)
+		ctx := context.Background()
 
-	if err := db.Close(); err != nil {
-		t.Fatalf("DB クローズに失敗: %v", err)
-	}
+		if err := db.Close(); err != nil {
+			t.Fatalf("DB クローズに失敗: %v", err)
+		}
 
-	from := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	to := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
-	_, err := database.DiariesByUserIDAndDateRangeDays(ctx, db, "00000000-0000-0000-0000-000000000001", from, to)
-	if err == nil {
-		t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
-	}
+		from := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		to := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+		_, err := database.DiariesByUserIDAndDateRangeDays(ctx, db, "00000000-0000-0000-0000-000000000001", from, to)
+		if err == nil {
+			t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
+		}
+	})
 }

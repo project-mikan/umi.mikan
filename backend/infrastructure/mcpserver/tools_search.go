@@ -34,19 +34,8 @@ func searchDiaryEntriesFulltextHandler(diaryService *diary.DiaryEntry) mcp.ToolH
 			return nil, SearchDiaryEntriesFulltextOutput{}, friendlyError(err)
 		}
 
-		entries := make([]DiaryEntryOutput, 0, len(result.Entries))
-		for _, d := range result.Entries {
-			entries = append(entries, DiaryEntryOutput{
-				ID:        d.ID.String(),
-				Date:      d.Date.Format(dateLayout),
-				Content:   d.Content,
-				CreatedAt: d.CreatedAt,
-				UpdatedAt: d.UpdatedAt,
-			})
-		}
-
 		return nil, SearchDiaryEntriesFulltextOutput{
-			Entries:          entries,
+			Entries:          toDiaryEntryOutputs(result.Entries),
 			ExpandedKeywords: result.ExpandedKeywords,
 		}, nil
 	}
@@ -55,7 +44,10 @@ func searchDiaryEntriesFulltextHandler(diaryService *diary.DiaryEntry) mcp.ToolH
 // SearchDiaryEntriesFuzzyInput は search_diary_entries_fuzzy ツールの入力
 type SearchDiaryEntriesFuzzyInput struct {
 	Query string `json:"query" jsonschema:"自然言語の検索クエリ（例: 「最近旅行に行った時の話」）"`
-	Limit int    `json:"limit,omitempty" jsonschema:"返す件数の上限（デフォルト10、最大50）"`
+	// Limit はポインタ型にすることで「未指定」（nil、デフォルト10件を使う）と
+	// 「明示的に0を指定」（0件、クライアントの意図通りに0件を返す）を区別する。
+	// int の omitempty だとこの2つが同じ値（0）になり区別できなかった。
+	Limit *int `json:"limit,omitempty" jsonschema:"返す件数の上限（省略時は10、最大50）"`
 }
 
 // SemanticSearchResultOutput はあいまい検索1件分の出力
@@ -85,7 +77,12 @@ func searchDiaryEntriesFuzzyHandler(diaryService *diary.DiaryEntry) mcp.ToolHand
 			return nil, SearchDiaryEntriesFuzzyOutput{}, fmt.Errorf("query is required")
 		}
 
-		outcome, err := diaryService.SearchDiaryEntriesSemanticByUserID(ctx, userID, input.Query, input.Limit)
+		// limit省略時（nil）はデフォルト10件、明示的な指定（0件を含む）はその値をそのまま使う
+		limit := 10
+		if input.Limit != nil {
+			limit = *input.Limit
+		}
+		outcome, err := diaryService.SearchDiaryEntriesSemanticByUserID(ctx, userID, input.Query, limit)
 		if err != nil {
 			return nil, SearchDiaryEntriesFuzzyOutput{}, friendlyError(err)
 		}

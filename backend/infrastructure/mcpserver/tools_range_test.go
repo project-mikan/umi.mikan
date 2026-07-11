@@ -45,62 +45,64 @@ func TestGetDiaryEntriesByRangeHandler_Validation(t *testing.T) {
 	}
 }
 
-func TestGetDiaryEntriesByRangeHandler_Unauthenticated(t *testing.T) {
-	diaryService := &diary.DiaryEntry{}
-	handler := getDiaryEntriesByRangeHandler(diaryService)
+func TestGetDiaryEntriesByRangeHandler(t *testing.T) {
+	t.Run("異常系: 未認証の場合はエラー", func(t *testing.T) {
+		diaryService := &diary.DiaryEntry{}
+		handler := getDiaryEntriesByRangeHandler(diaryService)
 
-	_, _, err := handler(testutil.CreateUnauthenticatedContext(), nil, GetDiaryEntriesByRangeInput{
-		From: "2024-05-01",
-		To:   "2024-05-10",
+		_, _, err := handler(testutil.CreateUnauthenticatedContext(), nil, GetDiaryEntriesByRangeInput{
+			From: "2024-05-01",
+			To:   "2024-05-10",
+		})
+		if err == nil {
+			t.Fatal("未認証時にエラーを期待したがnilが返った")
+		}
 	})
-	if err == nil {
-		t.Fatal("未認証時にエラーを期待したがnilが返った")
-	}
-}
 
-func TestGetDiaryEntriesByRangeHandler_Success(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "mcp-range-test@example.com", "MCPRangeUser")
-	diaryService := &diary.DiaryEntry{DB: db}
-	ctx := testutil.CreateAuthenticatedContext(userID)
+	t.Run("正常系: 範囲内の日記を日付昇順で返す", func(t *testing.T) {
+		db := testutil.SetupTestDB(t)
+		userID := testutil.CreateTestUser(t, db, "mcp-range-test@example.com", "MCPRangeUser")
+		diaryService := &diary.DiaryEntry{DB: db}
+		ctx := testutil.CreateAuthenticatedContext(userID)
 
-	if _, err := diaryService.CreateDiaryEntry(ctx, createDiaryReq(2024, 5, 1, "5月1日の日記")); err != nil {
-		t.Fatalf("日記作成失敗: %v", err)
-	}
-	if _, err := diaryService.CreateDiaryEntry(ctx, createDiaryReq(2024, 5, 10, "5月10日の日記")); err != nil {
-		t.Fatalf("日記作成失敗: %v", err)
-	}
-	if _, err := diaryService.CreateDiaryEntry(ctx, createDiaryReq(2024, 6, 1, "6月1日の日記")); err != nil {
-		t.Fatalf("日記作成失敗: %v", err)
-	}
+		if _, err := diaryService.CreateDiaryEntry(ctx, createDiaryReq(2024, 5, 1, "5月1日の日記")); err != nil {
+			t.Fatalf("日記作成失敗: %v", err)
+		}
+		if _, err := diaryService.CreateDiaryEntry(ctx, createDiaryReq(2024, 5, 10, "5月10日の日記")); err != nil {
+			t.Fatalf("日記作成失敗: %v", err)
+		}
+		if _, err := diaryService.CreateDiaryEntry(ctx, createDiaryReq(2024, 6, 1, "6月1日の日記")); err != nil {
+			t.Fatalf("日記作成失敗: %v", err)
+		}
 
-	handler := getDiaryEntriesByRangeHandler(diaryService)
-	_, out, err := handler(ctx, nil, GetDiaryEntriesByRangeInput{From: "2024-05-01", To: "2024-05-31"})
-	if err != nil {
-		t.Fatalf("予期しないエラー: %v", err)
-	}
-	if len(out.Entries) != 2 {
-		t.Fatalf("期待件数 2 に対して %d 件取得", len(out.Entries))
-	}
-	if out.Entries[0].Date != "2024-05-01" || out.Entries[1].Date != "2024-05-10" {
-		t.Errorf("日付が正しくフォーマットされていない: %+v", out.Entries)
-	}
-}
+		handler := getDiaryEntriesByRangeHandler(diaryService)
+		_, out, err := handler(ctx, nil, GetDiaryEntriesByRangeInput{From: "2024-05-01", To: "2024-05-31"})
+		if err != nil {
+			t.Fatalf("予期しないエラー: %v", err)
+		}
+		if len(out.Entries) != 2 {
+			t.Fatalf("期待件数 2 に対して %d 件取得", len(out.Entries))
+		}
+		if out.Entries[0].Date != "2024-05-01" || out.Entries[1].Date != "2024-05-10" {
+			t.Errorf("日付が正しくフォーマットされていない: %+v", out.Entries)
+		}
+	})
 
-func TestGetDiaryEntriesByRangeHandler_DBError(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "mcp-range-dberror@example.com", "MCPRangeDBErrorUser")
-	diaryService := &diary.DiaryEntry{DB: db}
-	ctx := testutil.CreateAuthenticatedContext(userID)
+	t.Run("異常系: DBエラー時はエラーを返す", func(t *testing.T) {
+		db := testutil.SetupTestDB(t)
+		userID := testutil.CreateTestUser(t, db, "mcp-range-dberror@example.com", "MCPRangeDBErrorUser")
+		diaryService := &diary.DiaryEntry{DB: db}
+		ctx := testutil.CreateAuthenticatedContext(userID)
 
-	// DBを閉じてクエリエラーを発生させる
-	if err := db.Close(); err != nil {
-		t.Fatalf("DB クローズに失敗: %v", err)
-	}
+		// DBを閉じてクエリエラーを発生させる
+		if err := db.Close(); err != nil {
+			t.Fatalf("DB クローズに失敗: %v", err)
+		}
 
-	handler := getDiaryEntriesByRangeHandler(diaryService)
-	_, _, err := handler(ctx, nil, GetDiaryEntriesByRangeInput{From: "2024-05-01", To: "2024-05-31"})
-	if err == nil {
-		t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
-	}
+		handler := getDiaryEntriesByRangeHandler(diaryService)
+		_, _, err := handler(ctx, nil, GetDiaryEntriesByRangeInput{From: "2024-05-01", To: "2024-05-31"})
+		if err == nil {
+			t.Fatal("DBエラー時にエラーが返ることを期待したがnilが返った")
+		}
+	})
 }

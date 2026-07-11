@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
 	"google.golang.org/grpc"
@@ -41,20 +40,14 @@ func AuthInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, h
 		return nil, status.Errorf(codes.Unauthenticated, "missing authorization header")
 	}
 
-	// "Bearer " プレフィックスを確認
-	token := authHeader[0]
-	if !strings.HasPrefix(token, "Bearer ") {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid authorization format")
+	// "Bearer " プレフィックスを確認してトークンを抽出
+	accessToken, err := model.ExtractBearerToken(authHeader[0])
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "%v", err)
 	}
 
-	// トークンを抽出
-	accessToken := strings.TrimPrefix(token, "Bearer ")
-	if accessToken == "" {
-		return nil, status.Errorf(codes.Unauthenticated, "empty access token")
-	}
-
-	// JWTトークンの検証
-	_, userID, err := model.ParseAuthTokens(accessToken)
+	// JWTトークンの検証（リフレッシュトークンは拒否する）
+	_, userID, err := model.ParseAccessToken(accessToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
 	}

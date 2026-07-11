@@ -3,10 +3,13 @@ package mcpserver
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/domain/model"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/project-mikan/umi.mikan/backend/service/user"
@@ -125,8 +128,24 @@ func TestAuthMiddleware_APIKey(t *testing.T) {
 		return rec.Code, capturedUserID
 	}
 
+	// callWithTokenAndWaitLastUsedUpdate はlast_used_atの非同期更新（AuthMiddleware内でgoroutine化されている）
+	// の完了を待ってからリクエストを完了させる。afterLastUsedUpdateフックはテスト全体で共有される
+	// パッケージ変数のため、このヘルパーの呼び出し中だけ差し替えて元に戻す。
+	callWithTokenAndWaitLastUsedUpdate := func(t *testing.T, token string) (int, string) {
+		t.Helper()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		prev := afterLastUsedUpdate
+		afterLastUsedUpdate = func(error) { wg.Done() }
+		defer func() { afterLastUsedUpdate = prev }()
+
+		status, capturedUserID := callWithToken(t, token)
+		wg.Wait()
+		return status, capturedUserID
+	}
+
 	t.Run("正常系: 有効なAPIキーで認証されユーザーIDが注入される", func(t *testing.T) {
-		status, capturedUserID := callWithToken(t, created.ApiKey)
+		status, capturedUserID := callWithTokenAndWaitLastUsedUpdate(t, created.ApiKey)
 		if status != http.StatusOK {
 			t.Fatalf("ステータスコード: 期待 200, 実際 %d", status)
 		}
@@ -134,7 +153,7 @@ func TestAuthMiddleware_APIKey(t *testing.T) {
 			t.Errorf("ユーザーID: 期待 %v, 実際 %v", userID, capturedUserID)
 		}
 
-		// 最終使用日時が更新されている
+		// 最終使用日時が更新されている（非同期更新の完了をafterLastUsedUpdateフックで待っている）
 		listResp, err := userService.ListApiKeys(ctx, &g.ListApiKeysRequest{})
 		if err != nil {
 			t.Fatalf("一覧取得に失敗: %v", err)
@@ -161,6 +180,30 @@ func TestAuthMiddleware_APIKey(t *testing.T) {
 		}
 
 		status, _ := callWithToken(t, toDelete.ApiKey)
+		if status != http.StatusUnauthorized {
+			t.Errorf("ステータスコード: 期待 401, 実際 %d", status)
+		}
+	})
+
+	t.Run("異常系: 有効期限が切れたAPIキーは401", func(t *testing.T) {
+		expiring, err := userService.CreateApiKey(ctx, &g.CreateApiKeyRequest{Name: "期限切れテスト用キー"})
+		if err != nil {
+			t.Fatalf("APIキー発行に失敗: %v", err)
+		}
+		keyID, err := uuid.Parse(expiring.Info.Id)
+		if err != nil {
+			t.Fatalf("キーIDのパースに失敗: %v", err)
+		}
+		record, err := database.UserAPIKeyByID(t.Context(), db, keyID)
+		if err != nil {
+			t.Fatalf("キー取得に失敗: %v", err)
+		}
+		record.ExpiresAt = time.Now().Add(-time.Hour).Unix()
+		if err := record.Update(t.Context(), db); err != nil {
+			t.Fatalf("有効期限の更新に失敗: %v", err)
+		}
+
+		status, _ := callWithToken(t, expiring.ApiKey)
 		if status != http.StatusUnauthorized {
 			t.Errorf("ステータスコード: 期待 401, 実際 %d", status)
 		}

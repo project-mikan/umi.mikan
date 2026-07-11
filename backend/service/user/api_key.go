@@ -19,6 +19,12 @@ import (
 // apiKeyNameMaxLength はAPIキー名の最大文字数（user_api_keys.nameのVARCHAR(100)に合わせる）
 const apiKeyNameMaxLength = 100
 
+// apiKeyValidityDuration はAPIキーの有効期間。
+// JWTアクセストークン（15分）と違い長期間使う前提の認証情報だが、無期限にすると
+// 設定ファイル経由での漏洩時の被害が際限なく続く。90日で強制失効させ、
+// 継続利用する場合はユーザーに再発行してもらう。
+const apiKeyValidityDuration = 90 * 24 * time.Hour
+
 // toApiKeyInfo はDB行をレスポンス用のApiKeyInfoに変換する
 func toApiKeyInfo(key *database.UserAPIKey) *g.ApiKeyInfo {
 	lastUsedAt := int64(0)
@@ -31,6 +37,7 @@ func toApiKeyInfo(key *database.UserAPIKey) *g.ApiKeyInfo {
 		KeyPrefix:  key.KeyPrefix,
 		LastUsedAt: lastUsedAt,
 		CreatedAt:  key.CreatedAt,
+		ExpiresAt:  key.ExpiresAt,
 	}
 }
 
@@ -58,15 +65,16 @@ func (s *UserEntry) CreateApiKey(ctx context.Context, req *g.CreateApiKeyRequest
 		return nil, status.Error(codes.Internal, "createFailed")
 	}
 
-	currentTime := time.Now().Unix()
+	currentTime := time.Now()
 	key := &database.UserAPIKey{
 		ID:        uuid.New(),
 		UserID:    userID,
 		Name:      req.GetName(),
 		KeyHash:   generated.Hash,
 		KeyPrefix: generated.DisplayPrefix,
-		CreatedAt: currentTime,
-		UpdatedAt: currentTime,
+		ExpiresAt: currentTime.Add(apiKeyValidityDuration).Unix(),
+		CreatedAt: currentTime.Unix(),
+		UpdatedAt: currentTime.Unix(),
 	}
 	if err := key.Insert(ctx, s.DB); err != nil {
 		return nil, status.Error(codes.Internal, "createFailed")

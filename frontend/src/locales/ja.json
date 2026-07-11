@@ -96,6 +96,7 @@
       "colKey": "キー",
       "colCreated": "作成日",
       "colLastUsed": "最終使用",
+      "colExpires": "有効期限",
       "neverUsed": "未使用",
       "deleteButton": "削除",
       "deleteConfirm": "APIキーの削除",

@@ -47,23 +47,14 @@ func NewAuthInterceptor() connect.UnaryInterceptorFunc {
 				return next(ctx, req)
 			}
 
-			// Authorization ヘッダーを取得
-			authHeader := req.Header().Get("Authorization")
-			if authHeader == "" {
-				return nil, connect.NewError(connect.CodeUnauthenticated, nil)
+			// Authorization ヘッダーからBearerトークンを抽出
+			accessToken, err := model.ExtractBearerToken(req.Header().Get("Authorization"))
+			if err != nil {
+				return nil, connect.NewError(connect.CodeUnauthenticated, err)
 			}
 
-			if !strings.HasPrefix(authHeader, "Bearer ") {
-				return nil, connect.NewError(connect.CodeUnauthenticated, nil)
-			}
-
-			accessToken := strings.TrimPrefix(authHeader, "Bearer ")
-			if accessToken == "" {
-				return nil, connect.NewError(connect.CodeUnauthenticated, nil)
-			}
-
-			// JWT を検証してユーザーIDを取得
-			_, userID, err := model.ParseAuthTokens(accessToken)
+			// JWT を検証してユーザーIDを取得（リフレッシュトークンは拒否する）
+			_, userID, err := model.ParseAccessToken(accessToken)
 			if err != nil {
 				return nil, connect.NewError(connect.CodeUnauthenticated, err)
 			}

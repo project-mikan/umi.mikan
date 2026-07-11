@@ -17,6 +17,7 @@ type UserAPIKey struct {
 	KeyHash    string        `json:"key_hash"`     // key_hash
 	KeyPrefix  string        `json:"key_prefix"`   // key_prefix
 	LastUsedAt sql.NullInt64 `json:"last_used_at"` // last_used_at
+	ExpiresAt  int64         `json:"expires_at"`   // expires_at
 	CreatedAt  int64         `json:"created_at"`   // created_at
 	UpdatedAt  int64         `json:"updated_at"`   // updated_at
 	// xo fields
@@ -44,13 +45,13 @@ func (uak *UserAPIKey) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.user_api_keys (` +
-		`id, user_id, name, key_hash, key_prefix, last_used_at, created_at, updated_at` +
+		`id, user_id, name, key_hash, key_prefix, last_used_at, expires_at, created_at, updated_at` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6, $7, $8, $9` +
 		`)`
 	// run
-	logf(sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.CreatedAt, uak.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.CreatedAt, uak.UpdatedAt); err != nil {
+	logf(sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.ExpiresAt, uak.CreatedAt, uak.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.ExpiresAt, uak.CreatedAt, uak.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -68,11 +69,11 @@ func (uak *UserAPIKey) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.user_api_keys SET ` +
-		`user_id = $1, name = $2, key_hash = $3, key_prefix = $4, last_used_at = $5, created_at = $6, updated_at = $7 ` +
-		`WHERE id = $8`
+		`user_id = $1, name = $2, key_hash = $3, key_prefix = $4, last_used_at = $5, expires_at = $6, created_at = $7, updated_at = $8 ` +
+		`WHERE id = $9`
 	// run
-	logf(sqlstr, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.CreatedAt, uak.UpdatedAt, uak.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.CreatedAt, uak.UpdatedAt, uak.ID); err != nil {
+	logf(sqlstr, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.ExpiresAt, uak.CreatedAt, uak.UpdatedAt, uak.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.ExpiresAt, uak.CreatedAt, uak.UpdatedAt, uak.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -94,16 +95,16 @@ func (uak *UserAPIKey) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.user_api_keys (` +
-		`id, user_id, name, key_hash, key_prefix, last_used_at, created_at, updated_at` +
+		`id, user_id, name, key_hash, key_prefix, last_used_at, expires_at, created_at, updated_at` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6, $7, $8, $9` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`user_id = EXCLUDED.user_id, name = EXCLUDED.name, key_hash = EXCLUDED.key_hash, key_prefix = EXCLUDED.key_prefix, last_used_at = EXCLUDED.last_used_at, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`user_id = EXCLUDED.user_id, name = EXCLUDED.name, key_hash = EXCLUDED.key_hash, key_prefix = EXCLUDED.key_prefix, last_used_at = EXCLUDED.last_used_at, expires_at = EXCLUDED.expires_at, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
 	// run
-	logf(sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.CreatedAt, uak.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.CreatedAt, uak.UpdatedAt); err != nil {
+	logf(sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.ExpiresAt, uak.CreatedAt, uak.UpdatedAt)
+	if _, err := db.ExecContext(ctx, sqlstr, uak.ID, uak.UserID, uak.Name, uak.KeyHash, uak.KeyPrefix, uak.LastUsedAt, uak.ExpiresAt, uak.CreatedAt, uak.UpdatedAt); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -138,7 +139,7 @@ func (uak *UserAPIKey) Delete(ctx context.Context, db DB) error {
 func UserAPIKeysByUserID(ctx context.Context, db DB, userID uuid.UUID) ([]*UserAPIKey, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, name, key_hash, key_prefix, last_used_at, created_at, updated_at ` +
+		`id, user_id, name, key_hash, key_prefix, last_used_at, expires_at, created_at, updated_at ` +
 		`FROM public.user_api_keys ` +
 		`WHERE user_id = $1`
 	// run
@@ -155,7 +156,7 @@ func UserAPIKeysByUserID(ctx context.Context, db DB, userID uuid.UUID) ([]*UserA
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&uak.ID, &uak.UserID, &uak.Name, &uak.KeyHash, &uak.KeyPrefix, &uak.LastUsedAt, &uak.CreatedAt, &uak.UpdatedAt); err != nil {
+		if err := rows.Scan(&uak.ID, &uak.UserID, &uak.Name, &uak.KeyHash, &uak.KeyPrefix, &uak.LastUsedAt, &uak.ExpiresAt, &uak.CreatedAt, &uak.UpdatedAt); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &uak)
@@ -172,7 +173,7 @@ func UserAPIKeysByUserID(ctx context.Context, db DB, userID uuid.UUID) ([]*UserA
 func UserAPIKeyByKeyHash(ctx context.Context, db DB, keyHash string) (*UserAPIKey, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, name, key_hash, key_prefix, last_used_at, created_at, updated_at ` +
+		`id, user_id, name, key_hash, key_prefix, last_used_at, expires_at, created_at, updated_at ` +
 		`FROM public.user_api_keys ` +
 		`WHERE key_hash = $1`
 	// run
@@ -180,7 +181,7 @@ func UserAPIKeyByKeyHash(ctx context.Context, db DB, keyHash string) (*UserAPIKe
 	uak := UserAPIKey{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, keyHash).Scan(&uak.ID, &uak.UserID, &uak.Name, &uak.KeyHash, &uak.KeyPrefix, &uak.LastUsedAt, &uak.CreatedAt, &uak.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, keyHash).Scan(&uak.ID, &uak.UserID, &uak.Name, &uak.KeyHash, &uak.KeyPrefix, &uak.LastUsedAt, &uak.ExpiresAt, &uak.CreatedAt, &uak.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &uak, nil
@@ -192,7 +193,7 @@ func UserAPIKeyByKeyHash(ctx context.Context, db DB, keyHash string) (*UserAPIKe
 func UserAPIKeyByID(ctx context.Context, db DB, id uuid.UUID) (*UserAPIKey, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, user_id, name, key_hash, key_prefix, last_used_at, created_at, updated_at ` +
+		`id, user_id, name, key_hash, key_prefix, last_used_at, expires_at, created_at, updated_at ` +
 		`FROM public.user_api_keys ` +
 		`WHERE id = $1`
 	// run
@@ -200,7 +201,7 @@ func UserAPIKeyByID(ctx context.Context, db DB, id uuid.UUID) (*UserAPIKey, erro
 	uak := UserAPIKey{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&uak.ID, &uak.UserID, &uak.Name, &uak.KeyHash, &uak.KeyPrefix, &uak.LastUsedAt, &uak.CreatedAt, &uak.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&uak.ID, &uak.UserID, &uak.Name, &uak.KeyHash, &uak.KeyPrefix, &uak.LastUsedAt, &uak.ExpiresAt, &uak.CreatedAt, &uak.UpdatedAt); err != nil {
 		return nil, logerror(err)
 	}
 	return &uak, nil
