@@ -19,10 +19,15 @@ struct DiaryDetailSheet: View {
 
     /// 現在表示中の日記のインデックス
     @State private var index: Int
+    /// 現在表示中の日記のViewModel。切り替え前に未保存の変更を保存できるよう、
+    /// DiaryDetailView ではなくこちらで所有する（切り替え時は都度作り直す）。
+    @State private var viewModel: DiaryDetailViewModel
     /// ドラッグ中の横方向の移動量（指の動きに追従させて手応えを出す）
     @State private var dragOffset: CGFloat = 0
     /// 切り替え時のスライド方向（新しい日記が入ってくる側の端）
     @State private var slideInEdge: Edge = .trailing
+    /// スワイプによる切り替え処理が進行中かどうか（多重発火防止）
+    @State private var isTransitioning = false
 
     // swiftlint:disable:next type_contents_order
     init(items: [DiarySheetItem], initialIndex: Int, authViewModel: AuthViewModel, syncManager: SyncManager) {
@@ -30,16 +35,20 @@ struct DiaryDetailSheet: View {
         self.authViewModel = authViewModel
         self.syncManager = syncManager
         // 範囲外のインデックスが渡されても落ちないように丸める
-        _index = State(initialValue: min(max(initialIndex, 0), max(items.count - 1, 0)))
+        let resolvedIndex = min(max(initialIndex, 0), max(items.count - 1, 0))
+        _index = State(initialValue: resolvedIndex)
+        _viewModel = State(initialValue: DiaryDetailViewModel(
+            date: items[resolvedIndex].date,
+            authViewModel: authViewModel,
+            syncManager: syncManager
+        ))
     }
 
     var body: some View {
         NavigationStack {
             GeometryReader { proxy in
                 DiaryDetailView(
-                    date: items[index].date,
-                    authViewModel: authViewModel,
-                    syncManager: syncManager,
+                    viewModel: viewModel,
                     highlightKeywords: items[index].highlightKeywords
                 )
                 // 日付が変わったらViewModelごと作り直す
@@ -99,29 +108,47 @@ struct DiaryDetailSheet: View {
         withAnimation(Self.slideAnimation) { dragOffset = 0 }
     }
 
-    /// 次の日記（配列の後ろ）へ移動する。新しい日記は右から入ってくる
+    /// 次の日記（配列の後ろ）へ移動する。新しい日記は右から入ってくる。
+    /// 遷移前に現在の日記の未保存の変更を保存してから index を進める。
     private func showNext() {
-        guard index < items.count - 1 else {
+        guard index < items.count - 1, !isTransitioning else {
             resetOffset()
             return
         }
-        slideInEdge = .trailing
-        withAnimation(Self.slideAnimation) {
-            index += 1
-            dragOffset = 0
-        }
+        transition(to: index + 1, edge: .trailing)
     }
 
-    /// 前の日記（配列の前）へ移動する。新しい日記は左から入ってくる
+    /// 前の日記（配列の前）へ移動する。新しい日記は左から入ってくる。
+    /// 遷移前に現在の日記の未保存の変更を保存してから index を戻す。
     private func showPrevious() {
-        guard index > 0 else {
+        guard index > 0, !isTransitioning else {
             resetOffset()
             return
         }
-        slideInEdge = .leading
-        withAnimation(Self.slideAnimation) {
-            index -= 1
-            dragOffset = 0
+        transition(to: index - 1, edge: .leading)
+    }
+
+    /// 現在の日記に未保存の変更があれば保存を待ってから、指定インデックスへ遷移する。
+    /// DiaryDetailView は .id() 変更で破棄されるため、ここで保存を確定させないと
+    /// フォーカス喪失やバックグラウンド移行を経由しないスワイプ操作で編集内容が失われる。
+    private func transition(to newIndex: Int, edge: Edge) {
+        isTransitioning = true
+        Task {
+            if viewModel.hasUnsavedChanges {
+                await viewModel.save()
+            }
+            let nextViewModel = DiaryDetailViewModel(
+                date: items[newIndex].date,
+                authViewModel: authViewModel,
+                syncManager: syncManager
+            )
+            slideInEdge = edge
+            withAnimation(Self.slideAnimation) {
+                index = newIndex
+                viewModel = nextViewModel
+                dragOffset = 0
+            }
+            isTransitioning = false
         }
     }
 }

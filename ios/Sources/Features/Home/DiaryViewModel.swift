@@ -52,8 +52,7 @@ final class DiaryViewModel {
     /// 今日・昨日・一昨日の日付を計算して初期化する。
     /// バックエンドが JST 基準で日付を管理するため、カレンダーも JST 固定にする。
     func setup() {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let calendar = Calendar.jst
         let now = Date()
         today = DiaryDayData(date: ymd(from: now, calendar: calendar))
         yesterday = DiaryDayData(date: ymd(from: calendar.date(byAdding: .day, value: -1, to: now)!, calendar: calendar))

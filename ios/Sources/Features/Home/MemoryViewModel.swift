@@ -59,10 +59,7 @@ final class MemoryViewModel {
     /// サーバーから「おもいで」（n年前の今日）の日記を取得する。
     /// オフライン時・エラー時は静かに失敗し items を空のままにする（付加的な導線のため通常表示を妨げない）。
     func load(today: Date = Date()) async {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
-
-        let dates = Self.pastYearsSameDayDates(today: today, calendar: calendar)
+        let dates = Self.pastYearsSameDayDates(today: today, calendar: .jst)
         guard !dates.isEmpty else {
             items = []
             return

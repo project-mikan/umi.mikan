@@ -261,12 +261,6 @@ struct HomeView: View {
         }
     }
 
-    /// フォーカス中のカードの日記を保存する（キーボードツールバーの保存ボタン用）
-    private func saveFocusedCard() {
-        guard let focusedCard else { return }
-        save(card: focusedCard)
-    }
-
     /// 指定カードに未保存の変更がある場合のみ保存する（フォーカスが外れた時の自動保存用）
     private func autoSaveIfChanged(card: DiaryCardFocus) {
         let hasChanges = switch card {

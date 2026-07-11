@@ -6,12 +6,14 @@ struct DiaryDetailView: View {
     private static let timestampFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.timeZone = .jst
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
         return formatter
     }()
 
-    @State private var viewModel: DiaryDetailViewModel
+    /// 表示中の日記のViewModel。スワイプ切り替え前に呼び出し元（DiaryDetailSheet）が
+    /// 未保存の変更を保存できるよう、所有権は呼び出し元に持たせて Bindable で受け取る。
+    @Bindable var viewModel: DiaryDetailViewModel
     /// 「この日記の概要」カーテンの開閉状態（デフォルトは閉じる）
     @State private var isTimelineExpanded = false
     /// ハイライト表示から編集モードへ切り替えたかどうか
@@ -27,11 +29,9 @@ struct DiaryDetailView: View {
     private let highlightKeywords: [String]
 
     // swiftlint:disable:next type_contents_order
-    init(date: Diary_YMD, authViewModel: AuthViewModel, syncManager: SyncManager, highlightKeywords: [String] = []) {
+    init(viewModel: DiaryDetailViewModel, highlightKeywords: [String] = []) {
+        self.viewModel = viewModel
         self.highlightKeywords = highlightKeywords
-        _viewModel = State(
-            initialValue: DiaryDetailViewModel(date: date, authViewModel: authViewModel, syncManager: syncManager)
-        )
     }
 
     var body: some View {

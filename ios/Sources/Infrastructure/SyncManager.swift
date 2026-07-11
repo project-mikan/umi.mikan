@@ -1,6 +1,9 @@
 import Connect
 import Foundation
 import Network
+#if canImport(UIKit)
+    import UIKit
+#endif
 
 /// オフライン編集の同期を管理するマネージャー。
 ///
@@ -19,6 +22,11 @@ final class SyncManager {
     private let authViewModel: AuthViewModel
     private let store: LocalDiaryStore
     private let monitor = NWPathMonitor()
+    #if canImport(UIKit)
+        /// syncPending 実行中のバックグラウンドタスクID。期限切れハンドラと defer の二重解放を防ぐため、
+        /// 解放時は必ずこのプロパティ経由でIDを取り出し .invalid にリセットしてから endBackgroundTask する。
+        private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+    #endif
 
     init(authViewModel: AuthViewModel, store: LocalDiaryStore = .shared) {
         self.authViewModel = authViewModel
@@ -29,20 +37,48 @@ final class SyncManager {
         updateLiveActivity()
     }
 
-    /// 同期待ちのエントリをすべてサーバーへ送信する
+    /// 同期待ちのエントリをすべてサーバーへ送信する。
+    /// 保存操作からは detached Task で fire-and-forget 起動されるため、
+    /// アプリがバックグラウンドへ移行した直後に呼ばれてもOSに即座にサスペンドされないよう
+    /// バックグラウンド実行時間を延長するアサーションを取得してから同期する。
     func syncPending() async {
         guard !isSyncing else { return }
         isSyncing = true
         updateLiveActivity()
+        beginBackgroundTask()
         defer {
             isSyncing = false
             pendingCount = store.pendingEntries().count
             updateLiveActivity()
+            endBackgroundTask()
         }
 
         for local in store.pendingEntries() {
             await syncEntry(local)
         }
+    }
+
+    /// バックグラウンド実行時間の延長をリクエストする（UIKitが使えない環境では何もしない）
+    private func beginBackgroundTask() {
+        #if canImport(UIKit)
+            backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "DiarySync") { [weak self] in
+                // expirationHandler は任意のスレッドから呼ばれうるため、@MainActor へホップしてから解放する
+                Task { @MainActor in
+                    self?.endBackgroundTask()
+                }
+            }
+        #endif
+    }
+
+    /// バックグラウンド実行時間の延長アサーションを解放する。
+    /// 期限切れハンドラと defer の両方から呼ばれうるため、解放済みなら何もしないようIDをリセットする。
+    private func endBackgroundTask() {
+        #if canImport(UIKit)
+            guard backgroundTaskID != .invalid else { return }
+            let taskID = backgroundTaskID
+            backgroundTaskID = .invalid
+            UIApplication.shared.endBackgroundTask(taskID)
+        #endif
     }
 
     /// 同期待ち件数を最新化する

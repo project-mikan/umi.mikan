@@ -39,27 +39,21 @@ final class MonthlyViewModel {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
         // バックエンドが JST 基準で日付を管理するため JST 固定にする
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.timeZone = .jst
         formatter.dateFormat = "E"
         return formatter
     }()
 
     /// JST 固定カレンダー（毎回生成するとスクロール時に高コストになるためキャッシュする）
-    private let jstCalendar: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
-        return calendar
-    }()
+    private let jstCalendar: Calendar = .jst
 
     init(authViewModel: AuthViewModel, store: LocalDiaryStore = .shared) {
         self.authViewModel = authViewModel
         self.store = store
         // バックエンドが JST 基準で日付を管理するため JST 固定にする
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
         let now = Date()
-        year = calendar.component(.year, from: now)
-        month = calendar.component(.month, from: now)
+        year = jstCalendar.component(.year, from: now)
+        month = jstCalendar.component(.month, from: now)
     }
 
     /// 表示中の月の日記エントリを取得する（ローカル優先＋サーバー同期）

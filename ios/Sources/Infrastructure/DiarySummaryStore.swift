@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 #if canImport(FoundationModels)
     import FoundationModels
@@ -5,8 +6,10 @@ import Foundation
 
 /// オンデバイスLLM（Foundation Models）による日記要約のキャッシュエントリ
 struct DiarySummaryCacheEntry: Codable, Equatable {
-    /// 要約元本文のハッシュ値（本文が変わったら再生成させるための判定に使う）
-    var contentHash: Int
+    /// 要約元本文のハッシュ値（本文が変わったら再生成させるための判定に使う）。
+    /// ディスクへ永続化し次回起動時にも比較するため、プロセスごとに値が変わる Hasher ではなく
+    /// SHA256 のような安定したハッシュを使う必要がある。
+    var contentHash: String
     /// 生成された要約の箇条書き（最大3件、各10文字以内を想定）
     var points: [String]
 }
@@ -67,11 +70,13 @@ final class DiarySummaryStore {
         cache = _loadDiarySummaryCache(from: resolvedURL)
     }
 
-    /// 本文の内容ハッシュを計算する（キャッシュの有効性判定に使う）
-    static func contentHash(_ content: String) -> Int {
-        var hasher = Hasher()
-        hasher.combine(content)
-        return hasher.finalize()
+    /// 本文の内容ハッシュを計算する（キャッシュの有効性判定に使う）。
+    /// Swift の Hasher はプロセスごとにシードがランダム化されるため、アプリ再起動をまたいで
+    /// ディスクキャッシュと比較する用途には使えない（比較が常に不一致になりキャッシュが無効化される）。
+    /// そのため SHA256 のようなプロセスに依存しない安定したハッシュを使う。
+    static func contentHash(_ content: String) -> String {
+        let digest = SHA256.hash(data: Data(content.utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 
     /// モデルの生出力を箇条書き配列にパースする。
