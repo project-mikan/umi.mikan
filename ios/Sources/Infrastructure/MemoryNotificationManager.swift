@@ -22,10 +22,15 @@ final class MemoryNotificationManager {
     /// 通知時刻（分）の永続化キー
     private static let minuteDefaultsKey = "memoryNotificationMinute"
 
-    /// リネーム前（OnThisDayNotificationManager）が使っていた通知識別子。
-    /// アプリ更新前にこの識別子で登録されたローカル通知はOS側に残り続けるため、
+    /// 過去にリネーム・廃止された通知識別子の一覧。
+    /// アプリ更新前にこれらの識別子で登録されたローカル通知はOS側に残り続けるため、
     /// 起動時に明示的に削除しないと新通知と二重に発火してしまう。
-    private static let legacyNotificationIdentifier = "on_this_day_daily_notification"
+    /// 今後 identifier を変更する場合は、旧値をこの配列に追加するだけで後片付けが効くようにする
+    /// （CLAUDE.md: 識別子/UserDefaultsキー変更時は必ず旧値の後片付け処理もセットで追加すること）。
+    private static let legacyNotificationIdentifiers = [
+        // OnThisDayNotificationManager → MemoryNotificationManager へのリネームで使われなくなった識別子
+        "on_this_day_daily_notification"
+    ]
 
     private let notificationCenter: UNUserNotificationCenter
     private let userDefaults: UserDefaults
@@ -95,13 +100,13 @@ final class MemoryNotificationManager {
         return settings.authorizationStatus == .authorized
     }
 
-    /// リネーム前（OnThisDayNotificationManager）が残した孤児通知を削除する。
+    /// 過去にリネーム・廃止された識別子が残した孤児通知を削除する。
     /// アプリ起動時に一度だけ呼び出すこと。旧バージョンで通知をONにしていたユーザーの端末には
     /// 新識別子と無関係に毎日発火する古い通知リクエストが残ったままになり、
     /// 新通知と合わせて「朝に2回通知が来る」原因になっていた。
     func migrateLegacyNotification() {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [Self.legacyNotificationIdentifier])
-        notificationCenter.removeDeliveredNotifications(withIdentifiers: [Self.legacyNotificationIdentifier])
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: Self.legacyNotificationIdentifiers)
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: Self.legacyNotificationIdentifiers)
     }
 
     /// 毎日決まった時刻に繰り返し発火するローカル通知をスケジュールする

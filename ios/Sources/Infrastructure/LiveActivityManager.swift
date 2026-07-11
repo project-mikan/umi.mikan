@@ -67,9 +67,15 @@ final class LiveActivityManager {
             staleDate: nil
         )
 
-        // アプリ再起動時などは既存のアクティビティを引き継ぐ
+        // アプリ再起動時などは既存のアクティビティを引き継ぐ。
+        // クラッシュ等で複数のActivityが残っている異常系では、1つだけを引き継ぎ、
+        // それ以外は古い情報を表示し続けないよう終了させる
         if activity == nil {
-            activity = Activity<DiaryActivityAttributes>.activities.first
+            let existing = Activity<DiaryActivityAttributes>.activities
+            activity = existing.first
+            for stale in existing where stale.id != activity?.id {
+                Task { await stale.end(nil, dismissalPolicy: .immediate) }
+            }
         }
 
         if let activity {

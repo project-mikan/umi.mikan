@@ -67,6 +67,16 @@ struct DiaryDetailSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        // 下スワイプでシートを閉じる操作はフォーカス喪失やバックグラウンド移行を
+        // 経由しないため、他の自動保存経路にヒットせず編集内容が消えてしまう。
+        // シート消滅時に未保存の変更があれば必ず保存する。
+        // transition(to:) によるスワイプ切り替えの保存が既に進行中の場合は
+        // 二重に保存を走らせない（isSaving は save() 完了後に false へ戻るため、
+        // 完了済みなら hasUnsavedChanges も既に false になっている）。
+        .onDisappear {
+            guard viewModel.hasUnsavedChanges, !viewModel.isSaving else { return }
+            Task { await viewModel.save() }
+        }
     }
 
     /// 左右スワイプで前後の日記へ移動するジェスチャー。

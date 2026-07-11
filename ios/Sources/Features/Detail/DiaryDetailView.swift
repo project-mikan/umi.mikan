@@ -50,7 +50,7 @@ struct DiaryDetailView: View {
                 }
                 // バックグラウンド移行時の書きかけ保存とLive Activity制御
                 .onChange(of: scenePhase) { _, newPhase in
-                    handleScenePhase(newPhase)
+                    handleDraftScenePhase(newPhase)
                 }
         }
     }
@@ -215,34 +215,6 @@ struct DiaryDetailView: View {
         .buttonStyle(.plain)
     }
 
-    /// アプリのフォアグラウンド状態の変化に応じて、書きかけの保存とLive Activityを制御する
-    private func handleScenePhase(_ phase: ScenePhase) {
-        switch phase {
-        case .inactive:
-            // Live Activityの開始はフォアグラウンド中しかできないため、
-            // バックグラウンド移行直前の inactive の時点で開始する
-            if viewModel.hasUnsavedChanges {
-                LiveActivityManager.shared.setDraft(true)
-            }
-
-        case .background:
-            // 書きかけを失わないようにローカルへ自動保存し、保存完了後に書きかけフラグを解除する
-            if viewModel.hasUnsavedChanges {
-                Task {
-                    await viewModel.save()
-                    LiveActivityManager.shared.setDraft(false)
-                }
-            }
-
-        case .active:
-            // フォアグラウンド復帰したら書きかけのLive Activityを終了する
-            LiveActivityManager.shared.setDraft(false)
-
-        @unknown default:
-            break
-        }
-    }
-
     /// 最初にキーワードがマッチした行まで自動スクロールする。
     /// レイアウト確定を待つため少し遅らせてから実行する。
     private func scrollToFirstHighlight(_ proxy: ScrollViewProxy) async {
@@ -297,5 +269,17 @@ struct DiaryDetailView: View {
     private func formatTimestamp(_ timestamp: Int64) -> String {
         let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
         return Self.timestampFormatter.string(from: date)
+    }
+}
+
+// MARK: - DraftAutoSaving
+
+extension DiaryDetailView: DraftAutoSaving {
+    var hasDraftInProgress: Bool {
+        viewModel.hasUnsavedChanges
+    }
+
+    func performDraftSave() async {
+        await viewModel.save()
     }
 }

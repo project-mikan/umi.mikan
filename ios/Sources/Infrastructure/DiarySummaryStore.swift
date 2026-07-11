@@ -41,6 +41,12 @@ final class DiarySummaryStore {
     nonisolated static let shared = DiarySummaryStore()
     /// 要約文の最大文字数（2〜3行の折り返し表示枠に収まる目安）
     static let maxSummaryLength = 60
+    /// キャッシュに保持するエントリ数の上限。
+    /// 日記アプリとして数年〜数十年運用されることを想定し、無制限に増え続けると
+    /// 起動時の全件ロードや persist() の全件書き込みコストが際限なく増えるため上限を設ける。
+    /// dateKey（"YYYY-MM-DD"）の文字列昇順が日付昇順と一致することを利用し、
+    /// 上限超過時は最も古い日付のエントリから間引く（直近の月をよく見る利用パターンを想定）。
+    static let maxCacheEntries = 2000
 
     /// dateKey（"YYYY-MM-DD"）をキーとした要約文のマップ。生成中のキーはこのマップに含まれない。
     private(set) var summaries: [String: String] = [:]
@@ -139,6 +145,7 @@ final class DiarySummaryStore {
             )
             summaries[key] = summary
             justCompletedKeys.insert(key)
+            evictOldestIfNeeded()
             persist()
         }
     }
@@ -201,6 +208,20 @@ final class DiarySummaryStore {
         #else
             return nil
         #endif
+    }
+
+    /// キャッシュの件数が上限を超えていたら、最も古い日付のエントリから間引く。
+    /// 永続キャッシュ（cache）だけでなく、UIが参照する summaries も同じキーで削除し、
+    /// 「summariesに残っているのに検証元のcacheが無い」という不整合を防ぐ
+    /// （不整合があると、本文が変わって再検証が必要になっても古い要約が表示され続ける）。
+    private func evictOldestIfNeeded() {
+        guard cache.count > Self.maxCacheEntries else { return }
+        let excess = cache.count - Self.maxCacheEntries
+        let oldestKeys = cache.keys.sorted().prefix(excess)
+        for key in oldestKeys {
+            cache.removeValue(forKey: key)
+            summaries.removeValue(forKey: key)
+        }
     }
 
     /// キャッシュをファイルへ書き込む

@@ -24,6 +24,17 @@ struct MonthlyView: View {
         _viewModel = State(initialValue: MonthlyViewModel(authViewModel: authViewModel))
     }
 
+    /// 年ピッカーで選択できる年の範囲（1980年〜現在の年）。
+    /// デバイスの暦設定が和暦などに変わっても正しいグレゴリオ年を使うため Calendar.gregorian を明示する。
+    /// SwiftUIの body 再評価（状態変化時）でのみ再評価される computed property のため、
+    /// 「ボタンをタップして開く」以外の経路（goToToday() など）で年が変わった場合でも
+    /// 常に最新の年範囲を返す。年をまたぐ判定はDateの生成コストのみで、
+    /// Pickerのスクロール操作自体はView再描画を伴わないため実行コストは無視できる。
+    private var selectableYears: [Int] {
+        let currentYear = Calendar(identifier: .gregorian).component(.year, from: Date())
+        return Array(1980 ... max(currentYear, 1980))
+    }
+
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
@@ -178,14 +189,6 @@ struct MonthlyView: View {
         }
         .padding(.horizontal, 16)
     }
-
-    /// 年ピッカーで選択できる年の範囲（1980年〜現在の年）。
-    /// デバイスの暦設定が和暦などに変わっても正しいグレゴリオ年を使うため Calendar.gregorian を明示する。
-    /// また computed var にすると Picker スクロールのたびに再計算されるため let で一度だけ生成する。
-    private let selectableYears: [Int] = {
-        let currentYear = Calendar(identifier: .gregorian).component(.year, from: Date())
-        return Array(1980 ... max(currentYear, 1980))
-    }()
 
     // MARK: - 日リスト
 

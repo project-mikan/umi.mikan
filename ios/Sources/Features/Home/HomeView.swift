@@ -2,6 +2,9 @@ import SwiftUI
 
 /// ホーム画面 - 今日・昨日・一昨日の日記を表示・編集する
 struct HomeView: View {
+    /// 「おもいで」セクションへスクロールする際に参照するID（通知タップ時の遷移用）
+    private static let memorySectionID = "memorySection"
+
     @State private var viewModel: DiaryViewModel
     @State private var memoryViewModel: MemoryViewModel
     @State private var todayContent: String = ""
@@ -46,22 +49,31 @@ struct HomeView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                syncStatusBanner
-                if viewModel.isLoading {
-                    loadingView
-                } else {
-                    todayCard
-                    MemorySectionView(items: memoryViewModel.items) { item in
-                        selectedMemoryItem = DiarySheetItem(date: item.entry.date)
+        ScrollViewReader { scrollProxy in
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    syncStatusBanner
+                    if viewModel.isLoading {
+                        loadingView
+                    } else {
+                        todayCard
+                        MemorySectionView(items: memoryViewModel.items) { item in
+                            selectedMemoryItem = DiarySheetItem(date: item.entry.date)
+                        }
+                        .id(Self.memorySectionID)
+                        yesterdayCard
+                        dayBeforeYesterdayCard
                     }
-                    yesterdayCard
-                    dayBeforeYesterdayCard
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .memoryNotificationTapped)) { _ in
+                guard !memoryViewModel.items.isEmpty else { return }
+                withAnimation {
+                    scrollProxy.scrollTo(Self.memorySectionID, anchor: .top)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
         }
         .task {
             // ローカルストアから即座に表示する。データの有無によらず即座にスプラッシュを終了する
@@ -137,7 +149,7 @@ struct HomeView: View {
         }
         // バックグラウンド移行時の書きかけ保存とLive Activity制御
         .onChange(of: scenePhase) { _, newPhase in
-            handleScenePhase(newPhase)
+            handleDraftScenePhase(newPhase)
         }
     }
 
@@ -320,39 +332,17 @@ struct HomeView: View {
 
 // MARK: - バックグラウンド移行時の書きかけ保存・Live Activity制御
 
-extension HomeView {
+extension HomeView: DraftAutoSaving {
     /// 書きかけ（保存していない編集途中の内容）があるかどうか
-    private var hasDraftInProgress: Bool {
+    var hasDraftInProgress: Bool {
         todayContent != lastAppliedToday
             || yesterdayContent != lastAppliedYesterday
             || dayBeforeYesterdayContent != lastAppliedDayBefore
     }
 
-    /// アプリのフォアグラウンド状態の変化に応じて、書きかけの保存とLive Activityを制御する
-    func handleScenePhase(_ phase: ScenePhase) {
-        switch phase {
-        case .inactive:
-            // Live Activityの開始はフォアグラウンド中しかできないため、
-            // バックグラウンド移行直前の inactive の時点で開始する
-            if hasDraftInProgress {
-                LiveActivityManager.shared.setDraft(true)
-            }
-
-        case .background:
-            // 書きかけを失わないようにローカルへ自動保存し、全カード保存後に書きかけフラグを解除する
-            Task { await backgroundSaveAndClearDraft() }
-
-        case .active:
-            // フォアグラウンド復帰したら書きかけのLive Activityを終了する
-            LiveActivityManager.shared.setDraft(false)
-
-        @unknown default:
-            break
-        }
-    }
-
-    /// 全カードを await 可能な形で順番に保存し、完了後に書きかけフラグを解除する（バックグラウンド移行時用）
-    private func backgroundSaveAndClearDraft() async {
+    /// 3枚のカードのうち未保存の変更があるものだけを順番に保存する（バックグラウンド移行時用）。
+    /// setDraft(false) の呼び出しは共通実装（DraftAutoSaving.handleDraftScenePhase）側で行う。
+    func performDraftSave() async {
         if todayContent != lastAppliedToday {
             await viewModel.saveToday(content: todayContent)
             lastAppliedToday = todayContent
@@ -365,7 +355,6 @@ extension HomeView {
             await viewModel.saveDayBeforeYesterday(content: dayBeforeYesterdayContent)
             lastAppliedDayBefore = dayBeforeYesterdayContent
         }
-        LiveActivityManager.shared.setDraft(false)
     }
 }
 

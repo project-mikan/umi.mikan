@@ -82,6 +82,9 @@ final class MonthlyViewModel {
                 errorMessage = APIHelper.errorMessage(error)
             }
             isLoading = false
+            // ローカルキャッシュのエントリは loadLocalMonth() で既に entryMap に反映済みのため、
+            // サーバー同期が失敗してもオンデバイス要約の生成は継続する
+            requestOnDeviceSummaries()
             return
         }
 
