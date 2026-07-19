@@ -27,15 +27,17 @@ extension DraftAutoSaving {
             }
 
         case .background:
-            // 書きかけを失わないようにローカルへ自動保存し、保存完了後に書きかけフラグを解除する。
+            // 書きかけを失わないようにローカルへ自動保存する。
             // バックグラウンド移行直後にTaskがスケジュールされる前にOSへサスペンドされるのを防ぐため、
-            // バックグラウンド実行時間を延長してから保存する
+            // バックグラウンド実行時間を延長してから保存する。
+            // 保存後も書きかけのLive Activityはここでは解除しない。解除してしまうと
+            // 表示が一瞬で消えてしまうため、ユーザーがアプリへ戻って続きを書ける状態になる
+            // （.active 復帰）まで「書きかけの日記があります」を表示し続ける
             if hasDraftInProgress {
                 Task {
                     await SyncManager.withBackgroundTask {
                         await performDraftSave()
                     }
-                    LiveActivityManager.shared.setDraft(false)
                 }
             }
 

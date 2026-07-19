@@ -13,23 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: "frontend/package.json"
-
+      # setup-nodeのpnpmキャッシュは`pnpm store path`を実行するため、pnpmを先にインストールする
       - name: Install pnpm
         uses: pnpm/action-setup@v5
         with:
           package_json_file: frontend/package.json
 
-      - name: Cache pnpm dependencies
-        uses: actions/cache@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          node-version-file: "frontend/package.json"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
         working-directory: ./frontend
