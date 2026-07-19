@@ -1,13 +1,17 @@
-settings:
-  onlyBuiltDependencies:
-    - esbuild
-    - "@bufbuild/buf"
-  ignoredBuiltDependencies:
-    # バイナリは optionalDependencies 経由で配布されるため postinstall は不要
-    - "@biomejs/biome"
-    # svelte-i18n → cli-color → memoizee → es5-extで入ってくるが無闇に実行され無くないのでやめる
-    - es5-ext
-  strictDepBuilds: true
-  minimumReleaseAge: 1440
-  blockExoticSubdeps: true
-  trustPolicy: no-downgrade
+# pnpm 11ではonlyBuiltDependencies/ignoredBuiltDependenciesはallowBuildsマップに統合された
+allowBuilds:
+  esbuild: true
+  "@bufbuild/buf": true
+  # バイナリは optionalDependencies 経由で配布されるため postinstall は不要
+  "@biomejs/biome": false
+  # svelte-i18n → cli-color → memoizee → es5-extで入ってくるが無闇に実行され無くないのでやめる
+  es5-ext: false
+strictDepBuilds: true
+minimumReleaseAge: 1440
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # 4.0.1にはprovenanceがあるが4.0.2/4.0.3はprovenanceなしで公開されており(5.0.0で復活)、
+  # no-downgradeポリシーに引っかかる。メンテナが手元からpublishしただけの典型例で
+  # 2024-12公開から広く使われている実績があるため個別に除外する
+  - "chokidar@4.0.3"
