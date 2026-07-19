@@ -1,0 +1,4 @@
+# COPY . . でホストのビルド成果物を持ち込まない（pnpm installしたnode_modulesを壊さない）
+node_modules
+.svelte-kit
+build
