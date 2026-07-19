@@ -1,19 +1,21 @@
 name: 【iOS】Unit Tests
 
+# .github/** 全体を対象にすると無関係なワークフロー変更(フロントエンド系など)でも
+# 高コストな macos ランナーが起動してしまうため、この workflow ファイル自身のみに絞る
 on:
   pull_request:
     paths:
       - "ios/**"
       - "proto/**"
-      - ".github/**"
-  # main の DerivedData キャッシュは全 PR から参照できるため、push でキャッシュを温めておく
+      - ".github/workflows/301_ios_test.yml"
+  # main のキャッシュ(SPM 依存のクローン)は全 PR から参照できるため、push でキャッシュを温めておく
   push:
     branches:
       - main
     paths:
       - "ios/**"
       - "proto/**"
-      - ".github/**"
+      - ".github/workflows/301_ios_test.yml"
 
 env:
   CONNECT_SWIFT_VERSION: "1.2.3"
@@ -108,20 +110,35 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # boot は非同期に進むので、後続の準備中にシミュレータ起動を済ませておく
-      - name: Boot simulator
-        run: xcrun simctl boot "iPhone 17" || true
+      # boot は同期で 20 秒前後かかるが、シミュレータが必要になるのはビルド完了後(数分先)
+      # なので nohup + & で完全にバックグラウンド化してステップを即終了させる
+      # (バックグラウンドでも boot はジョブ内で生き続け、xcodebuild 実行時には起動済みになる)
+      - name: Boot simulator (background)
+        run: nohup xcrun simctl boot "iPhone 17" >/dev/null 2>&1 &
 
-      # キャッシュ系(DerivedData 全体 / 依存ビルド成果物)は過去に検証したが、いずれも
-      # CI では効かなかった: checkout の mtime リセットや絶対パスの相違で Xcode の
-      # 増分ビルドが再現できず、キャッシュ hit してもフルビルドになる。しかも復元/保存の
-      # 往復(2〜3分)が重く逆効果だった。CI が遅い根本は macos ランナーが非力(3コア)な
-      # ことで、キャッシュでは解消できない(larger runner は public でも課金対象のため不採用)。
-      # そのためキャッシュは使わず素ビルドに徹し、ビルドフラグでビルド自体を軽くする:
+      # SPM 依存のクローン(swift-nio-ssl は BoringSSL 同梱で特に重い)を毎回やり直さないよう
+      # -clonedSourcePackagesDirPath を固定してキャッシュする。
+      # 注意: DerivedData 全体 / 依存ビルド成果物のキャッシュは過去に検証したが効かなかった
+      # (checkout の mtime リセットや絶対パスの相違で増分ビルドが再現できずフルビルドになる)。
+      # 一方このキャッシュは「ソースのチェックアウト」だけなので mtime 問題の影響を受けず、
+      # ネットワーク越しの git clone(1〜2分)を丸ごと省ける。
+      - name: Cache SPM dependencies
+        uses: actions/cache@v6
+        with:
+          path: ios/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      # CI が遅い根本は macos ランナーが非力(3コア)なことなので、ビルドフラグでビルド自体を軽くする:
       #   ONLY_ACTIVE_ARCH=YES  : シミュレータの arm64 のみビルド(不要アーキを削る)
       #   -jobs                 : 論理CPU数まで並列コンパイル
       #   COMPILER_INDEX_STORE_ENABLE=NO : インデックス生成を無効化
       #   CODE_SIGNING_ALLOWED=NO        : シミュレータ向けは署名不要
+      #   SWIFT_COMPILATION_MODE=wholemodule : 毎回クリーンビルドの CI では増分ビルド用の
+      #     ファイル単位コンパイルより、モジュール一括コンパイルの方が総仕事量が少なく速い
+      #   -onlyUsePackageVersionsFromResolvedFile : Package.resolved のバージョンをそのまま使い、
+      #     依存解決(バージョン再計算)を省く
       # 並列テスト(シミュレータのクローン作成)は無効化し、事前ブート済みのシミュレータを使う。
       # 生成物(ios/Sources/Proto/*)はコミット済みなのでここでは再生成しない(verify-proto で検証)
       - name: Run tests
@@ -132,7 +149,10 @@ jobs:
             -destination "platform=iOS Simulator,name=iPhone 17,arch=arm64" \
             -jobs $(sysctl -n hw.ncpu) \
             -parallel-testing-enabled NO \
+            -clonedSourcePackagesDirPath ios/SourcePackages \
+            -onlyUsePackageVersionsFromResolvedFile \
             -quiet \
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            SWIFT_COMPILATION_MODE=wholemodule

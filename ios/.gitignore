@@ -20,7 +20,11 @@ project.xcworkspace/xcuserdata/
 .swiftpm/
 Packages/
 Package.pins
-Package.resolved
+# Package.resolved はコミットする(意図的にignoreしない):
+# 依存バージョンを再現可能にし、CI の -onlyUsePackageVersionsFromResolvedFile と
+# SPM キャッシュキー(hashFiles)が resolved ファイルを前提とするため
+# CI 用の SPM クローン先ディレクトリ(.github/workflows/301_ios_test.yml 参照)
+SourcePackages/
 
 # CocoaPods
 Pods/
