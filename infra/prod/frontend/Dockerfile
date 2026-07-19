@@ -3,11 +3,16 @@ FROM node:22-alpine AS builder
 
 WORKDIR /frontend
 
+# pnpm 11の対話プロンプト（node_modules purge確認等）をTTYなし環境で無効化
+ENV CI=true
+
 # Install pnpm
 RUN npm install -g pnpm@latest
 
 # Copy package files first for better caching
-COPY package.json pnpm-lock.yaml ./
+# pnpm 11はallowBuilds等の設定をpnpm-workspace.yamlから読むため、COPYしないと
+# ビルドスクリプト許可が効かずERR_PNPM_IGNORED_BUILDSでinstallが失敗する
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 
 # Install dependencies (cached layer when package.json unchanged)
 RUN --mount=type=cache,target=/root/.pnpm-store \
