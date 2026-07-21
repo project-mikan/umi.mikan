@@ -17,6 +17,8 @@ services:
       REDIS_PORT: 6379
       REGISTER_KEY: "usuyuki" # 新規登録を制限する場合はコメントを外して設定
       TASK_TIMEOUT_SECONDS: 600 # タスクステータスの有効期限(秒)
+      MCP_SERVER_BASE_URL: "https://umi-mikan-api.usuyuki.net" # MCPサーバー自身の公開URL（OAuth Discoveryメタデータの組み立てに使用）
+      FRONTEND_BASE_URL: "https://umi-mikan.usuyuki.net" # フロントエンドの公開URL（OAuth認可画面へのリダイレクトに使用）
     restart: unless-stopped
     depends_on:
       postgres:

@@ -293,3 +293,29 @@ func LoadGRPCReflectionEnabled() bool {
 func LoadRegisterKey() string {
 	return os.Getenv("REGISTER_KEY")
 }
+
+// defaultMCPServerBaseURL / defaultFrontendBaseURL は開発環境（docker compose）向けのデフォルト値
+const (
+	defaultMCPServerBaseURL = "http://localhost:2014"
+	defaultFrontendBaseURL  = "http://localhost:2000"
+)
+
+// LoadMCPServerBaseURL はMCP_SERVER_BASE_URL環境変数を読み込む。
+// MCPサーバーがOAuth Discoveryメタデータ内でエンドポイントURLを組み立てる際に使う
+// （本番環境ではCloudflare Tunnel経由の公開URLを設定する）。未設定時は開発環境のデフォルト値を返す。
+func LoadMCPServerBaseURL() string {
+	if v := os.Getenv("MCP_SERVER_BASE_URL"); v != "" {
+		return v
+	}
+	return defaultMCPServerBaseURL
+}
+
+// LoadFrontendBaseURL はFRONTEND_BASE_URL環境変数を読み込む。
+// OAuth認可リクエストをフロントエンドのログイン/同意画面にリダイレクトする際に使う。
+// 未設定時は開発環境のデフォルト値を返す。
+func LoadFrontendBaseURL() string {
+	if v := os.Getenv("FRONTEND_BASE_URL"); v != "" {
+		return v
+	}
+	return defaultFrontendBaseURL
+}

@@ -598,5 +598,21 @@
   },
   "summary": {
     "modelVersion": "モデル"
+  },
+  "mcpOAuth": {
+    "title": "MCP接続の許可",
+    "description": "umi.mikanの日記データへのアクセスを許可しますか？許可すると、このMCPクライアントから日記の閲覧・検索が行えるようになります。",
+    "redirectTo": "許可すると「{host}」に遷移します。",
+    "loginRequired": "続行するにはログインが必要です。",
+    "goToLogin": "ログインページへ",
+    "authorize": "許可する",
+    "authorizing": "処理中...",
+    "invalidRequest": "リクエストが不正です。MCPクライアント側の設定を確認してください。",
+    "errors": {
+      "unauthorized": "ログインが必要です。ページを再読み込みしてください。",
+      "invalidCsrfToken": "セッションが無効です。ページを再読み込みしてください。",
+      "invalidRequest": "リクエストが不正です。",
+      "consentFailed": "許可処理に失敗しました。時間をおいて再度お試しください。"
+    }
   }
 }

@@ -7,9 +7,32 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/service/diary"
+	"github.com/project-mikan/umi.mikan/backend/service/user"
+	"github.com/redis/rueidis"
 )
+
+// setupTestRedisForServerTest はテスト用のminiredisクライアントを起動してrueidisクライアントを返す
+func setupTestRedisForServerTest(t *testing.T) rueidis.Client {
+	t.Helper()
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("miniredis起動失敗: %v", err)
+	}
+	t.Cleanup(mr.Close)
+
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress:  []string{mr.Addr()},
+		DisableCache: true,
+	})
+	if err != nil {
+		t.Fatalf("rueidisクライアント作成失敗: %v", err)
+	}
+	t.Cleanup(client.Close)
+	return client
+}
 
 func TestNewServer(t *testing.T) {
 	t.Run("正常系: ツールを登録したサーバーが生成される", func(t *testing.T) {
@@ -22,7 +45,8 @@ func TestNewServer(t *testing.T) {
 
 func TestNewHTTPHandler(t *testing.T) {
 	t.Run("異常系: 認証ヘッダーがないリクエストは401", func(t *testing.T) {
-		handler := NewHTTPHandler(&diary.DiaryEntry{}, nil)
+		redisClient := setupTestRedisForServerTest(t)
+		handler := NewHTTPHandler(&diary.DiaryEntry{}, nil, redisClient, &user.UserEntry{}, "http://localhost:2014", "http://localhost:2000")
 		ts := httptest.NewServer(handler)
 		defer ts.Close()
 
@@ -40,7 +64,8 @@ func TestNewHTTPHandler(t *testing.T) {
 	})
 
 	t.Run("正常系: 有効なトークンでinitializeが成功する", func(t *testing.T) {
-		handler := NewHTTPHandler(&diary.DiaryEntry{}, nil)
+		redisClient := setupTestRedisForServerTest(t)
+		handler := NewHTTPHandler(&diary.DiaryEntry{}, nil, redisClient, &user.UserEntry{}, "http://localhost:2014", "http://localhost:2000")
 		ts := httptest.NewServer(handler)
 		defer ts.Close()
 
