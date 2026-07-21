@@ -1,7 +1,10 @@
 import { fail } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { validateCSRFToken } from "$lib/server/csrf";
-import { issueMcpOAuthConsent } from "$lib/server/mcp-oauth-api";
+import {
+  issueMcpOAuthConsent,
+  McpOAuthConsentError,
+} from "$lib/server/mcp-oauth-api";
 import type { Actions, PageServerLoad } from "./$types";
 
 // MCPサーバー（backend/infrastructure/mcpserver）の /oauth/authorize が
@@ -75,6 +78,11 @@ export const actions: Actions = {
       return { success: true, redirectUrl: result.redirectUrl };
     } catch (error) {
       console.error("Failed to issue MCP OAuth consent:", error);
+      // バックエンドが401（アクセストークン失効など）を返した場合は、
+      // 汎用エラーではなく再ログインを促すメッセージを表示する。
+      if (error instanceof McpOAuthConsentError && error.status === 401) {
+        return fail(401, { error: "unauthorized" });
+      }
       return fail(500, { error: "consentFailed" });
     }
   },

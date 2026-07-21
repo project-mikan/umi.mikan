@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/redis/rueidis"
@@ -56,10 +57,8 @@ func isRegisteredRedirectURI(ctx context.Context, redisClient rueidis.Client, cl
 		return false, fmt.Errorf("failed to unmarshal redirect_uris: %w", err)
 	}
 
-	for _, registered := range redirectURIs {
-		if registered == redirectURI {
-			return true, nil
-		}
+	if slices.Contains(redirectURIs, redirectURI) {
+		return true, nil
 	}
 	return false, nil
 }

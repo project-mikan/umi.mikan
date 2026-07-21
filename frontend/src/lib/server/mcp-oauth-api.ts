@@ -23,6 +23,22 @@ export interface ConsentResult {
 }
 
 /**
+ * POST /oauth/consent がエラーレスポンスを返した際に投げる例外。
+ * バックエンドのHTTPステータスコードを保持することで、呼び出し元
+ * （+page.server.tsのconsentアクション）が401（トークン失効など再ログインで
+ * 解決する可能性がある場合）とそれ以外のエラーを区別してユーザーに案内できるようにする。
+ */
+export class McpOAuthConsentError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "McpOAuthConsentError";
+    this.status = status;
+  }
+}
+
+/**
  * ユーザーがMCP接続の同意操作をした後に呼び出す。
  * バックエンドの POST /oauth/consent にJWTアクセストークンを添えてリクエストし、
  * authorization codeを含んだMCPクライアント側のredirect_uriを取得する。
@@ -47,7 +63,8 @@ export async function issueMcpOAuthConsent(
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(
+    throw new McpOAuthConsentError(
+      response.status,
       `MCP OAuth consent failed: ${response.status} ${errorBody}`,
     );
   }

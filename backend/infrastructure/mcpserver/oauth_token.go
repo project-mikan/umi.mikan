@@ -1,17 +1,28 @@
 package mcpserver
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/project-mikan/umi.mikan/backend/service/user"
 	"github.com/redis/rueidis"
 )
 
-// oauthApiKeyName はOAuthフロー経由で発行されるAPIキーに付与する固定名。
+// oauthApiKeyNamePrefix はOAuthフロー経由で発行されるAPIキーの名前接頭辞。
 // user_api_keys.name に保存され、設定ページのAPIキー一覧にも他のキーと並んで表示される
 // （どのキーがどのMCPクライアント接続由来か利用者が判別できるようにするため）。
-const oauthApiKeyName = "MCP OAuth (Claude connector)"
+// 発行日時（JST・分単位）を付与するのは、同じユーザーが複数回接続・再認可した際に
+// user_api_keys.name にUNIQUE制約が無く同名レコードが複数並んでしまい、
+// 設定ページでどれを失効すべきか判別できなくなるのを防ぐため。
+const oauthApiKeyNamePrefix = "MCP OAuth (Claude connector)"
+
+// newOAuthApiKeyName は現在時刻（JST）を付与したOAuth用APIキー名を生成する。
+func newOAuthApiKeyName(now time.Time) string {
+	jst := time.FixedZone("JST", 9*60*60)
+	return fmt.Sprintf("%s %s", oauthApiKeyNamePrefix, now.In(jst).Format("2006-01-02 15:04"))
+}
 
 // tokenResponse はRFC6749 5.1節 (Successful Response) の必要最小限のフィールド。
 // token_typeはBearer固定。refresh_tokenは発行しない
@@ -61,13 +72,15 @@ func newTokenHandler(redisClient rueidis.Client, userService *user.UserEntry) ht
 			return
 		}
 
-		// client_idの一致確認。redirect_uriはRFC6749 4.1.3節の要求通り、
-		// /authorize時に指定された値と/token時の値が一致することも確認する。
-		if r.PostForm.Get("client_id") != "" && r.PostForm.Get("client_id") != data.ClientID {
+		// client_id・redirect_uriの一致確認。この実装では/authorize・/consent双方で
+		// 常にclient_id/redirect_uriを必須としているため、RFC6749 4.1.3節が求める
+		// 「/authorize時に指定された値との一致確認」は値の省略を許さず常に行う
+		// （省略時に検証をスキップすると、redirect_uri不一致検出という多層防御が失われるため）。
+		if r.PostForm.Get("client_id") != data.ClientID {
 			writeOAuthError(w, http.StatusBadRequest, "invalid_grant", "client_id mismatch")
 			return
 		}
-		if redirectURI := r.PostForm.Get("redirect_uri"); redirectURI != "" && redirectURI != data.RedirectURI {
+		if r.PostForm.Get("redirect_uri") != data.RedirectURI {
 			writeOAuthError(w, http.StatusBadRequest, "invalid_grant", "redirect_uri mismatch")
 			return
 		}
@@ -83,7 +96,7 @@ func newTokenHandler(redisClient rueidis.Client, userService *user.UserEntry) ht
 			return
 		}
 
-		key, plainKey, err := userService.CreateApiKeyForUser(r.Context(), userID, oauthApiKeyName)
+		key, plainKey, err := userService.CreateApiKeyForUser(r.Context(), userID, newOAuthApiKeyName(time.Now()))
 		if err != nil {
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to issue access token")
 			return

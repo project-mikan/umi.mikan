@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { issueMcpOAuthConsent } from "./mcp-oauth-api";
+import { issueMcpOAuthConsent, McpOAuthConsentError } from "./mcp-oauth-api";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -58,6 +58,30 @@ describe("mcp-oauth-api", () => {
           state: "",
         }),
       ).rejects.toThrow(/MCP OAuth consent failed/);
+    });
+
+    it("異常系: バックエンドが401を返すとMcpOAuthConsentErrorのstatusに401が入るので、呼び出し元がunauthorizedを他のエラーと区別できる", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        text: async () => '{"error":"unauthorized"}',
+      });
+
+      const promise = issueMcpOAuthConsent({
+        accessToken: "expired-token",
+        clientId: "client-1",
+        redirectUri: "https://claude.ai/callback",
+        codeChallenge: "challenge",
+        codeChallengeMethod: "S256",
+        state: "",
+      });
+
+      await expect(promise).rejects.toBeInstanceOf(McpOAuthConsentError);
+      try {
+        await promise;
+      } catch (error) {
+        expect((error as McpOAuthConsentError).status).toBe(401);
+      }
     });
   });
 });

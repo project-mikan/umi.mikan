@@ -55,28 +55,26 @@ func storeAuthCode(ctx context.Context, redisClient rueidis.Client, code string,
 	return nil
 }
 
-// consumeAuthCode はauthorization codeをRedisから取得し、即座に削除する（単回使用の強制）。
+// consumeAuthCode はauthorization codeをRedisから取得と同時に削除する（単回使用の強制）。
+// GETDELはRedis側でアトミックに実行されるため、同一codeに対する複数リクエストが
+// 同時に到達しても、取得できるのはそのうち1件のみとなる（GET+DELの2回のコマンドに
+// 分けると、削除が完了する前に複数リクエストがGETを通過してしまい、同じcodeから
+// 複数のAPIキーが発行されうる）。
 // 存在しない・期限切れの場合はokがfalseになる。
 func consumeAuthCode(ctx context.Context, redisClient rueidis.Client, code string) (authCodeData, bool, error) {
 	key := authCodeKeyPrefix + code
 
-	getCmd := redisClient.B().Get().Key(key).Build()
-	result := redisClient.Do(ctx, getCmd)
+	cmd := redisClient.B().Getdel().Key(key).Build()
+	result := redisClient.Do(ctx, cmd)
 	if result.Error() != nil {
 		if rueidis.IsRedisNil(result.Error()) {
 			return authCodeData{}, false, nil
 		}
-		return authCodeData{}, false, fmt.Errorf("failed to get auth code: %w", result.Error())
+		return authCodeData{}, false, fmt.Errorf("failed to get and delete auth code: %w", result.Error())
 	}
 	payload, err := result.ToString()
 	if err != nil {
 		return authCodeData{}, false, fmt.Errorf("failed to parse auth code: %w", err)
-	}
-
-	// 単回使用を保証するため、読み取り直後に削除する。
-	delCmd := redisClient.B().Del().Key(key).Build()
-	if err := redisClient.Do(ctx, delCmd).Error(); err != nil {
-		return authCodeData{}, false, fmt.Errorf("failed to delete auth code: %w", err)
 	}
 
 	var data authCodeData
