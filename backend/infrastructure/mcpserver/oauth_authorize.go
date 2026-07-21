@@ -3,6 +3,8 @@ package mcpserver
 import (
 	"net/http"
 	"net/url"
+
+	"github.com/redis/rueidis"
 )
 
 // newAuthorizeHandler は GET /oauth/authorize を提供する。
@@ -13,7 +15,7 @@ import (
 // oauth_consent.go）を叩くことで行う。
 //
 // frontendBaseURL はフロントエンドの公開URL（例: https://umi-mikan.usuyuki.net）。
-func newAuthorizeHandler(frontendBaseURL string) http.HandlerFunc {
+func newAuthorizeHandler(redisClient rueidis.Client, frontendBaseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 
@@ -38,6 +40,20 @@ func newAuthorizeHandler(frontendBaseURL string) http.HandlerFunc {
 		}
 		if !isValidRedirectURI(redirectURI) {
 			writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri must be an absolute http(s) URL")
+			return
+		}
+		// client_id登録時に申告されたredirect_uris以外への遷移を拒否する。
+		// これがないと、第三者が自分のclient_idを取得したうえで任意のredirect_uriを
+		// 指定し、被害者のauthorization codeを自分のサーバーに誘導できてしまう
+		// （Authorization Code Interception。PKCEは攻撃者が自分でcode_challenge/
+		// code_verifierを用意するこのシナリオを防げない）。
+		registered, err := isRegisteredRedirectURI(r.Context(), redisClient, clientID, redirectURI)
+		if err != nil {
+			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to verify redirect_uri")
+			return
+		}
+		if !registered {
+			writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri is not registered for this client_id")
 			return
 		}
 

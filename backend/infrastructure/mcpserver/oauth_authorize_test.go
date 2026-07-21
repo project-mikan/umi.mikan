@@ -50,8 +50,12 @@ func TestIsValidRedirectURI(t *testing.T) {
 }
 
 func TestNewAuthorizeHandler(t *testing.T) {
-	t.Run("正常系: 必須パラメータが揃っているとフロントエンドの同意画面へ302リダイレクトする", func(t *testing.T) {
-		handler := newAuthorizeHandler("http://localhost:2000")
+	t.Run("正常系: 必須パラメータが揃い、redirect_uriが登録済みだとフロントエンドの同意画面へ302リダイレクトする", func(t *testing.T) {
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		if err := storeClientRegistration(t.Context(), redisClient, "c1", []string{"https://claude.ai/callback"}); err != nil {
+			t.Fatalf("storeClientRegistration失敗: %v", err)
+		}
+		handler := newAuthorizeHandler(redisClient, "http://localhost:2000")
 		req := httptest.NewRequest(http.MethodGet, "/oauth/authorize?client_id=c1&redirect_uri=https://claude.ai/callback&code_challenge=abc&code_challenge_method=S256&response_type=code&state=xyz", nil)
 		w := httptest.NewRecorder()
 
@@ -67,7 +71,8 @@ func TestNewAuthorizeHandler(t *testing.T) {
 	})
 
 	t.Run("異常系: client_idがないとinvalid_requestエラーになる", func(t *testing.T) {
-		handler := newAuthorizeHandler("http://localhost:2000")
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		handler := newAuthorizeHandler(redisClient, "http://localhost:2000")
 		req := httptest.NewRequest(http.MethodGet, "/oauth/authorize?redirect_uri=https://claude.ai/callback&code_challenge=abc&code_challenge_method=S256&response_type=code", nil)
 		w := httptest.NewRecorder()
 
@@ -79,7 +84,8 @@ func TestNewAuthorizeHandler(t *testing.T) {
 	})
 
 	t.Run("異常系: response_typeがcode以外だとunsupported_response_typeエラーになる", func(t *testing.T) {
-		handler := newAuthorizeHandler("http://localhost:2000")
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		handler := newAuthorizeHandler(redisClient, "http://localhost:2000")
 		req := httptest.NewRequest(http.MethodGet, "/oauth/authorize?client_id=c1&redirect_uri=https://claude.ai/callback&code_challenge=abc&code_challenge_method=S256&response_type=token", nil)
 		w := httptest.NewRecorder()
 
@@ -91,7 +97,8 @@ func TestNewAuthorizeHandler(t *testing.T) {
 	})
 
 	t.Run("異常系: code_challenge_methodがS256以外だと拒否される（plain方式は脆弱なため非対応）", func(t *testing.T) {
-		handler := newAuthorizeHandler("http://localhost:2000")
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		handler := newAuthorizeHandler(redisClient, "http://localhost:2000")
 		req := httptest.NewRequest(http.MethodGet, "/oauth/authorize?client_id=c1&redirect_uri=https://claude.ai/callback&code_challenge=abc&code_challenge_method=plain&response_type=code", nil)
 		w := httptest.NewRecorder()
 
@@ -103,8 +110,38 @@ func TestNewAuthorizeHandler(t *testing.T) {
 	})
 
 	t.Run("異常系: redirect_uriが不正なスキームだとinvalid_requestエラーになる", func(t *testing.T) {
-		handler := newAuthorizeHandler("http://localhost:2000")
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		handler := newAuthorizeHandler(redisClient, "http://localhost:2000")
 		req := httptest.NewRequest(http.MethodGet, "/oauth/authorize?client_id=c1&redirect_uri=javascript:alert(1)&code_challenge=abc&code_challenge_method=S256&response_type=code", nil)
+		w := httptest.NewRecorder()
+
+		handler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("ステータスコードが期待と異なる: got %d, want %d", w.Code, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("異常系: client_id登録時のredirect_urisに含まれない値を指定すると、authorization code横取り攻撃を防ぐためinvalid_requestになる", func(t *testing.T) {
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		if err := storeClientRegistration(t.Context(), redisClient, "c1", []string{"https://claude.ai/callback"}); err != nil {
+			t.Fatalf("storeClientRegistration失敗: %v", err)
+		}
+		handler := newAuthorizeHandler(redisClient, "http://localhost:2000")
+		req := httptest.NewRequest(http.MethodGet, "/oauth/authorize?client_id=c1&redirect_uri=https://evil.example.com/collect&code_challenge=abc&code_challenge_method=S256&response_type=code", nil)
+		w := httptest.NewRecorder()
+
+		handler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("ステータスコードが期待と異なる: got %d, want %d", w.Code, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("異常系: 登録されていないclient_idを指定するとinvalid_requestになる", func(t *testing.T) {
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		handler := newAuthorizeHandler(redisClient, "http://localhost:2000")
+		req := httptest.NewRequest(http.MethodGet, "/oauth/authorize?client_id=unregistered&redirect_uri=https://claude.ai/callback&code_challenge=abc&code_challenge_method=S256&response_type=code", nil)
 		w := httptest.NewRecorder()
 
 		handler(w, req)

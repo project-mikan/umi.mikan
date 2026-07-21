@@ -602,6 +602,7 @@
   "mcpOAuth": {
     "title": "MCP接続の許可",
     "description": "umi.mikanの日記データへのアクセスを許可しますか？許可すると、このMCPクライアントから日記の閲覧・検索が行えるようになります。",
+    "redirectTo": "許可すると「{host}」に遷移します。",
     "loginRequired": "続行するにはログインが必要です。",
     "goToLogin": "ログインページへ",
     "authorize": "許可する",

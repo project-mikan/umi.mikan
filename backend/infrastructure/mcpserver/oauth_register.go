@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+
+	"github.com/redis/rueidis"
 )
 
 // clientIDRandomBytes はDynamic Client Registrationで発行するclient_idの乱数バイト長
@@ -31,13 +33,13 @@ type clientRegistrationResponse struct {
 // newRegisterHandler はDynamic Client Registration（POST /register）を提供する。
 //
 // umi.mikanのMCPサーバーは個人利用（自分の日記データへのアクセス）が前提であり、
-// 悪意あるクライアントがclient_idを取得できても、実際の認可（/oauth/authorize）では
-// 本人のログインセッションと同意操作が必須になる。そのためクライアントの真正性検証
-// （redirect_uriの事前登録・永続化など）は行わず、client_idをその場で発行するのみの
-// 最小実装とする。client_id・redirect_uriの対応関係はサーバー側に保存しないため、
-// オープンリダイレクト対策は /oauth/authorize 側でredirect_uriのスキーム・ホストを
-// 検証すること（PKCE必須化と合わせ、authorization codeの窃取・再利用を防ぐ）で担保する。
-func newRegisterHandler() http.HandlerFunc {
+// client_secretの発行やクライアント名の審査などは行わない最小実装だが、
+// redirect_urisはclient_idに紐付けてRedisに保存する（clientRegistrationTTL、
+// oauth_client_store.go参照）。これにより /oauth/authorize・/oauth/consent が
+// 「登録時に申告したredirect_uri以外への遷移を拒否する」検証を行えるようにし、
+// 第三者が任意のclient_idを取得して被害者のauthorization codeを自分の
+// redirect_uriへ誘導する攻撃（Authorization Code Interception）を防ぐ。
+func newRegisterHandler(redisClient rueidis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			writeOAuthError(w, http.StatusMethodNotAllowed, "invalid_request", "method not allowed")
@@ -53,10 +55,20 @@ func newRegisterHandler() http.HandlerFunc {
 			writeOAuthError(w, http.StatusBadRequest, "invalid_redirect_uri", "redirect_uris is required")
 			return
 		}
+		for _, redirectURI := range req.RedirectURIs {
+			if !isValidRedirectURI(redirectURI) {
+				writeOAuthError(w, http.StatusBadRequest, "invalid_redirect_uri", "redirect_uris must be absolute http(s) URLs")
+				return
+			}
+		}
 
 		clientID, err := generateClientID()
 		if err != nil {
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to generate client_id")
+			return
+		}
+		if err := storeClientRegistration(r.Context(), redisClient, clientID, req.RedirectURIs); err != nil {
+			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to store client registration")
 			return
 		}
 

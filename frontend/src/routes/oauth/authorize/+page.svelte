@@ -12,6 +12,18 @@
 
   $: csrfToken = $page.data.csrfToken as string | undefined;
 
+  // 同意画面に接続先ホストを表示し、ユーザーが何に同意しているか確認できるようにする。
+  // redirect_uriはバックエンド側で登録済みURLとの一致検証済みだが、URLとして不正な
+  // 値が渡ってきた場合に備えてパース失敗時はredirect_uriの生値をフォールバック表示する。
+  $: redirectHost = (() => {
+    if (!data.redirectUri) return "";
+    try {
+      return new URL(data.redirectUri).host;
+    } catch {
+      return data.redirectUri;
+    }
+  })();
+
   // action成功時にauthorization codeを含むredirect_uriへ遷移する。
   // SvelteKitのuse:enhanceはactionの戻り値をformに反映するだけで自動遷移はしないため、
   // ここで明示的にwindow.location.hrefを更新してMCPクライアント側に戻す。
@@ -45,9 +57,14 @@
         {$_("mcpOAuth.goToLogin")}
       </a>
     {:else}
-      <p class="mb-6 text-gray-700 dark:text-gray-300">
+      <p class="mb-2 text-gray-700 dark:text-gray-300">
         {$_("mcpOAuth.description")}
       </p>
+      {#if redirectHost}
+        <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
+          {$_("mcpOAuth.redirectTo", { values: { host: redirectHost } })}
+        </p>
+      {/if}
 
       {#if form?.error}
         <p class="mb-4 text-red-600 dark:text-red-400">

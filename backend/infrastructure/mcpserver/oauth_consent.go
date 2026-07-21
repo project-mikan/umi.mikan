@@ -67,6 +67,18 @@ func newConsentHandler(redisClient rueidis.Client) http.HandlerFunc {
 			writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri must be an absolute http(s) URL")
 			return
 		}
+		// /oauth/authorizeと同じ検証をここでも行う。フロントエンドの同意画面から
+		// 送られてくるパラメータは改ざんされうる（クエリパラメータをhidden inputに
+		// 折り返しているだけ）ため、authorization code発行前に再度確認する。
+		registered, err := isRegisteredRedirectURI(r.Context(), redisClient, req.ClientID, req.RedirectURI)
+		if err != nil {
+			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to verify redirect_uri")
+			return
+		}
+		if !registered {
+			writeOAuthError(w, http.StatusBadRequest, "invalid_request", "redirect_uri is not registered for this client_id")
+			return
+		}
 
 		code, err := generateAuthCode()
 		if err != nil {

@@ -13,6 +13,9 @@ import (
 func TestNewConsentHandler(t *testing.T) {
 	t.Run("正常系: 有効なトークンと必須パラメータでauthorization codeを含むリダイレクトURLが返る", func(t *testing.T) {
 		redisClient := setupTestRedisForOAuthStoreTest(t)
+		if err := storeClientRegistration(t.Context(), redisClient, "c1", []string{"https://claude.ai/callback"}); err != nil {
+			t.Fatalf("storeClientRegistration失敗: %v", err)
+		}
 		handler := newConsentHandler(redisClient)
 		token := generateValidTokenForTest(t, uuid.New().String())
 
@@ -87,6 +90,26 @@ func TestNewConsentHandler(t *testing.T) {
 
 		if w.Code != http.StatusBadRequest {
 			t.Fatalf("ステータスコードが期待と異なる: got %d, want %d", w.Code, http.StatusBadRequest)
+		}
+	})
+
+	t.Run("異常系: client_id登録時のredirect_urisに含まれない値を指定すると、authorization code横取り攻撃を防ぐためinvalid_requestになる", func(t *testing.T) {
+		redisClient := setupTestRedisForOAuthStoreTest(t)
+		if err := storeClientRegistration(t.Context(), redisClient, "c1", []string{"https://claude.ai/callback"}); err != nil {
+			t.Fatalf("storeClientRegistration失敗: %v", err)
+		}
+		handler := newConsentHandler(redisClient)
+		token := generateValidTokenForTest(t, uuid.New().String())
+
+		body := `{"client_id":"c1","redirect_uri":"https://evil.example.com/collect","code_challenge":"abc","code_challenge_method":"S256"}`
+		req := httptest.NewRequest(http.MethodPost, "/oauth/consent", strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+
+		handler(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("ステータスコードが期待と異なる: got %d, want %d, body=%s", w.Code, http.StatusBadRequest, w.Body.String())
 		}
 	})
 }

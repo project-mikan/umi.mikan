@@ -75,8 +75,8 @@ func NewHTTPHandler(diaryService *diary.DiaryEntry, db *sql.DB, redisClient ruei
 	mux.Handle(mcpPath, AuthMiddleware(db, mcpHandler))
 	mux.HandleFunc(oauthProtectedResourceMetadataPath, newProtectedResourceMetadataHandler(baseURL))
 	mux.HandleFunc(oauthAuthorizationServerMetadataPath, newAuthorizationServerMetadataHandler(baseURL))
-	mux.HandleFunc(oauthRegisterPath, newRegisterHandler())
-	mux.HandleFunc(oauthAuthorizePath, newAuthorizeHandler(frontendBaseURL))
+	mux.HandleFunc(oauthRegisterPath, newRegisterHandler(redisClient))
+	mux.HandleFunc(oauthAuthorizePath, newAuthorizeHandler(redisClient, frontendBaseURL))
 	mux.HandleFunc(oauthConsentPath, newConsentHandler(redisClient))
 	mux.HandleFunc(oauthTokenPath, newTokenHandler(redisClient, userService))
 
