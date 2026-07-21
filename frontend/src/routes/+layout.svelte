@@ -17,7 +17,9 @@
 
   $: isAuthenticated = data.isAuthenticated;
   $: isAuthPage =
-    $page.url.pathname === "/login" || $page.url.pathname === "/register";
+    $page.url.pathname === "/login" ||
+    $page.url.pathname === "/register" ||
+    $page.url.pathname === "/oauth/authorize";
 
   let lastActiveTime = Date.now();
   // invalidateAll() の重複実行を防ぐフラグ
