@@ -3,6 +3,9 @@
   import "$lib/i18n";
   import { enhance } from "$app/forms";
   import { page } from "$app/stores";
+  import Alert from "$lib/components/atoms/Alert.svelte";
+  import Button from "$lib/components/atoms/Button.svelte";
+  import Link from "$lib/components/atoms/Link.svelte";
   import type { ActionData, PageData } from "./$types";
 
   export let data: PageData;
@@ -30,87 +33,108 @@
   $: if (form?.success && form.redirectUrl) {
     window.location.href = form.redirectUrl;
   }
+
+  // MCPサーバー（別オリジン）からのリダイレクトチェーン経由の初回アクセスでは
+  // SameSite=StrictのログインCookieが送信されず未ログイン判定になるため、
+  // 同一オリジンへの自己リダイレクトを一度だけ行い「同一サイトナビゲーション」として
+  // 再読み込みさせる（retry=1を付与し、無限ループを防ぐ）。
+  $: if (data.needsSameSiteRetry) {
+    const retryUrl = new URL($page.url);
+    retryUrl.searchParams.set("retry", "1");
+    window.location.replace(retryUrl.toString());
+  }
 </script>
 
 <svelte:head>
   <title>{$_("mcpOAuth.title")}</title>
 </svelte:head>
 
-<div class="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-  <div class="w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-8 shadow">
-    <h1 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-      {$_("mcpOAuth.title")}
-    </h1>
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+	<div class="max-w-md w-full space-y-8">
+		<div>
+			<div class="flex justify-center mb-4">
+				<img src="/favicon.png" alt="umi.mikan" class="h-20 w-20" />
+			</div>
+			<p class="text-center text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">{$_('common.appName')}</p>
+			<h2 class="text-center text-xl font-semibold text-gray-900 dark:text-white">
+				{$_("mcpOAuth.title")}
+			</h2>
+		</div>
 
-    {#if data.invalidRequest}
-      <p class="text-red-600 dark:text-red-400">
-        {$_("mcpOAuth.invalidRequest")}
-      </p>
-    {:else if !data.isAuthenticated}
-      <p class="mb-4 text-gray-700 dark:text-gray-300">
-        {$_("mcpOAuth.loginRequired")}
-      </p>
-      <a
-        href="/login"
-        class="inline-block rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      >
-        {$_("mcpOAuth.goToLogin")}
-      </a>
-    {:else}
-      <p class="mb-2 text-gray-700 dark:text-gray-300">
-        {$_("mcpOAuth.description")}
-      </p>
-      {#if redirectHost}
-        <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-          {$_("mcpOAuth.redirectTo", { values: { host: redirectHost } })}
-        </p>
-      {/if}
+		<div class="mt-8 space-y-6">
+			{#if data.needsSameSiteRetry}
+				<p class="text-center text-gray-700 dark:text-gray-300">
+					{$_("mcpOAuth.checkingLogin")}
+				</p>
+			{:else if data.invalidRequest}
+				<Alert type="error">
+					{$_("mcpOAuth.invalidRequest")}
+				</Alert>
+			{:else if !data.isAuthenticated}
+				<p class="text-center text-gray-700 dark:text-gray-300">
+					{$_("mcpOAuth.loginRequired")}
+				</p>
+				<Link href="/login" variant="primary">
+					{$_("mcpOAuth.goToLogin")}
+				</Link>
+			{:else}
+				<p class="text-center text-gray-700 dark:text-gray-300">
+					{$_("mcpOAuth.description")}
+				</p>
+				{#if redirectHost}
+					<p class="text-center text-sm text-gray-500 dark:text-gray-400">
+						{$_("mcpOAuth.redirectTo", { values: { host: redirectHost } })}
+					</p>
+				{/if}
 
-      {#if form?.error}
-        <p class="mb-4 text-red-600 dark:text-red-400">
-          {$_(`mcpOAuth.errors.${form.error}`)}
-        </p>
-      {/if}
+				{#if form?.error}
+					<Alert type="error">
+						{$_(`mcpOAuth.errors.${form.error}`)}
+					</Alert>
+				{/if}
 
-      <form
-        method="POST"
-        action="?/consent"
-        use:enhance={() => {
-          submitting = true;
-          return async ({ update }) => {
-            try {
-              await update();
-            } finally {
-              submitting = false;
-            }
-          };
-        }}
-      >
-        <input type="hidden" name="csrfToken" value={csrfToken} />
-        <input type="hidden" name="client_id" value={data.clientId} />
-        <input type="hidden" name="redirect_uri" value={data.redirectUri} />
-        <input
-          type="hidden"
-          name="code_challenge"
-          value={data.codeChallenge}
-        />
-        <input
-          type="hidden"
-          name="code_challenge_method"
-          value={data.codeChallengeMethod}
-        />
-        <input type="hidden" name="state" value={data.state} />
+				<form
+					method="POST"
+					action="?/consent"
+					use:enhance={() => {
+						submitting = true;
+						return async ({ update }) => {
+							try {
+								await update();
+							} finally {
+								submitting = false;
+							}
+						};
+					}}
+				>
+					<input type="hidden" name="csrfToken" value={csrfToken} />
+					<input type="hidden" name="client_id" value={data.clientId} />
+					<input type="hidden" name="redirect_uri" value={data.redirectUri} />
+					<input
+						type="hidden"
+						name="code_challenge"
+						value={data.codeChallenge}
+					/>
+					<input
+						type="hidden"
+						name="code_challenge_method"
+						value={data.codeChallengeMethod}
+					/>
+					<input type="hidden" name="state" value={data.state} />
 
-        <button
-          type="submit"
-          disabled={submitting}
-          class="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {submitting
-            ? $_("mcpOAuth.authorizing")
-            : $_("mcpOAuth.authorize")}
-        </button>
-      </form>
-    {/if}
-  </div>
+					<Button
+						type="submit"
+						variant="primary"
+						size="md"
+						disabled={submitting}
+						class="w-full flex justify-center"
+					>
+						{submitting
+							? $_("mcpOAuth.authorizing")
+							: $_("mcpOAuth.authorize")}
+					</Button>
+				</form>
+			{/if}
+		</div>
+	</div>
 </div>
