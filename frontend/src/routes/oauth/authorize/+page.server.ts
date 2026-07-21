@@ -26,12 +26,29 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
     return {
       isAuthenticated: authResult.isAuthenticated,
       invalidRequest: true,
+      needsSameSiteRetry: false,
+    };
+  }
+
+  // MCPサーバー（別オリジン）からの302リダイレクトチェーンを経由してこのページに
+  // 到達した場合、ブラウザはこのナビゲーションを「クロスサイト」とみなすため、
+  // SameSite=StrictのログインCookie（accessToken/refreshToken）が送信されず、
+  // ログイン済みでも未ログイン判定になってしまう。
+  // その場合はクライアント側で同一オリジンへの自己リダイレクトを一度だけ行い、
+  // 「同一サイトナビゲーション」として再読み込みさせることでCookieを送らせる。
+  const retried = url.searchParams.get("retry") === "1";
+  if (!authResult.isAuthenticated && !retried) {
+    return {
+      isAuthenticated: false,
+      invalidRequest: false,
+      needsSameSiteRetry: true,
     };
   }
 
   return {
     isAuthenticated: authResult.isAuthenticated,
     invalidRequest: false,
+    needsSameSiteRetry: false,
     clientId,
     redirectUri,
     codeChallenge,

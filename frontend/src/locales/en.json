@@ -601,6 +601,7 @@
   },
   "mcpOAuth": {
     "title": "Allow MCP connection",
+    "checkingLogin": "Checking login status...",
     "description": "Allow this MCP client to access your umi.mikan diary data? Once allowed, it will be able to read and search your diary entries.",
     "redirectTo": "You will be redirected to \"{host}\" after allowing.",
     "loginRequired": "You need to log in to continue.",

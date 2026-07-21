@@ -30,6 +30,16 @@
   $: if (form?.success && form.redirectUrl) {
     window.location.href = form.redirectUrl;
   }
+
+  // MCPサーバー（別オリジン）からのリダイレクトチェーン経由の初回アクセスでは
+  // SameSite=StrictのログインCookieが送信されず未ログイン判定になるため、
+  // 同一オリジンへの自己リダイレクトを一度だけ行い「同一サイトナビゲーション」として
+  // 再読み込みさせる（retry=1を付与し、無限ループを防ぐ）。
+  $: if (data.needsSameSiteRetry) {
+    const retryUrl = new URL($page.url);
+    retryUrl.searchParams.set("retry", "1");
+    window.location.replace(retryUrl.toString());
+  }
 </script>
 
 <svelte:head>
@@ -42,7 +52,11 @@
       {$_("mcpOAuth.title")}
     </h1>
 
-    {#if data.invalidRequest}
+    {#if data.needsSameSiteRetry}
+      <p class="text-gray-700 dark:text-gray-300">
+        {$_("mcpOAuth.checkingLogin")}
+      </p>
+    {:else if data.invalidRequest}
       <p class="text-red-600 dark:text-red-400">
         {$_("mcpOAuth.invalidRequest")}
       </p>
