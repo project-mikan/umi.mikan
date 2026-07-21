@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 
@@ -25,6 +26,14 @@ const apiKeyNameMaxLength = 100
 // 継続利用する場合はユーザーに再発行してもらう。
 const apiKeyValidityDuration = 90 * 24 * time.Hour
 
+// ErrAPIKeyNameRequired / ErrAPIKeyNameTooLong は CreateApiKeyForUser が返す入力検証エラー。
+// 呼び出し元（gRPCハンドラー、OAuthトークンエンドポイント）がそれぞれの形式のエラーレスポンスに
+// 変換できるよう、errors.Is で判定可能なセンチネルエラーとして定義する。
+var (
+	ErrAPIKeyNameRequired = errors.New("name is required")
+	ErrAPIKeyNameTooLong  = errors.New("name is too long")
+)
+
 // toApiKeyInfo はDB行をレスポンス用のApiKeyInfoに変換する
 func toApiKeyInfo(key *database.UserAPIKey) *g.ApiKeyInfo {
 	lastUsedAt := int64(0)
@@ -41,6 +50,42 @@ func toApiKeyInfo(key *database.UserAPIKey) *g.ApiKeyInfo {
 	}
 }
 
+// CreateApiKeyForUser はユーザーID・キー名を直接受け取ってAPIキーを発行するコア処理。
+// gRPCの CreateApiKey ハンドラーと、MCPサーバーのOAuthトークンエンドポイント
+// （backend/infrastructure/mcpserver/oauth_token.go）の両方から呼び出される。
+// gRPCコンテキストを経由しない呼び出し元（OAuthトークンエンドポイントなど）のために
+// gRPC statusエラーではなく素の error を返す。
+func (s *UserEntry) CreateApiKeyForUser(ctx context.Context, userID uuid.UUID, name string) (*database.UserAPIKey, string, error) {
+	if name == "" {
+		return nil, "", ErrAPIKeyNameRequired
+	}
+	if len([]rune(name)) > apiKeyNameMaxLength {
+		return nil, "", ErrAPIKeyNameTooLong
+	}
+
+	generated, err := model.GenerateAPIKey()
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to generate api key: %w", err)
+	}
+
+	currentTime := time.Now()
+	key := &database.UserAPIKey{
+		ID:        uuid.New(),
+		UserID:    userID,
+		Name:      name,
+		KeyHash:   generated.Hash,
+		KeyPrefix: generated.DisplayPrefix,
+		ExpiresAt: currentTime.Add(apiKeyValidityDuration).Unix(),
+		CreatedAt: currentTime.Unix(),
+		UpdatedAt: currentTime.Unix(),
+	}
+	if err := key.Insert(ctx, s.DB); err != nil {
+		return nil, "", fmt.Errorf("failed to insert api key: %w", err)
+	}
+
+	return key, generated.Key, nil
+}
+
 // CreateApiKey はMCPサーバーなど外部クライアント向けのAPIキーを発行する。
 // キー本体はこのレスポンスで一度だけ返し、DBにはSHA-256ハッシュのみ保存する。
 func (s *UserEntry) CreateApiKey(ctx context.Context, req *g.CreateApiKeyRequest) (*g.CreateApiKeyResponse, error) {
@@ -53,35 +98,20 @@ func (s *UserEntry) CreateApiKey(ctx context.Context, req *g.CreateApiKeyRequest
 		return nil, status.Error(codes.Unauthenticated, "invalidUserId")
 	}
 
-	if req.GetName() == "" {
-		return nil, status.Error(codes.InvalidArgument, "nameRequired")
-	}
-	if len([]rune(req.GetName())) > apiKeyNameMaxLength {
-		return nil, status.Error(codes.InvalidArgument, "nameTooLong")
-	}
-
-	generated, err := model.GenerateAPIKey()
+	key, plainKey, err := s.CreateApiKeyForUser(ctx, userID, req.GetName())
 	if err != nil {
-		return nil, status.Error(codes.Internal, "createFailed")
-	}
-
-	currentTime := time.Now()
-	key := &database.UserAPIKey{
-		ID:        uuid.New(),
-		UserID:    userID,
-		Name:      req.GetName(),
-		KeyHash:   generated.Hash,
-		KeyPrefix: generated.DisplayPrefix,
-		ExpiresAt: currentTime.Add(apiKeyValidityDuration).Unix(),
-		CreatedAt: currentTime.Unix(),
-		UpdatedAt: currentTime.Unix(),
-	}
-	if err := key.Insert(ctx, s.DB); err != nil {
-		return nil, status.Error(codes.Internal, "createFailed")
+		switch {
+		case errors.Is(err, ErrAPIKeyNameRequired):
+			return nil, status.Error(codes.InvalidArgument, "nameRequired")
+		case errors.Is(err, ErrAPIKeyNameTooLong):
+			return nil, status.Error(codes.InvalidArgument, "nameTooLong")
+		default:
+			return nil, status.Error(codes.Internal, "createFailed")
+		}
 	}
 
 	return &g.CreateApiKeyResponse{
-		ApiKey: generated.Key,
+		ApiKey: plainKey,
 		Info:   toApiKeyInfo(key),
 	}, nil
 }

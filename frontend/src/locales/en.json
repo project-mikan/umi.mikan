@@ -598,5 +598,20 @@
   },
   "summary": {
     "modelVersion": "Model"
+  },
+  "mcpOAuth": {
+    "title": "Allow MCP connection",
+    "description": "Allow this MCP client to access your umi.mikan diary data? Once allowed, it will be able to read and search your diary entries.",
+    "loginRequired": "You need to log in to continue.",
+    "goToLogin": "Go to login page",
+    "authorize": "Allow",
+    "authorizing": "Processing...",
+    "invalidRequest": "Invalid request. Please check your MCP client configuration.",
+    "errors": {
+      "unauthorized": "Login required. Please reload the page.",
+      "invalidCsrfToken": "Your session is invalid. Please reload the page.",
+      "invalidRequest": "Invalid request.",
+      "consentFailed": "Failed to grant access. Please try again later."
+    }
   }
 }

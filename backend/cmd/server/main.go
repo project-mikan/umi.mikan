@@ -128,7 +128,7 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	// AIクライアント（Claude Desktopなど）向けに日記取得・検索ツールを公開する
 	mcpServer := &http.Server{
 		Addr:         ":8014",
-		Handler:      mcpserver.NewHTTPHandler(app.DiaryService, app.DB),
+		Handler:      mcpserver.NewHTTPHandler(app.DiaryService, app.DB, app.Redis, app.UserService, constants.LoadMCPServerBaseURL(), constants.LoadFrontendBaseURL()),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
