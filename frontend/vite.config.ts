@@ -19,6 +19,12 @@ export default defineConfig({
     noExternal: [],
     external: ["chart.js"],
   },
+  // Svelteコンポーネントをvitestでマウントする際、クライアント向けmount()を使わせるために必要
+  // （未設定だとvitestがSSRモードで依存解決しSvelteのサーバー用mount()が使われてしまい、
+  //   "mount(...) is not available on the server" エラーになる）
+  resolve: {
+    conditions: ["browser"],
+  },
   test: {
     include: ["src/**/*.{test,spec}.{js,ts}"],
     environment: "jsdom",

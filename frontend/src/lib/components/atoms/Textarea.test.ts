@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "@testing-library/svelte";
 import { htmlToPlainText as htmlToPlainTextImpl } from "$lib/utils/html-text-converter";
+import Textarea from "./Textarea.svelte";
 
 describe("Textarea Component Functionality", () => {
   let mockDiv: {
@@ -446,19 +448,16 @@ describe("Textarea Component Functionality", () => {
     expect(mockContentElement.dispatchEvent).toHaveBeenCalled();
   });
 
-  // 実DOMで文末Enterの挙動を再現し、valueに反映される改行数を検証する
+  // 実際のTextarea.svelteコンポーネントをマウントし、_handleKeydown（非公開）を
+  // DOM経由のEnterキー押下で駆動して、valueに反映される改行数を検証する
   describe("文末でEnterを押した際にvalueへ反映される改行数", () => {
     beforeEach(() => {
-      // このdescribe内はdocument.createElementの実実装が必要なため、上位beforeEachのモックを復元する
+      // このdescribe内は実DOM・実コンポーネントが必要なため、上位beforeEachのモックを復元する
       vi.restoreAllMocks();
     });
 
-    // Textarea.svelteの_handleKeydown内、文末<br>挿入部分を実DOM上で再現するヘルパー
-    // カーソル表示用の2つ目の<br>は挿入後に取り除いてからvalueへ変換する必要がある
-    function simulateEnterAtEnd(
-      contentElement: HTMLDivElement,
-      removeAfterBr: boolean,
-    ): void {
+    // contentEditable要素の末尾にカーソルを移動してEnterキーのkeydownイベントを発火する
+    function pressEnterAtEnd(contentElement: HTMLElement): void {
       const range = document.createRange();
       range.selectNodeContents(contentElement);
       range.collapse(false);
@@ -467,47 +466,77 @@ describe("Textarea Component Functionality", () => {
       selection?.removeAllRanges();
       selection?.addRange(range);
 
-      const br = document.createElement("br");
-      range.deleteContents();
-      range.insertNode(br);
-
-      // 文末なので2つ目の<br>を挿入（カーソル表示用）
-      const afterBr = document.createElement("br");
-      const newRange = document.createRange();
-      newRange.setStartAfter(br);
-      newRange.collapse(true);
-      newRange.insertNode(afterBr);
-
-      if (removeAfterBr) {
-        afterBr.remove();
-      }
+      // Textarea.svelteはcaptureフェーズでkeydownを購読しているため、bubbles: trueで十分伝播する
+      const event = new KeyboardEvent("keydown", {
+        key: "Enter",
+        bubbles: true,
+        cancelable: true,
+      });
+      contentElement.dispatchEvent(event);
     }
 
-    it("正常系: 修正後は2つ目の<br>を削除してからvalue変換するとEnter1回で改行1つになる", () => {
-      const contentElement = document.createElement("div");
-      contentElement.textContent = "こんにちは";
-      document.body.appendChild(contentElement);
+    it("正常系: contentEditableの文末でEnterキーを押すと_handleInputに渡るinnerHTMLの<br>が1つだけ増える", async () => {
+      const { container } = render(Textarea, {
+        props: { value: "こんにちは" },
+      });
 
-      simulateEnterAtEnd(contentElement, true);
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
+      expect(contentElement).not.toBeNull();
 
-      const result = htmlToPlainTextImpl(contentElement.innerHTML);
-      expect(result).toBe("こんにちは\n");
+      let capturedHtmlAtInput = "";
+      contentElement.addEventListener("input", (event) => {
+        capturedHtmlAtInput = (event.target as HTMLElement).innerHTML;
+      });
 
-      contentElement.remove();
+      pressEnterAtEnd(contentElement);
+
+      // 実コンポーネントの_handleKeydownが計算した最終的なvalueを検証する
+      // （_handleInputがhtmlToPlainTextで変換する直前のinnerHTMLと同じ変換を適用）
+      expect(htmlToPlainTextImpl(capturedHtmlAtInput)).toBe("こんにちは\n");
     });
 
-    it("異常系: 2つ目の<br>を削除せずにvalue変換すると、Enter1回のはずが改行が2つ（空行1つ分）入ってしまう", () => {
-      const contentElement = document.createElement("div");
-      contentElement.textContent = "こんにちは";
-      document.body.appendChild(contentElement);
+    it("異常系: Enterキーを2回連続で押すと改行が2つ（\\n\\n）になり、余分な空行が入らない", async () => {
+      const { container } = render(Textarea, {
+        props: { value: "こんにちは" },
+      });
 
-      simulateEnterAtEnd(contentElement, false);
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
 
-      const result = htmlToPlainTextImpl(contentElement.innerHTML);
-      // 修正前のバグ: 2つ目の<br>が残ったままだと"\n\n"になり、空行が余分に入る
+      let capturedHtmlAtInput = "";
+      contentElement.addEventListener("input", (event) => {
+        capturedHtmlAtInput = (event.target as HTMLElement).innerHTML;
+      });
+
+      pressEnterAtEnd(contentElement);
+      pressEnterAtEnd(contentElement);
+
+      // Enter2回 = 改行2つ。3つ（空行2つ分）になっていないことを検証する
+      expect(htmlToPlainTextImpl(capturedHtmlAtInput)).toBe("こんにちは\n\n");
+    });
+  });
+
+  // htmlToPlainTextImpl単体でも、2つ目の<br>を削除し忘れた場合に
+  // 余分な改行が入ることを回帰として押さえておく
+  describe("htmlToPlainText: カーソル表示用の2つ目の<br>が残っていた場合の変換結果", () => {
+    beforeEach(() => {
+      // 実DOM実装が必要なため、上位beforeEachのdocument.createElementモックを復元する
+      vi.restoreAllMocks();
+    });
+
+    it("異常系: 2つ目の<br>が残ったままだと、改行1つのつもりが改行2つ（空行1つ分）に変換される", () => {
+      const html = "こんにちは<br><br>";
+      const result = htmlToPlainTextImpl(html);
       expect(result).toBe("こんにちは\n\n");
+    });
 
-      contentElement.remove();
+    it("正常系: 2つ目の<br>を削除してから変換すると改行1つになる", () => {
+      const html = "こんにちは<br>";
+      const result = htmlToPlainTextImpl(html);
+      expect(result).toBe("こんにちは\n");
     });
   });
 });
