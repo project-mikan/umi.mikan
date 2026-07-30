@@ -268,10 +268,14 @@
 
         const isAtEnd = !hasContentAfterNode(br);
 
-        // 直前のノードがBRタグでない かつ 末尾の場合のみ、2つ目の<br>を挿入
+        // 直前のノードがBRタグでない かつ 末尾の場合のみ、カーソル表示用に一時的な2つ目の<br>を挿入
+        // ※この2つ目の<br>はDOM表示上カーソルを次行に見せるためだけのものであり、
+        //   value（プレーンテキスト）には反映してはいけない。
+        //   htmlToPlainTextは<br>1つにつき\nを1つ生成するため、2つ挿入したまま
+        //   input発火するとEnter1回でvalueに空行が2行分（\n\n）入ってしまう。
+        let afterBr: HTMLBRElement | null = null;
         if (!isPreviousNodeBR && isAtEnd) {
-          // 末尾の場合のみ2つ目の<br>を挿入
-          const afterBr = document.createElement("br");
+          afterBr = document.createElement("br");
 
           // カーソルを最初の<br>の直後に配置してから2つ目の<br>を挿入
           const newRange = document.createRange();
@@ -298,6 +302,12 @@
           // Update the selection
           selection.removeAllRanges();
           selection.addRange(newRange);
+        }
+
+        // valueへの反映用に、一時的な2つ目の<br>は変換前に取り除く
+        // （カーソル位置はafterBr削除の影響を受けないためそのまま維持される）
+        if (afterBr) {
+          afterBr.remove();
         }
       }
 
