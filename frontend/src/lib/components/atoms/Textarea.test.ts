@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { htmlToPlainText as htmlToPlainTextImpl } from "$lib/utils/html-text-converter";
 
 describe("Textarea Component Functionality", () => {
   let mockDiv: {
@@ -443,5 +444,70 @@ describe("Textarea Component Functionality", () => {
     expect(mockSelection.removeAllRanges).toHaveBeenCalled();
     expect(mockSelection.addRange).toHaveBeenCalled();
     expect(mockContentElement.dispatchEvent).toHaveBeenCalled();
+  });
+
+  // 実DOMで文末Enterの挙動を再現し、valueに反映される改行数を検証する
+  describe("文末でEnterを押した際にvalueへ反映される改行数", () => {
+    beforeEach(() => {
+      // このdescribe内はdocument.createElementの実実装が必要なため、上位beforeEachのモックを復元する
+      vi.restoreAllMocks();
+    });
+
+    // Textarea.svelteの_handleKeydown内、文末<br>挿入部分を実DOM上で再現するヘルパー
+    // カーソル表示用の2つ目の<br>は挿入後に取り除いてからvalueへ変換する必要がある
+    function simulateEnterAtEnd(
+      contentElement: HTMLDivElement,
+      removeAfterBr: boolean,
+    ): void {
+      const range = document.createRange();
+      range.selectNodeContents(contentElement);
+      range.collapse(false);
+
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+
+      const br = document.createElement("br");
+      range.deleteContents();
+      range.insertNode(br);
+
+      // 文末なので2つ目の<br>を挿入（カーソル表示用）
+      const afterBr = document.createElement("br");
+      const newRange = document.createRange();
+      newRange.setStartAfter(br);
+      newRange.collapse(true);
+      newRange.insertNode(afterBr);
+
+      if (removeAfterBr) {
+        afterBr.remove();
+      }
+    }
+
+    it("正常系: 修正後は2つ目の<br>を削除してからvalue変換するとEnter1回で改行1つになる", () => {
+      const contentElement = document.createElement("div");
+      contentElement.textContent = "こんにちは";
+      document.body.appendChild(contentElement);
+
+      simulateEnterAtEnd(contentElement, true);
+
+      const result = htmlToPlainTextImpl(contentElement.innerHTML);
+      expect(result).toBe("こんにちは\n");
+
+      contentElement.remove();
+    });
+
+    it("異常系: 2つ目の<br>を削除せずにvalue変換すると、Enter1回のはずが改行が2つ（空行1つ分）入ってしまう", () => {
+      const contentElement = document.createElement("div");
+      contentElement.textContent = "こんにちは";
+      document.body.appendChild(contentElement);
+
+      simulateEnterAtEnd(contentElement, false);
+
+      const result = htmlToPlainTextImpl(contentElement.innerHTML);
+      // 修正前のバグ: 2つ目の<br>が残ったままだと"\n\n"になり、空行が余分に入る
+      expect(result).toBe("こんにちは\n\n");
+
+      contentElement.remove();
+    });
   });
 });
