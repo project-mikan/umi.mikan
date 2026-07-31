@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
-    "@bufbuild/buf": "^1.71.0",
+    "@bufbuild/buf": "^1.72.0",
     "@bufbuild/protoc-gen-es": "^2.12.1",
     "@sveltejs/adapter-auto": "^7.0.1",
     "@sveltejs/adapter-node": "^5.5.7",
