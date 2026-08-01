@@ -2,6 +2,8 @@
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import type { DiaryHighlight } from "$lib/types/highlight";
   import {
+    CURSOR_ANCHOR_ZWS,
+    cleanupCursorAnchors,
     getTextOffset,
     restoreCursorPosition,
   } from "$lib/utils/cursor-utils";
@@ -28,6 +30,10 @@
   let isComposing = false; // IME入力中かどうかのフラグ
   let updateTimeout: ReturnType<typeof setTimeout> | null = null; // ハイライト更新のタイムアウト
   let isTyping = false; // ユーザーが入力中かどうかのフラグ
+  // _handleKeydownがEnter処理直後に発火させる合成inputイベントかどうかのフラグ。
+  // このタイミングではカーソルアンカー（ゼロ幅スペース）がまさにカーソル位置として
+  // 使われている最中なので、_handleInputの先頭でアンカーを掃除するのを1回だけスキップする。
+  let skipNextAnchorCleanup = false;
 
   // diaryHighlightsが変更されたときもsavedContentを更新
   // 配列の内容をシリアライズして比較（参照比較では毎回新しい配列なので不十分）
@@ -174,6 +180,23 @@
     // IME入力中（compositionupdate）の場合は、valueの更新のみ行う
     const isCompositionUpdate = event instanceof CompositionEvent;
 
+    // skipNextAnchorCleanupは_handleKeydownがEnter処理直後に発火させる合成inputイベントの
+    // 回のみtrueになる。このタイミングではカーソルアンカー（ゼロ幅スペース）がまさに
+    // カーソル位置として使われている最中なので、ここで消すとカーソル位置安定化の効果が
+    // 失われてしまう。そのためこの回だけ掃除をスキップし、次の入力が来たタイミングで、
+    // 役目を終えたアンカーをDOMから除去する。
+    // IME変換中（isComposing）も掃除をスキップする。cleanupCursorAnchorsはselectionを
+    // removeAllRanges/addRangeで直接操作するが、IMEが変換候補を表示している最中に
+    // プログラムからカーソル位置を書き換えると、IME側が変換セッションの状態を見失い、
+    // 未確定文字列の挿入位置がずれる（改行直後に入力を始めると、入力した文字が改行前の
+    // 行の続きとして入ってしまう）不具合が起きるため。掃除はIME確定後（compositionend）の
+    // _handleInput呼び出しに任せる。
+    if (skipNextAnchorCleanup) {
+      skipNextAnchorCleanup = false;
+    } else if (contentElement && !isComposing) {
+      cleanupCursorAnchors(contentElement);
+    }
+
     value = htmlToPlainText(target.innerHTML);
 
     // contentElementが初期化されていない場合は何もしない
@@ -291,7 +314,7 @@
         // ブラウザが正規化時に削除してしまいカーソル位置が失われることがあったため、
         // 削除されない1文字のゼロ幅スペースを使う。ゼロ幅スペースはhtmlToPlainText側で
         // 除去されるためvalueには反映されない。
-        const cursorAnchor = document.createTextNode("​");
+        const cursorAnchor = document.createTextNode(CURSOR_ANCHOR_ZWS);
         br.after(cursorAnchor);
 
         // 直前のノードがBRタグでない かつ 末尾の場合のみ、カーソル表示用に一時的な2つ目の<br>を挿入
@@ -322,6 +345,9 @@
       }
 
       // Trigger input event to update the value
+      // このinputイベント発火時点ではカーソルアンカーがまさにカーソル位置として
+      // 使われている最中なので、_handleInputでの掃除を1回だけスキップさせる
+      skipNextAnchorCleanup = true;
       const inputEvent = new Event("input", { bubbles: true });
       contentElement.dispatchEvent(inputEvent);
       // isTypingはdispatchによって呼ばれた_handleInput内のsetTimeoutに任せる
@@ -334,6 +360,9 @@
   function _handleBlur() {
     // IME入力中は自動保存しない
     if (isComposing) return;
+    if (contentElement) {
+      cleanupCursorAnchors(contentElement);
+    }
     dispatch("autosave");
   }
 </script>

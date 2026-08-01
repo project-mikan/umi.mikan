@@ -518,6 +518,32 @@ describe("Textarea Component Functionality", () => {
       expect(htmlToPlainTextImpl(capturedHtmlAtInput)).toBe("こんにちは\n\n");
     });
 
+    it("正常系: 複数回Enterを押した後に文字入力すると、蓄積したカーソルアンカー（ゼロ幅スペース）がDOMから掃除される", () => {
+      const { container } = render(Textarea, {
+        props: { value: "こんにちは" },
+      });
+
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
+
+      // Enterを複数回連続で押す（この時点ではカーソルアンカーがDOMに残り続ける）
+      pressEnterAtEnd(contentElement);
+      pressEnterAtEnd(contentElement);
+      pressEnterAtEnd(contentElement);
+
+      // 通常の文字入力イベントを発火する（isTrustedなユーザー入力を模す通常のinput）
+      const selection = window.getSelection();
+      const range = selection?.getRangeAt(0);
+      range?.insertNode(document.createTextNode("あ"));
+      const inputEvent = new Event("input", { bubbles: true });
+      contentElement.dispatchEvent(inputEvent);
+
+      // 蓄積していたカーソルアンカー（<br>直後のゼロ幅スペース）が全て掃除され、
+      // DOMに1つも残っていないことを確認する
+      expect(contentElement.innerHTML).not.toContain("​");
+    });
+
     it("正常系: 文末でEnterを押した直後、カーソルは<br>より後ろのノードに位置し、続けてテキストを挿入すると<br>の後ろに追加される", () => {
       const { container } = render(Textarea, {
         props: { value: "こんにちは" },
@@ -590,6 +616,71 @@ describe("Textarea Component Functionality", () => {
         vi.useRealTimers();
       }
     });
+
+    it("正常系: 文末でEnterを押した直後にIME入力（複数回のcompositionupdateを経て確定）しても、改行が保持されたまま新しい行に文字が入る", () => {
+      const { container } = render(Textarea, {
+        props: { value: "こんにちは" },
+      });
+
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
+
+      pressEnterAtEnd(contentElement);
+
+      // IME入力開始（変換候補確定前）
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionstart", { bubbles: true }),
+      );
+
+      // ローマ字入力の各段階でIMEが未確定文字列をカーソル位置のテキストノードへ
+      // 書き換えていく過程をシミュレートする（"s" → "su" → "す"）
+      const insertComposingText = (text: string) => {
+        const sel = window.getSelection();
+        const range = sel?.getRangeAt(0);
+        const node = range?.startContainer as Text;
+        node.textContent = text;
+        const newRange = document.createRange();
+        newRange.setStart(node, text.length);
+        newRange.collapse(true);
+        sel?.removeAllRanges();
+        sel?.addRange(newRange);
+      };
+
+      insertComposingText("s");
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionupdate", { bubbles: true, data: "s" }),
+      );
+
+      insertComposingText("su");
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionupdate", {
+          bubbles: true,
+          data: "su",
+        }),
+      );
+
+      insertComposingText("す");
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionupdate", {
+          bubbles: true,
+          data: "す",
+        }),
+      );
+
+      // IME確定
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionend", { bubbles: true, data: "す" }),
+      );
+
+      // 過去の実装では、IME変換中にcleanupCursorAnchorsがselectionを直接
+      // 書き換えてしまい、IME側の変換セッションが乱れて確定文字が改行前の行の
+      // 続きとして入ってしまう不具合があった。改行が保持され、新しい行に
+      // 「す」が入っていることを確認する。
+      expect(htmlToPlainTextImpl(contentElement.innerHTML)).toBe(
+        "こんにちは\nす",
+      );
+    });
   });
 
   // htmlToPlainTextImpl単体でも、2つ目の<br>を削除し忘れた場合に
@@ -627,10 +718,22 @@ describe("Textarea Component Functionality", () => {
       expect(result).toBe("こんにちは\n続き");
     });
 
-    it("正常系: ゼロ幅スペースのみの場合、valueは空文字列になる", () => {
+    it("正常系: <br>直後がゼロ幅スペースのみの場合、その1文字だけがvalueから除かれる", () => {
+      const html = "こんにちは<br>​";
+      const result = htmlToPlainTextImpl(html);
+      expect(result).toBe("こんにちは\n");
+    });
+
+    it("異常系: <br>を伴わずゼロ幅スペースのみの場合、カーソルアンカーとはみなされずvalueにそのまま残る（<br>直後で始まるテキストのみをアンカーとして扱うため）", () => {
       const html = "​";
       const result = htmlToPlainTextImpl(html);
-      expect(result).toBe("");
+      expect(result).toBe("​");
+    });
+
+    it("正常系: <br>を伴わずユーザーが入力・貼り付けした本物のゼロ幅スペースはvalueに保持される", () => {
+      const html = "前​後";
+      const result = htmlToPlainTextImpl(html);
+      expect(result).toBe("前​後");
     });
   });
 });
