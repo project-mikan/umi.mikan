@@ -185,9 +185,15 @@
     // カーソル位置として使われている最中なので、ここで消すとカーソル位置安定化の効果が
     // 失われてしまう。そのためこの回だけ掃除をスキップし、次の入力が来たタイミングで、
     // 役目を終えたアンカーをDOMから除去する。
+    // IME変換中（isComposing）も掃除をスキップする。cleanupCursorAnchorsはselectionを
+    // removeAllRanges/addRangeで直接操作するが、IMEが変換候補を表示している最中に
+    // プログラムからカーソル位置を書き換えると、IME側が変換セッションの状態を見失い、
+    // 未確定文字列の挿入位置がずれる（改行直後に入力を始めると、入力した文字が改行前の
+    // 行の続きとして入ってしまう）不具合が起きるため。掃除はIME確定後（compositionend）の
+    // _handleInput呼び出しに任せる。
     if (skipNextAnchorCleanup) {
       skipNextAnchorCleanup = false;
-    } else if (contentElement) {
+    } else if (contentElement && !isComposing) {
       cleanupCursorAnchors(contentElement);
     }
 

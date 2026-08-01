@@ -616,6 +616,71 @@ describe("Textarea Component Functionality", () => {
         vi.useRealTimers();
       }
     });
+
+    it("正常系: 文末でEnterを押した直後にIME入力（複数回のcompositionupdateを経て確定）しても、改行が保持されたまま新しい行に文字が入る", () => {
+      const { container } = render(Textarea, {
+        props: { value: "こんにちは" },
+      });
+
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
+
+      pressEnterAtEnd(contentElement);
+
+      // IME入力開始（変換候補確定前）
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionstart", { bubbles: true }),
+      );
+
+      // ローマ字入力の各段階でIMEが未確定文字列をカーソル位置のテキストノードへ
+      // 書き換えていく過程をシミュレートする（"s" → "su" → "す"）
+      const insertComposingText = (text: string) => {
+        const sel = window.getSelection();
+        const range = sel?.getRangeAt(0);
+        const node = range?.startContainer as Text;
+        node.textContent = text;
+        const newRange = document.createRange();
+        newRange.setStart(node, text.length);
+        newRange.collapse(true);
+        sel?.removeAllRanges();
+        sel?.addRange(newRange);
+      };
+
+      insertComposingText("s");
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionupdate", { bubbles: true, data: "s" }),
+      );
+
+      insertComposingText("su");
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionupdate", {
+          bubbles: true,
+          data: "su",
+        }),
+      );
+
+      insertComposingText("す");
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionupdate", {
+          bubbles: true,
+          data: "す",
+        }),
+      );
+
+      // IME確定
+      contentElement.dispatchEvent(
+        new CompositionEvent("compositionend", { bubbles: true, data: "す" }),
+      );
+
+      // 過去の実装では、IME変換中にcleanupCursorAnchorsがselectionを直接
+      // 書き換えてしまい、IME側の変換セッションが乱れて確定文字が改行前の行の
+      // 続きとして入ってしまう不具合があった。改行が保持され、新しい行に
+      // 「す」が入っていることを確認する。
+      expect(htmlToPlainTextImpl(contentElement.innerHTML)).toBe(
+        "こんにちは\nす",
+      );
+    });
   });
 
   // htmlToPlainTextImpl単体でも、2つ目の<br>を削除し忘れた場合に
