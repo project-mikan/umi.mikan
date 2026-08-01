@@ -273,13 +273,13 @@ func TestDiaryServiceAdapter_ExportDiaryEntries(t *testing.T) {
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
-		if resp == nil {
+		if resp == nil { //nolint:staticcheck // t.Fatalfで既にreturn済みだがstaticcheckが誤検知するため抑制
 			t.Fatal("レスポンスがnilだった")
 		}
-		if resp.Msg == nil {
+		if resp.Msg == nil { //nolint:staticcheck // t.Fatalfで既にreturn済みだがstaticcheckが誤検知するため抑制
 			t.Fatal("レスポンスメッセージがnilだった")
 		}
-		if len(resp.Msg.Entries) != 0 {
+		if len(resp.Msg.Entries) != 0 { //nolint:staticcheck // t.Fatalfで既にreturn済みだがstaticcheckが誤検知するため抑制
 			t.Errorf("空リストを期待したが %d 件返った", len(resp.Msg.Entries))
 		}
 	})
