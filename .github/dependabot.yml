@@ -5,8 +5,14 @@ updates:
     schedule:
       interval: "monthly"
       timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
     groups:
       frontend:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      frontend-security:
+        applies-to: security-updates
         patterns:
           - "*"
 
@@ -15,8 +21,14 @@ updates:
     schedule:
       interval: "monthly"
       timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
     groups:
       docker:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      docker-security:
+        applies-to: security-updates
         patterns:
           - "*"
 
@@ -25,8 +37,14 @@ updates:
     schedule:
       interval: "monthly"
       timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
     groups:
       backend:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      backend-security:
+        applies-to: security-updates
         patterns:
           - "*"
 
@@ -35,8 +53,14 @@ updates:
     schedule:
       interval: "monthly"
       timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
     groups:
       ios:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      ios-security:
+        applies-to: security-updates
         patterns:
           - "*"
 
@@ -45,7 +69,13 @@ updates:
     schedule:
       interval: "monthly"
       timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
     groups:
       github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      github-actions-security:
+        applies-to: security-updates
         patterns:
           - "*"
