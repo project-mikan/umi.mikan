@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, onDestroy } from "svelte";
-  import { highlightEntitiesAndHighlights } from "$lib/utils/diary-entity-highlighter";
+  import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import type { DiaryHighlight } from "$lib/types/highlight";
   import {
     getTextOffset,
     restoreCursorPosition,
   } from "$lib/utils/cursor-utils";
+  import { highlightEntitiesAndHighlights } from "$lib/utils/diary-entity-highlighter";
   import { htmlToPlainText } from "$lib/utils/html-text-converter";
 
   export let value = "";
@@ -123,6 +123,21 @@
     if (!contentElement) return;
     // SSR時は何もしない
     if (typeof window === "undefined") return;
+
+    // 現在のDOMの内容が、これから設定しようとする内容と実質的に同じ場合は
+    // innerHTMLの再代入をスキップする。
+    // ※例えば文末でEnterを押した直後は、_handleKeydownが既にDOMへ直接<br>を
+    //   挿入済みで見た目上は改行されている。その後isTypingが500ms後にfalseへ
+    //   戻ったタイミングでこの関数が呼ばれると、highlightedHTMLの中身（改行を
+    //   含むvalue由来のHTML）は既存のDOMと同じであるにもかかわらず、
+    //   innerHTMLを再代入してDOM要素を作り直してしまい、その一瞬の再構築が
+    //   「改行が一瞬戻る」ようなちらつきとして見える原因になっていた。
+    //   カーソルアンカー用のゼロ幅スペースはDOM側にのみ存在しうるため、
+    //   比較前に取り除く。
+    const currentHtmlWithoutAnchor = contentElement.innerHTML.replace(/​/g, "");
+    if (currentHtmlWithoutAnchor === highlightedHTML) {
+      return;
+    }
 
     // 現在のカーソル位置を取得
     const selection = window.getSelection();
@@ -268,44 +283,39 @@
 
         const isAtEnd = !hasContentAfterNode(br);
 
+        // カーソルを<br>の直後に置く際、コンテナ要素基準のoffset（例: setStartAfter(br)）で
+        // Rangeを設定すると、ブラウザによっては直後のキー入力が<br>の"前"ではなく"後ろ"に
+        // 挿入されてしまうことがある（Chromeで確認済み）。これを避けるため、<br>の直後に
+        // ゼロ幅スペース（U+200B）を1文字持つテキストノードを挿入し、そのテキストノード内
+        // （offset 1、＝ゼロ幅スペースの直後）にカーソルを置く。空文字列のテキストノードだと
+        // ブラウザが正規化時に削除してしまいカーソル位置が失われることがあったため、
+        // 削除されない1文字のゼロ幅スペースを使う。ゼロ幅スペースはhtmlToPlainText側で
+        // 除去されるためvalueには反映されない。
+        const cursorAnchor = document.createTextNode("​");
+        br.after(cursorAnchor);
+
         // 直前のノードがBRタグでない かつ 末尾の場合のみ、カーソル表示用に一時的な2つ目の<br>を挿入
         // ※この2つ目の<br>はDOM表示上カーソルを次行に見せるためだけのものであり、
         //   value（プレーンテキスト）には反映してはいけない。
         //   htmlToPlainTextは<br>1つにつき\nを1つ生成するため、2つ挿入したまま
         //   input発火するとEnter1回でvalueに空行が2行分（\n\n）入ってしまう。
+        //   cursorAnchorへのカーソル位置はafterBrの追加・削除の影響を受けない
+        //   （テキストノード自体は増減しないため）。
         let afterBr: HTMLBRElement | null = null;
         if (!isPreviousNodeBR && isAtEnd) {
           afterBr = document.createElement("br");
-
-          // カーソルを最初の<br>の直後に配置してから2つ目の<br>を挿入
-          const newRange = document.createRange();
-          newRange.setStartAfter(br);
-          newRange.collapse(true);
-
-          // 2つ目の<br>を挿入
-          newRange.insertNode(afterBr);
-
-          // カーソルを2つの<br>の間に配置
-          newRange.setStartAfter(br);
-          newRange.setEndBefore(afterBr);
-          newRange.collapse(true);
-
-          // Update the selection
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        } else {
-          // 連続改行の場合、または末尾でない場合は1つの<br>のみで、カーソルをその直後に配置
-          const newRange = document.createRange();
-          newRange.setStartAfter(br);
-          newRange.collapse(true);
-
-          // Update the selection
-          selection.removeAllRanges();
-          selection.addRange(newRange);
+          cursorAnchor.after(afterBr);
         }
 
-        // valueへの反映用に、一時的な2つ目の<br>は変換前に取り除く
-        // （カーソル位置はafterBr削除の影響を受けないためそのまま維持される）
+        // カーソルをcursorAnchor（ゼロ幅スペースを持つテキストノード）内、
+        // ゼロ幅スペースの直後（offset 1）に配置
+        const newRange = document.createRange();
+        newRange.setStart(cursorAnchor, 1);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+
+        // valueへの反映用に、表示専用の一時的な2つ目の<br>は変換前に取り除く
         if (afterBr) {
           afterBr.remove();
         }

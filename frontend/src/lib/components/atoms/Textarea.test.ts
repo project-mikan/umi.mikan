@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/svelte";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { htmlToPlainText as htmlToPlainTextImpl } from "$lib/utils/html-text-converter";
 import Textarea from "./Textarea.svelte";
 
@@ -517,6 +517,79 @@ describe("Textarea Component Functionality", () => {
       // Enter2回 = 改行2つ。3つ（空行2つ分）になっていないことを検証する
       expect(htmlToPlainTextImpl(capturedHtmlAtInput)).toBe("こんにちは\n\n");
     });
+
+    it("正常系: 文末でEnterを押した直後、カーソルは<br>より後ろのノードに位置し、続けてテキストを挿入すると<br>の後ろに追加される", () => {
+      const { container } = render(Textarea, {
+        props: { value: "こんにちは" },
+      });
+
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
+
+      pressEnterAtEnd(contentElement);
+
+      // Enter直後のカーソル位置を取得
+      const selection = window.getSelection();
+      expect(selection).not.toBeNull();
+      expect(selection?.rangeCount).toBeGreaterThan(0);
+      const range = selection?.getRangeAt(0);
+      expect(range?.collapsed).toBe(true);
+
+      // カーソルが<br>要素そのもの（コンテナ要素基準のoffset）ではなく、
+      // <br>の直後に置かれたテキストノード内にあることを確認する。
+      // 過去の実装ではコンテナ要素基準のoffsetでカーソルを設定していたため、
+      // ここでcollapsedなRangeにテキストを挿入すると<br>の"前"（1行目の末尾）に
+      // 入ってしまい、Enterを押したのに改行されないように見える不具合があった。
+      const br = contentElement.querySelector("br");
+      expect(br).not.toBeNull();
+      expect(range?.startContainer.nodeType).toBe(Node.TEXT_NODE);
+      expect(range?.startContainer.previousSibling).toBe(br);
+
+      // 実際にカーソル位置へテキストを挿入し、<br>より後ろに入ることを確認する
+      // （カーソルアンカーとして挿入されたゼロ幅スペースを含むテキストノード内に
+      // 挿入されるため、ゼロ幅スペースを除去した上で比較する。ゼロ幅スペース自体は
+      // htmlToPlainText側で除去されvalueには反映されない）
+      range?.insertNode(document.createTextNode("続き"));
+      expect(contentElement.innerHTML.replace(/​/g, "")).toBe(
+        "こんにちは<br>続き",
+      );
+    });
+
+    it("正常系: 文末でEnterを押した後、500ms経過してisTypingがfalseに戻ってもDOM要素が作り直されず、改行が一瞬消えて見えるちらつきが起きない", async () => {
+      vi.useFakeTimers();
+      try {
+        const { container } = render(Textarea, {
+          props: { value: "こんにちは" },
+        });
+
+        const contentElement = container.querySelector(
+          "[contenteditable]",
+        ) as HTMLElement;
+
+        pressEnterAtEnd(contentElement);
+
+        // Enter直後に挿入された<br>要素の参照を保持しておく
+        const brBeforeTimeout = contentElement.querySelector("br");
+        expect(brBeforeTimeout).not.toBeNull();
+
+        // isTypingをfalseに戻す500msタイムアウトを進める
+        // （SvelteのリアクティブブロックはPromiseベースでフラッシュされるため、
+        //   タイマーを進めた後にマイクロタスクキューも明示的にフラッシュする必要がある）
+        await vi.advanceTimersByTimeAsync(600);
+        await Promise.resolve();
+        await Promise.resolve();
+
+        // DOM要素（innerHTMLの再代入）が作り直されていれば<br>要素の参照は
+        // 別オブジェクトになる。過去の実装では、内容が実質同じ（改行のみ）でも
+        // updateContentElementがinnerHTMLを無条件に再代入していたため、
+        // 500ms後に一瞬DOMが作り直され、改行がちらついて見える不具合があった。
+        const brAfterTimeout = contentElement.querySelector("br");
+        expect(brAfterTimeout).toBe(brBeforeTimeout);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   // htmlToPlainTextImpl単体でも、2つ目の<br>を削除し忘れた場合に
@@ -537,6 +610,27 @@ describe("Textarea Component Functionality", () => {
       const html = "こんにちは<br>";
       const result = htmlToPlainTextImpl(html);
       expect(result).toBe("こんにちは\n");
+    });
+  });
+
+  // カーソル位置保持用に一時的に挿入されるゼロ幅スペース（U+200B）が
+  // valueに混入しないことを回帰として押さえておく
+  describe("htmlToPlainText: カーソルアンカー用のゼロ幅スペースが残っていた場合の変換結果", () => {
+    beforeEach(() => {
+      // 実DOM実装が必要なため、上位beforeEachのdocument.createElementモックを復元する
+      vi.restoreAllMocks();
+    });
+
+    it("正常系: <br>直後にカーソルアンカー用のゼロ幅スペースが残っていても、valueには含まれない", () => {
+      const html = "こんにちは<br>​続き";
+      const result = htmlToPlainTextImpl(html);
+      expect(result).toBe("こんにちは\n続き");
+    });
+
+    it("正常系: ゼロ幅スペースのみの場合、valueは空文字列になる", () => {
+      const html = "​";
+      const result = htmlToPlainTextImpl(html);
+      expect(result).toBe("");
     });
   });
 });

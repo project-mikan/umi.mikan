@@ -1,13 +1,13 @@
 /**
  * cursor-utilsのテスト
  */
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
-  getTextOffset,
   createRangeAtTextOffset,
+  getTextOffset,
+  restoreCursorFromRange,
   restoreCursorPosition,
   saveCursorPosition,
-  restoreCursorFromRange,
 } from "./cursor-utils";
 
 describe("cursor-utils", () => {
@@ -162,6 +162,32 @@ describe("cursor-utils", () => {
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         expect(range.collapsed).toBe(true);
+      }
+    });
+
+    it("正常系: BRタグ直後（末尾）にカーソルを復元すると、カーソル位置はBRの直後を指すテキストノード内になる", () => {
+      // 文末で改行した直後（例: "Hello\n"）をシミュレート
+      container.innerHTML = "Hello<br>";
+
+      // "Hello" + 改行1文字 = 6文字目（BRの直後）
+      restoreCursorPosition(container, 6);
+
+      const selection = window.getSelection();
+      expect(selection).not.toBeNull();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        // カーソルがBRの直後に挿入されたテキストノード内にあることを確認する。
+        // 過去の実装ではコンテナ要素基準のoffset（container, index）でカーソルを
+        // 設定していたため、直後にテキストを挿入するとブラウザによっては
+        // BRの"前"に挿入されてしまう不具合があった（Enterを押した直後に文字を
+        // 入力しても改行が反映されないように見える原因になっていた）。
+        // テキストノードを挿入してその中にカーソルを置くことで、後続の入力が
+        // 必ずBRより後ろに挿入されるようにする。
+        expect(range.collapsed).toBe(true);
+        expect(range.startContainer.nodeType).toBe(Node.TEXT_NODE);
+        // BRの直後に挿入されたテキストノードであること
+        const br = container.querySelector("br");
+        expect(range.startContainer.previousSibling).toBe(br);
       }
     });
 

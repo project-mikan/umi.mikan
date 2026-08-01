@@ -163,14 +163,19 @@ export function restoreCursorPosition(
       if (node.nodeName === "BR") {
         currentPos += 1;
         if (currentPos >= targetPos) {
-          const parent = node.parentNode;
-          if (parent) {
-            targetNode = parent;
-            // BRの直後にカーソルを置く（BRを1文字としてカウントした後の位置）
-            targetOffset =
-              Array.from(parent.childNodes).indexOf(node as ChildNode) + 1;
-            return true;
-          }
+          // BRの直後にカーソルを置く際、コンテナ要素基準のoffset（parent, index）で
+          // Rangeを設定すると、ブラウザによっては直後のキー入力がBRの"前"ではなく
+          // "後ろ"に挿入されてしまうことがある（Chromeで確認済み）。これを避けるため、
+          // BRの直後にゼロ幅スペース（U+200B）を1文字持つテキストノードを挿入し、
+          // そのテキストノード内（offset 1、＝ゼロ幅スペースの直後）をカーソル位置として使う。
+          // 空文字列のテキストノードだとブラウザが正規化時に削除してしまいカーソル位置が
+          // 失われることがあったため、削除されない1文字のゼロ幅スペースを使う。
+          // ゼロ幅スペースはhtmlToPlainText側で除去されるためvalueには反映されない。
+          const anchor = document.createTextNode("​");
+          node.parentNode?.insertBefore(anchor, node.nextSibling);
+          targetNode = anchor;
+          targetOffset = 1;
+          return true;
         }
       } else {
         for (const child of Array.from(node.childNodes)) {

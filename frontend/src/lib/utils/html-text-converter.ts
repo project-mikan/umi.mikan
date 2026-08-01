@@ -10,7 +10,10 @@
 export function htmlToPlainText(html: string): string {
   // SSR時はシンプルな正規表現処理
   if (typeof document === "undefined") {
-    return html.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+    return html
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/​/g, "");
   }
 
   const tempDiv = document.createElement("div");
@@ -58,6 +61,11 @@ export function htmlToPlainText(html: string): string {
   if (hasComplexHTML) {
     plainText = plainText.replace(/^\s+|\s+$/g, "").replace(/[ \t]+/g, " ");
   }
+
+  // カーソル位置保持用に挿入されるゼロ幅スペース（U+200B）を除去
+  // （Textarea.svelteのcursor-utils.tsが、<br>直後への入力位置がブラウザによって
+  // 意図せずずれる問題を避けるためのカーソルアンカーとして挿入している）
+  plainText = plainText.replace(/​/g, "");
 
   return plainText;
 }
