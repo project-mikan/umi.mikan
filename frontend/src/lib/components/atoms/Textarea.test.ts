@@ -518,6 +518,32 @@ describe("Textarea Component Functionality", () => {
       expect(htmlToPlainTextImpl(capturedHtmlAtInput)).toBe("こんにちは\n\n");
     });
 
+    it("正常系: 複数回Enterを押した後に文字入力すると、蓄積したカーソルアンカー（ゼロ幅スペース）がDOMから掃除される", () => {
+      const { container } = render(Textarea, {
+        props: { value: "こんにちは" },
+      });
+
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
+
+      // Enterを複数回連続で押す（この時点ではカーソルアンカーがDOMに残り続ける）
+      pressEnterAtEnd(contentElement);
+      pressEnterAtEnd(contentElement);
+      pressEnterAtEnd(contentElement);
+
+      // 通常の文字入力イベントを発火する（isTrustedなユーザー入力を模す通常のinput）
+      const selection = window.getSelection();
+      const range = selection?.getRangeAt(0);
+      range?.insertNode(document.createTextNode("あ"));
+      const inputEvent = new Event("input", { bubbles: true });
+      contentElement.dispatchEvent(inputEvent);
+
+      // 蓄積していたカーソルアンカー（<br>直後のゼロ幅スペース）が全て掃除され、
+      // DOMに1つも残っていないことを確認する
+      expect(contentElement.innerHTML).not.toContain("​");
+    });
+
     it("正常系: 文末でEnterを押した直後、カーソルは<br>より後ろのノードに位置し、続けてテキストを挿入すると<br>の後ろに追加される", () => {
       const { container } = render(Textarea, {
         props: { value: "こんにちは" },
@@ -627,10 +653,22 @@ describe("Textarea Component Functionality", () => {
       expect(result).toBe("こんにちは\n続き");
     });
 
-    it("正常系: ゼロ幅スペースのみの場合、valueは空文字列になる", () => {
+    it("正常系: <br>直後がゼロ幅スペースのみの場合、その1文字だけがvalueから除かれる", () => {
+      const html = "こんにちは<br>​";
+      const result = htmlToPlainTextImpl(html);
+      expect(result).toBe("こんにちは\n");
+    });
+
+    it("異常系: <br>を伴わずゼロ幅スペースのみの場合、カーソルアンカーとはみなされずvalueにそのまま残る（<br>直後で始まるテキストのみをアンカーとして扱うため）", () => {
       const html = "​";
       const result = htmlToPlainTextImpl(html);
-      expect(result).toBe("");
+      expect(result).toBe("​");
+    });
+
+    it("正常系: <br>を伴わずユーザーが入力・貼り付けした本物のゼロ幅スペースはvalueに保持される", () => {
+      const html = "前​後";
+      const result = htmlToPlainTextImpl(html);
+      expect(result).toBe("前​後");
     });
   });
 });

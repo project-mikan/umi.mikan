@@ -3,6 +3,13 @@
  */
 
 /**
+ * <br>直後のカーソル位置を安定させるために挿入するカーソルアンカー用のゼロ幅スペース（U+200B）。
+ * DOM上にのみ一時的に存在し、value（プレーンテキスト）には反映されない。
+ * リテラルが複数箇所に散らばると改変時に不一致を起こしやすいため、ここで一元管理する。
+ */
+export const CURSOR_ANCHOR_ZWS = "​";
+
+/**
  * contenteditable要素内のテキストオフセット位置を取得
  * @param root ルート要素
  * @param node 対象ノード
@@ -12,17 +19,38 @@
 export function getTextOffset(root: Node, node: Node, offset: number): number {
   let textOffset = 0;
 
+  // カーソルアンカー（<br>直後に挿入されるゼロ幅スペース1文字）はDOM上にのみ一時的に
+  // 存在し、valueには反映されない。「直前の兄弟ノードが<br>」かつ「テキストノードの
+  // 先頭がゼロ幅スペース」の場合のみアンカーとみなしてその1文字分をオフセット計算から
+  // 除外する（<br>直後以外にあるゼロ幅スペースはユーザー入力由来の可能性があるため対象外）。
+  // これを数えてしまうと、アンカーがまだ除去されていないタイミングでcursorPosを取得した
+  // 場合に、アンカー除去後のDOM（またはZWSを含まないvalue由来のHTML）に対して
+  // restoreCursorPositionした際、実際のカーソル位置より1つ後ろにずれてしまう。
+  function hasLeadingAnchor(textNode: Node): boolean {
+    return (
+      textNode.previousSibling?.nodeName === "BR" &&
+      (textNode.textContent || "").startsWith(CURSOR_ANCHOR_ZWS)
+    );
+  }
+
+  function textNodeLength(textNode: Node): number {
+    const content = textNode.textContent || "";
+    return hasLeadingAnchor(textNode) ? content.length - 1 : content.length;
+  }
+
   function traverse(currentNode: Node): number | null {
     if (currentNode === node) {
       if (currentNode.nodeType === Node.TEXT_NODE) {
-        return textOffset + offset;
+        const anchorAdjustment =
+          hasLeadingAnchor(currentNode) && offset > 0 ? 1 : 0;
+        return textOffset + offset - anchorAdjustment;
       }
       if (currentNode.nodeType === Node.ELEMENT_NODE) {
         const children = Array.from(currentNode.childNodes);
         for (let i = 0; i < Math.min(offset, children.length); i++) {
           const child = children[i];
           if (child.nodeType === Node.TEXT_NODE) {
-            textOffset += child.textContent?.length || 0;
+            textOffset += textNodeLength(child);
           } else if (child.nodeType === Node.ELEMENT_NODE) {
             if (child.nodeName === "BR") {
               textOffset += 1;
@@ -36,7 +64,7 @@ export function getTextOffset(root: Node, node: Node, offset: number): number {
     }
 
     if (currentNode.nodeType === Node.TEXT_NODE) {
-      textOffset += currentNode.textContent?.length || 0;
+      textOffset += textNodeLength(currentNode);
     } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
       if (currentNode.nodeName === "BR") {
         textOffset += 1;
@@ -52,7 +80,7 @@ export function getTextOffset(root: Node, node: Node, offset: number): number {
 
   function getTextLength(node: Node): number {
     if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent?.length || 0;
+      return textNodeLength(node);
     }
     if (node.nodeType === Node.ELEMENT_NODE) {
       if (node.nodeName === "BR") {
@@ -171,7 +199,7 @@ export function restoreCursorPosition(
           // 空文字列のテキストノードだとブラウザが正規化時に削除してしまいカーソル位置が
           // 失われることがあったため、削除されない1文字のゼロ幅スペースを使う。
           // ゼロ幅スペースはhtmlToPlainText側で除去されるためvalueには反映されない。
-          const anchor = document.createTextNode("​");
+          const anchor = document.createTextNode(CURSOR_ANCHOR_ZWS);
           node.parentNode?.insertBefore(anchor, node.nextSibling);
           targetNode = anchor;
           targetOffset = 1;
@@ -245,6 +273,67 @@ function fallbackToEnd(contentElement: HTMLDivElement, selection: Selection) {
     // カーソル復元の最終手段が失敗した場合は何もしない
     if (error instanceof Error) {
       console.error("Failed to fallback to end:", error.message);
+    }
+  }
+}
+
+/**
+ * contentElement内に残存するカーソルアンカー用ゼロ幅スペース（テキストノード先頭の1文字）を
+ * 全て除去する。<br>挿入直後のカーソル安定化のためだけに使われる一時的な文字であり、役目を
+ * 終えたらDOMに残し続けてはいけない（際限なく蓄積し、htmlToPlainTextでのユーザー由来ZWSとの
+ * 区別も不可能になるため）。現在のカーソル位置を保ったまま除去する。
+ * @param contentElement contenteditable要素
+ */
+export function cleanupCursorAnchors(contentElement: HTMLDivElement): void {
+  if (typeof window === "undefined") return;
+
+  const walker = document.createTreeWalker(
+    contentElement,
+    NodeFilter.SHOW_TEXT,
+  );
+  const anchorNodes: Text[] = [];
+  let current = walker.nextNode();
+  while (current) {
+    if (
+      current.previousSibling?.nodeName === "BR" &&
+      (current.textContent || "").startsWith(CURSOR_ANCHOR_ZWS)
+    ) {
+      anchorNodes.push(current as Text);
+    }
+    current = walker.nextNode();
+  }
+
+  if (anchorNodes.length === 0) return;
+
+  const selection = window.getSelection();
+  let cursorPos: number | null = null;
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    if (contentElement.contains(range.startContainer)) {
+      cursorPos = getTextOffset(
+        contentElement,
+        range.startContainer,
+        range.startOffset,
+      );
+    }
+  }
+
+  for (const textNode of anchorNodes) {
+    textNode.textContent = (textNode.textContent || "").slice(
+      CURSOR_ANCHOR_ZWS.length,
+    );
+  }
+
+  // ここでrestoreCursorPositionは使わない。targetPosがちょうど<br>の位置に一致する場合、
+  // restoreCursorPositionは（意図的に）新しいカーソルアンカーを挿入し直してしまうため、
+  // 「アンカーを除去する」はずのこの関数がアンカーを再生成する無限ループ状態になる。
+  // createRangeAtTextOffsetはアンカーを作らずRangeを返すだけなので、除去後の位置復元には
+  // こちらを使う。
+  if (cursorPos !== null) {
+    const range = createRangeAtTextOffset(contentElement, cursorPos);
+    if (range && selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
   }
 }

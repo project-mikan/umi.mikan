@@ -3,6 +3,8 @@
  */
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  CURSOR_ANCHOR_ZWS,
+  cleanupCursorAnchors,
   createRangeAtTextOffset,
   getTextOffset,
   restoreCursorFromRange,
@@ -335,6 +337,72 @@ describe("cursor-utils", () => {
         const range = selection.getRangeAt(0);
         expect(range.collapsed).toBe(true);
       }
+    });
+  });
+
+  describe("getTextOffset: <br>直後のカーソルアンカー（ゼロ幅スペース）を除外して計算する", () => {
+    it("正常系: <br>直後のゼロ幅スペースの直後にあるカーソルは、ゼロ幅スペース分を除いたオフセットになる", () => {
+      container.innerHTML = `Hello<br>${CURSOR_ANCHOR_ZWS}World`;
+      const textAfterBr = container.childNodes[2] as Node;
+
+      // "Hello"(5) + <br>(1) + ゼロ幅スペース(除外) = 6文字目でWorldの直前
+      expect(getTextOffset(container, textAfterBr, 1)).toBe(6);
+      expect(getTextOffset(container, textAfterBr, 1 + 5)).toBe(11);
+    });
+
+    it("異常系: <br>を伴わないゼロ幅スペースはカーソルアンカーとみなされず、通常の文字として数えられる", () => {
+      container.innerHTML = `${CURSOR_ANCHOR_ZWS}World`;
+      const textNode = container.firstChild as Node;
+
+      expect(getTextOffset(container, textNode, 1)).toBe(1);
+    });
+  });
+
+  describe("cleanupCursorAnchors: <br>直後のカーソルアンカーをDOMから除去する", () => {
+    it("正常系: <br>直後のゼロ幅スペースが除去され、カーソル位置が保たれる", () => {
+      container.innerHTML = `Hello<br>${CURSOR_ANCHOR_ZWS}World`;
+
+      // ゼロ幅スペースの直後（"World"の直前）にカーソルを置く
+      const textAfterBr = container.childNodes[2] as Text;
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.setStart(textAfterBr, 1);
+      range.collapse(true);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+
+      cleanupCursorAnchors(container);
+
+      expect(container.innerHTML).toBe("Hello<br>World");
+
+      const restoredSelection = window.getSelection();
+      expect(restoredSelection?.rangeCount).toBeGreaterThan(0);
+      if (restoredSelection && restoredSelection.rangeCount > 0) {
+        const restoredRange = restoredSelection.getRangeAt(0);
+        const offset = getTextOffset(
+          container,
+          restoredRange.startContainer,
+          restoredRange.startOffset,
+        );
+        // 除去後も"World"の直前（6文字目）を指したままであること
+        expect(offset).toBe(6);
+      }
+    });
+
+    it("異常系: <br>を伴わないゼロ幅スペースは除去されない", () => {
+      container.innerHTML = `${CURSOR_ANCHOR_ZWS}World`;
+
+      cleanupCursorAnchors(container);
+
+      expect(container.innerHTML).toBe(`${CURSOR_ANCHOR_ZWS}World`);
+    });
+
+    it("正常系: カーソルアンカーが存在しない場合は何もしない", () => {
+      container.innerHTML = "Hello<br>World";
+
+      cleanupCursorAnchors(container);
+
+      expect(container.innerHTML).toBe("Hello<br>World");
     });
   });
 });
