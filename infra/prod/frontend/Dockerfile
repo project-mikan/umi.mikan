@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /frontend
 
@@ -31,7 +31,7 @@ RUN --mount=type=cache,target=/root/.pnpm-store \
 
 # deps stage: package.jsonのdependenciesをnpmでインストール（シンボリックリンクなし）
 # pnpmのnode_modulesはシンボリックリンク構造のためCOPYで解決できないため、npmを使用
-FROM node:22-alpine AS deps
+FROM node:26-alpine AS deps
 
 WORKDIR /deps
 
@@ -39,7 +39,7 @@ COPY package.json ./
 RUN npm install --omit=dev --ignore-scripts
 
 # Production stage
-FROM node:22-alpine AS production
+FROM node:26-alpine AS production
 
 WORKDIR /frontend
 
