@@ -30,7 +30,7 @@ jobs:
     outputs:
       proto: ${{ steps.filter.outputs.proto }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
       - name: Detect proto changes
@@ -61,7 +61,7 @@ jobs:
     if: needs.changes.outputs.proto == 'true'
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Cache Homebrew packages
         id: cache-brew
@@ -108,7 +108,7 @@ jobs:
     runs-on: macos-26
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # boot は同期で 20 秒前後かかるが、シミュレータが必要になるのはビルド完了後(数分先)
       # なので nohup + & で完全にバックグラウンド化してステップを即終了させる
