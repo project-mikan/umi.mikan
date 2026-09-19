@@ -66,7 +66,7 @@ runs:
 
     - name: Cache Go modules
       if: contains(inputs.service, 'backend') || contains(inputs.service, 'scheduler') || contains(inputs.service, 'subscriber')
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           ~/.cache/go-build
@@ -77,7 +77,7 @@ runs:
 
     - name: Cache pnpm dependencies
       if: inputs.service == 'frontend'
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           ~/.pnpm-store
@@ -88,7 +88,7 @@ runs:
           ${{ runner.os }}-pnpm-
 
     - name: Build and Push to Container Registry
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: ${{ steps.context.outputs.context }}
         file: ./infra/prod/${{ inputs.service }}/Dockerfile
