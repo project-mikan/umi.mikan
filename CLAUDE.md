@@ -326,13 +326,15 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 3. **Authorization**: Bearer tokens in gRPC metadata headers
 4. **Middleware**: Automatic token validation for protected endpoints
 5. **User Context**: Injected user info available in all services
+6. **Token Refresh Failure Handling**: `ensureValidAccessToken` (`lib/server/auth-middleware.ts`) clears the auth cookies **only when the refresh token itself is invalid** (`InvalidArgument` / `Unauthenticated`). Clearing them on a transient failure (backend restart, brief DB outage) would throw away a refresh token that is still valid for up to 30 days and log the user out. The check lives in `isInvalidRefreshTokenError` (`lib/utils/error-utils.ts`).
 
 ### Security Features
 
 1. **CSRF Protection**: Token-based protection with timing-safe validation
 2. **Content Security Policy**: Restrictive CSP headers with environment-specific rules
 3. **Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-4. **Cookie Security**: Secure, HttpOnly, SameSite=Strict cookies with environment-aware settings
+4. **Cookie Security**: Secure, HttpOnly, SameSite=Lax cookies with environment-aware settings
+   - **Never change SameSite back to Strict**: with Strict, browsers drop the cookies when the user arrives from a bookmark or an external app link (Slack, mail, etc.), so a logged-in user gets redirected to `/login`. It is hard to reproduce because following any in-site link fixes it. Lax still withholds cookies on cross-site POSTs, and the token-based CSRF protection in `lib/server/csrf.ts` remains in place. Keep the auth cookies (`lib/utils/cookie-utils.ts`) and the CSRF cookie (`lib/server/csrf.ts`) in sync.
 5. **Timing Attack Prevention**: Constant-time string comparison for token validation
 6. **Registration Key Protection**: Optional registration key (REGISTER_KEY) to restrict new user signups
 
@@ -562,5 +564,5 @@ environment:
 - **HTTPS Required**: All cookies are configured with `secure: true` in production environments
 - **CSP Headers**: Content Security Policy headers are automatically applied via `hooks.server.ts`
 - **CSRF Protection**: CSRF tokens are mandatory for all state-changing operations
-- **Cookie Security**: HTTP-only, secure, SameSite=Strict cookies for authentication tokens
+- **Cookie Security**: HTTP-only, secure, SameSite=Lax cookies for authentication tokens
 - **CI/CD Optimization**: Build workflow optimized for performance (removed disk space cleanup step)

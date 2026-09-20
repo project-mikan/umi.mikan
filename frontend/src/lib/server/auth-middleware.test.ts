@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ensureValidAccessToken } from "./auth-middleware";
 import type { Cookies } from "@sveltejs/kit";
+import { Code, ConnectError } from "@connectrpc/connect";
 
 // Mock dependencies
 vi.mock("$lib/server/auth-api", () => ({
@@ -79,7 +80,7 @@ describe("auth-middleware", () => {
           path: "/",
           httpOnly: true,
           secure: false,
-          sameSite: "strict",
+          sameSite: "lax",
           maxAge: 60 * 15,
         },
       );
@@ -90,7 +91,7 @@ describe("auth-middleware", () => {
           path: "/",
           httpOnly: true,
           secure: false,
-          sameSite: "strict",
+          sameSite: "lax",
           maxAge: 60 * 60 * 24 * 30,
         },
       );
@@ -163,25 +164,76 @@ describe("auth-middleware", () => {
       expect(refreshAccessToken).not.toHaveBeenCalled();
     });
 
-    it("should return unauthenticated when refresh token call fails", async () => {
-      const cookies = createMockCookies({
-        refreshToken: "invalid-refresh-token",
-      });
-      vi.mocked(refreshAccessToken).mockRejectedValue(
-        new Error("Refresh failed"),
-      );
+    it("異常系: リフレッシュトークンが無効(InvalidArgument/Unauthenticated)な場合はCookieを削除して未認証を返す", async () => {
+      const testCases: { name: string; error: ConnectError }[] = [
+        {
+          name: "InvalidArgument: トークンが期限切れ・改竄されている",
+          error: new ConnectError("validation error", Code.InvalidArgument),
+        },
+        {
+          name: "Unauthenticated: ユーザーが存在しない",
+          error: new ConnectError("user not found", Code.Unauthenticated),
+        },
+      ];
 
-      const result = await ensureValidAccessToken(cookies);
+      for (const testCase of testCases) {
+        vi.clearAllMocks();
+        const cookies = createMockCookies({
+          refreshToken: "invalid-refresh-token",
+        });
+        vi.mocked(refreshAccessToken).mockRejectedValue(testCase.error);
 
-      expect(result).toEqual({
-        accessToken: null,
-        isAuthenticated: false,
-      });
-      expect(refreshAccessToken).toHaveBeenCalledWith("invalid-refresh-token");
-      expect(cookies.delete).toHaveBeenCalledWith("accessToken", { path: "/" });
-      expect(cookies.delete).toHaveBeenCalledWith("refreshToken", {
-        path: "/",
-      });
+        const result = await ensureValidAccessToken(cookies);
+
+        expect(result, testCase.name).toEqual({
+          accessToken: null,
+          isAuthenticated: false,
+        });
+        expect(refreshAccessToken).toHaveBeenCalledWith(
+          "invalid-refresh-token",
+        );
+        expect(cookies.delete, testCase.name).toHaveBeenCalledWith(
+          "accessToken",
+          { path: "/" },
+        );
+        expect(cookies.delete, testCase.name).toHaveBeenCalledWith(
+          "refreshToken",
+          { path: "/" },
+        );
+      }
+    });
+
+    it("異常系: バックエンドの一時的な障害の場合はCookieを削除せずに未認証を返す", async () => {
+      const testCases: { name: string; error: unknown }[] = [
+        {
+          name: "Internal: バックエンドの内部エラー",
+          error: new ConnectError("failed to get user by ID", Code.Internal),
+        },
+        {
+          name: "Unavailable: バックエンドに接続できない",
+          error: new ConnectError("connection refused", Code.Unavailable),
+        },
+        {
+          name: "ConnectError以外の例外",
+          error: new Error("network error"),
+        },
+      ];
+
+      for (const testCase of testCases) {
+        vi.clearAllMocks();
+        const cookies = createMockCookies({
+          refreshToken: "still-valid-refresh-token",
+        });
+        vi.mocked(refreshAccessToken).mockRejectedValue(testCase.error);
+
+        const result = await ensureValidAccessToken(cookies);
+
+        expect(result, testCase.name).toEqual({
+          accessToken: null,
+          isAuthenticated: false,
+        });
+        expect(cookies.delete, testCase.name).not.toHaveBeenCalled();
+      }
     });
 
     it("should handle valid access token that is not expiring", async () => {
