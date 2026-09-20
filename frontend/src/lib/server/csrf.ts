@@ -20,7 +20,8 @@ export function setCSRFToken(cookies: Cookies): string {
     path: "/",
     httpOnly: false, // JSからアクセス可能にする必要がある
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    // 認証Cookie(cookie-utils.ts)と揃える。strictだと外部リンク経由で毎回再発行されてしまう
+    sameSite: "lax",
     maxAge: 60 * 60 * 24, // 24時間
   });
   return token;

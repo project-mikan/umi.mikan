@@ -14,7 +14,8 @@ export function getSecureCookieOptions(maxAge: number): CookieOptions {
     path: "/",
     httpOnly: true,
     secure: !dev, // 本番環境では自動的にtrue
-    sameSite: "strict",
+    // strictにすると外部リンク経由でCookieが送られず、ログイン済みでも/loginに飛ばされる
+    sameSite: "lax",
     maxAge,
   };
 }

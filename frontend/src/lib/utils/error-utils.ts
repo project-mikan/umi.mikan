@@ -12,6 +12,22 @@ export function isRateLimitError(error: unknown): boolean {
 }
 
 /**
+ * リフレッシュトークン自体が無効（＝再ログインが必要）なエラーかどうかを判定
+ *
+ * バックエンドのRefreshAccessTokenは、トークンの期限切れ・改竄をInvalidArgument、
+ * ユーザー不在をUnauthenticated、インフラ障害をInternalとして返し分けている。
+ */
+export function isInvalidRefreshTokenError(error: unknown): boolean {
+  if (error instanceof ConnectError) {
+    return (
+      error.code === Code.InvalidArgument || error.code === Code.Unauthenticated
+    );
+  }
+  // ネットワーク断・タイムアウト等は一時的な障害とみなす
+  return false;
+}
+
+/**
  * レート制限エラーからリセット時間を抽出（可能であれば）
  */
 export function extractRateLimitResetTime(error: unknown): string | null {

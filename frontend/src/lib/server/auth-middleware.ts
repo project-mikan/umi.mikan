@@ -1,6 +1,7 @@
 import type { Cookies } from "@sveltejs/kit";
 import { refreshAccessToken } from "$lib/server/auth-api";
 import { isTokenExpiringSoon } from "$lib/utils/token-utils";
+import { isInvalidRefreshTokenError } from "$lib/utils/error-utils";
 import {
   ACCESS_TOKEN_COOKIE_OPTIONS,
   REFRESH_TOKEN_COOKIE_OPTIONS,
@@ -45,9 +46,11 @@ export async function ensureValidAccessToken(
     } catch (err) {
       console.error("Token refresh failed:", err);
 
-      // Clear invalid tokens
-      cookies.delete("accessToken", { path: "/" });
-      cookies.delete("refreshToken", { path: "/" });
+      // 一時的な障害で消すと、まだ有効なリフレッシュトークンを失ってログアウトしてしまう
+      if (isInvalidRefreshTokenError(err)) {
+        cookies.delete("accessToken", { path: "/" });
+        cookies.delete("refreshToken", { path: "/" });
+      }
 
       return {
         accessToken: null,
