@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -162,95 +163,6 @@ func (s *UserEntry) ChangePassword(ctx context.Context, req *g.ChangePasswordReq
 	}, nil
 }
 
-func (s *UserEntry) UpdateLLMKey(ctx context.Context, req *g.UpdateLLMKeyRequest) (*g.UpdateLLMKeyResponse, error) {
-	// リクエストのバリデーション
-	if req.GetKey() == "" {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "tokenRequired",
-		}, nil
-	}
-
-	// トークンの長さチェック（100文字以内）
-	if len(req.GetKey()) > 100 {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "tokenTooLong",
-		}, nil
-	}
-
-	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "invalidProvider",
-		}, nil
-	}
-
-	// コンテキストからユーザーIDを取得
-	userID, err := middleware.GetUserIDFromContext(ctx)
-	if err != nil {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "unauthorized",
-		}, nil
-	}
-
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "invalidUserId",
-		}, nil
-	}
-
-	// 既存のLLMトークンを確認
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
-	currentTime := time.Now().Unix()
-
-	if err != nil && err != sql.ErrNoRows {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "updateFailed",
-		}, nil
-	}
-
-	if err == sql.ErrNoRows {
-		// 新規作成
-		newUserLLM := &database.UserLlm{
-			UserID:             parsedUserID,
-			LlmProvider:        int16(req.GetLlmProvider()),
-			Key:                req.GetKey(),
-			AutoSummaryMonthly: false, // デフォルトは無効
-			CreatedAt:          currentTime,
-			UpdatedAt:          currentTime,
-		}
-
-		if err := newUserLLM.Insert(ctx, s.DB); err != nil {
-			return &g.UpdateLLMKeyResponse{
-				Success: false,
-				Message: "updateFailed",
-			}, nil
-		}
-	} else {
-		// 更新
-		userLLMDB.Key = req.GetKey()
-		userLLMDB.UpdatedAt = currentTime
-
-		if err := userLLMDB.Update(ctx, s.DB); err != nil {
-			return &g.UpdateLLMKeyResponse{
-				Success: false,
-				Message: "updateFailed",
-			}, nil
-		}
-	}
-
-	return &g.UpdateLLMKeyResponse{
-		Success: true,
-		Message: "llmTokenUpdateSuccess",
-	}, nil
-}
-
 func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) (*g.GetUserInfoResponse, error) {
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
@@ -272,80 +184,21 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
-	// LLMキーを取得（存在する場合）
-	var llmKeys []*g.LLMKeyInfo
-
-	// 現在はGemini（provider 1）のみサポート
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, 1)
+	// 一度も保存していないユーザーは設定が無いのでnilのまま返す
+	var llmSetting *g.LLMSettingInfo
+	userLLM, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
 	if err == nil && userLLM != nil {
-		llmKeys = append(llmKeys, &g.LLMKeyInfo{
-			LlmProvider:            int32(userLLM.LlmProvider),
-			Key:                    userLLM.Key,
+		llmSetting = &g.LLMSettingInfo{
 			AutoSummaryMonthly:     userLLM.AutoSummaryMonthly,
 			AutoLatestTrendEnabled: userLLM.AutoLatestTrendEnabled,
 			SemanticSearchEnabled:  userLLM.SemanticSearchEnabled,
-		})
+		}
 	}
 
 	return &g.GetUserInfoResponse{
-		Name:    userDB.Name,
-		Email:   userDB.Email,
-		LlmKeys: llmKeys,
-	}, nil
-}
-
-func (s *UserEntry) DeleteLLMKey(ctx context.Context, req *g.DeleteLLMKeyRequest) (*g.DeleteLLMKeyResponse, error) {
-	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
-		return &g.DeleteLLMKeyResponse{
-			Success: false,
-			Message: "invalidProvider",
-		}, nil
-	}
-
-	// コンテキストからユーザーIDを取得
-	userID, err := middleware.GetUserIDFromContext(ctx)
-	if err != nil {
-		return &g.DeleteLLMKeyResponse{
-			Success: false,
-			Message: "unauthorized",
-		}, nil
-	}
-
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &g.DeleteLLMKeyResponse{
-			Success: false,
-			Message: "invalidUserId",
-		}, nil
-	}
-
-	// 既存のLLMトークンを取得
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return &g.DeleteLLMKeyResponse{
-				Success: false,
-				Message: "tokenNotFound",
-			}, nil
-		}
-		return &g.DeleteLLMKeyResponse{
-			Success: false,
-			Message: "updateFailed",
-		}, nil
-	}
-
-	// LLMトークンを削除
-	if err := userLLMDB.Delete(ctx, s.DB); err != nil {
-		return &g.DeleteLLMKeyResponse{
-			Success: false,
-			Message: "updateFailed",
-		}, nil
-	}
-
-	return &g.DeleteLLMKeyResponse{
-		Success: true,
-		Message: "llmTokenDeleteSuccess",
+		Name:       userDB.Name,
+		Email:      userDB.Email,
+		LlmSetting: llmSetting,
 	}, nil
 }
 
@@ -420,14 +273,6 @@ func (s *UserEntry) DeleteAccount(ctx context.Context, req *g.DeleteAccountReque
 }
 
 func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.UpdateAutoSummarySettingsRequest) (*g.UpdateAutoSummarySettingsResponse, error) {
-	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
-		return &g.UpdateAutoSummarySettingsResponse{
-			Success: false,
-			Message: "invalidProvider",
-		}, nil
-	}
-
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -445,15 +290,15 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 		}, nil
 	}
 
-	// 既存のLLM設定を取得
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return &g.UpdateAutoSummarySettingsResponse{
-				Success: false,
-				Message: "llmKeyNotFound",
-			}, nil
+	// 既存のAI機能設定を取得する（作成日時を引き継ぐため。無い場合は新規作成扱い）
+	currentTime := time.Now().Unix()
+	userLLMDB, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
+	if errors.Is(err, sql.ErrNoRows) {
+		userLLMDB = &database.UserLlm{
+			UserID:    parsedUserID,
+			CreatedAt: currentTime,
 		}
+	} else if err != nil {
 		return &g.UpdateAutoSummarySettingsResponse{
 			Success: false,
 			Message: "updateFailed",
@@ -464,9 +309,11 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 	userLLMDB.AutoSummaryMonthly = req.GetAutoSummaryMonthly()
 	userLLMDB.AutoLatestTrendEnabled = req.GetAutoLatestTrendEnabled()
 	userLLMDB.SemanticSearchEnabled = req.GetSemanticSearchEnabled()
-	userLLMDB.UpdatedAt = time.Now().Unix()
+	userLLMDB.UpdatedAt = currentTime
 
-	if err := userLLMDB.Update(ctx, s.DB); err != nil {
+	// 同時保存（二重送信・複数タブ）で取得→作成の間に競合しても主キー違反にならないよう、
+	// INSERT/UPDATE を分けずに ON CONFLICT (user_id) の Upsert で保存する
+	if err := userLLMDB.Upsert(ctx, s.DB); err != nil {
 		return &g.UpdateAutoSummarySettingsResponse{
 			Success: false,
 			Message: "updateFailed",
@@ -480,14 +327,6 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 }
 
 func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSummarySettingsRequest) (*g.GetAutoSummarySettingsResponse, error) {
-	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
-		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryMonthly:     false,
-			AutoLatestTrendEnabled: false,
-		}, nil
-	}
-
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -506,7 +345,7 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 	}
 
 	// LLM設定を取得
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
+	userLLMDB, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
 	if err != nil {
 		// 設定が存在しない場合はデフォルト値を返す
 		return &g.GetAutoSummarySettingsResponse{

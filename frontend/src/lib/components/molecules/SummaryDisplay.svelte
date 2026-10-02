@@ -22,7 +22,6 @@
   export let generatePayload: Record<string, unknown> = {}; // 生成時に送信するペイロード
   export let isDisabled = false; // 生成ボタンを無効にするかどうか
   export let disabledMessage = ""; // 無効時のメッセージ
-  export let hasLLMKey = true;
   export let isGenerating = false; // 親コンポーネントから生成状況を受け取る
   export let isSummaryOutdated = false; // 要約が古いかどうか
 
@@ -267,15 +266,6 @@
     } else if (
       status === 400 &&
       typeof errorData.message === "string" &&
-      errorData.message.includes("API key")
-    ) {
-      errorMessage =
-        type === "daily"
-          ? $_("diary.summaryGenerationFailed")
-          : $_("monthly.summary.noApiKey");
-    } else if (
-      status === 400 &&
-      typeof errorData.message === "string" &&
       errorData.message.includes("current month")
     ) {
       errorMessage = $_("monthly.summary.currentMonthError");
@@ -485,12 +475,6 @@
 					{/if}
 				</button>
 			</div>
-		</div>
-	{:else if !hasLLMKey}
-		<div class="text-center py-4">
-			<p class="text-red-600 dark:text-red-400 text-sm">
-				{$_("monthly.summary.noApiKey")}
-			</p>
 		</div>
 	{:else}
 		<div class="space-y-4">

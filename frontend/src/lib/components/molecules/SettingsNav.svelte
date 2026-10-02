@@ -28,7 +28,6 @@
       id: "llm-settings",
       title: $_("settings.nav.llmSettings"),
       children: [
-        { id: "llm-token", title: $_("settings.llmToken.title") },
         { id: "auto-summary", title: $_("settings.autoSummary.title") },
         { id: "llm-status", title: $_("settings.llmStatus.title") },
       ],

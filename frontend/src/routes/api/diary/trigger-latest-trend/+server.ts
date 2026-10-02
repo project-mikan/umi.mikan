@@ -37,16 +37,6 @@ export const POST: RequestHandler = async ({ cookies }) => {
       stack: (err as Error)?.stack,
     });
 
-    if ((err as Error)?.message?.includes("API key")) {
-      throw error(400, { message: "Gemini API key not configured" });
-    }
-    if (
-      (err as { code?: string })?.code === "NOT_FOUND" ||
-      (err as { code?: number })?.code === 5 || // gRPC NOT_FOUND code
-      (err as Error)?.message?.includes("not configured")
-    ) {
-      throw error(404, "Gemini API key not configured");
-    }
     if (
       (err as { code?: string })?.code === "PERMISSION_DENIED" ||
       (err as { code?: number })?.code === 7 || // gRPC PERMISSION_DENIED code

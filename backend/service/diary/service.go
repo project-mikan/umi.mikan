@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +23,7 @@ import (
 
 // LLMFactory はLLMクライアントを作成するファクトリインターフェース
 type LLMFactory interface {
-	CreateGeminiClient(ctx context.Context, apiKey string) (GeminiEmbedder, error)
+	CreateGeminiClient(ctx context.Context) (GeminiEmbedder, error)
 }
 
 // GeminiEmbedder はGemini埋め込みAPIクライアントのインターフェース
@@ -459,12 +460,6 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		return nil, err
 	}
 
-	// ユーザーのLLMキーが設定されているかチェック
-	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Gemini API key not found for user")
-	}
-
 	// 指定された月が今月より前であることを確認
 	now := time.Now()
 	requestedMonth := time.Date(int(message.Month.Year), time.Month(message.Month.Month), 1, 0, 0, 0, 0, time.UTC)
@@ -666,12 +661,6 @@ func (s *DiaryEntry) TriggerDiaryHighlight(
 	// 文字数チェック（最小500文字）
 	if len([]rune(diary.Content)) < 500 {
 		return nil, status.Error(codes.FailedPrecondition, "Content too short for highlight generation (minimum 500 characters)")
-	}
-
-	// ユーザーのLLMキーが設定されているかチェック
-	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "Gemini API key not configured")
 	}
 
 	// タスクキーを生成
@@ -879,6 +868,20 @@ type SemanticSearchOutcome struct {
 	ChunkModel     string
 }
 
+// isSemanticSearchEnabled はユーザーが意味的検索（RAG）を有効にしているかを返す。
+// AI機能設定レコードが無い場合は無効として扱う。
+// DBエラーは「無効」と区別できるようエラーとして返す（一時障害時に「設定で有効にして」と誤案内しないため）
+func (s *DiaryEntry) isSemanticSearchEnabled(ctx context.Context, userID uuid.UUID) (bool, error) {
+	userLLM, err := database.UserLlmByUserID(ctx, s.DB, userID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return userLLM.SemanticSearchEnabled, nil
+}
+
 // SearchDiaryEntriesSemanticByUserID は指定ユーザーの日記を自然言語クエリで意味的に検索する。
 // gRPC/MCPどちらからも利用する共通ロジック。
 func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, userID uuid.UUID, query string, limit int) (*SemanticSearchOutcome, error) {
@@ -889,14 +892,12 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 		return nil, status.Error(codes.InvalidArgument, "Query is required")
 	}
 
-	// ユーザーのAPIキーと設定を取得
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Gemini API key not found")
-	}
-
 	// 意味的検索が有効化されているか確認
-	if !userLLM.SemanticSearchEnabled {
+	enabled, err := s.isSemanticSearchEnabled(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get AI settings: %v", err)
+	}
+	if !enabled {
 		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
 	}
 
@@ -906,7 +907,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 	}
 
 	// Geminiクライアント作成
-	geminiClient, err := s.LLMFactory.CreateGeminiClient(ctx, userLLM.Key)
+	geminiClient, err := s.LLMFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create Gemini client")
 	}
@@ -1094,14 +1095,12 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		return nil, err
 	}
 
-	// ユーザーのAPIキーと設定を取得
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
-	if err != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "Gemini API key not found")
-	}
-
 	// 意味的検索が有効化されているか確認
-	if !userLLM.SemanticSearchEnabled {
+	enabled, err := s.isSemanticSearchEnabled(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get AI settings: %v", err)
+	}
+	if !enabled {
 		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
 	}
 

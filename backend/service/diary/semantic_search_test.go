@@ -69,7 +69,7 @@ func insertTestDiaryWithEmbedding(t *testing.T, db *sql.DB, userID uuid.UUID, co
 func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_Success(t *testing.T) {
 	db := setupTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "semantic-success@example.com", "SemSuccessUser")
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	// ベクトル検索でヒットする日記（キーワードは含まない）
 	unitVec := makeTestUnitVector()
@@ -135,7 +135,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_Success(t *testing.T) {
 func TestDiaryEntry_SearchDiaryEntriesSemantic_Success(t *testing.T) {
 	db := setupTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "semantic-grpc-success@example.com", "Semantic GRPC User")
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	unitVec := makeTestUnitVector()
 	diaryID := insertTestDiaryWithEmbedding(t, db, userID, "公園でピクニックをした", "2024-04-10", "ピクニック", unitVec)
@@ -175,7 +175,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_Success(t *testing.T) {
 func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_ErrorBranches(t *testing.T) {
 	db := setupTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "semantic-error@example.com", "Semantic Error User")
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 	ctx := createAuthenticatedContext(userID)
 
 	t.Run("異常系: LLMFactory未設定の場合はエラー", func(t *testing.T) {
@@ -204,7 +204,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_ErrorBranches(t *testing.
 
 	t.Run("異常系: セマンティック検索が無効なユーザーはエラー", func(t *testing.T) {
 		disabledUserID := testutil.CreateTestUser(t, db, "semantic-disabled@example.com", "SemDisabledUser")
-		testutil.CreateTestUserLLMWithSettings(t, db, disabledUserID, "test-api-key", false, false, false)
+		testutil.CreateTestUserLLMWithSettings(t, db, disabledUserID, false, false, false)
 		svc := &DiaryEntry{DB: db, LLMFactory: &mockLLMFactory{embedder: &mockGeminiEmbedder{}}}
 		_, err := svc.SearchDiaryEntriesSemanticByUserID(ctx, disabledUserID, "クエリ", 10)
 		if err == nil {
@@ -283,5 +283,55 @@ func TestDiaryEntry_SearchDiaryEntriesByUserID_DBError(t *testing.T) {
 	_, err = svc.SearchDiaryEntries(ctx, &g.SearchDiaryEntriesRequest{Keyword: "旅行"})
 	if err == nil {
 		t.Fatal("gRPCラッパー経由でもDBエラーが返ることを期待したがnilが返った")
+	}
+}
+
+func TestDiaryEntry_isSemanticSearchEnabled(t *testing.T) {
+	db := setupTestDB(t)
+	ctx := context.Background()
+
+	enabledUserID := createTestUser(t, db)
+	testutil.CreateTestUserLLMWithSettings(t, db, enabledUserID, false, false, true)
+	disabledUserID := createTestUser(t, db)
+	testutil.CreateTestUserLLMWithSettings(t, db, disabledUserID, true, true, false)
+	noSettingsUserID := createTestUser(t, db)
+
+	// クエリが必ず失敗するよう、接続を閉じたDBを用意する
+	closedDB, err := sql.Open("postgres", "")
+	if err != nil {
+		t.Fatalf("DB オープンに失敗: %v", err)
+	}
+	if err := closedDB.Close(); err != nil {
+		t.Fatalf("DB クローズに失敗: %v", err)
+	}
+
+	tests := []struct {
+		name      string
+		db        *sql.DB
+		userID    uuid.UUID
+		expected  bool
+		expectErr bool
+	}{
+		// semantic_search_enabled = true なので対象
+		{name: "正常系: 意味的検索を有効にしたユーザーはtrue", db: db, userID: enabledUserID, expected: true},
+		// 他のフラグが true でも semantic_search_enabled = false なので対象外
+		{name: "正常系: 意味的検索を無効にしたユーザーはfalse", db: db, userID: disabledUserID, expected: false},
+		// 設定レコードが無いユーザーは未設定 = 無効扱い
+		{name: "正常系: AI機能設定が無いユーザーはfalse", db: db, userID: noSettingsUserID, expected: false},
+		// DBエラーは「無効」と区別するため、エラーとして返す
+		{name: "異常系: DBエラーが起きると無効扱いにせずエラーを返す", db: closedDB, userID: enabledUserID, expected: false, expectErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := &DiaryEntry{DB: tt.db}
+			got, err := svc.isSemanticSearchEnabled(ctx, tt.userID)
+			if (err != nil) != tt.expectErr {
+				t.Fatalf("err: got %v, expectErr %v", err, tt.expectErr)
+			}
+			if got != tt.expected {
+				t.Errorf("got %v, want %v", got, tt.expected)
+			}
+		})
 	}
 }

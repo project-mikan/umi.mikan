@@ -44,8 +44,8 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
     semanticPromise,
   ]);
 
-  const geminiKey = userInfo?.llmKeys?.find((k) => k.llmProvider === 1);
-  const semanticSearchEnabled = geminiKey?.semanticSearchEnabled ?? false;
+  const semanticSearchEnabled =
+    userInfo?.llmSetting?.semanticSearchEnabled ?? false;
 
   return {
     searchResults: keywordResponse,

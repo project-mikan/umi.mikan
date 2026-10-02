@@ -2,7 +2,10 @@ package diary
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"os"
 	"strings"
 	"testing"
@@ -42,7 +45,7 @@ type mockLLMFactory struct {
 	err      error
 }
 
-func (f *mockLLMFactory) CreateGeminiClient(_ context.Context, _ string) (GeminiEmbedder, error) {
+func (f *mockLLMFactory) CreateGeminiClient(_ context.Context) (GeminiEmbedder, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -476,30 +479,74 @@ func TestDiaryEntry_GetDiaryEmbeddingStatus_WithEmbedding(t *testing.T) {
 	}
 }
 
-func TestDiaryEntry_RegenerateAllEmbeddings_NoLLMKey(t *testing.T) {
+func TestDiaryEntry_RegenerateAllEmbeddings_NoLLMSettings(t *testing.T) {
 	db := setupTestDB(t)
 	userID := createTestUser(t, db)
 	svc := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
-	// LLMキーが存在しない場合はエラーを返す
+	// AI機能設定レコードが無い場合は意味的検索が無効なので FailedPrecondition になる
 	_, err := svc.RegenerateAllEmbeddings(ctx, &g.RegenerateAllEmbeddingsRequest{})
-	if err == nil {
-		t.Error("LLMキーが存在しないのにエラーが返らなかった")
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("コード: got %v, want %v", status.Code(err), codes.FailedPrecondition)
 	}
 }
 
-func TestDiaryEntry_SearchDiaryEntriesSemantic_NoLLMKey(t *testing.T) {
+func TestDiaryEntry_SemanticFeatures_DBError(t *testing.T) {
+	userID := uuid.New()
+	ctx := createAuthenticatedContext(userID)
+
+	// 設定取得クエリが必ず失敗するよう、接続を閉じたDBを使う
+	closedDB, err := sql.Open("postgres", "")
+	if err != nil {
+		t.Fatalf("DB オープンに失敗: %v", err)
+	}
+	if err := closedDB.Close(); err != nil {
+		t.Fatalf("DB クローズに失敗: %v", err)
+	}
+	svc := &DiaryEntry{DB: closedDB}
+
+	tests := []struct {
+		name string
+		call func() error
+	}{
+		{
+			name: "異常系: 意味検索でDBエラーが起きると「無効」と誤報告せずInternalエラーになる",
+			call: func() error {
+				_, err := svc.SearchDiaryEntriesSemanticByUserID(ctx, userID, "クエリ", 10)
+				return err
+			},
+		},
+		{
+			name: "異常系: 全embedding再生成でDBエラーが起きると「無効」と誤報告せずInternalエラーになる",
+			call: func() error {
+				_, err := svc.RegenerateAllEmbeddings(ctx, &g.RegenerateAllEmbeddingsRequest{})
+				return err
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if code := status.Code(tt.call()); code != codes.Internal {
+				t.Errorf("コード: got %v, want %v", code, codes.Internal)
+			}
+		})
+	}
+}
+
+func TestDiaryEntry_SearchDiaryEntriesSemantic_NoLLMSettings(t *testing.T) {
 	db := setupTestDB(t)
 	userID := createTestUser(t, db)
 	svc := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
+	// AI機能設定レコードが無い場合は意味的検索が無効なので FailedPrecondition になる
 	_, err := svc.SearchDiaryEntriesSemantic(ctx, &g.SearchDiaryEntriesSemanticRequest{
 		Query: "テスト検索クエリ",
 	})
-	if err == nil {
-		t.Error("LLMキーが存在しないのにエラーが返らなかった")
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("コード: got %v, want %v", status.Code(err), codes.FailedPrecondition)
 	}
 }
 
@@ -508,9 +555,6 @@ func TestDiaryEntry_GenerateMonthlySummary_NoDiaries(t *testing.T) {
 	userID := createTestUser(t, db)
 	svc := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
-
-	// LLMキーを作成（GenerateMonthlySummaryはLLMキーチェックを通過する必要がある）
-	testutil.CreateTestUserLLM(t, db, userID, "test-api-key")
 
 	// 日記が存在しない過去月に対してサマリー生成を要求する
 	_, err := svc.GenerateMonthlySummary(ctx, &g.GenerateMonthlySummaryRequest{
@@ -558,7 +602,7 @@ func TestDiaryEntry_RegenerateAllEmbeddings_SemanticEnabled(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// semantic_search_enabled=trueでuser_llmsを挿入
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	redisClient := setupTestRedisForDiary(t)
 	svc := &DiaryEntry{DB: db, Redis: redisClient}
@@ -583,7 +627,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_EnrichedQuery(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// semantic_search_enabled=trueでuser_llmsを挿入
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	embedder := &mockGeminiEmbedder{}
 	svc := &DiaryEntry{

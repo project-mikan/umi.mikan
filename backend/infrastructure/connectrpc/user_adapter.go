@@ -35,24 +35,8 @@ func (a *UserServiceAdapter) ChangePassword(ctx context.Context, req *connect.Re
 	return connect.NewResponse(resp), nil
 }
 
-func (a *UserServiceAdapter) UpdateLLMKey(ctx context.Context, req *connect.Request[g.UpdateLLMKeyRequest]) (*connect.Response[g.UpdateLLMKeyResponse], error) {
-	resp, err := a.svc.UpdateLLMKey(ctx, req.Msg)
-	if err != nil {
-		return nil, grpcStatusToConnectError(err)
-	}
-	return connect.NewResponse(resp), nil
-}
-
 func (a *UserServiceAdapter) GetUserInfo(ctx context.Context, req *connect.Request[g.GetUserInfoRequest]) (*connect.Response[g.GetUserInfoResponse], error) {
 	resp, err := a.svc.GetUserInfo(ctx, req.Msg)
-	if err != nil {
-		return nil, grpcStatusToConnectError(err)
-	}
-	return connect.NewResponse(resp), nil
-}
-
-func (a *UserServiceAdapter) DeleteLLMKey(ctx context.Context, req *connect.Request[g.DeleteLLMKeyRequest]) (*connect.Response[g.DeleteLLMKeyResponse], error) {
-	resp, err := a.svc.DeleteLLMKey(ctx, req.Msg)
 	if err != nil {
 		return nil, grpcStatusToConnectError(err)
 	}

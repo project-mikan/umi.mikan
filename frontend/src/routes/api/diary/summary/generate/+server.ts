@@ -56,9 +56,6 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
     if (err instanceof Response) {
       throw err;
     }
-    if ((err as Error)?.message?.includes("API key")) {
-      throw error(400, { message: "Gemini API key not configured" });
-    }
     if (
       (err as Error)?.message?.includes("only allowed for past months") ||
       (err as { code?: number })?.code === 9 // gRPC FAILED_PRECONDITION

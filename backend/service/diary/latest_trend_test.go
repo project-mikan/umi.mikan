@@ -34,22 +34,18 @@ func TestDiaryEntry_TriggerLatestTrend_ProductionEnv(t *testing.T) {
 	}
 }
 
-func TestDiaryEntry_TriggerLatestTrend_NoLLMKey(t *testing.T) {
+func TestDiaryEntry_TriggerLatestTrend_NoLLMSettings(t *testing.T) {
 	db := setupTestDB(t)
 	userID := createTestUser(t, db)
 	svc := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
-	_, err := svc.TriggerLatestTrend(ctx, &g.TriggerLatestTrendRequest{})
-	if err == nil {
-		t.Fatal("LLMキーが存在しないのにエラーが返らなかった")
+	// AI機能設定レコードが無いユーザーでも手動実行できる（日記が無いので Success:false で返る）
+	resp, err := svc.TriggerLatestTrend(ctx, &g.TriggerLatestTrendRequest{})
+	if err != nil {
+		t.Fatalf("AI機能設定が無くても実行できるはずがエラーになった: %v", err)
 	}
-
-	st, ok := status.FromError(err)
-	if !ok {
-		t.Fatalf("gRPCステータスエラーが返らなかった: %v", err)
-	}
-	if st.Code() != codes.NotFound {
-		t.Errorf("コード: got %v, want %v", st.Code(), codes.NotFound)
+	if resp.Success {
+		t.Error("分析期間の日記が無いのに Success:true になった")
 	}
 }

@@ -84,8 +84,6 @@
   $: hasUnsavedChanges = content !== initialContent && !allowNavigation;
 
   // Check if user has LLM key configured
-  $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
-  $: hasLLMKey = !!existingLLMKey;
 
   // 日付判定（当日・未来日）
   $: {
@@ -326,7 +324,6 @@ use:enhance={createSubmitHandler(
 				{#if data.entry && characterCount >= 500}
 					<HighlightDisplay
 						diaryId={data.entry.id}
-						{hasLLMKey}
 						{isHighlightOutdated}
 						diaryUpdatedAt={Number(data.entry.updatedAt)}
 						on:highlightUpdated={handleHighlightUpdated}

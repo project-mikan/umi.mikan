@@ -14,9 +14,7 @@ import {
   UserService,
   UpdateUserNameRequestSchema,
   ChangePasswordRequestSchema,
-  UpdateLLMKeyRequestSchema,
   GetUserInfoRequestSchema,
-  DeleteLLMKeyRequestSchema,
   DeleteAccountRequestSchema,
   UpdateAutoSummarySettingsRequestSchema,
   CreateApiKeyRequestSchema,
@@ -24,9 +22,7 @@ import {
   DeleteApiKeyRequestSchema,
   type UpdateUserNameResponse,
   type ChangePasswordResponse,
-  type UpdateLLMKeyResponse,
   type GetUserInfoResponse,
-  type DeleteLLMKeyResponse,
   type DeleteAccountResponse,
   type UpdateAutoSummarySettingsResponse,
   type CreateApiKeyResponse,
@@ -139,23 +135,6 @@ export async function changePassword(
   );
 }
 
-export interface UpdateLLMKeyParams {
-  llmProvider: number;
-  key: string;
-  accessToken: string;
-}
-
-export async function updateLLMKey(
-  params: UpdateLLMKeyParams,
-): Promise<UpdateLLMKeyResponse> {
-  const request = create(UpdateLLMKeyRequestSchema, {
-    llmProvider: params.llmProvider,
-    key: params.key,
-  });
-
-  return await userClient.updateLLMKey(request, authHeader(params.accessToken));
-}
-
 export interface GetUserInfoParams {
   accessToken: string;
 }
@@ -166,21 +145,6 @@ export async function getUserInfo(
   const request = create(GetUserInfoRequestSchema, {});
 
   return await userClient.getUserInfo(request, authHeader(params.accessToken));
-}
-
-export interface DeleteLLMKeyParams {
-  llmProvider: number;
-  accessToken: string;
-}
-
-export async function deleteLLMKey(
-  params: DeleteLLMKeyParams,
-): Promise<DeleteLLMKeyResponse> {
-  const request = create(DeleteLLMKeyRequestSchema, {
-    llmProvider: params.llmProvider,
-  });
-
-  return await userClient.deleteLLMKey(request, authHeader(params.accessToken));
 }
 
 export interface DeleteAccountParams {
@@ -199,7 +163,6 @@ export async function deleteAccount(
 }
 
 export interface UpdateAutoSummarySettingsParams {
-  llmProvider: number;
   autoSummaryMonthly: boolean;
   autoLatestTrendEnabled: boolean;
   semanticSearchEnabled: boolean;
@@ -210,7 +173,6 @@ export async function updateAutoSummarySettings(
   params: UpdateAutoSummarySettingsParams,
 ): Promise<UpdateAutoSummarySettingsResponse> {
   const request = create(UpdateAutoSummarySettingsRequestSchema, {
-    llmProvider: params.llmProvider,
     autoSummaryMonthly: params.autoSummaryMonthly,
     autoLatestTrendEnabled: params.autoLatestTrendEnabled,
     semanticSearchEnabled: params.semanticSearchEnabled,

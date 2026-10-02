@@ -51,20 +51,12 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
       }
       if (err.code === 5) {
         // NOT_FOUND
-        throw error(404, "Diary entry or LLM API key not found");
+        throw error(404, "Diary entry not found");
       }
       if (err.code === 3) {
         // INVALID_ARGUMENT
         throw error(400, "Invalid request parameters");
       }
-    }
-
-    // Check for LLM API key related errors
-    if (
-      (err as Error)?.message?.includes("API key") ||
-      (err as Error)?.message?.includes("Gemini")
-    ) {
-      throw error(400, { message: "Gemini API key not configured" });
     }
 
     throw error(500, "Failed to trigger highlight generation");

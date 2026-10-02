@@ -3,6 +3,7 @@ services:
     image: ghcr.io/project-mikan/umi-mikan-backend:latest
     volumes:
       - ./schema:/schema # pg-schema-diff用
+      - ./secrets:/secrets:ro # Vertex AIのサービスアカウントキー（roles/aiplatform.user）
     environment:
       BACKEND_ENV: production
       TZ: Asia/Tokyo
@@ -19,6 +20,10 @@ services:
       TASK_TIMEOUT_SECONDS: 600 # タスクステータスの有効期限(秒)
       MCP_SERVER_BASE_URL: "https://umi-mikan-api.usuyuki.net" # MCPサーバー自身の公開URL（OAuth Discoveryメタデータの組み立てに使用）
       FRONTEND_BASE_URL: "https://umi-mikan.usuyuki.net" # フロントエンドの公開URL（OAuth認可画面へのリダイレクトに使用）
+      # Vertex AIの設定（手順は GCP.md）
+      GOOGLE_CLOUD_PROJECT: "your-gcp-project-id"
+      GOOGLE_CLOUD_LOCATION: "global"
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-service-account.json
     restart: unless-stopped
     depends_on:
       postgres:
@@ -72,6 +77,8 @@ services:
 
   subscriber:
     image: ghcr.io/project-mikan/umi-mikan-subscriber:latest
+    volumes:
+      - ./secrets:/secrets:ro # Vertex AIのサービスアカウントキー（roles/aiplatform.user）
     environment:
       TZ: Asia/Tokyo
       DB_HOST: postgres
@@ -82,6 +89,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SUBSCRIBER_MAX_CONCURRENT_JOBS: 20
+      # Vertex AIの設定（手順は GCP.md）
+      GOOGLE_CLOUD_PROJECT: "your-gcp-project-id"
+      GOOGLE_CLOUD_LOCATION: "global"
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-service-account.json
     restart: unless-stopped
     depends_on:
       postgres:

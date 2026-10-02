@@ -59,9 +59,15 @@ type GeminiClient struct {
 	client *genai.Client
 }
 
-func NewGeminiClient(ctx context.Context, apiKey string) (*GeminiClient, error) {
+// NewGeminiClient はVertex AI経由のクライアントを生成する（認証はADC）
+func NewGeminiClient(ctx context.Context, project, location string) (*GeminiClient, error) {
+	if project == "" || location == "" {
+		return nil, fmt.Errorf("vertex AI project and location are required (project=%q location=%q)", project, location)
+	}
 	clientConfig := &genai.ClientConfig{
-		APIKey: apiKey,
+		Backend:  genai.BackendVertexAI,
+		Project:  project,
+		Location: location,
 	}
 	client, err := genai.NewClient(ctx, clientConfig)
 	if err != nil {

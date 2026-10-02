@@ -33,9 +33,8 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
         accessToken: accessToken as string,
       });
       userName = userInfo.name;
-      // LLMキー情報から autoLatestTrendEnabled を取得（Gemini provider=1のみ）
-      const geminiKey = userInfo.llmKeys?.find((key) => key.llmProvider === 1);
-      autoLatestTrendEnabled = geminiKey?.autoLatestTrendEnabled || false;
+      autoLatestTrendEnabled =
+        userInfo.llmSetting?.autoLatestTrendEnabled ?? false;
     } catch (error) {
       // バックエンド一時エラーでログアウトさせないようエラーは吸収する
       console.error("Failed to get user info:", error);

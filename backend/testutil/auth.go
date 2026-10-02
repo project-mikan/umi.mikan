@@ -102,19 +102,18 @@ func GenerateTestTokens(t *testing.T, userID uuid.UUID) *model.TokenDetails {
 	return tokens
 }
 
-// CreateTestUserLLM creates a test LLM configuration for a user with default settings
-func CreateTestUserLLM(t *testing.T, db *sql.DB, userID uuid.UUID, apiKey string) {
-	CreateTestUserLLMWithSettings(t, db, userID, apiKey, true, true, false)
+// CreateTestUserLLM はユーザーのAI機能設定（機能ごとのフラグ）をデフォルト値で作成する
+func CreateTestUserLLM(t *testing.T, db *sql.DB, userID uuid.UUID) {
+	CreateTestUserLLMWithSettings(t, db, userID, true, true, false)
 }
 
-// CreateTestUserLLMWithSettings creates a test LLM configuration for a user with specific settings
-func CreateTestUserLLMWithSettings(t *testing.T, db *sql.DB, userID uuid.UUID, apiKey string, autoMonthly, autoTrend, semantic bool) {
+// CreateTestUserLLMWithSettings はユーザーのAI機能設定（機能ごとのフラグ）を指定値で作成する
+func CreateTestUserLLMWithSettings(t *testing.T, db *sql.DB, userID uuid.UUID, autoMonthly, autoTrend, semantic bool) {
 	currentTime := time.Now().Unix()
 
-	// LLM provider: 1 = Gemini
 	_, err := db.Exec(
-		"INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-		userID, 1, apiKey, autoMonthly, autoTrend, semantic, currentTime, currentTime,
+		"INSERT INTO user_llms (user_id, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
+		userID, autoMonthly, autoTrend, semantic, currentTime, currentTime,
 	)
 	if err != nil {
 		t.Fatalf("Failed to create test user LLM: %v", err)

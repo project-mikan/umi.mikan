@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/project-mikan/umi.mikan/backend/constants"
@@ -156,20 +157,44 @@ type RateLimitConfig struct {
 
 // LLMClientFactory creates LLM clients
 type LLMClientFactory interface {
-	CreateGeminiClient(ctx context.Context, apiKey string) (*llm.GeminiClient, error)
+	CreateGeminiClient(ctx context.Context) (*llm.GeminiClient, error)
 }
 
-type geminiClientFactory struct{}
+// geminiClientFactory はクライアントを1つだけ生成して使い回す（genai.Client は並行利用可能）
+type geminiClientFactory struct {
+	config constants.VertexAIConfig
+	mu     sync.Mutex
+	client *llm.GeminiClient
+}
 
-func (f *geminiClientFactory) CreateGeminiClient(ctx context.Context, apiKey string) (*llm.GeminiClient, error) {
-	return llm.NewGeminiClient(ctx, apiKey)
+// CreateGeminiClient は生成失敗をキャッシュせず次回再試行する（キーの後追い配置に備える）
+func (f *geminiClientFactory) CreateGeminiClient(ctx context.Context) (*llm.GeminiClient, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.client != nil {
+		return f.client, nil
+	}
+	client, err := llm.NewGeminiClient(ctx, f.config.Project, f.config.Location)
+	if err != nil {
+		return nil, err
+	}
+	f.client = client
+	return client, nil
 }
 
 // diaryLLMFactory は diary.LLMFactory を実装するアダプタ
-type diaryLLMFactory struct{}
+type diaryLLMFactory struct {
+	factory LLMClientFactory
+}
 
-func (f *diaryLLMFactory) CreateGeminiClient(ctx context.Context, apiKey string) (diary.GeminiEmbedder, error) {
-	return llm.NewGeminiClient(ctx, apiKey)
+// CreateGeminiClient は共通ファクトリのクライアントを diary.GeminiEmbedder として返す
+func (f *diaryLLMFactory) CreateGeminiClient(ctx context.Context) (diary.GeminiEmbedder, error) {
+	client, err := f.factory.CreateGeminiClient(ctx)
+	if err != nil {
+		// nil の *llm.GeminiClient をインターフェースに詰めると非nil扱いになるため明示的に nil を返す
+		return nil, err
+	}
+	return client, nil
 }
 
 // LockService provides distributed locking functionality
@@ -313,7 +338,7 @@ func NewRedisClient(config *RedisConfig) (rueidis.Client, error) {
 
 // NewLLMClientFactory creates an LLM client factory
 func NewLLMClientFactory() LLMClientFactory {
-	return &geminiClientFactory{}
+	return &geminiClientFactory{config: constants.LoadVertexAIConfig()}
 }
 
 // NewLockService creates a lock service
@@ -348,11 +373,11 @@ func NewAuthService(db *sql.DB, loginLimiter *ratelimiter.LoginAttemptLimiter, r
 }
 
 // NewDiaryService creates a diary service
-func NewDiaryService(db *sql.DB, redis rueidis.Client) *diary.DiaryEntry {
+func NewDiaryService(db *sql.DB, redis rueidis.Client, llmFactory LLMClientFactory) *diary.DiaryEntry {
 	return &diary.DiaryEntry{
 		DB:         db,
 		Redis:      redis,
-		LLMFactory: &diaryLLMFactory{},
+		LLMFactory: &diaryLLMFactory{factory: llmFactory},
 	}
 }
 

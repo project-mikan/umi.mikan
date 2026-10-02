@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/project-mikan/umi.mikan/backend/constants"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 )
 
 func TestNewContainer(t *testing.T) {
@@ -269,27 +272,55 @@ func TestCleanupFunction(t *testing.T) {
 
 // TestLLMClientFactoryFunctionality LLMクライアントファクトリをテスト
 func TestLLMClientFactoryFunctionality(t *testing.T) {
-	factory := &geminiClientFactory{}
-
-	// 空のAPIキーでテスト（エラーを返すべき）
-	ctx := context.Background()
-	client, err := factory.CreateGeminiClient(ctx, "")
-
-	// 空のキーでは失敗することを期待
-	if err == nil {
-		t.Error("Expected error with empty API key, but got success")
-	}
-	if client != nil {
-		t.Error("Expected nil client with empty API key")
+	tests := []struct {
+		name   string
+		config constants.VertexAIConfig
+	}{
+		{
+			name:   "異常系: GOOGLE_CLOUD_PROJECTが未設定だとVertex AIの接続先が決まらないのでエラーになる",
+			config: constants.VertexAIConfig{Project: "", Location: "global"},
+		},
 	}
 
-	// 空でないAPIキーでテスト（失敗するかもしれないが、パニックしてはいけない）
-	// 実際の検証はAPI呼び出し時に発生する可能性があり、クライアント作成時ではない
-	client2, err2 := factory.CreateGeminiClient(ctx, "test-key")
-	// 動作が異なる可能性があるため、ここでは結果をアサートしない
-	// パニックせず、合理的な結果を返すことだけを確認
-	_ = client2
-	_ = err2
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			factory := &geminiClientFactory{config: tt.config}
+			ctx := context.Background()
+
+			client, err := factory.CreateGeminiClient(ctx)
+			if err == nil {
+				t.Fatal("エラーが返ることを期待したが nil だった")
+			}
+			if client != nil {
+				t.Error("エラー時はクライアントが nil であることを期待")
+			}
+
+			// diary.LLMFactory 用アダプタも同じ設定を使うためエラーになる
+			adapter := &diaryLLMFactory{factory: factory}
+			embedder, err := adapter.CreateGeminiClient(ctx)
+			if err == nil {
+				t.Fatal("アダプタでもエラーが返ることを期待したが nil だった")
+			}
+			if embedder != nil {
+				t.Error("エラー時は embedder が nil であることを期待")
+			}
+		})
+	}
+}
+
+// TestLLMClientFactoryReusesClient 生成済みのクライアントを使い回すことをテスト
+func TestLLMClientFactoryReusesClient(t *testing.T) {
+	cached := &llm.GeminiClient{}
+	// Projectが空でも、生成済みクライアントがあれば再生成せずにそれを返す
+	factory := &geminiClientFactory{client: cached}
+
+	got, err := factory.CreateGeminiClient(context.Background())
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+	if got != cached {
+		t.Error("生成済みのクライアントが返ることを期待")
+	}
 }
 
 // TestLockServiceFunctionality ロックサービスをテスト

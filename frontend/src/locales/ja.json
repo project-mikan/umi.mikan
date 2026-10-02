@@ -37,18 +37,6 @@
       "confirmPlaceholder": "新しいパスワードを再入力してください",
       "save": "パスワードを変更"
     },
-    "llmToken": {
-      "title": "LLMトークン設定",
-      "providerLabel": "LLMプロバイダー",
-      "provider": {
-        "gemini": "Gemini"
-      },
-      "tokenLabel": "APIキー",
-      "tokenPlaceholder": "APIキーを入力してください",
-      "tokenHelp": "API Tokenはこちら:",
-      "freeWarning": "Google AI StudioのFree Tierは学習に利用されるため個人情報を入れないでください。プライベートな日記を使用する場合は有料APIを利用してください。",
-      "save": "トークンを保存"
-    },
     "autoSummary": {
       "title": "自動まとめ設定",
       "description": "1000文字以上の日記に対して自動でまとめを生成する設定です。",
@@ -59,12 +47,8 @@
       "regenerateEmbeddingsButton": "未インデックスの日記を一括生成",
       "regenerateEmbeddingsSuccess": "{count}件の日記をキューに追加しました。しばらくお待ちください。",
       "regenerateEmbeddingsFailed": "一括生成に失敗しました。",
-      "save": "設定を保存"
-    },
-    "deleteToken": {
-      "button": "トークンを削除",
-      "confirm": "LLMトークンを削除",
-      "confirmMessage": "LLMトークンを削除してもよろしいですか？この操作は取り消せません。"
+      "save": "設定を保存",
+      "dataNotice": "AI機能を使うと、日記の内容はAI処理のために運営者のGoogle Cloud（Vertex AI）に送信されます。送信された内容がモデルの学習に使われることはありません。"
     },
     "llmStatus": {
       "title": "LLM処理状況",
@@ -114,8 +98,6 @@
     "messages": {
       "usernameUpdateSuccess": "お名前を更新しました",
       "passwordChangeSuccess": "パスワードを変更しました",
-      "llmTokenUpdateSuccess": "LLMトークンを保存しました",
-      "llmTokenDeleteSuccess": "LLMトークンを削除しました",
       "autoSummarySettingsUpdateSuccess": "自動まとめ設定を更新しました",
       "accountDeleteSuccess": "アカウントを削除しました",
       "unauthorized": "認証が必要です",
@@ -127,10 +109,6 @@
       "passwordsDoNotMatch": "新しいパスワードが一致しません",
       "passwordTooShort": "新しいパスワードは8文字以上で入力してください",
       "currentPasswordIncorrect": "現在のパスワードが正しくありません",
-      "tokenRequired": "トークンは必須です",
-      "tokenTooLong": "トークンは100文字以内で入力してください",
-      "tokenNotFound": "トークンが見つかりません",
-      "invalidProvider": "無効なLLMプロバイダーです",
       "updateFailed": "更新に失敗しました",
       "apiKeyNameRequired": "キーの名前は必須です",
       "apiKeyNameTooLong": "キーの名前は100文字以内で入力してください",
@@ -251,8 +229,7 @@
       "timeout": "ハイライト生成がタイムアウトしました。再度お試しください",
       "statusQueued": "ハイライトの生成をキューに追加しました。しばらくお待ちください",
       "statusProcessing": "ハイライトを生成中です。しばらくお待ちください",
-      "contentTooShort": "ハイライト生成には最低500文字必要です",
-      "apiKeyNotConfigured": "Gemini APIキーが設定されていません。設定ページから登録してください"
+      "contentTooShort": "ハイライト生成には最低500文字必要です"
     },
     "embedding": {
       "indexed": "意味的検索：インデックス済み",
@@ -359,7 +336,7 @@
     "button": "さがす",
     "modeKeyword": "キーワードでさがす",
     "modeSemantic": "意味でさがす",
-    "semanticDescription": "Gemini AIを使って意味・文脈でさがします（APIキー設定が必要）",
+    "semanticDescription": "Gemini AIを使って意味・文脈でさがします（設定で自然言語検索の有効化が必要）",
     "results": "でさがした結果",
     "semanticResults": "の意味でさがした結果",
     "resultCount": "件",
@@ -375,7 +352,7 @@
     "expandedKeywordsNote": "エンティティに紐づく {keywords} でもさがしました",
     "error": {
       "searchFailed": "さがせませんでした。",
-      "semanticSearchFailed": "意味的検索に失敗しました。Gemini APIキーが設定されているか確認してください。"
+      "semanticSearchFailed": "意味的検索に失敗しました。設定で自然言語検索が有効になっているか確認してください。"
     },
     "chunkCount": "{count}チャンク"
   },
@@ -399,7 +376,6 @@
       "error": "まとめの生成に失敗しました",
       "outdated": "この月の日記が更新されています。最新のまとめにする場合は再生成してください。",
       "noEntries": "この月の日記が見つかりません。月次まとめを生成するには、まず日記を書いてください。",
-      "noApiKey": "Gemini APIキーが設定されていません。設定画面から設定してください。",
       "updateAvailable": "このまとめ生成後に日記が更新されています。最新のまとめを得るには再生成してください。",
       "currentMonthError": "月次まとめは過去の月のみ生成できます。現在の月は生成できません。",
       "currentMonthNote": "現在の月のためまとめは生成できません",
@@ -475,9 +451,9 @@
       "ragRegenerateButton": "未生成の日記を一括インデックス",
       "ragRegenerateSuccess": "{count}件の日記をキューに追加しました。バックグラウンドで順次インデックスが生成されます。",
       "ragRegenerateFailed": "インデックス生成のキュー追加に失敗しました。",
-      "ragDisabledNote": "設定ページでGemini APIキーを登録し、自然言語検索を有効にするとここに状況が表示されます。",
+      "ragDisabledNote": "設定ページで自然言語検索を有効にするとここに状況が表示されます。",
       "aboutTitle": "LLM処理について",
-      "aboutDescription": "このページでは、AI（Gemini）による自動まとめ処理の状況を確認できます。",
+      "aboutDescription": "このページでは、AI（Google Cloud Vertex AI経由のGemini）による自動まとめ処理の状況を確認できます。",
       "monthlySummaryExplanation": "月次まとめ: 日記の内容から生成される月間の総合まとめ",
       "processingExplanation": "処理中タスク: 現在バックグラウンドで実行中のまとめ生成作業"
     },

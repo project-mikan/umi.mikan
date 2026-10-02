@@ -4,11 +4,11 @@ package database_test
 
 // セマンティック検索（RAG）の有効性を評価する統合テスト。
 // 実行条件:
-//   - GEMINI_API_KEY_FOR_TEST 環境変数が設定されていること
+//   - backendコンテナにVertex AIの設定があること（GCP.md参照）
 //   - テストDBが起動していること（make db-apply-test 済み）
 //
 // 実行方法:
-//   GEMINI_API_KEY_FOR_TEST=xxx make b-test-semantic-eval
+//   make b-test-semantic-eval
 //
 // このテストは以下を計測する:
 //   1. 語彙一致なしでの意味的検索（Recall）— evalPositiveThreshold を使用
@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
@@ -130,15 +131,15 @@ type multiChunkQueryResult struct {
 }
 
 func TestSemanticSearchEvaluation(t *testing.T) {
-	apiKey := os.Getenv("GEMINI_API_KEY_FOR_TEST")
-	if apiKey == "" {
-		t.Skip("GEMINI_API_KEY_FOR_TEST が設定されていないためスキップ（セマンティック検索の評価には実際のGemini APIが必要）")
+	vertexConfig := constants.LoadVertexAIConfig()
+	if vertexConfig.Project == "" {
+		t.Skip("GOOGLE_CLOUD_PROJECT が設定されていないためスキップ（セマンティック検索の評価には実際のVertex AIが必要）")
 	}
 
 	db := testutil.SetupTestDB(t)
 	ctx := context.Background()
 
-	geminiClient, err := llm.NewGeminiClient(ctx, apiKey)
+	geminiClient, err := llm.NewGeminiClient(ctx, vertexConfig.Project, vertexConfig.Location)
 	if err != nil {
 		t.Fatalf("GeminiClientの初期化に失敗: %v", err)
 	}
@@ -653,7 +654,7 @@ func loadEvalDataset(t *testing.T) *evalDataset {
 }
 
 // TestSemanticSearchEvaluation_PrintDataset はデータセットの内容をダンプするヘルパーテスト
-// GEMINI_API_KEY不要で実行可能（データセットの確認用）
+// Vertex AIの認証情報不要で実行可能（データセットの確認用）
 func TestSemanticSearchEvaluation_PrintDataset(t *testing.T) {
 	dataset := loadEvalDataset(t)
 

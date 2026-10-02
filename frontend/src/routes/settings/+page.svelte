@@ -24,14 +24,11 @@
 
   let usernameLoading = false;
   let passwordLoading = false;
-  let llmTokenLoading = false;
   let autoSummaryLoading = false;
-  let deleteLLMKeyLoading = false;
   let deleteAccountLoading = false;
   let regenerateEmbeddingsLoading = false;
 
   // Modal states
-  let showDeleteLLMTokenConfirm = false;
   let showDeleteAccountConfirm = false;
 
   // Password visibility toggles
@@ -39,9 +36,8 @@
   let showNewPassword = false;
   let showConfirmPassword = false;
 
-  // Get existing LLM key for Gemini (provider 1)
-  $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
-  $: existingLLMToken = existingLLMKey?.key || "";
+  // AI機能設定（一度でも設定を保存した場合のみ存在する）
+  $: llmSetting = data.user?.llmSetting;
 
   // Local state for checkbox values
   let autoSummaryMonthly = false;
@@ -50,10 +46,10 @@
 
   // Update local state when data changes
   $: {
-    if (existingLLMKey) {
-      autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
-      autoLatestTrend = existingLLMKey.autoLatestTrendEnabled || false;
-      semanticSearchEnabled = existingLLMKey.semanticSearchEnabled || false;
+    if (llmSetting) {
+      autoSummaryMonthly = llmSetting.autoSummaryMonthly || false;
+      autoLatestTrend = llmSetting.autoLatestTrendEnabled || false;
+      semanticSearchEnabled = llmSetting.semanticSearchEnabled || false;
     }
   }
 
@@ -116,32 +112,6 @@
   });
 
   // Modal helper functions
-  function confirmDeleteLLMToken() {
-    showDeleteLLMTokenConfirm = true;
-  }
-
-  function cancelDeleteLLMToken() {
-    showDeleteLLMTokenConfirm = false;
-  }
-
-  function handleDeleteLLMToken() {
-    showDeleteLLMTokenConfirm = false;
-    // Submit the delete form
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "?/deleteLLMKey";
-
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "llmProvider";
-    input.value = "1";
-    form.appendChild(input);
-
-    document.body.appendChild(form);
-    deleteLLMKeyLoading = true;
-    form.submit();
-  }
-
   // エクスポート関連の状態
   const currentDate = new Date();
   let exportFromYear = currentDate.getFullYear() - 1;
@@ -531,109 +501,14 @@
 						{$_("settings.nav.llmSettings")}
 					</h2>
 
-					<!-- LLMトークン変更セクション -->
-					<section id="llm-token" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-						<h3 class="text-xl font-semibold mb-4">{$_("settings.llmToken.title")}</h3>
-			<form
-				method="POST"
-				action="?/updateLLMKey"
-				class="space-y-4"
-				use:enhance={() => {
-					llmTokenLoading = true;
-					return async ({ update }) => {
-						llmTokenLoading = false;
-						await update();
-					};
-				}}
-			>
-				<div>
-					<label for="llmProvider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						{$_("settings.llmToken.providerLabel")}
-					</label>
-					<select
-						id="llmProvider"
-						name="llmProvider"
-						disabled={llmTokenLoading}
-						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-					>
-						<option value="1">{$_("settings.llmToken.provider.gemini")}</option>
-					</select>
-				</div>
-				<div>
-					<label for="llmToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						{$_("settings.llmToken.tokenLabel")}
-					</label>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2 auto-phrase-target">
-						{$_("settings.llmToken.tokenHelp")} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">https://aistudio.google.com/apikey</a>
-					</p>
-					<p class="text-xs text-orange-600 dark:text-orange-400 mb-2 bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-200 dark:border-orange-800 auto-phrase-target">
-						{$_("settings.llmToken.freeWarning")}
-					</p>
-					<input
-						type="text"
-						id="llmToken"
-						name="llmKey"
-						required
-						maxlength="100"
-						disabled={llmTokenLoading}
-						value={existingLLMToken}
-						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-						placeholder={$_("settings.llmToken.tokenPlaceholder")}
-					/>
-				</div>
-				<button
-					type="submit"
-					use:haptic
-					disabled={llmTokenLoading}
-					class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-				>
-					{llmTokenLoading ? $_("common.loading") : $_("settings.llmToken.save")}
-				</button>
-				<!-- LLMトークン変更メッセージ -->
-				{#if form?.error && isMessageForAction("updateLLMKey")}
-					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
-						{$_(`settings.messages.${form.error}`) || form.error}
-					</div>
-				{/if}
-				{#if form?.success && isMessageForAction("updateLLMKey")}
-					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
-						{$_(`settings.messages.${form.message}`) || form.message}
-					</div>
-				{/if}
-			</form>
-
-			<!-- LLM Token Delete Section -->
-			{#if existingLLMToken}
-				<div class="mt-4">
-					<button
-						type="button"
-						disabled={deleteLLMKeyLoading}
-						on:click={confirmDeleteLLMToken}
-						class="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-					>
-						{deleteLLMKeyLoading ? $_("common.loading") : $_("settings.deleteToken.button")}
-					</button>
-					<!-- LLMトークン削除メッセージ -->
-					{#if form?.error && isMessageForAction("deleteLLMKey")}
-						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
-							{$_(`settings.messages.${form.error}`) || form.error}
-						</div>
-					{/if}
-					{#if form?.success && isMessageForAction("deleteLLMKey")}
-						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
-							{$_(`settings.messages.${form.message}`) || form.message}
-						</div>
-					{/if}
-				</div>
-			{/if}
-					</section>
-
 					<!-- 自動要約設定セクション -->
-					{#if existingLLMToken}
-						<section id="auto-summary" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+					<section id="auto-summary" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
 							<h3 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h3>
-				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 auto-phrase-target">
+				<p class="text-sm text-gray-600 dark:text-gray-400 mb-2 auto-phrase-target">
 					{$_("settings.autoSummary.description")}
+				</p>
+				<p class="text-xs text-gray-500 dark:text-gray-400 mb-4 auto-phrase-target">
+					{$_("settings.autoSummary.dataNotice")}
 				</p>
 				<form
 					method="POST"
@@ -651,8 +526,6 @@
 						};
 					}}
 				>
-					<input type="hidden" name="llmProvider" value="1" />
-
 					<div class="space-y-3">
 						<label class="flex items-center">
 							<input
@@ -758,11 +631,9 @@
 						</div>
 					{/if}
 						</section>
-					{/if}
 
 					<!-- LLM処理状況セクション -->
-					{#if existingLLMKey}
-						<section id="llm-status" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+					<section id="llm-status" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
 							<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
 								{$_("settings.llmStatus.title")}
 							</h3>
@@ -790,7 +661,6 @@
 					{$_("settings.llmStatus.viewButton")}
 								</a>
 						</section>
-					{/if}
 				</div>
 			</div>
 
@@ -1067,21 +937,6 @@
 	</div>
 	</div>
 </main>
-
-<!-- LLM Token Delete Confirmation Modal -->
-<Modal
-	isOpen={showDeleteLLMTokenConfirm}
-	title={$_("settings.deleteToken.confirm")}
-	confirmText={$_("settings.deleteToken.button")}
-	cancelText={$_("diary.cancel")}
-	variant="danger"
-	onConfirm={handleDeleteLLMToken}
-	onCancel={cancelDeleteLLMToken}
->
-	<p class="text-sm text-gray-500 dark:text-gray-400 auto-phrase-target">
-		{$_("settings.deleteToken.confirmMessage")}
-	</p>
-</Modal>
 
 <!-- API Key Delete Confirmation Modal -->
 <Modal

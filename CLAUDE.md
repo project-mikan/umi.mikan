@@ -270,13 +270,14 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **users**: UUID primary keys, email-based authentication
 - **diaries**: One diary per user per date (unique constraint)
 - **user_password_authes**: Separate password authentication table
-- **user_llms**: LLM provider settings and auto-summary preferences
+- **user_llms**: Per-feature AI flags (`auto_summary_monthly`, `auto_latest_trend_enabled`, `semantic_search_enabled`), one row per user (primary key `user_id`; there is no `llm_provider` column — the LLM is fixed for all users, and `GetUserInfoResponse.llm_setting` is a single optional message). The row is created on first save via `UpdateAutoSummarySettings` (upsert); a missing row means all flags are false. No per-user API key is stored — LLM calls go through the shared GCP project's Vertex AI, see `adr/0017-vertex-ai.md`
 - **user_api_keys**: Long-lived API keys for MCP clients (SHA-256 hash only, plaintext never stored; `expires_at` enforces a 90-day expiry)
 - **diary_summary_months**: AI-generated monthly summaries
 - **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)
 - **diary_embeddings**: Per-chunk vector embeddings for semantic search (pgvector halfvec)
 - **semantic_search_logs**: Tracks semantic search API requests per user
 - **Migrations**: Numbered SQL files in /schema directory — **one file per table, always**
+- **`make db-apply` caveat**: if pg-schema-diff tries `ALTER EXTENSION "vector" UPDATE TO "0.7.4"` and fails (the running DB already has pgvector 0.8.x, which has no downgrade path), apply the remaining statements shown by `make db-diff` manually with `docker compose exec -T postgres psql ...` / `postgres_test`
 
 ### Async Processing Architecture
 
@@ -355,6 +356,8 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 ## Key Files
 
 - `compose.yml`: Development environment configuration
+- `GCP.md`: GCP / Vertex AI setup guide (service account, env vars, production setup, troubleshooting)
+- `terraform/`: Terraform for the GCP side of Vertex AI (API enablement, service account + `roles/aiplatform.user`, optional budget alert). State lives in a GCS bucket (`backend "gcs"`; bucket name passed via the git-ignored `terraform/backend.hcl`, created once with gcloud) so anyone/any machine sees the same state. The service account key is intentionally **not** managed by Terraform (it would put the private key in the shared state) — it is issued with `gcloud iam service-accounts keys create`. Run via `make tf-init` / `make tf-plan` / `make tf-apply`; if the `UMI_MIKAN_PROJECT_ID` env var is exported (e.g. in `~/.zshrc`), the Makefile passes it as `TF_VAR_project_id` and uses `${UMI_MIKAN_PROJECT_ID}-tfstate` as the state bucket, otherwise it falls back to `terraform.tfvars` / `backend.hcl`. `.terraform.lock.hcl` is committed
 - `Makefile`: All development commands
 - `proto/`: gRPC service definitions
 - `schema/`: Database migration files
@@ -381,6 +384,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `0009-natural-language-search.md`: Semantic search (RAG) with pgvector + Gemini Embedding
   - `0014-mcp-server.md`: MCP server transport and authentication decisions
   - `0016-mcp-oauth.md`: MCP server OAuth 2.0 (Authorization Code + PKCE) support for Claude.ai custom connectors
+  - `0017-vertex-ai.md`: LLM calls via the shared GCP project's Vertex AI (replacing per-user Gemini API keys), gated only by per-feature flags
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
   - `loki/loki-config.yml`: Loki log aggregation configuration
@@ -517,6 +521,20 @@ Examples:
 SUBSCRIBER_MAX_CONCURRENT_JOBS=5    # Limit to 5 concurrent jobs
 SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
 ```
+
+### Vertex AI Configuration
+
+All LLM calls (summaries, highlights, latest trend, embeddings) go through a **shared GCP project's Vertex AI** — users no longer register their own Gemini API keys. There is no global "AI enabled" switch: automatic processing is gated by the per-feature flags in `user_llms`, and manual triggers (monthly summary generation, highlight generation, latest trend trigger) are available to every logged-in user since the button press itself is explicit consent. See `adr/0017-vertex-ai.md`.
+
+Environment variables (set on `backend` and `subscriber`):
+
+- `GOOGLE_CLOUD_PROJECT`: GCP project ID (required for AI features; if unset the server still starts and only AI calls fail)
+- `GOOGLE_CLOUD_LOCATION`: Vertex AI location (default: `global`) — fixed in `compose.yml`
+- `GOOGLE_APPLICATION_CREDENTIALS`: path to the service account key (`roles/aiplatform.user`). In compose it is `/secrets/gcp-service-account.json`, mounted from `./secrets/` (git-ignored)
+
+In development, export `UMI_MIKAN_PROJECT_ID` in your shell (e.g. `~/.zshrc`) — `compose.yml` passes it as `GOOGLE_CLOUD_PROJECT` (location is fixed to `global` in `compose.yml`) — put the key file at `./secrets/gcp-service-account.json`, then `docker compose up -d backend subscriber`. There is no `.env` file. Step-by-step GCP setup (API enablement, service account, key rotation, cost alerts, troubleshooting) is in `GCP.md`; the GCP resources are provisioned with Terraform in `terraform/` (`make tf-init` → `make tf-plan` → `make tf-apply`, state in GCS), and the key is issued with gcloud. `GCP.md` also has the cost estimate (about ¥11 per user per month with every feature enabled; default budget alert ¥1,000/month).
+
+`container.geminiClientFactory` creates the Vertex AI client once per process and reuses it (failed creation is not cached). `make b-test-semantic-eval` uses the same Vertex AI settings from the backend container.
 
 ### Registration Key Configuration
 

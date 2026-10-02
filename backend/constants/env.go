@@ -32,6 +32,12 @@ type SubscriberConfig struct {
 	MaxConcurrentJobs int
 }
 
+// VertexAIConfig はVertex AI経由でGeminiを呼び出すための設定
+type VertexAIConfig struct {
+	Project  string
+	Location string
+}
+
 type RateLimitConfig struct {
 	LoginMaxAttempts    int
 	LoginWindow         time.Duration
@@ -318,4 +324,18 @@ func LoadFrontendBaseURL() string {
 		return v
 	}
 	return defaultFrontendBaseURL
+}
+
+const defaultVertexAILocation = "global"
+
+// LoadVertexAIConfig は環境変数を読む。Project未設定でも起動は妨げず、クライアント生成時にエラーにする
+func LoadVertexAIConfig() VertexAIConfig {
+	location := os.Getenv("GOOGLE_CLOUD_LOCATION")
+	if location == "" {
+		location = defaultVertexAILocation
+	}
+	return VertexAIConfig{
+		Project:  os.Getenv("GOOGLE_CLOUD_PROJECT"),
+		Location: location,
+	}
 }

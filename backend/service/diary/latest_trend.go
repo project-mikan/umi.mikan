@@ -95,15 +95,8 @@ func (s *DiaryEntry) TriggerLatestTrend(
 		return nil, err
 	}
 
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
+	if _, err := uuid.Parse(userIDStr); err != nil {
 		return nil, err
-	}
-
-	// ユーザーのLLMキーが設定されているかチェック
-	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "Gemini API key not configured")
 	}
 
 	// 直近3日間の期間を計算（今日を除く）

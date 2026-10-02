@@ -494,7 +494,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	// 2. LLMで月次要約生成
 	combinedDiaryEntries := fmt.Sprintf("Diary entries for %d/%d:\n\n%s", year, month,
 		strings.Join(diaryEntries, "\n\n"))
-	monthlySummary, err := generateMonthlySummaryWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, logger)
+	monthlySummary, err := generateMonthlySummaryWithLLM(ctx, llmFactory, userID, combinedDiaryEntries, logger)
 	if err != nil {
 		// APIのコンテンツポリシーによる永続的なブロックはDBに記録してリトライを防ぐ
 		if errors.Is(err, llm.ErrContentBlocked) {
@@ -535,18 +535,18 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	return nil
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
-	// ユーザーのGemini API keyをuser_llmsテーブルから取得
-	var apiKey string
-	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
+// getUserLLMSetting はAI機能設定を取得する（一度も保存していなければ sql.ErrNoRows）
+func getUserLLMSetting(ctx context.Context, db *sql.DB, userID string) (*database.UserLlm, error) {
+	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
+		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
+	return database.UserLlmByUserID(ctx, db, userUUID)
+}
 
-	// Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+func generateMonthlySummaryWithLLM(ctx context.Context, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
+	// Gemini クライアント取得
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return "", fmt.Errorf("failed to create Gemini client: %w", err)
@@ -670,7 +670,7 @@ func generateLatestTrend(ctx context.Context, db *sql.DB, redisClient rueidis.Cl
 	periodEndJST := periodEnd.In(jst)
 	combinedDiaryEntries := fmt.Sprintf("Diary entries from %s to %s:\n\n%s", periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02"),
 		strings.Join(diaryEntries, "\n\n"))
-	trendAnalysisJSON, err := generateLatestTrendWithLLM(ctx, db, llmFactory, userID, combinedDiaryEntries, periodEndJST, logger)
+	trendAnalysisJSON, err := generateLatestTrendWithLLM(ctx, llmFactory, userID, combinedDiaryEntries, periodEndJST, logger)
 	if err != nil {
 		return fmt.Errorf("failed to generate latest trend with LLM: %w", err)
 	}
@@ -721,18 +721,9 @@ func generateLatestTrend(ctx context.Context, db *sql.DB, redisClient rueidis.Cl
 	return nil
 }
 
-func generateLatestTrendWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
-	// ユーザーのGemini API keyをuser_llmsテーブルから取得
-	var apiKey string
-	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
-	if err != nil {
-		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
-	}
-
-	// Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+func generateLatestTrendWithLLM(ctx context.Context, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
+	// Gemini クライアント取得
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return "", fmt.Errorf("failed to create Gemini client: %w", err)
@@ -824,7 +815,7 @@ func generateDiaryHighlight(ctx context.Context, db *sql.DB, redisClient rueidis
 	}
 
 	// 3. LLMでハイライト生成
-	highlights, err := generateDiaryHighlightWithLLM(ctx, db, llmFactory, userID, diaryContent, logger)
+	highlights, err := generateDiaryHighlightWithLLM(ctx, llmFactory, userID, diaryContent, logger)
 	if err != nil {
 		return fmt.Errorf("failed to generate highlight with LLM: %w", err)
 	}
@@ -909,18 +900,9 @@ func generateDiaryHighlight(ctx context.Context, db *sql.DB, redisClient rueidis
 	return nil
 }
 
-func generateDiaryHighlightWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
-	// ユーザーのGemini API keyをuser_llmsテーブルから取得
-	var apiKey string
-	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
-	if err != nil {
-		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return nil, fmt.Errorf("failed to get user's Gemini API key: %w", err)
-	}
-
-	// Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+func generateDiaryHighlightWithLLM(ctx context.Context, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
+	// Gemini クライアント取得
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
@@ -965,20 +947,17 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		"diary_id": diaryID,
 	}).Info("Generating diary embedding")
 
-	// 1. ユーザーのAPIキーと意味的検索の有効化を確認（未設定/無効の場合はスキップ）
-	var apiKey string
-	var semanticSearchEnabled bool
-	apiKeyQuery := `SELECT key, semantic_search_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, apiKeyQuery, userID).Scan(&apiKey, &semanticSearchEnabled)
+	// 1. ユーザーが意味的検索を有効化しているか確認
+	userLLM, err := getUserLLMSetting(ctx, db, userID)
 	if err != nil {
-		// APIキー未設定はスキップ（エラーではない）
+		// AI機能設定が無いユーザーはスキップ（エラーではない）
 		logger.WithFields(logrus.Fields{
 			"user_id":  userID,
 			"diary_id": diaryID,
-		}).Info("User has no Gemini API key, skipping diary embedding generation")
+		}).Info("User has no AI feature settings, skipping diary embedding generation")
 		return nil
 	}
-	if !semanticSearchEnabled {
+	if !userLLM.SemanticSearchEnabled {
 		// 意味的検索が無効ならスキップ
 		logger.WithFields(logrus.Fields{
 			"user_id":  userID,
@@ -996,8 +975,8 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
 
-	// 3. Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	// 3. Gemini クライアント取得
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create Gemini client: %w", err)
 	}

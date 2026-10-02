@@ -39,14 +39,8 @@ const (
 	// UserServiceChangePasswordProcedure is the fully-qualified name of the UserService's
 	// ChangePassword RPC.
 	UserServiceChangePasswordProcedure = "/user.UserService/ChangePassword"
-	// UserServiceUpdateLLMKeyProcedure is the fully-qualified name of the UserService's UpdateLLMKey
-	// RPC.
-	UserServiceUpdateLLMKeyProcedure = "/user.UserService/UpdateLLMKey"
 	// UserServiceGetUserInfoProcedure is the fully-qualified name of the UserService's GetUserInfo RPC.
 	UserServiceGetUserInfoProcedure = "/user.UserService/GetUserInfo"
-	// UserServiceDeleteLLMKeyProcedure is the fully-qualified name of the UserService's DeleteLLMKey
-	// RPC.
-	UserServiceDeleteLLMKeyProcedure = "/user.UserService/DeleteLLMKey"
 	// UserServiceDeleteAccountProcedure is the fully-qualified name of the UserService's DeleteAccount
 	// RPC.
 	UserServiceDeleteAccountProcedure = "/user.UserService/DeleteAccount"
@@ -93,37 +87,16 @@ type UserServiceClient interface {
 	//   - Unauthenticated: 現在のパスワードが不正
 	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(context.Context, *connect.Request[grpc.ChangePasswordRequest]) (*connect.Response[grpc.ChangePasswordResponse], error)
-	// UpdateLLMKey はLLM APIキーを更新または新規作成します。
-	// 現在はGemini (llm_provider=1) のみ対応しています。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1, key: "AIza..." }
-	//	response: { success: true, message: "LLMキーを更新しました" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーまたはキーが不正
-	UpdateLLMKey(context.Context, *connect.Request[grpc.UpdateLLMKeyRequest]) (*connect.Response[grpc.UpdateLLMKeyResponse], error)
-	// GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
+	// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
 	//
 	// 例:
 	//
 	//	request: {}
-	//	response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
+	//	response: { name: "太郎", email: "user@example.com", llm_setting: { auto_summary_monthly: true, ... } }
 	//
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(context.Context, *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error)
-	// DeleteLLMKey は指定されたLLM APIキーを削除します。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "LLMキーを削除しました" }
-	//
-	// エラー:
-	//   - NotFound: 指定されたプロバイダーのキーが存在しない
-	DeleteLLMKey(context.Context, *connect.Request[grpc.DeleteLLMKeyRequest]) (*connect.Response[grpc.DeleteLLMKeyResponse], error)
 	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
 	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
 	//
@@ -135,26 +108,21 @@ type UserServiceClient interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error)
-	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 月次要約を有効/無効にできます。
+	// UpdateAutoSummarySettings はAI機能ごとのフラグを更新します（設定が無ければ作成）。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1, auto_summary_monthly: false }
+	//	request: { auto_summary_monthly: false }
 	//	response: { success: true, message: "自動要約設定を更新しました" }
-	//
-	// エラー:
-	//   - NotFound: LLMキーが設定されていない
 	UpdateAutoSummarySettings(context.Context, *connect.Request[grpc.UpdateAutoSummarySettingsRequest]) (*connect.Response[grpc.UpdateAutoSummarySettingsResponse], error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1 }
+	//	request: {}
 	//	response: { auto_summary_monthly: false }
 	//
-	// エラー:
-	//   - NotFound: LLMキーが設定されていない
+	// 設定レコードが無い場合は全て false を返します。
 	GetAutoSummarySettings(context.Context, *connect.Request[grpc.GetAutoSummarySettingsRequest]) (*connect.Response[grpc.GetAutoSummarySettingsResponse], error)
 	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
 	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
@@ -222,22 +190,10 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(userServiceMethods.ByName("ChangePassword")),
 			connect.WithClientOptions(opts...),
 		),
-		updateLLMKey: connect.NewClient[grpc.UpdateLLMKeyRequest, grpc.UpdateLLMKeyResponse](
-			httpClient,
-			baseURL+UserServiceUpdateLLMKeyProcedure,
-			connect.WithSchema(userServiceMethods.ByName("UpdateLLMKey")),
-			connect.WithClientOptions(opts...),
-		),
 		getUserInfo: connect.NewClient[grpc.GetUserInfoRequest, grpc.GetUserInfoResponse](
 			httpClient,
 			baseURL+UserServiceGetUserInfoProcedure,
 			connect.WithSchema(userServiceMethods.ByName("GetUserInfo")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteLLMKey: connect.NewClient[grpc.DeleteLLMKeyRequest, grpc.DeleteLLMKeyResponse](
-			httpClient,
-			baseURL+UserServiceDeleteLLMKeyProcedure,
-			connect.WithSchema(userServiceMethods.ByName("DeleteLLMKey")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteAccount: connect.NewClient[grpc.DeleteAccountRequest, grpc.DeleteAccountResponse](
@@ -289,9 +245,7 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 type userServiceClient struct {
 	updateUserName            *connect.Client[grpc.UpdateUserNameRequest, grpc.UpdateUserNameResponse]
 	changePassword            *connect.Client[grpc.ChangePasswordRequest, grpc.ChangePasswordResponse]
-	updateLLMKey              *connect.Client[grpc.UpdateLLMKeyRequest, grpc.UpdateLLMKeyResponse]
 	getUserInfo               *connect.Client[grpc.GetUserInfoRequest, grpc.GetUserInfoResponse]
-	deleteLLMKey              *connect.Client[grpc.DeleteLLMKeyRequest, grpc.DeleteLLMKeyResponse]
 	deleteAccount             *connect.Client[grpc.DeleteAccountRequest, grpc.DeleteAccountResponse]
 	updateAutoSummarySettings *connect.Client[grpc.UpdateAutoSummarySettingsRequest, grpc.UpdateAutoSummarySettingsResponse]
 	getAutoSummarySettings    *connect.Client[grpc.GetAutoSummarySettingsRequest, grpc.GetAutoSummarySettingsResponse]
@@ -311,19 +265,9 @@ func (c *userServiceClient) ChangePassword(ctx context.Context, req *connect.Req
 	return c.changePassword.CallUnary(ctx, req)
 }
 
-// UpdateLLMKey calls user.UserService.UpdateLLMKey.
-func (c *userServiceClient) UpdateLLMKey(ctx context.Context, req *connect.Request[grpc.UpdateLLMKeyRequest]) (*connect.Response[grpc.UpdateLLMKeyResponse], error) {
-	return c.updateLLMKey.CallUnary(ctx, req)
-}
-
 // GetUserInfo calls user.UserService.GetUserInfo.
 func (c *userServiceClient) GetUserInfo(ctx context.Context, req *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error) {
 	return c.getUserInfo.CallUnary(ctx, req)
-}
-
-// DeleteLLMKey calls user.UserService.DeleteLLMKey.
-func (c *userServiceClient) DeleteLLMKey(ctx context.Context, req *connect.Request[grpc.DeleteLLMKeyRequest]) (*connect.Response[grpc.DeleteLLMKeyResponse], error) {
-	return c.deleteLLMKey.CallUnary(ctx, req)
 }
 
 // DeleteAccount calls user.UserService.DeleteAccount.
@@ -385,37 +329,16 @@ type UserServiceHandler interface {
 	//   - Unauthenticated: 現在のパスワードが不正
 	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(context.Context, *connect.Request[grpc.ChangePasswordRequest]) (*connect.Response[grpc.ChangePasswordResponse], error)
-	// UpdateLLMKey はLLM APIキーを更新または新規作成します。
-	// 現在はGemini (llm_provider=1) のみ対応しています。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1, key: "AIza..." }
-	//	response: { success: true, message: "LLMキーを更新しました" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーまたはキーが不正
-	UpdateLLMKey(context.Context, *connect.Request[grpc.UpdateLLMKeyRequest]) (*connect.Response[grpc.UpdateLLMKeyResponse], error)
-	// GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
+	// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
 	//
 	// 例:
 	//
 	//	request: {}
-	//	response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
+	//	response: { name: "太郎", email: "user@example.com", llm_setting: { auto_summary_monthly: true, ... } }
 	//
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(context.Context, *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error)
-	// DeleteLLMKey は指定されたLLM APIキーを削除します。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "LLMキーを削除しました" }
-	//
-	// エラー:
-	//   - NotFound: 指定されたプロバイダーのキーが存在しない
-	DeleteLLMKey(context.Context, *connect.Request[grpc.DeleteLLMKeyRequest]) (*connect.Response[grpc.DeleteLLMKeyResponse], error)
 	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
 	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
 	//
@@ -427,26 +350,21 @@ type UserServiceHandler interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error)
-	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 月次要約を有効/無効にできます。
+	// UpdateAutoSummarySettings はAI機能ごとのフラグを更新します（設定が無ければ作成）。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1, auto_summary_monthly: false }
+	//	request: { auto_summary_monthly: false }
 	//	response: { success: true, message: "自動要約設定を更新しました" }
-	//
-	// エラー:
-	//   - NotFound: LLMキーが設定されていない
 	UpdateAutoSummarySettings(context.Context, *connect.Request[grpc.UpdateAutoSummarySettingsRequest]) (*connect.Response[grpc.UpdateAutoSummarySettingsResponse], error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1 }
+	//	request: {}
 	//	response: { auto_summary_monthly: false }
 	//
-	// エラー:
-	//   - NotFound: LLMキーが設定されていない
+	// 設定レコードが無い場合は全て false を返します。
 	GetAutoSummarySettings(context.Context, *connect.Request[grpc.GetAutoSummarySettingsRequest]) (*connect.Response[grpc.GetAutoSummarySettingsResponse], error)
 	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
 	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
@@ -510,22 +428,10 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(userServiceMethods.ByName("ChangePassword")),
 		connect.WithHandlerOptions(opts...),
 	)
-	userServiceUpdateLLMKeyHandler := connect.NewUnaryHandler(
-		UserServiceUpdateLLMKeyProcedure,
-		svc.UpdateLLMKey,
-		connect.WithSchema(userServiceMethods.ByName("UpdateLLMKey")),
-		connect.WithHandlerOptions(opts...),
-	)
 	userServiceGetUserInfoHandler := connect.NewUnaryHandler(
 		UserServiceGetUserInfoProcedure,
 		svc.GetUserInfo,
 		connect.WithSchema(userServiceMethods.ByName("GetUserInfo")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userServiceDeleteLLMKeyHandler := connect.NewUnaryHandler(
-		UserServiceDeleteLLMKeyProcedure,
-		svc.DeleteLLMKey,
-		connect.WithSchema(userServiceMethods.ByName("DeleteLLMKey")),
 		connect.WithHandlerOptions(opts...),
 	)
 	userServiceDeleteAccountHandler := connect.NewUnaryHandler(
@@ -576,12 +482,8 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 			userServiceUpdateUserNameHandler.ServeHTTP(w, r)
 		case UserServiceChangePasswordProcedure:
 			userServiceChangePasswordHandler.ServeHTTP(w, r)
-		case UserServiceUpdateLLMKeyProcedure:
-			userServiceUpdateLLMKeyHandler.ServeHTTP(w, r)
 		case UserServiceGetUserInfoProcedure:
 			userServiceGetUserInfoHandler.ServeHTTP(w, r)
-		case UserServiceDeleteLLMKeyProcedure:
-			userServiceDeleteLLMKeyHandler.ServeHTTP(w, r)
 		case UserServiceDeleteAccountProcedure:
 			userServiceDeleteAccountHandler.ServeHTTP(w, r)
 		case UserServiceUpdateAutoSummarySettingsProcedure:
@@ -613,16 +515,8 @@ func (UnimplementedUserServiceHandler) ChangePassword(context.Context, *connect.
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.ChangePassword is not implemented"))
 }
 
-func (UnimplementedUserServiceHandler) UpdateLLMKey(context.Context, *connect.Request[grpc.UpdateLLMKeyRequest]) (*connect.Response[grpc.UpdateLLMKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.UpdateLLMKey is not implemented"))
-}
-
 func (UnimplementedUserServiceHandler) GetUserInfo(context.Context, *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.GetUserInfo is not implemented"))
-}
-
-func (UnimplementedUserServiceHandler) DeleteLLMKey(context.Context, *connect.Request[grpc.DeleteLLMKeyRequest]) (*connect.Response[grpc.DeleteLLMKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.DeleteLLMKey is not implemented"))
 }
 
 func (UnimplementedUserServiceHandler) DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error) {
