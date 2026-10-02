@@ -32,6 +32,7 @@ struct LoginView: View {
                     loginButtons
                     Spacer().frame(height: 60)
                 }
+                .readableContentWidth()
             }
         }
     }

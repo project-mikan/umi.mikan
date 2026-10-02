@@ -8,6 +8,10 @@ struct SearchView: View {
     /// 検索フィールドのフォーカス状態（検索実行時にキーボードを閉じるために使う）
     @FocusState private var isSearchFieldFocused: Bool
 
+    /// 横幅のサイズクラス（regular幅では検索フィールドへ移動するボタンと ⌘F を表示する）
+    @Environment(\.horizontalSizeClass)
+    private var horizontalSizeClass
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
 
@@ -30,6 +34,7 @@ struct SearchView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
@@ -37,6 +42,7 @@ struct SearchView: View {
             }
         }
         // 検索完了時に成功の触覚フィードバックを鳴らす
+        .toolbar { focusSearchToolbar }
         .sensoryFeedback(.success, trigger: viewModel.completedSearchCount) { old, new in new > old }
         // 日記詳細を検索キーワードのハイライト付きハーフモーダルで表示する
         .sheet(item: $selectedItem) { item in
@@ -66,6 +72,22 @@ struct SearchView: View {
                 .map { DiarySheetItem(date: $0.date, highlightKeywords: [query]) }
         }
         return nil
+    }
+
+    /// 検索フィールドへフォーカスを移すボタン（regular幅のみ）。
+    /// iPadの外付けキーボードで ⌘F を押すとすぐ入力を始められるようにする。
+    /// compact幅（iPhone）は従来どおりナビゲーションバーにボタンを出さない。
+    @ToolbarContentBuilder private var focusSearchToolbar: some ToolbarContent {
+        if horizontalSizeClass == .regular {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    isSearchFieldFocused = true
+                } label: {
+                    Label("検索フィールドへ移動", systemImage: "character.cursor.ibeam")
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+        }
     }
 
     // MARK: - 検索フォーム

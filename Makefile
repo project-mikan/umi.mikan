@@ -152,6 +152,8 @@ b-test-race:
 IOS_PROJECT = ios/umi.mikan.xcodeproj
 IOS_SCHEME = umi.mikan
 IOS_DESTINATION = platform=iOS Simulator,name=iPhone 17
+# iPadのレイアウト崩れ・ビルドエラー検知用（ADR 0018）
+IOS_DESTINATION_IPAD = platform=iOS Simulator,name=iPad Pro 11-inch (M5)
 
 ios-format:
 	cd ios && swiftformat --config .swiftformat .
@@ -162,6 +164,9 @@ ios-lint:
 
 ios-build:
 	xcodebuild build -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet
+
+ios-build-ipad:
+	xcodebuild build -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION_IPAD)" -quiet
 
 ios-test:
 	xcodebuild test -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet

@@ -29,6 +29,10 @@ struct DiaryDetailSheet: View {
     /// スワイプによる切り替え処理が進行中かどうか（多重発火防止）
     @State private var isTransitioning = false
 
+    /// 横幅のサイズクラス（regular幅では前後移動ボタンとキーボードショートカットを表示する）
+    @Environment(\.horizontalSizeClass)
+    private var horizontalSizeClass
+
     // swiftlint:disable:next type_contents_order
     init(items: [DiarySheetItem], initialIndex: Int, authViewModel: AuthViewModel, syncManager: SyncManager) {
         self.items = items
@@ -64,8 +68,12 @@ struct DiaryDetailSheet: View {
                 .contentShape(Rectangle())
                 .simultaneousGesture(swipeGesture(width: proxy.size.width))
             }
+            .toolbar { pagerToolbar }
         }
         .presentationDetents([.medium, .large])
+        // iPad等のregular幅ではdetentsが効かず小さなフォームシートになるため、
+        // 編集領域を広く取れるページサイズのシートにする（compact幅は従来のハーフモーダルのまま）
+        .presentationSizing(.page)
         .presentationDragIndicator(.visible)
         // 下スワイプでシートを閉じる操作はフォーカス喪失やバックグラウンド移行を
         // 経由しないため、他の自動保存経路にヒットせず編集内容が消えてしまう。
@@ -76,6 +84,31 @@ struct DiaryDetailSheet: View {
         .onDisappear {
             guard viewModel.hasUnsavedChanges, !viewModel.isSaving else { return }
             Task { await viewModel.save() }
+        }
+    }
+
+    /// 前後の日記へ移動するボタン（regular幅のみ）。
+    /// iPadではトラックパッド・外付けキーボード利用時にスワイプしづらいため、ボタンと ⌘[ / ⌘] でも移動できるようにする。
+    /// compact幅（iPhone）は従来どおりスワイプのみとし、ナビゲーションバーの見た目を変えない。
+    @ToolbarContentBuilder private var pagerToolbar: some ToolbarContent {
+        if horizontalSizeClass == .regular {
+            ToolbarItemGroup(placement: .topBarLeading) {
+                Button {
+                    showPrevious()
+                } label: {
+                    Label("前の日記", systemImage: "chevron.left")
+                }
+                .keyboardShortcut("[", modifiers: .command)
+                .disabled(index == 0)
+
+                Button {
+                    showNext()
+                } label: {
+                    Label("次の日記", systemImage: "chevron.right")
+                }
+                .keyboardShortcut("]", modifiers: .command)
+                .disabled(index >= items.count - 1)
+            }
         }
     }
 

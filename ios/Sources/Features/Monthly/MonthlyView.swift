@@ -49,6 +49,7 @@ struct MonthlyView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .task {
             await viewModel.fetch()
@@ -93,10 +94,14 @@ struct MonthlyView: View {
             Button {
                 Task { await viewModel.previousMonth() }
             } label: {
-                Image(systemName: "chevron.left")
+                // ⌘長押し時のショートカット一覧に名前を出すため、アイコンのみのLabelにする
+                Label("前の月", systemImage: "chevron.left")
+                    .labelStyle(.iconOnly)
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.glass)
+            // iPad等の外付けキーボード向けショートカット
+            .keyboardShortcut(.leftArrow, modifiers: .command)
 
             yearMonthButton
 
@@ -109,14 +114,17 @@ struct MonthlyView: View {
                     .padding(.horizontal, 4)
             }
             .buttonStyle(.glass)
+            .keyboardShortcut("t", modifiers: .command)
 
             Button {
                 Task { await viewModel.nextMonth() }
             } label: {
-                Image(systemName: "chevron.right")
+                Label("次の月", systemImage: "chevron.right")
+                    .labelStyle(.iconOnly)
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.glass)
+            .keyboardShortcut(.rightArrow, modifiers: .command)
         }
     }
 

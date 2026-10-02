@@ -35,6 +35,10 @@ struct HomeView: View {
     @Environment(\.scenePhase)
     private var scenePhase
 
+    /// 横幅のサイズクラス（regular幅では編集中に保存ボタンと ⌘S を表示する）
+    @Environment(\.horizontalSizeClass)
+    private var horizontalSizeClass
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let launchState: AppLaunchState?
@@ -67,6 +71,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
+                .readableContentWidth()
             }
             .onReceive(NotificationCenter.default.publisher(for: .memoryNotificationTapped)) { _ in
                 guard !memoryViewModel.items.isEmpty else { return }
@@ -130,6 +135,7 @@ struct HomeView: View {
             }
         }
         .toolbar { keyboardToolbar }
+        .toolbar { saveToolbar }
         // スクロール位置を常時追跡し、キーボードを閉じた時の位置復元に備える
         .scrollPosition($scrollPosition)
         .onScrollGeometryChange(for: CGFloat.self) { geometry in
@@ -162,6 +168,23 @@ struct HomeView: View {
                 focusedCard = nil
             } label: {
                 Image(systemName: "keyboard.chevron.compact.down")
+            }
+        }
+    }
+
+    /// 編集中のカードを保存するボタン（regular幅のみ）。
+    /// iPadで外付けキーボードを使うとソフトウェアキーボードとその上のツールバーが出ないため、
+    /// ナビゲーションバーに保存ボタンを出して ⌘S で保存できるようにする。
+    /// compact幅（iPhone）はフォーカス喪失時の自動保存に任せ、従来どおり保存ボタンは出さない。
+    @ToolbarContentBuilder private var saveToolbar: some ToolbarContent {
+        if horizontalSizeClass == .regular, let focusedCard {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    autoSaveIfChanged(card: focusedCard)
+                } label: {
+                    Label("保存", systemImage: "checkmark")
+                }
+                .keyboardShortcut("s", modifiers: .command)
             }
         }
     }
@@ -273,7 +296,7 @@ struct HomeView: View {
         }
     }
 
-    /// 指定カードに未保存の変更がある場合のみ保存する（フォーカスが外れた時の自動保存用）
+    /// 指定カードに未保存の変更がある場合のみ保存する（フォーカスが外れた時の自動保存・regular幅の保存ボタン用）
     private func autoSaveIfChanged(card: DiaryCardFocus) {
         let hasChanges = switch card {
         case .today: todayContent != lastAppliedToday

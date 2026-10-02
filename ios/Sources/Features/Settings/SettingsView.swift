@@ -25,6 +25,7 @@ struct SettingsView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .task {
             await viewModel.fetch()

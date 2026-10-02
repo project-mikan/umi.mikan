@@ -25,6 +25,10 @@ struct DiaryDetailView: View {
     @Environment(\.scenePhase)
     private var scenePhase
 
+    /// 横幅のサイズクラス（regular幅では編集中に保存ボタンと ⌘S を表示する）
+    @Environment(\.horizontalSizeClass)
+    private var horizontalSizeClass
+
     /// 検索結果から開いた場合にハイライトするキーワード
     private let highlightKeywords: [String]
 
@@ -38,6 +42,7 @@ struct DiaryDetailView: View {
         ScrollViewReader { proxy in
             scrollContent
                 .toolbar { keyboardToolbar }
+                .toolbar { saveToolbar }
                 .task {
                     await viewModel.fetch()
                     await scrollToFirstHighlight(proxy)
@@ -73,6 +78,7 @@ struct DiaryDetailView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .navigationTitle(dateTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -187,6 +193,24 @@ struct DiaryDetailView: View {
                 isEditorFocused = false
             } label: {
                 Image(systemName: "keyboard.chevron.compact.down")
+            }
+        }
+    }
+
+    /// 編集中に表示する保存ボタン（regular幅のみ）。
+    /// iPadで外付けキーボードを使うとソフトウェアキーボードとその上のツールバーが出ないため、
+    /// ナビゲーションバーに保存ボタンを出して ⌘S で保存できるようにする。
+    /// compact幅（iPhone）はフォーカス喪失時の自動保存に任せ、従来どおり保存ボタンは出さない。
+    @ToolbarContentBuilder private var saveToolbar: some ToolbarContent {
+        if horizontalSizeClass == .regular, isEditorFocused {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await viewModel.save() }
+                } label: {
+                    Label("保存", systemImage: "checkmark")
+                }
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(!viewModel.hasUnsavedChanges || viewModel.isSaving)
             }
         }
     }

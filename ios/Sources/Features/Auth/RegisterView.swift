@@ -20,6 +20,7 @@ struct RegisterView: View {
                     registerButton
                     Spacer().frame(height: 60)
                 }
+                .readableContentWidth()
             }
         }
         .navigationTitle("アカウント作成")

@@ -38,6 +38,8 @@ struct MainView: View {
             Tab("よびな", systemImage: "person.text.rectangle") { entitiesTab }
             Tab("設定", systemImage: "gearshape") { settingsTab }
         }
+        // iPad等のregular幅ではサイドバー、iPhone等のcompact幅では従来のタブバーで表示する
+        .tabViewStyle(.sidebarAdaptable)
         .onChange(of: scenePhase) { _, newPhase in
             // フォアグラウンド復帰時に未同期の編集をサーバーへ送信する
             if newPhase == .active {

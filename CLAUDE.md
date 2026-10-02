@@ -86,6 +86,7 @@ are OK.
 make ios-lint          # Format (SwiftFormat) + Lint (SwiftLint)
 make ios-format        # Format iOS code with SwiftFormat
 make ios-build         # Build iOS app with xcodebuild (iPhone 17 Simulator)
+make ios-build-ipad    # Build iOS app for iPad (iPad Pro 11-inch (M5) Simulator)
 make ios-test          # Run iOS unit tests with xcodebuild
 make ios-log           # Stream iOS app logs from Simulator
 ```
@@ -94,6 +95,7 @@ When you change the iOS app, make sure that
 
 - `make ios-lint`
 - `make ios-build`
+- `make ios-build-ipad`
 
 are OK.
 
@@ -112,6 +114,8 @@ The iOS app connects to the backend via `https://umi-mikan-api.usuyuki.net` (Clo
 **iOS Sync Timeout & Non-Blocking Save**: `ConnectClient` (`ios/Sources/Infrastructure/ConnectClient.swift`) sets an explicit 15s `timeout` on `ProtocolClientConfig` — without it, connect-swift falls back to the default URLSession timeout (~60s), which combined with an unstable network right after a long background period (Wi-Fi reassociation, Cloudflare Tunnel re-establishment) could hang requests for a long time. Save operations (`DiaryViewModel.saveLocally`, `DiaryDetailViewModel.save`) fire `syncManager.syncPending()` as a detached `Task` rather than `await`-ing it, so a slow/stuck sync never blocks the save itself — `SyncManager.syncPending()` still processes `pendingEntries()` sequentially (one `await syncEntry` at a time), so a large backlog after long background periods can take a while to fully sync, but the UI and further saves remain responsive throughout.
 
 **iOS UX Features**:
+
+- **iPad support (ADR 0018)**: Layout switches on `@Environment(\.horizontalSizeClass)`, never on `UIDevice` idiom, so iPad Split View / Slide Over (compact) gets the iPhone UI. `MainView`'s `TabView` uses `.tabViewStyle(.sidebarAdaptable)` (sidebar on regular, tab bar on compact). Every scrolling screen applies `readableContentWidth()` (`ios/Sources/Features/Common/ReadableWidth.swift`), which caps content at 720pt and centers it on regular width only — **new screens must apply it too**. The modifier always applies the same frames (only the width value changes) so resizing a Split View doesn't reset view identity/focus. `DiaryDetailSheet` uses `.presentationSizing(.page)` so regular width gets a large page sheet (compact keeps the `.medium`/`.large` half-modal). Hardware-keyboard shortcuts are exposed as **regular-width-only** navigation-bar buttons so the iPhone UI is unchanged: ⌘S save (Home while a card is focused, detail view while the editor is focused), ⌘[ / ⌘] previous/next diary (detail sheet), ⌘F focus the search field (Search). Monthly's existing month buttons carry ⌘← / ⌘→ / ⌘T in all size classes. Multiple windows (`UIApplicationSupportsMultipleScenes`) are intentionally unsupported because the stores/managers are app-wide singletons. Live Activity is unsupported on iPadOS and is already skipped by the `areActivitiesEnabled` guard.
 
 - **Half-modal detail (no full-page detail)**: All diary detail presentation goes through `DiaryDetailSheet` (`ios/Sources/Features/Detail/DiaryDetailSheet.swift`), a sheet with `presentationDetents([.medium, .large])`. Home cards, the Monthly list, and Search results all open it; push navigation to `DiaryDetailView` is not used anywhere. `DiarySheetItem` carries the date and highlight keywords.
 - **Swipe navigation in the half-modal**: `DiaryDetailSheet` takes `items` + `initialIndex`; horizontal swipes move to the previous/next diary with a push (slide) animation — the detail view is wrapped in a `ZStack` with `.animation(value: index)` because `.transition` directly under `NavigationStack` does not animate. Ordering per caller: Search = the current result list order, Home = today/yesterday/day-before-yesterday, Monthly = every day of the displayed month.
@@ -385,6 +389,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `0014-mcp-server.md`: MCP server transport and authentication decisions
   - `0016-mcp-oauth.md`: MCP server OAuth 2.0 (Authorization Code + PKCE) support for Claude.ai custom connectors
   - `0017-vertex-ai.md`: LLM calls via the shared GCP project's Vertex AI (replacing per-user Gemini API keys), gated only by per-feature flags
+  - `0018-ios-ipad-support.md`: iOS app iPad support (size-class based layout, sidebar, keyboard shortcuts, phased split-view plan)
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
   - `loki/loki-config.yml`: Loki log aggregation configuration
