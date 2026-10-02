@@ -542,8 +542,7 @@ func getUserLLMSetting(ctx context.Context, db *sql.DB, userID string) (*databas
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
-	// 現在はGemini（provider 1）のみサポート
-	return database.UserLlmByUserIDLlmProvider(ctx, db, userUUID, 1)
+	return database.UserLlmByUserID(ctx, db, userUUID)
 }
 
 func generateMonthlySummaryWithLLM(ctx context.Context, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {

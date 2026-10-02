@@ -166,7 +166,7 @@ func TestUserEntry_GetUserInfo(t *testing.T) {
 	svc := &UserEntry{DB: db}
 	ctx := testutil.CreateAuthenticatedContext(userID)
 
-	t.Run("正常系：ユーザー情報を取得", func(t *testing.T) {
+	t.Run("正常系：AI機能設定が無いユーザーはLlmSettingがnilになる", func(t *testing.T) {
 		resp, err := svc.GetUserInfo(ctx, &g.GetUserInfoRequest{})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
@@ -174,17 +174,24 @@ func TestUserEntry_GetUserInfo(t *testing.T) {
 		if resp.Name != "Info User" {
 			t.Errorf("Name: got %q, want %q", resp.Name, "Info User")
 		}
+		if resp.LlmSetting != nil {
+			t.Errorf("AI機能設定が無いのにLlmSettingが返った: %+v", resp.LlmSetting)
+		}
 	})
 
-	t.Run("正常系：AI機能設定を保存済みのユーザー情報を取得", func(t *testing.T) {
-		testutil.CreateTestUserLLM(t, db, userID)
+	t.Run("正常系：AI機能設定を保存済みのユーザーは機能ごとのフラグが返る", func(t *testing.T) {
+		testutil.CreateTestUserLLMWithSettings(t, db, userID, true, false, true)
 
 		resp, err := svc.GetUserInfo(ctx, &g.GetUserInfoRequest{})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
-		if len(resp.LlmSettings) == 0 {
-			t.Error("AI機能設定を保存済みのはずがLlmSettingsが空")
+		got := resp.GetLlmSetting()
+		if got == nil {
+			t.Fatal("AI機能設定を保存済みのはずがLlmSettingがnil")
+		}
+		if !got.AutoSummaryMonthly || got.AutoLatestTrendEnabled || !got.SemanticSearchEnabled {
+			t.Errorf("フラグが保存値と一致しない: %+v", got)
 		}
 	})
 
@@ -241,33 +248,14 @@ func TestUserEntry_UpdateAutoSummarySettings(t *testing.T) {
 		expectedMessage string
 	}{
 		{
-			name:            "異常系: 負のプロバイダーを指定すると存在しないプロバイダーなのでinvalidProviderになる",
-			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: -1, AutoSummaryMonthly: true},
-			expectedSuccess: false,
-			expectedMessage: "invalidProvider",
-		},
-		{
-			// llm_providerを省略したリクエストは0になる。ここで行が作られると後続の新規作成が主キー衝突で失敗する
-			name:            "異常系: プロバイダーに0（未指定）を指定するとGemini以外なのでinvalidProviderになり設定レコードも作られない",
-			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 0, AutoSummaryMonthly: true},
-			expectedSuccess: false,
-			expectedMessage: "invalidProvider",
-		},
-		{
-			name:            "異常系: 未対応のプロバイダー2を指定するとGemini以外なのでinvalidProviderになる",
-			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 2, AutoSummaryMonthly: true},
-			expectedSuccess: false,
-			expectedMessage: "invalidProvider",
-		},
-		{
 			name:            "正常系: 設定レコードが無いユーザーは新規作成して保存できる",
-			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 1, AutoSummaryMonthly: true, SemanticSearchEnabled: true},
+			request:         &g.UpdateAutoSummarySettingsRequest{AutoSummaryMonthly: true, SemanticSearchEnabled: true},
 			expectedSuccess: true,
 			expectedMessage: "autoSummarySettingsUpdateSuccess",
 		},
 		{
 			name:            "正常系: 設定レコードがあるユーザーは既存レコードを更新できる",
-			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 1, AutoLatestTrendEnabled: true},
+			request:         &g.UpdateAutoSummarySettingsRequest{AutoLatestTrendEnabled: true},
 			expectedSuccess: true,
 			expectedMessage: "autoSummarySettingsUpdateSuccess",
 		},
@@ -290,7 +278,7 @@ func TestUserEntry_UpdateAutoSummarySettings(t *testing.T) {
 			}
 
 			// 保存した値がそのまま読み出せることを確認
-			settings, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
+			settings, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{})
 			if err != nil {
 				t.Fatalf("予期しないエラー: %v", err)
 			}
@@ -310,7 +298,7 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 	ctx := testutil.CreateAuthenticatedContext(userID)
 
 	t.Run("正常系：AI機能設定が存在しない場合はデフォルト値を返す", func(t *testing.T) {
-		resp, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
+		resp, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
@@ -322,7 +310,7 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 	t.Run("正常系：AI機能設定が存在する場合は設定を返す", func(t *testing.T) {
 		testutil.CreateTestUserLLM(t, db, userID)
 
-		resp, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
+		resp, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
@@ -331,27 +319,6 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 			t.Error("AutoSummaryMonthlyがtrueであるべき")
 		}
 	})
-}
-
-func TestIsSupportedLLMProvider(t *testing.T) {
-	tests := []struct {
-		name     string
-		provider int32
-		expected bool
-	}{
-		{name: "正常系: 1はGeminiなので対応している", provider: 1, expected: true},
-		{name: "正常系: 0はリクエストで未指定の場合の値なので対応していない", provider: 0, expected: false},
-		{name: "正常系: 負の値は存在しないプロバイダーなので対応していない", provider: -1, expected: false},
-		{name: "正常系: 2は未実装のプロバイダーなので対応していない", provider: 2, expected: false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := isSupportedLLMProvider(tt.provider); got != tt.expected {
-				t.Errorf("isSupportedLLMProvider(%d): got %v, want %v", tt.provider, got, tt.expected)
-			}
-		})
-	}
 }
 
 // setupTestRedis はテスト用のminiredisクライアントを起動してrueidisクライアントを返す

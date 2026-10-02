@@ -111,10 +111,9 @@ func CreateTestUserLLM(t *testing.T, db *sql.DB, userID uuid.UUID) {
 func CreateTestUserLLMWithSettings(t *testing.T, db *sql.DB, userID uuid.UUID, autoMonthly, autoTrend, semantic bool) {
 	currentTime := time.Now().Unix()
 
-	// LLM provider: 1 = Gemini
 	_, err := db.Exec(
-		"INSERT INTO user_llms (user_id, llm_provider, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-		userID, 1, autoMonthly, autoTrend, semantic, currentTime, currentTime,
+		"INSERT INTO user_llms (user_id, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
+		userID, autoMonthly, autoTrend, semantic, currentTime, currentTime,
 	)
 	if err != nil {
 		t.Fatalf("Failed to create test user LLM: %v", err)

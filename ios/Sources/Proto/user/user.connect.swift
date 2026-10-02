@@ -42,7 +42,7 @@ internal protocol User_UserServiceClientInterface: Sendable {
     ///
     /// 例:
     ///   request: {}
-    ///   response: { name: "太郎", email: "user@example.com", llm_settings: [{ llm_provider: 1, ... }] }
+    ///   response: { name: "太郎", email: "user@example.com", llm_setting: { auto_summary_monthly: true, ... } }
     ///
     /// エラー:
     ///   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
@@ -65,18 +65,15 @@ internal protocol User_UserServiceClientInterface: Sendable {
     /// 設定レコードが無い場合は新規作成します。
     ///
     /// 例:
-    ///   request: { llm_provider: 1, auto_summary_monthly: false }
+    ///   request: { auto_summary_monthly: false }
     ///   response: { success: true, message: "自動要約設定を更新しました" }
-    ///
-    /// エラー:
-    ///   - InvalidArgument: プロバイダーが不正
     @available(iOS 13, *)
     func `updateAutoSummarySettings`(request: User_UpdateAutoSummarySettingsRequest, headers: Connect.Headers) async -> ResponseMessage<User_UpdateAutoSummarySettingsResponse>
 
     /// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
     ///
     /// 例:
-    ///   request: { llm_provider: 1 }
+    ///   request: {}
     ///   response: { auto_summary_monthly: false }
     ///
     /// 設定レコードが無い場合は全て false を返します。

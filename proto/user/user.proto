@@ -34,7 +34,7 @@ service UserService {
   //
   // 例:
   //   request: {}
-  //   response: { name: "太郎", email: "user@example.com", llm_settings: [{ llm_provider: 1, ... }] }
+  //   response: { name: "太郎", email: "user@example.com", llm_setting: { auto_summary_monthly: true, ... } }
   //
   // エラー:
   //   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
@@ -55,17 +55,14 @@ service UserService {
   // 設定レコードが無い場合は新規作成します。
   //
   // 例:
-  //   request: { llm_provider: 1, auto_summary_monthly: false }
+  //   request: { auto_summary_monthly: false }
   //   response: { success: true, message: "自動要約設定を更新しました" }
-  //
-  // エラー:
-  //   - InvalidArgument: プロバイダーが不正
   rpc UpdateAutoSummarySettings(UpdateAutoSummarySettingsRequest) returns (UpdateAutoSummarySettingsResponse);
 
   // GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
   //
   // 例:
-  //   request: { llm_provider: 1 }
+  //   request: {}
   //   response: { auto_summary_monthly: false }
   //
   // 設定レコードが無い場合は全て false を返します。
@@ -145,13 +142,13 @@ message GetUserInfoRequest {
 message GetUserInfoResponse {
   string name = 1;
   string email = 2;
-  // AI機能設定（一度でも設定を保存した場合のみ）
-  repeated LLMSettingInfo llm_settings = 3;
+  // AI機能設定（一度でも設定を保存した場合のみ。LLMは全ユーザー共通のため1件）
+  LLMSettingInfo llm_setting = 3;
 }
 
 // AI機能設定情報
 message LLMSettingInfo {
-  int32 llm_provider = 1; // 1:Gemini
+  reserved 1; // 旧: llm_provider（LLMは全ユーザー共通のため廃止）
   reserved 2; // 旧: key（ユーザー個別のAPIキーは廃止）
   bool auto_summary_monthly = 4; // 月毎の自動要約生成
   bool auto_latest_trend_enabled = 5; // 直近トレンド分析の自動生成
@@ -171,7 +168,7 @@ message DeleteAccountResponse {
 
 // 自動要約設定更新用のリクエスト
 message UpdateAutoSummarySettingsRequest {
-  int32 llm_provider = 1; // 1:Gemini
+  reserved 1; // 旧: llm_provider（LLMは全ユーザー共通のため廃止）
   bool auto_summary_monthly = 3; // 月毎の自動要約生成
   bool auto_latest_trend_enabled = 4; // 直近トレンド分析の自動生成
   bool semantic_search_enabled = 5; // 意味的検索（RAG）機能の有効化
@@ -185,7 +182,7 @@ message UpdateAutoSummarySettingsResponse {
 
 // 自動要約設定取得用のリクエスト
 message GetAutoSummarySettingsRequest {
-  int32 llm_provider = 1; // 1:Gemini
+  reserved 1; // 旧: llm_provider（LLMは全ユーザー共通のため廃止）
 }
 
 // 自動要約設定取得用のレスポンス

@@ -17,6 +17,3 @@ backend/tmp-subscriber/
 documents/
 
 .claude/worktrees/
-
-# Vertex AI設定（GOOGLE_CLOUD_PROJECT など）
-.env

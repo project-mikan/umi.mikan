@@ -66,7 +66,7 @@ type UserServiceClient interface {
 	// 例:
 	//
 	//	request: {}
-	//	response: { name: "太郎", email: "user@example.com", llm_settings: [{ llm_provider: 1, ... }] }
+	//	response: { name: "太郎", email: "user@example.com", llm_setting: { auto_summary_monthly: true, ... } }
 	//
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
@@ -87,17 +87,14 @@ type UserServiceClient interface {
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1, auto_summary_monthly: false }
+	//	request: { auto_summary_monthly: false }
 	//	response: { success: true, message: "自動要約設定を更新しました" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーが不正
 	UpdateAutoSummarySettings(ctx context.Context, in *UpdateAutoSummarySettingsRequest, opts ...grpc.CallOption) (*UpdateAutoSummarySettingsResponse, error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1 }
+	//	request: {}
 	//	response: { auto_summary_monthly: false }
 	//
 	// 設定レコードが無い場合は全て false を返します。
@@ -288,7 +285,7 @@ type UserServiceServer interface {
 	// 例:
 	//
 	//	request: {}
-	//	response: { name: "太郎", email: "user@example.com", llm_settings: [{ llm_provider: 1, ... }] }
+	//	response: { name: "太郎", email: "user@example.com", llm_setting: { auto_summary_monthly: true, ... } }
 	//
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
@@ -309,17 +306,14 @@ type UserServiceServer interface {
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1, auto_summary_monthly: false }
+	//	request: { auto_summary_monthly: false }
 	//	response: { success: true, message: "自動要約設定を更新しました" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーが不正
 	UpdateAutoSummarySettings(context.Context, *UpdateAutoSummarySettingsRequest) (*UpdateAutoSummarySettingsResponse, error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
 	// 例:
 	//
-	//	request: { llm_provider: 1 }
+	//	request: {}
 	//	response: { auto_summary_monthly: false }
 	//
 	// 設定レコードが無い場合は全て false を返します。

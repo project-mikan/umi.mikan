@@ -153,7 +153,7 @@ func PendingMonthlySummaryCount(ctx context.Context, db DB, userID uuid.UUID) (i
 // UserLLMAutoSettingsByUserID は指定ユーザーのLLM自動処理設定を返す
 // 設定が存在しない場合は全てfalseの設定を返す
 func UserLLMAutoSettingsByUserID(ctx context.Context, db DB, userID uuid.UUID) (*UserLLMAutoSettings, error) {
-	ul, err := UserLlmByUserIDLlmProvider(ctx, db, userID, 1)
+	ul, err := UserLlmByUserID(ctx, db, userID)
 	if err != nil {
 		// 設定が存在しない場合は全てfalse
 		return &UserLLMAutoSettings{}, nil

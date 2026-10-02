@@ -99,12 +99,21 @@ nonisolated struct User_GetUserInfoResponse: Sendable {
 
   var email: String = String()
 
-  /// AI機能設定（一度でも設定を保存した場合のみ）
-  var llmSettings: [User_LLMSettingInfo] = []
+  /// AI機能設定（一度でも設定を保存した場合のみ。LLMは全ユーザー共通のため1件）
+  var llmSetting: User_LLMSettingInfo {
+    get {_llmSetting ?? User_LLMSettingInfo()}
+    set {_llmSetting = newValue}
+  }
+  /// Returns true if `llmSetting` has been explicitly set.
+  var hasLlmSetting: Bool {self._llmSetting != nil}
+  /// Clears the value of `llmSetting`. Subsequent reads from it will return its default value.
+  mutating func clearLlmSetting() {self._llmSetting = nil}
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
+
+  fileprivate var _llmSetting: User_LLMSettingInfo? = nil
 }
 
 /// AI機能設定情報
@@ -112,9 +121,6 @@ nonisolated struct User_LLMSettingInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
-
-  /// 1:Gemini
-  var llmProvider: Int32 = 0
 
   /// 月毎の自動要約生成
   var autoSummaryMonthly: Bool = false
@@ -162,9 +168,6 @@ nonisolated struct User_UpdateAutoSummarySettingsRequest: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// 1:Gemini
-  var llmProvider: Int32 = 0
-
   /// 月毎の自動要約生成
   var autoSummaryMonthly: Bool = false
 
@@ -199,9 +202,6 @@ nonisolated struct User_GetAutoSummarySettingsRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
-
-  /// 1:Gemini
-  var llmProvider: Int32 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -639,7 +639,7 @@ nonisolated extension User_GetUserInfoRequest: SwiftProtobuf.Message, SwiftProto
 
 nonisolated extension User_GetUserInfoResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetUserInfoResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}email\0\u{3}llm_settings\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}email\0\u{3}llm_setting\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -649,29 +649,33 @@ nonisolated extension User_GetUserInfoResponse: SwiftProtobuf.Message, SwiftProt
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.email) }()
-      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.llmSettings) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._llmSetting) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
     if !self.email.isEmpty {
       try visitor.visitSingularStringField(value: self.email, fieldNumber: 2)
     }
-    if !self.llmSettings.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.llmSettings, fieldNumber: 3)
-    }
+    try { if let v = self._llmSetting {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: User_GetUserInfoResponse, rhs: User_GetUserInfoResponse) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.email != rhs.email {return false}
-    if lhs.llmSettings != rhs.llmSettings {return false}
+    if lhs._llmSetting != rhs._llmSetting {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -679,7 +683,7 @@ nonisolated extension User_GetUserInfoResponse: SwiftProtobuf.Message, SwiftProt
 
 nonisolated extension User_LLMSettingInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".LLMSettingInfo"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0\u{4}\u{3}auto_summary_monthly\0\u{3}auto_latest_trend_enabled\0\u{3}semantic_search_enabled\0\u{c}\u{2}\u{1}")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{4}auto_summary_monthly\0\u{3}auto_latest_trend_enabled\0\u{3}semantic_search_enabled\0\u{c}\u{1}\u{1}\u{c}\u{2}\u{1}")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -687,7 +691,6 @@ nonisolated extension User_LLMSettingInfo: SwiftProtobuf.Message, SwiftProtobuf.
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt32Field(value: &self.llmProvider) }()
       case 4: try { try decoder.decodeSingularBoolField(value: &self.autoSummaryMonthly) }()
       case 5: try { try decoder.decodeSingularBoolField(value: &self.autoLatestTrendEnabled) }()
       case 6: try { try decoder.decodeSingularBoolField(value: &self.semanticSearchEnabled) }()
@@ -697,9 +700,6 @@ nonisolated extension User_LLMSettingInfo: SwiftProtobuf.Message, SwiftProtobuf.
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.llmProvider != 0 {
-      try visitor.visitSingularInt32Field(value: self.llmProvider, fieldNumber: 1)
-    }
     if self.autoSummaryMonthly != false {
       try visitor.visitSingularBoolField(value: self.autoSummaryMonthly, fieldNumber: 4)
     }
@@ -713,7 +713,6 @@ nonisolated extension User_LLMSettingInfo: SwiftProtobuf.Message, SwiftProtobuf.
   }
 
   static func ==(lhs: User_LLMSettingInfo, rhs: User_LLMSettingInfo) -> Bool {
-    if lhs.llmProvider != rhs.llmProvider {return false}
     if lhs.autoSummaryMonthly != rhs.autoSummaryMonthly {return false}
     if lhs.autoLatestTrendEnabled != rhs.autoLatestTrendEnabled {return false}
     if lhs.semanticSearchEnabled != rhs.semanticSearchEnabled {return false}
@@ -778,7 +777,7 @@ nonisolated extension User_DeleteAccountResponse: SwiftProtobuf.Message, SwiftPr
 
 nonisolated extension User_UpdateAutoSummarySettingsRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".UpdateAutoSummarySettingsRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0\u{4}\u{2}auto_summary_monthly\0\u{3}auto_latest_trend_enabled\0\u{3}semantic_search_enabled\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{3}auto_summary_monthly\0\u{3}auto_latest_trend_enabled\0\u{3}semantic_search_enabled\0\u{c}\u{1}\u{1}")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -786,7 +785,6 @@ nonisolated extension User_UpdateAutoSummarySettingsRequest: SwiftProtobuf.Messa
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt32Field(value: &self.llmProvider) }()
       case 3: try { try decoder.decodeSingularBoolField(value: &self.autoSummaryMonthly) }()
       case 4: try { try decoder.decodeSingularBoolField(value: &self.autoLatestTrendEnabled) }()
       case 5: try { try decoder.decodeSingularBoolField(value: &self.semanticSearchEnabled) }()
@@ -796,9 +794,6 @@ nonisolated extension User_UpdateAutoSummarySettingsRequest: SwiftProtobuf.Messa
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.llmProvider != 0 {
-      try visitor.visitSingularInt32Field(value: self.llmProvider, fieldNumber: 1)
-    }
     if self.autoSummaryMonthly != false {
       try visitor.visitSingularBoolField(value: self.autoSummaryMonthly, fieldNumber: 3)
     }
@@ -812,7 +807,6 @@ nonisolated extension User_UpdateAutoSummarySettingsRequest: SwiftProtobuf.Messa
   }
 
   static func ==(lhs: User_UpdateAutoSummarySettingsRequest, rhs: User_UpdateAutoSummarySettingsRequest) -> Bool {
-    if lhs.llmProvider != rhs.llmProvider {return false}
     if lhs.autoSummaryMonthly != rhs.autoSummaryMonthly {return false}
     if lhs.autoLatestTrendEnabled != rhs.autoLatestTrendEnabled {return false}
     if lhs.semanticSearchEnabled != rhs.semanticSearchEnabled {return false}
@@ -858,29 +852,18 @@ nonisolated extension User_UpdateAutoSummarySettingsResponse: SwiftProtobuf.Mess
 
 nonisolated extension User_GetAutoSummarySettingsRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetAutoSummarySettingsRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{c}\u{1}\u{1}")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt32Field(value: &self.llmProvider) }()
-      default: break
-      }
-    }
+    // Load everything into unknown fields
+    while try decoder.nextFieldNumber() != nil {}
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.llmProvider != 0 {
-      try visitor.visitSingularInt32Field(value: self.llmProvider, fieldNumber: 1)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: User_GetAutoSummarySettingsRequest, rhs: User_GetAutoSummarySettingsRequest) -> Bool {
-    if lhs.llmProvider != rhs.llmProvider {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

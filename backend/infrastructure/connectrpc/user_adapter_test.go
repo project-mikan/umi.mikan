@@ -190,7 +190,7 @@ func TestUserServiceAdapter_UpdateAutoSummarySettings(t *testing.T) {
 		expectSuccess bool
 	}{
 		{
-			name:          "異常系: 負のプロバイダーは存在しないプロバイダーなのでSuccess:falseを返す",
+			name:          "異常系: 存在しないユーザーは設定レコードを作成できないのでSuccess:falseを返す",
 			expectSuccess: false,
 		},
 	}
@@ -199,7 +199,7 @@ func TestUserServiceAdapter_UpdateAutoSummarySettings(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			adapter := setupUserAdapter(t)
 			ctx := createAuthContext(uuid.New().String())
-			req := connect.NewRequest(&g.UpdateAutoSummarySettingsRequest{LlmProvider: -1})
+			req := connect.NewRequest(&g.UpdateAutoSummarySettingsRequest{AutoSummaryMonthly: true})
 			resp, err := adapter.UpdateAutoSummarySettings(ctx, req)
 
 			if err != nil {

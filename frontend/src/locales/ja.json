@@ -109,7 +109,6 @@
       "passwordsDoNotMatch": "新しいパスワードが一致しません",
       "passwordTooShort": "新しいパスワードは8文字以上で入力してください",
       "currentPasswordIncorrect": "現在のパスワードが正しくありません",
-      "invalidProvider": "無効なLLMプロバイダーです",
       "updateFailed": "更新に失敗しました",
       "apiKeyNameRequired": "キーの名前は必須です",
       "apiKeyNameTooLong": "キーの名前は100文字以内で入力してください",

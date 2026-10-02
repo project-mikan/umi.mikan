@@ -16,9 +16,9 @@ func createUserLLMRow(t *testing.T, db *sql.DB, userID uuid.UUID, autoSummaryMon
 	t.Helper()
 	now := time.Now().Unix()
 	_, err := db.ExecContext(context.Background(),
-		`INSERT INTO user_llms (user_id, llm_provider, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		userID, 1, autoSummaryMonthly, autoLatestTrend, semanticSearch, now, now,
+		`INSERT INTO user_llms (user_id, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		userID, autoSummaryMonthly, autoLatestTrend, semanticSearch, now, now,
 	)
 	if err != nil {
 		t.Fatalf("user_llmsレコードの挿入に失敗: %v", err)

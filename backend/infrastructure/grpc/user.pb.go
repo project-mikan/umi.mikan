@@ -267,8 +267,8 @@ type GetUserInfoResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Email string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	// AI機能設定（一度でも設定を保存した場合のみ）
-	LlmSettings   []*LLMSettingInfo `protobuf:"bytes,3,rep,name=llm_settings,json=llmSettings,proto3" json:"llm_settings,omitempty"`
+	// AI機能設定（一度でも設定を保存した場合のみ。LLMは全ユーザー共通のため1件）
+	LlmSetting    *LLMSettingInfo `protobuf:"bytes,3,opt,name=llm_setting,json=llmSetting,proto3" json:"llm_setting,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -317,9 +317,9 @@ func (x *GetUserInfoResponse) GetEmail() string {
 	return ""
 }
 
-func (x *GetUserInfoResponse) GetLlmSettings() []*LLMSettingInfo {
+func (x *GetUserInfoResponse) GetLlmSetting() *LLMSettingInfo {
 	if x != nil {
-		return x.LlmSettings
+		return x.LlmSetting
 	}
 	return nil
 }
@@ -327,7 +327,6 @@ func (x *GetUserInfoResponse) GetLlmSettings() []*LLMSettingInfo {
 // AI機能設定情報
 type LLMSettingInfo struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"`                                      // 1:Gemini
 	AutoSummaryMonthly     bool                   `protobuf:"varint,4,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,5,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
 	SemanticSearchEnabled  bool                   `protobuf:"varint,6,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
@@ -363,13 +362,6 @@ func (x *LLMSettingInfo) ProtoReflect() protoreflect.Message {
 // Deprecated: Use LLMSettingInfo.ProtoReflect.Descriptor instead.
 func (*LLMSettingInfo) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *LLMSettingInfo) GetLlmProvider() int32 {
-	if x != nil {
-		return x.LlmProvider
-	}
-	return 0
 }
 
 func (x *LLMSettingInfo) GetAutoSummaryMonthly() bool {
@@ -486,7 +478,6 @@ func (x *DeleteAccountResponse) GetMessage() string {
 // 自動要約設定更新用のリクエスト
 type UpdateAutoSummarySettingsRequest struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"`                                      // 1:Gemini
 	AutoSummaryMonthly     bool                   `protobuf:"varint,3,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,4,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
 	SemanticSearchEnabled  bool                   `protobuf:"varint,5,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
@@ -522,13 +513,6 @@ func (x *UpdateAutoSummarySettingsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UpdateAutoSummarySettingsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAutoSummarySettingsRequest) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *UpdateAutoSummarySettingsRequest) GetLlmProvider() int32 {
-	if x != nil {
-		return x.LlmProvider
-	}
-	return 0
 }
 
 func (x *UpdateAutoSummarySettingsRequest) GetAutoSummaryMonthly() bool {
@@ -608,7 +592,6 @@ func (x *UpdateAutoSummarySettingsResponse) GetMessage() string {
 // 自動要約設定取得用のリクエスト
 type GetAutoSummarySettingsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -641,13 +624,6 @@ func (x *GetAutoSummarySettingsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetAutoSummarySettingsRequest.ProtoReflect.Descriptor instead.
 func (*GetAutoSummarySettingsRequest) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *GetAutoSummarySettingsRequest) GetLlmProvider() int32 {
-	if x != nil {
-		return x.LlmProvider
-	}
-	return 0
 }
 
 // 自動要約設定取得用のレスポンス
@@ -1462,30 +1438,28 @@ const file_user_user_proto_rawDesc = "" +
 	"\x16ChangePasswordResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\x14\n" +
-	"\x12GetUserInfoRequest\"x\n" +
+	"\x12GetUserInfoRequest\"v\n" +
 	"\x13GetUserInfoResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x127\n" +
-	"\fllm_settings\x18\x03 \x03(\v2\x14.user.LLMSettingInfoR\vllmSettings\"\xde\x01\n" +
-	"\x0eLLMSettingInfo\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x120\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x125\n" +
+	"\vllm_setting\x18\x03 \x01(\v2\x14.user.LLMSettingInfoR\n" +
+	"llmSetting\"\xc1\x01\n" +
+	"\x0eLLMSettingInfo\x120\n" +
 	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
-	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabledJ\x04\b\x02\x10\x03\"\x16\n" +
+	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabledJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03\"\x16\n" +
 	"\x14DeleteAccountRequest\"K\n" +
 	"\x15DeleteAccountResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\xea\x01\n" +
-	" UpdateAutoSummarySettingsRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x120\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xcd\x01\n" +
+	" UpdateAutoSummarySettingsRequest\x120\n" +
 	"\x14auto_summary_monthly\x18\x03 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x04 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
-	"\x17semantic_search_enabled\x18\x05 \x01(\bR\x15semanticSearchEnabled\"W\n" +
+	"\x17semantic_search_enabled\x18\x05 \x01(\bR\x15semanticSearchEnabledJ\x04\b\x01\x10\x02\"W\n" +
 	"!UpdateAutoSummarySettingsResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"B\n" +
-	"\x1dGetAutoSummarySettingsRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"\xc5\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"%\n" +
+	"\x1dGetAutoSummarySettingsRequestJ\x04\b\x01\x10\x02\"\xc5\x01\n" +
 	"\x1eGetAutoSummarySettingsResponse\x120\n" +
 	"\x14auto_summary_monthly\x18\x02 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x03 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
@@ -1599,7 +1573,7 @@ var file_user_user_proto_goTypes = []any{
 	(*DeleteApiKeyResponse)(nil),              // 24: user.DeleteApiKeyResponse
 }
 var file_user_user_proto_depIdxs = []int32{
-	6,  // 0: user.GetUserInfoResponse.llm_settings:type_name -> user.LLMSettingInfo
+	6,  // 0: user.GetUserInfoResponse.llm_setting:type_name -> user.LLMSettingInfo
 	15, // 1: user.GetPubSubMetricsResponse.hourly_metrics:type_name -> user.HourlyMetrics
 	16, // 2: user.GetPubSubMetricsResponse.processing_tasks:type_name -> user.ProcessingTask
 	17, // 3: user.GetPubSubMetricsResponse.summary:type_name -> user.MetricsSummary

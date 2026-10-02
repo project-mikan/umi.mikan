@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
       user: {
         name: userInfo.name,
         email: userInfo.email,
-        llmSettings: userInfo.llmSettings || [],
+        llmSetting: userInfo.llmSetting ?? null,
       },
       apiKeys: (apiKeysResponse.apiKeys || []).map((key) => ({
         id: key.id,
@@ -196,23 +196,14 @@ export const actions: Actions = {
     }
 
     const data = await request.formData();
-    const llmProvider = parseInt(data.get("llmProvider") as string, 10);
     const autoSummaryMonthly = data.get("autoSummaryMonthly") === "on";
     const autoLatestTrendEnabled = data.get("autoLatestTrendEnabled") === "on";
     const semanticSearchEnabled = data.get("semanticSearchEnabled") === "on";
-
-    if (Number.isNaN(llmProvider) || llmProvider < 0) {
-      return fail(400, {
-        error: "invalidProvider",
-        action: "updateAutoSummarySettings",
-      });
-    }
 
     try {
       // 設定更新とユーザー情報取得を並列実行（getUserInfo は更新結果に依存しないため）
       const [response, userInfo] = await Promise.all([
         updateAutoSummarySettings({
-          llmProvider,
           autoSummaryMonthly,
           autoLatestTrendEnabled,
           semanticSearchEnabled,
@@ -235,7 +226,7 @@ export const actions: Actions = {
         user: {
           name: userInfo.name,
           email: userInfo.email,
-          llmSettings: userInfo.llmSettings || [],
+          llmSetting: userInfo.llmSetting ?? null,
         },
       };
     } catch (error) {

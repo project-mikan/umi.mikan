@@ -870,7 +870,7 @@ type SemanticSearchOutcome struct {
 // isSemanticSearchEnabled はユーザーが意味的検索（RAG）を有効にしているかを返す。
 // AI機能設定レコードが無い場合や取得に失敗した場合は無効として扱う
 func (s *DiaryEntry) isSemanticSearchEnabled(ctx context.Context, userID uuid.UUID) bool {
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	userLLM, err := database.UserLlmByUserID(ctx, s.DB, userID)
 	if err != nil {
 		return false
 	}

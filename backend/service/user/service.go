@@ -183,24 +183,21 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
-	// AI機能設定を取得（一度でも設定を保存した場合のみ存在する）
-	var llmSettings []*g.LLMSettingInfo
-
-	// 現在はGemini（provider 1）のみサポート
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, 1)
+	// AI機能設定を取得（一度でも設定を保存した場合のみ存在する。無ければnil）
+	var llmSetting *g.LLMSettingInfo
+	userLLM, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
 	if err == nil && userLLM != nil {
-		llmSettings = append(llmSettings, &g.LLMSettingInfo{
-			LlmProvider:            int32(userLLM.LlmProvider),
+		llmSetting = &g.LLMSettingInfo{
 			AutoSummaryMonthly:     userLLM.AutoSummaryMonthly,
 			AutoLatestTrendEnabled: userLLM.AutoLatestTrendEnabled,
 			SemanticSearchEnabled:  userLLM.SemanticSearchEnabled,
-		})
+		}
 	}
 
 	return &g.GetUserInfoResponse{
-		Name:        userDB.Name,
-		Email:       userDB.Email,
-		LlmSettings: llmSettings,
+		Name:       userDB.Name,
+		Email:      userDB.Email,
+		LlmSetting: llmSetting,
 	}, nil
 }
 
@@ -274,25 +271,7 @@ func (s *UserEntry) DeleteAccount(ctx context.Context, req *g.DeleteAccountReque
 	}, nil
 }
 
-// geminiLLMProvider は user_llms.llm_provider で Gemini（共通GCPプロジェクトのVertex AI）を表す値
-const geminiLLMProvider = 1
-
-// isSupportedLLMProvider は指定されたLLMプロバイダーが対応済みかを判定する。
-// llm_provider を省略したリクエストは0になるため、0を許可すると読み取り側（常に1で検索）から見えない行が作られ、
-// user_id 主キーの衝突で以後の設定保存ができなくなる。そのため対応済みのGeminiのみ許可する。
-func isSupportedLLMProvider(provider int32) bool {
-	return provider == geminiLLMProvider
-}
-
 func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.UpdateAutoSummarySettingsRequest) (*g.UpdateAutoSummarySettingsResponse, error) {
-	// プロバイダーの検証
-	if !isSupportedLLMProvider(req.GetLlmProvider()) {
-		return &g.UpdateAutoSummarySettingsResponse{
-			Success: false,
-			Message: "invalidProvider",
-		}, nil
-	}
-
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -312,7 +291,7 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 
 	// 既存のAI機能設定を取得（無い場合は新規作成する）
 	currentTime := time.Now().Unix()
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
+	userLLMDB, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
 	isNew := err == sql.ErrNoRows
 	if err != nil && !isNew {
 		return &g.UpdateAutoSummarySettingsResponse{
@@ -322,9 +301,8 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 	}
 	if isNew {
 		userLLMDB = &database.UserLlm{
-			UserID:      parsedUserID,
-			LlmProvider: int16(req.GetLlmProvider()),
-			CreatedAt:   currentTime,
+			UserID:    parsedUserID,
+			CreatedAt: currentTime,
 		}
 	}
 
@@ -353,14 +331,6 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 }
 
 func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSummarySettingsRequest) (*g.GetAutoSummarySettingsResponse, error) {
-	// プロバイダーの検証
-	if !isSupportedLLMProvider(req.GetLlmProvider()) {
-		return &g.GetAutoSummarySettingsResponse{
-			AutoSummaryMonthly:     false,
-			AutoLatestTrendEnabled: false,
-		}, nil
-	}
-
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
@@ -378,8 +348,8 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 		}, nil
 	}
 
-	// LLM設定を取得
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
+	// AI機能設定を取得
+	userLLMDB, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
 	if err != nil {
 		// 設定が存在しない場合はデフォルト値を返す
 		return &g.GetAutoSummarySettingsResponse{

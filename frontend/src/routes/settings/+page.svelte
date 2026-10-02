@@ -36,10 +36,8 @@
   let showNewPassword = false;
   let showConfirmPassword = false;
 
-  // Gemini（provider 1）のAI機能設定（一度でも設定を保存した場合のみ存在する）
-  $: llmSetting = data.user?.llmSettings?.find(
-    (setting) => setting.llmProvider === 1,
-  );
+  // AI機能設定（一度でも設定を保存した場合のみ存在する）
+  $: llmSetting = data.user?.llmSetting;
 
   // Local state for checkbox values
   let autoSummaryMonthly = false;
@@ -528,8 +526,6 @@
 						};
 					}}
 				>
-					<input type="hidden" name="llmProvider" value="1" />
-
 					<div class="space-y-3">
 						<label class="flex items-center">
 							<input
