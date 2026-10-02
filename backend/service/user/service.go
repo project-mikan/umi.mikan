@@ -162,26 +162,13 @@ func (s *UserEntry) ChangePassword(ctx context.Context, req *g.ChangePasswordReq
 	}, nil
 }
 
-func (s *UserEntry) UpdateLLMKey(ctx context.Context, req *g.UpdateLLMKeyRequest) (*g.UpdateLLMKeyResponse, error) {
-	// リクエストのバリデーション
-	if req.GetKey() == "" {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "tokenRequired",
-		}, nil
-	}
-
-	// トークンの長さチェック（100文字以内）
-	if len(req.GetKey()) > 100 {
-		return &g.UpdateLLMKeyResponse{
-			Success: false,
-			Message: "tokenTooLong",
-		}, nil
-	}
-
+// EnableLLM はユーザーのAI機能を有効化（オプトイン）する。
+// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーは不要。
+// 既に有効化済みの場合は自動要約などの既存設定を保持したまま成功を返す。
+func (s *UserEntry) EnableLLM(ctx context.Context, req *g.EnableLLMRequest) (*g.EnableLLMResponse, error) {
 	// プロバイダーの検証
 	if req.GetLlmProvider() < 0 {
-		return &g.UpdateLLMKeyResponse{
+		return &g.EnableLLMResponse{
 			Success: false,
 			Message: "invalidProvider",
 		}, nil
@@ -190,7 +177,7 @@ func (s *UserEntry) UpdateLLMKey(ctx context.Context, req *g.UpdateLLMKeyRequest
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
-		return &g.UpdateLLMKeyResponse{
+		return &g.EnableLLMResponse{
 			Success: false,
 			Message: "unauthorized",
 		}, nil
@@ -198,56 +185,45 @@ func (s *UserEntry) UpdateLLMKey(ctx context.Context, req *g.UpdateLLMKeyRequest
 
 	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
-		return &g.UpdateLLMKeyResponse{
+		return &g.EnableLLMResponse{
 			Success: false,
 			Message: "invalidUserId",
 		}, nil
 	}
 
-	// 既存のLLMトークンを確認
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
-	currentTime := time.Now().Unix()
-
-	if err != nil && err != sql.ErrNoRows {
-		return &g.UpdateLLMKeyResponse{
+	// 既に有効化済みかを確認
+	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
+	if err == nil {
+		return &g.EnableLLMResponse{
+			Success: true,
+			Message: "llmEnabled",
+		}, nil
+	}
+	if err != sql.ErrNoRows {
+		return &g.EnableLLMResponse{
 			Success: false,
 			Message: "updateFailed",
 		}, nil
 	}
 
-	if err == sql.ErrNoRows {
-		// 新規作成
-		newUserLLM := &database.UserLlm{
-			UserID:             parsedUserID,
-			LlmProvider:        int16(req.GetLlmProvider()),
-			Key:                req.GetKey(),
-			AutoSummaryMonthly: false, // デフォルトは無効
-			CreatedAt:          currentTime,
-			UpdatedAt:          currentTime,
-		}
-
-		if err := newUserLLM.Insert(ctx, s.DB); err != nil {
-			return &g.UpdateLLMKeyResponse{
-				Success: false,
-				Message: "updateFailed",
-			}, nil
-		}
-	} else {
-		// 更新
-		userLLMDB.Key = req.GetKey()
-		userLLMDB.UpdatedAt = currentTime
-
-		if err := userLLMDB.Update(ctx, s.DB); err != nil {
-			return &g.UpdateLLMKeyResponse{
-				Success: false,
-				Message: "updateFailed",
-			}, nil
-		}
+	// 新規に有効化（自動要約などの各機能はデフォルト無効）
+	currentTime := time.Now().Unix()
+	newUserLLM := &database.UserLlm{
+		UserID:      parsedUserID,
+		LlmProvider: int16(req.GetLlmProvider()),
+		CreatedAt:   currentTime,
+		UpdatedAt:   currentTime,
+	}
+	if err := newUserLLM.Insert(ctx, s.DB); err != nil {
+		return &g.EnableLLMResponse{
+			Success: false,
+			Message: "updateFailed",
+		}, nil
 	}
 
-	return &g.UpdateLLMKeyResponse{
+	return &g.EnableLLMResponse{
 		Success: true,
-		Message: "llmTokenUpdateSuccess",
+		Message: "llmEnabled",
 	}, nil
 }
 
@@ -272,15 +248,14 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
-	// LLMキーを取得（存在する場合）
-	var llmKeys []*g.LLMKeyInfo
+	// AI機能設定を取得（有効化されている場合のみ）
+	var llmSettings []*g.LLMSettingInfo
 
 	// 現在はGemini（provider 1）のみサポート
 	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, 1)
 	if err == nil && userLLM != nil {
-		llmKeys = append(llmKeys, &g.LLMKeyInfo{
+		llmSettings = append(llmSettings, &g.LLMSettingInfo{
 			LlmProvider:            int32(userLLM.LlmProvider),
-			Key:                    userLLM.Key,
 			AutoSummaryMonthly:     userLLM.AutoSummaryMonthly,
 			AutoLatestTrendEnabled: userLLM.AutoLatestTrendEnabled,
 			SemanticSearchEnabled:  userLLM.SemanticSearchEnabled,
@@ -288,16 +263,17 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 	}
 
 	return &g.GetUserInfoResponse{
-		Name:    userDB.Name,
-		Email:   userDB.Email,
-		LlmKeys: llmKeys,
+		Name:        userDB.Name,
+		Email:       userDB.Email,
+		LlmSettings: llmSettings,
 	}, nil
 }
 
-func (s *UserEntry) DeleteLLMKey(ctx context.Context, req *g.DeleteLLMKeyRequest) (*g.DeleteLLMKeyResponse, error) {
+// DisableLLM はユーザーのAI機能を無効化（オプトアウト）する。自動要約などの設定も合わせて削除される
+func (s *UserEntry) DisableLLM(ctx context.Context, req *g.DisableLLMRequest) (*g.DisableLLMResponse, error) {
 	// プロバイダーの検証
 	if req.GetLlmProvider() < 0 {
-		return &g.DeleteLLMKeyResponse{
+		return &g.DisableLLMResponse{
 			Success: false,
 			Message: "invalidProvider",
 		}, nil
@@ -306,7 +282,7 @@ func (s *UserEntry) DeleteLLMKey(ctx context.Context, req *g.DeleteLLMKeyRequest
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
 	if err != nil {
-		return &g.DeleteLLMKeyResponse{
+		return &g.DisableLLMResponse{
 			Success: false,
 			Message: "unauthorized",
 		}, nil
@@ -314,38 +290,38 @@ func (s *UserEntry) DeleteLLMKey(ctx context.Context, req *g.DeleteLLMKeyRequest
 
 	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
-		return &g.DeleteLLMKeyResponse{
+		return &g.DisableLLMResponse{
 			Success: false,
 			Message: "invalidUserId",
 		}, nil
 	}
 
-	// 既存のLLMトークンを取得
+	// 既存のAI機能設定を取得
 	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return &g.DeleteLLMKeyResponse{
+			return &g.DisableLLMResponse{
 				Success: false,
-				Message: "tokenNotFound",
+				Message: "llmNotEnabled",
 			}, nil
 		}
-		return &g.DeleteLLMKeyResponse{
+		return &g.DisableLLMResponse{
 			Success: false,
 			Message: "updateFailed",
 		}, nil
 	}
 
-	// LLMトークンを削除
+	// AI機能設定を削除
 	if err := userLLMDB.Delete(ctx, s.DB); err != nil {
-		return &g.DeleteLLMKeyResponse{
+		return &g.DisableLLMResponse{
 			Success: false,
 			Message: "updateFailed",
 		}, nil
 	}
 
-	return &g.DeleteLLMKeyResponse{
+	return &g.DisableLLMResponse{
 		Success: true,
-		Message: "llmTokenDeleteSuccess",
+		Message: "llmDisabled",
 	}, nil
 }
 

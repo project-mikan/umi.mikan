@@ -225,29 +225,28 @@ func (x *ChangePasswordResponse) GetMessage() string {
 	return ""
 }
 
-// LLMキー更新用のリクエスト
-type UpdateLLMKeyRequest struct {
+// AI機能有効化用のリクエスト
+type EnableLLMRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
-	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdateLLMKeyRequest) Reset() {
-	*x = UpdateLLMKeyRequest{}
+func (x *EnableLLMRequest) Reset() {
+	*x = EnableLLMRequest{}
 	mi := &file_user_user_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateLLMKeyRequest) String() string {
+func (x *EnableLLMRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateLLMKeyRequest) ProtoMessage() {}
+func (*EnableLLMRequest) ProtoMessage() {}
 
-func (x *UpdateLLMKeyRequest) ProtoReflect() protoreflect.Message {
+func (x *EnableLLMRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_user_user_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -259,27 +258,20 @@ func (x *UpdateLLMKeyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateLLMKeyRequest.ProtoReflect.Descriptor instead.
-func (*UpdateLLMKeyRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use EnableLLMRequest.ProtoReflect.Descriptor instead.
+func (*EnableLLMRequest) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *UpdateLLMKeyRequest) GetLlmProvider() int32 {
+func (x *EnableLLMRequest) GetLlmProvider() int32 {
 	if x != nil {
 		return x.LlmProvider
 	}
 	return 0
 }
 
-func (x *UpdateLLMKeyRequest) GetKey() string {
-	if x != nil {
-		return x.Key
-	}
-	return ""
-}
-
-// LLMキー更新用のレスポンス
-type UpdateLLMKeyResponse struct {
+// AI機能有効化用のレスポンス
+type EnableLLMResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
@@ -287,20 +279,20 @@ type UpdateLLMKeyResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdateLLMKeyResponse) Reset() {
-	*x = UpdateLLMKeyResponse{}
+func (x *EnableLLMResponse) Reset() {
+	*x = EnableLLMResponse{}
 	mi := &file_user_user_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateLLMKeyResponse) String() string {
+func (x *EnableLLMResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateLLMKeyResponse) ProtoMessage() {}
+func (*EnableLLMResponse) ProtoMessage() {}
 
-func (x *UpdateLLMKeyResponse) ProtoReflect() protoreflect.Message {
+func (x *EnableLLMResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_user_user_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -312,19 +304,19 @@ func (x *UpdateLLMKeyResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateLLMKeyResponse.ProtoReflect.Descriptor instead.
-func (*UpdateLLMKeyResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use EnableLLMResponse.ProtoReflect.Descriptor instead.
+func (*EnableLLMResponse) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *UpdateLLMKeyResponse) GetSuccess() bool {
+func (x *EnableLLMResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
 	return false
 }
 
-func (x *UpdateLLMKeyResponse) GetMessage() string {
+func (x *EnableLLMResponse) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
@@ -373,8 +365,8 @@ type GetUserInfoResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Email string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	// LLMキー情報（存在する場合）
-	LlmKeys       []*LLMKeyInfo `protobuf:"bytes,3,rep,name=llm_keys,json=llmKeys,proto3" json:"llm_keys,omitempty"`
+	// AI機能設定（有効化されている場合のみ）
+	LlmSettings   []*LLMSettingInfo `protobuf:"bytes,3,rep,name=llm_settings,json=llmSettings,proto3" json:"llm_settings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -423,18 +415,17 @@ func (x *GetUserInfoResponse) GetEmail() string {
 	return ""
 }
 
-func (x *GetUserInfoResponse) GetLlmKeys() []*LLMKeyInfo {
+func (x *GetUserInfoResponse) GetLlmSettings() []*LLMSettingInfo {
 	if x != nil {
-		return x.LlmKeys
+		return x.LlmSettings
 	}
 	return nil
 }
 
-// LLMキー情報
-type LLMKeyInfo struct {
+// AI機能設定情報
+type LLMSettingInfo struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
-	Key                    string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	LlmProvider            int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"`                                      // 1:Gemini
 	AutoSummaryMonthly     bool                   `protobuf:"varint,4,opt,name=auto_summary_monthly,json=autoSummaryMonthly,proto3" json:"auto_summary_monthly,omitempty"`               // 月毎の自動要約生成
 	AutoLatestTrendEnabled bool                   `protobuf:"varint,5,opt,name=auto_latest_trend_enabled,json=autoLatestTrendEnabled,proto3" json:"auto_latest_trend_enabled,omitempty"` // 直近トレンド分析の自動生成
 	SemanticSearchEnabled  bool                   `protobuf:"varint,6,opt,name=semantic_search_enabled,json=semanticSearchEnabled,proto3" json:"semantic_search_enabled,omitempty"`      // 意味的検索（RAG）機能の有効化
@@ -442,20 +433,20 @@ type LLMKeyInfo struct {
 	sizeCache              protoimpl.SizeCache
 }
 
-func (x *LLMKeyInfo) Reset() {
-	*x = LLMKeyInfo{}
+func (x *LLMSettingInfo) Reset() {
+	*x = LLMSettingInfo{}
 	mi := &file_user_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *LLMKeyInfo) String() string {
+func (x *LLMSettingInfo) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*LLMKeyInfo) ProtoMessage() {}
+func (*LLMSettingInfo) ProtoMessage() {}
 
-func (x *LLMKeyInfo) ProtoReflect() protoreflect.Message {
+func (x *LLMSettingInfo) ProtoReflect() protoreflect.Message {
 	mi := &file_user_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -467,68 +458,61 @@ func (x *LLMKeyInfo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use LLMKeyInfo.ProtoReflect.Descriptor instead.
-func (*LLMKeyInfo) Descriptor() ([]byte, []int) {
+// Deprecated: Use LLMSettingInfo.ProtoReflect.Descriptor instead.
+func (*LLMSettingInfo) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *LLMKeyInfo) GetLlmProvider() int32 {
+func (x *LLMSettingInfo) GetLlmProvider() int32 {
 	if x != nil {
 		return x.LlmProvider
 	}
 	return 0
 }
 
-func (x *LLMKeyInfo) GetKey() string {
-	if x != nil {
-		return x.Key
-	}
-	return ""
-}
-
-func (x *LLMKeyInfo) GetAutoSummaryMonthly() bool {
+func (x *LLMSettingInfo) GetAutoSummaryMonthly() bool {
 	if x != nil {
 		return x.AutoSummaryMonthly
 	}
 	return false
 }
 
-func (x *LLMKeyInfo) GetAutoLatestTrendEnabled() bool {
+func (x *LLMSettingInfo) GetAutoLatestTrendEnabled() bool {
 	if x != nil {
 		return x.AutoLatestTrendEnabled
 	}
 	return false
 }
 
-func (x *LLMKeyInfo) GetSemanticSearchEnabled() bool {
+func (x *LLMSettingInfo) GetSemanticSearchEnabled() bool {
 	if x != nil {
 		return x.SemanticSearchEnabled
 	}
 	return false
 }
 
-// LLMキー削除用のリクエスト
-type DeleteLLMKeyRequest struct {
+// AI機能無効化用のリクエスト
+type DisableLLMRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeleteLLMKeyRequest) Reset() {
-	*x = DeleteLLMKeyRequest{}
+func (x *DisableLLMRequest) Reset() {
+	*x = DisableLLMRequest{}
 	mi := &file_user_user_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeleteLLMKeyRequest) String() string {
+func (x *DisableLLMRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeleteLLMKeyRequest) ProtoMessage() {}
+func (*DisableLLMRequest) ProtoMessage() {}
 
-func (x *DeleteLLMKeyRequest) ProtoReflect() protoreflect.Message {
+func (x *DisableLLMRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_user_user_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -540,20 +524,20 @@ func (x *DeleteLLMKeyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeleteLLMKeyRequest.ProtoReflect.Descriptor instead.
-func (*DeleteLLMKeyRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use DisableLLMRequest.ProtoReflect.Descriptor instead.
+func (*DisableLLMRequest) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *DeleteLLMKeyRequest) GetLlmProvider() int32 {
+func (x *DisableLLMRequest) GetLlmProvider() int32 {
 	if x != nil {
 		return x.LlmProvider
 	}
 	return 0
 }
 
-// LLMキー削除用のレスポンス
-type DeleteLLMKeyResponse struct {
+// AI機能無効化用のレスポンス
+type DisableLLMResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
@@ -561,20 +545,20 @@ type DeleteLLMKeyResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeleteLLMKeyResponse) Reset() {
-	*x = DeleteLLMKeyResponse{}
+func (x *DisableLLMResponse) Reset() {
+	*x = DisableLLMResponse{}
 	mi := &file_user_user_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeleteLLMKeyResponse) String() string {
+func (x *DisableLLMResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeleteLLMKeyResponse) ProtoMessage() {}
+func (*DisableLLMResponse) ProtoMessage() {}
 
-func (x *DeleteLLMKeyResponse) ProtoReflect() protoreflect.Message {
+func (x *DisableLLMResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_user_user_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -586,19 +570,19 @@ func (x *DeleteLLMKeyResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeleteLLMKeyResponse.ProtoReflect.Descriptor instead.
-func (*DeleteLLMKeyResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use DisableLLMResponse.ProtoReflect.Descriptor instead.
+func (*DisableLLMResponse) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *DeleteLLMKeyResponse) GetSuccess() bool {
+func (x *DisableLLMResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
 	return false
 }
 
-func (x *DeleteLLMKeyResponse) GetMessage() string {
+func (x *DisableLLMResponse) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
@@ -1673,28 +1657,25 @@ const file_user_user_proto_rawDesc = "" +
 	"\fnew_password\x18\x02 \x01(\tR\vnewPassword\"L\n" +
 	"\x16ChangePasswordResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"J\n" +
-	"\x13UpdateLLMKeyRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12\x10\n" +
-	"\x03key\x18\x02 \x01(\tR\x03key\"J\n" +
-	"\x14UpdateLLMKeyResponse\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\";\n" +
+	"\x10EnableLLMRequest\x12!\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProviderJ\x04\b\x02\x10\x03\"G\n" +
+	"\x11EnableLLMResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\x14\n" +
-	"\x12GetUserInfoRequest\"l\n" +
+	"\x12GetUserInfoRequest\"x\n" +
 	"\x13GetUserInfoResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x12+\n" +
-	"\bllm_keys\x18\x03 \x03(\v2\x10.user.LLMKeyInfoR\allmKeys\"\xe6\x01\n" +
-	"\n" +
-	"LLMKeyInfo\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x12\x10\n" +
-	"\x03key\x18\x02 \x01(\tR\x03key\x120\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x127\n" +
+	"\fllm_settings\x18\x03 \x03(\v2\x14.user.LLMSettingInfoR\vllmSettings\"\xde\x01\n" +
+	"\x0eLLMSettingInfo\x12!\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x120\n" +
 	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
-	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabled\"8\n" +
-	"\x13DeleteLLMKeyRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"J\n" +
-	"\x14DeleteLLMKeyResponse\x12\x18\n" +
+	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabledJ\x04\b\x02\x10\x03\"6\n" +
+	"\x11DisableLLMRequest\x12!\n" +
+	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"H\n" +
+	"\x12DisableLLMResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\x16\n" +
 	"\x14DeleteAccountRequest\"K\n" +
@@ -1770,13 +1751,14 @@ const file_user_user_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"J\n" +
 	"\x14DeleteApiKeyResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\xbb\a\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xac\a\n" +
 	"\vUserService\x12K\n" +
 	"\x0eUpdateUserName\x12\x1b.user.UpdateUserNameRequest\x1a\x1c.user.UpdateUserNameResponse\x12K\n" +
-	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12E\n" +
-	"\fUpdateLLMKey\x12\x19.user.UpdateLLMKeyRequest\x1a\x1a.user.UpdateLLMKeyResponse\x12B\n" +
-	"\vGetUserInfo\x12\x18.user.GetUserInfoRequest\x1a\x19.user.GetUserInfoResponse\x12E\n" +
-	"\fDeleteLLMKey\x12\x19.user.DeleteLLMKeyRequest\x1a\x1a.user.DeleteLLMKeyResponse\x12H\n" +
+	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12<\n" +
+	"\tEnableLLM\x12\x16.user.EnableLLMRequest\x1a\x17.user.EnableLLMResponse\x12B\n" +
+	"\vGetUserInfo\x12\x18.user.GetUserInfoRequest\x1a\x19.user.GetUserInfoResponse\x12?\n" +
+	"\n" +
+	"DisableLLM\x12\x17.user.DisableLLMRequest\x1a\x18.user.DisableLLMResponse\x12H\n" +
 	"\rDeleteAccount\x12\x1a.user.DeleteAccountRequest\x1a\x1b.user.DeleteAccountResponse\x12l\n" +
 	"\x19UpdateAutoSummarySettings\x12&.user.UpdateAutoSummarySettingsRequest\x1a'.user.UpdateAutoSummarySettingsResponse\x12c\n" +
 	"\x16GetAutoSummarySettings\x12#.user.GetAutoSummarySettingsRequest\x1a$.user.GetAutoSummarySettingsResponse\x12Q\n" +
@@ -1803,13 +1785,13 @@ var file_user_user_proto_goTypes = []any{
 	(*UpdateUserNameResponse)(nil),            // 1: user.UpdateUserNameResponse
 	(*ChangePasswordRequest)(nil),             // 2: user.ChangePasswordRequest
 	(*ChangePasswordResponse)(nil),            // 3: user.ChangePasswordResponse
-	(*UpdateLLMKeyRequest)(nil),               // 4: user.UpdateLLMKeyRequest
-	(*UpdateLLMKeyResponse)(nil),              // 5: user.UpdateLLMKeyResponse
+	(*EnableLLMRequest)(nil),                  // 4: user.EnableLLMRequest
+	(*EnableLLMResponse)(nil),                 // 5: user.EnableLLMResponse
 	(*GetUserInfoRequest)(nil),                // 6: user.GetUserInfoRequest
 	(*GetUserInfoResponse)(nil),               // 7: user.GetUserInfoResponse
-	(*LLMKeyInfo)(nil),                        // 8: user.LLMKeyInfo
-	(*DeleteLLMKeyRequest)(nil),               // 9: user.DeleteLLMKeyRequest
-	(*DeleteLLMKeyResponse)(nil),              // 10: user.DeleteLLMKeyResponse
+	(*LLMSettingInfo)(nil),                    // 8: user.LLMSettingInfo
+	(*DisableLLMRequest)(nil),                 // 9: user.DisableLLMRequest
+	(*DisableLLMResponse)(nil),                // 10: user.DisableLLMResponse
 	(*DeleteAccountRequest)(nil),              // 11: user.DeleteAccountRequest
 	(*DeleteAccountResponse)(nil),             // 12: user.DeleteAccountResponse
 	(*UpdateAutoSummarySettingsRequest)(nil),  // 13: user.UpdateAutoSummarySettingsRequest
@@ -1830,7 +1812,7 @@ var file_user_user_proto_goTypes = []any{
 	(*DeleteApiKeyResponse)(nil),              // 28: user.DeleteApiKeyResponse
 }
 var file_user_user_proto_depIdxs = []int32{
-	8,  // 0: user.GetUserInfoResponse.llm_keys:type_name -> user.LLMKeyInfo
+	8,  // 0: user.GetUserInfoResponse.llm_settings:type_name -> user.LLMSettingInfo
 	19, // 1: user.GetPubSubMetricsResponse.hourly_metrics:type_name -> user.HourlyMetrics
 	20, // 2: user.GetPubSubMetricsResponse.processing_tasks:type_name -> user.ProcessingTask
 	21, // 3: user.GetPubSubMetricsResponse.summary:type_name -> user.MetricsSummary
@@ -1838,9 +1820,9 @@ var file_user_user_proto_depIdxs = []int32{
 	22, // 5: user.ListApiKeysResponse.api_keys:type_name -> user.ApiKeyInfo
 	0,  // 6: user.UserService.UpdateUserName:input_type -> user.UpdateUserNameRequest
 	2,  // 7: user.UserService.ChangePassword:input_type -> user.ChangePasswordRequest
-	4,  // 8: user.UserService.UpdateLLMKey:input_type -> user.UpdateLLMKeyRequest
+	4,  // 8: user.UserService.EnableLLM:input_type -> user.EnableLLMRequest
 	6,  // 9: user.UserService.GetUserInfo:input_type -> user.GetUserInfoRequest
-	9,  // 10: user.UserService.DeleteLLMKey:input_type -> user.DeleteLLMKeyRequest
+	9,  // 10: user.UserService.DisableLLM:input_type -> user.DisableLLMRequest
 	11, // 11: user.UserService.DeleteAccount:input_type -> user.DeleteAccountRequest
 	13, // 12: user.UserService.UpdateAutoSummarySettings:input_type -> user.UpdateAutoSummarySettingsRequest
 	15, // 13: user.UserService.GetAutoSummarySettings:input_type -> user.GetAutoSummarySettingsRequest
@@ -1850,9 +1832,9 @@ var file_user_user_proto_depIdxs = []int32{
 	27, // 17: user.UserService.DeleteApiKey:input_type -> user.DeleteApiKeyRequest
 	1,  // 18: user.UserService.UpdateUserName:output_type -> user.UpdateUserNameResponse
 	3,  // 19: user.UserService.ChangePassword:output_type -> user.ChangePasswordResponse
-	5,  // 20: user.UserService.UpdateLLMKey:output_type -> user.UpdateLLMKeyResponse
+	5,  // 20: user.UserService.EnableLLM:output_type -> user.EnableLLMResponse
 	7,  // 21: user.UserService.GetUserInfo:output_type -> user.GetUserInfoResponse
-	10, // 22: user.UserService.DeleteLLMKey:output_type -> user.DeleteLLMKeyResponse
+	10, // 22: user.UserService.DisableLLM:output_type -> user.DisableLLMResponse
 	12, // 23: user.UserService.DeleteAccount:output_type -> user.DeleteAccountResponse
 	14, // 24: user.UserService.UpdateAutoSummarySettings:output_type -> user.UpdateAutoSummarySettingsResponse
 	16, // 25: user.UserService.GetAutoSummarySettings:output_type -> user.GetAutoSummarySettingsResponse

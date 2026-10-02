@@ -98,3 +98,53 @@ func TestGenerateDiaryHighlightWithLLM_NoLLMConfig(t *testing.T) {
 		t.Fatal("LLM設定なしの場合はエラーが期待されますが、nilが返りました")
 	}
 }
+
+func TestGetUserLLMSetting(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	enabledUserID := testutil.CreateTestUser(t, db, "subscriber-llm-enabled@example.com", "Enabled User")
+	testutil.CreateTestUserLLMWithSettings(t, db, enabledUserID, false, false, true)
+	disabledUserID := testutil.CreateTestUser(t, db, "subscriber-llm-disabled@example.com", "Disabled User")
+	ctx := context.Background()
+
+	tests := []struct {
+		name               string
+		userID             string
+		expectError        bool
+		expectSemanticFlag bool
+	}{
+		{
+			name:               "正常系: AI機能を有効化済みのユーザーは設定を取得できる",
+			userID:             enabledUserID.String(),
+			expectError:        false,
+			expectSemanticFlag: true,
+		},
+		{
+			name:        "異常系: AI機能を有効化していないユーザーはuser_llmsにレコードが無いのでエラーになる",
+			userID:      disabledUserID.String(),
+			expectError: true,
+		},
+		{
+			name:        "異常系: UUIDとして不正なユーザーIDを渡すとパースできないのでエラーになる",
+			userID:      "not-a-uuid",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setting, err := getUserLLMSetting(ctx, db, tt.userID)
+			if tt.expectError {
+				if err == nil {
+					t.Fatal("エラーが返ることを期待したが nil だった")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("予期しないエラー: %v", err)
+			}
+			if setting.SemanticSearchEnabled != tt.expectSemanticFlag {
+				t.Errorf("SemanticSearchEnabled: 期待 %v, 実際 %v", tt.expectSemanticFlag, setting.SemanticSearchEnabled)
+			}
+		})
+	}
+}

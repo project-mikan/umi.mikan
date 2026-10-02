@@ -115,8 +115,8 @@ export const load: PageServerLoad = async ({
   // RAGインデックス状態を取得（entry.id が必要なため第2フェーズ）
   // Promiseのまま返してストリーミングし、ページ表示をブロックしない
   const semanticSearchEnabled =
-    userInfo.llmKeys?.find((k) => k.llmProvider === 1)?.semanticSearchEnabled ??
-    false;
+    userInfo.llmSettings?.find((k) => k.llmProvider === 1)
+      ?.semanticSearchEnabled ?? false;
   const embeddingStatus =
     entryResponse.entry && semanticSearchEnabled
       ? getDiaryEmbeddingStatus({
@@ -159,7 +159,7 @@ export const load: PageServerLoad = async ({
     user: {
       name: userInfo.name,
       email: userInfo.email,
-      llmKeys: userInfo.llmKeys || [],
+      llmSettings: userInfo.llmSettings || [],
     },
     today: {
       year: today.getFullYear(),

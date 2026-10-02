@@ -270,13 +270,14 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **users**: UUID primary keys, email-based authentication
 - **diaries**: One diary per user per date (unique constraint)
 - **user_password_authes**: Separate password authentication table
-- **user_llms**: LLM provider settings and auto-summary preferences
+- **user_llms**: AI feature opt-in and auto-summary preferences (a row exists = the user enabled AI features; no per-user API key is stored — LLM calls go through the shared GCP project's Vertex AI, see `adr/0017-vertex-ai.md`)
 - **user_api_keys**: Long-lived API keys for MCP clients (SHA-256 hash only, plaintext never stored; `expires_at` enforces a 90-day expiry)
 - **diary_summary_months**: AI-generated monthly summaries
 - **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)
 - **diary_embeddings**: Per-chunk vector embeddings for semantic search (pgvector halfvec)
 - **semantic_search_logs**: Tracks semantic search API requests per user
 - **Migrations**: Numbered SQL files in /schema directory — **one file per table, always**
+- **`make db-apply` caveat**: if pg-schema-diff tries `ALTER EXTENSION "vector" UPDATE TO "0.7.4"` and fails (the running DB already has pgvector 0.8.x, which has no downgrade path), apply the remaining statements shown by `make db-diff` manually with `docker compose exec -T postgres psql ...` / `postgres_test`
 
 ### Async Processing Architecture
 
@@ -381,6 +382,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - `0009-natural-language-search.md`: Semantic search (RAG) with pgvector + Gemini Embedding
   - `0014-mcp-server.md`: MCP server transport and authentication decisions
   - `0016-mcp-oauth.md`: MCP server OAuth 2.0 (Authorization Code + PKCE) support for Claude.ai custom connectors
+  - `0017-vertex-ai.md`: LLM calls via the shared GCP project's Vertex AI (replacing per-user Gemini API keys) and AI feature opt-in
 - `monitoring/`: Monitoring configuration
   - `prometheus.yml`: Metrics collection configuration
   - `loki/loki-config.yml`: Loki log aggregation configuration
@@ -517,6 +519,20 @@ Examples:
 SUBSCRIBER_MAX_CONCURRENT_JOBS=5    # Limit to 5 concurrent jobs
 SUBSCRIBER_MAX_CONCURRENT_JOBS=20   # Allow up to 20 concurrent jobs
 ```
+
+### Vertex AI Configuration
+
+All LLM calls (summaries, highlights, latest trend, embeddings) go through a **shared GCP project's Vertex AI** — users no longer register their own Gemini API keys. Users opt in from the settings page (`UserService.EnableLLM` / `DisableLLM`; a `user_llms` row means opted in). See `adr/0017-vertex-ai.md`.
+
+Environment variables (set on `backend` and `subscriber`):
+
+- `GOOGLE_CLOUD_PROJECT`: GCP project ID (required for AI features; if unset the server still starts and only AI calls fail)
+- `GOOGLE_CLOUD_LOCATION`: Vertex AI location (default: `global`)
+- `GOOGLE_APPLICATION_CREDENTIALS`: path to the service account key (`roles/aiplatform.user`). In compose it is `/secrets/gcp-service-account.json`, mounted from `./secrets/` (git-ignored)
+
+In development, put `GOOGLE_CLOUD_PROJECT=...` in the project-root `.env` and the key file at `./secrets/gcp-service-account.json`, then `docker compose up -d backend subscriber`.
+
+`container.geminiClientFactory` creates the Vertex AI client once per process and reuses it (failed creation is not cached). `make b-test-semantic-eval` uses the same Vertex AI settings from the backend container.
 
 ### Registration Key Configuration
 

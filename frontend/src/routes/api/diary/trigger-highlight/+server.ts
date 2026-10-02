@@ -2,6 +2,10 @@ import { error, json } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { triggerDiaryHighlight } from "$lib/server/diary-api";
 import type { RequestHandler } from "./$types";
+import {
+  AI_NOT_ENABLED_MESSAGE,
+  isAiNotEnabledError,
+} from "$lib/utils/error-utils";
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
   const authResult = await ensureValidAccessToken(cookies);
@@ -43,6 +47,11 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 
     console.error("Failed to trigger highlight generation:", err);
 
+    // AI機能が未有効化（設定画面でオプトインしていない）
+    if (isAiNotEnabledError(err)) {
+      throw error(400, { message: AI_NOT_ENABLED_MESSAGE });
+    }
+
     // Handle specific gRPC errors
     if (err && typeof err === "object" && "code" in err) {
       if (err.code === 7) {
@@ -51,20 +60,12 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
       }
       if (err.code === 5) {
         // NOT_FOUND
-        throw error(404, "Diary entry or LLM API key not found");
+        throw error(404, "Diary entry not found");
       }
       if (err.code === 3) {
         // INVALID_ARGUMENT
         throw error(400, "Invalid request parameters");
       }
-    }
-
-    // Check for LLM API key related errors
-    if (
-      (err as Error)?.message?.includes("API key") ||
-      (err as Error)?.message?.includes("Gemini")
-    ) {
-      throw error(400, { message: "Gemini API key not configured" });
     }
 
     throw error(500, "Failed to trigger highlight generation");

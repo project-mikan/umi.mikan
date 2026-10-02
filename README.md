@@ -46,7 +46,7 @@ graph TB
 
     Scheduler[Scheduler<br/>定期タスク] --> Redis[Redis Pub/Sub<br/>Message Queue]
     Redis --> Subscriber[Subscriber<br/>非同期処理]
-    Subscriber --> LLM[LLM APIs<br/>Gemini, etc.]
+    Subscriber --> LLM[Vertex AI<br/>Gemini]
 
     Backend -.-> Scheduler
     Subscriber --> DB

@@ -535,18 +535,26 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	return nil
 }
 
-func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
-	// ユーザーのGemini API keyをuser_llmsテーブルから取得
-	var apiKey string
-	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
+// getUserLLMSetting はユーザーのAI機能設定を取得する。
+// user_llmsにレコードが無い（AI機能を有効化していない）場合はエラーを返す
+func getUserLLMSetting(ctx context.Context, db *sql.DB, userID string) (*database.UserLlm, error) {
+	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+	// 現在はGemini（provider 1）のみサポート
+	return database.UserLlmByUserIDLlmProvider(ctx, db, userUUID, 1)
+}
+
+func generateMonthlySummaryWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
+	// ユーザーがAI機能を有効化（オプトイン）しているか確認（キュー投入後に無効化された場合は処理しない）
+	if _, err := getUserLLMSetting(ctx, db, userID); err != nil {
+		logger.WithError(err).WithField("user_id", userID).Error("AI features are not enabled for user")
+		return "", fmt.Errorf("AI features are not enabled for user: %w", err)
 	}
 
-	// Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	// Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return "", fmt.Errorf("failed to create Gemini client: %w", err)
@@ -722,17 +730,14 @@ func generateLatestTrend(ctx context.Context, db *sql.DB, redisClient rueidis.Cl
 }
 
 func generateLatestTrendWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
-	// ユーザーのGemini API keyをuser_llmsテーブルから取得
-	var apiKey string
-	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
-	if err != nil {
-		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return "", fmt.Errorf("failed to get user's Gemini API key: %w", err)
+	// ユーザーがAI機能を有効化（オプトイン）しているか確認（キュー投入後に無効化された場合は処理しない）
+	if _, err := getUserLLMSetting(ctx, db, userID); err != nil {
+		logger.WithError(err).WithField("user_id", userID).Error("AI features are not enabled for user")
+		return "", fmt.Errorf("AI features are not enabled for user: %w", err)
 	}
 
-	// Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	// Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return "", fmt.Errorf("failed to create Gemini client: %w", err)
@@ -910,17 +915,14 @@ func generateDiaryHighlight(ctx context.Context, db *sql.DB, redisClient rueidis
 }
 
 func generateDiaryHighlightWithLLM(ctx context.Context, db *sql.DB, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
-	// ユーザーのGemini API keyをuser_llmsテーブルから取得
-	var apiKey string
-	query := `SELECT key FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, query, userID).Scan(&apiKey)
-	if err != nil {
-		logger.WithError(err).WithField("user_id", userID).Error("Failed to get user's Gemini API key")
-		return nil, fmt.Errorf("failed to get user's Gemini API key: %w", err)
+	// ユーザーがAI機能を有効化（オプトイン）しているか確認（キュー投入後に無効化された場合は処理しない）
+	if _, err := getUserLLMSetting(ctx, db, userID); err != nil {
+		logger.WithError(err).WithField("user_id", userID).Error("AI features are not enabled for user")
+		return nil, fmt.Errorf("AI features are not enabled for user: %w", err)
 	}
 
-	// Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	// Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
 		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
@@ -965,20 +967,17 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		"diary_id": diaryID,
 	}).Info("Generating diary embedding")
 
-	// 1. ユーザーのAPIキーと意味的検索の有効化を確認（未設定/無効の場合はスキップ）
-	var apiKey string
-	var semanticSearchEnabled bool
-	apiKeyQuery := `SELECT key, semantic_search_enabled FROM user_llms WHERE user_id = $1 AND llm_provider = 1`
-	err := db.QueryRowContext(ctx, apiKeyQuery, userID).Scan(&apiKey, &semanticSearchEnabled)
+	// 1. ユーザーのAI機能と意味的検索の有効化を確認（未有効化/無効の場合はスキップ）
+	userLLM, err := getUserLLMSetting(ctx, db, userID)
 	if err != nil {
-		// APIキー未設定はスキップ（エラーではない）
+		// AI機能未有効化はスキップ（エラーではない）
 		logger.WithFields(logrus.Fields{
 			"user_id":  userID,
 			"diary_id": diaryID,
-		}).Info("User has no Gemini API key, skipping diary embedding generation")
+		}).Info("AI features are not enabled for user, skipping diary embedding generation")
 		return nil
 	}
-	if !semanticSearchEnabled {
+	if !userLLM.SemanticSearchEnabled {
 		// 意味的検索が無効ならスキップ
 		logger.WithFields(logrus.Fields{
 			"user_id":  userID,
@@ -996,8 +995,8 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
 
-	// 3. Gemini クライアント作成
-	geminiClient, err := llmFactory.CreateGeminiClient(ctx, apiKey)
+	// 3. Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create Gemini client: %w", err)
 	}

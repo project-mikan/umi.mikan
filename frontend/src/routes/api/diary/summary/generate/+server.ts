@@ -3,6 +3,10 @@ import { createYM, generateMonthlySummary } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { unixToMilliseconds } from "$lib/utils/token-utils";
 import type { RequestHandler } from "./$types";
+import {
+  AI_NOT_ENABLED_MESSAGE,
+  isAiNotEnabledError,
+} from "$lib/utils/error-utils";
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
   const authResult = await ensureValidAccessToken(cookies);
@@ -56,8 +60,9 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
     if (err instanceof Response) {
       throw err;
     }
-    if ((err as Error)?.message?.includes("API key")) {
-      throw error(400, { message: "Gemini API key not configured" });
+    // AI機能が未有効化（設定画面でオプトインしていない）
+    if (isAiNotEnabledError(err)) {
+      throw error(400, { message: AI_NOT_ENABLED_MESSAGE });
     }
     if (
       (err as Error)?.message?.includes("only allowed for past months") ||

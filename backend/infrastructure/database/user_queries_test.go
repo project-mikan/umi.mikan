@@ -46,9 +46,9 @@ func TestDeleteUserLLMsByUserID(t *testing.T) {
 
 	now := time.Now().Unix()
 	if _, err := db.ExecContext(ctx,
-		`INSERT INTO user_llms (user_id, llm_provider, key, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		userID, 1, "test-key", false, false, false, now, now,
+		`INSERT INTO user_llms (user_id, llm_provider, auto_summary_monthly, auto_latest_trend_enabled, semantic_search_enabled, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		userID, 1, false, false, false, now, now,
 	); err != nil {
 		t.Fatalf("user_llmsの挿入に失敗: %v", err)
 	}

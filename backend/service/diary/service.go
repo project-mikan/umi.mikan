@@ -22,7 +22,7 @@ import (
 
 // LLMFactory はLLMクライアントを作成するファクトリインターフェース
 type LLMFactory interface {
-	CreateGeminiClient(ctx context.Context, apiKey string) (GeminiEmbedder, error)
+	CreateGeminiClient(ctx context.Context) (GeminiEmbedder, error)
 }
 
 // GeminiEmbedder はGemini埋め込みAPIクライアントのインターフェース
@@ -459,10 +459,10 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		return nil, err
 	}
 
-	// ユーザーのLLMキーが設定されているかチェック
+	// ユーザーがAI機能を有効化（オプトイン）しているかチェック
 	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Gemini API key not found for user")
+		return nil, status.Errorf(codes.NotFound, "AI features are not enabled for user")
 	}
 
 	// 指定された月が今月より前であることを確認
@@ -668,10 +668,10 @@ func (s *DiaryEntry) TriggerDiaryHighlight(
 		return nil, status.Error(codes.FailedPrecondition, "Content too short for highlight generation (minimum 500 characters)")
 	}
 
-	// ユーザーのLLMキーが設定されているかチェック
+	// ユーザーがAI機能を有効化（オプトイン）しているかチェック
 	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "Gemini API key not configured")
+		return nil, status.Error(codes.NotFound, "AI features are not enabled")
 	}
 
 	// タスクキーを生成
@@ -889,10 +889,10 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 		return nil, status.Error(codes.InvalidArgument, "Query is required")
 	}
 
-	// ユーザーのAPIキーと設定を取得
+	// ユーザーのAI機能設定を取得
 	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Gemini API key not found")
+		return nil, status.Errorf(codes.NotFound, "AI features are not enabled")
 	}
 
 	// 意味的検索が有効化されているか確認
@@ -906,7 +906,7 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 	}
 
 	// Geminiクライアント作成
-	geminiClient, err := s.LLMFactory.CreateGeminiClient(ctx, userLLM.Key)
+	geminiClient, err := s.LLMFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create Gemini client")
 	}
@@ -1094,10 +1094,10 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		return nil, err
 	}
 
-	// ユーザーのAPIキーと設定を取得
+	// ユーザーのAI機能設定を取得
 	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
 	if err != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "Gemini API key not found")
+		return nil, status.Errorf(codes.FailedPrecondition, "AI features are not enabled")
 	}
 
 	// 意味的検索が有効化されているか確認

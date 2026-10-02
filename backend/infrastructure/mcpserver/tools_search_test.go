@@ -108,7 +108,7 @@ func TestSearchDiaryEntriesFuzzyHandler(t *testing.T) {
 	t.Run("正常系: 検索結果がある場合", func(t *testing.T) {
 		db := testutil.SetupTestDB(t)
 		userID := testutil.CreateTestUser(t, db, "mcp-fuzzy-success@example.com", "MCPFuzzySuccessUser")
-		testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+		testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 		diaryService := &diary.DiaryEntry{DB: db, LLMFactory: &mockLLMFactory{}}
 		ctx := testutil.CreateAuthenticatedContext(userID)
 
@@ -138,7 +138,7 @@ func TestSearchDiaryEntriesFuzzyHandler(t *testing.T) {
 	t.Run("正常系: limitを明示的に0にすると0件を返す（デフォルト値に丸められない）", func(t *testing.T) {
 		db := testutil.SetupTestDB(t)
 		userID := testutil.CreateTestUser(t, db, "mcp-fuzzy-zero-limit@example.com", "MCPFuzzyZeroUser")
-		testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+		testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 		diaryService := &diary.DiaryEntry{DB: db, LLMFactory: &mockLLMFactory{}}
 		ctx := testutil.CreateAuthenticatedContext(userID)
 
@@ -160,7 +160,7 @@ func TestSearchDiaryEntriesFuzzyHandler(t *testing.T) {
 	t.Run("正常系: limit未指定時はデフォルト10件が使われる", func(t *testing.T) {
 		db := testutil.SetupTestDB(t)
 		userID := testutil.CreateTestUser(t, db, "mcp-fuzzy-default-limit@example.com", "MCPFuzzyDefaultUser")
-		testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+		testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 		diaryService := &diary.DiaryEntry{DB: db, LLMFactory: &mockLLMFactory{}}
 		ctx := testutil.CreateAuthenticatedContext(userID)
 

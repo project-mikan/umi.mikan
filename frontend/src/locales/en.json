@@ -37,17 +37,17 @@
       "confirmPlaceholder": "Re-enter new password",
       "save": "Change password"
     },
-    "llmToken": {
-      "title": "LLM Token Settings",
-      "providerLabel": "LLM Provider",
-      "provider": {
-        "gemini": "Gemini"
-      },
-      "tokenLabel": "API Key",
-      "tokenPlaceholder": "Enter API key",
-      "tokenHelp": "Get API Token here:",
-      "freeWarning": "Google AI Studio Free Tier is used for learning purposes, so please do not enter personal information. For private diaries, please use paid APIs.",
-      "save": "Save token"
+    "aiFeatures": {
+      "title": "AI Features",
+      "description": "Use AI features such as monthly summaries, highlights, latest trend analysis, and natural language search. No API key is required.",
+      "dataNotice": "When enabled, your diary content is sent to the operator's Google Cloud (Vertex AI) for AI processing. The content is not used to train models.",
+      "statusLabel": "Status",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enableButton": "Enable AI features",
+      "disableButton": "Disable AI features",
+      "disableConfirm": "Disable AI features",
+      "disableConfirmMessage": "Are you sure you want to disable AI features? Auto summary and natural language search settings will also be reset."
     },
     "autoSummary": {
       "title": "Auto Summary Settings",
@@ -60,11 +60,6 @@
       "regenerateEmbeddingsSuccess": "Queued {count} diaries. Please wait.",
       "regenerateEmbeddingsFailed": "Bulk indexing failed.",
       "save": "Save settings"
-    },
-    "deleteToken": {
-      "button": "Delete Token",
-      "confirm": "Delete LLM Token",
-      "confirmMessage": "Are you sure you want to delete this LLM token? This action cannot be undone."
     },
     "llmStatus": {
       "title": "LLM Processing Status",
@@ -114,8 +109,6 @@
     "messages": {
       "usernameUpdateSuccess": "Username updated successfully",
       "passwordChangeSuccess": "Password changed successfully",
-      "llmTokenUpdateSuccess": "LLM token updated successfully",
-      "llmTokenDeleteSuccess": "LLM token deleted successfully",
       "autoSummarySettingsUpdateSuccess": "Auto summary settings updated successfully",
       "accountDeleteSuccess": "Account deleted successfully",
       "unauthorized": "Authentication required",
@@ -127,9 +120,6 @@
       "passwordsDoNotMatch": "New passwords do not match",
       "passwordTooShort": "New password must be at least 8 characters long",
       "currentPasswordIncorrect": "Current password is incorrect",
-      "tokenRequired": "Token is required",
-      "tokenTooLong": "Token must be 100 characters or less",
-      "tokenNotFound": "Token not found",
       "invalidProvider": "Invalid LLM provider",
       "updateFailed": "Update failed",
       "apiKeyNameRequired": "Key name is required",
@@ -138,7 +128,10 @@
       "apiKeyDeleteFailed": "Failed to delete API key",
       "apiKeyDeleted": "API key deleted",
       "apiKeyIdRequired": "API key ID is required",
-      "keyNotFound": "API key not found"
+      "keyNotFound": "API key not found",
+      "llmEnabled": "AI features enabled",
+      "llmDisabled": "AI features disabled",
+      "llmNotEnabled": "AI features are not enabled"
     }
   },
   "auth": {
@@ -252,7 +245,7 @@
       "statusQueued": "Highlight generation has been queued. Please wait",
       "statusProcessing": "Generating highlights. Please wait",
       "contentTooShort": "At least 500 characters are required for highlight generation",
-      "apiKeyNotConfigured": "Gemini API key is not configured. Please register it in the settings page"
+      "aiNotEnabled": "AI features are not enabled. Please enable them in the settings page"
     },
     "embedding": {
       "indexed": "Semantic search: Indexed",
@@ -359,7 +352,7 @@
     "button": "Search",
     "modeKeyword": "Keyword search",
     "modeSemantic": "Semantic search",
-    "semanticDescription": "Search by meaning and context using Gemini AI (API key required)",
+    "semanticDescription": "Search by meaning and context using Gemini AI (requires enabling AI features in settings)",
     "results": "search results for",
     "semanticResults": "semantic search results for",
     "resultCount": "results",
@@ -375,7 +368,7 @@
     "expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}",
     "error": {
       "searchFailed": "Search failed.",
-      "semanticSearchFailed": "Semantic search failed. Please check if your Gemini API key is configured."
+      "semanticSearchFailed": "Semantic search failed. Please check that AI features and natural language search are enabled in settings."
     },
     "chunkCount": "{count} chunks"
   },
@@ -399,13 +392,13 @@
       "error": "Failed to generate summary",
       "outdated": "Diary entries have been updated since this summary was created. Regenerate the summary for the latest version.",
       "noEntries": "No diary entries found for this month. To generate a monthly summary, please write diary entries first.",
-      "noApiKey": "Gemini API key is not configured. Please set it up in settings.",
       "updateAvailable": "Diary entries have been updated since this summary was generated. We recommend regenerating the summary.",
       "currentMonthError": "Monthly summary can only be generated for past months. Current month cannot be processed.",
       "currentMonthNote": "Summary cannot be generated for current month",
       "futureMonthError": "Summary cannot be generated for future months.",
       "noEntriesError": "No diary entries found for this month. Please write diary entries first to generate a summary.",
-      "blockedContent": "AI declined to generate a summary for this month due to content policy. You can regenerate after editing your diary entries."
+      "blockedContent": "AI declined to generate a summary for this month due to content policy. You can regenerate after editing your diary entries.",
+      "aiNotEnabled": "AI features are not enabled. Please enable them in settings."
     }
   },
   "timeProgress": {
@@ -475,9 +468,9 @@
       "ragRegenerateButton": "Index all pending entries",
       "ragRegenerateSuccess": "Queued {count} entries. Indexes will be generated in the background.",
       "ragRegenerateFailed": "Failed to queue index generation.",
-      "ragDisabledNote": "Register a Gemini API key in settings and enable natural language search to see the status here.",
+      "ragDisabledNote": "Enable AI features and natural language search in settings to see the status here.",
       "aboutTitle": "About LLM Processing",
-      "aboutDescription": "This page shows the status of automated summary processing by AI (Gemini).",
+      "aboutDescription": "This page shows the status of automated summary processing by AI (Gemini via Google Cloud Vertex AI).",
       "monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from diary entries",
       "processingExplanation": "Processing Tasks: Summary generation work currently running in the background"
     },

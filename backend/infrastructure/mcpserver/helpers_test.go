@@ -40,6 +40,6 @@ func (m *mockEmbedder) Close() error { return nil }
 // mockLLMFactory はテスト用のdiary.LLMFactoryモック
 type mockLLMFactory struct{}
 
-func (f *mockLLMFactory) CreateGeminiClient(_ context.Context, _ string) (diary.GeminiEmbedder, error) {
+func (f *mockLLMFactory) CreateGeminiClient(_ context.Context) (diary.GeminiEmbedder, error) {
 	return &mockEmbedder{}, nil
 }

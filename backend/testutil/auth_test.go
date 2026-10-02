@@ -9,7 +9,7 @@ func TestCreateTestUserLLM(t *testing.T) {
 	db := SetupTestDB(t)
 	userID := CreateTestUser(t, db, "create-user-llm@example.com", "User")
 
-	CreateTestUserLLM(t, db, userID, "test-api-key")
+	CreateTestUserLLM(t, db, userID)
 
 	var count int
 	if err := db.QueryRowContext(context.Background(),
@@ -40,7 +40,7 @@ func TestCreateTestUserLLMWithSettings(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			userID := CreateTestUser(t, db, "user-llm-settings@example.com", "User")
-			CreateTestUserLLMWithSettings(t, db, userID, "test-key", tt.autoMonthly, tt.autoTrend, tt.semantic)
+			CreateTestUserLLMWithSettings(t, db, userID, tt.autoMonthly, tt.autoTrend, tt.semantic)
 
 			var autoMonthly, autoTrend, semantic bool
 			if err := db.QueryRowContext(context.Background(),

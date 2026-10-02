@@ -176,3 +176,44 @@ func TestLoadSubscriberConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadVertexAIConfig(t *testing.T) {
+	tests := []struct {
+		name             string
+		project          string
+		location         string
+		expectedProject  string
+		expectedLocation string
+	}{
+		{
+			name:             "正常系: 環境変数が未設定の場合、Projectは空でLocationはglobalになる",
+			project:          "",
+			location:         "",
+			expectedProject:  "",
+			expectedLocation: "global",
+		},
+		{
+			name:             "正常系: 環境変数が設定されている場合、その値が使われる",
+			project:          "umi-mikan-prod",
+			location:         "asia-northeast1",
+			expectedProject:  "umi-mikan-prod",
+			expectedLocation: "asia-northeast1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("GOOGLE_CLOUD_PROJECT", tt.project)
+			t.Setenv("GOOGLE_CLOUD_LOCATION", tt.location)
+
+			config := LoadVertexAIConfig()
+
+			if config.Project != tt.expectedProject {
+				t.Errorf("Project: 期待 %q, 実際 %q", tt.expectedProject, config.Project)
+			}
+			if config.Location != tt.expectedLocation {
+				t.Errorf("Location: 期待 %q, 実際 %q", tt.expectedLocation, config.Location)
+			}
+		})
+	}
+}

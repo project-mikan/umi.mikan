@@ -14,9 +14,9 @@ import {
   UserService,
   UpdateUserNameRequestSchema,
   ChangePasswordRequestSchema,
-  UpdateLLMKeyRequestSchema,
+  EnableLLMRequestSchema,
   GetUserInfoRequestSchema,
-  DeleteLLMKeyRequestSchema,
+  DisableLLMRequestSchema,
   DeleteAccountRequestSchema,
   UpdateAutoSummarySettingsRequestSchema,
   CreateApiKeyRequestSchema,
@@ -24,9 +24,9 @@ import {
   DeleteApiKeyRequestSchema,
   type UpdateUserNameResponse,
   type ChangePasswordResponse,
-  type UpdateLLMKeyResponse,
+  type EnableLLMResponse,
   type GetUserInfoResponse,
-  type DeleteLLMKeyResponse,
+  type DisableLLMResponse,
   type DeleteAccountResponse,
   type UpdateAutoSummarySettingsResponse,
   type CreateApiKeyResponse,
@@ -139,21 +139,20 @@ export async function changePassword(
   );
 }
 
-export interface UpdateLLMKeyParams {
+export interface EnableLLMParams {
   llmProvider: number;
-  key: string;
   accessToken: string;
 }
 
-export async function updateLLMKey(
-  params: UpdateLLMKeyParams,
-): Promise<UpdateLLMKeyResponse> {
-  const request = create(UpdateLLMKeyRequestSchema, {
+// enableLLM はユーザーのAI機能を有効化（オプトイン）する。LLMは共通GCPプロジェクトのVertex AI経由で呼ばれる
+export async function enableLLM(
+  params: EnableLLMParams,
+): Promise<EnableLLMResponse> {
+  const request = create(EnableLLMRequestSchema, {
     llmProvider: params.llmProvider,
-    key: params.key,
   });
 
-  return await userClient.updateLLMKey(request, authHeader(params.accessToken));
+  return await userClient.enableLLM(request, authHeader(params.accessToken));
 }
 
 export interface GetUserInfoParams {
@@ -168,19 +167,20 @@ export async function getUserInfo(
   return await userClient.getUserInfo(request, authHeader(params.accessToken));
 }
 
-export interface DeleteLLMKeyParams {
+export interface DisableLLMParams {
   llmProvider: number;
   accessToken: string;
 }
 
-export async function deleteLLMKey(
-  params: DeleteLLMKeyParams,
-): Promise<DeleteLLMKeyResponse> {
-  const request = create(DeleteLLMKeyRequestSchema, {
+// disableLLM はユーザーのAI機能を無効化（オプトアウト）する
+export async function disableLLM(
+  params: DisableLLMParams,
+): Promise<DisableLLMResponse> {
+  const request = create(DisableLLMRequestSchema, {
     llmProvider: params.llmProvider,
   });
 
-  return await userClient.deleteLLMKey(request, authHeader(params.accessToken));
+  return await userClient.disableLLM(request, authHeader(params.accessToken));
 }
 
 export interface DeleteAccountParams {

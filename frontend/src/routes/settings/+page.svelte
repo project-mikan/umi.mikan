@@ -24,14 +24,14 @@
 
   let usernameLoading = false;
   let passwordLoading = false;
-  let llmTokenLoading = false;
+  let enableLLMLoading = false;
   let autoSummaryLoading = false;
-  let deleteLLMKeyLoading = false;
+  let disableLLMLoading = false;
   let deleteAccountLoading = false;
   let regenerateEmbeddingsLoading = false;
 
   // Modal states
-  let showDeleteLLMTokenConfirm = false;
+  let showDisableLLMConfirm = false;
   let showDeleteAccountConfirm = false;
 
   // Password visibility toggles
@@ -39,9 +39,11 @@
   let showNewPassword = false;
   let showConfirmPassword = false;
 
-  // Get existing LLM key for Gemini (provider 1)
-  $: existingLLMKey = data.user?.llmKeys?.find((key) => key.llmProvider === 1);
-  $: existingLLMToken = existingLLMKey?.key || "";
+  // Gemini（provider 1）のAI機能設定（有効化済みの場合のみ存在する）
+  $: llmSetting = data.user?.llmSettings?.find(
+    (setting) => setting.llmProvider === 1,
+  );
+  $: isAiEnabled = !!llmSetting;
 
   // Local state for checkbox values
   let autoSummaryMonthly = false;
@@ -50,10 +52,10 @@
 
   // Update local state when data changes
   $: {
-    if (existingLLMKey) {
-      autoSummaryMonthly = existingLLMKey.autoSummaryMonthly || false;
-      autoLatestTrend = existingLLMKey.autoLatestTrendEnabled || false;
-      semanticSearchEnabled = existingLLMKey.semanticSearchEnabled || false;
+    if (llmSetting) {
+      autoSummaryMonthly = llmSetting.autoSummaryMonthly || false;
+      autoLatestTrend = llmSetting.autoLatestTrendEnabled || false;
+      semanticSearchEnabled = llmSetting.semanticSearchEnabled || false;
     }
   }
 
@@ -116,20 +118,20 @@
   });
 
   // Modal helper functions
-  function confirmDeleteLLMToken() {
-    showDeleteLLMTokenConfirm = true;
+  function confirmDisableLLM() {
+    showDisableLLMConfirm = true;
   }
 
-  function cancelDeleteLLMToken() {
-    showDeleteLLMTokenConfirm = false;
+  function cancelDisableLLM() {
+    showDisableLLMConfirm = false;
   }
 
-  function handleDeleteLLMToken() {
-    showDeleteLLMTokenConfirm = false;
-    // Submit the delete form
+  // AI機能の無効化フォームを送信する
+  function handleDisableLLM() {
+    showDisableLLMConfirm = false;
     const form = document.createElement("form");
     form.method = "POST";
-    form.action = "?/deleteLLMKey";
+    form.action = "?/disableLLM";
 
     const input = document.createElement("input");
     input.type = "hidden";
@@ -138,7 +140,7 @@
     form.appendChild(input);
 
     document.body.appendChild(form);
-    deleteLLMKeyLoading = true;
+    disableLLMLoading = true;
     form.submit();
   }
 
@@ -531,105 +533,72 @@
 						{$_("settings.nav.llmSettings")}
 					</h2>
 
-					<!-- LLMトークン変更セクション -->
-					<section id="llm-token" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-						<h3 class="text-xl font-semibold mb-4">{$_("settings.llmToken.title")}</h3>
-			<form
-				method="POST"
-				action="?/updateLLMKey"
-				class="space-y-4"
-				use:enhance={() => {
-					llmTokenLoading = true;
-					return async ({ update }) => {
-						llmTokenLoading = false;
-						await update();
-					};
-				}}
-			>
-				<div>
-					<label for="llmProvider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						{$_("settings.llmToken.providerLabel")}
-					</label>
-					<select
-						id="llmProvider"
-						name="llmProvider"
-						disabled={llmTokenLoading}
-						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-					>
-						<option value="1">{$_("settings.llmToken.provider.gemini")}</option>
-					</select>
-				</div>
-				<div>
-					<label for="llmToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-						{$_("settings.llmToken.tokenLabel")}
-					</label>
-					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2 auto-phrase-target">
-						{$_("settings.llmToken.tokenHelp")} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">https://aistudio.google.com/apikey</a>
-					</p>
-					<p class="text-xs text-orange-600 dark:text-orange-400 mb-2 bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-200 dark:border-orange-800 auto-phrase-target">
-						{$_("settings.llmToken.freeWarning")}
-					</p>
-					<input
-						type="text"
-						id="llmToken"
-						name="llmKey"
-						required
-						maxlength="100"
-						disabled={llmTokenLoading}
-						value={existingLLMToken}
-						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-						placeholder={$_("settings.llmToken.tokenPlaceholder")}
-					/>
-				</div>
-				<button
-					type="submit"
-					use:haptic
-					disabled={llmTokenLoading}
-					class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-				>
-					{llmTokenLoading ? $_("common.loading") : $_("settings.llmToken.save")}
-				</button>
-				<!-- LLMトークン変更メッセージ -->
-				{#if form?.error && isMessageForAction("updateLLMKey")}
-					<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
-						{$_(`settings.messages.${form.error}`) || form.error}
-					</div>
-				{/if}
-				{#if form?.success && isMessageForAction("updateLLMKey")}
-					<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
-						{$_(`settings.messages.${form.message}`) || form.message}
-					</div>
-				{/if}
-			</form>
+					<!-- AI機能の有効化セクション -->
+					<section id="ai-features" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+						<h3 class="text-xl font-semibold mb-4">{$_("settings.aiFeatures.title")}</h3>
+						<p class="text-sm text-gray-600 dark:text-gray-400 mb-2 auto-phrase-target">
+							{$_("settings.aiFeatures.description")}
+						</p>
+						<p class="text-xs text-gray-500 dark:text-gray-400 mb-4 auto-phrase-target">
+							{$_("settings.aiFeatures.dataNotice")}
+						</p>
+						<p class="text-sm font-medium mb-4" data-testid="ai-features-status">
+							{$_("settings.aiFeatures.statusLabel")}:
+							{#if isAiEnabled}
+								<span class="text-green-600 dark:text-green-400">{$_("settings.aiFeatures.enabled")}</span>
+							{:else}
+								<span class="text-gray-500 dark:text-gray-400">{$_("settings.aiFeatures.disabled")}</span>
+							{/if}
+						</p>
 
-			<!-- LLM Token Delete Section -->
-			{#if existingLLMToken}
-				<div class="mt-4">
-					<button
-						type="button"
-						disabled={deleteLLMKeyLoading}
-						on:click={confirmDeleteLLMToken}
-						class="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-					>
-						{deleteLLMKeyLoading ? $_("common.loading") : $_("settings.deleteToken.button")}
-					</button>
-					<!-- LLMトークン削除メッセージ -->
-					{#if form?.error && isMessageForAction("deleteLLMKey")}
-						<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
-							{$_(`settings.messages.${form.error}`) || form.error}
-						</div>
-					{/if}
-					{#if form?.success && isMessageForAction("deleteLLMKey")}
-						<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
-							{$_(`settings.messages.${form.message}`) || form.message}
-						</div>
-					{/if}
-				</div>
-			{/if}
+						{#if isAiEnabled}
+							<button
+								type="button"
+								disabled={disableLLMLoading}
+								on:click={confirmDisableLLM}
+								class="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+							>
+								{disableLLMLoading ? $_("common.loading") : $_("settings.aiFeatures.disableButton")}
+							</button>
+						{:else}
+							<form
+								method="POST"
+								action="?/enableLLM"
+								use:enhance={() => {
+									enableLLMLoading = true;
+									return async ({ update }) => {
+										enableLLMLoading = false;
+										await update();
+									};
+								}}
+							>
+								<input type="hidden" name="llmProvider" value="1" />
+								<button
+									type="submit"
+									use:haptic
+									disabled={enableLLMLoading}
+									class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+								>
+									{enableLLMLoading ? $_("common.loading") : $_("settings.aiFeatures.enableButton")}
+								</button>
+							</form>
+						{/if}
+
+						<!-- AI機能の有効化/無効化メッセージ -->
+						{#if form?.error && (isMessageForAction("enableLLM") || isMessageForAction("disableLLM"))}
+							<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
+								{$_(`settings.messages.${form.error}`) || form.error}
+							</div>
+						{/if}
+						{#if form?.success && (isMessageForAction("enableLLM") || isMessageForAction("disableLLM"))}
+							<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
+								{$_(`settings.messages.${form.message}`) || form.message}
+							</div>
+						{/if}
 					</section>
 
 					<!-- 自動要約設定セクション -->
-					{#if existingLLMToken}
+					{#if isAiEnabled}
 						<section id="auto-summary" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
 							<h3 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h3>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 auto-phrase-target">
@@ -761,7 +730,7 @@
 					{/if}
 
 					<!-- LLM処理状況セクション -->
-					{#if existingLLMKey}
+					{#if isAiEnabled}
 						<section id="llm-status" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
 							<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
 								{$_("settings.llmStatus.title")}
@@ -1070,16 +1039,16 @@
 
 <!-- LLM Token Delete Confirmation Modal -->
 <Modal
-	isOpen={showDeleteLLMTokenConfirm}
-	title={$_("settings.deleteToken.confirm")}
-	confirmText={$_("settings.deleteToken.button")}
+	isOpen={showDisableLLMConfirm}
+	title={$_("settings.aiFeatures.disableConfirm")}
+	confirmText={$_("settings.aiFeatures.disableButton")}
 	cancelText={$_("diary.cancel")}
 	variant="danger"
-	onConfirm={handleDeleteLLMToken}
-	onCancel={cancelDeleteLLMToken}
+	onConfirm={handleDisableLLM}
+	onCancel={cancelDisableLLM}
 >
 	<p class="text-sm text-gray-500 dark:text-gray-400 auto-phrase-target">
-		{$_("settings.deleteToken.confirmMessage")}
+		{$_("settings.aiFeatures.disableConfirmMessage")}
 	</p>
 </Modal>
 

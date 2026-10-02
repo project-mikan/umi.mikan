@@ -10,7 +10,7 @@ import Foundation
 import SwiftProtobuf
 
 /// UserService はユーザー設定とアカウント管理を提供するサービスです。
-/// ユーザー情報の更新、LLMキー管理、自動要約設定、Pub/Subメトリクス取得などの機能があります。
+/// ユーザー情報の更新、AI機能の有効化、自動要約設定、Pub/Subメトリクス取得などの機能があります。
 internal protocol User_UserServiceClientInterface: Sendable {
 
     /// UpdateUserName はユーザー名を変更します。
@@ -37,39 +37,40 @@ internal protocol User_UserServiceClientInterface: Sendable {
     @available(iOS 13, *)
     func `changePassword`(request: User_ChangePasswordRequest, headers: Connect.Headers) async -> ResponseMessage<User_ChangePasswordResponse>
 
-    /// UpdateLLMKey はLLM APIキーを更新または新規作成します。
-    /// 現在はGemini (llm_provider=1) のみ対応しています。
+    /// EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
+    /// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
+    /// 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
     ///
     /// 例:
-    ///   request: { llm_provider: 1, key: "AIza..." }
-    ///   response: { success: true, message: "LLMキーを更新しました" }
+    ///   request: { llm_provider: 1 }
+    ///   response: { success: true, message: "llmEnabled" }
     ///
     /// エラー:
-    ///   - InvalidArgument: プロバイダーまたはキーが不正
+    ///   - InvalidArgument: プロバイダーが不正
     @available(iOS 13, *)
-    func `updateLlmkey`(request: User_UpdateLLMKeyRequest, headers: Connect.Headers) async -> ResponseMessage<User_UpdateLLMKeyResponse>
+    func `enableLlm`(request: User_EnableLLMRequest, headers: Connect.Headers) async -> ResponseMessage<User_EnableLLMResponse>
 
-    /// GetUserInfo はユーザーの基本情報とLLMキー設定を取得します。
+    /// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
     ///
     /// 例:
     ///   request: {}
-    ///   response: { name: "太郎", email: "user@example.com", llm_keys: [{ llm_provider: 1, ... }] }
+    ///   response: { name: "太郎", email: "user@example.com", llm_settings: [{ llm_provider: 1, ... }] }
     ///
     /// エラー:
     ///   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
     @available(iOS 13, *)
     func `getUserInfo`(request: User_GetUserInfoRequest, headers: Connect.Headers) async -> ResponseMessage<User_GetUserInfoResponse>
 
-    /// DeleteLLMKey は指定されたLLM APIキーを削除します。
+    /// DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
     ///
     /// 例:
     ///   request: { llm_provider: 1 }
-    ///   response: { success: true, message: "LLMキーを削除しました" }
+    ///   response: { success: true, message: "llmDisabled" }
     ///
     /// エラー:
-    ///   - NotFound: 指定されたプロバイダーのキーが存在しない
+    ///   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
     @available(iOS 13, *)
-    func `deleteLlmkey`(request: User_DeleteLLMKeyRequest, headers: Connect.Headers) async -> ResponseMessage<User_DeleteLLMKeyResponse>
+    func `disableLlm`(request: User_DisableLLMRequest, headers: Connect.Headers) async -> ResponseMessage<User_DisableLLMResponse>
 
     /// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
     /// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
@@ -91,7 +92,7 @@ internal protocol User_UserServiceClientInterface: Sendable {
     ///   response: { success: true, message: "自動要約設定を更新しました" }
     ///
     /// エラー:
-    ///   - NotFound: LLMキーが設定されていない
+    ///   - NotFound: AI機能が有効化されていない
     @available(iOS 13, *)
     func `updateAutoSummarySettings`(request: User_UpdateAutoSummarySettingsRequest, headers: Connect.Headers) async -> ResponseMessage<User_UpdateAutoSummarySettingsResponse>
 
@@ -102,7 +103,7 @@ internal protocol User_UserServiceClientInterface: Sendable {
     ///   response: { auto_summary_monthly: false }
     ///
     /// エラー:
-    ///   - NotFound: LLMキーが設定されていない
+    ///   - NotFound: AI機能が有効化されていない
     @available(iOS 13, *)
     func `getAutoSummarySettings`(request: User_GetAutoSummarySettingsRequest, headers: Connect.Headers) async -> ResponseMessage<User_GetAutoSummarySettingsResponse>
 
@@ -171,8 +172,8 @@ internal final class User_UserServiceClient: User_UserServiceClientInterface, Se
     }
 
     @available(iOS 13, *)
-    internal func `updateLlmkey`(request: User_UpdateLLMKeyRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_UpdateLLMKeyResponse> {
-        return await self.client.unary(path: "/user.UserService/UpdateLLMKey", idempotencyLevel: .unknown, request: request, headers: headers)
+    internal func `enableLlm`(request: User_EnableLLMRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_EnableLLMResponse> {
+        return await self.client.unary(path: "/user.UserService/EnableLLM", idempotencyLevel: .unknown, request: request, headers: headers)
     }
 
     @available(iOS 13, *)
@@ -181,8 +182,8 @@ internal final class User_UserServiceClient: User_UserServiceClientInterface, Se
     }
 
     @available(iOS 13, *)
-    internal func `deleteLlmkey`(request: User_DeleteLLMKeyRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_DeleteLLMKeyResponse> {
-        return await self.client.unary(path: "/user.UserService/DeleteLLMKey", idempotencyLevel: .unknown, request: request, headers: headers)
+    internal func `disableLlm`(request: User_DisableLLMRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_DisableLLMResponse> {
+        return await self.client.unary(path: "/user.UserService/DisableLLM", idempotencyLevel: .unknown, request: request, headers: headers)
     }
 
     @available(iOS 13, *)
@@ -224,9 +225,9 @@ internal final class User_UserServiceClient: User_UserServiceClientInterface, Se
         internal enum Methods {
             internal static let updateUserName = Connect.MethodSpec(name: "UpdateUserName", service: "user.UserService", type: .unary)
             internal static let changePassword = Connect.MethodSpec(name: "ChangePassword", service: "user.UserService", type: .unary)
-            internal static let updateLlmkey = Connect.MethodSpec(name: "UpdateLLMKey", service: "user.UserService", type: .unary)
+            internal static let enableLlm = Connect.MethodSpec(name: "EnableLLM", service: "user.UserService", type: .unary)
             internal static let getUserInfo = Connect.MethodSpec(name: "GetUserInfo", service: "user.UserService", type: .unary)
-            internal static let deleteLlmkey = Connect.MethodSpec(name: "DeleteLLMKey", service: "user.UserService", type: .unary)
+            internal static let disableLlm = Connect.MethodSpec(name: "DisableLLM", service: "user.UserService", type: .unary)
             internal static let deleteAccount = Connect.MethodSpec(name: "DeleteAccount", service: "user.UserService", type: .unary)
             internal static let updateAutoSummarySettings = Connect.MethodSpec(name: "UpdateAutoSummarySettings", service: "user.UserService", type: .unary)
             internal static let getAutoSummarySettings = Connect.MethodSpec(name: "GetAutoSummarySettings", service: "user.UserService", type: .unary)

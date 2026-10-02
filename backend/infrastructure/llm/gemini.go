@@ -59,9 +59,16 @@ type GeminiClient struct {
 	client *genai.Client
 }
 
-func NewGeminiClient(ctx context.Context, apiKey string) (*GeminiClient, error) {
+// NewGeminiClient は共通GCPプロジェクトのVertex AI経由でGeminiを呼び出すクライアントを生成する。
+// 認証はADC（GOOGLE_APPLICATION_CREDENTIALSで指定したサービスアカウントキー）で行う。
+func NewGeminiClient(ctx context.Context, project, location string) (*GeminiClient, error) {
+	if project == "" || location == "" {
+		return nil, fmt.Errorf("vertex AI project and location are required (project=%q location=%q)", project, location)
+	}
 	clientConfig := &genai.ClientConfig{
-		APIKey: apiKey,
+		Backend:  genai.BackendVertexAI,
+		Project:  project,
+		Location: location,
 	}
 	client, err := genai.NewClient(ctx, clientConfig)
 	if err != nil {

@@ -69,7 +69,7 @@ func insertTestDiaryWithEmbedding(t *testing.T, db *sql.DB, userID uuid.UUID, co
 func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_Success(t *testing.T) {
 	db := setupTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "semantic-success@example.com", "SemSuccessUser")
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	// ベクトル検索でヒットする日記（キーワードは含まない）
 	unitVec := makeTestUnitVector()
@@ -135,7 +135,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_Success(t *testing.T) {
 func TestDiaryEntry_SearchDiaryEntriesSemantic_Success(t *testing.T) {
 	db := setupTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "semantic-grpc-success@example.com", "Semantic GRPC User")
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	unitVec := makeTestUnitVector()
 	diaryID := insertTestDiaryWithEmbedding(t, db, userID, "公園でピクニックをした", "2024-04-10", "ピクニック", unitVec)
@@ -175,7 +175,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_Success(t *testing.T) {
 func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_ErrorBranches(t *testing.T) {
 	db := setupTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "semantic-error@example.com", "Semantic Error User")
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 	ctx := createAuthenticatedContext(userID)
 
 	t.Run("異常系: LLMFactory未設定の場合はエラー", func(t *testing.T) {
@@ -204,7 +204,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemanticByUserID_ErrorBranches(t *testing.
 
 	t.Run("異常系: セマンティック検索が無効なユーザーはエラー", func(t *testing.T) {
 		disabledUserID := testutil.CreateTestUser(t, db, "semantic-disabled@example.com", "SemDisabledUser")
-		testutil.CreateTestUserLLMWithSettings(t, db, disabledUserID, "test-api-key", false, false, false)
+		testutil.CreateTestUserLLMWithSettings(t, db, disabledUserID, false, false, false)
 		svc := &DiaryEntry{DB: db, LLMFactory: &mockLLMFactory{embedder: &mockGeminiEmbedder{}}}
 		_, err := svc.SearchDiaryEntriesSemanticByUserID(ctx, disabledUserID, "クエリ", 10)
 		if err == nil {

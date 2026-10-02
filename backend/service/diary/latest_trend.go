@@ -100,10 +100,10 @@ func (s *DiaryEntry) TriggerLatestTrend(
 		return nil, err
 	}
 
-	// ユーザーのLLMキーが設定されているかチェック
+	// ユーザーがAI機能を有効化（オプトイン）しているかチェック
 	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "Gemini API key not configured")
+		return nil, status.Error(codes.NotFound, "AI features are not enabled")
 	}
 
 	// 直近3日間の期間を計算（今日を除く）

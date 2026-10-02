@@ -12,7 +12,6 @@ import (
 type UserLlm struct {
 	UserID                 uuid.UUID `json:"user_id"`                   // user_id
 	LlmProvider            int16     `json:"llm_provider"`              // llm_provider
-	Key                    string    `json:"key"`                       // key
 	AutoSummaryMonthly     bool      `json:"auto_summary_monthly"`      // auto_summary_monthly
 	AutoLatestTrendEnabled bool      `json:"auto_latest_trend_enabled"` // auto_latest_trend_enabled
 	CreatedAt              int64     `json:"created_at"`                // created_at
@@ -43,13 +42,13 @@ func (ul *UserLlm) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.user_llms (` +
-		`user_id, llm_provider, key, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled` +
+		`user_id, llm_provider, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`)`
 	// run
-	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled)
-	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled); err != nil {
+	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled)
+	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -67,11 +66,11 @@ func (ul *UserLlm) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.user_llms SET ` +
-		`llm_provider = $1, key = $2, auto_summary_monthly = $3, auto_latest_trend_enabled = $4, created_at = $5, updated_at = $6, semantic_search_enabled = $7 ` +
-		`WHERE user_id = $8`
+		`llm_provider = $1, auto_summary_monthly = $2, auto_latest_trend_enabled = $3, created_at = $4, updated_at = $5, semantic_search_enabled = $6 ` +
+		`WHERE user_id = $7`
 	// run
-	logf(sqlstr, ul.LlmProvider, ul.Key, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled, ul.UserID)
-	if _, err := db.ExecContext(ctx, sqlstr, ul.LlmProvider, ul.Key, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled, ul.UserID); err != nil {
+	logf(sqlstr, ul.LlmProvider, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled, ul.UserID)
+	if _, err := db.ExecContext(ctx, sqlstr, ul.LlmProvider, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled, ul.UserID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -93,16 +92,16 @@ func (ul *UserLlm) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.user_llms (` +
-		`user_id, llm_provider, key, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled` +
+		`user_id, llm_provider, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`)` +
 		` ON CONFLICT (user_id) DO ` +
 		`UPDATE SET ` +
-		`llm_provider = EXCLUDED.llm_provider, key = EXCLUDED.key, auto_summary_monthly = EXCLUDED.auto_summary_monthly, auto_latest_trend_enabled = EXCLUDED.auto_latest_trend_enabled, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, semantic_search_enabled = EXCLUDED.semantic_search_enabled `
+		`llm_provider = EXCLUDED.llm_provider, auto_summary_monthly = EXCLUDED.auto_summary_monthly, auto_latest_trend_enabled = EXCLUDED.auto_latest_trend_enabled, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at, semantic_search_enabled = EXCLUDED.semantic_search_enabled `
 	// run
-	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled)
-	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.Key, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled); err != nil {
+	logf(sqlstr, ul.UserID, ul.LlmProvider, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled)
+	if _, err := db.ExecContext(ctx, sqlstr, ul.UserID, ul.LlmProvider, ul.AutoSummaryMonthly, ul.AutoLatestTrendEnabled, ul.CreatedAt, ul.UpdatedAt, ul.SemanticSearchEnabled); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -137,7 +136,7 @@ func (ul *UserLlm) Delete(ctx context.Context, db DB) error {
 func UserLlmByUserIDLlmProvider(ctx context.Context, db DB, userID uuid.UUID, llmProvider int16) (*UserLlm, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`user_id, llm_provider, key, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled ` +
+		`user_id, llm_provider, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled ` +
 		`FROM public.user_llms ` +
 		`WHERE user_id = $1 AND llm_provider = $2`
 	// run
@@ -145,7 +144,7 @@ func UserLlmByUserIDLlmProvider(ctx context.Context, db DB, userID uuid.UUID, ll
 	ul := UserLlm{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID, llmProvider).Scan(&ul.UserID, &ul.LlmProvider, &ul.Key, &ul.AutoSummaryMonthly, &ul.AutoLatestTrendEnabled, &ul.CreatedAt, &ul.UpdatedAt, &ul.SemanticSearchEnabled); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID, llmProvider).Scan(&ul.UserID, &ul.LlmProvider, &ul.AutoSummaryMonthly, &ul.AutoLatestTrendEnabled, &ul.CreatedAt, &ul.UpdatedAt, &ul.SemanticSearchEnabled); err != nil {
 		return nil, logerror(err)
 	}
 	return &ul, nil
@@ -157,7 +156,7 @@ func UserLlmByUserIDLlmProvider(ctx context.Context, db DB, userID uuid.UUID, ll
 func UserLlmByUserID(ctx context.Context, db DB, userID uuid.UUID) (*UserLlm, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`user_id, llm_provider, key, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled ` +
+		`user_id, llm_provider, auto_summary_monthly, auto_latest_trend_enabled, created_at, updated_at, semantic_search_enabled ` +
 		`FROM public.user_llms ` +
 		`WHERE user_id = $1`
 	// run
@@ -165,7 +164,7 @@ func UserLlmByUserID(ctx context.Context, db DB, userID uuid.UUID) (*UserLlm, er
 	ul := UserLlm{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, userID).Scan(&ul.UserID, &ul.LlmProvider, &ul.Key, &ul.AutoSummaryMonthly, &ul.AutoLatestTrendEnabled, &ul.CreatedAt, &ul.UpdatedAt, &ul.SemanticSearchEnabled); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, userID).Scan(&ul.UserID, &ul.LlmProvider, &ul.AutoSummaryMonthly, &ul.AutoLatestTrendEnabled, &ul.CreatedAt, &ul.UpdatedAt, &ul.SemanticSearchEnabled); err != nil {
 		return nil, logerror(err)
 	}
 	return &ul, nil

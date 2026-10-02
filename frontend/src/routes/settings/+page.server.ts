@@ -2,9 +2,9 @@ import { redirect, fail } from "@sveltejs/kit";
 import {
   updateUserName,
   changePassword,
-  updateLLMKey,
+  enableLLM,
   getUserInfo,
-  deleteLLMKey,
+  disableLLM,
   deleteAccount,
   updateAutoSummarySettings,
   createApiKey,
@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
       user: {
         name: userInfo.name,
         email: userInfo.email,
-        llmKeys: userInfo.llmKeys || [],
+        llmSettings: userInfo.llmSettings || [],
       },
       apiKeys: (apiKeysResponse.apiKeys || []).map((key) => ({
         id: key.id,
@@ -139,81 +139,71 @@ export const actions: Actions = {
     }
   },
 
-  updateLLMKey: async ({ request, cookies }) => {
+  enableLLM: async ({ request, cookies }) => {
     const accessToken = cookies.get("accessToken");
     if (!accessToken) {
-      return fail(401, { error: "unauthorized", action: "updateLLMKey" });
+      return fail(401, { error: "unauthorized", action: "enableLLM" });
     }
 
     const data = await request.formData();
     const llmProvider = parseInt(data.get("llmProvider") as string, 10);
-    const key = data.get("llmKey") as string;
 
     if (Number.isNaN(llmProvider) || llmProvider < 0) {
-      return fail(400, { error: "invalidProvider", action: "updateLLMKey" });
-    }
-
-    if (!key || key.trim() === "") {
-      return fail(400, { error: "tokenRequired", action: "updateLLMKey" });
-    }
-
-    if (key.length > 100) {
-      return fail(400, { error: "tokenTooLong", action: "updateLLMKey" });
+      return fail(400, { error: "invalidProvider", action: "enableLLM" });
     }
 
     try {
-      const response = await updateLLMKey({
+      const response = await enableLLM({
         llmProvider,
-        key: key.trim(),
         accessToken,
       });
 
       if (!response.success) {
-        return fail(400, { error: response.message, action: "updateLLMKey" });
+        return fail(400, { error: response.message, action: "enableLLM" });
       }
 
       return {
         success: true,
         message: response.message,
-        action: "updateLLMKey",
+        action: "enableLLM",
       };
     } catch (error) {
-      console.error("Update LLM token error:", error);
-      return fail(500, { error: "updateFailed", action: "updateLLMKey" });
+      console.error("Enable LLM error:", error);
+      return fail(500, { error: "updateFailed", action: "enableLLM" });
     }
   },
 
-  deleteLLMKey: async ({ request, cookies }) => {
+  disableLLM: async ({ request, cookies }) => {
     const accessToken = cookies.get("accessToken");
     if (!accessToken) {
-      return fail(401, { error: "unauthorized", action: "deleteLLMKey" });
+      return fail(401, { error: "unauthorized", action: "disableLLM" });
     }
 
     const data = await request.formData();
     const llmProvider = parseInt(data.get("llmProvider") as string, 10);
 
     if (Number.isNaN(llmProvider) || llmProvider < 0) {
-      return fail(400, { error: "invalidProvider", action: "deleteLLMKey" });
+      return fail(400, { error: "invalidProvider", action: "disableLLM" });
     }
 
     try {
-      const response = await deleteLLMKey({
+      const response = await disableLLM({
         llmProvider,
         accessToken,
       });
 
       if (!response.success) {
-        return fail(400, { error: response.message, action: "deleteLLMKey" });
+        return fail(400, { error: response.message, action: "disableLLM" });
       }
 
       return {
         success: true,
         message: response.message,
-        action: "deleteLLMKey",
+        action: "disableLLM",
       };
     } catch (error) {
-      console.error("Delete LLM token error:", error);
-      return fail(500, { error: "updateFailed", action: "deleteLLMKey" });
+      console.error("Disable LLM error:", error);
+      return fail(500, { error: "updateFailed", action: "disableLLM" });
     }
   },
 
@@ -315,7 +305,7 @@ export const actions: Actions = {
         user: {
           name: userInfo.name,
           email: userInfo.email,
-          llmKeys: userInfo.llmKeys || [],
+          llmSettings: userInfo.llmSettings || [],
         },
       };
     } catch (error) {

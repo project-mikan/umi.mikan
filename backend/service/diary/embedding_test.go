@@ -42,7 +42,7 @@ type mockLLMFactory struct {
 	err      error
 }
 
-func (f *mockLLMFactory) CreateGeminiClient(_ context.Context, _ string) (GeminiEmbedder, error) {
+func (f *mockLLMFactory) CreateGeminiClient(_ context.Context) (GeminiEmbedder, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -510,7 +510,7 @@ func TestDiaryEntry_GenerateMonthlySummary_NoDiaries(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// LLMキーを作成（GenerateMonthlySummaryはLLMキーチェックを通過する必要がある）
-	testutil.CreateTestUserLLM(t, db, userID, "test-api-key")
+	testutil.CreateTestUserLLM(t, db, userID)
 
 	// 日記が存在しない過去月に対してサマリー生成を要求する
 	_, err := svc.GenerateMonthlySummary(ctx, &g.GenerateMonthlySummaryRequest{
@@ -558,7 +558,7 @@ func TestDiaryEntry_RegenerateAllEmbeddings_SemanticEnabled(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// semantic_search_enabled=trueでuser_llmsを挿入
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	redisClient := setupTestRedisForDiary(t)
 	svc := &DiaryEntry{DB: db, Redis: redisClient}
@@ -583,7 +583,7 @@ func TestDiaryEntry_SearchDiaryEntriesSemantic_EnrichedQuery(t *testing.T) {
 	ctx := createAuthenticatedContext(userID)
 
 	// semantic_search_enabled=trueでuser_llmsを挿入
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, "test-api-key", false, false, true)
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, false, false, true)
 
 	embedder := &mockGeminiEmbedder{}
 	svc := &DiaryEntry{

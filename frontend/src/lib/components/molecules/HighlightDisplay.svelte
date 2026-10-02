@@ -8,7 +8,7 @@
   import type { HighlightData } from "$lib/types/highlight";
 
   export let diaryId: string;
-  export let hasLLMKey = true;
+  export let isAiEnabled = true;
   export let isHighlightOutdated = false;
   export let diaryUpdatedAt: number;
 
@@ -98,7 +98,7 @@
 
   // ハイライト生成をトリガー
   async function generateHighlight() {
-    if (!browser || !hasLLMKey) return;
+    if (!browser || !isAiEnabled) return;
 
     highlightGenerating = true;
     highlightStatus = highlightData ? "processing" : "queued";
@@ -187,7 +187,7 @@
   $: buttonLoadingLabel = $_("diary.highlight.generating");
 </script>
 
-{#if hasLLMKey}
+{#if isAiEnabled}
 	<div class="flex flex-col gap-2 my-4">
 		<div class="flex items-center justify-between mb-2">
 			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">

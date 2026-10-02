@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
@@ -161,46 +160,42 @@ func TestUserEntry_ChangePassword_Unauthenticated(t *testing.T) {
 	}
 }
 
-func TestUserEntry_UpdateLLMKey(t *testing.T) {
+func TestUserEntry_EnableLLM(t *testing.T) {
 	db := setupUserTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "user-llm-key@example.com", "LLM Key User")
+	userID := testutil.CreateTestUser(t, db, "user-llm-enable@example.com", "LLM Enable User")
 	svc := &UserEntry{DB: db}
 	ctx := testutil.CreateAuthenticatedContext(userID)
 
+	// テストケースは順に実行され、前のケースの状態（有効化済みかどうか）を引き継ぐ
 	tests := []struct {
 		name            string
-		key             string
 		llmProvider     int32
 		expectedSuccess bool
 		expectedMessage string
 	}{
 		{
-			name:            "異常系：空のキー",
-			key:             "",
-			llmProvider:     1,
+			name:            "異常系: 負のプロバイダーを指定すると存在しないプロバイダーなのでinvalidProviderになる",
+			llmProvider:     -1,
 			expectedSuccess: false,
-			expectedMessage: "tokenRequired",
+			expectedMessage: "invalidProvider",
 		},
 		{
-			name:            "正常系：新規LLMキーを作成",
-			key:             "test-api-key-12345",
+			name:            "正常系: 未有効化のユーザーがAI機能を有効化できる",
 			llmProvider:     1,
 			expectedSuccess: true,
-			expectedMessage: "llmTokenUpdateSuccess",
+			expectedMessage: "llmEnabled",
 		},
 		{
-			name:            "正常系：既存LLMキーを更新",
-			key:             "updated-api-key-12345",
+			name:            "正常系: 有効化済みのユーザーが再度有効化しても成功する",
 			llmProvider:     1,
 			expectedSuccess: true,
-			expectedMessage: "llmTokenUpdateSuccess",
+			expectedMessage: "llmEnabled",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, err := svc.UpdateLLMKey(ctx, &g.UpdateLLMKeyRequest{
-				Key:         tt.key,
+			resp, err := svc.EnableLLM(ctx, &g.EnableLLMRequest{
 				LlmProvider: tt.llmProvider,
 			})
 			if err != nil {
@@ -216,31 +211,29 @@ func TestUserEntry_UpdateLLMKey(t *testing.T) {
 	}
 }
 
-func TestUserEntry_UpdateLLMKey_TokenTooLong(t *testing.T) {
+func TestUserEntry_EnableLLM_KeepsExistingSettings(t *testing.T) {
 	db := setupUserTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "user-llm-long@example.com", "LLM Long User")
+	userID := testutil.CreateTestUser(t, db, "user-llm-enable-keep@example.com", "LLM Keep User")
 	svc := &UserEntry{DB: db}
 	ctx := testutil.CreateAuthenticatedContext(userID)
 
-	// 101文字のキー
-	var longKey strings.Builder
-	longKey.WriteString("a")
-	for range 100 {
-		longKey.WriteString("a")
-	}
+	// 自動要約・意味的検索を有効にした状態で再度有効化しても、設定が初期化されないことを確認
+	testutil.CreateTestUserLLMWithSettings(t, db, userID, true, true, true)
 
-	resp, err := svc.UpdateLLMKey(ctx, &g.UpdateLLMKeyRequest{
-		Key:         longKey.String(),
-		LlmProvider: 1,
-	})
+	resp, err := svc.EnableLLM(ctx, &g.EnableLLMRequest{LlmProvider: 1})
 	if err != nil {
 		t.Fatalf("予期しないエラー: %v", err)
 	}
-	if resp.Success {
-		t.Error("長すぎるキーでSuccessがtrueになっている")
+	if !resp.Success {
+		t.Fatalf("Success: got false, want true (message: %s)", resp.Message)
 	}
-	if resp.Message != "tokenTooLong" {
-		t.Errorf("Message: got %q, want %q", resp.Message, "tokenTooLong")
+
+	settings, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+	if !settings.AutoSummaryMonthly || !settings.AutoLatestTrendEnabled || !settings.SemanticSearchEnabled {
+		t.Errorf("既存の設定が初期化された: %+v", settings)
 	}
 }
 
@@ -260,15 +253,15 @@ func TestUserEntry_GetUserInfo(t *testing.T) {
 		}
 	})
 
-	t.Run("正常系：LLMキー付きユーザー情報を取得", func(t *testing.T) {
-		testutil.CreateTestUserLLM(t, db, userID, "test-api-key")
+	t.Run("正常系：AI機能を有効化済みのユーザー情報を取得", func(t *testing.T) {
+		testutil.CreateTestUserLLM(t, db, userID)
 
 		resp, err := svc.GetUserInfo(ctx, &g.GetUserInfoRequest{})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
-		if len(resp.LlmKeys) == 0 {
-			t.Error("LLMキーが存在するはずがLlmKeysが空")
+		if len(resp.LlmSettings) == 0 {
+			t.Error("AI機能が有効化済みのはずがLlmSettingsが空")
 		}
 	})
 
@@ -280,37 +273,37 @@ func TestUserEntry_GetUserInfo(t *testing.T) {
 	})
 }
 
-func TestUserEntry_DeleteLLMKey(t *testing.T) {
+func TestUserEntry_DisableLLM(t *testing.T) {
 	db := setupUserTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "user-del-llm@example.com", "Del LLM User")
 	svc := &UserEntry{DB: db}
 	ctx := testutil.CreateAuthenticatedContext(userID)
 
-	t.Run("異常系：存在しないLLMキーを削除", func(t *testing.T) {
-		resp, err := svc.DeleteLLMKey(ctx, &g.DeleteLLMKeyRequest{LlmProvider: 1})
+	t.Run("異常系: AI機能を有効化していないユーザーが無効化すると対象が無いのでllmNotEnabledになる", func(t *testing.T) {
+		resp, err := svc.DisableLLM(ctx, &g.DisableLLMRequest{LlmProvider: 1})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
 		if resp.Success {
-			t.Error("存在しないキーの削除でSuccessがtrueになっている")
+			t.Error("未有効化での無効化でSuccessがtrueになっている")
 		}
-		if resp.Message != "tokenNotFound" {
-			t.Errorf("Message: got %q, want %q", resp.Message, "tokenNotFound")
+		if resp.Message != "llmNotEnabled" {
+			t.Errorf("Message: got %q, want %q", resp.Message, "llmNotEnabled")
 		}
 	})
 
-	t.Run("正常系：LLMキーを削除", func(t *testing.T) {
-		testutil.CreateTestUserLLM(t, db, userID, "test-api-key")
+	t.Run("正常系: AI機能を有効化済みのユーザーが無効化できる", func(t *testing.T) {
+		testutil.CreateTestUserLLM(t, db, userID)
 
-		resp, err := svc.DeleteLLMKey(ctx, &g.DeleteLLMKeyRequest{LlmProvider: 1})
+		resp, err := svc.DisableLLM(ctx, &g.DisableLLMRequest{LlmProvider: 1})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
 		if !resp.Success {
 			t.Errorf("Success: got false, want true (message: %s)", resp.Message)
 		}
-		if resp.Message != "llmTokenDeleteSuccess" {
-			t.Errorf("Message: got %q, want %q", resp.Message, "llmTokenDeleteSuccess")
+		if resp.Message != "llmDisabled" {
+			t.Errorf("Message: got %q, want %q", resp.Message, "llmDisabled")
 		}
 	})
 }
@@ -369,7 +362,7 @@ func TestUserEntry_UpdateAutoSummarySettings(t *testing.T) {
 	})
 
 	t.Run("正常系：自動要約設定を更新", func(t *testing.T) {
-		testutil.CreateTestUserLLM(t, db, userID, "test-api-key")
+		testutil.CreateTestUserLLM(t, db, userID)
 
 		resp, err := svc.UpdateAutoSummarySettings(ctx, &g.UpdateAutoSummarySettingsRequest{
 			LlmProvider:           1,
@@ -405,7 +398,7 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 	})
 
 	t.Run("正常系：LLMキーが存在する場合は設定を返す", func(t *testing.T) {
-		testutil.CreateTestUserLLM(t, db, userID, "test-api-key")
+		testutil.CreateTestUserLLM(t, db, userID)
 
 		resp, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
 		if err != nil {

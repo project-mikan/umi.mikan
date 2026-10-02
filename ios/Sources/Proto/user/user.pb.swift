@@ -78,8 +78,8 @@ nonisolated struct User_ChangePasswordResponse: Sendable {
   init() {}
 }
 
-/// LLMキー更新用のリクエスト
-nonisolated struct User_UpdateLLMKeyRequest: Sendable {
+/// AI機能有効化用のリクエスト
+nonisolated struct User_EnableLLMRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -87,15 +87,13 @@ nonisolated struct User_UpdateLLMKeyRequest: Sendable {
   /// 1:Gemini
   var llmProvider: Int32 = 0
 
-  var key: String = String()
-
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
-/// LLMキー更新用のレスポンス
-nonisolated struct User_UpdateLLMKeyResponse: Sendable {
+/// AI機能有効化用のレスポンス
+nonisolated struct User_EnableLLMResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -130,24 +128,22 @@ nonisolated struct User_GetUserInfoResponse: Sendable {
 
   var email: String = String()
 
-  /// LLMキー情報（存在する場合）
-  var llmKeys: [User_LLMKeyInfo] = []
+  /// AI機能設定（有効化されている場合のみ）
+  var llmSettings: [User_LLMSettingInfo] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
-/// LLMキー情報
-nonisolated struct User_LLMKeyInfo: Sendable {
+/// AI機能設定情報
+nonisolated struct User_LLMSettingInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// 1:Gemini
   var llmProvider: Int32 = 0
-
-  var key: String = String()
 
   /// 月毎の自動要約生成
   var autoSummaryMonthly: Bool = false
@@ -163,8 +159,8 @@ nonisolated struct User_LLMKeyInfo: Sendable {
   init() {}
 }
 
-/// LLMキー削除用のリクエスト
-nonisolated struct User_DeleteLLMKeyRequest: Sendable {
+/// AI機能無効化用のリクエスト
+nonisolated struct User_DisableLLMRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -177,8 +173,8 @@ nonisolated struct User_DeleteLLMKeyRequest: Sendable {
   init() {}
 }
 
-/// LLMキー削除用のレスポンス
-nonisolated struct User_DeleteLLMKeyResponse: Sendable {
+/// AI機能無効化用のレスポンス
+nonisolated struct User_DisableLLMResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -680,9 +676,9 @@ nonisolated extension User_ChangePasswordResponse: SwiftProtobuf.Message, SwiftP
   }
 }
 
-nonisolated extension User_UpdateLLMKeyRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".UpdateLLMKeyRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0\u{1}key\0")
+nonisolated extension User_EnableLLMRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".EnableLLMRequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0\u{c}\u{2}\u{1}")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -691,7 +687,6 @@ nonisolated extension User_UpdateLLMKeyRequest: SwiftProtobuf.Message, SwiftProt
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularInt32Field(value: &self.llmProvider) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.key) }()
       default: break
       }
     }
@@ -701,22 +696,18 @@ nonisolated extension User_UpdateLLMKeyRequest: SwiftProtobuf.Message, SwiftProt
     if self.llmProvider != 0 {
       try visitor.visitSingularInt32Field(value: self.llmProvider, fieldNumber: 1)
     }
-    if !self.key.isEmpty {
-      try visitor.visitSingularStringField(value: self.key, fieldNumber: 2)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: User_UpdateLLMKeyRequest, rhs: User_UpdateLLMKeyRequest) -> Bool {
+  static func ==(lhs: User_EnableLLMRequest, rhs: User_EnableLLMRequest) -> Bool {
     if lhs.llmProvider != rhs.llmProvider {return false}
-    if lhs.key != rhs.key {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-nonisolated extension User_UpdateLLMKeyResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".UpdateLLMKeyResponse"
+nonisolated extension User_EnableLLMResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".EnableLLMResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}success\0\u{1}message\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -742,7 +733,7 @@ nonisolated extension User_UpdateLLMKeyResponse: SwiftProtobuf.Message, SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: User_UpdateLLMKeyResponse, rhs: User_UpdateLLMKeyResponse) -> Bool {
+  static func ==(lhs: User_EnableLLMResponse, rhs: User_EnableLLMResponse) -> Bool {
     if lhs.success != rhs.success {return false}
     if lhs.message != rhs.message {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -771,7 +762,7 @@ nonisolated extension User_GetUserInfoRequest: SwiftProtobuf.Message, SwiftProto
 
 nonisolated extension User_GetUserInfoResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetUserInfoResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}email\0\u{3}llm_keys\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}email\0\u{3}llm_settings\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -781,7 +772,7 @@ nonisolated extension User_GetUserInfoResponse: SwiftProtobuf.Message, SwiftProt
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.email) }()
-      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.llmKeys) }()
+      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.llmSettings) }()
       default: break
       }
     }
@@ -794,8 +785,8 @@ nonisolated extension User_GetUserInfoResponse: SwiftProtobuf.Message, SwiftProt
     if !self.email.isEmpty {
       try visitor.visitSingularStringField(value: self.email, fieldNumber: 2)
     }
-    if !self.llmKeys.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.llmKeys, fieldNumber: 3)
+    if !self.llmSettings.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.llmSettings, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -803,15 +794,15 @@ nonisolated extension User_GetUserInfoResponse: SwiftProtobuf.Message, SwiftProt
   static func ==(lhs: User_GetUserInfoResponse, rhs: User_GetUserInfoResponse) -> Bool {
     if lhs.name != rhs.name {return false}
     if lhs.email != rhs.email {return false}
-    if lhs.llmKeys != rhs.llmKeys {return false}
+    if lhs.llmSettings != rhs.llmSettings {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-nonisolated extension User_LLMKeyInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".LLMKeyInfo"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0\u{1}key\0\u{4}\u{2}auto_summary_monthly\0\u{3}auto_latest_trend_enabled\0\u{3}semantic_search_enabled\0")
+nonisolated extension User_LLMSettingInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".LLMSettingInfo"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0\u{4}\u{3}auto_summary_monthly\0\u{3}auto_latest_trend_enabled\0\u{3}semantic_search_enabled\0\u{c}\u{2}\u{1}")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -820,7 +811,6 @@ nonisolated extension User_LLMKeyInfo: SwiftProtobuf.Message, SwiftProtobuf._Mes
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularInt32Field(value: &self.llmProvider) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.key) }()
       case 4: try { try decoder.decodeSingularBoolField(value: &self.autoSummaryMonthly) }()
       case 5: try { try decoder.decodeSingularBoolField(value: &self.autoLatestTrendEnabled) }()
       case 6: try { try decoder.decodeSingularBoolField(value: &self.semanticSearchEnabled) }()
@@ -832,9 +822,6 @@ nonisolated extension User_LLMKeyInfo: SwiftProtobuf.Message, SwiftProtobuf._Mes
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.llmProvider != 0 {
       try visitor.visitSingularInt32Field(value: self.llmProvider, fieldNumber: 1)
-    }
-    if !self.key.isEmpty {
-      try visitor.visitSingularStringField(value: self.key, fieldNumber: 2)
     }
     if self.autoSummaryMonthly != false {
       try visitor.visitSingularBoolField(value: self.autoSummaryMonthly, fieldNumber: 4)
@@ -848,9 +835,8 @@ nonisolated extension User_LLMKeyInfo: SwiftProtobuf.Message, SwiftProtobuf._Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: User_LLMKeyInfo, rhs: User_LLMKeyInfo) -> Bool {
+  static func ==(lhs: User_LLMSettingInfo, rhs: User_LLMSettingInfo) -> Bool {
     if lhs.llmProvider != rhs.llmProvider {return false}
-    if lhs.key != rhs.key {return false}
     if lhs.autoSummaryMonthly != rhs.autoSummaryMonthly {return false}
     if lhs.autoLatestTrendEnabled != rhs.autoLatestTrendEnabled {return false}
     if lhs.semanticSearchEnabled != rhs.semanticSearchEnabled {return false}
@@ -859,8 +845,8 @@ nonisolated extension User_LLMKeyInfo: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 }
 
-nonisolated extension User_DeleteLLMKeyRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".DeleteLLMKeyRequest"
+nonisolated extension User_DisableLLMRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DisableLLMRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}llm_provider\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -882,15 +868,15 @@ nonisolated extension User_DeleteLLMKeyRequest: SwiftProtobuf.Message, SwiftProt
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: User_DeleteLLMKeyRequest, rhs: User_DeleteLLMKeyRequest) -> Bool {
+  static func ==(lhs: User_DisableLLMRequest, rhs: User_DisableLLMRequest) -> Bool {
     if lhs.llmProvider != rhs.llmProvider {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-nonisolated extension User_DeleteLLMKeyResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".DeleteLLMKeyResponse"
+nonisolated extension User_DisableLLMResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DisableLLMResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}success\0\u{1}message\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -916,7 +902,7 @@ nonisolated extension User_DeleteLLMKeyResponse: SwiftProtobuf.Message, SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: User_DeleteLLMKeyResponse, rhs: User_DeleteLLMKeyResponse) -> Bool {
+  static func ==(lhs: User_DisableLLMResponse, rhs: User_DisableLLMResponse) -> Bool {
     if lhs.success != rhs.success {return false}
     if lhs.message != rhs.message {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

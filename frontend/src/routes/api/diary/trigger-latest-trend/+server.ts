@@ -2,6 +2,10 @@ import { error, json } from "@sveltejs/kit";
 import { triggerLatestTrend } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { RequestHandler } from "./$types";
+import {
+  AI_NOT_ENABLED_MESSAGE,
+  isAiNotEnabledError,
+} from "$lib/utils/error-utils";
 
 export const POST: RequestHandler = async ({ cookies }) => {
   const authResult = await ensureValidAccessToken(cookies);
@@ -37,15 +41,15 @@ export const POST: RequestHandler = async ({ cookies }) => {
       stack: (err as Error)?.stack,
     });
 
-    if ((err as Error)?.message?.includes("API key")) {
-      throw error(400, { message: "Gemini API key not configured" });
+    // AI機能が未有効化（設定画面でオプトインしていない）
+    if (isAiNotEnabledError(err)) {
+      throw error(400, { message: AI_NOT_ENABLED_MESSAGE });
     }
     if (
       (err as { code?: string })?.code === "NOT_FOUND" ||
-      (err as { code?: number })?.code === 5 || // gRPC NOT_FOUND code
-      (err as Error)?.message?.includes("not configured")
+      (err as { code?: number })?.code === 5 // gRPC NOT_FOUND code
     ) {
-      throw error(404, "Gemini API key not configured");
+      throw error(404, AI_NOT_ENABLED_MESSAGE);
     }
     if (
       (err as { code?: string })?.code === "PERMISSION_DENIED" ||

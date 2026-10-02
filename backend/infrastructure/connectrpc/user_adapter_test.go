@@ -156,13 +156,13 @@ func TestUserServiceAdapter_ChangePassword(t *testing.T) {
 	}
 }
 
-func TestUserServiceAdapter_DeleteLLMKey(t *testing.T) {
+func TestUserServiceAdapter_DisableLLM(t *testing.T) {
 	tests := []struct {
 		name          string
 		expectSuccess bool
 	}{
 		{
-			name:          "異常系: LLMキーが未登録の場合はSuccess:falseを返す",
+			name:          "異常系: AI機能を有効化していない場合は無効化対象が無いのでSuccess:falseを返す",
 			expectSuccess: false,
 		},
 	}
@@ -171,8 +171,8 @@ func TestUserServiceAdapter_DeleteLLMKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			adapter := setupUserAdapter(t)
 			ctx := createAuthContext(uuid.New().String())
-			req := connect.NewRequest(&g.DeleteLLMKeyRequest{})
-			resp, err := adapter.DeleteLLMKey(ctx, req)
+			req := connect.NewRequest(&g.DisableLLMRequest{})
+			resp, err := adapter.DisableLLM(ctx, req)
 
 			if err != nil {
 				t.Fatalf("予期しないエラー: %v", err)
@@ -240,16 +240,16 @@ func TestUserServiceAdapter_UpdateAutoSummarySettings(t *testing.T) {
 	}
 }
 
-func TestUserServiceAdapter_UpdateLLMKey(t *testing.T) {
+func TestUserServiceAdapter_EnableLLM(t *testing.T) {
 	tests := []struct {
 		name          string
-		request       *g.UpdateLLMKeyRequest
+		request       *g.EnableLLMRequest
 		expectSuccess bool
 	}{
 		{
-			name: "異常系: 空のキーはSuccess:falseを返す",
-			request: &g.UpdateLLMKeyRequest{
-				Key: "",
+			name: "異常系: 負のプロバイダーは存在しないプロバイダーなのでSuccess:falseを返す",
+			request: &g.EnableLLMRequest{
+				LlmProvider: -1,
 			},
 			expectSuccess: false,
 		},
@@ -260,7 +260,7 @@ func TestUserServiceAdapter_UpdateLLMKey(t *testing.T) {
 			adapter := setupUserAdapter(t)
 			ctx := createAuthContext(uuid.New().String())
 			req := connect.NewRequest(tt.request)
-			resp, err := adapter.UpdateLLMKey(ctx, req)
+			resp, err := adapter.EnableLLM(ctx, req)
 
 			if err != nil {
 				t.Fatalf("予期しないエラー: %v", err)
