@@ -108,8 +108,7 @@ type UserServiceClient interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error)
-	// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
-	// 設定レコードが無い場合は新規作成します。
+	// UpdateAutoSummarySettings はAI機能ごとのフラグを更新します（設定が無ければ作成）。
 	//
 	// 例:
 	//
@@ -351,8 +350,7 @@ type UserServiceHandler interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error)
-	// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
-	// 設定レコードが無い場合は新規作成します。
+	// UpdateAutoSummarySettings はAI機能ごとのフラグを更新します（設定が無ければ作成）。
 	//
 	// 例:
 	//

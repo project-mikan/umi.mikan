@@ -155,21 +155,19 @@ type RateLimitConfig struct {
 	RegisterWindow      time.Duration
 }
 
-// LLMClientFactory はLLMクライアントを提供する
+// LLMClientFactory creates LLM clients
 type LLMClientFactory interface {
 	CreateGeminiClient(ctx context.Context) (*llm.GeminiClient, error)
 }
 
-// geminiClientFactory は共通GCPプロジェクトのVertex AIクライアントを一度だけ生成して使い回す
-// （genai.Client は並行利用可能なため、ジョブ毎に生成する必要はない）
+// geminiClientFactory はクライアントを1つだけ生成して使い回す（genai.Client は並行利用可能）
 type geminiClientFactory struct {
 	config constants.VertexAIConfig
 	mu     sync.Mutex
 	client *llm.GeminiClient
 }
 
-// CreateGeminiClient は生成済みのクライアントを返し、未生成なら生成する。
-// 生成失敗時はキャッシュせず、次回呼び出しで再試行する（認証情報の後追い配置などに備える）
+// CreateGeminiClient は生成失敗をキャッシュせず次回再試行する（キーの後追い配置に備える）
 func (f *geminiClientFactory) CreateGeminiClient(ctx context.Context) (*llm.GeminiClient, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -338,7 +336,7 @@ func NewRedisClient(config *RedisConfig) (rueidis.Client, error) {
 	return nil, fmt.Errorf("failed to create Redis client: %w", lastErr)
 }
 
-// NewLLMClientFactory はVertex AI設定を読み込んでLLMクライアントファクトリを生成する
+// NewLLMClientFactory creates an LLM client factory
 func NewLLMClientFactory() LLMClientFactory {
 	return &geminiClientFactory{config: constants.LoadVertexAIConfig()}
 }
@@ -376,7 +374,6 @@ func NewAuthService(db *sql.DB, loginLimiter *ratelimiter.LoginAttemptLimiter, r
 
 // NewDiaryService creates a diary service
 func NewDiaryService(db *sql.DB, redis rueidis.Client, llmFactory LLMClientFactory) *diary.DiaryEntry {
-	// サーバー内でVertex AIクライアントを共有するため、DIで提供されたファクトリをラップする
 	return &diary.DiaryEntry{
 		DB:         db,
 		Redis:      redis,

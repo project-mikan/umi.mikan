@@ -3,9 +3,11 @@ package user
 import (
 	"context"
 	"database/sql"
+	"sync"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/testutil"
 	"github.com/redis/rueidis"
@@ -288,6 +290,65 @@ func TestUserEntry_UpdateAutoSummarySettings(t *testing.T) {
 				t.Errorf("保存した設定と読み出した設定が一致しない: got %+v, want %+v", settings, tt.request)
 			}
 		})
+	}
+}
+
+func TestUserEntry_UpdateAutoSummarySettings_Concurrent(t *testing.T) {
+	db := setupUserTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "user-auto-summary-concurrent@example.com", "Concurrent User")
+	svc := &UserEntry{DB: db}
+	ctx := testutil.CreateAuthenticatedContext(userID)
+
+	// 設定レコードが無い状態で同時に保存する（二重送信・複数タブからの保存を想定）
+	const concurrency = 10
+	var wg sync.WaitGroup
+	responses := make([]*g.UpdateAutoSummarySettingsResponse, concurrency)
+	for i := range concurrency {
+		wg.Go(func() {
+			resp, err := svc.UpdateAutoSummarySettings(ctx, &g.UpdateAutoSummarySettingsRequest{SemanticSearchEnabled: true})
+			if err != nil {
+				t.Errorf("予期しないエラー: %v", err)
+				return
+			}
+			responses[i] = resp
+		})
+	}
+	wg.Wait()
+
+	for i, resp := range responses {
+		if resp == nil || !resp.Success {
+			t.Errorf("正常系: 同時保存しても全リクエストが成功する: %d件目が失敗した (resp: %+v)", i, resp)
+		}
+	}
+}
+
+func TestUserEntry_UpdateAutoSummarySettings_KeepsCreatedAt(t *testing.T) {
+	db := setupUserTestDB(t)
+	userID := testutil.CreateTestUser(t, db, "user-auto-summary-created@example.com", "CreatedAt User")
+	svc := &UserEntry{DB: db}
+	ctx := testutil.CreateAuthenticatedContext(userID)
+
+	// 既存レコードの作成日時を過去の固定値にしておく
+	const originalCreatedAt int64 = 1000
+	existing := &database.UserLlm{UserID: userID, CreatedAt: originalCreatedAt, UpdatedAt: originalCreatedAt}
+	if err := existing.Insert(ctx, db); err != nil {
+		t.Fatalf("設定レコードの作成に失敗: %v", err)
+	}
+
+	resp, err := svc.UpdateAutoSummarySettings(ctx, &g.UpdateAutoSummarySettingsRequest{AutoSummaryMonthly: true})
+	if err != nil || !resp.Success {
+		t.Fatalf("保存に失敗: resp=%+v err=%v", resp, err)
+	}
+
+	saved, err := database.UserLlmByUserID(ctx, db, userID)
+	if err != nil {
+		t.Fatalf("設定レコードの取得に失敗: %v", err)
+	}
+	if saved.CreatedAt != originalCreatedAt {
+		t.Errorf("正常系: 既存レコードの更新ではcreated_atが維持される: got %d, want %d", saved.CreatedAt, originalCreatedAt)
+	}
+	if !saved.AutoSummaryMonthly {
+		t.Error("正常系: 更新したフラグが保存される: AutoSummaryMonthly が false のまま")
 	}
 }
 

@@ -8,8 +8,7 @@ terraform {
     }
   }
 
-  # stateはGCSに置き、誰がどのマシンから実行しても同じstateを参照する
-  # バケット名は環境ごとに異なるため backend.hcl で渡す（make tf-init が -backend-config=backend.hcl を指定する）
+  # バケット名は環境ごとに異なるため make tf-init で渡す
   backend "gcs" {
     prefix = "umi-mikan/vertex-ai"
   }

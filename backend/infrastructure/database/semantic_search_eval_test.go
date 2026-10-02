@@ -4,7 +4,7 @@ package database_test
 
 // セマンティック検索（RAG）の有効性を評価する統合テスト。
 // 実行条件:
-//   - GOOGLE_CLOUD_PROJECT（必要に応じて GOOGLE_CLOUD_LOCATION）と GOOGLE_APPLICATION_CREDENTIALS が設定されていること
+//   - backendコンテナにVertex AIの設定があること（GCP.md参照）
 //   - テストDBが起動していること（make db-apply-test 済み）
 //
 // 実行方法:

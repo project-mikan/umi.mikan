@@ -46,8 +46,9 @@ Accepted
 |---|---|
 | 手動実行（月次まとめ生成・ハイライト生成・トレンド分析の手動実行） | ボタン操作そのものを明示的な同意とみなし、フラグは確認しない。ログインユーザーなら誰でも実行できる |
 | 設定レコード | `UpdateAutoSummarySettings` で初めて保存したときに作成する（upsert）。レコードが無い場合は全フラグ false として扱う |
-| API | `UpdateLLMKey` / `DeleteLLMKey` を削除。`LLMKeyInfo` は `LLMSettingInfo`（`GetUserInfoResponse.llm_settings`）に改名し、旧 `key` フィールドは `reserved 2` |
+| API | `UpdateLLMKey` / `DeleteLLMKey` を削除。`LLMKeyInfo` は `LLMSettingInfo` に改名し、`GetUserInfoResponse.llm_setting`（単数。設定が無ければ未設定）で返す。旧 `key`・`llm_provider` フィールドは `reserved` |
 | 既存のキー | `user_llms.key` カラムを削除する（平文で保存されていたキーを残さない） |
+| LLMプロバイダー | 使うLLMは全ユーザー共通で固定するため、`user_llms.llm_provider` カラムと、APIの `llm_provider` 指定を削除する。`user_llms` はユーザーごとに1行（主キー `user_id`） |
 | 埋め込みベクトル | Vertex AI でも同じ `gemini-embedding-001` を使うため互換性があり、再生成はしない |
 | データの扱いの明示 | 設定画面の自動まとめ設定に「日記は運営者のVertex AIに送信されるが学習には使われない」旨を表示する |
 

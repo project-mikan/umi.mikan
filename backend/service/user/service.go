@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -183,7 +184,7 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
-	// AI機能設定を取得（一度でも設定を保存した場合のみ存在する。無ければnil）
+	// 一度も保存していないユーザーは設定が無いのでnilのまま返す
 	var llmSetting *g.LLMSettingInfo
 	userLLM, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
 	if err == nil && userLLM != nil {
@@ -289,35 +290,30 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 		}, nil
 	}
 
-	// 既存のAI機能設定を取得（無い場合は新規作成する）
+	// 既存のAI機能設定を取得する（作成日時を引き継ぐため。無い場合は新規作成扱い）
 	currentTime := time.Now().Unix()
 	userLLMDB, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
-	isNew := err == sql.ErrNoRows
-	if err != nil && !isNew {
+	if errors.Is(err, sql.ErrNoRows) {
+		userLLMDB = &database.UserLlm{
+			UserID:    parsedUserID,
+			CreatedAt: currentTime,
+		}
+	} else if err != nil {
 		return &g.UpdateAutoSummarySettingsResponse{
 			Success: false,
 			Message: "updateFailed",
 		}, nil
 	}
-	if isNew {
-		userLLMDB = &database.UserLlm{
-			UserID:    parsedUserID,
-			CreatedAt: currentTime,
-		}
-	}
 
-	// 機能ごとのフラグを更新
+	// 自動要約設定を更新
 	userLLMDB.AutoSummaryMonthly = req.GetAutoSummaryMonthly()
 	userLLMDB.AutoLatestTrendEnabled = req.GetAutoLatestTrendEnabled()
 	userLLMDB.SemanticSearchEnabled = req.GetSemanticSearchEnabled()
 	userLLMDB.UpdatedAt = currentTime
 
-	if isNew {
-		err = userLLMDB.Insert(ctx, s.DB)
-	} else {
-		err = userLLMDB.Update(ctx, s.DB)
-	}
-	if err != nil {
+	// 同時保存（二重送信・複数タブ）で取得→作成の間に競合しても主キー違反にならないよう、
+	// INSERT/UPDATE を分けずに ON CONFLICT (user_id) の Upsert で保存する
+	if err := userLLMDB.Upsert(ctx, s.DB); err != nil {
 		return &g.UpdateAutoSummarySettingsResponse{
 			Success: false,
 			Message: "updateFailed",
@@ -348,7 +344,7 @@ func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSu
 		}, nil
 	}
 
-	// AI機能設定を取得
+	// LLM設定を取得
 	userLLMDB, err := database.UserLlmByUserID(ctx, s.DB, parsedUserID)
 	if err != nil {
 		// 設定が存在しない場合はデフォルト値を返す

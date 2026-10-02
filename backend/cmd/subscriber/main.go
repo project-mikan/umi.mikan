@@ -535,8 +535,7 @@ func generateMonthlySummary(ctx context.Context, db *sql.DB, redisClient rueidis
 	return nil
 }
 
-// getUserLLMSetting はユーザーのAI機能設定（機能ごとのフラグ）を取得する。
-// user_llmsにレコードが無い（一度も設定を保存していない）場合はエラーを返す
+// getUserLLMSetting はAI機能設定を取得する（一度も保存していなければ sql.ErrNoRows）
 func getUserLLMSetting(ctx context.Context, db *sql.DB, userID string) (*database.UserLlm, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
@@ -546,7 +545,7 @@ func getUserLLMSetting(ctx context.Context, db *sql.DB, userID string) (*databas
 }
 
 func generateMonthlySummaryWithLLM(ctx context.Context, llmFactory container.LLMClientFactory, userID, combinedEntries string, logger *logrus.Entry) (string, error) {
-	// Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	// Gemini クライアント取得
 	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
@@ -723,7 +722,7 @@ func generateLatestTrend(ctx context.Context, db *sql.DB, redisClient rueidis.Cl
 }
 
 func generateLatestTrendWithLLM(ctx context.Context, llmFactory container.LLMClientFactory, userID, combinedEntries string, yesterday time.Time, logger *logrus.Entry) (string, error) {
-	// Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	// Gemini クライアント取得
 	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
@@ -902,7 +901,7 @@ func generateDiaryHighlight(ctx context.Context, db *sql.DB, redisClient rueidis
 }
 
 func generateDiaryHighlightWithLLM(ctx context.Context, llmFactory container.LLMClientFactory, userID, content string, logger *logrus.Entry) ([]map[string]any, error) {
-	// Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	// Gemini クライアント取得
 	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Failed to create Gemini client")
@@ -948,7 +947,7 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		"diary_id": diaryID,
 	}).Info("Generating diary embedding")
 
-	// 1. ユーザーが意味的検索を有効化しているか確認（設定が無い/無効の場合はスキップ）
+	// 1. ユーザーが意味的検索を有効化しているか確認
 	userLLM, err := getUserLLMSetting(ctx, db, userID)
 	if err != nil {
 		// AI機能設定が無いユーザーはスキップ（エラーではない）
@@ -976,7 +975,7 @@ func generateDiaryEmbedding(ctx context.Context, db *sql.DB, llmFactory containe
 		return fmt.Errorf("failed to get diary content: %w", err)
 	}
 
-	// 3. Gemini クライアント取得（共通GCPプロジェクトのVertex AI経由）
+	// 3. Gemini クライアント取得
 	geminiClient, err := llmFactory.CreateGeminiClient(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create Gemini client: %w", err)

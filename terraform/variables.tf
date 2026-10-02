@@ -2,7 +2,6 @@ variable "project_id" {
   description = "Vertex AIを利用するGCPプロジェクトID（請求先アカウントが紐付いた既存プロジェクト）。make経由では環境変数 UMI_MIKAN_PROJECT_ID から渡される"
   type        = string
 
-  # 環境変数の設定漏れで空文字が渡された場合に、分かりやすいエラーで止める
   validation {
     condition     = length(var.project_id) > 0
     error_message = "project_idが空です。UMI_MIKAN_PROJECT_IDをexportするか、terraform.tfvarsにproject_idを書いてください。"

@@ -33,7 +33,6 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
         accessToken: accessToken as string,
       });
       userName = userInfo.name;
-      // AI機能設定から autoLatestTrendEnabled を取得（未設定ならfalse）
       autoLatestTrendEnabled =
         userInfo.llmSetting?.autoLatestTrendEnabled ?? false;
     } catch (error) {

@@ -32,7 +32,7 @@ type SubscriberConfig struct {
 	MaxConcurrentJobs int
 }
 
-// VertexAIConfig はVertex AI（共通GCPプロジェクト）経由でGeminiを呼び出すための設定
+// VertexAIConfig はVertex AI経由でGeminiを呼び出すための設定
 type VertexAIConfig struct {
 	Project  string
 	Location string
@@ -326,12 +326,9 @@ func LoadFrontendBaseURL() string {
 	return defaultFrontendBaseURL
 }
 
-// defaultVertexAILocation はVertex AIのデフォルトリージョン（グローバルエンドポイント）
 const defaultVertexAILocation = "global"
 
-// LoadVertexAIConfig はGOOGLE_CLOUD_PROJECT / GOOGLE_CLOUD_LOCATION環境変数を読み込む。
-// 認証情報はADC（GOOGLE_APPLICATION_CREDENTIALSのサービスアカウントキー）からSDKが自動で解決する。
-// Projectが未設定でもサーバー起動は妨げず、LLMクライアント生成時にエラーとする。
+// LoadVertexAIConfig は環境変数を読む。Project未設定でも起動は妨げず、クライアント生成時にエラーにする
 func LoadVertexAIConfig() VertexAIConfig {
 	location := os.Getenv("GOOGLE_CLOUD_LOCATION")
 	if location == "" {

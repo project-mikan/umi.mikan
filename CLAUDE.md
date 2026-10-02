@@ -270,7 +270,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **users**: UUID primary keys, email-based authentication
 - **diaries**: One diary per user per date (unique constraint)
 - **user_password_authes**: Separate password authentication table
-- **user_llms**: Per-feature AI flags (`auto_summary_monthly`, `auto_latest_trend_enabled`, `semantic_search_enabled`). The row is created on first save via `UpdateAutoSummarySettings` (upsert); a missing row means all flags are false. No per-user API key is stored — LLM calls go through the shared GCP project's Vertex AI, see `adr/0017-vertex-ai.md`
+- **user_llms**: Per-feature AI flags (`auto_summary_monthly`, `auto_latest_trend_enabled`, `semantic_search_enabled`), one row per user (primary key `user_id`; there is no `llm_provider` column — the LLM is fixed for all users, and `GetUserInfoResponse.llm_setting` is a single optional message). The row is created on first save via `UpdateAutoSummarySettings` (upsert); a missing row means all flags are false. No per-user API key is stored — LLM calls go through the shared GCP project's Vertex AI, see `adr/0017-vertex-ai.md`
 - **user_api_keys**: Long-lived API keys for MCP clients (SHA-256 hash only, plaintext never stored; `expires_at` enforces a 90-day expiry)
 - **diary_summary_months**: AI-generated monthly summaries
 - **diary_highlights**: LLM-generated highlights for diary entries (JSONB format)

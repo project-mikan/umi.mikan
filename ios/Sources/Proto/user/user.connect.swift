@@ -11,7 +11,6 @@ import SwiftProtobuf
 
 /// UserService はユーザー設定とアカウント管理を提供するサービスです。
 /// ユーザー情報の更新、AI機能設定、Pub/Subメトリクス取得などの機能があります。
-/// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーはありません。
 internal protocol User_UserServiceClientInterface: Sendable {
 
     /// UpdateUserName はユーザー名を変更します。
@@ -61,8 +60,7 @@ internal protocol User_UserServiceClientInterface: Sendable {
     @available(iOS 13, *)
     func `deleteAccount`(request: User_DeleteAccountRequest, headers: Connect.Headers) async -> ResponseMessage<User_DeleteAccountResponse>
 
-    /// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
-    /// 設定レコードが無い場合は新規作成します。
+    /// UpdateAutoSummarySettings はAI機能ごとのフラグを更新します（設定が無ければ作成）。
     ///
     /// 例:
     ///   request: { auto_summary_monthly: false }

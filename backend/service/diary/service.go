@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -868,13 +869,17 @@ type SemanticSearchOutcome struct {
 }
 
 // isSemanticSearchEnabled はユーザーが意味的検索（RAG）を有効にしているかを返す。
-// AI機能設定レコードが無い場合や取得に失敗した場合は無効として扱う
-func (s *DiaryEntry) isSemanticSearchEnabled(ctx context.Context, userID uuid.UUID) bool {
+// AI機能設定レコードが無い場合は無効として扱う。
+// DBエラーは「無効」と区別できるようエラーとして返す（一時障害時に「設定で有効にして」と誤案内しないため）
+func (s *DiaryEntry) isSemanticSearchEnabled(ctx context.Context, userID uuid.UUID) (bool, error) {
 	userLLM, err := database.UserLlmByUserID(ctx, s.DB, userID)
-	if err != nil {
-		return false
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
 	}
-	return userLLM.SemanticSearchEnabled
+	if err != nil {
+		return false, err
+	}
+	return userLLM.SemanticSearchEnabled, nil
 }
 
 // SearchDiaryEntriesSemanticByUserID は指定ユーザーの日記を自然言語クエリで意味的に検索する。
@@ -887,8 +892,12 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 		return nil, status.Error(codes.InvalidArgument, "Query is required")
 	}
 
-	// 意味的検索が有効化されているか確認（設定レコードが無い場合は無効扱い）
-	if !s.isSemanticSearchEnabled(ctx, userID) {
+	// 意味的検索が有効化されているか確認
+	enabled, err := s.isSemanticSearchEnabled(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get AI settings: %v", err)
+	}
+	if !enabled {
 		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
 	}
 
@@ -1086,8 +1095,12 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		return nil, err
 	}
 
-	// 意味的検索が有効化されているか確認（設定レコードが無い場合は無効扱い）
-	if !s.isSemanticSearchEnabled(ctx, userID) {
+	// 意味的検索が有効化されているか確認
+	enabled, err := s.isSemanticSearchEnabled(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get AI settings: %v", err)
+	}
+	if !enabled {
 		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
 	}
 

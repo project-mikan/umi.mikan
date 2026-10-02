@@ -6,7 +6,6 @@ option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/g
 
 // UserService はユーザー設定とアカウント管理を提供するサービスです。
 // ユーザー情報の更新、AI機能設定、Pub/Subメトリクス取得などの機能があります。
-// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーはありません。
 service UserService {
   // UpdateUserName はユーザー名を変更します。
   //
@@ -51,8 +50,7 @@ service UserService {
   //   - Internal: 削除処理エラー
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
 
-  // UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
-  // 設定レコードが無い場合は新規作成します。
+  // UpdateAutoSummarySettings はAI機能ごとのフラグを更新します（設定が無ければ作成）。
   //
   // 例:
   //   request: { auto_summary_monthly: false }
@@ -142,7 +140,7 @@ message GetUserInfoRequest {
 message GetUserInfoResponse {
   string name = 1;
   string email = 2;
-  // AI機能設定（一度でも設定を保存した場合のみ。LLMは全ユーザー共通のため1件）
+  // AI機能設定（一度も保存していなければ未設定）
   LLMSettingInfo llm_setting = 3;
 }
 

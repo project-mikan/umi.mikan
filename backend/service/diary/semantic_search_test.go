@@ -288,7 +288,6 @@ func TestDiaryEntry_SearchDiaryEntriesByUserID_DBError(t *testing.T) {
 
 func TestDiaryEntry_isSemanticSearchEnabled(t *testing.T) {
 	db := setupTestDB(t)
-	svc := &DiaryEntry{DB: db}
 	ctx := context.Background()
 
 	enabledUserID := createTestUser(t, db)
@@ -297,22 +296,40 @@ func TestDiaryEntry_isSemanticSearchEnabled(t *testing.T) {
 	testutil.CreateTestUserLLMWithSettings(t, db, disabledUserID, true, true, false)
 	noSettingsUserID := createTestUser(t, db)
 
+	// クエリが必ず失敗するよう、接続を閉じたDBを用意する
+	closedDB, err := sql.Open("postgres", "")
+	if err != nil {
+		t.Fatalf("DB オープンに失敗: %v", err)
+	}
+	if err := closedDB.Close(); err != nil {
+		t.Fatalf("DB クローズに失敗: %v", err)
+	}
+
 	tests := []struct {
-		name     string
-		userID   uuid.UUID
-		expected bool
+		name      string
+		db        *sql.DB
+		userID    uuid.UUID
+		expected  bool
+		expectErr bool
 	}{
 		// semantic_search_enabled = true なので対象
-		{name: "正常系: 意味的検索を有効にしたユーザーはtrue", userID: enabledUserID, expected: true},
+		{name: "正常系: 意味的検索を有効にしたユーザーはtrue", db: db, userID: enabledUserID, expected: true},
 		// 他のフラグが true でも semantic_search_enabled = false なので対象外
-		{name: "正常系: 意味的検索を無効にしたユーザーはfalse", userID: disabledUserID, expected: false},
+		{name: "正常系: 意味的検索を無効にしたユーザーはfalse", db: db, userID: disabledUserID, expected: false},
 		// 設定レコードが無いユーザーは未設定 = 無効扱い
-		{name: "正常系: AI機能設定が無いユーザーはfalse", userID: noSettingsUserID, expected: false},
+		{name: "正常系: AI機能設定が無いユーザーはfalse", db: db, userID: noSettingsUserID, expected: false},
+		// DBエラーは「無効」と区別するため、エラーとして返す
+		{name: "異常系: DBエラーが起きると無効扱いにせずエラーを返す", db: closedDB, userID: enabledUserID, expected: false, expectErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := svc.isSemanticSearchEnabled(ctx, tt.userID); got != tt.expected {
+			svc := &DiaryEntry{DB: tt.db}
+			got, err := svc.isSemanticSearchEnabled(ctx, tt.userID)
+			if (err != nil) != tt.expectErr {
+				t.Fatalf("err: got %v, expectErr %v", err, tt.expectErr)
+			}
+			if got != tt.expected {
 				t.Errorf("got %v, want %v", got, tt.expected)
 			}
 		})

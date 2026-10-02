@@ -95,7 +95,6 @@ func (s *DiaryEntry) TriggerLatestTrend(
 		return nil, err
 	}
 
-	// ユーザーIDの形式を検証
 	if _, err := uuid.Parse(userIDStr); err != nil {
 		return nil, err
 	}

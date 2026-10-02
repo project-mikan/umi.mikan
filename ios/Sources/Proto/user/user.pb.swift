@@ -99,7 +99,7 @@ nonisolated struct User_GetUserInfoResponse: Sendable {
 
   var email: String = String()
 
-  /// AI機能設定（一度でも設定を保存した場合のみ。LLMは全ユーザー共通のため1件）
+  /// AI機能設定（一度も保存していなければ未設定）
   var llmSetting: User_LLMSettingInfo {
     get {_llmSetting ?? User_LLMSettingInfo()}
     set {_llmSetting = newValue}

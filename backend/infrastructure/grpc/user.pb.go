@@ -267,7 +267,7 @@ type GetUserInfoResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Email string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	// AI機能設定（一度でも設定を保存した場合のみ。LLMは全ユーザー共通のため1件）
+	// AI機能設定（一度も保存していなければ未設定）
 	LlmSetting    *LLMSettingInfo `protobuf:"bytes,3,opt,name=llm_setting,json=llmSetting,proto3" json:"llm_setting,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

@@ -2,6 +2,7 @@ package diary
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -488,6 +489,49 @@ func TestDiaryEntry_RegenerateAllEmbeddings_NoLLMSettings(t *testing.T) {
 	_, err := svc.RegenerateAllEmbeddings(ctx, &g.RegenerateAllEmbeddingsRequest{})
 	if status.Code(err) != codes.FailedPrecondition {
 		t.Errorf("コード: got %v, want %v", status.Code(err), codes.FailedPrecondition)
+	}
+}
+
+func TestDiaryEntry_SemanticFeatures_DBError(t *testing.T) {
+	userID := uuid.New()
+	ctx := createAuthenticatedContext(userID)
+
+	// 設定取得クエリが必ず失敗するよう、接続を閉じたDBを使う
+	closedDB, err := sql.Open("postgres", "")
+	if err != nil {
+		t.Fatalf("DB オープンに失敗: %v", err)
+	}
+	if err := closedDB.Close(); err != nil {
+		t.Fatalf("DB クローズに失敗: %v", err)
+	}
+	svc := &DiaryEntry{DB: closedDB}
+
+	tests := []struct {
+		name string
+		call func() error
+	}{
+		{
+			name: "異常系: 意味検索でDBエラーが起きると「無効」と誤報告せずInternalエラーになる",
+			call: func() error {
+				_, err := svc.SearchDiaryEntriesSemanticByUserID(ctx, userID, "クエリ", 10)
+				return err
+			},
+		},
+		{
+			name: "異常系: 全embedding再生成でDBエラーが起きると「無効」と誤報告せずInternalエラーになる",
+			call: func() error {
+				_, err := svc.RegenerateAllEmbeddings(ctx, &g.RegenerateAllEmbeddingsRequest{})
+				return err
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if code := status.Code(tt.call()); code != codes.Internal {
+				t.Errorf("コード: got %v, want %v", code, codes.Internal)
+			}
+		})
 	}
 }
 

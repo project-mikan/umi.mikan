@@ -136,7 +136,7 @@ Terraform を使わない場合の手順である。以下のコマンドは、�
 |---|---|---|
 | 1 | キーを配置 | 本番サーバーの `compose-prod.yml` と同じディレクトリに `secrets/gcp-service-account.json` を置く（`chmod 600` 推奨） |
 | 2 | `compose-prod.yml` を更新 | `compose-prod.example.yml` と同じように、`backend` と `subscriber` に `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` / `GOOGLE_APPLICATION_CREDENTIALS` を設定し、`./secrets:/secrets:ro` をマウントする |
-| 3 | スキーマを適用 | `user_llms.key` カラムの削除を含む。`make db-apply` が pgvector のバージョン差で失敗する場合は `ALTER TABLE user_llms DROP COLUMN key;` を psql で実行する |
+| 3 | スキーマを適用 | `user_llms` の `key`・`llm_provider` カラムの削除を含む。`make db-apply` が pgvector のバージョン差で失敗する場合は `ALTER TABLE user_llms DROP COLUMN key; ALTER TABLE user_llms DROP CONSTRAINT unique_user_llm; ALTER TABLE user_llms DROP COLUMN llm_provider;` を psql で実行する |
 | 4 | 再起動 | `docker compose -f compose-prod.yml up -d backend subscriber` |
 
 開発用と本番用でサービスアカウント（またはプロジェクト）を分けておくと、キーが漏洩したときの影響範囲と、コストの切り分けがしやすい。

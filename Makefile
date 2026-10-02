@@ -141,7 +141,7 @@ b-test-coverage:
 b-test-benchmark:
 	docker compose exec backend go test -bench=. ./...
 
-# GOOGLE_CLOUD_PROJECT 等のVertex AI設定がbackendコンテナにある状態で make b-test-semantic-eval で実行する
+# backendコンテナのVertex AI設定で実際のAPIを呼ぶ
 b-test-semantic-eval:
 	docker compose exec backend go test -tags=integration -v -run TestSemanticSearchEvaluation ./infrastructure/database/...
 
@@ -169,9 +169,7 @@ ios-test:
 ios-log:
 	xcrun simctl spawn booted log stream --predicate 'processImagePath contains "umi.mikan"' 2>/dev/null || echo "アプリが起動していません"
 
-# GCP（Vertex AI）のリソースをTerraformで管理する（手順は GCP.md）
-# 環境変数 UMI_MIKAN_PROJECT_ID がexportされていれば、それをproject_idとstateバケット名（<ID>-tfstate）に使う
-# 未設定の場合は terraform/terraform.tfvars と terraform/backend.hcl を使う
+# 手順は GCP.md。UMI_MIKAN_PROJECT_ID 未設定時は terraform.tfvars / backend.hcl を使う
 TF_BACKEND_CONFIG := $(if $(UMI_MIKAN_PROJECT_ID),-backend-config="bucket=$(UMI_MIKAN_PROJECT_ID)-tfstate",-backend-config=backend.hcl)
 TF_PROJECT_ENV := $(if $(UMI_MIKAN_PROJECT_ID),TF_VAR_project_id=$(UMI_MIKAN_PROJECT_ID))
 

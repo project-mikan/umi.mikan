@@ -1,4 +1,4 @@
--- ユーザーごとのAI機能設定（機能ごとのフラグ）。LLMは全ユーザー共通（共通GCPプロジェクトのVertex AI経由のGemini）のため、プロバイダーは持たない
+-- LLMは全ユーザー共通のため、プロバイダーは持たない
 CREATE TABLE IF NOT EXISTS user_llms (
     user_id UUID REFERENCES users(id) PRIMARY KEY,
     auto_summary_monthly BOOLEAN NOT NULL DEFAULT FALSE, -- 月毎の自動要約生成を行うかどうか

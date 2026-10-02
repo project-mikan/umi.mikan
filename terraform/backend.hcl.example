@@ -1,4 +1,2 @@
-# 環境変数 UMI_MIKAN_PROJECT_ID が未設定の場合のみ使う（設定済みなら make tf-init がバケット名を <ID>-tfstate にする）
-# backend.hcl にコピーしてstate保存用のGCSバケット名を設定する（backend.hcl はgit管理外）
-# バケットは ../GCP.md の手順で事前に作成しておく
+# UMI_MIKAN_PROJECT_ID 未設定時のみ、backend.hcl にコピーして使う（git管理外）
 bucket = "your-gcp-project-id-tfstate"
