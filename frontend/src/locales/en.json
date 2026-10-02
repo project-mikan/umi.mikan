@@ -37,18 +37,6 @@
       "confirmPlaceholder": "Re-enter new password",
       "save": "Change password"
     },
-    "aiFeatures": {
-      "title": "AI Features",
-      "description": "Use AI features such as monthly summaries, highlights, latest trend analysis, and natural language search. No API key is required.",
-      "dataNotice": "When enabled, your diary content is sent to the operator's Google Cloud (Vertex AI) for AI processing. The content is not used to train models.",
-      "statusLabel": "Status",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "enableButton": "Enable AI features",
-      "disableButton": "Disable AI features",
-      "disableConfirm": "Disable AI features",
-      "disableConfirmMessage": "Are you sure you want to disable AI features? Auto summary and natural language search settings will also be reset."
-    },
     "autoSummary": {
       "title": "Auto Summary Settings",
       "description": "Automatically generate summaries for diary entries over 1000 characters.",
@@ -59,7 +47,8 @@
       "regenerateEmbeddingsButton": "Index all unindexed diaries",
       "regenerateEmbeddingsSuccess": "Queued {count} diaries. Please wait.",
       "regenerateEmbeddingsFailed": "Bulk indexing failed.",
-      "save": "Save settings"
+      "save": "Save settings",
+      "dataNotice": "When you use AI features, your diary content is sent to the operator's Google Cloud (Vertex AI) for AI processing. The content is not used to train models."
     },
     "llmStatus": {
       "title": "LLM Processing Status",
@@ -128,10 +117,7 @@
       "apiKeyDeleteFailed": "Failed to delete API key",
       "apiKeyDeleted": "API key deleted",
       "apiKeyIdRequired": "API key ID is required",
-      "keyNotFound": "API key not found",
-      "llmEnabled": "AI features enabled",
-      "llmDisabled": "AI features disabled",
-      "llmNotEnabled": "AI features are not enabled"
+      "keyNotFound": "API key not found"
     }
   },
   "auth": {
@@ -244,8 +230,7 @@
       "timeout": "Highlight generation timed out. Please try again",
       "statusQueued": "Highlight generation has been queued. Please wait",
       "statusProcessing": "Generating highlights. Please wait",
-      "contentTooShort": "At least 500 characters are required for highlight generation",
-      "aiNotEnabled": "AI features are not enabled. Please enable them in the settings page"
+      "contentTooShort": "At least 500 characters are required for highlight generation"
     },
     "embedding": {
       "indexed": "Semantic search: Indexed",
@@ -352,7 +337,7 @@
     "button": "Search",
     "modeKeyword": "Keyword search",
     "modeSemantic": "Semantic search",
-    "semanticDescription": "Search by meaning and context using Gemini AI (requires enabling AI features in settings)",
+    "semanticDescription": "Search by meaning and context using Gemini AI (requires enabling natural language search in settings)",
     "results": "search results for",
     "semanticResults": "semantic search results for",
     "resultCount": "results",
@@ -368,7 +353,7 @@
     "expandedKeywordsNote": "Also searched for entity-linked keywords: {keywords}",
     "error": {
       "searchFailed": "Search failed.",
-      "semanticSearchFailed": "Semantic search failed. Please check that AI features and natural language search are enabled in settings."
+      "semanticSearchFailed": "Semantic search failed. Please check that natural language search is enabled in settings."
     },
     "chunkCount": "{count} chunks"
   },
@@ -397,8 +382,7 @@
       "currentMonthNote": "Summary cannot be generated for current month",
       "futureMonthError": "Summary cannot be generated for future months.",
       "noEntriesError": "No diary entries found for this month. Please write diary entries first to generate a summary.",
-      "blockedContent": "AI declined to generate a summary for this month due to content policy. You can regenerate after editing your diary entries.",
-      "aiNotEnabled": "AI features are not enabled. Please enable them in settings."
+      "blockedContent": "AI declined to generate a summary for this month due to content policy. You can regenerate after editing your diary entries."
     }
   },
   "timeProgress": {
@@ -468,7 +452,7 @@
       "ragRegenerateButton": "Index all pending entries",
       "ragRegenerateSuccess": "Queued {count} entries. Indexes will be generated in the background.",
       "ragRegenerateFailed": "Failed to queue index generation.",
-      "ragDisabledNote": "Enable AI features and natural language search in settings to see the status here.",
+      "ragDisabledNote": "Enable natural language search in settings to see the status here.",
       "aboutTitle": "About LLM Processing",
       "aboutDescription": "This page shows the status of automated summary processing by AI (Gemini via Google Cloud Vertex AI).",
       "monthlySummaryExplanation": "Monthly Summary: Comprehensive monthly summaries generated from diary entries",

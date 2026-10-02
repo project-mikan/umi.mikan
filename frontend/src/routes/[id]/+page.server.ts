@@ -159,7 +159,6 @@ export const load: PageServerLoad = async ({
     user: {
       name: userInfo.name,
       email: userInfo.email,
-      llmSettings: userInfo.llmSettings || [],
     },
     today: {
       year: today.getFullYear(),

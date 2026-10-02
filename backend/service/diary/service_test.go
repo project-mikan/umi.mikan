@@ -699,7 +699,8 @@ func TestDiaryEntry_TriggerDiaryHighlight(t *testing.T) {
 	db := setupTestDB(t)
 
 	userID := createTestUser(t, db)
-	diaryService := &DiaryEntry{DB: db}
+	// キュー追加（Redis Pub/Sub）まで到達するケースがあるためminiredisを使う
+	diaryService := &DiaryEntry{DB: db, Redis: setupTestRedisForDiary(t)}
 	ctx := createAuthenticatedContext(userID)
 
 	// Create a test diary entry with sufficient content (500+ characters)
@@ -744,12 +745,12 @@ func TestDiaryEntry_TriggerDiaryHighlight(t *testing.T) {
 			expectedCode:  codes.InvalidArgument,
 		},
 		{
-			name: "異常系：Gemini APIキー未設定（実際のテストでは成功する可能性がある）",
+			// AI機能設定レコードが無くても、ユーザーの手動実行なのでキューに追加される
+			name: "正常系：AI機能設定が無いユーザーでもハイライト生成をキューに追加できる",
 			request: &g.TriggerDiaryHighlightRequest{
 				DiaryId: createResp.Entry.Id,
 			},
-			shouldSucceed: false,
-			expectedCode:  codes.NotFound, // Gemini APIキーが見つからない
+			shouldSucceed: true,
 		},
 	}
 

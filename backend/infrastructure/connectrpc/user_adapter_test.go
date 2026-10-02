@@ -156,34 +156,6 @@ func TestUserServiceAdapter_ChangePassword(t *testing.T) {
 	}
 }
 
-func TestUserServiceAdapter_DisableLLM(t *testing.T) {
-	tests := []struct {
-		name          string
-		expectSuccess bool
-	}{
-		{
-			name:          "異常系: AI機能を有効化していない場合は無効化対象が無いのでSuccess:falseを返す",
-			expectSuccess: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			adapter := setupUserAdapter(t)
-			ctx := createAuthContext(uuid.New().String())
-			req := connect.NewRequest(&g.DisableLLMRequest{})
-			resp, err := adapter.DisableLLM(ctx, req)
-
-			if err != nil {
-				t.Fatalf("予期しないエラー: %v", err)
-			}
-			if resp.Msg.GetSuccess() != tt.expectSuccess {
-				t.Errorf("Success: 期待 %v, 実際 %v (msg: %v)", tt.expectSuccess, resp.Msg.GetSuccess(), resp.Msg.GetMessage())
-			}
-		})
-	}
-}
-
 func TestUserServiceAdapter_DeleteAccount(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -218,7 +190,7 @@ func TestUserServiceAdapter_UpdateAutoSummarySettings(t *testing.T) {
 		expectSuccess bool
 	}{
 		{
-			name:          "異常系: LLMキーが未登録のユーザーは Success:falseを返す",
+			name:          "異常系: 負のプロバイダーは存在しないプロバイダーなのでSuccess:falseを返す",
 			expectSuccess: false,
 		},
 	}
@@ -227,40 +199,8 @@ func TestUserServiceAdapter_UpdateAutoSummarySettings(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			adapter := setupUserAdapter(t)
 			ctx := createAuthContext(uuid.New().String())
-			req := connect.NewRequest(&g.UpdateAutoSummarySettingsRequest{})
+			req := connect.NewRequest(&g.UpdateAutoSummarySettingsRequest{LlmProvider: -1})
 			resp, err := adapter.UpdateAutoSummarySettings(ctx, req)
-
-			if err != nil {
-				t.Fatalf("予期しないエラー: %v", err)
-			}
-			if resp.Msg.GetSuccess() != tt.expectSuccess {
-				t.Errorf("Success: 期待 %v, 実際 %v (msg: %v)", tt.expectSuccess, resp.Msg.GetSuccess(), resp.Msg.GetMessage())
-			}
-		})
-	}
-}
-
-func TestUserServiceAdapter_EnableLLM(t *testing.T) {
-	tests := []struct {
-		name          string
-		request       *g.EnableLLMRequest
-		expectSuccess bool
-	}{
-		{
-			name: "異常系: 負のプロバイダーは存在しないプロバイダーなのでSuccess:falseを返す",
-			request: &g.EnableLLMRequest{
-				LlmProvider: -1,
-			},
-			expectSuccess: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			adapter := setupUserAdapter(t)
-			ctx := createAuthContext(uuid.New().String())
-			req := connect.NewRequest(tt.request)
-			resp, err := adapter.EnableLLM(ctx, req)
 
 			if err != nil {
 				t.Fatalf("予期しないエラー: %v", err)

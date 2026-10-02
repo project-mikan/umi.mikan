@@ -24,14 +24,11 @@
 
   let usernameLoading = false;
   let passwordLoading = false;
-  let enableLLMLoading = false;
   let autoSummaryLoading = false;
-  let disableLLMLoading = false;
   let deleteAccountLoading = false;
   let regenerateEmbeddingsLoading = false;
 
   // Modal states
-  let showDisableLLMConfirm = false;
   let showDeleteAccountConfirm = false;
 
   // Password visibility toggles
@@ -39,11 +36,10 @@
   let showNewPassword = false;
   let showConfirmPassword = false;
 
-  // Gemini（provider 1）のAI機能設定（有効化済みの場合のみ存在する）
+  // Gemini（provider 1）のAI機能設定（一度でも設定を保存した場合のみ存在する）
   $: llmSetting = data.user?.llmSettings?.find(
     (setting) => setting.llmProvider === 1,
   );
-  $: isAiEnabled = !!llmSetting;
 
   // Local state for checkbox values
   let autoSummaryMonthly = false;
@@ -118,32 +114,6 @@
   });
 
   // Modal helper functions
-  function confirmDisableLLM() {
-    showDisableLLMConfirm = true;
-  }
-
-  function cancelDisableLLM() {
-    showDisableLLMConfirm = false;
-  }
-
-  // AI機能の無効化フォームを送信する
-  function handleDisableLLM() {
-    showDisableLLMConfirm = false;
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "?/disableLLM";
-
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "llmProvider";
-    input.value = "1";
-    form.appendChild(input);
-
-    document.body.appendChild(form);
-    disableLLMLoading = true;
-    form.submit();
-  }
-
   // エクスポート関連の状態
   const currentDate = new Date();
   let exportFromYear = currentDate.getFullYear() - 1;
@@ -533,76 +503,14 @@
 						{$_("settings.nav.llmSettings")}
 					</h2>
 
-					<!-- AI機能の有効化セクション -->
-					<section id="ai-features" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-						<h3 class="text-xl font-semibold mb-4">{$_("settings.aiFeatures.title")}</h3>
-						<p class="text-sm text-gray-600 dark:text-gray-400 mb-2 auto-phrase-target">
-							{$_("settings.aiFeatures.description")}
-						</p>
-						<p class="text-xs text-gray-500 dark:text-gray-400 mb-4 auto-phrase-target">
-							{$_("settings.aiFeatures.dataNotice")}
-						</p>
-						<p class="text-sm font-medium mb-4" data-testid="ai-features-status">
-							{$_("settings.aiFeatures.statusLabel")}:
-							{#if isAiEnabled}
-								<span class="text-green-600 dark:text-green-400">{$_("settings.aiFeatures.enabled")}</span>
-							{:else}
-								<span class="text-gray-500 dark:text-gray-400">{$_("settings.aiFeatures.disabled")}</span>
-							{/if}
-						</p>
-
-						{#if isAiEnabled}
-							<button
-								type="button"
-								disabled={disableLLMLoading}
-								on:click={confirmDisableLLM}
-								class="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-							>
-								{disableLLMLoading ? $_("common.loading") : $_("settings.aiFeatures.disableButton")}
-							</button>
-						{:else}
-							<form
-								method="POST"
-								action="?/enableLLM"
-								use:enhance={() => {
-									enableLLMLoading = true;
-									return async ({ update }) => {
-										enableLLMLoading = false;
-										await update();
-									};
-								}}
-							>
-								<input type="hidden" name="llmProvider" value="1" />
-								<button
-									type="submit"
-									use:haptic
-									disabled={enableLLMLoading}
-									class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-								>
-									{enableLLMLoading ? $_("common.loading") : $_("settings.aiFeatures.enableButton")}
-								</button>
-							</form>
-						{/if}
-
-						<!-- AI機能の有効化/無効化メッセージ -->
-						{#if form?.error && (isMessageForAction("enableLLM") || isMessageForAction("disableLLM"))}
-							<div class="mt-3 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded auto-phrase-target">
-								{$_(`settings.messages.${form.error}`) || form.error}
-							</div>
-						{/if}
-						{#if form?.success && (isMessageForAction("enableLLM") || isMessageForAction("disableLLM"))}
-							<div class="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded auto-phrase-target">
-								{$_(`settings.messages.${form.message}`) || form.message}
-							</div>
-						{/if}
-					</section>
-
 					<!-- 自動要約設定セクション -->
-					{#if isAiEnabled}
-						<section id="auto-summary" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+					<section id="auto-summary" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
 							<h3 class="text-xl font-semibold mb-4">{$_("settings.autoSummary.title")}</h3>
-				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4 auto-phrase-target">
+				<p class="text-sm text-gray-600 dark:text-gray-400 mb-2 auto-phrase-target">
 					{$_("settings.autoSummary.description")}
+				</p>
+				<p class="text-xs text-gray-500 dark:text-gray-400 mb-4 auto-phrase-target">
+					{$_("settings.autoSummary.dataNotice")}
 				</p>
 				<form
 					method="POST"
@@ -727,11 +635,9 @@
 						</div>
 					{/if}
 						</section>
-					{/if}
 
 					<!-- LLM処理状況セクション -->
-					{#if isAiEnabled}
-						<section id="llm-status" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+					<section id="llm-status" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
 							<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
 								{$_("settings.llmStatus.title")}
 							</h3>
@@ -759,7 +665,6 @@
 					{$_("settings.llmStatus.viewButton")}
 								</a>
 						</section>
-					{/if}
 				</div>
 			</div>
 
@@ -1036,21 +941,6 @@
 	</div>
 	</div>
 </main>
-
-<!-- LLM Token Delete Confirmation Modal -->
-<Modal
-	isOpen={showDisableLLMConfirm}
-	title={$_("settings.aiFeatures.disableConfirm")}
-	confirmText={$_("settings.aiFeatures.disableButton")}
-	cancelText={$_("diary.cancel")}
-	variant="danger"
-	onConfirm={handleDisableLLM}
-	onCancel={cancelDisableLLM}
->
-	<p class="text-sm text-gray-500 dark:text-gray-400 auto-phrase-target">
-		{$_("settings.aiFeatures.disableConfirmMessage")}
-	</p>
-</Modal>
 
 <!-- API Key Delete Confirmation Modal -->
 <Modal

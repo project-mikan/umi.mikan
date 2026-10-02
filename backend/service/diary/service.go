@@ -459,12 +459,6 @@ func (s *DiaryEntry) GenerateMonthlySummary(
 		return nil, err
 	}
 
-	// ユーザーがAI機能を有効化（オプトイン）しているかチェック
-	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "AI features are not enabled for user")
-	}
-
 	// 指定された月が今月より前であることを確認
 	now := time.Now()
 	requestedMonth := time.Date(int(message.Month.Year), time.Month(message.Month.Month), 1, 0, 0, 0, 0, time.UTC)
@@ -666,12 +660,6 @@ func (s *DiaryEntry) TriggerDiaryHighlight(
 	// 文字数チェック（最小500文字）
 	if len([]rune(diary.Content)) < 500 {
 		return nil, status.Error(codes.FailedPrecondition, "Content too short for highlight generation (minimum 500 characters)")
-	}
-
-	// ユーザーがAI機能を有効化（オプトイン）しているかチェック
-	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "AI features are not enabled")
 	}
 
 	// タスクキーを生成
@@ -879,6 +867,16 @@ type SemanticSearchOutcome struct {
 	ChunkModel     string
 }
 
+// isSemanticSearchEnabled はユーザーが意味的検索（RAG）を有効にしているかを返す。
+// AI機能設定レコードが無い場合や取得に失敗した場合は無効として扱う
+func (s *DiaryEntry) isSemanticSearchEnabled(ctx context.Context, userID uuid.UUID) bool {
+	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
+	if err != nil {
+		return false
+	}
+	return userLLM.SemanticSearchEnabled
+}
+
 // SearchDiaryEntriesSemanticByUserID は指定ユーザーの日記を自然言語クエリで意味的に検索する。
 // gRPC/MCPどちらからも利用する共通ロジック。
 func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, userID uuid.UUID, query string, limit int) (*SemanticSearchOutcome, error) {
@@ -889,14 +887,8 @@ func (s *DiaryEntry) SearchDiaryEntriesSemanticByUserID(ctx context.Context, use
 		return nil, status.Error(codes.InvalidArgument, "Query is required")
 	}
 
-	// ユーザーのAI機能設定を取得
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "AI features are not enabled")
-	}
-
-	// 意味的検索が有効化されているか確認
-	if !userLLM.SemanticSearchEnabled {
+	// 意味的検索が有効化されているか確認（設定レコードが無い場合は無効扱い）
+	if !s.isSemanticSearchEnabled(ctx, userID) {
 		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
 	}
 
@@ -1094,14 +1086,8 @@ func (s *DiaryEntry) RegenerateAllEmbeddings(
 		return nil, err
 	}
 
-	// ユーザーのAI機能設定を取得
-	userLLM, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, userID, 1) // Gemini
-	if err != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "AI features are not enabled")
-	}
-
-	// 意味的検索が有効化されているか確認
-	if !userLLM.SemanticSearchEnabled {
+	// 意味的検索が有効化されているか確認（設定レコードが無い場合は無効扱い）
+	if !s.isSemanticSearchEnabled(ctx, userID) {
 		return nil, status.Errorf(codes.FailedPrecondition, "Semantic search is not enabled. Please enable it in settings.")
 	}
 

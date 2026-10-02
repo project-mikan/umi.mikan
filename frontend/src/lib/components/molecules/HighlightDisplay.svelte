@@ -8,7 +8,6 @@
   import type { HighlightData } from "$lib/types/highlight";
 
   export let diaryId: string;
-  export let isAiEnabled = true;
   export let isHighlightOutdated = false;
   export let diaryUpdatedAt: number;
 
@@ -98,7 +97,7 @@
 
   // ハイライト生成をトリガー
   async function generateHighlight() {
-    if (!browser || !isAiEnabled) return;
+    if (!browser) return;
 
     highlightGenerating = true;
     highlightStatus = highlightData ? "processing" : "queued";
@@ -187,53 +186,51 @@
   $: buttonLoadingLabel = $_("diary.highlight.generating");
 </script>
 
-{#if isAiEnabled}
-	<div class="flex flex-col gap-2 my-4">
-		<div class="flex items-center justify-between mb-2">
-			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-				{$_("diary.highlight.title")}
-			</h2>
-		</div>
-		<div class="flex flex-wrap gap-2 items-center">
-			{#if isHighlightOutdated && highlightData}
-				<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
-					⚠️ {$_("diary.highlight.outdated")}
-				</span>
-			{/if}
+<div class="flex flex-col gap-2 my-4">
+	<div class="flex items-center justify-between mb-2">
+		<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+			{$_("diary.highlight.title")}
+		</h2>
+	</div>
+	<div class="flex flex-wrap gap-2 items-center">
+		{#if isHighlightOutdated && highlightData}
+			<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
+				⚠️ {$_("diary.highlight.outdated")}
+			</span>
+		{/if}
 
-			{#if highlightStatus === "queued"}
-				<span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-					{$_("diary.highlight.statusQueued")}
-				</span>
-			{:else if highlightStatus === "processing"}
-				<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
-					{$_("diary.highlight.statusProcessing")}
-				</span>
-			{:else if highlightStatus === "error" && errorMessage}
-				<span class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
-					❌ {errorMessage}
-				</span>
-			{/if}
+		{#if highlightStatus === "queued"}
+			<span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+				{$_("diary.highlight.statusQueued")}
+			</span>
+		{:else if highlightStatus === "processing"}
+			<span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
+				{$_("diary.highlight.statusProcessing")}
+			</span>
+		{:else if highlightStatus === "error" && errorMessage}
+			<span class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+				❌ {errorMessage}
+			</span>
+		{/if}
 
+		<Button
+			variant="secondary"
+			size="sm"
+			on:click={generateHighlight}
+			disabled={highlightGenerating}
+		>
+			{highlightGenerating ? buttonLoadingLabel : buttonLabel}
+		</Button>
+
+		{#if highlightData}
 			<Button
-				variant="secondary"
+				variant={highlightVisible ? "secondary" : "primary"}
 				size="sm"
-				on:click={generateHighlight}
+				on:click={toggleHighlightVisibility}
 				disabled={highlightGenerating}
 			>
-				{highlightGenerating ? buttonLoadingLabel : buttonLabel}
+				{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
 			</Button>
-
-			{#if highlightData}
-				<Button
-					variant={highlightVisible ? "secondary" : "primary"}
-					size="sm"
-					on:click={toggleHighlightVisibility}
-					disabled={highlightGenerating}
-				>
-					{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
-				</Button>
-			{/if}
-		</div>
+		{/if}
 	</div>
-{/if}
+</div>

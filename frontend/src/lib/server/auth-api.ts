@@ -14,9 +14,7 @@ import {
   UserService,
   UpdateUserNameRequestSchema,
   ChangePasswordRequestSchema,
-  EnableLLMRequestSchema,
   GetUserInfoRequestSchema,
-  DisableLLMRequestSchema,
   DeleteAccountRequestSchema,
   UpdateAutoSummarySettingsRequestSchema,
   CreateApiKeyRequestSchema,
@@ -24,9 +22,7 @@ import {
   DeleteApiKeyRequestSchema,
   type UpdateUserNameResponse,
   type ChangePasswordResponse,
-  type EnableLLMResponse,
   type GetUserInfoResponse,
-  type DisableLLMResponse,
   type DeleteAccountResponse,
   type UpdateAutoSummarySettingsResponse,
   type CreateApiKeyResponse,
@@ -139,22 +135,6 @@ export async function changePassword(
   );
 }
 
-export interface EnableLLMParams {
-  llmProvider: number;
-  accessToken: string;
-}
-
-// enableLLM はユーザーのAI機能を有効化（オプトイン）する。LLMは共通GCPプロジェクトのVertex AI経由で呼ばれる
-export async function enableLLM(
-  params: EnableLLMParams,
-): Promise<EnableLLMResponse> {
-  const request = create(EnableLLMRequestSchema, {
-    llmProvider: params.llmProvider,
-  });
-
-  return await userClient.enableLLM(request, authHeader(params.accessToken));
-}
-
 export interface GetUserInfoParams {
   accessToken: string;
 }
@@ -165,22 +145,6 @@ export async function getUserInfo(
   const request = create(GetUserInfoRequestSchema, {});
 
   return await userClient.getUserInfo(request, authHeader(params.accessToken));
-}
-
-export interface DisableLLMParams {
-  llmProvider: number;
-  accessToken: string;
-}
-
-// disableLLM はユーザーのAI機能を無効化（オプトアウト）する
-export async function disableLLM(
-  params: DisableLLMParams,
-): Promise<DisableLLMResponse> {
-  const request = create(DisableLLMRequestSchema, {
-    llmProvider: params.llmProvider,
-  });
-
-  return await userClient.disableLLM(request, authHeader(params.accessToken));
 }
 
 export interface DeleteAccountParams {

@@ -28,22 +28,6 @@ export function isInvalidRefreshTokenError(error: unknown): boolean {
 }
 
 /**
- * AI機能が未有効化（オプトインしていない）の場合にバックエンドが返すエラーメッセージ。
- * backend/service/diary の "AI features are not enabled" と一致させること
- */
-export const AI_NOT_ENABLED_MESSAGE = "AI features are not enabled";
-
-/**
- * AI機能が未有効化であることを示すエラーかどうかを判定
- */
-export function isAiNotEnabledError(error: unknown): boolean {
-  if (error instanceof Error) {
-    return error.message.includes(AI_NOT_ENABLED_MESSAGE);
-  }
-  return false;
-}
-
-/**
  * レート制限エラーからリセット時間を抽出（可能であれば）
  */
 export function extractRateLimitResetTime(error: unknown): string | null {

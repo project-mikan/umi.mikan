@@ -1,0 +1,7 @@
+# stateはGCSに置くが、移行時などにローカルへ作られたstateもコミットしない
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+backend.hcl
+crash.log

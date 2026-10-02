@@ -285,3 +285,36 @@ func TestDiaryEntry_SearchDiaryEntriesByUserID_DBError(t *testing.T) {
 		t.Fatal("gRPCラッパー経由でもDBエラーが返ることを期待したがnilが返った")
 	}
 }
+
+func TestDiaryEntry_isSemanticSearchEnabled(t *testing.T) {
+	db := setupTestDB(t)
+	svc := &DiaryEntry{DB: db}
+	ctx := context.Background()
+
+	enabledUserID := createTestUser(t, db)
+	testutil.CreateTestUserLLMWithSettings(t, db, enabledUserID, false, false, true)
+	disabledUserID := createTestUser(t, db)
+	testutil.CreateTestUserLLMWithSettings(t, db, disabledUserID, true, true, false)
+	noSettingsUserID := createTestUser(t, db)
+
+	tests := []struct {
+		name     string
+		userID   uuid.UUID
+		expected bool
+	}{
+		// semantic_search_enabled = true なので対象
+		{name: "正常系: 意味的検索を有効にしたユーザーはtrue", userID: enabledUserID, expected: true},
+		// 他のフラグが true でも semantic_search_enabled = false なので対象外
+		{name: "正常系: 意味的検索を無効にしたユーザーはfalse", userID: disabledUserID, expected: false},
+		// 設定レコードが無いユーザーは未設定 = 無効扱い
+		{name: "正常系: AI機能設定が無いユーザーはfalse", userID: noSettingsUserID, expected: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := svc.isSemanticSearchEnabled(ctx, tt.userID); got != tt.expected {
+				t.Errorf("got %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}

@@ -31,28 +31,39 @@ Accepted
 | クライアント | `container.geminiClientFactory` がプロセス内で1つだけ生成して使い回す（`genai.Client` は並行利用可能）。生成失敗はキャッシュせず次回再試行する |
 | 未設定時の挙動 | `GOOGLE_CLOUD_PROJECT` が未設定でもサーバーは起動し、AI機能の呼び出し時にのみエラーとなる |
 
-### AI機能はユーザーのオプトイン制にする
+### AI機能は既存の機能ごとのフラグで制御する（全体の有効化フラグは設けない）
 
-共通プロジェクトの課金を抑えるため、全ユーザーに自動で開放せず、設定画面で明示的に有効化したユーザーのみ利用できる。
+`user_llms` には以前から機能ごとのフラグがあり、自動で動く処理はこれらで対象ユーザーを絞り込んでいる。
+そのため「AI機能全体を有効にしたか」を別に持つと二重管理になる。
+
+| フラグ | 制御対象 |
+|---|---|
+| `auto_summary_monthly` | 月次まとめの自動生成（scheduler） |
+| `auto_latest_trend_enabled` | 直近トレンド分析の自動生成（scheduler） |
+| `semantic_search_enabled` | RAGの埋め込み生成・自然言語検索（scheduler / subscriber / 検索API） |
 
 | 項目 | 決定 |
 |---|---|
-| オプトイン状態 | `user_llms` レコードの存在で表す（従来の「キー登録済み」と同じ判定を流用） |
-| API | `UpdateLLMKey` / `DeleteLLMKey` を `EnableLLM` / `DisableLLM` に置き換え、`LLMKeyInfo` は `LLMSettingInfo`（`GetUserInfoResponse.llm_settings`）に改名。旧 `key` フィールドは `reserved 2` |
+| 手動実行（月次まとめ生成・ハイライト生成・トレンド分析の手動実行） | ボタン操作そのものを明示的な同意とみなし、フラグは確認しない。ログインユーザーなら誰でも実行できる |
+| 設定レコード | `UpdateAutoSummarySettings` で初めて保存したときに作成する（upsert）。レコードが無い場合は全フラグ false として扱う |
+| API | `UpdateLLMKey` / `DeleteLLMKey` を削除。`LLMKeyInfo` は `LLMSettingInfo`（`GetUserInfoResponse.llm_settings`）に改名し、旧 `key` フィールドは `reserved 2` |
 | 既存のキー | `user_llms.key` カラムを削除する（平文で保存されていたキーを残さない） |
 | 埋め込みベクトル | Vertex AI でも同じ `gemini-embedding-001` を使うため互換性があり、再生成はしない |
+| データの扱いの明示 | 設定画面の自動まとめ設定に「日記は運営者のVertex AIに送信されるが学習には使われない」旨を表示する |
 
 ## 結果
 
 | 観点 | 影響 |
 |---|---|
-| ユーザー体験 | ボタン1つでAI機能を使えるようになる |
+| ユーザー体験 | APIキーの用意が不要になり、手動実行の機能はすぐ使える |
 | プライバシー | Vertex AI に送信したデータはモデルの学習に使われない |
-| コスト | LLM利用料は運営者負担になる。オプトイン制で対象ユーザーを絞り、利用状況は `/llm` ページと Grafana で監視する |
+| コスト | LLM利用料は運営者負担になる。新規登録は `REGISTER_KEY` で制限されており、自動処理は機能ごとのフラグを有効にしたユーザーのみが対象 |
 | 運用 | 本番環境では `./secrets/gcp-service-account.json` の配置と `GOOGLE_CLOUD_PROJECT` の設定が必須 |
 | 互換性 | 旧RPC（`UpdateLLMKey` / `DeleteLLMKey`）は削除した。iOSアプリでは使っていない |
 
 ## 補足
+
+- GCP側の設定手順（APIの有効化・サービスアカウント作成・キーのローテーション等）は `GCP.md` にまとめている
 
 - `global` エンドポイントで利用できないモデルが出てきた場合は、`GOOGLE_CLOUD_LOCATION` を `asia-northeast1` などのリージョンに変える
 - 今後 Vertex AI 以外のプロバイダーを追加する場合でも、実装が複数そろうまではファクトリをインターフェース化して抽象化しない（YAGNI）

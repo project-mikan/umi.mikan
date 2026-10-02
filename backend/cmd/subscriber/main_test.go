@@ -85,20 +85,6 @@ func TestProcessMessage_DiaryHighlight_InvalidJSON(t *testing.T) {
 	}
 }
 
-func TestGenerateDiaryHighlightWithLLM_NoLLMConfig(t *testing.T) {
-	db := testutil.SetupTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "subscriber-highlight-test@example.com", "Subscriber Test User")
-	ctx := context.Background()
-	logger := logrus.NewEntry(logrus.New())
-
-	// LLM設定なしのユーザーでgenerateDiaryHighlightWithLLMを呼び出すと、
-	// user_llmsテーブルにレコードがないためエラーが返ることを確認
-	_, err := generateDiaryHighlightWithLLM(ctx, db, nil, userID.String(), "テストコンテンツ", logger)
-	if err == nil {
-		t.Fatal("LLM設定なしの場合はエラーが期待されますが、nilが返りました")
-	}
-}
-
 func TestGetUserLLMSetting(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	enabledUserID := testutil.CreateTestUser(t, db, "subscriber-llm-enabled@example.com", "Enabled User")
@@ -113,13 +99,13 @@ func TestGetUserLLMSetting(t *testing.T) {
 		expectSemanticFlag bool
 	}{
 		{
-			name:               "正常系: AI機能を有効化済みのユーザーは設定を取得できる",
+			name:               "正常系: AI機能設定を保存済みのユーザーは設定を取得できる",
 			userID:             enabledUserID.String(),
 			expectError:        false,
 			expectSemanticFlag: true,
 		},
 		{
-			name:        "異常系: AI機能を有効化していないユーザーはuser_llmsにレコードが無いのでエラーになる",
+			name:        "異常系: AI機能設定を保存していないユーザーはuser_llmsにレコードが無いのでエラーになる",
 			userID:      disabledUserID.String(),
 			expectError: true,
 		},

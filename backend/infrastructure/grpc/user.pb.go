@@ -225,104 +225,6 @@ func (x *ChangePasswordResponse) GetMessage() string {
 	return ""
 }
 
-// AI機能有効化用のリクエスト
-type EnableLLMRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *EnableLLMRequest) Reset() {
-	*x = EnableLLMRequest{}
-	mi := &file_user_user_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EnableLLMRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EnableLLMRequest) ProtoMessage() {}
-
-func (x *EnableLLMRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EnableLLMRequest.ProtoReflect.Descriptor instead.
-func (*EnableLLMRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *EnableLLMRequest) GetLlmProvider() int32 {
-	if x != nil {
-		return x.LlmProvider
-	}
-	return 0
-}
-
-// AI機能有効化用のレスポンス
-type EnableLLMResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *EnableLLMResponse) Reset() {
-	*x = EnableLLMResponse{}
-	mi := &file_user_user_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EnableLLMResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EnableLLMResponse) ProtoMessage() {}
-
-func (x *EnableLLMResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EnableLLMResponse.ProtoReflect.Descriptor instead.
-func (*EnableLLMResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *EnableLLMResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *EnableLLMResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 // ユーザー情報取得用のリクエスト
 type GetUserInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -332,7 +234,7 @@ type GetUserInfoRequest struct {
 
 func (x *GetUserInfoRequest) Reset() {
 	*x = GetUserInfoRequest{}
-	mi := &file_user_user_proto_msgTypes[6]
+	mi := &file_user_user_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -344,7 +246,7 @@ func (x *GetUserInfoRequest) String() string {
 func (*GetUserInfoRequest) ProtoMessage() {}
 
 func (x *GetUserInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[6]
+	mi := &file_user_user_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -357,7 +259,7 @@ func (x *GetUserInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetUserInfoRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{6}
+	return file_user_user_proto_rawDescGZIP(), []int{4}
 }
 
 // ユーザー情報取得用のレスポンス
@@ -365,7 +267,7 @@ type GetUserInfoResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Email string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	// AI機能設定（有効化されている場合のみ）
+	// AI機能設定（一度でも設定を保存した場合のみ）
 	LlmSettings   []*LLMSettingInfo `protobuf:"bytes,3,rep,name=llm_settings,json=llmSettings,proto3" json:"llm_settings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -373,7 +275,7 @@ type GetUserInfoResponse struct {
 
 func (x *GetUserInfoResponse) Reset() {
 	*x = GetUserInfoResponse{}
-	mi := &file_user_user_proto_msgTypes[7]
+	mi := &file_user_user_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -385,7 +287,7 @@ func (x *GetUserInfoResponse) String() string {
 func (*GetUserInfoResponse) ProtoMessage() {}
 
 func (x *GetUserInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[7]
+	mi := &file_user_user_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -398,7 +300,7 @@ func (x *GetUserInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetUserInfoResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{7}
+	return file_user_user_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetUserInfoResponse) GetName() string {
@@ -435,7 +337,7 @@ type LLMSettingInfo struct {
 
 func (x *LLMSettingInfo) Reset() {
 	*x = LLMSettingInfo{}
-	mi := &file_user_user_proto_msgTypes[8]
+	mi := &file_user_user_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -447,7 +349,7 @@ func (x *LLMSettingInfo) String() string {
 func (*LLMSettingInfo) ProtoMessage() {}
 
 func (x *LLMSettingInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[8]
+	mi := &file_user_user_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -460,7 +362,7 @@ func (x *LLMSettingInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMSettingInfo.ProtoReflect.Descriptor instead.
 func (*LLMSettingInfo) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{8}
+	return file_user_user_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LLMSettingInfo) GetLlmProvider() int32 {
@@ -491,104 +393,6 @@ func (x *LLMSettingInfo) GetSemanticSearchEnabled() bool {
 	return false
 }
 
-// AI機能無効化用のリクエスト
-type DisableLLMRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	LlmProvider   int32                  `protobuf:"varint,1,opt,name=llm_provider,json=llmProvider,proto3" json:"llm_provider,omitempty"` // 1:Gemini
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DisableLLMRequest) Reset() {
-	*x = DisableLLMRequest{}
-	mi := &file_user_user_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DisableLLMRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DisableLLMRequest) ProtoMessage() {}
-
-func (x *DisableLLMRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DisableLLMRequest.ProtoReflect.Descriptor instead.
-func (*DisableLLMRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *DisableLLMRequest) GetLlmProvider() int32 {
-	if x != nil {
-		return x.LlmProvider
-	}
-	return 0
-}
-
-// AI機能無効化用のレスポンス
-type DisableLLMResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DisableLLMResponse) Reset() {
-	*x = DisableLLMResponse{}
-	mi := &file_user_user_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DisableLLMResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DisableLLMResponse) ProtoMessage() {}
-
-func (x *DisableLLMResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DisableLLMResponse.ProtoReflect.Descriptor instead.
-func (*DisableLLMResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *DisableLLMResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *DisableLLMResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 // アカウント削除用のリクエスト
 type DeleteAccountRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -598,7 +402,7 @@ type DeleteAccountRequest struct {
 
 func (x *DeleteAccountRequest) Reset() {
 	*x = DeleteAccountRequest{}
-	mi := &file_user_user_proto_msgTypes[11]
+	mi := &file_user_user_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -610,7 +414,7 @@ func (x *DeleteAccountRequest) String() string {
 func (*DeleteAccountRequest) ProtoMessage() {}
 
 func (x *DeleteAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[11]
+	mi := &file_user_user_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -623,7 +427,7 @@ func (x *DeleteAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAccountRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAccountRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{11}
+	return file_user_user_proto_rawDescGZIP(), []int{7}
 }
 
 // アカウント削除用のレスポンス
@@ -637,7 +441,7 @@ type DeleteAccountResponse struct {
 
 func (x *DeleteAccountResponse) Reset() {
 	*x = DeleteAccountResponse{}
-	mi := &file_user_user_proto_msgTypes[12]
+	mi := &file_user_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -649,7 +453,7 @@ func (x *DeleteAccountResponse) String() string {
 func (*DeleteAccountResponse) ProtoMessage() {}
 
 func (x *DeleteAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[12]
+	mi := &file_user_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -662,7 +466,7 @@ func (x *DeleteAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAccountResponse.ProtoReflect.Descriptor instead.
 func (*DeleteAccountResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{12}
+	return file_user_user_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteAccountResponse) GetSuccess() bool {
@@ -692,7 +496,7 @@ type UpdateAutoSummarySettingsRequest struct {
 
 func (x *UpdateAutoSummarySettingsRequest) Reset() {
 	*x = UpdateAutoSummarySettingsRequest{}
-	mi := &file_user_user_proto_msgTypes[13]
+	mi := &file_user_user_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -704,7 +508,7 @@ func (x *UpdateAutoSummarySettingsRequest) String() string {
 func (*UpdateAutoSummarySettingsRequest) ProtoMessage() {}
 
 func (x *UpdateAutoSummarySettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[13]
+	mi := &file_user_user_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -717,7 +521,7 @@ func (x *UpdateAutoSummarySettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAutoSummarySettingsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAutoSummarySettingsRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{13}
+	return file_user_user_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateAutoSummarySettingsRequest) GetLlmProvider() int32 {
@@ -759,7 +563,7 @@ type UpdateAutoSummarySettingsResponse struct {
 
 func (x *UpdateAutoSummarySettingsResponse) Reset() {
 	*x = UpdateAutoSummarySettingsResponse{}
-	mi := &file_user_user_proto_msgTypes[14]
+	mi := &file_user_user_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -771,7 +575,7 @@ func (x *UpdateAutoSummarySettingsResponse) String() string {
 func (*UpdateAutoSummarySettingsResponse) ProtoMessage() {}
 
 func (x *UpdateAutoSummarySettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[14]
+	mi := &file_user_user_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -784,7 +588,7 @@ func (x *UpdateAutoSummarySettingsResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use UpdateAutoSummarySettingsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAutoSummarySettingsResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{14}
+	return file_user_user_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateAutoSummarySettingsResponse) GetSuccess() bool {
@@ -811,7 +615,7 @@ type GetAutoSummarySettingsRequest struct {
 
 func (x *GetAutoSummarySettingsRequest) Reset() {
 	*x = GetAutoSummarySettingsRequest{}
-	mi := &file_user_user_proto_msgTypes[15]
+	mi := &file_user_user_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -823,7 +627,7 @@ func (x *GetAutoSummarySettingsRequest) String() string {
 func (*GetAutoSummarySettingsRequest) ProtoMessage() {}
 
 func (x *GetAutoSummarySettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[15]
+	mi := &file_user_user_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -836,7 +640,7 @@ func (x *GetAutoSummarySettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAutoSummarySettingsRequest.ProtoReflect.Descriptor instead.
 func (*GetAutoSummarySettingsRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{15}
+	return file_user_user_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetAutoSummarySettingsRequest) GetLlmProvider() int32 {
@@ -858,7 +662,7 @@ type GetAutoSummarySettingsResponse struct {
 
 func (x *GetAutoSummarySettingsResponse) Reset() {
 	*x = GetAutoSummarySettingsResponse{}
-	mi := &file_user_user_proto_msgTypes[16]
+	mi := &file_user_user_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -870,7 +674,7 @@ func (x *GetAutoSummarySettingsResponse) String() string {
 func (*GetAutoSummarySettingsResponse) ProtoMessage() {}
 
 func (x *GetAutoSummarySettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[16]
+	mi := &file_user_user_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -883,7 +687,7 @@ func (x *GetAutoSummarySettingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAutoSummarySettingsResponse.ProtoReflect.Descriptor instead.
 func (*GetAutoSummarySettingsResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{16}
+	return file_user_user_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetAutoSummarySettingsResponse) GetAutoSummaryMonthly() bool {
@@ -916,7 +720,7 @@ type GetPubSubMetricsRequest struct {
 
 func (x *GetPubSubMetricsRequest) Reset() {
 	*x = GetPubSubMetricsRequest{}
-	mi := &file_user_user_proto_msgTypes[17]
+	mi := &file_user_user_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -928,7 +732,7 @@ func (x *GetPubSubMetricsRequest) String() string {
 func (*GetPubSubMetricsRequest) ProtoMessage() {}
 
 func (x *GetPubSubMetricsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[17]
+	mi := &file_user_user_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -941,7 +745,7 @@ func (x *GetPubSubMetricsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPubSubMetricsRequest.ProtoReflect.Descriptor instead.
 func (*GetPubSubMetricsRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{17}
+	return file_user_user_proto_rawDescGZIP(), []int{13}
 }
 
 // Pub/Subメトリクス取得用のレスポンス
@@ -959,7 +763,7 @@ type GetPubSubMetricsResponse struct {
 
 func (x *GetPubSubMetricsResponse) Reset() {
 	*x = GetPubSubMetricsResponse{}
-	mi := &file_user_user_proto_msgTypes[18]
+	mi := &file_user_user_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -971,7 +775,7 @@ func (x *GetPubSubMetricsResponse) String() string {
 func (*GetPubSubMetricsResponse) ProtoMessage() {}
 
 func (x *GetPubSubMetricsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[18]
+	mi := &file_user_user_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -984,7 +788,7 @@ func (x *GetPubSubMetricsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPubSubMetricsResponse.ProtoReflect.Descriptor instead.
 func (*GetPubSubMetricsResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{18}
+	return file_user_user_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetPubSubMetricsResponse) GetHourlyMetrics() []*HourlyMetrics {
@@ -1025,7 +829,7 @@ type HourlyMetrics struct {
 
 func (x *HourlyMetrics) Reset() {
 	*x = HourlyMetrics{}
-	mi := &file_user_user_proto_msgTypes[19]
+	mi := &file_user_user_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1037,7 +841,7 @@ func (x *HourlyMetrics) String() string {
 func (*HourlyMetrics) ProtoMessage() {}
 
 func (x *HourlyMetrics) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[19]
+	mi := &file_user_user_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1050,7 +854,7 @@ func (x *HourlyMetrics) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HourlyMetrics.ProtoReflect.Descriptor instead.
 func (*HourlyMetrics) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{19}
+	return file_user_user_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *HourlyMetrics) GetTimestamp() int64 {
@@ -1121,7 +925,7 @@ type ProcessingTask struct {
 
 func (x *ProcessingTask) Reset() {
 	*x = ProcessingTask{}
-	mi := &file_user_user_proto_msgTypes[20]
+	mi := &file_user_user_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1133,7 +937,7 @@ func (x *ProcessingTask) String() string {
 func (*ProcessingTask) ProtoMessage() {}
 
 func (x *ProcessingTask) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[20]
+	mi := &file_user_user_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1146,7 +950,7 @@ func (x *ProcessingTask) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessingTask.ProtoReflect.Descriptor instead.
 func (*ProcessingTask) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{20}
+	return file_user_user_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ProcessingTask) GetTaskType() string {
@@ -1188,7 +992,7 @@ type MetricsSummary struct {
 
 func (x *MetricsSummary) Reset() {
 	*x = MetricsSummary{}
-	mi := &file_user_user_proto_msgTypes[21]
+	mi := &file_user_user_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1200,7 +1004,7 @@ func (x *MetricsSummary) String() string {
 func (*MetricsSummary) ProtoMessage() {}
 
 func (x *MetricsSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[21]
+	mi := &file_user_user_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1213,7 +1017,7 @@ func (x *MetricsSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricsSummary.ProtoReflect.Descriptor instead.
 func (*MetricsSummary) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{21}
+	return file_user_user_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *MetricsSummary) GetTotalMonthlySummaries() int32 {
@@ -1294,7 +1098,7 @@ type ApiKeyInfo struct {
 
 func (x *ApiKeyInfo) Reset() {
 	*x = ApiKeyInfo{}
-	mi := &file_user_user_proto_msgTypes[22]
+	mi := &file_user_user_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1306,7 +1110,7 @@ func (x *ApiKeyInfo) String() string {
 func (*ApiKeyInfo) ProtoMessage() {}
 
 func (x *ApiKeyInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[22]
+	mi := &file_user_user_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1319,7 +1123,7 @@ func (x *ApiKeyInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApiKeyInfo.ProtoReflect.Descriptor instead.
 func (*ApiKeyInfo) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{22}
+	return file_user_user_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ApiKeyInfo) GetId() string {
@@ -1374,7 +1178,7 @@ type CreateApiKeyRequest struct {
 
 func (x *CreateApiKeyRequest) Reset() {
 	*x = CreateApiKeyRequest{}
-	mi := &file_user_user_proto_msgTypes[23]
+	mi := &file_user_user_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1386,7 +1190,7 @@ func (x *CreateApiKeyRequest) String() string {
 func (*CreateApiKeyRequest) ProtoMessage() {}
 
 func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[23]
+	mi := &file_user_user_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1399,7 +1203,7 @@ func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateApiKeyRequest.ProtoReflect.Descriptor instead.
 func (*CreateApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{23}
+	return file_user_user_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *CreateApiKeyRequest) GetName() string {
@@ -1420,7 +1224,7 @@ type CreateApiKeyResponse struct {
 
 func (x *CreateApiKeyResponse) Reset() {
 	*x = CreateApiKeyResponse{}
-	mi := &file_user_user_proto_msgTypes[24]
+	mi := &file_user_user_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1432,7 +1236,7 @@ func (x *CreateApiKeyResponse) String() string {
 func (*CreateApiKeyResponse) ProtoMessage() {}
 
 func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[24]
+	mi := &file_user_user_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1445,7 +1249,7 @@ func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateApiKeyResponse.ProtoReflect.Descriptor instead.
 func (*CreateApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{24}
+	return file_user_user_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *CreateApiKeyResponse) GetApiKey() string {
@@ -1471,7 +1275,7 @@ type ListApiKeysRequest struct {
 
 func (x *ListApiKeysRequest) Reset() {
 	*x = ListApiKeysRequest{}
-	mi := &file_user_user_proto_msgTypes[25]
+	mi := &file_user_user_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1483,7 +1287,7 @@ func (x *ListApiKeysRequest) String() string {
 func (*ListApiKeysRequest) ProtoMessage() {}
 
 func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[25]
+	mi := &file_user_user_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1496,7 +1300,7 @@ func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListApiKeysRequest.ProtoReflect.Descriptor instead.
 func (*ListApiKeysRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{25}
+	return file_user_user_proto_rawDescGZIP(), []int{21}
 }
 
 // APIキー一覧取得用のレスポンス
@@ -1509,7 +1313,7 @@ type ListApiKeysResponse struct {
 
 func (x *ListApiKeysResponse) Reset() {
 	*x = ListApiKeysResponse{}
-	mi := &file_user_user_proto_msgTypes[26]
+	mi := &file_user_user_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1521,7 +1325,7 @@ func (x *ListApiKeysResponse) String() string {
 func (*ListApiKeysResponse) ProtoMessage() {}
 
 func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[26]
+	mi := &file_user_user_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1534,7 +1338,7 @@ func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListApiKeysResponse.ProtoReflect.Descriptor instead.
 func (*ListApiKeysResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{26}
+	return file_user_user_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListApiKeysResponse) GetApiKeys() []*ApiKeyInfo {
@@ -1554,7 +1358,7 @@ type DeleteApiKeyRequest struct {
 
 func (x *DeleteApiKeyRequest) Reset() {
 	*x = DeleteApiKeyRequest{}
-	mi := &file_user_user_proto_msgTypes[27]
+	mi := &file_user_user_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1566,7 +1370,7 @@ func (x *DeleteApiKeyRequest) String() string {
 func (*DeleteApiKeyRequest) ProtoMessage() {}
 
 func (x *DeleteApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[27]
+	mi := &file_user_user_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1579,7 +1383,7 @@ func (x *DeleteApiKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteApiKeyRequest.ProtoReflect.Descriptor instead.
 func (*DeleteApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{27}
+	return file_user_user_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *DeleteApiKeyRequest) GetId() string {
@@ -1600,7 +1404,7 @@ type DeleteApiKeyResponse struct {
 
 func (x *DeleteApiKeyResponse) Reset() {
 	*x = DeleteApiKeyResponse{}
-	mi := &file_user_user_proto_msgTypes[28]
+	mi := &file_user_user_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1612,7 +1416,7 @@ func (x *DeleteApiKeyResponse) String() string {
 func (*DeleteApiKeyResponse) ProtoMessage() {}
 
 func (x *DeleteApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[28]
+	mi := &file_user_user_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1625,7 +1429,7 @@ func (x *DeleteApiKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteApiKeyResponse.ProtoReflect.Descriptor instead.
 func (*DeleteApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{28}
+	return file_user_user_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *DeleteApiKeyResponse) GetSuccess() bool {
@@ -1657,11 +1461,6 @@ const file_user_user_proto_rawDesc = "" +
 	"\fnew_password\x18\x02 \x01(\tR\vnewPassword\"L\n" +
 	"\x16ChangePasswordResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\";\n" +
-	"\x10EnableLLMRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProviderJ\x04\b\x02\x10\x03\"G\n" +
-	"\x11EnableLLMResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\x14\n" +
 	"\x12GetUserInfoRequest\"x\n" +
 	"\x13GetUserInfoResponse\x12\x12\n" +
@@ -1672,12 +1471,7 @@ const file_user_user_proto_rawDesc = "" +
 	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\x120\n" +
 	"\x14auto_summary_monthly\x18\x04 \x01(\bR\x12autoSummaryMonthly\x129\n" +
 	"\x19auto_latest_trend_enabled\x18\x05 \x01(\bR\x16autoLatestTrendEnabled\x126\n" +
-	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabledJ\x04\b\x02\x10\x03\"6\n" +
-	"\x11DisableLLMRequest\x12!\n" +
-	"\fllm_provider\x18\x01 \x01(\x05R\vllmProvider\"H\n" +
-	"\x12DisableLLMResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x16\n" +
+	"\x17semantic_search_enabled\x18\x06 \x01(\bR\x15semanticSearchEnabledJ\x04\b\x02\x10\x03\"\x16\n" +
 	"\x14DeleteAccountRequest\"K\n" +
 	"\x15DeleteAccountResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
@@ -1751,14 +1545,11 @@ const file_user_user_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"J\n" +
 	"\x14DeleteApiKeyResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\xac\a\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xad\x06\n" +
 	"\vUserService\x12K\n" +
 	"\x0eUpdateUserName\x12\x1b.user.UpdateUserNameRequest\x1a\x1c.user.UpdateUserNameResponse\x12K\n" +
-	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12<\n" +
-	"\tEnableLLM\x12\x16.user.EnableLLMRequest\x1a\x17.user.EnableLLMResponse\x12B\n" +
-	"\vGetUserInfo\x12\x18.user.GetUserInfoRequest\x1a\x19.user.GetUserInfoResponse\x12?\n" +
-	"\n" +
-	"DisableLLM\x12\x17.user.DisableLLMRequest\x1a\x18.user.DisableLLMResponse\x12H\n" +
+	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\x12B\n" +
+	"\vGetUserInfo\x12\x18.user.GetUserInfoRequest\x1a\x19.user.GetUserInfoResponse\x12H\n" +
 	"\rDeleteAccount\x12\x1a.user.DeleteAccountRequest\x1a\x1b.user.DeleteAccountResponse\x12l\n" +
 	"\x19UpdateAutoSummarySettings\x12&.user.UpdateAutoSummarySettingsRequest\x1a'.user.UpdateAutoSummarySettingsResponse\x12c\n" +
 	"\x16GetAutoSummarySettings\x12#.user.GetAutoSummarySettingsRequest\x1a$.user.GetAutoSummarySettingsResponse\x12Q\n" +
@@ -1779,71 +1570,63 @@ func file_user_user_proto_rawDescGZIP() []byte {
 	return file_user_user_proto_rawDescData
 }
 
-var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_user_user_proto_goTypes = []any{
 	(*UpdateUserNameRequest)(nil),             // 0: user.UpdateUserNameRequest
 	(*UpdateUserNameResponse)(nil),            // 1: user.UpdateUserNameResponse
 	(*ChangePasswordRequest)(nil),             // 2: user.ChangePasswordRequest
 	(*ChangePasswordResponse)(nil),            // 3: user.ChangePasswordResponse
-	(*EnableLLMRequest)(nil),                  // 4: user.EnableLLMRequest
-	(*EnableLLMResponse)(nil),                 // 5: user.EnableLLMResponse
-	(*GetUserInfoRequest)(nil),                // 6: user.GetUserInfoRequest
-	(*GetUserInfoResponse)(nil),               // 7: user.GetUserInfoResponse
-	(*LLMSettingInfo)(nil),                    // 8: user.LLMSettingInfo
-	(*DisableLLMRequest)(nil),                 // 9: user.DisableLLMRequest
-	(*DisableLLMResponse)(nil),                // 10: user.DisableLLMResponse
-	(*DeleteAccountRequest)(nil),              // 11: user.DeleteAccountRequest
-	(*DeleteAccountResponse)(nil),             // 12: user.DeleteAccountResponse
-	(*UpdateAutoSummarySettingsRequest)(nil),  // 13: user.UpdateAutoSummarySettingsRequest
-	(*UpdateAutoSummarySettingsResponse)(nil), // 14: user.UpdateAutoSummarySettingsResponse
-	(*GetAutoSummarySettingsRequest)(nil),     // 15: user.GetAutoSummarySettingsRequest
-	(*GetAutoSummarySettingsResponse)(nil),    // 16: user.GetAutoSummarySettingsResponse
-	(*GetPubSubMetricsRequest)(nil),           // 17: user.GetPubSubMetricsRequest
-	(*GetPubSubMetricsResponse)(nil),          // 18: user.GetPubSubMetricsResponse
-	(*HourlyMetrics)(nil),                     // 19: user.HourlyMetrics
-	(*ProcessingTask)(nil),                    // 20: user.ProcessingTask
-	(*MetricsSummary)(nil),                    // 21: user.MetricsSummary
-	(*ApiKeyInfo)(nil),                        // 22: user.ApiKeyInfo
-	(*CreateApiKeyRequest)(nil),               // 23: user.CreateApiKeyRequest
-	(*CreateApiKeyResponse)(nil),              // 24: user.CreateApiKeyResponse
-	(*ListApiKeysRequest)(nil),                // 25: user.ListApiKeysRequest
-	(*ListApiKeysResponse)(nil),               // 26: user.ListApiKeysResponse
-	(*DeleteApiKeyRequest)(nil),               // 27: user.DeleteApiKeyRequest
-	(*DeleteApiKeyResponse)(nil),              // 28: user.DeleteApiKeyResponse
+	(*GetUserInfoRequest)(nil),                // 4: user.GetUserInfoRequest
+	(*GetUserInfoResponse)(nil),               // 5: user.GetUserInfoResponse
+	(*LLMSettingInfo)(nil),                    // 6: user.LLMSettingInfo
+	(*DeleteAccountRequest)(nil),              // 7: user.DeleteAccountRequest
+	(*DeleteAccountResponse)(nil),             // 8: user.DeleteAccountResponse
+	(*UpdateAutoSummarySettingsRequest)(nil),  // 9: user.UpdateAutoSummarySettingsRequest
+	(*UpdateAutoSummarySettingsResponse)(nil), // 10: user.UpdateAutoSummarySettingsResponse
+	(*GetAutoSummarySettingsRequest)(nil),     // 11: user.GetAutoSummarySettingsRequest
+	(*GetAutoSummarySettingsResponse)(nil),    // 12: user.GetAutoSummarySettingsResponse
+	(*GetPubSubMetricsRequest)(nil),           // 13: user.GetPubSubMetricsRequest
+	(*GetPubSubMetricsResponse)(nil),          // 14: user.GetPubSubMetricsResponse
+	(*HourlyMetrics)(nil),                     // 15: user.HourlyMetrics
+	(*ProcessingTask)(nil),                    // 16: user.ProcessingTask
+	(*MetricsSummary)(nil),                    // 17: user.MetricsSummary
+	(*ApiKeyInfo)(nil),                        // 18: user.ApiKeyInfo
+	(*CreateApiKeyRequest)(nil),               // 19: user.CreateApiKeyRequest
+	(*CreateApiKeyResponse)(nil),              // 20: user.CreateApiKeyResponse
+	(*ListApiKeysRequest)(nil),                // 21: user.ListApiKeysRequest
+	(*ListApiKeysResponse)(nil),               // 22: user.ListApiKeysResponse
+	(*DeleteApiKeyRequest)(nil),               // 23: user.DeleteApiKeyRequest
+	(*DeleteApiKeyResponse)(nil),              // 24: user.DeleteApiKeyResponse
 }
 var file_user_user_proto_depIdxs = []int32{
-	8,  // 0: user.GetUserInfoResponse.llm_settings:type_name -> user.LLMSettingInfo
-	19, // 1: user.GetPubSubMetricsResponse.hourly_metrics:type_name -> user.HourlyMetrics
-	20, // 2: user.GetPubSubMetricsResponse.processing_tasks:type_name -> user.ProcessingTask
-	21, // 3: user.GetPubSubMetricsResponse.summary:type_name -> user.MetricsSummary
-	22, // 4: user.CreateApiKeyResponse.info:type_name -> user.ApiKeyInfo
-	22, // 5: user.ListApiKeysResponse.api_keys:type_name -> user.ApiKeyInfo
+	6,  // 0: user.GetUserInfoResponse.llm_settings:type_name -> user.LLMSettingInfo
+	15, // 1: user.GetPubSubMetricsResponse.hourly_metrics:type_name -> user.HourlyMetrics
+	16, // 2: user.GetPubSubMetricsResponse.processing_tasks:type_name -> user.ProcessingTask
+	17, // 3: user.GetPubSubMetricsResponse.summary:type_name -> user.MetricsSummary
+	18, // 4: user.CreateApiKeyResponse.info:type_name -> user.ApiKeyInfo
+	18, // 5: user.ListApiKeysResponse.api_keys:type_name -> user.ApiKeyInfo
 	0,  // 6: user.UserService.UpdateUserName:input_type -> user.UpdateUserNameRequest
 	2,  // 7: user.UserService.ChangePassword:input_type -> user.ChangePasswordRequest
-	4,  // 8: user.UserService.EnableLLM:input_type -> user.EnableLLMRequest
-	6,  // 9: user.UserService.GetUserInfo:input_type -> user.GetUserInfoRequest
-	9,  // 10: user.UserService.DisableLLM:input_type -> user.DisableLLMRequest
-	11, // 11: user.UserService.DeleteAccount:input_type -> user.DeleteAccountRequest
-	13, // 12: user.UserService.UpdateAutoSummarySettings:input_type -> user.UpdateAutoSummarySettingsRequest
-	15, // 13: user.UserService.GetAutoSummarySettings:input_type -> user.GetAutoSummarySettingsRequest
-	17, // 14: user.UserService.GetPubSubMetrics:input_type -> user.GetPubSubMetricsRequest
-	23, // 15: user.UserService.CreateApiKey:input_type -> user.CreateApiKeyRequest
-	25, // 16: user.UserService.ListApiKeys:input_type -> user.ListApiKeysRequest
-	27, // 17: user.UserService.DeleteApiKey:input_type -> user.DeleteApiKeyRequest
-	1,  // 18: user.UserService.UpdateUserName:output_type -> user.UpdateUserNameResponse
-	3,  // 19: user.UserService.ChangePassword:output_type -> user.ChangePasswordResponse
-	5,  // 20: user.UserService.EnableLLM:output_type -> user.EnableLLMResponse
-	7,  // 21: user.UserService.GetUserInfo:output_type -> user.GetUserInfoResponse
-	10, // 22: user.UserService.DisableLLM:output_type -> user.DisableLLMResponse
-	12, // 23: user.UserService.DeleteAccount:output_type -> user.DeleteAccountResponse
-	14, // 24: user.UserService.UpdateAutoSummarySettings:output_type -> user.UpdateAutoSummarySettingsResponse
-	16, // 25: user.UserService.GetAutoSummarySettings:output_type -> user.GetAutoSummarySettingsResponse
-	18, // 26: user.UserService.GetPubSubMetrics:output_type -> user.GetPubSubMetricsResponse
-	24, // 27: user.UserService.CreateApiKey:output_type -> user.CreateApiKeyResponse
-	26, // 28: user.UserService.ListApiKeys:output_type -> user.ListApiKeysResponse
-	28, // 29: user.UserService.DeleteApiKey:output_type -> user.DeleteApiKeyResponse
-	18, // [18:30] is the sub-list for method output_type
-	6,  // [6:18] is the sub-list for method input_type
+	4,  // 8: user.UserService.GetUserInfo:input_type -> user.GetUserInfoRequest
+	7,  // 9: user.UserService.DeleteAccount:input_type -> user.DeleteAccountRequest
+	9,  // 10: user.UserService.UpdateAutoSummarySettings:input_type -> user.UpdateAutoSummarySettingsRequest
+	11, // 11: user.UserService.GetAutoSummarySettings:input_type -> user.GetAutoSummarySettingsRequest
+	13, // 12: user.UserService.GetPubSubMetrics:input_type -> user.GetPubSubMetricsRequest
+	19, // 13: user.UserService.CreateApiKey:input_type -> user.CreateApiKeyRequest
+	21, // 14: user.UserService.ListApiKeys:input_type -> user.ListApiKeysRequest
+	23, // 15: user.UserService.DeleteApiKey:input_type -> user.DeleteApiKeyRequest
+	1,  // 16: user.UserService.UpdateUserName:output_type -> user.UpdateUserNameResponse
+	3,  // 17: user.UserService.ChangePassword:output_type -> user.ChangePasswordResponse
+	5,  // 18: user.UserService.GetUserInfo:output_type -> user.GetUserInfoResponse
+	8,  // 19: user.UserService.DeleteAccount:output_type -> user.DeleteAccountResponse
+	10, // 20: user.UserService.UpdateAutoSummarySettings:output_type -> user.UpdateAutoSummarySettingsResponse
+	12, // 21: user.UserService.GetAutoSummarySettings:output_type -> user.GetAutoSummarySettingsResponse
+	14, // 22: user.UserService.GetPubSubMetrics:output_type -> user.GetPubSubMetricsResponse
+	20, // 23: user.UserService.CreateApiKey:output_type -> user.CreateApiKeyResponse
+	22, // 24: user.UserService.ListApiKeys:output_type -> user.ListApiKeysResponse
+	24, // 25: user.UserService.DeleteApiKey:output_type -> user.DeleteApiKeyResponse
+	16, // [16:26] is the sub-list for method output_type
+	6,  // [6:16] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
 	6,  // [6:6] is the sub-list for extension extendee
 	0,  // [0:6] is the sub-list for field type_name
@@ -1860,7 +1643,7 @@ func file_user_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_user_proto_rawDesc), len(file_user_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   29,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

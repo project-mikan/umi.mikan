@@ -5,7 +5,8 @@ package user;
 option go_package = "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc";
 
 // UserService はユーザー設定とアカウント管理を提供するサービスです。
-// ユーザー情報の更新、AI機能の有効化、自動要約設定、Pub/Subメトリクス取得などの機能があります。
+// ユーザー情報の更新、AI機能設定、Pub/Subメトリクス取得などの機能があります。
+// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーはありません。
 service UserService {
   // UpdateUserName はユーザー名を変更します。
   //
@@ -29,18 +30,6 @@ service UserService {
   //   - InvalidArgument: 新しいパスワードが短すぎる
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 
-  // EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
-  // LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
-  // 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
-  //
-  // 例:
-  //   request: { llm_provider: 1 }
-  //   response: { success: true, message: "llmEnabled" }
-  //
-  // エラー:
-  //   - InvalidArgument: プロバイダーが不正
-  rpc EnableLLM(EnableLLMRequest) returns (EnableLLMResponse);
-
   // GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
   //
   // 例:
@@ -50,16 +39,6 @@ service UserService {
   // エラー:
   //   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
   rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
-
-  // DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
-  //
-  // 例:
-  //   request: { llm_provider: 1 }
-  //   response: { success: true, message: "llmDisabled" }
-  //
-  // エラー:
-  //   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
-  rpc DisableLLM(DisableLLMRequest) returns (DisableLLMResponse);
 
   // DeleteAccount はユーザーアカウントと関連データを完全に削除します。
   // 日記、エンティティ、要約など全てのデータがカスケード削除されます。
@@ -72,15 +51,15 @@ service UserService {
   //   - Internal: 削除処理エラー
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
 
-  // UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-  // 月次要約を有効/無効にできます。
+  // UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
+  // 設定レコードが無い場合は新規作成します。
   //
   // 例:
   //   request: { llm_provider: 1, auto_summary_monthly: false }
   //   response: { success: true, message: "自動要約設定を更新しました" }
   //
   // エラー:
-  //   - NotFound: AI機能が有効化されていない
+  //   - InvalidArgument: プロバイダーが不正
   rpc UpdateAutoSummarySettings(UpdateAutoSummarySettingsRequest) returns (UpdateAutoSummarySettingsResponse);
 
   // GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
@@ -89,8 +68,7 @@ service UserService {
   //   request: { llm_provider: 1 }
   //   response: { auto_summary_monthly: false }
   //
-  // エラー:
-  //   - NotFound: AI機能が有効化されていない
+  // 設定レコードが無い場合は全て false を返します。
   rpc GetAutoSummarySettings(GetAutoSummarySettingsRequest) returns (GetAutoSummarySettingsResponse);
 
   // GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
@@ -158,18 +136,6 @@ message ChangePasswordResponse {
   string message = 2;
 }
 
-// AI機能有効化用のリクエスト
-message EnableLLMRequest {
-  int32 llm_provider = 1; // 1:Gemini
-  reserved 2; // 旧: key（ユーザー個別のAPIキーは廃止）
-}
-
-// AI機能有効化用のレスポンス
-message EnableLLMResponse {
-  bool success = 1;
-  string message = 2;
-}
-
 // ユーザー情報取得用のリクエスト
 message GetUserInfoRequest {
   // 空のリクエスト（認証はヘッダーから）
@@ -179,7 +145,7 @@ message GetUserInfoRequest {
 message GetUserInfoResponse {
   string name = 1;
   string email = 2;
-  // AI機能設定（有効化されている場合のみ）
+  // AI機能設定（一度でも設定を保存した場合のみ）
   repeated LLMSettingInfo llm_settings = 3;
 }
 
@@ -190,17 +156,6 @@ message LLMSettingInfo {
   bool auto_summary_monthly = 4; // 月毎の自動要約生成
   bool auto_latest_trend_enabled = 5; // 直近トレンド分析の自動生成
   bool semantic_search_enabled = 6; // 意味的検索（RAG）機能の有効化
-}
-
-// AI機能無効化用のリクエスト
-message DisableLLMRequest {
-  int32 llm_provider = 1; // 1:Gemini
-}
-
-// AI機能無効化用のレスポンス
-message DisableLLMResponse {
-  bool success = 1;
-  string message = 2;
 }
 
 // アカウント削除用のリクエスト

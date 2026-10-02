@@ -21,9 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	UserService_UpdateUserName_FullMethodName            = "/user.UserService/UpdateUserName"
 	UserService_ChangePassword_FullMethodName            = "/user.UserService/ChangePassword"
-	UserService_EnableLLM_FullMethodName                 = "/user.UserService/EnableLLM"
 	UserService_GetUserInfo_FullMethodName               = "/user.UserService/GetUserInfo"
-	UserService_DisableLLM_FullMethodName                = "/user.UserService/DisableLLM"
 	UserService_DeleteAccount_FullMethodName             = "/user.UserService/DeleteAccount"
 	UserService_UpdateAutoSummarySettings_FullMethodName = "/user.UserService/UpdateAutoSummarySettings"
 	UserService_GetAutoSummarySettings_FullMethodName    = "/user.UserService/GetAutoSummarySettings"
@@ -38,7 +36,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // UserService はユーザー設定とアカウント管理を提供するサービスです。
-// ユーザー情報の更新、AI機能の有効化、自動要約設定、Pub/Subメトリクス取得などの機能があります。
+// ユーザー情報の更新、AI機能設定、Pub/Subメトリクス取得などの機能があります。
+// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーはありません。
 type UserServiceClient interface {
 	// UpdateUserName はユーザー名を変更します。
 	//
@@ -62,18 +61,6 @@ type UserServiceClient interface {
 	//   - Unauthenticated: 現在のパスワードが不正
 	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
-	// EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
-	// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
-	// 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmEnabled" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーが不正
-	EnableLLM(ctx context.Context, in *EnableLLMRequest, opts ...grpc.CallOption) (*EnableLLMResponse, error)
 	// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
 	//
 	// 例:
@@ -84,16 +71,6 @@ type UserServiceClient interface {
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
-	// DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmDisabled" }
-	//
-	// エラー:
-	//   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
-	DisableLLM(ctx context.Context, in *DisableLLMRequest, opts ...grpc.CallOption) (*DisableLLMResponse, error)
 	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
 	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
 	//
@@ -105,8 +82,8 @@ type UserServiceClient interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
-	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 月次要約を有効/無効にできます。
+	// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
+	// 設定レコードが無い場合は新規作成します。
 	//
 	// 例:
 	//
@@ -114,7 +91,7 @@ type UserServiceClient interface {
 	//	response: { success: true, message: "自動要約設定を更新しました" }
 	//
 	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	//   - InvalidArgument: プロバイダーが不正
 	UpdateAutoSummarySettings(ctx context.Context, in *UpdateAutoSummarySettingsRequest, opts ...grpc.CallOption) (*UpdateAutoSummarySettingsResponse, error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
@@ -123,8 +100,7 @@ type UserServiceClient interface {
 	//	request: { llm_provider: 1 }
 	//	response: { auto_summary_monthly: false }
 	//
-	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	// 設定レコードが無い場合は全て false を返します。
 	GetAutoSummarySettings(ctx context.Context, in *GetAutoSummarySettingsRequest, opts ...grpc.CallOption) (*GetAutoSummarySettingsResponse, error)
 	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
 	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
@@ -197,30 +173,10 @@ func (c *userServiceClient) ChangePassword(ctx context.Context, in *ChangePasswo
 	return out, nil
 }
 
-func (c *userServiceClient) EnableLLM(ctx context.Context, in *EnableLLMRequest, opts ...grpc.CallOption) (*EnableLLMResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EnableLLMResponse)
-	err := c.cc.Invoke(ctx, UserService_EnableLLM_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userServiceClient) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetUserInfoResponse)
 	err := c.cc.Invoke(ctx, UserService_GetUserInfo_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) DisableLLM(ctx context.Context, in *DisableLLMRequest, opts ...grpc.CallOption) (*DisableLLMResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DisableLLMResponse)
-	err := c.cc.Invoke(ctx, UserService_DisableLLM_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +258,8 @@ func (c *userServiceClient) DeleteApiKey(ctx context.Context, in *DeleteApiKeyRe
 // for forward compatibility.
 //
 // UserService はユーザー設定とアカウント管理を提供するサービスです。
-// ユーザー情報の更新、AI機能の有効化、自動要約設定、Pub/Subメトリクス取得などの機能があります。
+// ユーザー情報の更新、AI機能設定、Pub/Subメトリクス取得などの機能があります。
+// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーはありません。
 type UserServiceServer interface {
 	// UpdateUserName はユーザー名を変更します。
 	//
@@ -326,18 +283,6 @@ type UserServiceServer interface {
 	//   - Unauthenticated: 現在のパスワードが不正
 	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
-	// EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
-	// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
-	// 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmEnabled" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーが不正
-	EnableLLM(context.Context, *EnableLLMRequest) (*EnableLLMResponse, error)
 	// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
 	//
 	// 例:
@@ -348,16 +293,6 @@ type UserServiceServer interface {
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
-	// DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmDisabled" }
-	//
-	// エラー:
-	//   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
-	DisableLLM(context.Context, *DisableLLMRequest) (*DisableLLMResponse, error)
 	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
 	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
 	//
@@ -369,8 +304,8 @@ type UserServiceServer interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
-	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 月次要約を有効/無効にできます。
+	// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
+	// 設定レコードが無い場合は新規作成します。
 	//
 	// 例:
 	//
@@ -378,7 +313,7 @@ type UserServiceServer interface {
 	//	response: { success: true, message: "自動要約設定を更新しました" }
 	//
 	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	//   - InvalidArgument: プロバイダーが不正
 	UpdateAutoSummarySettings(context.Context, *UpdateAutoSummarySettingsRequest) (*UpdateAutoSummarySettingsResponse, error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
@@ -387,8 +322,7 @@ type UserServiceServer interface {
 	//	request: { llm_provider: 1 }
 	//	response: { auto_summary_monthly: false }
 	//
-	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	// 設定レコードが無い場合は全て false を返します。
 	GetAutoSummarySettings(context.Context, *GetAutoSummarySettingsRequest) (*GetAutoSummarySettingsResponse, error)
 	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
 	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
@@ -447,14 +381,8 @@ func (UnimplementedUserServiceServer) UpdateUserName(context.Context, *UpdateUse
 func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangePassword not implemented")
 }
-func (UnimplementedUserServiceServer) EnableLLM(context.Context, *EnableLLMRequest) (*EnableLLMResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method EnableLLM not implemented")
-}
 func (UnimplementedUserServiceServer) GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserInfo not implemented")
-}
-func (UnimplementedUserServiceServer) DisableLLM(context.Context, *DisableLLMRequest) (*DisableLLMResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DisableLLM not implemented")
 }
 func (UnimplementedUserServiceServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAccount not implemented")
@@ -534,24 +462,6 @@ func _UserService_ChangePassword_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_EnableLLM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EnableLLMRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).EnableLLM(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_EnableLLM_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).EnableLLM(ctx, req.(*EnableLLMRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserService_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetUserInfoRequest)
 	if err := dec(in); err != nil {
@@ -566,24 +476,6 @@ func _UserService_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).GetUserInfo(ctx, req.(*GetUserInfoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_DisableLLM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DisableLLMRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).DisableLLM(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_DisableLLM_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).DisableLLM(ctx, req.(*DisableLLMRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -730,16 +622,8 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_ChangePassword_Handler,
 		},
 		{
-			MethodName: "EnableLLM",
-			Handler:    _UserService_EnableLLM_Handler,
-		},
-		{
 			MethodName: "GetUserInfo",
 			Handler:    _UserService_GetUserInfo_Handler,
-		},
-		{
-			MethodName: "DisableLLM",
-			Handler:    _UserService_DisableLLM_Handler,
 		},
 		{
 			MethodName: "DeleteAccount",

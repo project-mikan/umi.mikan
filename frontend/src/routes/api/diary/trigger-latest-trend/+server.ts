@@ -2,10 +2,6 @@ import { error, json } from "@sveltejs/kit";
 import { triggerLatestTrend } from "$lib/server/diary-api";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import type { RequestHandler } from "./$types";
-import {
-  AI_NOT_ENABLED_MESSAGE,
-  isAiNotEnabledError,
-} from "$lib/utils/error-utils";
 
 export const POST: RequestHandler = async ({ cookies }) => {
   const authResult = await ensureValidAccessToken(cookies);
@@ -41,16 +37,6 @@ export const POST: RequestHandler = async ({ cookies }) => {
       stack: (err as Error)?.stack,
     });
 
-    // AI機能が未有効化（設定画面でオプトインしていない）
-    if (isAiNotEnabledError(err)) {
-      throw error(400, { message: AI_NOT_ENABLED_MESSAGE });
-    }
-    if (
-      (err as { code?: string })?.code === "NOT_FOUND" ||
-      (err as { code?: number })?.code === 5 // gRPC NOT_FOUND code
-    ) {
-      throw error(404, AI_NOT_ENABLED_MESSAGE);
-    }
     if (
       (err as { code?: string })?.code === "PERMISSION_DENIED" ||
       (err as { code?: number })?.code === 7 || // gRPC PERMISSION_DENIED code

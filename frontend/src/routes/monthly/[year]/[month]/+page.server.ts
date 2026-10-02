@@ -44,7 +44,6 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
       user: {
         name: userInfo.name,
         email: userInfo.email,
-        llmSettings: userInfo.llmSettings || [],
       },
     };
   } catch (err) {
@@ -56,7 +55,6 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
       user: {
         name: "",
         email: "",
-        llmSettings: [],
       },
     };
   }

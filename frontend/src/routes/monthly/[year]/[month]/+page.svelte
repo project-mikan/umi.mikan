@@ -59,10 +59,6 @@
   let isInitialLoad = true; // 初回読み込みかどうかのフラグ
 
   // Check if user has LLM key configured
-  $: llmSetting = data.user?.llmSettings?.find(
-    (setting) => setting.llmProvider === 1,
-  );
-  $: isAiEnabled = !!llmSetting;
 
   // 現在の月かどうかの判定（リアクティブ）
   $: {
@@ -407,7 +403,6 @@
 		}}
 		isDisabled={isFutureMonth || isCurrentMonth || !hasEntries}
 		disabledMessage={getDisabledMessage()}
-		{isAiEnabled}
 		isSummaryOutdated={isMonthlySummaryOutdated}
 		isGenerating={isSummaryGenerating}
 		on:summaryUpdated={handleSummaryUpdated}

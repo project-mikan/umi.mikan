@@ -3,6 +3,8 @@ package diary
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"os"
 	"strings"
 	"testing"
@@ -476,30 +478,31 @@ func TestDiaryEntry_GetDiaryEmbeddingStatus_WithEmbedding(t *testing.T) {
 	}
 }
 
-func TestDiaryEntry_RegenerateAllEmbeddings_NoLLMKey(t *testing.T) {
+func TestDiaryEntry_RegenerateAllEmbeddings_NoLLMSettings(t *testing.T) {
 	db := setupTestDB(t)
 	userID := createTestUser(t, db)
 	svc := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
-	// LLMキーが存在しない場合はエラーを返す
+	// AI機能設定レコードが無い場合は意味的検索が無効なので FailedPrecondition になる
 	_, err := svc.RegenerateAllEmbeddings(ctx, &g.RegenerateAllEmbeddingsRequest{})
-	if err == nil {
-		t.Error("LLMキーが存在しないのにエラーが返らなかった")
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("コード: got %v, want %v", status.Code(err), codes.FailedPrecondition)
 	}
 }
 
-func TestDiaryEntry_SearchDiaryEntriesSemantic_NoLLMKey(t *testing.T) {
+func TestDiaryEntry_SearchDiaryEntriesSemantic_NoLLMSettings(t *testing.T) {
 	db := setupTestDB(t)
 	userID := createTestUser(t, db)
 	svc := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
 
+	// AI機能設定レコードが無い場合は意味的検索が無効なので FailedPrecondition になる
 	_, err := svc.SearchDiaryEntriesSemantic(ctx, &g.SearchDiaryEntriesSemanticRequest{
 		Query: "テスト検索クエリ",
 	})
-	if err == nil {
-		t.Error("LLMキーが存在しないのにエラーが返らなかった")
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("コード: got %v, want %v", status.Code(err), codes.FailedPrecondition)
 	}
 }
 
@@ -508,9 +511,6 @@ func TestDiaryEntry_GenerateMonthlySummary_NoDiaries(t *testing.T) {
 	userID := createTestUser(t, db)
 	svc := &DiaryEntry{DB: db}
 	ctx := createAuthenticatedContext(userID)
-
-	// LLMキーを作成（GenerateMonthlySummaryはLLMキーチェックを通過する必要がある）
-	testutil.CreateTestUserLLM(t, db, userID)
 
 	// 日記が存在しない過去月に対してサマリー生成を要求する
 	_, err := svc.GenerateMonthlySummary(ctx, &g.GenerateMonthlySummaryRequest{

@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
 export const file_user_user: GenFile =
   /*@__PURE__*/
   fileDesc(
-    "Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIuChBFbmFibGVMTE1SZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBUoECAIQAyI1ChFFbmFibGVMTE1SZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiFAoSR2V0VXNlckluZm9SZXF1ZXN0Il4KE0dldFVzZXJJbmZvUmVzcG9uc2USDAoEbmFtZRgBIAEoCRINCgVlbWFpbBgCIAEoCRIqCgxsbG1fc2V0dGluZ3MYAyADKAsyFC51c2VyLkxMTVNldHRpbmdJbmZvIo4BCg5MTE1TZXR0aW5nSW5mbxIUCgxsbG1fcHJvdmlkZXIYASABKAUSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYBCABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgFIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgGIAEoCEoECAIQAyIpChFEaXNhYmxlTExNUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUiNgoSRGlzYWJsZUxMTVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIWChREZWxldGVBY2NvdW50UmVxdWVzdCI5ChVEZWxldGVBY2NvdW50UmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIpoBCiBVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBIUCgxsbG1fcHJvdmlkZXIYASABKAUSHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAyABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgEIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgFIAEoCCJFCiFVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIjUKHUdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBSKCAQoeR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEhwKFGF1dG9fc3VtbWFyeV9tb250aGx5GAIgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYAyABKAgSHwoXc2VtYW50aWNfc2VhcmNoX2VuYWJsZWQYBCABKAgiGQoXR2V0UHViU3ViTWV0cmljc1JlcXVlc3QingEKGEdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRIrCg5ob3VybHlfbWV0cmljcxgBIAMoCzITLnVzZXIuSG91cmx5TWV0cmljcxIuChBwcm9jZXNzaW5nX3Rhc2tzGAIgAygLMhQudXNlci5Qcm9jZXNzaW5nVGFzaxIlCgdzdW1tYXJ5GAMgASgLMhQudXNlci5NZXRyaWNzU3VtbWFyeSKSAgoNSG91cmx5TWV0cmljcxIRCgl0aW1lc3RhbXAYASABKAMSIwobbW9udGhseV9zdW1tYXJpZXNfcHJvY2Vzc2VkGAMgASgFEiAKGG1vbnRobHlfc3VtbWFyaWVzX2ZhaWxlZBgFIAEoBRIfChdsYXRlc3RfdHJlbmRzX3Byb2Nlc3NlZBgGIAEoBRIcChRsYXRlc3RfdHJlbmRzX2ZhaWxlZBgHIAEoBRIiChpkaWFyeV9lbWJlZGRpbmdzX3Byb2Nlc3NlZBgIIAEoBRIfChdkaWFyeV9lbWJlZGRpbmdzX2ZhaWxlZBgJIAEoBRIjChtzZW1hbnRpY19zZWFyY2hlc19wcm9jZXNzZWQYCiABKAUiRQoOUHJvY2Vzc2luZ1Rhc2sSEQoJdGFza190eXBlGAEgASgJEgwKBGRhdGUYAiABKAkSEgoKc3RhcnRlZF9hdBgDIAEoAyK4AgoOTWV0cmljc1N1bW1hcnkSHwoXdG90YWxfbW9udGhseV9zdW1tYXJpZXMYAiABKAUSIQoZcGVuZGluZ19tb250aGx5X3N1bW1hcmllcxgEIAEoBRIkChxhdXRvX3N1bW1hcnlfbW9udGhseV9lbmFibGVkGAYgASgIEiEKGWF1dG9fbGF0ZXN0X3RyZW5kX2VuYWJsZWQYByABKAgSIQoZbGF0ZXN0X3RyZW5kX2dlbmVyYXRlZF9hdBgIIAEoCRIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgJIAEoCBIYChB0b3RhbF9lbWJlZGRpbmdzGAogASgFEhoKEnBlbmRpbmdfZW1iZWRkaW5ncxgLIAEoBRIfChd0b3RhbF9lbWJlZGRpbmdfZGlhcmllcxgMIAEoBSJ4CgpBcGlLZXlJbmZvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEgoKa2V5X3ByZWZpeBgDIAEoCRIUCgxsYXN0X3VzZWRfYXQYBCABKAMSEgoKY3JlYXRlZF9hdBgFIAEoAxISCgpleHBpcmVzX2F0GAYgASgDIiMKE0NyZWF0ZUFwaUtleVJlcXVlc3QSDAoEbmFtZRgBIAEoCSJHChRDcmVhdGVBcGlLZXlSZXNwb25zZRIPCgdhcGlfa2V5GAEgASgJEh4KBGluZm8YAiABKAsyEC51c2VyLkFwaUtleUluZm8iFAoSTGlzdEFwaUtleXNSZXF1ZXN0IjkKE0xpc3RBcGlLZXlzUmVzcG9uc2USIgoIYXBpX2tleXMYASADKAsyEC51c2VyLkFwaUtleUluZm8iIQoTRGVsZXRlQXBpS2V5UmVxdWVzdBIKCgJpZBgBIAEoCSI4ChREZWxldGVBcGlLZXlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkyrAcKC1VzZXJTZXJ2aWNlEksKDlVwZGF0ZVVzZXJOYW1lEhsudXNlci5VcGRhdGVVc2VyTmFtZVJlcXVlc3QaHC51c2VyLlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USSwoOQ2hhbmdlUGFzc3dvcmQSGy51c2VyLkNoYW5nZVBhc3N3b3JkUmVxdWVzdBocLnVzZXIuQ2hhbmdlUGFzc3dvcmRSZXNwb25zZRI8CglFbmFibGVMTE0SFi51c2VyLkVuYWJsZUxMTVJlcXVlc3QaFy51c2VyLkVuYWJsZUxMTVJlc3BvbnNlEkIKC0dldFVzZXJJbmZvEhgudXNlci5HZXRVc2VySW5mb1JlcXVlc3QaGS51c2VyLkdldFVzZXJJbmZvUmVzcG9uc2USPwoKRGlzYWJsZUxMTRIXLnVzZXIuRGlzYWJsZUxMTVJlcXVlc3QaGC51c2VyLkRpc2FibGVMTE1SZXNwb25zZRJICg1EZWxldGVBY2NvdW50EhoudXNlci5EZWxldGVBY2NvdW50UmVxdWVzdBobLnVzZXIuRGVsZXRlQWNjb3VudFJlc3BvbnNlEmwKGVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3MSJi51c2VyLlVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GicudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USYwoWR2V0QXV0b1N1bW1hcnlTZXR0aW5ncxIjLnVzZXIuR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QaJC51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRJRChBHZXRQdWJTdWJNZXRyaWNzEh0udXNlci5HZXRQdWJTdWJNZXRyaWNzUmVxdWVzdBoeLnVzZXIuR2V0UHViU3ViTWV0cmljc1Jlc3BvbnNlEkUKDENyZWF0ZUFwaUtleRIZLnVzZXIuQ3JlYXRlQXBpS2V5UmVxdWVzdBoaLnVzZXIuQ3JlYXRlQXBpS2V5UmVzcG9uc2USQgoLTGlzdEFwaUtleXMSGC51c2VyLkxpc3RBcGlLZXlzUmVxdWVzdBoZLnVzZXIuTGlzdEFwaUtleXNSZXNwb25zZRJFCgxEZWxldGVBcGlLZXkSGS51c2VyLkRlbGV0ZUFwaUtleVJlcXVlc3QaGi51c2VyLkRlbGV0ZUFwaUtleVJlc3BvbnNlQkBaPmdpdGh1Yi5jb20vcHJvamVjdC1taWthbi91bWkubWlrYW4vYmFja2VuZC9pbmZyYXN0cnVjdHVyZS9ncnBjYgZwcm90bzM",
+    "Cg91c2VyL3VzZXIucHJvdG8SBHVzZXIiKQoVVXBkYXRlVXNlck5hbWVSZXF1ZXN0EhAKCG5ld19uYW1lGAEgASgJIjoKFlVwZGF0ZVVzZXJOYW1lUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJIkcKFUNoYW5nZVBhc3N3b3JkUmVxdWVzdBIYChBjdXJyZW50X3Bhc3N3b3JkGAEgASgJEhQKDG5ld19wYXNzd29yZBgCIAEoCSI6ChZDaGFuZ2VQYXNzd29yZFJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCSIUChJHZXRVc2VySW5mb1JlcXVlc3QiXgoTR2V0VXNlckluZm9SZXNwb25zZRIMCgRuYW1lGAEgASgJEg0KBWVtYWlsGAIgASgJEioKDGxsbV9zZXR0aW5ncxgDIAMoCzIULnVzZXIuTExNU2V0dGluZ0luZm8ijgEKDkxMTVNldHRpbmdJbmZvEhQKDGxsbV9wcm92aWRlchgBIAEoBRIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgEIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAUgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAYgASgISgQIAhADIhYKFERlbGV0ZUFjY291bnRSZXF1ZXN0IjkKFURlbGV0ZUFjY291bnRSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkimgEKIFVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0EhQKDGxsbV9wcm92aWRlchgBIAEoBRIcChRhdXRvX3N1bW1hcnlfbW9udGhseRgDIAEoCBIhChlhdXRvX2xhdGVzdF90cmVuZF9lbmFibGVkGAQgASgIEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAUgASgIIkUKIVVwZGF0ZUF1dG9TdW1tYXJ5U2V0dGluZ3NSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiNQodR2V0QXV0b1N1bW1hcnlTZXR0aW5nc1JlcXVlc3QSFAoMbGxtX3Byb3ZpZGVyGAEgASgFIoIBCh5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USHAoUYXV0b19zdW1tYXJ5X21vbnRobHkYAiABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgDIAEoCBIfChdzZW1hbnRpY19zZWFyY2hfZW5hYmxlZBgEIAEoCCIZChdHZXRQdWJTdWJNZXRyaWNzUmVxdWVzdCKeAQoYR2V0UHViU3ViTWV0cmljc1Jlc3BvbnNlEisKDmhvdXJseV9tZXRyaWNzGAEgAygLMhMudXNlci5Ib3VybHlNZXRyaWNzEi4KEHByb2Nlc3NpbmdfdGFza3MYAiADKAsyFC51c2VyLlByb2Nlc3NpbmdUYXNrEiUKB3N1bW1hcnkYAyABKAsyFC51c2VyLk1ldHJpY3NTdW1tYXJ5IpICCg1Ib3VybHlNZXRyaWNzEhEKCXRpbWVzdGFtcBgBIAEoAxIjChttb250aGx5X3N1bW1hcmllc19wcm9jZXNzZWQYAyABKAUSIAoYbW9udGhseV9zdW1tYXJpZXNfZmFpbGVkGAUgASgFEh8KF2xhdGVzdF90cmVuZHNfcHJvY2Vzc2VkGAYgASgFEhwKFGxhdGVzdF90cmVuZHNfZmFpbGVkGAcgASgFEiIKGmRpYXJ5X2VtYmVkZGluZ3NfcHJvY2Vzc2VkGAggASgFEh8KF2RpYXJ5X2VtYmVkZGluZ3NfZmFpbGVkGAkgASgFEiMKG3NlbWFudGljX3NlYXJjaGVzX3Byb2Nlc3NlZBgKIAEoBSJFCg5Qcm9jZXNzaW5nVGFzaxIRCgl0YXNrX3R5cGUYASABKAkSDAoEZGF0ZRgCIAEoCRISCgpzdGFydGVkX2F0GAMgASgDIrgCCg5NZXRyaWNzU3VtbWFyeRIfChd0b3RhbF9tb250aGx5X3N1bW1hcmllcxgCIAEoBRIhChlwZW5kaW5nX21vbnRobHlfc3VtbWFyaWVzGAQgASgFEiQKHGF1dG9fc3VtbWFyeV9tb250aGx5X2VuYWJsZWQYBiABKAgSIQoZYXV0b19sYXRlc3RfdHJlbmRfZW5hYmxlZBgHIAEoCBIhChlsYXRlc3RfdHJlbmRfZ2VuZXJhdGVkX2F0GAggASgJEh8KF3NlbWFudGljX3NlYXJjaF9lbmFibGVkGAkgASgIEhgKEHRvdGFsX2VtYmVkZGluZ3MYCiABKAUSGgoScGVuZGluZ19lbWJlZGRpbmdzGAsgASgFEh8KF3RvdGFsX2VtYmVkZGluZ19kaWFyaWVzGAwgASgFIngKCkFwaUtleUluZm8SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRISCgprZXlfcHJlZml4GAMgASgJEhQKDGxhc3RfdXNlZF9hdBgEIAEoAxISCgpjcmVhdGVkX2F0GAUgASgDEhIKCmV4cGlyZXNfYXQYBiABKAMiIwoTQ3JlYXRlQXBpS2V5UmVxdWVzdBIMCgRuYW1lGAEgASgJIkcKFENyZWF0ZUFwaUtleVJlc3BvbnNlEg8KB2FwaV9rZXkYASABKAkSHgoEaW5mbxgCIAEoCzIQLnVzZXIuQXBpS2V5SW5mbyIUChJMaXN0QXBpS2V5c1JlcXVlc3QiOQoTTGlzdEFwaUtleXNSZXNwb25zZRIiCghhcGlfa2V5cxgBIAMoCzIQLnVzZXIuQXBpS2V5SW5mbyIhChNEZWxldGVBcGlLZXlSZXF1ZXN0EgoKAmlkGAEgASgJIjgKFERlbGV0ZUFwaUtleVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSDwoHbWVzc2FnZRgCIAEoCTKtBgoLVXNlclNlcnZpY2USSwoOVXBkYXRlVXNlck5hbWUSGy51c2VyLlVwZGF0ZVVzZXJOYW1lUmVxdWVzdBocLnVzZXIuVXBkYXRlVXNlck5hbWVSZXNwb25zZRJLCg5DaGFuZ2VQYXNzd29yZBIbLnVzZXIuQ2hhbmdlUGFzc3dvcmRSZXF1ZXN0GhwudXNlci5DaGFuZ2VQYXNzd29yZFJlc3BvbnNlEkIKC0dldFVzZXJJbmZvEhgudXNlci5HZXRVc2VySW5mb1JlcXVlc3QaGS51c2VyLkdldFVzZXJJbmZvUmVzcG9uc2USSAoNRGVsZXRlQWNjb3VudBIaLnVzZXIuRGVsZXRlQWNjb3VudFJlcXVlc3QaGy51c2VyLkRlbGV0ZUFjY291bnRSZXNwb25zZRJsChlVcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzEiYudXNlci5VcGRhdGVBdXRvU3VtbWFyeVNldHRpbmdzUmVxdWVzdBonLnVzZXIuVXBkYXRlQXV0b1N1bW1hcnlTZXR0aW5nc1Jlc3BvbnNlEmMKFkdldEF1dG9TdW1tYXJ5U2V0dGluZ3MSIy51c2VyLkdldEF1dG9TdW1tYXJ5U2V0dGluZ3NSZXF1ZXN0GiQudXNlci5HZXRBdXRvU3VtbWFyeVNldHRpbmdzUmVzcG9uc2USUQoQR2V0UHViU3ViTWV0cmljcxIdLnVzZXIuR2V0UHViU3ViTWV0cmljc1JlcXVlc3QaHi51c2VyLkdldFB1YlN1Yk1ldHJpY3NSZXNwb25zZRJFCgxDcmVhdGVBcGlLZXkSGS51c2VyLkNyZWF0ZUFwaUtleVJlcXVlc3QaGi51c2VyLkNyZWF0ZUFwaUtleVJlc3BvbnNlEkIKC0xpc3RBcGlLZXlzEhgudXNlci5MaXN0QXBpS2V5c1JlcXVlc3QaGS51c2VyLkxpc3RBcGlLZXlzUmVzcG9uc2USRQoMRGVsZXRlQXBpS2V5EhkudXNlci5EZWxldGVBcGlLZXlSZXF1ZXN0GhoudXNlci5EZWxldGVBcGlLZXlSZXNwb25zZUJAWj5naXRodWIuY29tL3Byb2plY3QtbWlrYW4vdW1pLm1pa2FuL2JhY2tlbmQvaW5mcmFzdHJ1Y3R1cmUvZ3JwY2IGcHJvdG8z",
   );
 
 /**
@@ -119,53 +119,6 @@ export const ChangePasswordResponseSchema: GenMessage<ChangePasswordResponse> =
   messageDesc(file_user_user, 3);
 
 /**
- * AI機能有効化用のリクエスト
- *
- * @generated from message user.EnableLLMRequest
- */
-export type EnableLLMRequest = Message<"user.EnableLLMRequest"> & {
-  /**
-   * 1:Gemini
-   *
-   * @generated from field: int32 llm_provider = 1;
-   */
-  llmProvider: number;
-};
-
-/**
- * Describes the message user.EnableLLMRequest.
- * Use `create(EnableLLMRequestSchema)` to create a new message.
- */
-export const EnableLLMRequestSchema: GenMessage<EnableLLMRequest> =
-  /*@__PURE__*/
-  messageDesc(file_user_user, 4);
-
-/**
- * AI機能有効化用のレスポンス
- *
- * @generated from message user.EnableLLMResponse
- */
-export type EnableLLMResponse = Message<"user.EnableLLMResponse"> & {
-  /**
-   * @generated from field: bool success = 1;
-   */
-  success: boolean;
-
-  /**
-   * @generated from field: string message = 2;
-   */
-  message: string;
-};
-
-/**
- * Describes the message user.EnableLLMResponse.
- * Use `create(EnableLLMResponseSchema)` to create a new message.
- */
-export const EnableLLMResponseSchema: GenMessage<EnableLLMResponse> =
-  /*@__PURE__*/
-  messageDesc(file_user_user, 5);
-
-/**
  * ユーザー情報取得用のリクエスト
  *
  * 空のリクエスト（認証はヘッダーから）
@@ -180,7 +133,7 @@ export type GetUserInfoRequest = Message<"user.GetUserInfoRequest"> & {};
  */
 export const GetUserInfoRequestSchema: GenMessage<GetUserInfoRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 6);
+  messageDesc(file_user_user, 4);
 
 /**
  * ユーザー情報取得用のレスポンス
@@ -199,7 +152,7 @@ export type GetUserInfoResponse = Message<"user.GetUserInfoResponse"> & {
   email: string;
 
   /**
-   * AI機能設定（有効化されている場合のみ）
+   * AI機能設定（一度でも設定を保存した場合のみ）
    *
    * @generated from field: repeated user.LLMSettingInfo llm_settings = 3;
    */
@@ -212,7 +165,7 @@ export type GetUserInfoResponse = Message<"user.GetUserInfoResponse"> & {
  */
 export const GetUserInfoResponseSchema: GenMessage<GetUserInfoResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 7);
+  messageDesc(file_user_user, 5);
 
 /**
  * AI機能設定情報
@@ -255,54 +208,7 @@ export type LLMSettingInfo = Message<"user.LLMSettingInfo"> & {
  */
 export const LLMSettingInfoSchema: GenMessage<LLMSettingInfo> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 8);
-
-/**
- * AI機能無効化用のリクエスト
- *
- * @generated from message user.DisableLLMRequest
- */
-export type DisableLLMRequest = Message<"user.DisableLLMRequest"> & {
-  /**
-   * 1:Gemini
-   *
-   * @generated from field: int32 llm_provider = 1;
-   */
-  llmProvider: number;
-};
-
-/**
- * Describes the message user.DisableLLMRequest.
- * Use `create(DisableLLMRequestSchema)` to create a new message.
- */
-export const DisableLLMRequestSchema: GenMessage<DisableLLMRequest> =
-  /*@__PURE__*/
-  messageDesc(file_user_user, 9);
-
-/**
- * AI機能無効化用のレスポンス
- *
- * @generated from message user.DisableLLMResponse
- */
-export type DisableLLMResponse = Message<"user.DisableLLMResponse"> & {
-  /**
-   * @generated from field: bool success = 1;
-   */
-  success: boolean;
-
-  /**
-   * @generated from field: string message = 2;
-   */
-  message: string;
-};
-
-/**
- * Describes the message user.DisableLLMResponse.
- * Use `create(DisableLLMResponseSchema)` to create a new message.
- */
-export const DisableLLMResponseSchema: GenMessage<DisableLLMResponse> =
-  /*@__PURE__*/
-  messageDesc(file_user_user, 10);
+  messageDesc(file_user_user, 6);
 
 /**
  * アカウント削除用のリクエスト
@@ -319,7 +225,7 @@ export type DeleteAccountRequest = Message<"user.DeleteAccountRequest"> & {};
  */
 export const DeleteAccountRequestSchema: GenMessage<DeleteAccountRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 11);
+  messageDesc(file_user_user, 7);
 
 /**
  * アカウント削除用のレスポンス
@@ -344,7 +250,7 @@ export type DeleteAccountResponse = Message<"user.DeleteAccountResponse"> & {
  */
 export const DeleteAccountResponseSchema: GenMessage<DeleteAccountResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 12);
+  messageDesc(file_user_user, 8);
 
 /**
  * 自動要約設定更新用のリクエスト
@@ -388,7 +294,7 @@ export type UpdateAutoSummarySettingsRequest =
  */
 export const UpdateAutoSummarySettingsRequestSchema: GenMessage<UpdateAutoSummarySettingsRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 13);
+  messageDesc(file_user_user, 9);
 
 /**
  * 自動要約設定更新用のレスポンス
@@ -414,7 +320,7 @@ export type UpdateAutoSummarySettingsResponse =
  */
 export const UpdateAutoSummarySettingsResponseSchema: GenMessage<UpdateAutoSummarySettingsResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 14);
+  messageDesc(file_user_user, 10);
 
 /**
  * 自動要約設定取得用のリクエスト
@@ -437,7 +343,7 @@ export type GetAutoSummarySettingsRequest =
  */
 export const GetAutoSummarySettingsRequestSchema: GenMessage<GetAutoSummarySettingsRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 15);
+  messageDesc(file_user_user, 11);
 
 /**
  * 自動要約設定取得用のレスポンス
@@ -474,7 +380,7 @@ export type GetAutoSummarySettingsResponse =
  */
 export const GetAutoSummarySettingsResponseSchema: GenMessage<GetAutoSummarySettingsResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 16);
+  messageDesc(file_user_user, 12);
 
 /**
  * Pub/Subメトリクス取得用のリクエスト
@@ -492,7 +398,7 @@ export type GetPubSubMetricsRequest =
  */
 export const GetPubSubMetricsRequestSchema: GenMessage<GetPubSubMetricsRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 17);
+  messageDesc(file_user_user, 13);
 
 /**
  * Pub/Subメトリクス取得用のレスポンス
@@ -529,7 +435,7 @@ export type GetPubSubMetricsResponse =
  */
 export const GetPubSubMetricsResponseSchema: GenMessage<GetPubSubMetricsResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 18);
+  messageDesc(file_user_user, 14);
 
 /**
  * 1時間ごとのメトリクス
@@ -600,7 +506,7 @@ export type HourlyMetrics = Message<"user.HourlyMetrics"> & {
  */
 export const HourlyMetricsSchema: GenMessage<HourlyMetrics> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 19);
+  messageDesc(file_user_user, 15);
 
 /**
  * 処理中のタスク
@@ -636,7 +542,7 @@ export type ProcessingTask = Message<"user.ProcessingTask"> & {
  */
 export const ProcessingTaskSchema: GenMessage<ProcessingTask> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 20);
+  messageDesc(file_user_user, 16);
 
 /**
  * メトリクス統計情報
@@ -714,7 +620,7 @@ export type MetricsSummary = Message<"user.MetricsSummary"> & {
  */
 export const MetricsSummarySchema: GenMessage<MetricsSummary> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 21);
+  messageDesc(file_user_user, 17);
 
 /**
  * APIキー情報（キー本体は含まない）
@@ -767,7 +673,7 @@ export type ApiKeyInfo = Message<"user.ApiKeyInfo"> & {
  */
 export const ApiKeyInfoSchema: GenMessage<ApiKeyInfo> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 22);
+  messageDesc(file_user_user, 18);
 
 /**
  * APIキー発行用のリクエスト
@@ -789,7 +695,7 @@ export type CreateApiKeyRequest = Message<"user.CreateApiKeyRequest"> & {
  */
 export const CreateApiKeyRequestSchema: GenMessage<CreateApiKeyRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 23);
+  messageDesc(file_user_user, 19);
 
 /**
  * APIキー発行用のレスポンス
@@ -816,7 +722,7 @@ export type CreateApiKeyResponse = Message<"user.CreateApiKeyResponse"> & {
  */
 export const CreateApiKeyResponseSchema: GenMessage<CreateApiKeyResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 24);
+  messageDesc(file_user_user, 20);
 
 /**
  * APIキー一覧取得用のリクエスト
@@ -833,7 +739,7 @@ export type ListApiKeysRequest = Message<"user.ListApiKeysRequest"> & {};
  */
 export const ListApiKeysRequestSchema: GenMessage<ListApiKeysRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 25);
+  messageDesc(file_user_user, 21);
 
 /**
  * APIキー一覧取得用のレスポンス
@@ -853,7 +759,7 @@ export type ListApiKeysResponse = Message<"user.ListApiKeysResponse"> & {
  */
 export const ListApiKeysResponseSchema: GenMessage<ListApiKeysResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 26);
+  messageDesc(file_user_user, 22);
 
 /**
  * APIキー削除用のリクエスト
@@ -873,7 +779,7 @@ export type DeleteApiKeyRequest = Message<"user.DeleteApiKeyRequest"> & {
  */
 export const DeleteApiKeyRequestSchema: GenMessage<DeleteApiKeyRequest> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 27);
+  messageDesc(file_user_user, 23);
 
 /**
  * APIキー削除用のレスポンス
@@ -898,11 +804,12 @@ export type DeleteApiKeyResponse = Message<"user.DeleteApiKeyResponse"> & {
  */
 export const DeleteApiKeyResponseSchema: GenMessage<DeleteApiKeyResponse> =
   /*@__PURE__*/
-  messageDesc(file_user_user, 28);
+  messageDesc(file_user_user, 24);
 
 /**
  * UserService はユーザー設定とアカウント管理を提供するサービスです。
- * ユーザー情報の更新、AI機能の有効化、自動要約設定、Pub/Subメトリクス取得などの機能があります。
+ * ユーザー情報の更新、AI機能設定、Pub/Subメトリクス取得などの機能があります。
+ * LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーはありません。
  *
  * @generated from service user.UserService
  */
@@ -944,25 +851,6 @@ export const UserService: GenService<{
     output: typeof ChangePasswordResponseSchema;
   };
   /**
-   * EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
-   * LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
-   * 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
-   *
-   * 例:
-   *   request: { llm_provider: 1 }
-   *   response: { success: true, message: "llmEnabled" }
-   *
-   * エラー:
-   *   - InvalidArgument: プロバイダーが不正
-   *
-   * @generated from rpc user.UserService.EnableLLM
-   */
-  enableLLM: {
-    methodKind: "unary";
-    input: typeof EnableLLMRequestSchema;
-    output: typeof EnableLLMResponseSchema;
-  };
-  /**
    * GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
    *
    * 例:
@@ -978,23 +866,6 @@ export const UserService: GenService<{
     methodKind: "unary";
     input: typeof GetUserInfoRequestSchema;
     output: typeof GetUserInfoResponseSchema;
-  };
-  /**
-   * DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
-   *
-   * 例:
-   *   request: { llm_provider: 1 }
-   *   response: { success: true, message: "llmDisabled" }
-   *
-   * エラー:
-   *   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
-   *
-   * @generated from rpc user.UserService.DisableLLM
-   */
-  disableLLM: {
-    methodKind: "unary";
-    input: typeof DisableLLMRequestSchema;
-    output: typeof DisableLLMResponseSchema;
   };
   /**
    * DeleteAccount はユーザーアカウントと関連データを完全に削除します。
@@ -1015,15 +886,15 @@ export const UserService: GenService<{
     output: typeof DeleteAccountResponseSchema;
   };
   /**
-   * UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-   * 月次要約を有効/無効にできます。
+   * UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
+   * 設定レコードが無い場合は新規作成します。
    *
    * 例:
    *   request: { llm_provider: 1, auto_summary_monthly: false }
    *   response: { success: true, message: "自動要約設定を更新しました" }
    *
    * エラー:
-   *   - NotFound: AI機能が有効化されていない
+   *   - InvalidArgument: プロバイダーが不正
    *
    * @generated from rpc user.UserService.UpdateAutoSummarySettings
    */
@@ -1039,8 +910,7 @@ export const UserService: GenService<{
    *   request: { llm_provider: 1 }
    *   response: { auto_summary_monthly: false }
    *
-   * エラー:
-   *   - NotFound: AI機能が有効化されていない
+   * 設定レコードが無い場合は全て false を返します。
    *
    * @generated from rpc user.UserService.GetAutoSummarySettings
    */

@@ -102,12 +102,12 @@ func GenerateTestTokens(t *testing.T, userID uuid.UUID) *model.TokenDetails {
 	return tokens
 }
 
-// CreateTestUserLLM はユーザーのAI機能を有効化（オプトイン）したテスト用設定をデフォルト値で作成する
+// CreateTestUserLLM はユーザーのAI機能設定（機能ごとのフラグ）をデフォルト値で作成する
 func CreateTestUserLLM(t *testing.T, db *sql.DB, userID uuid.UUID) {
 	CreateTestUserLLMWithSettings(t, db, userID, true, true, false)
 }
 
-// CreateTestUserLLMWithSettings はユーザーのAI機能を有効化（オプトイン）したテスト用設定を指定値で作成する
+// CreateTestUserLLMWithSettings はユーザーのAI機能設定（機能ごとのフラグ）を指定値で作成する
 func CreateTestUserLLMWithSettings(t *testing.T, db *sql.DB, userID uuid.UUID, autoMonthly, autoTrend, semantic bool) {
 	currentTime := time.Now().Unix()
 

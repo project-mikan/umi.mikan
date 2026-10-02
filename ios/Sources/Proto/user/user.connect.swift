@@ -10,7 +10,8 @@ import Foundation
 import SwiftProtobuf
 
 /// UserService はユーザー設定とアカウント管理を提供するサービスです。
-/// ユーザー情報の更新、AI機能の有効化、自動要約設定、Pub/Subメトリクス取得などの機能があります。
+/// ユーザー情報の更新、AI機能設定、Pub/Subメトリクス取得などの機能があります。
+/// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーはありません。
 internal protocol User_UserServiceClientInterface: Sendable {
 
     /// UpdateUserName はユーザー名を変更します。
@@ -37,19 +38,6 @@ internal protocol User_UserServiceClientInterface: Sendable {
     @available(iOS 13, *)
     func `changePassword`(request: User_ChangePasswordRequest, headers: Connect.Headers) async -> ResponseMessage<User_ChangePasswordResponse>
 
-    /// EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
-    /// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
-    /// 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
-    ///
-    /// 例:
-    ///   request: { llm_provider: 1 }
-    ///   response: { success: true, message: "llmEnabled" }
-    ///
-    /// エラー:
-    ///   - InvalidArgument: プロバイダーが不正
-    @available(iOS 13, *)
-    func `enableLlm`(request: User_EnableLLMRequest, headers: Connect.Headers) async -> ResponseMessage<User_EnableLLMResponse>
-
     /// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
     ///
     /// 例:
@@ -60,17 +48,6 @@ internal protocol User_UserServiceClientInterface: Sendable {
     ///   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
     @available(iOS 13, *)
     func `getUserInfo`(request: User_GetUserInfoRequest, headers: Connect.Headers) async -> ResponseMessage<User_GetUserInfoResponse>
-
-    /// DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
-    ///
-    /// 例:
-    ///   request: { llm_provider: 1 }
-    ///   response: { success: true, message: "llmDisabled" }
-    ///
-    /// エラー:
-    ///   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
-    @available(iOS 13, *)
-    func `disableLlm`(request: User_DisableLLMRequest, headers: Connect.Headers) async -> ResponseMessage<User_DisableLLMResponse>
 
     /// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
     /// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
@@ -84,15 +61,15 @@ internal protocol User_UserServiceClientInterface: Sendable {
     @available(iOS 13, *)
     func `deleteAccount`(request: User_DeleteAccountRequest, headers: Connect.Headers) async -> ResponseMessage<User_DeleteAccountResponse>
 
-    /// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-    /// 月次要約を有効/無効にできます。
+    /// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
+    /// 設定レコードが無い場合は新規作成します。
     ///
     /// 例:
     ///   request: { llm_provider: 1, auto_summary_monthly: false }
     ///   response: { success: true, message: "自動要約設定を更新しました" }
     ///
     /// エラー:
-    ///   - NotFound: AI機能が有効化されていない
+    ///   - InvalidArgument: プロバイダーが不正
     @available(iOS 13, *)
     func `updateAutoSummarySettings`(request: User_UpdateAutoSummarySettingsRequest, headers: Connect.Headers) async -> ResponseMessage<User_UpdateAutoSummarySettingsResponse>
 
@@ -102,8 +79,7 @@ internal protocol User_UserServiceClientInterface: Sendable {
     ///   request: { llm_provider: 1 }
     ///   response: { auto_summary_monthly: false }
     ///
-    /// エラー:
-    ///   - NotFound: AI機能が有効化されていない
+    /// 設定レコードが無い場合は全て false を返します。
     @available(iOS 13, *)
     func `getAutoSummarySettings`(request: User_GetAutoSummarySettingsRequest, headers: Connect.Headers) async -> ResponseMessage<User_GetAutoSummarySettingsResponse>
 
@@ -172,18 +148,8 @@ internal final class User_UserServiceClient: User_UserServiceClientInterface, Se
     }
 
     @available(iOS 13, *)
-    internal func `enableLlm`(request: User_EnableLLMRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_EnableLLMResponse> {
-        return await self.client.unary(path: "/user.UserService/EnableLLM", idempotencyLevel: .unknown, request: request, headers: headers)
-    }
-
-    @available(iOS 13, *)
     internal func `getUserInfo`(request: User_GetUserInfoRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_GetUserInfoResponse> {
         return await self.client.unary(path: "/user.UserService/GetUserInfo", idempotencyLevel: .unknown, request: request, headers: headers)
-    }
-
-    @available(iOS 13, *)
-    internal func `disableLlm`(request: User_DisableLLMRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<User_DisableLLMResponse> {
-        return await self.client.unary(path: "/user.UserService/DisableLLM", idempotencyLevel: .unknown, request: request, headers: headers)
     }
 
     @available(iOS 13, *)
@@ -225,9 +191,7 @@ internal final class User_UserServiceClient: User_UserServiceClientInterface, Se
         internal enum Methods {
             internal static let updateUserName = Connect.MethodSpec(name: "UpdateUserName", service: "user.UserService", type: .unary)
             internal static let changePassword = Connect.MethodSpec(name: "ChangePassword", service: "user.UserService", type: .unary)
-            internal static let enableLlm = Connect.MethodSpec(name: "EnableLLM", service: "user.UserService", type: .unary)
             internal static let getUserInfo = Connect.MethodSpec(name: "GetUserInfo", service: "user.UserService", type: .unary)
-            internal static let disableLlm = Connect.MethodSpec(name: "DisableLLM", service: "user.UserService", type: .unary)
             internal static let deleteAccount = Connect.MethodSpec(name: "DeleteAccount", service: "user.UserService", type: .unary)
             internal static let updateAutoSummarySettings = Connect.MethodSpec(name: "UpdateAutoSummarySettings", service: "user.UserService", type: .unary)
             internal static let getAutoSummarySettings = Connect.MethodSpec(name: "GetAutoSummarySettings", service: "user.UserService", type: .unary)

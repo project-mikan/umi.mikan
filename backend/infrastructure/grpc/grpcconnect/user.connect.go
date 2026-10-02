@@ -39,12 +39,8 @@ const (
 	// UserServiceChangePasswordProcedure is the fully-qualified name of the UserService's
 	// ChangePassword RPC.
 	UserServiceChangePasswordProcedure = "/user.UserService/ChangePassword"
-	// UserServiceEnableLLMProcedure is the fully-qualified name of the UserService's EnableLLM RPC.
-	UserServiceEnableLLMProcedure = "/user.UserService/EnableLLM"
 	// UserServiceGetUserInfoProcedure is the fully-qualified name of the UserService's GetUserInfo RPC.
 	UserServiceGetUserInfoProcedure = "/user.UserService/GetUserInfo"
-	// UserServiceDisableLLMProcedure is the fully-qualified name of the UserService's DisableLLM RPC.
-	UserServiceDisableLLMProcedure = "/user.UserService/DisableLLM"
 	// UserServiceDeleteAccountProcedure is the fully-qualified name of the UserService's DeleteAccount
 	// RPC.
 	UserServiceDeleteAccountProcedure = "/user.UserService/DeleteAccount"
@@ -91,18 +87,6 @@ type UserServiceClient interface {
 	//   - Unauthenticated: 現在のパスワードが不正
 	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(context.Context, *connect.Request[grpc.ChangePasswordRequest]) (*connect.Response[grpc.ChangePasswordResponse], error)
-	// EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
-	// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
-	// 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmEnabled" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーが不正
-	EnableLLM(context.Context, *connect.Request[grpc.EnableLLMRequest]) (*connect.Response[grpc.EnableLLMResponse], error)
 	// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
 	//
 	// 例:
@@ -113,16 +97,6 @@ type UserServiceClient interface {
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(context.Context, *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error)
-	// DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmDisabled" }
-	//
-	// エラー:
-	//   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
-	DisableLLM(context.Context, *connect.Request[grpc.DisableLLMRequest]) (*connect.Response[grpc.DisableLLMResponse], error)
 	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
 	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
 	//
@@ -134,8 +108,8 @@ type UserServiceClient interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error)
-	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 月次要約を有効/無効にできます。
+	// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
+	// 設定レコードが無い場合は新規作成します。
 	//
 	// 例:
 	//
@@ -143,7 +117,7 @@ type UserServiceClient interface {
 	//	response: { success: true, message: "自動要約設定を更新しました" }
 	//
 	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	//   - InvalidArgument: プロバイダーが不正
 	UpdateAutoSummarySettings(context.Context, *connect.Request[grpc.UpdateAutoSummarySettingsRequest]) (*connect.Response[grpc.UpdateAutoSummarySettingsResponse], error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
@@ -152,8 +126,7 @@ type UserServiceClient interface {
 	//	request: { llm_provider: 1 }
 	//	response: { auto_summary_monthly: false }
 	//
-	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	// 設定レコードが無い場合は全て false を返します。
 	GetAutoSummarySettings(context.Context, *connect.Request[grpc.GetAutoSummarySettingsRequest]) (*connect.Response[grpc.GetAutoSummarySettingsResponse], error)
 	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
 	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
@@ -221,22 +194,10 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(userServiceMethods.ByName("ChangePassword")),
 			connect.WithClientOptions(opts...),
 		),
-		enableLLM: connect.NewClient[grpc.EnableLLMRequest, grpc.EnableLLMResponse](
-			httpClient,
-			baseURL+UserServiceEnableLLMProcedure,
-			connect.WithSchema(userServiceMethods.ByName("EnableLLM")),
-			connect.WithClientOptions(opts...),
-		),
 		getUserInfo: connect.NewClient[grpc.GetUserInfoRequest, grpc.GetUserInfoResponse](
 			httpClient,
 			baseURL+UserServiceGetUserInfoProcedure,
 			connect.WithSchema(userServiceMethods.ByName("GetUserInfo")),
-			connect.WithClientOptions(opts...),
-		),
-		disableLLM: connect.NewClient[grpc.DisableLLMRequest, grpc.DisableLLMResponse](
-			httpClient,
-			baseURL+UserServiceDisableLLMProcedure,
-			connect.WithSchema(userServiceMethods.ByName("DisableLLM")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteAccount: connect.NewClient[grpc.DeleteAccountRequest, grpc.DeleteAccountResponse](
@@ -288,9 +249,7 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 type userServiceClient struct {
 	updateUserName            *connect.Client[grpc.UpdateUserNameRequest, grpc.UpdateUserNameResponse]
 	changePassword            *connect.Client[grpc.ChangePasswordRequest, grpc.ChangePasswordResponse]
-	enableLLM                 *connect.Client[grpc.EnableLLMRequest, grpc.EnableLLMResponse]
 	getUserInfo               *connect.Client[grpc.GetUserInfoRequest, grpc.GetUserInfoResponse]
-	disableLLM                *connect.Client[grpc.DisableLLMRequest, grpc.DisableLLMResponse]
 	deleteAccount             *connect.Client[grpc.DeleteAccountRequest, grpc.DeleteAccountResponse]
 	updateAutoSummarySettings *connect.Client[grpc.UpdateAutoSummarySettingsRequest, grpc.UpdateAutoSummarySettingsResponse]
 	getAutoSummarySettings    *connect.Client[grpc.GetAutoSummarySettingsRequest, grpc.GetAutoSummarySettingsResponse]
@@ -310,19 +269,9 @@ func (c *userServiceClient) ChangePassword(ctx context.Context, req *connect.Req
 	return c.changePassword.CallUnary(ctx, req)
 }
 
-// EnableLLM calls user.UserService.EnableLLM.
-func (c *userServiceClient) EnableLLM(ctx context.Context, req *connect.Request[grpc.EnableLLMRequest]) (*connect.Response[grpc.EnableLLMResponse], error) {
-	return c.enableLLM.CallUnary(ctx, req)
-}
-
 // GetUserInfo calls user.UserService.GetUserInfo.
 func (c *userServiceClient) GetUserInfo(ctx context.Context, req *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error) {
 	return c.getUserInfo.CallUnary(ctx, req)
-}
-
-// DisableLLM calls user.UserService.DisableLLM.
-func (c *userServiceClient) DisableLLM(ctx context.Context, req *connect.Request[grpc.DisableLLMRequest]) (*connect.Response[grpc.DisableLLMResponse], error) {
-	return c.disableLLM.CallUnary(ctx, req)
 }
 
 // DeleteAccount calls user.UserService.DeleteAccount.
@@ -384,18 +333,6 @@ type UserServiceHandler interface {
 	//   - Unauthenticated: 現在のパスワードが不正
 	//   - InvalidArgument: 新しいパスワードが短すぎる
 	ChangePassword(context.Context, *connect.Request[grpc.ChangePasswordRequest]) (*connect.Response[grpc.ChangePasswordResponse], error)
-	// EnableLLM はユーザーのAI機能（要約・ハイライト・意味的検索など）を有効化（オプトイン）します。
-	// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザーがAPIキーを用意する必要はありません。
-	// 現在はGemini (llm_provider=1) のみ対応しています。既に有効な場合は何もせず成功を返します。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmEnabled" }
-	//
-	// エラー:
-	//   - InvalidArgument: プロバイダーが不正
-	EnableLLM(context.Context, *connect.Request[grpc.EnableLLMRequest]) (*connect.Response[grpc.EnableLLMResponse], error)
 	// GetUserInfo はユーザーの基本情報とAI機能設定を取得します。
 	//
 	// 例:
@@ -406,16 +343,6 @@ type UserServiceHandler interface {
 	// エラー:
 	//   - NotFound: ユーザーが存在しない（通常発生しない、認証済みのため）
 	GetUserInfo(context.Context, *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error)
-	// DisableLLM はユーザーのAI機能を無効化（オプトアウト）します。自動要約などの設定も削除されます。
-	//
-	// 例:
-	//
-	//	request: { llm_provider: 1 }
-	//	response: { success: true, message: "llmDisabled" }
-	//
-	// エラー:
-	//   - NotFound: 指定されたプロバイダーのAI機能が有効化されていない
-	DisableLLM(context.Context, *connect.Request[grpc.DisableLLMRequest]) (*connect.Response[grpc.DisableLLMResponse], error)
 	// DeleteAccount はユーザーアカウントと関連データを完全に削除します。
 	// 日記、エンティティ、要約など全てのデータがカスケード削除されます。
 	//
@@ -427,8 +354,8 @@ type UserServiceHandler interface {
 	// エラー:
 	//   - Internal: 削除処理エラー
 	DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error)
-	// UpdateAutoSummarySettings は自動要約生成の設定を更新します。
-	// 月次要約を有効/無効にできます。
+	// UpdateAutoSummarySettings はAI機能ごとの設定（月次要約・トレンド分析の自動生成、意味的検索）を更新します。
+	// 設定レコードが無い場合は新規作成します。
 	//
 	// 例:
 	//
@@ -436,7 +363,7 @@ type UserServiceHandler interface {
 	//	response: { success: true, message: "自動要約設定を更新しました" }
 	//
 	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	//   - InvalidArgument: プロバイダーが不正
 	UpdateAutoSummarySettings(context.Context, *connect.Request[grpc.UpdateAutoSummarySettingsRequest]) (*connect.Response[grpc.UpdateAutoSummarySettingsResponse], error)
 	// GetAutoSummarySettings は自動要約生成の現在の設定を取得します。
 	//
@@ -445,8 +372,7 @@ type UserServiceHandler interface {
 	//	request: { llm_provider: 1 }
 	//	response: { auto_summary_monthly: false }
 	//
-	// エラー:
-	//   - NotFound: AI機能が有効化されていない
+	// 設定レコードが無い場合は全て false を返します。
 	GetAutoSummarySettings(context.Context, *connect.Request[grpc.GetAutoSummarySettingsRequest]) (*connect.Response[grpc.GetAutoSummarySettingsResponse], error)
 	// GetPubSubMetrics はRedis Pub/Subによる要約生成タスクの処理状況を取得します。
 	// 過去24時間の時間別メトリクス、現在処理中のタスク、統計情報が含まれます。
@@ -510,22 +436,10 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(userServiceMethods.ByName("ChangePassword")),
 		connect.WithHandlerOptions(opts...),
 	)
-	userServiceEnableLLMHandler := connect.NewUnaryHandler(
-		UserServiceEnableLLMProcedure,
-		svc.EnableLLM,
-		connect.WithSchema(userServiceMethods.ByName("EnableLLM")),
-		connect.WithHandlerOptions(opts...),
-	)
 	userServiceGetUserInfoHandler := connect.NewUnaryHandler(
 		UserServiceGetUserInfoProcedure,
 		svc.GetUserInfo,
 		connect.WithSchema(userServiceMethods.ByName("GetUserInfo")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userServiceDisableLLMHandler := connect.NewUnaryHandler(
-		UserServiceDisableLLMProcedure,
-		svc.DisableLLM,
-		connect.WithSchema(userServiceMethods.ByName("DisableLLM")),
 		connect.WithHandlerOptions(opts...),
 	)
 	userServiceDeleteAccountHandler := connect.NewUnaryHandler(
@@ -576,12 +490,8 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 			userServiceUpdateUserNameHandler.ServeHTTP(w, r)
 		case UserServiceChangePasswordProcedure:
 			userServiceChangePasswordHandler.ServeHTTP(w, r)
-		case UserServiceEnableLLMProcedure:
-			userServiceEnableLLMHandler.ServeHTTP(w, r)
 		case UserServiceGetUserInfoProcedure:
 			userServiceGetUserInfoHandler.ServeHTTP(w, r)
-		case UserServiceDisableLLMProcedure:
-			userServiceDisableLLMHandler.ServeHTTP(w, r)
 		case UserServiceDeleteAccountProcedure:
 			userServiceDeleteAccountHandler.ServeHTTP(w, r)
 		case UserServiceUpdateAutoSummarySettingsProcedure:
@@ -613,16 +523,8 @@ func (UnimplementedUserServiceHandler) ChangePassword(context.Context, *connect.
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.ChangePassword is not implemented"))
 }
 
-func (UnimplementedUserServiceHandler) EnableLLM(context.Context, *connect.Request[grpc.EnableLLMRequest]) (*connect.Response[grpc.EnableLLMResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.EnableLLM is not implemented"))
-}
-
 func (UnimplementedUserServiceHandler) GetUserInfo(context.Context, *connect.Request[grpc.GetUserInfoRequest]) (*connect.Response[grpc.GetUserInfoResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.GetUserInfo is not implemented"))
-}
-
-func (UnimplementedUserServiceHandler) DisableLLM(context.Context, *connect.Request[grpc.DisableLLMRequest]) (*connect.Response[grpc.DisableLLMResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.UserService.DisableLLM is not implemented"))
 }
 
 func (UnimplementedUserServiceHandler) DeleteAccount(context.Context, *connect.Request[grpc.DeleteAccountRequest]) (*connect.Response[grpc.DeleteAccountResponse], error) {

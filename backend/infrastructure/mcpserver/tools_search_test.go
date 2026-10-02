@@ -92,7 +92,7 @@ func TestSearchDiaryEntriesFuzzyHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("異常系: LLMキー未設定の場合はエラー", func(t *testing.T) {
+	t.Run("異常系: AI機能設定が無いユーザーは意味的検索が無効なのでエラーになる", func(t *testing.T) {
 		db := testutil.SetupTestDB(t)
 		userID := testutil.CreateTestUser(t, db, "mcp-fuzzy-test@example.com", "MCPFuzzyUser")
 		diaryService := &diary.DiaryEntry{DB: db}
@@ -101,7 +101,7 @@ func TestSearchDiaryEntriesFuzzyHandler(t *testing.T) {
 		handler := searchDiaryEntriesFuzzyHandler(diaryService)
 		_, _, err := handler(ctx, nil, SearchDiaryEntriesFuzzyInput{Query: "最近の出来事"})
 		if err == nil {
-			t.Fatal("LLMキー未設定時にエラーを期待したがnilが返った")
+			t.Fatal("意味的検索が無効なのにエラーが返らなかった")
 		}
 	})
 

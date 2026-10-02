@@ -2,9 +2,7 @@ import { redirect, fail } from "@sveltejs/kit";
 import {
   updateUserName,
   changePassword,
-  enableLLM,
   getUserInfo,
-  disableLLM,
   deleteAccount,
   updateAutoSummarySettings,
   createApiKey,
@@ -136,74 +134,6 @@ export const actions: Actions = {
     } catch (error) {
       console.error("Change password error:", error);
       return fail(500, { error: "updateFailed", action: "changePassword" });
-    }
-  },
-
-  enableLLM: async ({ request, cookies }) => {
-    const accessToken = cookies.get("accessToken");
-    if (!accessToken) {
-      return fail(401, { error: "unauthorized", action: "enableLLM" });
-    }
-
-    const data = await request.formData();
-    const llmProvider = parseInt(data.get("llmProvider") as string, 10);
-
-    if (Number.isNaN(llmProvider) || llmProvider < 0) {
-      return fail(400, { error: "invalidProvider", action: "enableLLM" });
-    }
-
-    try {
-      const response = await enableLLM({
-        llmProvider,
-        accessToken,
-      });
-
-      if (!response.success) {
-        return fail(400, { error: response.message, action: "enableLLM" });
-      }
-
-      return {
-        success: true,
-        message: response.message,
-        action: "enableLLM",
-      };
-    } catch (error) {
-      console.error("Enable LLM error:", error);
-      return fail(500, { error: "updateFailed", action: "enableLLM" });
-    }
-  },
-
-  disableLLM: async ({ request, cookies }) => {
-    const accessToken = cookies.get("accessToken");
-    if (!accessToken) {
-      return fail(401, { error: "unauthorized", action: "disableLLM" });
-    }
-
-    const data = await request.formData();
-    const llmProvider = parseInt(data.get("llmProvider") as string, 10);
-
-    if (Number.isNaN(llmProvider) || llmProvider < 0) {
-      return fail(400, { error: "invalidProvider", action: "disableLLM" });
-    }
-
-    try {
-      const response = await disableLLM({
-        llmProvider,
-        accessToken,
-      });
-
-      if (!response.success) {
-        return fail(400, { error: response.message, action: "disableLLM" });
-      }
-
-      return {
-        success: true,
-        message: response.message,
-        action: "disableLLM",
-      };
-    } catch (error) {
-      console.error("Disable LLM error:", error);
-      return fail(500, { error: "updateFailed", action: "disableLLM" });
     }
   },
 

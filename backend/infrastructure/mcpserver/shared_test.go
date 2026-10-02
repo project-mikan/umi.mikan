@@ -49,10 +49,10 @@ func TestFriendlyError(t *testing.T) {
 	})
 
 	t.Run("正常系: gRPC statusエラーはメッセージのみを抽出する", func(t *testing.T) {
-		err := status.Errorf(codes.NotFound, "Gemini API key not found")
+		err := status.Errorf(codes.NotFound, "Diary entry not found")
 		got := friendlyError(err)
-		if got.Error() != "Gemini API key not found" {
-			t.Errorf("メッセージ: 期待 %q, 実際 %q", "Gemini API key not found", got.Error())
+		if got.Error() != "Diary entry not found" {
+			t.Errorf("メッセージ: 期待 %q, 実際 %q", "Diary entry not found", got.Error())
 		}
 	})
 

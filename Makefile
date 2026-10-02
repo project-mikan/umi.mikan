@@ -169,6 +169,21 @@ ios-test:
 ios-log:
 	xcrun simctl spawn booted log stream --predicate 'processImagePath contains "umi.mikan"' 2>/dev/null || echo "アプリが起動していません"
 
+# GCP（Vertex AI）のリソースをTerraformで管理する（手順は GCP.md）
+# 環境変数 UMI_MIKAN_PROJECT_ID がexportされていれば、それをproject_idとstateバケット名（<ID>-tfstate）に使う
+# 未設定の場合は terraform/terraform.tfvars と terraform/backend.hcl を使う
+TF_BACKEND_CONFIG := $(if $(UMI_MIKAN_PROJECT_ID),-backend-config="bucket=$(UMI_MIKAN_PROJECT_ID)-tfstate",-backend-config=backend.hcl)
+TF_PROJECT_ENV := $(if $(UMI_MIKAN_PROJECT_ID),TF_VAR_project_id=$(UMI_MIKAN_PROJECT_ID))
+
+tf-init:
+	cd terraform && terraform init $(TF_BACKEND_CONFIG)
+
+tf-plan:
+	cd terraform && $(TF_PROJECT_ENV) terraform plan
+
+tf-apply:
+	cd terraform && $(TF_PROJECT_ENV) terraform apply
+
 1:
 	make b-lint
 	make f-lint

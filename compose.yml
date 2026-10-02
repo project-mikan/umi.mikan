@@ -26,9 +26,10 @@ services:
       REDIS_PORT: 6379
       REGISTER_KEY: "usuyuki" # 新規登録を制限する場合はコメントを外して設定
       TASK_TIMEOUT_SECONDS: 600 # タスクステータスの有効期限(秒)
-      # Vertex AI（共通GCPプロジェクト）経由でGeminiを呼び出すための設定。値はプロジェクト直下の .env に書く
-      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
-      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-global}
+      # Vertex AI（共通GCPプロジェクト）経由でGeminiを呼び出すための設定
+      # プロジェクトIDはシェル（~/.zshrcなど）でexportした UMI_MIKAN_PROJECT_ID を使う（Terraformと共通）
+      GOOGLE_CLOUD_PROJECT: ${UMI_MIKAN_PROJECT_ID:-}
+      GOOGLE_CLOUD_LOCATION: global
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-service-account.json # ./secrets に配置したサービスアカウントキー
     tty: true
     ports:
@@ -101,9 +102,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SUBSCRIBER_MAX_CONCURRENT_JOBS: 10
-      # Vertex AI（共通GCPプロジェクト）経由でGeminiを呼び出すための設定。値はプロジェクト直下の .env に書く
-      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
-      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-global}
+      # Vertex AI（共通GCPプロジェクト）経由でGeminiを呼び出すための設定
+      # プロジェクトIDはシェル（~/.zshrcなど）でexportした UMI_MIKAN_PROJECT_ID を使う（Terraformと共通）
+      GOOGLE_CLOUD_PROJECT: ${UMI_MIKAN_PROJECT_ID:-}
+      GOOGLE_CLOUD_LOCATION: global
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-service-account.json # ./secrets に配置したサービスアカウントキー
     tty: true
     depends_on:

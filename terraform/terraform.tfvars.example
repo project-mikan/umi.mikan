@@ -1,0 +1,9 @@
+# terraform.tfvars にコピーして値を設定する（terraform.tfvars はgit管理外）
+# 環境変数 UMI_MIKAN_PROJECT_ID をexportしていれば、make tf-plan / tf-apply がそれを使うため不要
+# ここに書いた場合はこちらが優先される
+# project_id = "your-gcp-project-id"
+
+# 予算アラートを作る場合のみ設定（gcloud billing accounts list で確認できる）
+# billing_account_id    = "XXXXXX-XXXXXX-XXXXXX"
+# monthly_budget_amount = 1000
+# budget_currency       = "JPY"

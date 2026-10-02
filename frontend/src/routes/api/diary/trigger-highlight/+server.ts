@@ -2,10 +2,6 @@ import { error, json } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "$lib/server/auth-middleware";
 import { triggerDiaryHighlight } from "$lib/server/diary-api";
 import type { RequestHandler } from "./$types";
-import {
-  AI_NOT_ENABLED_MESSAGE,
-  isAiNotEnabledError,
-} from "$lib/utils/error-utils";
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
   const authResult = await ensureValidAccessToken(cookies);
@@ -46,11 +42,6 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
     }
 
     console.error("Failed to trigger highlight generation:", err);
-
-    // AI機能が未有効化（設定画面でオプトインしていない）
-    if (isAiNotEnabledError(err)) {
-      throw error(400, { message: AI_NOT_ENABLED_MESSAGE });
-    }
 
     // Handle specific gRPC errors
     if (err && typeof err === "object" && "code" in err) {

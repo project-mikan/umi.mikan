@@ -4,7 +4,6 @@
   import { onMount, onDestroy, createEventDispatcher } from "svelte";
   import { authenticatedFetch } from "$lib/auth-client";
   import { summaryVisibility } from "$lib/summary-visibility-store";
-  import { AI_NOT_ENABLED_MESSAGE } from "$lib/utils/error-utils";
   import "$lib/i18n";
 
   interface Summary {
@@ -23,7 +22,6 @@
   export let generatePayload: Record<string, unknown> = {}; // 生成時に送信するペイロード
   export let isDisabled = false; // 生成ボタンを無効にするかどうか
   export let disabledMessage = ""; // 無効時のメッセージ
-  export let isAiEnabled = true;
   export let isGenerating = false; // 親コンポーネントから生成状況を受け取る
   export let isSummaryOutdated = false; // 要約が古いかどうか
 
@@ -268,15 +266,6 @@
     } else if (
       status === 400 &&
       typeof errorData.message === "string" &&
-      errorData.message.includes(AI_NOT_ENABLED_MESSAGE)
-    ) {
-      errorMessage =
-        type === "daily"
-          ? $_("diary.summaryGenerationFailed")
-          : $_("monthly.summary.aiNotEnabled");
-    } else if (
-      status === 400 &&
-      typeof errorData.message === "string" &&
       errorData.message.includes("current month")
     ) {
       errorMessage = $_("monthly.summary.currentMonthError");
@@ -486,12 +475,6 @@
 					{/if}
 				</button>
 			</div>
-		</div>
-	{:else if !isAiEnabled}
-		<div class="text-center py-4">
-			<p class="text-red-600 dark:text-red-400 text-sm">
-				{$_("monthly.summary.aiNotEnabled")}
-			</p>
 		</div>
 	{:else}
 		<div class="space-y-4">

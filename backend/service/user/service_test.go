@@ -160,83 +160,6 @@ func TestUserEntry_ChangePassword_Unauthenticated(t *testing.T) {
 	}
 }
 
-func TestUserEntry_EnableLLM(t *testing.T) {
-	db := setupUserTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "user-llm-enable@example.com", "LLM Enable User")
-	svc := &UserEntry{DB: db}
-	ctx := testutil.CreateAuthenticatedContext(userID)
-
-	// テストケースは順に実行され、前のケースの状態（有効化済みかどうか）を引き継ぐ
-	tests := []struct {
-		name            string
-		llmProvider     int32
-		expectedSuccess bool
-		expectedMessage string
-	}{
-		{
-			name:            "異常系: 負のプロバイダーを指定すると存在しないプロバイダーなのでinvalidProviderになる",
-			llmProvider:     -1,
-			expectedSuccess: false,
-			expectedMessage: "invalidProvider",
-		},
-		{
-			name:            "正常系: 未有効化のユーザーがAI機能を有効化できる",
-			llmProvider:     1,
-			expectedSuccess: true,
-			expectedMessage: "llmEnabled",
-		},
-		{
-			name:            "正常系: 有効化済みのユーザーが再度有効化しても成功する",
-			llmProvider:     1,
-			expectedSuccess: true,
-			expectedMessage: "llmEnabled",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			resp, err := svc.EnableLLM(ctx, &g.EnableLLMRequest{
-				LlmProvider: tt.llmProvider,
-			})
-			if err != nil {
-				t.Fatalf("予期しないエラー: %v", err)
-			}
-			if resp.Success != tt.expectedSuccess {
-				t.Errorf("Success: got %v, want %v", resp.Success, tt.expectedSuccess)
-			}
-			if resp.Message != tt.expectedMessage {
-				t.Errorf("Message: got %q, want %q", resp.Message, tt.expectedMessage)
-			}
-		})
-	}
-}
-
-func TestUserEntry_EnableLLM_KeepsExistingSettings(t *testing.T) {
-	db := setupUserTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "user-llm-enable-keep@example.com", "LLM Keep User")
-	svc := &UserEntry{DB: db}
-	ctx := testutil.CreateAuthenticatedContext(userID)
-
-	// 自動要約・意味的検索を有効にした状態で再度有効化しても、設定が初期化されないことを確認
-	testutil.CreateTestUserLLMWithSettings(t, db, userID, true, true, true)
-
-	resp, err := svc.EnableLLM(ctx, &g.EnableLLMRequest{LlmProvider: 1})
-	if err != nil {
-		t.Fatalf("予期しないエラー: %v", err)
-	}
-	if !resp.Success {
-		t.Fatalf("Success: got false, want true (message: %s)", resp.Message)
-	}
-
-	settings, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
-	if err != nil {
-		t.Fatalf("予期しないエラー: %v", err)
-	}
-	if !settings.AutoSummaryMonthly || !settings.AutoLatestTrendEnabled || !settings.SemanticSearchEnabled {
-		t.Errorf("既存の設定が初期化された: %+v", settings)
-	}
-}
-
 func TestUserEntry_GetUserInfo(t *testing.T) {
 	db := setupUserTestDB(t)
 	userID := testutil.CreateTestUser(t, db, "user-info@example.com", "Info User")
@@ -253,7 +176,7 @@ func TestUserEntry_GetUserInfo(t *testing.T) {
 		}
 	})
 
-	t.Run("正常系：AI機能を有効化済みのユーザー情報を取得", func(t *testing.T) {
+	t.Run("正常系：AI機能設定を保存済みのユーザー情報を取得", func(t *testing.T) {
 		testutil.CreateTestUserLLM(t, db, userID)
 
 		resp, err := svc.GetUserInfo(ctx, &g.GetUserInfoRequest{})
@@ -261,7 +184,7 @@ func TestUserEntry_GetUserInfo(t *testing.T) {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
 		if len(resp.LlmSettings) == 0 {
-			t.Error("AI機能が有効化済みのはずがLlmSettingsが空")
+			t.Error("AI機能設定を保存済みのはずがLlmSettingsが空")
 		}
 	})
 
@@ -269,41 +192,6 @@ func TestUserEntry_GetUserInfo(t *testing.T) {
 		_, err := svc.GetUserInfo(context.Background(), &g.GetUserInfoRequest{})
 		if err == nil {
 			t.Error("認証なしでエラーが返らなかった")
-		}
-	})
-}
-
-func TestUserEntry_DisableLLM(t *testing.T) {
-	db := setupUserTestDB(t)
-	userID := testutil.CreateTestUser(t, db, "user-del-llm@example.com", "Del LLM User")
-	svc := &UserEntry{DB: db}
-	ctx := testutil.CreateAuthenticatedContext(userID)
-
-	t.Run("異常系: AI機能を有効化していないユーザーが無効化すると対象が無いのでllmNotEnabledになる", func(t *testing.T) {
-		resp, err := svc.DisableLLM(ctx, &g.DisableLLMRequest{LlmProvider: 1})
-		if err != nil {
-			t.Fatalf("予期しないエラー: %v", err)
-		}
-		if resp.Success {
-			t.Error("未有効化での無効化でSuccessがtrueになっている")
-		}
-		if resp.Message != "llmNotEnabled" {
-			t.Errorf("Message: got %q, want %q", resp.Message, "llmNotEnabled")
-		}
-	})
-
-	t.Run("正常系: AI機能を有効化済みのユーザーが無効化できる", func(t *testing.T) {
-		testutil.CreateTestUserLLM(t, db, userID)
-
-		resp, err := svc.DisableLLM(ctx, &g.DisableLLMRequest{LlmProvider: 1})
-		if err != nil {
-			t.Fatalf("予期しないエラー: %v", err)
-		}
-		if !resp.Success {
-			t.Errorf("Success: got false, want true (message: %s)", resp.Message)
-		}
-		if resp.Message != "llmDisabled" {
-			t.Errorf("Message: got %q, want %q", resp.Message, "llmDisabled")
 		}
 	})
 }
@@ -345,40 +233,74 @@ func TestUserEntry_UpdateAutoSummarySettings(t *testing.T) {
 	svc := &UserEntry{DB: db}
 	ctx := testutil.CreateAuthenticatedContext(userID)
 
-	t.Run("異常系：LLMキーが存在しない", func(t *testing.T) {
-		resp, err := svc.UpdateAutoSummarySettings(ctx, &g.UpdateAutoSummarySettingsRequest{
-			LlmProvider:        1,
-			AutoSummaryMonthly: true,
-		})
-		if err != nil {
-			t.Fatalf("予期しないエラー: %v", err)
-		}
-		if resp.Success {
-			t.Error("LLMキーが存在しないのにSuccessがtrueになっている")
-		}
-		if resp.Message != "llmKeyNotFound" {
-			t.Errorf("Message: got %q, want %q", resp.Message, "llmKeyNotFound")
-		}
-	})
+	// テストケースは順に実行され、前のケースで保存した設定レコードを引き継ぐ
+	tests := []struct {
+		name            string
+		request         *g.UpdateAutoSummarySettingsRequest
+		expectedSuccess bool
+		expectedMessage string
+	}{
+		{
+			name:            "異常系: 負のプロバイダーを指定すると存在しないプロバイダーなのでinvalidProviderになる",
+			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: -1, AutoSummaryMonthly: true},
+			expectedSuccess: false,
+			expectedMessage: "invalidProvider",
+		},
+		{
+			// llm_providerを省略したリクエストは0になる。ここで行が作られると後続の新規作成が主キー衝突で失敗する
+			name:            "異常系: プロバイダーに0（未指定）を指定するとGemini以外なのでinvalidProviderになり設定レコードも作られない",
+			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 0, AutoSummaryMonthly: true},
+			expectedSuccess: false,
+			expectedMessage: "invalidProvider",
+		},
+		{
+			name:            "異常系: 未対応のプロバイダー2を指定するとGemini以外なのでinvalidProviderになる",
+			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 2, AutoSummaryMonthly: true},
+			expectedSuccess: false,
+			expectedMessage: "invalidProvider",
+		},
+		{
+			name:            "正常系: 設定レコードが無いユーザーは新規作成して保存できる",
+			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 1, AutoSummaryMonthly: true, SemanticSearchEnabled: true},
+			expectedSuccess: true,
+			expectedMessage: "autoSummarySettingsUpdateSuccess",
+		},
+		{
+			name:            "正常系: 設定レコードがあるユーザーは既存レコードを更新できる",
+			request:         &g.UpdateAutoSummarySettingsRequest{LlmProvider: 1, AutoLatestTrendEnabled: true},
+			expectedSuccess: true,
+			expectedMessage: "autoSummarySettingsUpdateSuccess",
+		},
+	}
 
-	t.Run("正常系：自動要約設定を更新", func(t *testing.T) {
-		testutil.CreateTestUserLLM(t, db, userID)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp, err := svc.UpdateAutoSummarySettings(ctx, tt.request)
+			if err != nil {
+				t.Fatalf("予期しないエラー: %v", err)
+			}
+			if resp.Success != tt.expectedSuccess {
+				t.Errorf("Success: got %v, want %v (message: %s)", resp.Success, tt.expectedSuccess, resp.Message)
+			}
+			if resp.Message != tt.expectedMessage {
+				t.Errorf("Message: got %q, want %q", resp.Message, tt.expectedMessage)
+			}
+			if !tt.expectedSuccess {
+				return
+			}
 
-		resp, err := svc.UpdateAutoSummarySettings(ctx, &g.UpdateAutoSummarySettingsRequest{
-			LlmProvider:           1,
-			AutoSummaryMonthly:    false,
-			SemanticSearchEnabled: true,
+			// 保存した値がそのまま読み出せることを確認
+			settings, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
+			if err != nil {
+				t.Fatalf("予期しないエラー: %v", err)
+			}
+			if settings.AutoSummaryMonthly != tt.request.AutoSummaryMonthly ||
+				settings.AutoLatestTrendEnabled != tt.request.AutoLatestTrendEnabled ||
+				settings.SemanticSearchEnabled != tt.request.SemanticSearchEnabled {
+				t.Errorf("保存した設定と読み出した設定が一致しない: got %+v, want %+v", settings, tt.request)
+			}
 		})
-		if err != nil {
-			t.Fatalf("予期しないエラー: %v", err)
-		}
-		if !resp.Success {
-			t.Errorf("Success: got false, want true (message: %s)", resp.Message)
-		}
-		if resp.Message != "autoSummarySettingsUpdateSuccess" {
-			t.Errorf("Message: got %q, want %q", resp.Message, "autoSummarySettingsUpdateSuccess")
-		}
-	})
+	}
 }
 
 func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
@@ -387,17 +309,17 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 	svc := &UserEntry{DB: db}
 	ctx := testutil.CreateAuthenticatedContext(userID)
 
-	t.Run("正常系：LLMキーが存在しない場合はデフォルト値を返す", func(t *testing.T) {
+	t.Run("正常系：AI機能設定が存在しない場合はデフォルト値を返す", func(t *testing.T) {
 		resp, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
 		if err != nil {
 			t.Fatalf("予期しないエラー: %v", err)
 		}
 		if resp.AutoSummaryMonthly {
-			t.Error("LLMキーが存在しない場合はデフォルト値がfalseであるべき")
+			t.Error("AI機能設定が存在しない場合はデフォルト値がfalseであるべき")
 		}
 	})
 
-	t.Run("正常系：LLMキーが存在する場合は設定を返す", func(t *testing.T) {
+	t.Run("正常系：AI機能設定が存在する場合は設定を返す", func(t *testing.T) {
 		testutil.CreateTestUserLLM(t, db, userID)
 
 		resp, err := svc.GetAutoSummarySettings(ctx, &g.GetAutoSummarySettingsRequest{LlmProvider: 1})
@@ -409,6 +331,27 @@ func TestUserEntry_GetAutoSummarySettings(t *testing.T) {
 			t.Error("AutoSummaryMonthlyがtrueであるべき")
 		}
 	})
+}
+
+func TestIsSupportedLLMProvider(t *testing.T) {
+	tests := []struct {
+		name     string
+		provider int32
+		expected bool
+	}{
+		{name: "正常系: 1はGeminiなので対応している", provider: 1, expected: true},
+		{name: "正常系: 0はリクエストで未指定の場合の値なので対応していない", provider: 0, expected: false},
+		{name: "正常系: 負の値は存在しないプロバイダーなので対応していない", provider: -1, expected: false},
+		{name: "正常系: 2は未実装のプロバイダーなので対応していない", provider: 2, expected: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isSupportedLLMProvider(tt.provider); got != tt.expected {
+				t.Errorf("isSupportedLLMProvider(%d): got %v, want %v", tt.provider, got, tt.expected)
+			}
+		})
+	}
 }
 
 // setupTestRedis はテスト用のminiredisクライアントを起動してrueidisクライアントを返す

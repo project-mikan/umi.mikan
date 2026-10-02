@@ -143,6 +143,10 @@ dockerさえあれば動くはず
 dc up -d
 ```
 
+### AI機能の設定
+
+AI機能（要約・ハイライト・自然言語検索）は共通GCPプロジェクトの Vertex AI を使う。設定手順は [GCP.md](GCP.md) を参照。
+
 ### 開発URL
 
 - **アプリケーション**: http://localhost:2000（Frontend）

@@ -162,71 +162,6 @@ func (s *UserEntry) ChangePassword(ctx context.Context, req *g.ChangePasswordReq
 	}, nil
 }
 
-// EnableLLM はユーザーのAI機能を有効化（オプトイン）する。
-// LLMは共通GCPプロジェクトのVertex AI経由で呼び出すため、ユーザー個別のAPIキーは不要。
-// 既に有効化済みの場合は自動要約などの既存設定を保持したまま成功を返す。
-func (s *UserEntry) EnableLLM(ctx context.Context, req *g.EnableLLMRequest) (*g.EnableLLMResponse, error) {
-	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
-		return &g.EnableLLMResponse{
-			Success: false,
-			Message: "invalidProvider",
-		}, nil
-	}
-
-	// コンテキストからユーザーIDを取得
-	userID, err := middleware.GetUserIDFromContext(ctx)
-	if err != nil {
-		return &g.EnableLLMResponse{
-			Success: false,
-			Message: "unauthorized",
-		}, nil
-	}
-
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &g.EnableLLMResponse{
-			Success: false,
-			Message: "invalidUserId",
-		}, nil
-	}
-
-	// 既に有効化済みかを確認
-	_, err = database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
-	if err == nil {
-		return &g.EnableLLMResponse{
-			Success: true,
-			Message: "llmEnabled",
-		}, nil
-	}
-	if err != sql.ErrNoRows {
-		return &g.EnableLLMResponse{
-			Success: false,
-			Message: "updateFailed",
-		}, nil
-	}
-
-	// 新規に有効化（自動要約などの各機能はデフォルト無効）
-	currentTime := time.Now().Unix()
-	newUserLLM := &database.UserLlm{
-		UserID:      parsedUserID,
-		LlmProvider: int16(req.GetLlmProvider()),
-		CreatedAt:   currentTime,
-		UpdatedAt:   currentTime,
-	}
-	if err := newUserLLM.Insert(ctx, s.DB); err != nil {
-		return &g.EnableLLMResponse{
-			Success: false,
-			Message: "updateFailed",
-		}, nil
-	}
-
-	return &g.EnableLLMResponse{
-		Success: true,
-		Message: "llmEnabled",
-	}, nil
-}
-
 func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) (*g.GetUserInfoResponse, error) {
 	// コンテキストからユーザーIDを取得
 	userID, err := middleware.GetUserIDFromContext(ctx)
@@ -248,7 +183,7 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
-	// AI機能設定を取得（有効化されている場合のみ）
+	// AI機能設定を取得（一度でも設定を保存した場合のみ存在する）
 	var llmSettings []*g.LLMSettingInfo
 
 	// 現在はGemini（provider 1）のみサポート
@@ -266,62 +201,6 @@ func (s *UserEntry) GetUserInfo(ctx context.Context, req *g.GetUserInfoRequest) 
 		Name:        userDB.Name,
 		Email:       userDB.Email,
 		LlmSettings: llmSettings,
-	}, nil
-}
-
-// DisableLLM はユーザーのAI機能を無効化（オプトアウト）する。自動要約などの設定も合わせて削除される
-func (s *UserEntry) DisableLLM(ctx context.Context, req *g.DisableLLMRequest) (*g.DisableLLMResponse, error) {
-	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
-		return &g.DisableLLMResponse{
-			Success: false,
-			Message: "invalidProvider",
-		}, nil
-	}
-
-	// コンテキストからユーザーIDを取得
-	userID, err := middleware.GetUserIDFromContext(ctx)
-	if err != nil {
-		return &g.DisableLLMResponse{
-			Success: false,
-			Message: "unauthorized",
-		}, nil
-	}
-
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return &g.DisableLLMResponse{
-			Success: false,
-			Message: "invalidUserId",
-		}, nil
-	}
-
-	// 既存のAI機能設定を取得
-	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return &g.DisableLLMResponse{
-				Success: false,
-				Message: "llmNotEnabled",
-			}, nil
-		}
-		return &g.DisableLLMResponse{
-			Success: false,
-			Message: "updateFailed",
-		}, nil
-	}
-
-	// AI機能設定を削除
-	if err := userLLMDB.Delete(ctx, s.DB); err != nil {
-		return &g.DisableLLMResponse{
-			Success: false,
-			Message: "updateFailed",
-		}, nil
-	}
-
-	return &g.DisableLLMResponse{
-		Success: true,
-		Message: "llmDisabled",
 	}, nil
 }
 
@@ -395,9 +274,19 @@ func (s *UserEntry) DeleteAccount(ctx context.Context, req *g.DeleteAccountReque
 	}, nil
 }
 
+// geminiLLMProvider は user_llms.llm_provider で Gemini（共通GCPプロジェクトのVertex AI）を表す値
+const geminiLLMProvider = 1
+
+// isSupportedLLMProvider は指定されたLLMプロバイダーが対応済みかを判定する。
+// llm_provider を省略したリクエストは0になるため、0を許可すると読み取り側（常に1で検索）から見えない行が作られ、
+// user_id 主キーの衝突で以後の設定保存ができなくなる。そのため対応済みのGeminiのみ許可する。
+func isSupportedLLMProvider(provider int32) bool {
+	return provider == geminiLLMProvider
+}
+
 func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.UpdateAutoSummarySettingsRequest) (*g.UpdateAutoSummarySettingsResponse, error) {
 	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
+	if !isSupportedLLMProvider(req.GetLlmProvider()) {
 		return &g.UpdateAutoSummarySettingsResponse{
 			Success: false,
 			Message: "invalidProvider",
@@ -421,28 +310,36 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 		}, nil
 	}
 
-	// 既存のLLM設定を取得
+	// 既存のAI機能設定を取得（無い場合は新規作成する）
+	currentTime := time.Now().Unix()
 	userLLMDB, err := database.UserLlmByUserIDLlmProvider(ctx, s.DB, parsedUserID, int16(req.GetLlmProvider()))
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return &g.UpdateAutoSummarySettingsResponse{
-				Success: false,
-				Message: "llmKeyNotFound",
-			}, nil
-		}
+	isNew := err == sql.ErrNoRows
+	if err != nil && !isNew {
 		return &g.UpdateAutoSummarySettingsResponse{
 			Success: false,
 			Message: "updateFailed",
 		}, nil
 	}
+	if isNew {
+		userLLMDB = &database.UserLlm{
+			UserID:      parsedUserID,
+			LlmProvider: int16(req.GetLlmProvider()),
+			CreatedAt:   currentTime,
+		}
+	}
 
-	// 自動要約設定を更新
+	// 機能ごとのフラグを更新
 	userLLMDB.AutoSummaryMonthly = req.GetAutoSummaryMonthly()
 	userLLMDB.AutoLatestTrendEnabled = req.GetAutoLatestTrendEnabled()
 	userLLMDB.SemanticSearchEnabled = req.GetSemanticSearchEnabled()
-	userLLMDB.UpdatedAt = time.Now().Unix()
+	userLLMDB.UpdatedAt = currentTime
 
-	if err := userLLMDB.Update(ctx, s.DB); err != nil {
+	if isNew {
+		err = userLLMDB.Insert(ctx, s.DB)
+	} else {
+		err = userLLMDB.Update(ctx, s.DB)
+	}
+	if err != nil {
 		return &g.UpdateAutoSummarySettingsResponse{
 			Success: false,
 			Message: "updateFailed",
@@ -457,7 +354,7 @@ func (s *UserEntry) UpdateAutoSummarySettings(ctx context.Context, req *g.Update
 
 func (s *UserEntry) GetAutoSummarySettings(ctx context.Context, req *g.GetAutoSummarySettingsRequest) (*g.GetAutoSummarySettingsResponse, error) {
 	// プロバイダーの検証
-	if req.GetLlmProvider() < 0 {
+	if !isSupportedLLMProvider(req.GetLlmProvider()) {
 		return &g.GetAutoSummarySettingsResponse{
 			AutoSummaryMonthly:     false,
 			AutoLatestTrendEnabled: false,
