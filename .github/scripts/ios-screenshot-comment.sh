@@ -11,7 +11,12 @@ DEST="pr-${PR_NUMBER}/${HEAD_SHA}"
 MARKER="<!-- ios-screenshots -->"
 
 # 列（端末）と行（画面）の定義。ファイル名は <端末>_<画面>.png（ios/Tests/ScreenshotTests.swift）
-DEVICES=("iphone|iPhone" "iphone-duo|iPhone Duo（iPad mini相当で近似）" "ipad|iPad")
+DUO_TITLE="iPhone Duo"
+# iPhone Duo シミュレータがない環境では iPad 上で近似している（capture-screenshots.sh が目印を置く）
+if [ -f "$SCREENSHOT_DIR/.duo-approximation" ]; then
+  DUO_TITLE="iPhone Duo（iPad mini相当で近似）"
+fi
+DEVICES=("iphone|iPhone" "iphone-duo|${DUO_TITLE}" "ipad|iPad")
 SCREENS=("home|ホーム" "monthly|月ごと" "search|検索" "detail|詳細モーダル" "settings|設定")
 
 # --- 画像を専用ブランチへ push する ---

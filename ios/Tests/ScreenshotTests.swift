@@ -26,7 +26,12 @@ struct ScreenshotTests {
 
         try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
         // 起動するシミュレータの台数を減らすため、1台で撮れる端末バリエーションはまとめて撮る
-        for variant in ScreenshotVariant.variants(for: UIDevice.current.userInterfaceIdiom) {
+        let variants = ScreenshotVariant.variants(
+            for: UIDevice.current.userInterfaceIdiom,
+            deviceName: ScreenshotEnvironment.simulatorDeviceName,
+            approximatesDuo: ScreenshotEnvironment.approximatesDuo
+        )
+        for variant in variants {
             let fixture = ScreenshotFixture()
             let image = try await ScreenshotRenderer.capture(
                 screen.makeView(fixture: fixture),
@@ -42,19 +47,70 @@ struct ScreenshotTests {
 
 /// 撮影する端末バリエーションのテスト（撮影自体と違い、環境変数がなくても常に実行する）
 struct ScreenshotVariantTests {
+    /// variants(for:deviceName:approximatesDuo:) のテーブル駆動テスト用ケース
+    struct VariantCase: Sendable {
+        let name: String
+        let idiom: UIUserInterfaceIdiom
+        let deviceName: String
+        let approximatesDuo: Bool
+        let expectedLabels: [String]
+    }
+
     @Test(
-        "正常系: 端末種別ごとに撮影する端末バリエーションが決まる",
+        "variants: 端末種別・シミュレータ名ごとに撮影する端末バリエーションが決まる",
         arguments: [
-            // iPhone シミュレータでは iPhone の画面だけを撮る
-            (UIUserInterfaceIdiom.phone, ["iphone"]),
-            // iPad シミュレータでは iPad 全画面に加え、iPhone Duo（開いた状態）を iPad mini 相当の大きさで撮る
-            (UIUserInterfaceIdiom.pad, ["ipad", "iphone-duo"]),
+            // 通常の iPhone シミュレータでは iPhone の画面だけを撮る
+            VariantCase(
+                name: "正常系: iPhoneシミュレータではiPhoneを撮る",
+                idiom: .phone,
+                deviceName: "iPhone 17",
+                approximatesDuo: false,
+                expectedLabels: ["iphone"]
+            ),
+            // iPhone Duo シミュレータでは実機と同じ画面を iPhone Duo として撮る
+            VariantCase(
+                name: "正常系: iPhone DuoシミュレータではiPhone Duoを撮る",
+                idiom: .phone,
+                deviceName: "iPhone Duo",
+                approximatesDuo: false,
+                expectedLabels: ["iphone-duo"]
+            ),
+            // iPhone Duo シミュレータがある環境では、iPad 上での近似は撮らない
+            VariantCase(
+                name: "正常系: 近似なしのiPadシミュレータではiPadだけを撮る",
+                idiom: .pad,
+                deviceName: "iPad Pro 11-inch (M5)",
+                approximatesDuo: false,
+                expectedLabels: ["ipad"]
+            ),
+            // iPhone Duo シミュレータがない環境では、iPad 上に iPad mini 相当のウィンドウを出して近似する
+            VariantCase(
+                name: "正常系: 近似ありのiPadシミュレータではiPadとiPhone Duoの近似を撮る",
+                idiom: .pad,
+                deviceName: "iPad Pro 11-inch (M5)",
+                approximatesDuo: true,
+                expectedLabels: [
+                    "ipad",
+                    "iphone-duo"
+                ]
+            ),
             // 想定外の端末では何も撮らない
-            (UIUserInterfaceIdiom.tv, [])
+            VariantCase(
+                name: "正常系: 想定外の端末では何も撮らない",
+                idiom: .tv,
+                deviceName: "Apple TV",
+                approximatesDuo: true,
+                expectedLabels: []
+            )
         ]
     )
-    func variants(idiom: UIUserInterfaceIdiom, expectedLabels: [String]) {
-        #expect(ScreenshotVariant.variants(for: idiom).map(\.label) == expectedLabels)
+    func variants(testCase: VariantCase) {
+        let variants = ScreenshotVariant.variants(
+            for: testCase.idiom,
+            deviceName: testCase.deviceName,
+            approximatesDuo: testCase.approximatesDuo
+        )
+        #expect(variants.map(\.label) == testCase.expectedLabels, "\(testCase.name)")
     }
 }
 
@@ -67,35 +123,45 @@ enum ScreenshotEnvironment {
         guard let path = ProcessInfo.processInfo.environment["SCREENSHOT_OUTPUT_DIR"], !path.isEmpty else { return nil }
         return URL(fileURLWithPath: path, isDirectory: true)
     }
+
+    /// 実行中のシミュレータ名（シミュレータが自動で設定する環境変数）
+    static var simulatorDeviceName: String {
+        ProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] ?? ""
+    }
+
+    /// iPhone Duo シミュレータが使えず、iPad 上で近似して撮るかどうか（撮影スクリプトが設定する）
+    static var approximatesDuo: Bool {
+        ProcessInfo.processInfo.environment["SCREENSHOT_DUO_APPROXIMATION"] == "1"
+    }
 }
 
 // MARK: - 端末バリエーション
 
 /// 撮影する端末バリエーション（label はファイル名の接頭辞に使う）
 struct ScreenshotVariant {
-    /// iPad mini (A17 Pro) の画面サイズ（pt）。折りたたみiPhone（iPhone Duo）を開いた状態の近似に使う
+    /// iPad mini (A17 Pro) の画面サイズ（pt）。iPhone Duo シミュレータがない環境で、開いた状態の近似に使う
     static let iPadMiniSize = CGSize(width: 744, height: 1133)
 
     let label: String
     /// 撮影するウィンドウの大きさ。nil ならシミュレータの画面全体
     let size: CGSize?
 
-    /// 実行中のシミュレータの端末種別で撮れるバリエーションを返す。
-    /// iPad mini 相当のサイズは iPad Pro 11インチの画面に収まるため、iPad シミュレータ1台で両方撮れる
-    /// （ウィンドウシーン自体は regular 幅のままなので、サイズクラスも実機の iPad mini と同じ regular になる）
-    static func variants(for idiom: UIUserInterfaceIdiom) -> [ScreenshotVariant] {
+    /// 実行中のシミュレータで撮るバリエーションを返す。
+    /// iPhone Duo シミュレータがない環境（approximatesDuo == true）では、iPad mini 相当のサイズが
+    /// iPad Pro 11インチの画面に収まるため iPad シミュレータ上で近似して撮る
+    /// （ウィンドウシーン自体は regular 幅のままなので、サイズクラスは実機の iPad mini と同じ regular になる）
+    static func variants(for idiom: UIUserInterfaceIdiom, deviceName: String, approximatesDuo: Bool) -> [Self] {
         switch idiom {
         case .phone:
-            [ScreenshotVariant(label: "iphone", size: nil)]
+            let label = deviceName.localizedCaseInsensitiveContains("Duo") ? "iphone-duo" : "iphone"
+            return [Self(label: label, size: nil)]
 
         case .pad:
-            [
-                ScreenshotVariant(label: "ipad", size: nil),
-                ScreenshotVariant(label: "iphone-duo", size: iPadMiniSize)
-            ]
+            let ipad = Self(label: "ipad", size: nil)
+            return approximatesDuo ? [ipad, Self(label: "iphone-duo", size: Self.iPadMiniSize)] : [ipad]
 
         default:
-            []
+            return []
         }
     }
 }
@@ -289,29 +355,6 @@ struct ScreenshotFixture {
         }
     }
 
-    /// キーワード「カフェ」で検索した直後の状態の検索ViewModelを生成する
-    func makeSearchViewModel() -> SearchViewModel {
-        let viewModel = SearchViewModel(authViewModel: authViewModel, store: store)
-        var results = Diary_SearchDiaryEntriesResponse()
-        results.searchedKeyword = "カフェ"
-        results.expandedKeywords = ["喫茶店"]
-        results.entries = homeDates.enumerated().map { index, date in
-            Self.entry(date: date, content: Self.sampleContents[[0, 3, 0][index]])
-        }
-        viewModel.keyword = "カフェ"
-        viewModel.keywordResults = results
-        viewModel.hasSearched = true
-        return viewModel
-    }
-
-    /// ユーザー情報を取得済みの状態の設定ViewModelを生成する
-    func makeSettingsViewModel() -> SettingsViewModel {
-        let viewModel = SettingsViewModel(authViewModel: authViewModel, notificationManager: MemoryNotificationManager.shared)
-        viewModel.userName = "うみみかん"
-        viewModel.email = "demo@example.com"
-        return viewModel
-    }
-
     /// サーバーから取得した体のダミー日記を生成する（needsSync にならないよう serverID を付ける）
     private static func entry(date: Diary_YMD, content: String) -> Diary_DiaryEntry {
         var entry = Diary_DiaryEntry()
@@ -341,6 +384,29 @@ struct ScreenshotFixture {
         ymd.month = UInt32(calendar.component(.month, from: date))
         ymd.day = UInt32(calendar.component(.day, from: date))
         return ymd
+    }
+
+    /// キーワード「カフェ」で検索した直後の状態の検索ViewModelを生成する
+    func makeSearchViewModel() -> SearchViewModel {
+        let viewModel = SearchViewModel(authViewModel: authViewModel, store: store)
+        var results = Diary_SearchDiaryEntriesResponse()
+        results.searchedKeyword = "カフェ"
+        results.expandedKeywords = ["喫茶店"]
+        results.entries = homeDates.enumerated().map { index, date in
+            Self.entry(date: date, content: Self.sampleContents[[0, 3, 0][index]])
+        }
+        viewModel.keyword = "カフェ"
+        viewModel.keywordResults = results
+        viewModel.hasSearched = true
+        return viewModel
+    }
+
+    /// ユーザー情報を取得済みの状態の設定ViewModelを生成する
+    func makeSettingsViewModel() -> SettingsViewModel {
+        let viewModel = SettingsViewModel(authViewModel: authViewModel, notificationManager: MemoryNotificationManager.shared)
+        viewModel.userName = "うみみかん"
+        viewModel.email = "demo@example.com"
+        return viewModel
     }
 }
 

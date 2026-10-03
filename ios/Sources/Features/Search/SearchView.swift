@@ -23,7 +23,7 @@ struct SearchView: View {
     }
 
     /// ViewModel を外から渡すイニシャライザ（スクリーンショットテストで検索結果を表示した状態にするため）
-    init(
+    init( // swiftlint:disable:this type_contents_order
         viewModel: SearchViewModel,
         authViewModel: AuthViewModel,
         syncManager: SyncManager,

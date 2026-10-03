@@ -14,7 +14,7 @@ struct SettingsView: View {
     }
 
     /// ViewModel を外から渡すイニシャライザ（スクリーンショットテストでユーザー情報を表示した状態にするため）
-    init(viewModel: SettingsViewModel) {
+    init(viewModel: SettingsViewModel) { // swiftlint:disable:this type_contents_order
         _viewModel = State(initialValue: viewModel)
     }
 

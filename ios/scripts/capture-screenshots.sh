@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# iPhone / iPhone Duo（iPad mini相当で近似） / iPad の各画面スクリーンショットを撮影して PNG を出力する。
+# iPhone / iPhone Duo / iPad の各画面スクリーンショットを撮影して PNG を出力する。
 # 使い方: ios/scripts/capture-screenshots.sh <出力ディレクトリ>
 # 撮影本体は ios/Tests/ScreenshotTests.swift。環境変数 TEST_RUNNER_* はテストプロセスへ接頭辞を外して渡される。
 #
 # 高速化のため:
-#   - シミュレータは iPhone と iPad の2台だけ（iPhone Duo は iPad 上で iPad mini 相当のウィンドウを出して撮る）
 #   - シミュレータの起動はビルドと並行してバックグラウンドで行う
-#   - 2台への撮影は1回の xcodebuild で同時に実行する
+#   - 全端末への撮影を1回の xcodebuild（ビルド成果物は共有）で行う
+# iPhone Duo のデバイスタイプがある Xcode ではそのシミュレータで撮影する（なければ作成する）。
+# ない Xcode では iPad 上に iPad mini 相当のウィンドウを出して近似し、出力先に .duo-approximation を置く。
 # 任意の環境変数:
 #   DERIVED_DATA_PATH : ビルド成果物の出力先（デフォルト: ios/DerivedData）
 #   SPM_CACHE_DIR     : SPM 依存のクローン先（CI でキャッシュする場合に指定）
@@ -33,6 +34,32 @@ for runtime in sorted(runtimes, reverse=True):
             print(d['udid']); sys.exit()
 " "$1"
 }
+
+# iPhone Duo のデバイスタイプ（名前に Duo を含む iPhone）の識別子を引く。なければ空
+find_duo_device_type() {
+  xcrun simctl list devicetypes -j | python3 -c "
+import json, sys
+for t in json.load(sys.stdin)['devicetypes']:
+    if t['name'].startswith('iPhone') and 'duo' in t['name'].lower():
+        print(t['name'] + '|' + t['identifier']); sys.exit()
+"
+}
+
+rm -f "$OUTPUT_DIR/.duo-approximation"
+DUO_TYPE="$(find_duo_device_type)"
+if [ -n "$DUO_TYPE" ]; then
+  duo_name="${DUO_TYPE%%|*}"
+  # ランナーのイメージにシミュレータ本体が作られていない場合に備え、なければ最新ランタイムで作成する
+  if [ -z "$(find_udid "$duo_name")" ]; then
+    xcrun simctl create "$duo_name" "${DUO_TYPE#*|}" >/dev/null
+  fi
+  SIMULATORS+=("$duo_name")
+  export TEST_RUNNER_SCREENSHOT_DUO_APPROXIMATION=0
+else
+  echo "⚠️ iPhone Duo のシミュレータがないため、iPad 上で iPad mini 相当の大きさで近似して撮影します"
+  touch "$OUTPUT_DIR/.duo-approximation"
+  export TEST_RUNNER_SCREENSHOT_DUO_APPROXIMATION=1
+fi
 
 UDIDS=()
 DESTINATIONS=()
@@ -73,9 +100,12 @@ for udid in "${UDIDS[@]}"; do
 done
 log "シミュレータの起動が完了しました"
 
+# 複数のシミュレータで同時にテストを走らせると、非力なマシンでは準備中に kill されることがあったため
+# 撮影は1台ずつ順番に行う（ビルドとシミュレータ起動は済んでいるので、1台あたりの追加コストは小さい）
 TEST_RUNNER_SCREENSHOT_OUTPUT_DIR="$OUTPUT_DIR" \
   xcodebuild test-without-building "${BUILD_FLAGS[@]}" \
     "${DESTINATIONS[@]}" \
+    -maximum-concurrent-test-simulator-destinations 1 \
     -only-testing:umi.mikanTests/ScreenshotTests \
     -parallel-testing-enabled NO
 log "撮影が完了しました: ${OUTPUT_DIR}"

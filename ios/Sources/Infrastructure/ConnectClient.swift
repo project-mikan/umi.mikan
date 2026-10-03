@@ -26,6 +26,21 @@ final class ConnectClient: Sendable {
         client = Mutex(Self.makeProtocolClient(host: Self.defaultHost))
     }
 
+    /// 指定した接続先の ProtocolClient を生成する
+    private static func makeProtocolClient(host: String) -> ProtocolClientInterface {
+        ProtocolClient(
+            httpClient: URLSessionHTTPClient(),
+            config: ProtocolClientConfig(
+                host: host,
+                networkProtocol: .connect,
+                codec: ProtoCodec(),
+                // バックグラウンド放置後の復帰直後などネットワークが不安定な状況で
+                // リクエストが長時間（デフォルトの約60秒）ハングするのを防ぐ
+                timeout: 15
+            )
+        )
+    }
+
     /// 接続先を差し替える。
     /// スクリーンショットテストで本番サーバーへ通信しない（＝実データや認証状態に触れない）ようにするために使う。
     func replaceHost(_ host: String) {
@@ -40,20 +55,5 @@ final class ConnectClient: Sendable {
             headers["Authorization"] = ["Bearer \(token)"]
         }
         return headers
-    }
-
-    /// 指定した接続先の ProtocolClient を生成する
-    private static func makeProtocolClient(host: String) -> ProtocolClientInterface {
-        ProtocolClient(
-            httpClient: URLSessionHTTPClient(),
-            config: ProtocolClientConfig(
-                host: host,
-                networkProtocol: .connect,
-                codec: ProtoCodec(),
-                // バックグラウンド放置後の復帰直後などネットワークが不安定な状況で
-                // リクエストが長時間（デフォルトの約60秒）ハングするのを防ぐ
-                timeout: 15
-            )
-        )
     }
 }
