@@ -1,29 +1,20 @@
 #!/usr/bin/env bash
-# iPhone / iPhone Duo / iPad の各画面スクリーンショットを撮影して PNG を出力する。
-# 使い方: ios/scripts/capture-screenshots.sh <出力ディレクトリ>
-# 撮影本体は ios/Tests/ScreenshotTests.swift。環境変数 TEST_RUNNER_* はテストプロセスへ接頭辞を外して渡される。
-#
-# 高速化のため:
-#   - シミュレータの起動はビルドと並行してバックグラウンドで行う
-#   - 全端末への撮影を1回の xcodebuild（ビルド成果物は共有）で行う
-# iPhone Duo のデバイスタイプがある Xcode ではそのシミュレータで撮影する（なければ作成する）。
-# safe area などが実機と変わってしまうため近似はせず、デバイスタイプがない Xcode では iPhone Duo を撮らない。
-# 任意の環境変数:
-#   DERIVED_DATA_PATH : ビルド成果物の出力先（デフォルト: ios/DerivedData）
-#   SPM_CACHE_DIR     : SPM 依存のクローン先（CI でキャッシュする場合に指定）
+# 使い方: ios/scripts/capture-screenshots.sh <出力ディレクトリ> [iphone|ipad|iphone-duo ...]（任意: DERIVED_DATA_PATH, SPM_CACHE_DIR）
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
 
 OUTPUT_DIR="$(mkdir -p "${1:?出力ディレクトリを指定してください}" && cd "$1" && pwd)"
+shift
+DEVICES=("${@:-iphone ipad iphone-duo}")
+# 引数なしの場合に1要素の文字列を単語分割する
+read -r -a DEVICES <<<"${DEVICES[*]}"
 DERIVED_DATA="${DERIVED_DATA_PATH:-ios/DerivedData}"
-SIMULATORS=("iPhone 17" "iPad Pro 11-inch (M5)")
 
-# 各フェーズの所要時間を出す（遅い箇所の切り分け用）
 SECONDS=0
 log() { echo "[$(printf '%3d' "$SECONDS")s] $*"; }
 
-# シミュレータ名から UDID を引く（同名が複数ランタイムにある場合は最新のランタイムを使う）
+# 同名のシミュレータが複数ランタイムにある場合は最新のランタイムのものを使う
 find_udid() {
   xcrun simctl list devices available -j | python3 -c "
 import json, sys
@@ -35,7 +26,6 @@ for runtime in sorted(runtimes, reverse=True):
 " "$1"
 }
 
-# iPhone Duo のデバイスタイプ（名前に Duo を含む iPhone）の識別子を引く。なければ空
 find_duo_device_type() {
   xcrun simctl list devicetypes -j | python3 -c "
 import json, sys
@@ -45,19 +35,36 @@ for t in json.load(sys.stdin)['devicetypes']:
 "
 }
 
-DUO_TYPE="$(find_duo_device_type)"
-if [ -n "$DUO_TYPE" ]; then
-  duo_name="${DUO_TYPE%%|*}"
-  # ランナーのイメージにシミュレータ本体が作られていない場合に備え、なければ最新ランタイムで作成する
-  if [ -z "$(find_udid "$duo_name")" ]; then
-    xcrun simctl create "$duo_name" "${DUO_TYPE#*|}" >/dev/null
-  fi
-  SIMULATORS+=("$duo_name")
-else
-  echo "⚠️ この Xcode には iPhone Duo のシミュレータがないため、iPhone Duo は撮影しません"
-fi
+SIMULATORS=()
+DUO_TYPE=""
+DOWNLOAD_PID=""
+for device in "${DEVICES[@]}"; do
+  case "$device" in
+    iphone) SIMULATORS+=("iPhone 17") ;;
+    ipad) SIMULATORS+=("iPad Pro 11-inch (M5)") ;;
+    iphone-duo)
+      DUO_TYPE="$(find_duo_device_type)"
+      if [ -z "$DUO_TYPE" ]; then
+        echo "⚠️ この Xcode には iPhone Duo のシミュレータがないため撮影しません"
+        touch "$OUTPUT_DIR/iphone-duo.unavailable"
+      elif [ -z "$(find_udid "${DUO_TYPE%%|*}")" ] && ! xcrun simctl create "${DUO_TYPE%%|*}" "${DUO_TYPE#*|}" >/dev/null 2>&1; then
+        # 対応ランタイムが未導入で作成できない。数GBあるのでビルドと並行してダウンロードする
+        xcodebuild -downloadPlatform iOS >"$OUTPUT_DIR/.runtime-download.log" 2>&1 &
+        DOWNLOAD_PID=$!
+      fi
+      ;;
+    *) echo "::error::未知の端末 ${device}" >&2; exit 1 ;;
+  esac
+done
 
-UDIDS=()
+BOOT_PIDS=()
+BOOT_NAMES=()
+boot_in_background() {
+  xcrun simctl bootstatus "$1" -b >/dev/null &
+  BOOT_PIDS+=("$!")
+  BOOT_NAMES+=("$2")
+}
+
 DESTINATIONS=()
 for name in "${SIMULATORS[@]}"; do
   udid="$(find_udid "$name")"
@@ -65,12 +72,10 @@ for name in "${SIMULATORS[@]}"; do
     echo "::error::シミュレータ ${name} が見つかりません" >&2
     exit 1
   fi
-  UDIDS+=("$udid")
   DESTINATIONS+=(-destination "platform=iOS Simulator,id=${udid}")
-  # 起動には1台あたり数十秒かかるため、ビルドと並行してバックグラウンドで起動しておく
-  xcrun simctl boot "$udid" >/dev/null 2>&1 &
+  # 起動に数十秒かかるのでビルドと並行させる
+  boot_in_background "$udid" "$name"
 done
-log "シミュレータの起動を開始しました"
 
 BUILD_FLAGS=(
   -project ios/umi.mikan.xcodeproj
@@ -82,22 +87,48 @@ if [ -n "${SPM_CACHE_DIR:-}" ]; then
   BUILD_FLAGS+=(-clonedSourcePackagesDirPath "$SPM_CACHE_DIR" -onlyUsePackageVersionsFromResolvedFile)
 fi
 
-# 単体テストの workflow（301_ios_test.yml）と同じくビルド自体を軽くするフラグを付ける
+# 起動するシミュレータに依存しないよう generic な宛先でビルドする
 xcodebuild build-for-testing "${BUILD_FLAGS[@]}" \
-  -destination "platform=iOS Simulator,id=${UDIDS[0]}" \
+  -destination "generic/platform=iOS Simulator" \
   -jobs "$(sysctl -n hw.ncpu)" \
   ONLY_ACTIVE_ARCH=YES \
+  ARCHS=arm64 \
   CODE_SIGNING_ALLOWED=NO \
-  COMPILER_INDEX_STORE_ENABLE=NO
+  COMPILER_INDEX_STORE_ENABLE=NO \
+  SWIFT_COMPILATION_MODE=wholemodule
 log "ビルドが完了しました"
 
-for udid in "${UDIDS[@]}"; do
-  xcrun simctl bootstatus "$udid" >/dev/null
+if [ -n "$DUO_TYPE" ]; then
+  duo_name="${DUO_TYPE%%|*}"
+  if [ -n "$DOWNLOAD_PID" ] && ! wait "$DOWNLOAD_PID"; then
+    cat "$OUTPUT_DIR/.runtime-download.log" >&2
+  fi
+  rm -f "$OUTPUT_DIR/.runtime-download.log"
+  log "iPhone Duo のランタイムの準備が完了しました"
+  if [ -z "$(find_udid "$duo_name")" ] && ! xcrun simctl create "$duo_name" "${DUO_TYPE#*|}" >/dev/null; then
+    echo "⚠️ ${duo_name} のシミュレータを作成できなかったため撮影しません"
+    touch "$OUTPUT_DIR/iphone-duo.unavailable"
+  else
+    duo_udid="$(find_udid "$duo_name")"
+    DESTINATIONS+=(-destination "platform=iOS Simulator,id=${duo_udid}")
+    boot_in_background "$duo_udid" "$duo_name"
+  fi
+fi
+
+if [ "${#DESTINATIONS[@]}" -eq 0 ]; then
+  log "撮影する端末がありません"
+  exit 0
+fi
+
+for i in "${!BOOT_PIDS[@]}"; do
+  if ! wait "${BOOT_PIDS[$i]}"; then
+    echo "::error::シミュレータ ${BOOT_NAMES[$i]} の起動に失敗しました" >&2
+    exit 1
+  fi
 done
 log "シミュレータの起動が完了しました"
 
-# 複数のシミュレータで同時にテストを走らせると、非力なマシンでは準備中に kill されることがあったため
-# 撮影は1台ずつ順番に行う（ビルドとシミュレータ起動は済んでいるので、1台あたりの追加コストは小さい）
+# 複数台を同時に走らせると非力なマシンで準備中に kill されたため1台ずつ撮る
 TEST_RUNNER_SCREENSHOT_OUTPUT_DIR="$OUTPUT_DIR" \
   xcodebuild test-without-building "${BUILD_FLAGS[@]}" \
     "${DESTINATIONS[@]}" \

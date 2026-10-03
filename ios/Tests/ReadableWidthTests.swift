@@ -2,9 +2,7 @@ import SwiftUI
 import Testing
 @testable import umi_mikan
 
-/// ReadableWidth のテスト
 struct ReadableWidthTests {
-    /// maxWidth(for:) のテーブル駆動テスト用ケース
     struct MaxWidthCase {
         let name: String
         let sizeClass: UserInterfaceSizeClass?

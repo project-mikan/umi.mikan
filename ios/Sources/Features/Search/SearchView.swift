@@ -8,13 +8,12 @@ struct SearchView: View {
     /// 検索フィールドのフォーカス状態（検索実行時にキーボードを閉じるために使う）
     @FocusState private var isSearchFieldFocused: Bool
 
-    /// 横幅のサイズクラス（regular幅では検索フィールドへ移動するボタンと ⌘F を表示する）
     @Environment(\.horizontalSizeClass)
     private var horizontalSizeClass
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
-    /// 日記のローカルストア（スクリーンショットテストではダミーデータ入りのストアを渡す）
+    /// スクリーンショットテストでダミーデータ入りのストアを渡すために外から受け取る
     private let store: LocalDiaryStore
 
     // swiftlint:disable:next type_contents_order
@@ -22,7 +21,7 @@ struct SearchView: View {
         self.init(viewModel: SearchViewModel(authViewModel: authViewModel), authViewModel: authViewModel, syncManager: syncManager)
     }
 
-    /// ViewModel を外から渡すイニシャライザ（スクリーンショットテストで検索結果を表示した状態にするため）
+    /// スクリーンショットテストで検索結果を表示した状態にするため
     init( // swiftlint:disable:this type_contents_order
         viewModel: SearchViewModel,
         authViewModel: AuthViewModel,
@@ -88,9 +87,6 @@ struct SearchView: View {
         return nil
     }
 
-    /// 検索フィールドへフォーカスを移すボタン（regular幅のみ）。
-    /// iPadの外付けキーボードで ⌘F を押すとすぐ入力を始められるようにする。
-    /// compact幅（iPhone）は従来どおりナビゲーションバーにボタンを出さない。
     @ToolbarContentBuilder private var focusSearchToolbar: some ToolbarContent {
         if horizontalSizeClass == .regular {
             ToolbarItem(placement: .topBarTrailing) {

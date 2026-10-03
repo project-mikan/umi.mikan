@@ -3,7 +3,6 @@ import Foundation
 import Testing
 @testable import umi_mikan
 
-/// ConnectClient のテスト
 @MainActor
 struct ConnectClientTests {
     @Test("正常系: replaceHostで接続先を差し替えると、以降の通信は差し替え先へ向かう（到達不能な接続先ならネットワークエラーになる）")

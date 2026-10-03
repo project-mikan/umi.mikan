@@ -34,7 +34,7 @@ final class MonthlyViewModel {
 
     private let authViewModel: AuthViewModel
     private let store: LocalDiaryStore
-    /// オンデバイス要約ストア（スクリーンショットテストで実データの要約キャッシュを読まないよう差し替え可能にする）
+    /// スクリーンショットテストで実データの要約キャッシュを読まないよう外から受け取る
     private let summaryStore: DiarySummaryStore
     /// 曜日名フォーマット用（毎回生成するとスクロール時に高コストになるためキャッシュする）
     private let weekdayFormatter: DateFormatter = {

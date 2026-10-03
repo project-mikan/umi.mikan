@@ -1,7 +1,6 @@
 name: 【iOS】Screenshots
 
-# PR 上で人間が見た目を確認するためのスクリーンショットを撮影してコメントする（合否判定はしない）。
-# 単体テスト（301_ios_test.yml）とは別 workflow にして並行実行し、テスト結果の待ち時間に影響させない。
+# 撮影は遅いため、単体テスト（301）の待ち時間に影響しないよう別 workflow にしている
 on:
   pull_request:
     paths:
@@ -9,14 +8,27 @@ on:
       - ".github/workflows/302_ios_screenshot.yml"
       - ".github/scripts/ios-screenshot-comment.sh"
 
-# 同じ PR へ連続 push した場合は古い撮影を止める（高コストな macos ランナーの無駄撃ちを防ぐ）
 concurrency:
   group: ios-screenshot-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   screenshot:
-    runs-on: macos-26
+    # 1台のランナーで複数シミュレータを動かすとメモリ不足でテスト準備に数分かかったため、端末ごとにランナーを分ける
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - device: iphone
+            runner: macos-26
+          - device: ipad
+            runner: macos-26
+          # iPhone Duo のため Xcode 27.1 が要る。イメージは preview（actions/runner-images#14404）なので macos-27 が GA したら移行
+          - device: iphone-duo
+            runner: xcode-27
+            xcode: /Applications/Xcode_27.1.app
+    name: screenshot (${{ matrix.device }})
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: write # スクリーンショット画像を ios-screenshots ブランチへ push する
       pull-requests: write # スクリーンショットを PR にコメントする
@@ -24,7 +36,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # 301_ios_test.yml と同じ SPM 依存のキャッシュを共有する（キーが同じなので main で温めたものが使われる）
+      - name: Select Xcode
+        if: matrix.xcode
+        run: sudo xcode-select -s "${{ matrix.xcode }}"
+
+      # 301_ios_test.yml とキーを揃えて main で温めたキャッシュを使う
       - name: Cache SPM dependencies
         uses: actions/cache@v6
         with:
@@ -33,21 +49,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
-      # シミュレータ起動・ビルド・2台同時撮影はスクリプト内で行う（`make ios-screenshot` と同じ手順）
       - name: Capture screenshots
         env:
           SPM_CACHE_DIR: ios/SourcePackages
-        run: ios/scripts/capture-screenshots.sh "$RUNNER_TEMP/ios-screenshots"
+        run: ios/scripts/capture-screenshots.sh "$RUNNER_TEMP/ios-screenshots" "${{ matrix.device }}"
 
+      # 一部の撮影が失敗しても撮れた分は見られるようにする
       - name: Upload screenshots
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: ios-screenshots
+          name: ios-screenshots-${{ matrix.device }}
           path: ${{ runner.temp }}/ios-screenshots/*.png
+          if-no-files-found: ignore
 
-      # フォーク元からの PR はトークンに書き込み権限がないため、artifact のみとしコメントはしない
+      # フォークからの PR はトークンに書き込み権限がない
       - name: Comment screenshots on PR
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ !cancelled() && github.event.pull_request.head.repo.full_name == github.repository }}
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}

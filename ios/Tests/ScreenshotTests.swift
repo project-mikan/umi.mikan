@@ -3,24 +3,18 @@ import Testing
 import UIKit
 @testable import umi_mikan
 
-/// PRで画面の見た目を人間が確認するためのスクリーンショット撮影テスト。
-///
-/// 画像の比較（合否判定）は行わず、撮影した PNG を出力ディレクトリへ保存するだけ。
-/// 環境変数 SCREENSHOT_OUTPUT_DIR が設定されている時のみ実行し、通常の `make ios-test` ではスキップされる。
-/// xcodebuild からは TEST_RUNNER_ 接頭辞付きで渡す（例: TEST_RUNNER_SCREENSHOT_OUTPUT_DIR=/path）。
-/// 撮影は ios/scripts/capture-screenshots.sh（`make ios-screenshot` / CI）から行う。
+/// PRで人間が見た目を確認するための撮影で、比較はしない（ios/scripts/capture-screenshots.sh から実行する）
 @MainActor
 @Suite(.serialized, .enabled(if: ScreenshotEnvironment.outputDirectory != nil))
 struct ScreenshotTests {
-    /// 本番サーバーへ通信させないための到達不能な接続先（接続拒否で即座にネットワークエラーになる）
+    /// 接続拒否で即座にネットワークエラーになり、各ViewModelがオフライン扱いにする
     private static let unreachableHost = "http://127.0.0.1:9"
 
     @Test("正常系: 各画面のスクリーンショットを保存できる", arguments: ScreenshotScreen.allCases)
     func capture(screen: ScreenshotScreen) async throws {
         let outputDirectory = try #require(ScreenshotEnvironment.outputDirectory)
 
-        // 実データの取得・トークンリフレッシュ（失敗時のログアウト）を起こさないよう、通信先を到達不能にする。
-        // 各ViewModelはネットワークエラーをオフライン扱いにするため、ダミーデータのみが表示される
+        // 本番に繋ぐと実データの表示やトークンリフレッシュ失敗によるログアウトが起きる
         ConnectClient.shared.replaceHost(Self.unreachableHost)
         defer { ConnectClient.shared.replaceHost(ConnectClient.defaultHost) }
 
@@ -35,9 +29,7 @@ struct ScreenshotTests {
     }
 }
 
-/// 撮影する端末ラベルのテスト（撮影自体と違い、環境変数がなくても常に実行する）
 struct ScreenshotDeviceTests {
-    /// label(for:deviceName:) のテーブル駆動テスト用ケース
     struct LabelCase: Sendable {
         let name: String
         let idiom: UIUserInterfaceIdiom
@@ -65,15 +57,14 @@ struct ScreenshotDeviceTests {
 
 // MARK: - 環境変数
 
-/// スクリーンショット撮影の設定（環境変数から読む）
 enum ScreenshotEnvironment {
-    /// 画像の保存先。未設定なら撮影テスト自体を実行しない
+    /// xcodebuild からは TEST_RUNNER_SCREENSHOT_OUTPUT_DIR として渡す
     static var outputDirectory: URL? {
         guard let path = ProcessInfo.processInfo.environment["SCREENSHOT_OUTPUT_DIR"], !path.isEmpty else { return nil }
         return URL(fileURLWithPath: path, isDirectory: true)
     }
 
-    /// 実行中のシミュレータ名（シミュレータが自動で設定する環境変数）
+    /// シミュレータが自動で設定する環境変数
     static var simulatorDeviceName: String {
         ProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] ?? ""
     }
@@ -81,10 +72,8 @@ enum ScreenshotEnvironment {
 
 // MARK: - 端末ラベル
 
-/// 撮影する端末の判定
 enum ScreenshotDevice {
-    /// 実行中のシミュレータのファイル名接頭辞（iphone / iphone-duo / ipad）を返す。想定外の端末は nil。
-    /// iPhone Duo は近似せず、実機と同じ画面サイズ・safe area を持つ iPhone Duo シミュレータでのみ撮る
+    /// iPhone Duo は safe area 等が違い近似できないため、iPhone Duo シミュレータでのみ撮る
     static func label(for idiom: UIUserInterfaceIdiom, deviceName: String) -> String? {
         switch idiom {
         case .phone:
@@ -101,7 +90,7 @@ enum ScreenshotDevice {
 
 // MARK: - 撮影対象の画面
 
-/// 撮影対象の画面（rawValue はファイル名に使う）
+/// rawValue はファイル名に使う
 @MainActor
 enum ScreenshotScreen: String, CaseIterable {
     case home
@@ -110,14 +99,11 @@ enum ScreenshotScreen: String, CaseIterable {
     case detail
     case settings
 
-    /// 撮影までの待ち時間。.task の読み込み（ローカルストア＋到達不能な接続先への即時失敗）と
-    /// シートの表示アニメーションが終わるのを待つ
+    /// .task の読み込みとシートの表示アニメーションを待つ
     var renderWait: Duration {
         self == .detail ? .milliseconds(1500) : .milliseconds(700)
     }
 
-    /// ダミーデータを流し込んだ画面を生成する。
-    /// MainView と同じく TabView + NavigationStack に載せ、iPad のサイドバーも含めて撮影する
     @ViewBuilder
     func makeView(fixture: ScreenshotFixture) -> some View {
         switch self {
@@ -155,7 +141,6 @@ enum ScreenshotScreen: String, CaseIterable {
             }
 
         case .detail:
-            // ホーム画面から今日の日記を開いた状態を再現する
             ScreenshotTabContainer(selected: .home) {
                 homeScreen(fixture: fixture)
                     .sheet(isPresented: .constant(true)) {
@@ -180,7 +165,6 @@ enum ScreenshotScreen: String, CaseIterable {
         }
     }
 
-    /// ホーム画面（MainView の homeTab と同じ構成）
     private func homeScreen(fixture: ScreenshotFixture) -> some View {
         NavigationStack {
             HomeView(authViewModel: fixture.authViewModel, syncManager: fixture.syncManager, store: fixture.store)
@@ -190,11 +174,8 @@ enum ScreenshotScreen: String, CaseIterable {
     }
 }
 
-/// MainView のタブ構成を再現するコンテナ。
-/// MainView は各画面を本番のストアで生成するため、ダミーデータを渡せるようテスト側で同じタブを組み立てる。
-/// MainView のタブ（名前・アイコン・順序）を変えた場合はここも合わせること。
+/// MainView は本番のストアで各画面を作るため同じタブを再現している（MainView のタブを変えたら合わせること）
 private struct ScreenshotTabContainer<Content: View>: View {
-    /// MainView のタブ定義
     enum TabItem: CaseIterable {
         case home
         case monthly
@@ -230,7 +211,6 @@ private struct ScreenshotTabContainer<Content: View>: View {
         TabView(selection: .constant(selected)) {
             ForEach(TabItem.allCases, id: \.self) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
-                    // 選択中のタブだけ中身を描画する（他のタブは表示されないため空でよい）
                     if tab == selected {
                         content
                     } else {
@@ -245,11 +225,9 @@ private struct ScreenshotTabContainer<Content: View>: View {
 
 // MARK: - ダミーデータ
 
-/// 撮影用のダミーデータ一式。
-/// 実データ（端末のローカルストア・要約キャッシュ）に触れないよう、すべて一時ファイルのストアを使う。
+/// 端末の実データ（ローカルストア・要約キャッシュ）に触れないよう一時ファイルのストアを使う
 @MainActor
 struct ScreenshotFixture {
-    /// 日記本文のサンプル（日付ごとに順番に割り当てる）
     private static let sampleContents = [
         "朝から雨。駅前のカフェでモーニングを食べながら本を読んだ。午後は図書館で調べもの、帰りに八百屋でみかんを買った。夜は久しぶりに鍋にした。",
         "仕事が立て込んでいたけど、昼休みに少し散歩できたのが良かった。夕方から友人と電話して、来月の旅行の計画を立てた。",
@@ -263,7 +241,6 @@ struct ScreenshotFixture {
     let store: LocalDiaryStore
     let summaryStore: DiarySummaryStore
     let syncManager: SyncManager
-    /// ホーム画面に表示する今日・昨日・一昨日の日付（JST）
     let homeDates: [Diary_YMD]
 
     init() {
@@ -278,7 +255,7 @@ struct ScreenshotFixture {
         homeDates = (0 ..< 3).compactMap { calendar.date(byAdding: .day, value: -$0, to: now) }
             .map { Self.ymd(from: $0, calendar: calendar) }
 
-        // 月ごと画面が埋まるよう今月の全日分と、ホーム画面用の3日分（月をまたぐ場合がある）を入れる
+        // ホームの3日分は月をまたぐ場合があるため今月分とは別に入れる
         let monthDates = Self.allDatesInMonth(of: now, calendar: calendar)
         for (index, date) in (monthDates + homeDates).enumerated() {
             store.applyServerEntry(Self.entry(
@@ -288,7 +265,7 @@ struct ScreenshotFixture {
         }
     }
 
-    /// サーバーから取得した体のダミー日記を生成する（needsSync にならないよう serverID を付ける）
+    /// serverID を付けて同期待ち（needsSync）扱いにならないようにする
     private static func entry(date: Diary_YMD, content: String) -> Diary_DiaryEntry {
         var entry = Diary_DiaryEntry()
         entry.id = "screenshot-\(LocalDiaryEntry.dateKey(date))"
@@ -298,7 +275,6 @@ struct ScreenshotFixture {
         return entry
     }
 
-    /// 指定日を含む月の全日付を返す
     private static func allDatesInMonth(of date: Date, calendar: Calendar) -> [Diary_YMD] {
         guard
             let range = calendar.range(of: .day, in: .month, for: date),
@@ -310,7 +286,6 @@ struct ScreenshotFixture {
             .map { ymd(from: $0, calendar: calendar) }
     }
 
-    /// Date を Diary_YMD に変換する
     private static func ymd(from date: Date, calendar: Calendar) -> Diary_YMD {
         var ymd = Diary_YMD()
         ymd.year = UInt32(calendar.component(.year, from: date))
@@ -319,7 +294,6 @@ struct ScreenshotFixture {
         return ymd
     }
 
-    /// キーワード「カフェ」で検索した直後の状態の検索ViewModelを生成する
     func makeSearchViewModel() -> SearchViewModel {
         let viewModel = SearchViewModel(authViewModel: authViewModel, store: store)
         var results = Diary_SearchDiaryEntriesResponse()
@@ -334,7 +308,6 @@ struct ScreenshotFixture {
         return viewModel
     }
 
-    /// ユーザー情報を取得済みの状態の設定ViewModelを生成する
     func makeSettingsViewModel() -> SettingsViewModel {
         let viewModel = SettingsViewModel(authViewModel: authViewModel, notificationManager: MemoryNotificationManager.shared)
         viewModel.userName = "うみみかん"
@@ -345,9 +318,7 @@ struct ScreenshotFixture {
 
 // MARK: - 描画
 
-/// SwiftUI の View を実際のウィンドウに表示してスクリーンショットを撮る。
-/// Liquid Glass やマテリアルはオフスクリーン描画（layer.render）では再現されないため、
-/// テストホストのウィンドウシーン上に最前面のウィンドウを出して drawHierarchy で撮影する。
+/// Liquid Glass やマテリアルは layer.render では描画されないため、実ウィンドウを出して drawHierarchy で撮る
 @MainActor
 enum ScreenshotRenderer {
     static func capture(_ view: some View, wait: Duration) async throws -> UIImage {
@@ -357,9 +328,7 @@ enum ScreenshotRenderer {
         )
         let window = UIWindow(windowScene: scene)
         window.frame = scene.effectiveGeometry.coordinateSpace.bounds
-        // テストホスト本体の画面（ログイン画面など）より前面に出す
         window.windowLevel = .alert + 1
-        // 実行環境の外観設定で結果が変わらないようライトモードに固定する
         window.overrideUserInterfaceStyle = .light
         window.rootViewController = UIHostingController(rootView: view)
         window.makeKeyAndVisible()

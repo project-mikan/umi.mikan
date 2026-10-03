@@ -16,7 +16,7 @@ struct DiaryDetailSheet: View {
     let items: [DiarySheetItem]
     let authViewModel: AuthViewModel
     let syncManager: SyncManager
-    /// 日記のローカルストア（スクリーンショットテストではダミーデータ入りのストアを渡す）
+    /// スクリーンショットテストでダミーデータ入りのストアを渡すために外から受け取る
     let store: LocalDiaryStore
 
     /// 現在表示中の日記のインデックス
@@ -31,7 +31,6 @@ struct DiaryDetailSheet: View {
     /// スワイプによる切り替え処理が進行中かどうか（多重発火防止）
     @State private var isTransitioning = false
 
-    /// 横幅のサイズクラス（regular幅では前後移動ボタンとキーボードショートカットを表示する）
     @Environment(\.horizontalSizeClass)
     private var horizontalSizeClass
 
@@ -81,8 +80,7 @@ struct DiaryDetailSheet: View {
             .toolbar { pagerToolbar }
         }
         .presentationDetents([.medium, .large])
-        // iPad等のregular幅ではdetentsが効かず小さなフォームシートになるため、
-        // 編集領域を広く取れるページサイズのシートにする（compact幅は従来のハーフモーダルのまま）
+        // regular幅ではdetentsが効かず小さなフォームシートになるため
         .presentationSizing(.page)
         .presentationDragIndicator(.visible)
         // 下スワイプでシートを閉じる操作はフォーカス喪失やバックグラウンド移行を
@@ -97,9 +95,7 @@ struct DiaryDetailSheet: View {
         }
     }
 
-    /// 前後の日記へ移動するボタン（regular幅のみ）。
-    /// iPadではトラックパッド・外付けキーボード利用時にスワイプしづらいため、ボタンと ⌘[ / ⌘] でも移動できるようにする。
-    /// compact幅（iPhone）は従来どおりスワイプのみとし、ナビゲーションバーの見た目を変えない。
+    /// iPadのトラックパッド・外付けキーボードではスワイプしづらいため、regular幅だけボタンを出す
     @ToolbarContentBuilder private var pagerToolbar: some ToolbarContent {
         if horizontalSizeClass == .regular {
             ToolbarItemGroup(placement: .topBarLeading) {

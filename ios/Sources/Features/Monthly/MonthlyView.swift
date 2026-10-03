@@ -16,7 +16,7 @@ struct MonthlyView: View {
     private let syncManager: SyncManager
     /// オンデバイスLLMによる日記要約ストア（非対応端末では isAvailable が false になり機能全体が非表示になる）
     private let summaryStore: DiarySummaryStore
-    /// 日記のローカルストア（スクリーンショットテストではダミーデータ入りのストアを渡す）
+    /// スクリーンショットテストでダミーデータ入りのストアを渡すために外から受け取る
     private let store: LocalDiaryStore
 
     // swiftlint:disable:next type_contents_order
@@ -114,7 +114,6 @@ struct MonthlyView: View {
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.glass)
-            // iPad等の外付けキーボード向けショートカット
             .keyboardShortcut(.leftArrow, modifiers: .command)
 
             yearMonthButton

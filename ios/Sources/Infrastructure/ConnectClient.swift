@@ -10,11 +10,9 @@ import Synchronization
 final class ConnectClient: Sendable {
     static let shared = ConnectClient()
 
-    /// 本番の接続先
     static let defaultHost = "https://umi-mikan-api.usuyuki.net"
 
-    /// ConnectRPC プロトコルクライアント（接続設定を保持）。
-    /// スクリーンショットテストで接続先を差し替えられるよう Mutex で保持する。
+    /// スクリーンショットテストで接続先を差し替えるため Mutex で保持する
     private let client: Mutex<ProtocolClientInterface>
 
     /// ConnectRPC プロトコルクライアント（接続設定を保持）
@@ -26,7 +24,6 @@ final class ConnectClient: Sendable {
         client = Mutex(Self.makeProtocolClient(host: Self.defaultHost))
     }
 
-    /// 指定した接続先の ProtocolClient を生成する
     private static func makeProtocolClient(host: String) -> ProtocolClientInterface {
         ProtocolClient(
             httpClient: URLSessionHTTPClient(),
@@ -41,8 +38,7 @@ final class ConnectClient: Sendable {
         )
     }
 
-    /// 接続先を差し替える。
-    /// スクリーンショットテストで本番サーバーへ通信しない（＝実データや認証状態に触れない）ようにするために使う。
+    /// スクリーンショットテストで本番へ通信させない（実データ表示やログアウトを防ぐ）ために使う
     func replaceHost(_ host: String) {
         let newClient = Self.makeProtocolClient(host: host)
         client.withLock { $0 = newClient }

@@ -25,7 +25,6 @@ struct DiaryDetailView: View {
     @Environment(\.scenePhase)
     private var scenePhase
 
-    /// 横幅のサイズクラス（regular幅では編集中に保存ボタンと ⌘S を表示する）
     @Environment(\.horizontalSizeClass)
     private var horizontalSizeClass
 
@@ -197,10 +196,7 @@ struct DiaryDetailView: View {
         }
     }
 
-    /// 編集中に表示する保存ボタン（regular幅のみ）。
-    /// iPadで外付けキーボードを使うとソフトウェアキーボードとその上のツールバーが出ないため、
-    /// ナビゲーションバーに保存ボタンを出して ⌘S で保存できるようにする。
-    /// compact幅（iPhone）はフォーカス喪失時の自動保存に任せ、従来どおり保存ボタンは出さない。
+    /// 外付けキーボードではキーボード上のツールバーが出ず保存手段がないため、regular幅だけ出す
     @ToolbarContentBuilder private var saveToolbar: some ToolbarContent {
         if horizontalSizeClass == .regular, isEditorFocused {
             ToolbarItem(placement: .topBarTrailing) {

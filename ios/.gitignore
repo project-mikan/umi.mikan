@@ -102,5 +102,4 @@ fabric.properties
 .env
 .env.local
 
-# スクリーンショット撮影の出力（make ios-screenshot）
 screenshots/
