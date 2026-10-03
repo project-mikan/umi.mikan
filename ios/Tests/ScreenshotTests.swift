@@ -24,13 +24,37 @@ struct ScreenshotTests {
         ConnectClient.shared.replaceHost(Self.unreachableHost)
         defer { ConnectClient.shared.replaceHost(ConnectClient.defaultHost) }
 
-        let fixture = ScreenshotFixture()
-        let image = try await ScreenshotRenderer.capture(screen.makeView(fixture: fixture), wait: screen.renderWait)
-        let data = try #require(image.pngData())
-
         try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
-        let fileURL = outputDirectory.appendingPathComponent("\(ScreenshotEnvironment.deviceLabel)_\(screen.rawValue).png")
-        try data.write(to: fileURL)
+        // 起動するシミュレータの台数を減らすため、1台で撮れる端末バリエーションはまとめて撮る
+        for variant in ScreenshotVariant.variants(for: UIDevice.current.userInterfaceIdiom) {
+            let fixture = ScreenshotFixture()
+            let image = try await ScreenshotRenderer.capture(
+                screen.makeView(fixture: fixture),
+                size: variant.size,
+                wait: screen.renderWait
+            )
+            let data = try #require(image.pngData())
+            let fileURL = outputDirectory.appendingPathComponent("\(variant.label)_\(screen.rawValue).png")
+            try data.write(to: fileURL)
+        }
+    }
+}
+
+/// 撮影する端末バリエーションのテスト（撮影自体と違い、環境変数がなくても常に実行する）
+struct ScreenshotVariantTests {
+    @Test(
+        "正常系: 端末種別ごとに撮影する端末バリエーションが決まる",
+        arguments: [
+            // iPhone シミュレータでは iPhone の画面だけを撮る
+            (UIUserInterfaceIdiom.phone, ["iphone"]),
+            // iPad シミュレータでは iPad 全画面に加え、iPhone Duo（開いた状態）を iPad mini 相当の大きさで撮る
+            (UIUserInterfaceIdiom.pad, ["ipad", "iphone-duo"]),
+            // 想定外の端末では何も撮らない
+            (UIUserInterfaceIdiom.tv, [])
+        ]
+    )
+    func variants(idiom: UIUserInterfaceIdiom, expectedLabels: [String]) {
+        #expect(ScreenshotVariant.variants(for: idiom).map(\.label) == expectedLabels)
     }
 }
 
@@ -43,13 +67,36 @@ enum ScreenshotEnvironment {
         guard let path = ProcessInfo.processInfo.environment["SCREENSHOT_OUTPUT_DIR"], !path.isEmpty else { return nil }
         return URL(fileURLWithPath: path, isDirectory: true)
     }
+}
 
-    /// ファイル名の接頭辞にする端末名（iphone / iphone-duo / ipad）。未設定なら端末種別から決める
-    @MainActor static var deviceLabel: String {
-        if let label = ProcessInfo.processInfo.environment["SCREENSHOT_DEVICE"], !label.isEmpty {
-            return label
+// MARK: - 端末バリエーション
+
+/// 撮影する端末バリエーション（label はファイル名の接頭辞に使う）
+struct ScreenshotVariant {
+    /// iPad mini (A17 Pro) の画面サイズ（pt）。折りたたみiPhone（iPhone Duo）を開いた状態の近似に使う
+    static let iPadMiniSize = CGSize(width: 744, height: 1133)
+
+    let label: String
+    /// 撮影するウィンドウの大きさ。nil ならシミュレータの画面全体
+    let size: CGSize?
+
+    /// 実行中のシミュレータの端末種別で撮れるバリエーションを返す。
+    /// iPad mini 相当のサイズは iPad Pro 11インチの画面に収まるため、iPad シミュレータ1台で両方撮れる
+    /// （ウィンドウシーン自体は regular 幅のままなので、サイズクラスも実機の iPad mini と同じ regular になる）
+    static func variants(for idiom: UIUserInterfaceIdiom) -> [ScreenshotVariant] {
+        switch idiom {
+        case .phone:
+            [ScreenshotVariant(label: "iphone", size: nil)]
+
+        case .pad:
+            [
+                ScreenshotVariant(label: "ipad", size: nil),
+                ScreenshotVariant(label: "iphone-duo", size: iPadMiniSize)
+            ]
+
+        default:
+            []
         }
-        return UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone"
     }
 }
 
@@ -64,9 +111,10 @@ enum ScreenshotScreen: String, CaseIterable {
     case detail
     case settings
 
-    /// 撮影までの待ち時間。.task の読み込みとシートの表示アニメーションが終わるのを待つ
+    /// 撮影までの待ち時間。.task の読み込み（ローカルストア＋到達不能な接続先への即時失敗）と
+    /// シートの表示アニメーションが終わるのを待つ
     var renderWait: Duration {
-        self == .detail ? .seconds(3) : .seconds(2)
+        self == .detail ? .milliseconds(1500) : .milliseconds(700)
     }
 
     /// ダミーデータを流し込んだ画面を生成する。
@@ -303,13 +351,15 @@ struct ScreenshotFixture {
 /// テストホストのウィンドウシーン上に最前面のウィンドウを出して drawHierarchy で撮影する。
 @MainActor
 enum ScreenshotRenderer {
-    static func capture(_ view: some View, wait: Duration) async throws -> UIImage {
+    /// size を指定した場合は画面左上にその大きさのウィンドウを出して撮影する（nil なら画面全体）
+    static func capture(_ view: some View, size: CGSize?, wait: Duration) async throws -> UIImage {
         let scene = try #require(
             UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first,
             "テストホストのウィンドウシーンが見つかりません"
         )
         let window = UIWindow(windowScene: scene)
-        window.frame = scene.effectiveGeometry.coordinateSpace.bounds
+        let screenBounds = scene.effectiveGeometry.coordinateSpace.bounds
+        window.frame = size.map { CGRect(origin: .zero, size: $0) } ?? screenBounds
         // テストホスト本体の画面（ログイン画面など）より前面に出す
         window.windowLevel = .alert + 1
         // 実行環境の外観設定で結果が変わらないようライトモードに固定する

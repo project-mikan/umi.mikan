@@ -11,7 +11,7 @@ DEST="pr-${PR_NUMBER}/${HEAD_SHA}"
 MARKER="<!-- ios-screenshots -->"
 
 # 列（端末）と行（画面）の定義。ファイル名は <端末>_<画面>.png（ios/Tests/ScreenshotTests.swift）
-DEVICES=("iphone|iPhone" "iphone-duo|iPhone Duo（iPad miniで近似）" "ipad|iPad")
+DEVICES=("iphone|iPhone" "iphone-duo|iPhone Duo（iPad mini相当で近似）" "ipad|iPad")
 SCREENS=("home|ホーム" "monthly|月ごと" "search|検索" "detail|詳細モーダル" "settings|設定")
 
 # --- 画像を専用ブランチへ push する ---
