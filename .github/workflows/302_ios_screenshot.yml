@@ -18,17 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - device: iphone
-            runner: macos-26
-          - device: ipad
-            runner: macos-26
-          # iPhone Duo のため Xcode 27.1 が要る。イメージは preview（actions/runner-images#14404）なので macos-27 が GA したら移行
-          - device: iphone-duo
-            runner: xcode-27
-            xcode: /Applications/Xcode_27.1.app
+        device: [iphone, ipad, iphone-duo]
     name: screenshot (${{ matrix.device }})
-    runs-on: ${{ matrix.runner }}
+    # iPhone Duo のため Xcode 27.1 が要り、比較しやすいよう全端末を揃える。イメージは preview（actions/runner-images#14404）なので macos-27 が GA したら移行
+    runs-on: xcode-27
     permissions:
       contents: write # スクリーンショット画像を ios-screenshots ブランチへ push する
       pull-requests: write # スクリーンショットを PR にコメントする
@@ -36,11 +29,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Select Xcode
-        if: matrix.xcode
-        run: sudo xcode-select -s "${{ matrix.xcode }}"
+      - name: Select Xcode 27.1
+        run: sudo xcode-select -s /Applications/Xcode_27.1.app
 
-      # 301_ios_test.yml とキーを揃えて main で温めたキャッシュを使う
       - name: Cache SPM dependencies
         uses: actions/cache@v6
         with:
@@ -54,9 +45,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ios/CompilationCache
-          key: ${{ matrix.runner }}-compilation-cache-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: xcode-27.1-compilation-cache-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            ${{ matrix.runner }}-compilation-cache-
+            xcode-27.1-compilation-cache-
 
       - name: Capture screenshots
         env:
