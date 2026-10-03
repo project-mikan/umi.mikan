@@ -15,13 +15,26 @@ struct MonthlyView: View {
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     /// オンデバイスLLMによる日記要約ストア（非対応端末では isAvailable が false になり機能全体が非表示になる）
-    private let summaryStore = DiarySummaryStore.shared
+    private let summaryStore: DiarySummaryStore
+    /// スクリーンショットテストでダミーデータ入りのストアを渡すために外から受け取る
+    private let store: LocalDiaryStore
 
     // swiftlint:disable:next type_contents_order
-    init(authViewModel: AuthViewModel, syncManager: SyncManager) {
+    init(
+        authViewModel: AuthViewModel,
+        syncManager: SyncManager,
+        store: LocalDiaryStore = .shared,
+        summaryStore: DiarySummaryStore = .shared
+    ) {
         self.authViewModel = authViewModel
         self.syncManager = syncManager
-        _viewModel = State(initialValue: MonthlyViewModel(authViewModel: authViewModel))
+        self.store = store
+        self.summaryStore = summaryStore
+        _viewModel = State(initialValue: MonthlyViewModel(
+            authViewModel: authViewModel,
+            store: store,
+            summaryStore: summaryStore
+        ))
     }
 
     /// 年ピッカーで選択できる年の範囲（1980年〜現在の年）。
@@ -49,6 +62,7 @@ struct MonthlyView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .task {
             await viewModel.fetch()
@@ -71,7 +85,8 @@ struct MonthlyView: View {
                     items: monthSheetItems,
                     initialIndex: monthSheetItems.firstIndex { $0.id == item.id } ?? 0,
                     authViewModel: authViewModel,
-                    syncManager: syncManager
+                    syncManager: syncManager,
+                    store: store
                 )
             }
         )
@@ -93,10 +108,13 @@ struct MonthlyView: View {
             Button {
                 Task { await viewModel.previousMonth() }
             } label: {
-                Image(systemName: "chevron.left")
+                // ⌘長押し時のショートカット一覧に名前を出すため、アイコンのみのLabelにする
+                Label("前の月", systemImage: "chevron.left")
+                    .labelStyle(.iconOnly)
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.glass)
+            .keyboardShortcut(.leftArrow, modifiers: .command)
 
             yearMonthButton
 
@@ -109,14 +127,17 @@ struct MonthlyView: View {
                     .padding(.horizontal, 4)
             }
             .buttonStyle(.glass)
+            .keyboardShortcut("t", modifiers: .command)
 
             Button {
                 Task { await viewModel.nextMonth() }
             } label: {
-                Image(systemName: "chevron.right")
+                Label("次の月", systemImage: "chevron.right")
+                    .labelStyle(.iconOnly)
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.glass)
+            .keyboardShortcut(.rightArrow, modifiers: .command)
         }
     }
 

@@ -7,10 +7,15 @@ struct SettingsView: View {
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel) {
-        _viewModel = State(initialValue: SettingsViewModel(
+        self.init(viewModel: SettingsViewModel(
             authViewModel: authViewModel,
             notificationManager: MemoryNotificationManager.shared
         ))
+    }
+
+    /// スクリーンショットテストでユーザー情報を表示した状態にするため
+    init(viewModel: SettingsViewModel) { // swiftlint:disable:this type_contents_order
+        _viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
@@ -25,6 +30,7 @@ struct SettingsView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .task {
             await viewModel.fetch()

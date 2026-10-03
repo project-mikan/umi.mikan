@@ -1,5 +1,6 @@
 import Connect
 import Foundation
+import Synchronization
 
 /// ConnectRPC クライアントを管理するシングルトン。
 ///
@@ -9,13 +10,22 @@ import Foundation
 final class ConnectClient: Sendable {
     static let shared = ConnectClient()
 
-    private let host = "https://umi-mikan-api.usuyuki.net"
+    static let defaultHost = "https://umi-mikan-api.usuyuki.net"
+
+    /// スクリーンショットテストで接続先を差し替えるため Mutex で保持する
+    private let client: Mutex<ProtocolClientInterface>
 
     /// ConnectRPC プロトコルクライアント（接続設定を保持）
-    let protocolClient: ProtocolClientInterface
+    var protocolClient: ProtocolClientInterface {
+        client.withLock { $0 }
+    }
 
     private init() {
-        let client = ProtocolClient(
+        client = Mutex(Self.makeProtocolClient(host: Self.defaultHost))
+    }
+
+    private static func makeProtocolClient(host: String) -> ProtocolClientInterface {
+        ProtocolClient(
             httpClient: URLSessionHTTPClient(),
             config: ProtocolClientConfig(
                 host: host,
@@ -26,7 +36,12 @@ final class ConnectClient: Sendable {
                 timeout: 15
             )
         )
-        protocolClient = client
+    }
+
+    /// スクリーンショットテストで本番へ通信させない（実データ表示やログアウトを防ぐ）ために使う
+    func replaceHost(_ host: String) {
+        let newClient = Self.makeProtocolClient(host: host)
+        client.withLock { $0 = newClient }
     }
 
     /// Authorization ヘッダーを含む Headers を生成する。

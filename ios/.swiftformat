@@ -1,5 +1,5 @@
 --swiftversion 5.10
---exclude Sources/Proto
+--exclude Sources/Proto,DerivedData,SourcePackages,screenshots
 --indent 4
 --tabwidth 4
 --indentcase false

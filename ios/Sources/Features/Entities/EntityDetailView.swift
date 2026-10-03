@@ -27,6 +27,7 @@ struct EntityDetailView: View {
                 deleteButton
             }
             .padding(16)
+            .readableContentWidth()
         }
         .navigationTitle(entity.name)
         .navigationBarTitleDisplayMode(.inline)

@@ -35,16 +35,27 @@ struct HomeView: View {
     @Environment(\.scenePhase)
     private var scenePhase
 
+    @Environment(\.horizontalSizeClass)
+    private var horizontalSizeClass
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let launchState: AppLaunchState?
+    /// スクリーンショットテストでダミーデータ入りのストアを渡すために外から受け取る
+    private let store: LocalDiaryStore
 
     // swiftlint:disable:next type_contents_order
-    init(authViewModel: AuthViewModel, syncManager: SyncManager, launchState: AppLaunchState? = nil) {
+    init(
+        authViewModel: AuthViewModel,
+        syncManager: SyncManager,
+        launchState: AppLaunchState? = nil,
+        store: LocalDiaryStore = .shared
+    ) {
         self.authViewModel = authViewModel
         self.syncManager = syncManager
         self.launchState = launchState
-        _viewModel = State(initialValue: DiaryViewModel(authViewModel: authViewModel, syncManager: syncManager))
+        self.store = store
+        _viewModel = State(initialValue: DiaryViewModel(authViewModel: authViewModel, syncManager: syncManager, store: store))
         _memoryViewModel = State(initialValue: MemoryViewModel(authViewModel: authViewModel))
     }
 
@@ -67,6 +78,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
+                .readableContentWidth()
             }
             .onReceive(NotificationCenter.default.publisher(for: .memoryNotificationTapped)) { _ in
                 guard !memoryViewModel.items.isEmpty else { return }
@@ -110,7 +122,8 @@ struct HomeView: View {
                     items: items,
                     initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
                     authViewModel: authViewModel,
-                    syncManager: syncManager
+                    syncManager: syncManager,
+                    store: store
                 )
             }
         )
@@ -121,7 +134,8 @@ struct HomeView: View {
                 items: items,
                 initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
                 authViewModel: authViewModel,
-                syncManager: syncManager
+                syncManager: syncManager,
+                store: store
             )
         }
         .overlay(alignment: .bottom) {
@@ -130,6 +144,7 @@ struct HomeView: View {
             }
         }
         .toolbar { keyboardToolbar }
+        .toolbar { saveToolbar }
         // スクロール位置を常時追跡し、キーボードを閉じた時の位置復元に備える
         .scrollPosition($scrollPosition)
         .onScrollGeometryChange(for: CGFloat.self) { geometry in
@@ -162,6 +177,20 @@ struct HomeView: View {
                 focusedCard = nil
             } label: {
                 Image(systemName: "keyboard.chevron.compact.down")
+            }
+        }
+    }
+
+    /// 外付けキーボードではキーボード上のツールバーが出ず保存手段がないため、regular幅だけ出す
+    @ToolbarContentBuilder private var saveToolbar: some ToolbarContent {
+        if horizontalSizeClass == .regular, let focusedCard {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    autoSaveIfChanged(card: focusedCard)
+                } label: {
+                    Label("保存", systemImage: "checkmark")
+                }
+                .keyboardShortcut("s", modifiers: .command)
             }
         }
     }

@@ -8,14 +8,30 @@ struct SearchView: View {
     /// 検索フィールドのフォーカス状態（検索実行時にキーボードを閉じるために使う）
     @FocusState private var isSearchFieldFocused: Bool
 
+    @Environment(\.horizontalSizeClass)
+    private var horizontalSizeClass
+
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
+    /// スクリーンショットテストでダミーデータ入りのストアを渡すために外から受け取る
+    private let store: LocalDiaryStore
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel, syncManager: SyncManager) {
+        self.init(viewModel: SearchViewModel(authViewModel: authViewModel), authViewModel: authViewModel, syncManager: syncManager)
+    }
+
+    /// スクリーンショットテストで検索結果を表示した状態にするため
+    init( // swiftlint:disable:this type_contents_order
+        viewModel: SearchViewModel,
+        authViewModel: AuthViewModel,
+        syncManager: SyncManager,
+        store: LocalDiaryStore = .shared
+    ) {
         self.authViewModel = authViewModel
         self.syncManager = syncManager
-        _viewModel = State(initialValue: SearchViewModel(authViewModel: authViewModel))
+        self.store = store
+        _viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
@@ -30,6 +46,7 @@ struct SearchView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
@@ -37,6 +54,7 @@ struct SearchView: View {
             }
         }
         // 検索完了時に成功の触覚フィードバックを鳴らす
+        .toolbar { focusSearchToolbar }
         .sensoryFeedback(.success, trigger: viewModel.completedSearchCount) { old, new in new > old }
         // 日記詳細を検索キーワードのハイライト付きハーフモーダルで表示する
         .sheet(item: $selectedItem) { item in
@@ -46,7 +64,8 @@ struct SearchView: View {
                 items: items,
                 initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
                 authViewModel: authViewModel,
-                syncManager: syncManager
+                syncManager: syncManager,
+                store: store
             )
         }
     }
@@ -66,6 +85,19 @@ struct SearchView: View {
                 .map { DiarySheetItem(date: $0.date, highlightKeywords: [query]) }
         }
         return nil
+    }
+
+    @ToolbarContentBuilder private var focusSearchToolbar: some ToolbarContent {
+        if horizontalSizeClass == .regular {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    isSearchFieldFocused = true
+                } label: {
+                    Label("検索フィールドへ移動", systemImage: "character.cursor.ibeam")
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+        }
     }
 
     // MARK: - 検索フォーム

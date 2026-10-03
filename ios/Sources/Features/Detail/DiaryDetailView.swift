@@ -25,6 +25,9 @@ struct DiaryDetailView: View {
     @Environment(\.scenePhase)
     private var scenePhase
 
+    @Environment(\.horizontalSizeClass)
+    private var horizontalSizeClass
+
     /// 検索結果から開いた場合にハイライトするキーワード
     private let highlightKeywords: [String]
 
@@ -38,6 +41,7 @@ struct DiaryDetailView: View {
         ScrollViewReader { proxy in
             scrollContent
                 .toolbar { keyboardToolbar }
+                .toolbar { saveToolbar }
                 .task {
                     await viewModel.fetch()
                     await scrollToFirstHighlight(proxy)
@@ -73,6 +77,7 @@ struct DiaryDetailView: View {
                 }
             }
             .padding(16)
+            .readableContentWidth()
         }
         .navigationTitle(dateTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -187,6 +192,21 @@ struct DiaryDetailView: View {
                 isEditorFocused = false
             } label: {
                 Image(systemName: "keyboard.chevron.compact.down")
+            }
+        }
+    }
+
+    /// 外付けキーボードではキーボード上のツールバーが出ず保存手段がないため、regular幅だけ出す
+    @ToolbarContentBuilder private var saveToolbar: some ToolbarContent {
+        if horizontalSizeClass == .regular, isEditorFocused {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await viewModel.save() }
+                } label: {
+                    Label("保存", systemImage: "checkmark")
+                }
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(!viewModel.hasUnsavedChanges || viewModel.isSaving)
             }
         }
     }

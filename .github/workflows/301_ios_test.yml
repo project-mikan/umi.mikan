@@ -130,6 +130,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
+      # mtime や絶対パスに依存しない内容ベースのコンパイルキャッシュ。重い依存パッケージの分は Package.resolved が同じ限り使い回せる
+      - name: Cache compilation
+        uses: actions/cache@v6
+        with:
+          path: ios/CompilationCache
+          key: macos-26-compilation-cache-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            macos-26-compilation-cache-
+
       # CI が遅い根本は macos ランナーが非力(3コア)なことなので、ビルドフラグでビルド自体を軽くする:
       #   ONLY_ACTIVE_ARCH=YES  : シミュレータの arm64 のみビルド(不要アーキを削る)
       #   -jobs                 : 論理CPU数まで並列コンパイル
@@ -155,4 +164,6 @@ jobs:
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            SWIFT_COMPILATION_MODE=wholemodule
+            SWIFT_COMPILATION_MODE=wholemodule \
+            COMPILATION_CACHE_ENABLE_CACHING=YES \
+            COMPILATION_CACHE_CAS_PATH="$PWD/ios/CompilationCache"
