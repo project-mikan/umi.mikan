@@ -11,12 +11,13 @@ DEST="pr-${PR_NUMBER}/${HEAD_SHA}"
 MARKER="<!-- ios-screenshots -->"
 
 # 列（端末）と行（画面）の定義。ファイル名は <端末>_<画面>.png（ios/Tests/ScreenshotTests.swift）
-DUO_TITLE="iPhone Duo"
-# iPhone Duo シミュレータがない環境では iPad 上で近似している（capture-screenshots.sh が目印を置く）
-if [ -f "$SCREENSHOT_DIR/.duo-approximation" ]; then
-  DUO_TITLE="iPhone Duo（iPad mini相当で近似）"
+DEVICES=("iphone|iPhone" "iphone-duo|iPhone Duo" "ipad|iPad")
+# CI の Xcode に iPhone Duo のシミュレータがない場合は撮影されないため、列ごと出さない
+NOTE=""
+if ! ls "$SCREENSHOT_DIR"/iphone-duo_*.png >/dev/null 2>&1; then
+  DEVICES=("iphone|iPhone" "ipad|iPad")
+  NOTE="※ CI の Xcode に iPhone Duo のシミュレータがないため、iPhone Duo は撮影していません。"
 fi
-DEVICES=("iphone|iPhone" "iphone-duo|${DUO_TITLE}" "ipad|iPad")
 SCREENS=("home|ホーム" "monthly|月ごと" "search|検索" "detail|詳細モーダル" "settings|設定")
 
 # --- 画像を専用ブランチへ push する ---
@@ -58,6 +59,10 @@ BASE_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${BRANCH}/${DES
   echo "## 📱 iOS スクリーンショット"
   echo
   echo "コミット ${HEAD_SHA:0:7} 時点の画面です（ダミーデータで描画しています）。"
+  if [ -n "$NOTE" ]; then
+    echo
+    echo "$NOTE"
+  fi
   echo
   header="| 画面 |"
   divider="| --- |"

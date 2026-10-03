@@ -7,7 +7,7 @@
 #   - シミュレータの起動はビルドと並行してバックグラウンドで行う
 #   - 全端末への撮影を1回の xcodebuild（ビルド成果物は共有）で行う
 # iPhone Duo のデバイスタイプがある Xcode ではそのシミュレータで撮影する（なければ作成する）。
-# ない Xcode では iPad 上に iPad mini 相当のウィンドウを出して近似し、出力先に .duo-approximation を置く。
+# safe area などが実機と変わってしまうため近似はせず、デバイスタイプがない Xcode では iPhone Duo を撮らない。
 # 任意の環境変数:
 #   DERIVED_DATA_PATH : ビルド成果物の出力先（デフォルト: ios/DerivedData）
 #   SPM_CACHE_DIR     : SPM 依存のクローン先（CI でキャッシュする場合に指定）
@@ -45,7 +45,6 @@ for t in json.load(sys.stdin)['devicetypes']:
 "
 }
 
-rm -f "$OUTPUT_DIR/.duo-approximation"
 DUO_TYPE="$(find_duo_device_type)"
 if [ -n "$DUO_TYPE" ]; then
   duo_name="${DUO_TYPE%%|*}"
@@ -54,11 +53,8 @@ if [ -n "$DUO_TYPE" ]; then
     xcrun simctl create "$duo_name" "${DUO_TYPE#*|}" >/dev/null
   fi
   SIMULATORS+=("$duo_name")
-  export TEST_RUNNER_SCREENSHOT_DUO_APPROXIMATION=0
 else
-  echo "⚠️ iPhone Duo のシミュレータがないため、iPad 上で iPad mini 相当の大きさで近似して撮影します"
-  touch "$OUTPUT_DIR/.duo-approximation"
-  export TEST_RUNNER_SCREENSHOT_DUO_APPROXIMATION=1
+  echo "⚠️ この Xcode には iPhone Duo のシミュレータがないため、iPhone Duo は撮影しません"
 fi
 
 UDIDS=()

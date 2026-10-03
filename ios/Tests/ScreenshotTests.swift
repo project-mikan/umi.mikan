@@ -25,92 +25,41 @@ struct ScreenshotTests {
         defer { ConnectClient.shared.replaceHost(ConnectClient.defaultHost) }
 
         try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
-        // 起動するシミュレータの台数を減らすため、1台で撮れる端末バリエーションはまとめて撮る
-        let variants = ScreenshotVariant.variants(
+        let label = try #require(ScreenshotDevice.label(
             for: UIDevice.current.userInterfaceIdiom,
-            deviceName: ScreenshotEnvironment.simulatorDeviceName,
-            approximatesDuo: ScreenshotEnvironment.approximatesDuo
-        )
-        for variant in variants {
-            let fixture = ScreenshotFixture()
-            let image = try await ScreenshotRenderer.capture(
-                screen.makeView(fixture: fixture),
-                size: variant.size,
-                wait: screen.renderWait
-            )
-            let data = try #require(image.pngData())
-            let fileURL = outputDirectory.appendingPathComponent("\(variant.label)_\(screen.rawValue).png")
-            try data.write(to: fileURL)
-        }
+            deviceName: ScreenshotEnvironment.simulatorDeviceName
+        ))
+        let image = try await ScreenshotRenderer.capture(screen.makeView(fixture: ScreenshotFixture()), wait: screen.renderWait)
+        let data = try #require(image.pngData())
+        try data.write(to: outputDirectory.appendingPathComponent("\(label)_\(screen.rawValue).png"))
     }
 }
 
-/// 撮影する端末バリエーションのテスト（撮影自体と違い、環境変数がなくても常に実行する）
-struct ScreenshotVariantTests {
-    /// variants(for:deviceName:approximatesDuo:) のテーブル駆動テスト用ケース
-    struct VariantCase: Sendable {
+/// 撮影する端末ラベルのテスト（撮影自体と違い、環境変数がなくても常に実行する）
+struct ScreenshotDeviceTests {
+    /// label(for:deviceName:) のテーブル駆動テスト用ケース
+    struct LabelCase: Sendable {
         let name: String
         let idiom: UIUserInterfaceIdiom
         let deviceName: String
-        let approximatesDuo: Bool
-        let expectedLabels: [String]
+        let expected: String?
     }
 
     @Test(
-        "variants: 端末種別・シミュレータ名ごとに撮影する端末バリエーションが決まる",
+        "label: 端末種別とシミュレータ名からファイル名の接頭辞が決まる",
         arguments: [
-            // 通常の iPhone シミュレータでは iPhone の画面だけを撮る
-            VariantCase(
-                name: "正常系: iPhoneシミュレータではiPhoneを撮る",
-                idiom: .phone,
-                deviceName: "iPhone 17",
-                approximatesDuo: false,
-                expectedLabels: ["iphone"]
-            ),
-            // iPhone Duo シミュレータでは実機と同じ画面を iPhone Duo として撮る
-            VariantCase(
-                name: "正常系: iPhone DuoシミュレータではiPhone Duoを撮る",
-                idiom: .phone,
-                deviceName: "iPhone Duo",
-                approximatesDuo: false,
-                expectedLabels: ["iphone-duo"]
-            ),
-            // iPhone Duo シミュレータがある環境では、iPad 上での近似は撮らない
-            VariantCase(
-                name: "正常系: 近似なしのiPadシミュレータではiPadだけを撮る",
-                idiom: .pad,
-                deviceName: "iPad Pro 11-inch (M5)",
-                approximatesDuo: false,
-                expectedLabels: ["ipad"]
-            ),
-            // iPhone Duo シミュレータがない環境では、iPad 上に iPad mini 相当のウィンドウを出して近似する
-            VariantCase(
-                name: "正常系: 近似ありのiPadシミュレータではiPadとiPhone Duoの近似を撮る",
-                idiom: .pad,
-                deviceName: "iPad Pro 11-inch (M5)",
-                approximatesDuo: true,
-                expectedLabels: [
-                    "ipad",
-                    "iphone-duo"
-                ]
-            ),
-            // 想定外の端末では何も撮らない
-            VariantCase(
-                name: "正常系: 想定外の端末では何も撮らない",
-                idiom: .tv,
-                deviceName: "Apple TV",
-                approximatesDuo: true,
-                expectedLabels: []
-            )
+            // 通常の iPhone シミュレータ
+            LabelCase(name: "正常系: iPhoneシミュレータはiphoneになる", idiom: .phone, deviceName: "iPhone 17", expected: "iphone"),
+            // iPhone Duo は iPhone 扱いの端末種別だが、safe area 等が違うため別の列として撮る
+            LabelCase(name: "正常系: iPhone Duoシミュレータはiphone-duoになる", idiom: .phone, deviceName: "iPhone Duo", expected: "iphone-duo"),
+            // iPad シミュレータ
+            LabelCase(name: "正常系: iPadシミュレータはipadになる", idiom: .pad, deviceName: "iPad Pro 11-inch (M5)", expected: "ipad"),
+            // 想定外の端末では撮らない
+            LabelCase(name: "異常系: 想定外の端末を渡すとnilになるので撮影しない", idiom: .tv, deviceName: "Apple TV", expected: nil)
         ]
     )
-    func variants(testCase: VariantCase) {
-        let variants = ScreenshotVariant.variants(
-            for: testCase.idiom,
-            deviceName: testCase.deviceName,
-            approximatesDuo: testCase.approximatesDuo
-        )
-        #expect(variants.map(\.label) == testCase.expectedLabels, "\(testCase.name)")
+    func label(testCase: LabelCase) {
+        #expect(ScreenshotDevice.label(for: testCase.idiom, deviceName: testCase.deviceName) == testCase.expected, "\(testCase.name)")
     }
 }
 
@@ -128,40 +77,24 @@ enum ScreenshotEnvironment {
     static var simulatorDeviceName: String {
         ProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] ?? ""
     }
-
-    /// iPhone Duo シミュレータが使えず、iPad 上で近似して撮るかどうか（撮影スクリプトが設定する）
-    static var approximatesDuo: Bool {
-        ProcessInfo.processInfo.environment["SCREENSHOT_DUO_APPROXIMATION"] == "1"
-    }
 }
 
-// MARK: - 端末バリエーション
+// MARK: - 端末ラベル
 
-/// 撮影する端末バリエーション（label はファイル名の接頭辞に使う）
-struct ScreenshotVariant {
-    /// iPad mini (A17 Pro) の画面サイズ（pt）。iPhone Duo シミュレータがない環境で、開いた状態の近似に使う
-    static let iPadMiniSize = CGSize(width: 744, height: 1133)
-
-    let label: String
-    /// 撮影するウィンドウの大きさ。nil ならシミュレータの画面全体
-    let size: CGSize?
-
-    /// 実行中のシミュレータで撮るバリエーションを返す。
-    /// iPhone Duo シミュレータがない環境（approximatesDuo == true）では、iPad mini 相当のサイズが
-    /// iPad Pro 11インチの画面に収まるため iPad シミュレータ上で近似して撮る
-    /// （ウィンドウシーン自体は regular 幅のままなので、サイズクラスは実機の iPad mini と同じ regular になる）
-    static func variants(for idiom: UIUserInterfaceIdiom, deviceName: String, approximatesDuo: Bool) -> [Self] {
+/// 撮影する端末の判定
+enum ScreenshotDevice {
+    /// 実行中のシミュレータのファイル名接頭辞（iphone / iphone-duo / ipad）を返す。想定外の端末は nil。
+    /// iPhone Duo は近似せず、実機と同じ画面サイズ・safe area を持つ iPhone Duo シミュレータでのみ撮る
+    static func label(for idiom: UIUserInterfaceIdiom, deviceName: String) -> String? {
         switch idiom {
         case .phone:
-            let label = deviceName.localizedCaseInsensitiveContains("Duo") ? "iphone-duo" : "iphone"
-            return [Self(label: label, size: nil)]
+            deviceName.localizedCaseInsensitiveContains("Duo") ? "iphone-duo" : "iphone"
 
         case .pad:
-            let ipad = Self(label: "ipad", size: nil)
-            return approximatesDuo ? [ipad, Self(label: "iphone-duo", size: Self.iPadMiniSize)] : [ipad]
+            "ipad"
 
         default:
-            return []
+            nil
         }
     }
 }
@@ -417,15 +350,13 @@ struct ScreenshotFixture {
 /// テストホストのウィンドウシーン上に最前面のウィンドウを出して drawHierarchy で撮影する。
 @MainActor
 enum ScreenshotRenderer {
-    /// size を指定した場合は画面左上にその大きさのウィンドウを出して撮影する（nil なら画面全体）
-    static func capture(_ view: some View, size: CGSize?, wait: Duration) async throws -> UIImage {
+    static func capture(_ view: some View, wait: Duration) async throws -> UIImage {
         let scene = try #require(
             UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first,
             "テストホストのウィンドウシーンが見つかりません"
         )
         let window = UIWindow(windowScene: scene)
-        let screenBounds = scene.effectiveGeometry.coordinateSpace.bounds
-        window.frame = size.map { CGRect(origin: .zero, size: $0) } ?? screenBounds
+        window.frame = scene.effectiveGeometry.coordinateSpace.bounds
         // テストホスト本体の画面（ログイン画面など）より前面に出す
         window.windowLevel = .alert + 1
         // 実行環境の外観設定で結果が変わらないようライトモードに固定する
