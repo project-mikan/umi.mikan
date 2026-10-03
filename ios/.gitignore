@@ -103,3 +103,4 @@ fabric.properties
 .env.local
 
 screenshots/
+CompilationCache/

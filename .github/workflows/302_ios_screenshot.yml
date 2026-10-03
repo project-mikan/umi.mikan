@@ -49,9 +49,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
+      # mtime や絶対パスに依存しない内容ベースのコンパイルキャッシュ。重い依存パッケージの分は Package.resolved が同じ限り使い回せる
+      - name: Cache compilation
+        uses: actions/cache@v6
+        with:
+          path: ios/CompilationCache
+          key: ${{ matrix.runner }}-compilation-cache-${{ hashFiles('ios/umi.mikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ${{ matrix.runner }}-compilation-cache-
+
       - name: Capture screenshots
         env:
           SPM_CACHE_DIR: ios/SourcePackages
+          COMPILATION_CACHE_DIR: ios/CompilationCache
         run: ios/scripts/capture-screenshots.sh "$RUNNER_TEMP/ios-screenshots" "${{ matrix.device }}"
 
       # 一部の撮影が失敗しても撮れた分は見られるようにする

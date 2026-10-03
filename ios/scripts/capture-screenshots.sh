@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 使い方: ios/scripts/capture-screenshots.sh <出力ディレクトリ> [iphone|ipad|iphone-duo ...]（任意: DERIVED_DATA_PATH, SPM_CACHE_DIR）
+# 使い方: ios/scripts/capture-screenshots.sh <出力ディレクトリ> [iphone|ipad|iphone-duo ...]（任意: DERIVED_DATA_PATH, SPM_CACHE_DIR, COMPILATION_CACHE_DIR）
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
@@ -87,6 +87,10 @@ BUILD_FLAGS=(
 if [ -n "${SPM_CACHE_DIR:-}" ]; then
   BUILD_FLAGS+=(-clonedSourcePackagesDirPath "$SPM_CACHE_DIR" -onlyUsePackageVersionsFromResolvedFile)
 fi
+CACHE_SETTINGS=()
+if [ -n "${COMPILATION_CACHE_DIR:-}" ]; then
+  CACHE_SETTINGS+=(COMPILATION_CACHE_ENABLE_CACHING=YES "COMPILATION_CACHE_CAS_PATH=$(mkdir -p "$COMPILATION_CACHE_DIR" && cd "$COMPILATION_CACHE_DIR" && pwd)")
+fi
 
 # 起動するシミュレータに依存しないよう generic な宛先でビルドする
 xcodebuild build-for-testing "${BUILD_FLAGS[@]}" \
@@ -96,7 +100,8 @@ xcodebuild build-for-testing "${BUILD_FLAGS[@]}" \
   ARCHS=arm64 \
   CODE_SIGNING_ALLOWED=NO \
   COMPILER_INDEX_STORE_ENABLE=NO \
-  SWIFT_COMPILATION_MODE=wholemodule
+  SWIFT_COMPILATION_MODE=wholemodule \
+  ${CACHE_SETTINGS[@]+"${CACHE_SETTINGS[@]}"}
 log "ビルドが完了しました"
 
 if [ -n "$DUO_TYPE" ]; then
