@@ -34,6 +34,8 @@ final class MonthlyViewModel {
 
     private let authViewModel: AuthViewModel
     private let store: LocalDiaryStore
+    /// オンデバイス要約ストア（スクリーンショットテストで実データの要約キャッシュを読まないよう差し替え可能にする）
+    private let summaryStore: DiarySummaryStore
     /// 曜日名フォーマット用（毎回生成するとスクロール時に高コストになるためキャッシュする）
     private let weekdayFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -47,9 +49,10 @@ final class MonthlyViewModel {
     /// JST 固定カレンダー（毎回生成するとスクロール時に高コストになるためキャッシュする）
     private let jstCalendar: Calendar = .jst
 
-    init(authViewModel: AuthViewModel, store: LocalDiaryStore = .shared) {
+    init(authViewModel: AuthViewModel, store: LocalDiaryStore = .shared, summaryStore: DiarySummaryStore = .shared) {
         self.authViewModel = authViewModel
         self.store = store
+        self.summaryStore = summaryStore
         // バックエンドが JST 基準で日付を管理するため JST 固定にする
         let now = Date()
         year = jstCalendar.component(.year, from: now)
@@ -106,7 +109,7 @@ final class MonthlyViewModel {
             guard let entry = entryMap[day] else { return nil }
             return DiarySummaryRequest(key: LocalDiaryEntry.dateKey(entry.date), content: entry.content)
         }
-        DiarySummaryStore.shared.requestSummaries(requests)
+        summaryStore.requestSummaries(requests)
     }
 
     /// 月間まとめを取得する（未生成・エラー時は非表示にするだけ）

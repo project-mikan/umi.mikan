@@ -171,6 +171,10 @@ ios-build-ipad:
 ios-test:
 	xcodebuild test -project $(IOS_PROJECT) -scheme "$(IOS_SCHEME)" -destination "$(IOS_DESTINATION)" -quiet
 
+# iPhone / iPhone Duo（iPad miniで近似） / iPad の各画面スクリーンショットを ios/screenshots/ に保存する
+ios-screenshot:
+	ios/scripts/capture-screenshots.sh ios/screenshots
+
 ios-log:
 	xcrun simctl spawn booted log stream --predicate 'processImagePath contains "umi.mikan"' 2>/dev/null || echo "アプリが起動していません"
 

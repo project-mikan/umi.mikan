@@ -42,13 +42,21 @@ struct HomeView: View {
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
     private let launchState: AppLaunchState?
+    /// 日記のローカルストア（スクリーンショットテストではダミーデータ入りのストアを渡す）
+    private let store: LocalDiaryStore
 
     // swiftlint:disable:next type_contents_order
-    init(authViewModel: AuthViewModel, syncManager: SyncManager, launchState: AppLaunchState? = nil) {
+    init(
+        authViewModel: AuthViewModel,
+        syncManager: SyncManager,
+        launchState: AppLaunchState? = nil,
+        store: LocalDiaryStore = .shared
+    ) {
         self.authViewModel = authViewModel
         self.syncManager = syncManager
         self.launchState = launchState
-        _viewModel = State(initialValue: DiaryViewModel(authViewModel: authViewModel, syncManager: syncManager))
+        self.store = store
+        _viewModel = State(initialValue: DiaryViewModel(authViewModel: authViewModel, syncManager: syncManager, store: store))
         _memoryViewModel = State(initialValue: MemoryViewModel(authViewModel: authViewModel))
     }
 
@@ -115,7 +123,8 @@ struct HomeView: View {
                     items: items,
                     initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
                     authViewModel: authViewModel,
-                    syncManager: syncManager
+                    syncManager: syncManager,
+                    store: store
                 )
             }
         )
@@ -126,7 +135,8 @@ struct HomeView: View {
                 items: items,
                 initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
                 authViewModel: authViewModel,
-                syncManager: syncManager
+                syncManager: syncManager,
+                store: store
             )
         }
         .overlay(alignment: .bottom) {

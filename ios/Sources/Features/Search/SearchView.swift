@@ -14,12 +14,25 @@ struct SearchView: View {
 
     private let authViewModel: AuthViewModel
     private let syncManager: SyncManager
+    /// 日記のローカルストア（スクリーンショットテストではダミーデータ入りのストアを渡す）
+    private let store: LocalDiaryStore
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel, syncManager: SyncManager) {
+        self.init(viewModel: SearchViewModel(authViewModel: authViewModel), authViewModel: authViewModel, syncManager: syncManager)
+    }
+
+    /// ViewModel を外から渡すイニシャライザ（スクリーンショットテストで検索結果を表示した状態にするため）
+    init(
+        viewModel: SearchViewModel,
+        authViewModel: AuthViewModel,
+        syncManager: SyncManager,
+        store: LocalDiaryStore = .shared
+    ) {
         self.authViewModel = authViewModel
         self.syncManager = syncManager
-        _viewModel = State(initialValue: SearchViewModel(authViewModel: authViewModel))
+        self.store = store
+        _viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
@@ -52,7 +65,8 @@ struct SearchView: View {
                 items: items,
                 initialIndex: items.firstIndex { $0.id == item.id } ?? 0,
                 authViewModel: authViewModel,
-                syncManager: syncManager
+                syncManager: syncManager,
+                store: store
             )
         }
     }

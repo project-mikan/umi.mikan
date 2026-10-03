@@ -16,6 +16,8 @@ struct DiaryDetailSheet: View {
     let items: [DiarySheetItem]
     let authViewModel: AuthViewModel
     let syncManager: SyncManager
+    /// 日記のローカルストア（スクリーンショットテストではダミーデータ入りのストアを渡す）
+    let store: LocalDiaryStore
 
     /// 現在表示中の日記のインデックス
     @State private var index: Int
@@ -34,17 +36,25 @@ struct DiaryDetailSheet: View {
     private var horizontalSizeClass
 
     // swiftlint:disable:next type_contents_order
-    init(items: [DiarySheetItem], initialIndex: Int, authViewModel: AuthViewModel, syncManager: SyncManager) {
+    init(
+        items: [DiarySheetItem],
+        initialIndex: Int,
+        authViewModel: AuthViewModel,
+        syncManager: SyncManager,
+        store: LocalDiaryStore = .shared
+    ) {
         self.items = items
         self.authViewModel = authViewModel
         self.syncManager = syncManager
+        self.store = store
         // 範囲外のインデックスが渡されても落ちないように丸める
         let resolvedIndex = min(max(initialIndex, 0), max(items.count - 1, 0))
         _index = State(initialValue: resolvedIndex)
         _viewModel = State(initialValue: DiaryDetailViewModel(
             date: items[resolvedIndex].date,
             authViewModel: authViewModel,
-            syncManager: syncManager
+            syncManager: syncManager,
+            store: store
         ))
     }
 
@@ -183,7 +193,8 @@ struct DiaryDetailSheet: View {
             let nextViewModel = DiaryDetailViewModel(
                 date: items[newIndex].date,
                 authViewModel: authViewModel,
-                syncManager: syncManager
+                syncManager: syncManager,
+                store: store
             )
             slideInEdge = edge
             withAnimation(Self.slideAnimation) {

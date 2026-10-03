@@ -8,6 +8,7 @@ on:
       - "ios/**"
       - "proto/**"
       - ".github/workflows/301_ios_test.yml"
+      - ".github/scripts/ios-screenshot-comment.sh"
   # main のキャッシュ(SPM 依存のクローン)は全 PR から参照できるため、push でキャッシュを温めておく
   push:
     branches:
@@ -106,6 +107,9 @@ jobs:
 
   test:
     runs-on: macos-26
+    permissions:
+      contents: write # スクリーンショット画像を ios-screenshots ブランチへ push する
+      pull-requests: write # スクリーンショットを PR にコメントする
 
     steps:
       - uses: actions/checkout@v7
@@ -139,6 +143,7 @@ jobs:
       #     ファイル単位コンパイルより、モジュール一括コンパイルの方が総仕事量が少なく速い
       #   -onlyUsePackageVersionsFromResolvedFile : Package.resolved のバージョンをそのまま使い、
       #     依存解決(バージョン再計算)を省く
+      #   -derivedDataPath : 後続のスクリーンショット撮影で同じビルド成果物を再利用する
       # 並列テスト(シミュレータのクローン作成)は無効化し、事前ブート済みのシミュレータを使う。
       # 生成物(ios/Sources/Proto/*)はコミット済みなのでここでは再生成しない(verify-proto で検証)
       - name: Run tests
@@ -151,8 +156,38 @@ jobs:
             -parallel-testing-enabled NO \
             -clonedSourcePackagesDirPath ios/SourcePackages \
             -onlyUsePackageVersionsFromResolvedFile \
+            -derivedDataPath ios/DerivedData \
             -quiet \
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             SWIFT_COMPILATION_MODE=wholemodule
+
+      # 人間が PR 上で見た目を確認するためのスクリーンショット（合否判定はしない）。
+      # 上のテストでビルドした成果物を使い回し、iPhone / iPhone Duo（iPad miniで近似） / iPad で撮影する。
+      # 撮影の失敗でテスト結果を落とさないよう continue-on-error にする
+      - name: Capture screenshots
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          DERIVED_DATA_PATH: ios/DerivedData
+        run: ios/scripts/capture-screenshots.sh "$RUNNER_TEMP/ios-screenshots" --skip-build
+
+      - name: Upload screenshots
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-screenshots
+          path: ${{ runner.temp }}/ios-screenshots/*.png
+          if-no-files-found: ignore
+
+      # フォーク元からの PR はトークンに書き込み権限がないため、artifact のみとしコメントはしない
+      - name: Comment screenshots on PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: .github/scripts/ios-screenshot-comment.sh "$RUNNER_TEMP/ios-screenshots"

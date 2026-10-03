@@ -7,10 +7,15 @@ struct SettingsView: View {
 
     // swiftlint:disable:next type_contents_order
     init(authViewModel: AuthViewModel) {
-        _viewModel = State(initialValue: SettingsViewModel(
+        self.init(viewModel: SettingsViewModel(
             authViewModel: authViewModel,
             notificationManager: MemoryNotificationManager.shared
         ))
+    }
+
+    /// ViewModel を外から渡すイニシャライザ（スクリーンショットテストでユーザー情報を表示した状態にするため）
+    init(viewModel: SettingsViewModel) {
+        _viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
