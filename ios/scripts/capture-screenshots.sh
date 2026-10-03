@@ -66,7 +66,8 @@ boot_in_background() {
 }
 
 DESTINATIONS=()
-for name in "${SIMULATORS[@]}"; do
+# macOS の bash 3.2 は set -u で空配列を展開するとエラーになるため ${arr[@]+...} で囲む
+for name in ${SIMULATORS[@]+"${SIMULATORS[@]}"}; do
   udid="$(find_udid "$name")"
   if [ -z "$udid" ]; then
     echo "::error::シミュレータ ${name} が見つかりません" >&2
@@ -120,7 +121,7 @@ if [ "${#DESTINATIONS[@]}" -eq 0 ]; then
   exit 0
 fi
 
-for i in "${!BOOT_PIDS[@]}"; do
+for i in ${BOOT_PIDS[@]+"${!BOOT_PIDS[@]}"}; do
   if ! wait "${BOOT_PIDS[$i]}"; then
     echo "::error::シミュレータ ${BOOT_NAMES[$i]} の起動に失敗しました" >&2
     exit 1
