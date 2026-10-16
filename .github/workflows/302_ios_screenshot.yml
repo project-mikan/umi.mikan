@@ -22,6 +22,8 @@ jobs:
     name: screenshot (${{ matrix.device }})
     # iPhone Duo のため Xcode 27.1 が要り、比較しやすいよう全端末を揃える。イメージは preview（actions/runner-images#14404）なので macos-27 が GA したら移行
     runs-on: xcode-27
+    # 正常時は最も遅い iPhone Duo でも約12分。ハングしても枠を占有し続けないよう打ち切る
+    timeout-minutes: 25
     permissions:
       contents: write # スクリーンショット画像を ios-screenshots ブランチへ push する
       pull-requests: write # スクリーンショットを PR にコメントする

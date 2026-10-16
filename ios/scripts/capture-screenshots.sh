@@ -140,6 +140,9 @@ TEST_RUNNER_SCREENSHOT_OUTPUT_DIR="$OUTPUT_DIR" \
     "${DESTINATIONS[@]}" \
     -maximum-concurrent-test-simulator-destinations 1 \
     -only-testing:umi.mikanTests/ScreenshotTests \
-    -parallel-testing-enabled NO
+    -parallel-testing-enabled NO \
+    -test-timeouts-enabled YES \
+    -default-test-execution-time-allowance 60 \
+    -maximum-test-execution-time-allowance 120
 log "撮影が完了しました: ${OUTPUT_DIR}"
 ls -1 "$OUTPUT_DIR"
