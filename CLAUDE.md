@@ -284,7 +284,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **diary_embeddings**: Per-chunk vector embeddings for semantic search (pgvector halfvec)
 - **semantic_search_logs**: Tracks semantic search API requests per user
 - **Migrations**: Numbered SQL files in /schema directory — **one file per table, always**
-- **`make db-apply` caveat**: if pg-schema-diff tries `ALTER EXTENSION "vector" UPDATE TO "0.7.4"` and fails (the running DB already has pgvector 0.8.x, which has no downgrade path), apply the remaining statements shown by `make db-diff` manually with `docker compose exec -T postgres psql ...` / `postgres_test`
+- **`make db-apply` caveat**: the postgres image used to be pinned to `pgvector/pgvector:0.7.4-pg17` while the DB already had pgvector 0.8.x, so pg-schema-diff tried `ALTER EXTENSION "vector" UPDATE TO "0.7.4"` and failed (no downgrade path). The image is now `pgvector/pgvector:pg17` (latest pgvector for PostgreSQL 17). If the same error appears again, apply the remaining statements shown by `make db-diff` manually with `docker compose exec -T postgres psql ...` / `postgres_test`
 
 ### Async Processing Architecture
 
@@ -438,6 +438,14 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - 2013: ConnectRPC (iOS/外部クライアント向け)
   - 2014: MCP Server (AIクライアント向け)
 - **Custom services**: New services should use available ports in the 2000 range (e.g., 2015+)
+
+### Docker Image Tag Policy
+
+- **Specify Docker images by major-version tag only**: In `compose.yml` and Dockerfiles, use tags like `node:26-slim` / `postgres:17`, not minor or patch tags like `node:26.9.0-slim`
+- **Why**: `docker pull` (or `docker compose pull`) then picks up minor/patch releases (including security fixes) automatically, without editing files
+- **Avoid minor/patch pins as much as possible**: Pin a more specific tag only when there is a concrete reason (e.g. a known regression in a newer release), and leave a comment explaining why
+- **When no major tag is published**: use the coarsest tag that is published and leave a comment in `compose.yml` (`grafana/grafana:13.2` — minor is the coarsest; `grafana/alloy:latest` — only patch tags exist; `cloudflare/cloudflared:latest` — calendar versioning). For pgvector, `pg17` tracks the latest pgvector for PostgreSQL 17
+- **Exception — Go images**: `golang:1.27.3` etc. are intentionally pinned to the patch version (Go's major is always `1`, so a major tag would jump across Go releases)
 
 ### Internationalization (i18n)
 
