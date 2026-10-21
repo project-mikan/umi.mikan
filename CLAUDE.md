@@ -439,6 +439,12 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
   - 2014: MCP Server (AIクライアント向け)
 - **Custom services**: New services should use available ports in the 2000 range (e.g., 2015+)
 
+### Docker Image Tag Policy
+
+- **Specify Docker images by major-version tag only**: In `compose.yml` and Dockerfiles, use tags like `node:26-slim` / `postgres:17`, not minor or patch tags like `node:26.9.0-slim`
+- **Why**: `docker pull` (or `docker compose pull`) then picks up minor/patch releases (including security fixes) automatically, without editing files
+- **Avoid minor/patch pins as much as possible**: Pin a more specific tag only when there is a concrete reason (e.g. a known regression in a newer release), and leave a comment explaining why
+
 ### Internationalization (i18n)
 
 - **Always use i18n for user-facing text**: Use `$_("key")` for all UI text

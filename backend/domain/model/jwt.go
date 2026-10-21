@@ -46,14 +46,17 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	}
 	jwtSecret := []byte(jwtS)
 
+	// exp/iat/nbf/ExpiresIn の基準時刻を揃えるため一度だけ取得する
+	now := time.Now()
+
 	// --- Access Token の生成 ---
-	accessTokenExpiration := time.Now().Add(accessTokenExpirationMinutes)
+	accessTokenExpiration := now.Add(accessTokenExpirationMinutes)
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenUse:  tokenUseAccess,
 		ExpiresAt: jwt.NewNumericDate(accessTokenExpiration),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		NotBefore: jwt.NewNumericDate(time.Now()),
+		IssuedAt:  jwt.NewNumericDate(now),
+		NotBefore: jwt.NewNumericDate(now),
 		Subject:   userID,
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
@@ -63,13 +66,13 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	}
 
 	// --- Refresh Token の生成 ---
-	refreshTokenExpiration := time.Now().Add(refreshTokenExpirationDays)
+	refreshTokenExpiration := now.Add(refreshTokenExpirationDays)
 	refreshClaims := &Claims{
 		UserID:    userID,
 		TokenUse:  tokenUseRefresh,
 		ExpiresAt: jwt.NewNumericDate(refreshTokenExpiration),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		NotBefore: jwt.NewNumericDate(time.Now()),
+		IssuedAt:  jwt.NewNumericDate(now),
+		NotBefore: jwt.NewNumericDate(now),
 		Subject:   userID,
 		Issuer:    "your-app-issuer",
 	}
@@ -82,7 +85,7 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	return &TokenDetails{
 		AccessToken:  signedAccessToken,
 		TokenType:    "Bearer",
-		ExpiresIn:    accessTokenExpiration.Unix() - time.Now().Unix(), // 秒単位の残り時間を返す
+		ExpiresIn:    accessTokenExpiration.Unix() - now.Unix(), // 秒単位の残り時間を返す
 		RefreshToken: signedRefreshToken,
 	}, nil
 }
@@ -95,14 +98,17 @@ func GenerateAccessToken(userID string) (*TokenDetails, error) {
 	}
 	jwtSecret := []byte(jwtS)
 
+	// exp/iat/nbf/ExpiresIn の基準時刻を揃えるため一度だけ取得する
+	now := time.Now()
+
 	// --- Access Token の生成 ---
-	accessTokenExpiration := time.Now().Add(accessTokenExpirationMinutes)
+	accessTokenExpiration := now.Add(accessTokenExpirationMinutes)
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenUse:  tokenUseAccess,
 		ExpiresAt: jwt.NewNumericDate(accessTokenExpiration),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		NotBefore: jwt.NewNumericDate(time.Now()),
+		IssuedAt:  jwt.NewNumericDate(now),
+		NotBefore: jwt.NewNumericDate(now),
 		Subject:   userID,
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
@@ -113,8 +119,8 @@ func GenerateAccessToken(userID string) (*TokenDetails, error) {
 	return &TokenDetails{
 		AccessToken:  signedAccessToken,
 		TokenType:    "Bearer",
-		ExpiresIn:    accessTokenExpiration.Unix() - time.Now().Unix(), // 秒単位の残り時間を返す
-		RefreshToken: "",                                               // RefreshTokenは変更しない
+		ExpiresIn:    accessTokenExpiration.Unix() - now.Unix(), // 秒単位の残り時間を返す
+		RefreshToken: "",                                        // RefreshTokenは変更しない
 	}, nil
 }
 
