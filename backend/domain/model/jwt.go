@@ -49,14 +49,12 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	// --- Access Token の生成 ---
 	accessTokenExpiration := time.Now().Add(accessTokenExpirationMinutes)
 	accessClaims := &Claims{
-		UserID:   userID,
-		TokenUse: tokenUseAccess,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(accessTokenExpiration),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Subject:   userID,
-		},
+		UserID:    userID,
+		TokenUse:  tokenUseAccess,
+		ExpiresAt: jwt.NewNumericDate(accessTokenExpiration),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Subject:   userID,
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	signedAccessToken, err := accessToken.SignedString(jwtSecret)
@@ -67,15 +65,13 @@ func GenerateAuthTokens(userID string) (*TokenDetails, error) {
 	// --- Refresh Token の生成 ---
 	refreshTokenExpiration := time.Now().Add(refreshTokenExpirationDays)
 	refreshClaims := &Claims{
-		UserID:   userID,
-		TokenUse: tokenUseRefresh,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(refreshTokenExpiration),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Subject:   userID,
-			Issuer:    "your-app-issuer",
-		},
+		UserID:    userID,
+		TokenUse:  tokenUseRefresh,
+		ExpiresAt: jwt.NewNumericDate(refreshTokenExpiration),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Subject:   userID,
+		Issuer:    "your-app-issuer",
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	signedRefreshToken, err := refreshToken.SignedString(jwtSecret)
@@ -102,14 +98,12 @@ func GenerateAccessToken(userID string) (*TokenDetails, error) {
 	// --- Access Token の生成 ---
 	accessTokenExpiration := time.Now().Add(accessTokenExpirationMinutes)
 	accessClaims := &Claims{
-		UserID:   userID,
-		TokenUse: tokenUseAccess,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(accessTokenExpiration),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Subject:   userID,
-		},
+		UserID:    userID,
+		TokenUse:  tokenUseAccess,
+		ExpiresAt: jwt.NewNumericDate(accessTokenExpiration),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Subject:   userID,
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	signedAccessToken, err := accessToken.SignedString(jwtSecret)
