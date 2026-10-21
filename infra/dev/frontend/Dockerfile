@@ -1,4 +1,4 @@
-FROM node:26.9.0-bookworm-slim
+FROM node:26-slim
 RUN npm install -g corepack@latest
 RUN corepack enable
 RUN pnpm config set store-dir ${PNPM_HOME}/store

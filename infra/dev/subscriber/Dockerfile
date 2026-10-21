@@ -1,4 +1,4 @@
-FROM golang:1.26.1
+FROM golang:1.27.3
 WORKDIR /backend
 RUN go install github.com/air-verse/air@latest
 CMD ["air", "-c", ".air-subscriber.toml"]
