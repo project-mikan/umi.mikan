@@ -46,7 +46,7 @@ services:
       - internal
 
   postgres:
-    image: pgvector/pgvector:0.7.4-pg17
+    image: pgvector/pgvector:pg17
     platform: linux/amd64
     restart: unless-stopped
     environment:
@@ -127,7 +127,7 @@ services:
       - internal
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3
     restart: unless-stopped
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -146,7 +146,7 @@ services:
       - internal
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.2 # メジャー単位のタグが公開されていないためマイナー指定
     restart: unless-stopped
     ports:
       - "2008:3000"
@@ -189,7 +189,7 @@ services:
       - internal
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3
     restart: unless-stopped
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
@@ -200,7 +200,7 @@ services:
       - internal
 
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:latest # メジャー・マイナー単位のタグが公開されていないためlatest
     restart: unless-stopped
     volumes:
       - ./monitoring/alloy/alloy-config.alloy:/etc/alloy/config.alloy
@@ -215,7 +215,7 @@ services:
 
   tunnel:
     restart: always
-    image: cloudflare/cloudflared
+    image: cloudflare/cloudflared:latest # 年月ベースのバージョンでメジャーの概念がないためlatest
     command: tunnel run
     depends_on:
       - frontend
