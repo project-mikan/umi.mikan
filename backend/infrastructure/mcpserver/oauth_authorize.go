@@ -1,6 +1,7 @@
 package mcpserver
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 
@@ -49,6 +50,7 @@ func newAuthorizeHandler(redisClient rueidis.Client, frontendBaseURL string) htt
 		// code_verifierを用意するこのシナリオを防げない）。
 		registered, err := isRegisteredRedirectURI(r.Context(), redisClient, clientID, redirectURI)
 		if err != nil {
+			log.Printf("mcp oauth authorize: failed to verify redirect_uri: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to verify redirect_uri")
 			return
 		}
@@ -59,6 +61,7 @@ func newAuthorizeHandler(redisClient rueidis.Client, frontendBaseURL string) htt
 
 		dest, err := url.Parse(frontendBaseURL + frontendConsentPath)
 		if err != nil {
+			log.Printf("mcp oauth authorize: invalid frontend base URL: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "invalid frontend base URL")
 			return
 		}

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/redis/rueidis"
@@ -64,10 +65,12 @@ func newRegisterHandler(redisClient rueidis.Client) http.HandlerFunc {
 
 		clientID, err := generateClientID()
 		if err != nil {
+			log.Printf("mcp oauth register: failed to generate client_id: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to generate client_id")
 			return
 		}
 		if err := storeClientRegistration(r.Context(), redisClient, clientID, req.RedirectURIs); err != nil {
+			log.Printf("mcp oauth register: failed to store client registration: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to store client registration")
 			return
 		}

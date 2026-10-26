@@ -2,6 +2,7 @@ package mcpserver
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -64,6 +65,7 @@ func newTokenHandler(redisClient rueidis.Client, userService *user.UserEntry) ht
 
 		data, ok, err := consumeAuthCode(r.Context(), redisClient, code)
 		if err != nil {
+			log.Printf("mcp oauth token: failed to look up authorization code: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to look up authorization code")
 			return
 		}
@@ -92,12 +94,14 @@ func newTokenHandler(redisClient rueidis.Client, userService *user.UserEntry) ht
 
 		userID, err := uuid.Parse(data.UserID)
 		if err != nil {
+			log.Printf("mcp oauth token: invalid user id in authorization code: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "invalid user id")
 			return
 		}
 
 		key, plainKey, err := userService.CreateApiKeyForUser(r.Context(), userID, newOAuthApiKeyName(time.Now()))
 		if err != nil {
+			log.Printf("mcp oauth token: failed to issue access token: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to issue access token")
 			return
 		}
