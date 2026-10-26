@@ -9,17 +9,23 @@ import {
   REFRESH_TOKEN_COOKIE_OPTIONS,
 } from "$lib/utils/cookie-utils";
 import { validateCSRFToken } from "$lib/server/csrf";
+import { getSafeRedirectPath } from "$lib/utils/redirect-utils";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ parent }) => {
+// redirectTo はMCP OAuthの同意画面など、ログイン後に元の画面へ戻す必要がある場合に付与される。
+// 同一サイト内のパスのみ許可する（getSafeRedirectPath参照）。
+export const load: PageServerLoad = async ({ parent, url }) => {
   const { isAuthenticated } = await parent();
   if (isAuthenticated) {
-    throw redirect(302, "/");
+    throw redirect(
+      302,
+      getSafeRedirectPath(url.searchParams.get("redirectTo")),
+    );
   }
 };
 
 export const actions: Actions = {
-  default: async ({ request, cookies }) => {
+  default: async ({ request, cookies, url }) => {
     const data = await request.formData();
     const email = data.get("email") as string;
     const password = data.get("password") as string;
@@ -63,6 +69,6 @@ export const actions: Actions = {
       });
     }
 
-    redirect(303, "/");
+    redirect(303, getSafeRedirectPath(url.searchParams.get("redirectTo")));
   },
 };
