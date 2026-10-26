@@ -1,6 +1,7 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import "$lib/i18n";
+  import { browser } from "$app/environment";
   import { enhance } from "$app/forms";
   import { page } from "$app/stores";
   import Alert from "$lib/components/atoms/Alert.svelte";
@@ -27,10 +28,16 @@
     }
   })();
 
+  // WebViewなどCookieを共有しない環境では未ログインから始まるため、
+  // ログイン後にこの同意画面（OAuthパラメータ付き）へ戻れるようにする。
+  $: loginHref = `/login?redirectTo=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
+
   // action成功時にauthorization codeを含むredirect_uriへ遷移する。
   // SvelteKitのuse:enhanceはactionの戻り値をformに反映するだけで自動遷移はしないため、
   // ここで明示的にwindow.location.hrefを更新してMCPクライアント側に戻す。
-  $: if (form?.success && form.redirectUrl) {
+  // `$:` はSSR時にも評価されるため、window参照はブラウザでのみ行う
+  // （未ログインのWebView等で初回アクセス時にSSRが500になっていた）。
+  $: if (browser && form?.success && form.redirectUrl) {
     window.location.href = form.redirectUrl;
   }
 
@@ -38,7 +45,7 @@
   // SameSite=StrictのログインCookieが送信されず未ログイン判定になるため、
   // 同一オリジンへの自己リダイレクトを一度だけ行い「同一サイトナビゲーション」として
   // 再読み込みさせる（retry=1を付与し、無限ループを防ぐ）。
-  $: if (data.needsSameSiteRetry) {
+  $: if (browser && data.needsSameSiteRetry) {
     const retryUrl = new URL($page.url);
     retryUrl.searchParams.set("retry", "1");
     window.location.replace(retryUrl.toString());
@@ -74,7 +81,7 @@
 				<p class="text-center text-gray-700 dark:text-gray-300">
 					{$_("mcpOAuth.loginRequired")}
 				</p>
-				<Link href="/login" variant="primary">
+				<Link href={loginHref} variant="primary">
 					{$_("mcpOAuth.goToLogin")}
 				</Link>
 			{:else}

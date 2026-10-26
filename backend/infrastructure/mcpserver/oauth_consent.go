@@ -2,6 +2,7 @@ package mcpserver
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -72,6 +73,7 @@ func newConsentHandler(redisClient rueidis.Client) http.HandlerFunc {
 		// 折り返しているだけ）ため、authorization code発行前に再度確認する。
 		registered, err := isRegisteredRedirectURI(r.Context(), redisClient, req.ClientID, req.RedirectURI)
 		if err != nil {
+			log.Printf("mcp oauth consent: failed to verify redirect_uri: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to verify redirect_uri")
 			return
 		}
@@ -82,6 +84,7 @@ func newConsentHandler(redisClient rueidis.Client) http.HandlerFunc {
 
 		code, err := generateAuthCode()
 		if err != nil {
+			log.Printf("mcp oauth consent: failed to generate authorization code: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to generate authorization code")
 			return
 		}
@@ -92,12 +95,14 @@ func newConsentHandler(redisClient rueidis.Client) http.HandlerFunc {
 			CodeChallenge:       req.CodeChallenge,
 			CodeChallengeMethod: req.CodeChallengeMethod,
 		}); err != nil {
+			log.Printf("mcp oauth consent: failed to store authorization code: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to store authorization code")
 			return
 		}
 
 		dest, err := url.Parse(req.RedirectURI)
 		if err != nil {
+			log.Printf("mcp oauth consent: invalid redirect_uri: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "invalid redirect_uri")
 			return
 		}
