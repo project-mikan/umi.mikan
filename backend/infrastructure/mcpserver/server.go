@@ -80,5 +80,5 @@ func NewHTTPHandler(diaryService *diary.DiaryEntry, db *sql.DB, redisClient ruei
 	mux.HandleFunc(oauthConsentPath, newConsentHandler(redisClient))
 	mux.HandleFunc(oauthTokenPath, newTokenHandler(redisClient, userService))
 
-	return mux
+	return AccessLogMiddleware(mux)
 }
