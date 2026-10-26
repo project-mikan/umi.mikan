@@ -317,27 +317,53 @@ func TestNewTokenHandler(t *testing.T) {
 
 func TestNewOAuthApiKeyName(t *testing.T) {
 	tests := []struct {
-		name string
-		now  time.Time
-		want string
+		name        string
+		redirectURI string
+		now         time.Time
+		want        string
 	}{
 		{
-			name: "正常系: JSTの日時が接尾辞としてキー名に付与される",
-			now:  time.Date(2026, 7, 21, 12, 34, 0, 0, time.UTC),
-			want: "MCP OAuth (Claude connector) 2026-07-21 21:34",
+			name:        "正常系: redirect_uriのホストとJSTの日時がキー名に付与される",
+			redirectURI: "https://claude.ai/api/mcp/auth_callback",
+			now:         time.Date(2026, 7, 21, 12, 34, 0, 0, time.UTC),
+			want:        "MCP OAuth (claude.ai) 2026-07-21 21:34",
 		},
 		{
-			name: "正常系: UTCで日付が変わる時刻でもJSTの日付に変換される",
-			now:  time.Date(2026, 7, 21, 15, 30, 0, 0, time.UTC),
-			want: "MCP OAuth (Claude connector) 2026-07-22 00:30",
+			name:        "正常系: UTCで日付が変わる時刻でもJSTの日付に変換される",
+			redirectURI: "https://agent.meta.ai/api/hatch/oauth/callback",
+			now:         time.Date(2026, 7, 21, 15, 30, 0, 0, time.UTC),
+			want:        "MCP OAuth (agent.meta.ai) 2026-07-22 00:30",
+		},
+		{
+			name:        "正常系: ポート番号はキー名に含めない",
+			redirectURI: "http://localhost:6274/oauth/callback",
+			now:         time.Date(2026, 7, 21, 12, 34, 0, 0, time.UTC),
+			want:        "MCP OAuth (localhost) 2026-07-21 21:34",
+		},
+		{
+			name:        "異常系: ホストを取り出せないredirect_uriはunknownになる",
+			redirectURI: "%%invalid",
+			now:         time.Date(2026, 7, 21, 12, 34, 0, 0, time.UTC),
+			want:        "MCP OAuth (unknown) 2026-07-21 21:34",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := newOAuthApiKeyName(tt.now)
+			got := newOAuthApiKeyName(tt.redirectURI, tt.now)
 			if got != tt.want {
 				t.Errorf("newOAuthApiKeyName() = %q, want %q", got, tt.want)
 			}
 		})
 	}
+
+	t.Run("正常系: ホスト名が長くてもキー名はuser_api_keys.nameの上限（100文字）に収まるため、トークン発行が失敗しない", func(t *testing.T) {
+		longHost := strings.Repeat("a", 200) + ".example.com"
+		got := newOAuthApiKeyName("https://"+longHost+"/callback", time.Date(2026, 7, 21, 12, 34, 0, 0, time.UTC))
+		if n := len([]rune(got)); n != oauthApiKeyNameMaxLength {
+			t.Errorf("キー名の文字数が上限ちょうどになっていない: got %d, want %d (%q)", n, oauthApiKeyNameMaxLength, got)
+		}
+		if !strings.HasPrefix(got, "MCP OAuth (aaaa") || !strings.HasSuffix(got, ") 2026-07-21 21:34") {
+			t.Errorf("切り詰め後のキー名の形式が想定外: %q", got)
+		}
+	})
 }

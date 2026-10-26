@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,18 +12,38 @@ import (
 	"github.com/redis/rueidis"
 )
 
-// oauthApiKeyNamePrefix はOAuthフロー経由で発行されるAPIキーの名前接頭辞。
-// user_api_keys.name に保存され、設定ページのAPIキー一覧にも他のキーと並んで表示される
-// （どのキーがどのMCPクライアント接続由来か利用者が判別できるようにするため）。
-// 発行日時（JST・分単位）を付与するのは、同じユーザーが複数回接続・再認可した際に
+// oauthApiKeyNameFormat はOAuthフロー経由で発行されるAPIキーの名前の書式（接続元ホスト・発行日時）。
+// user_api_keys.name に保存され、設定ページのAPIキー一覧にも他のキーと並んで表示される。
+// 接続元はClaude.ai以外のMCPクライアント（Meta AIなど）もありうるため、どのクライアント
+// 由来のキーか判別できるようredirect_uriのホストを含める。
+// 発行日時（JST・分単位）を付与するのは、同じクライアントから複数回接続・再認可した際に
 // user_api_keys.name にUNIQUE制約が無く同名レコードが複数並んでしまい、
 // 設定ページでどれを失効すべきか判別できなくなるのを防ぐため。
-const oauthApiKeyNamePrefix = "MCP OAuth (Claude connector)"
+const oauthApiKeyNameFormat = "MCP OAuth (%s) %s"
 
-// newOAuthApiKeyName は現在時刻（JST）を付与したOAuth用APIキー名を生成する。
-func newOAuthApiKeyName(now time.Time) string {
+// oauthApiKeyNameDateLayout はキー名に付与する発行日時の書式
+const oauthApiKeyNameDateLayout = "2006-01-02 15:04"
+
+// oauthApiKeyNameMaxLength はキー名の最大文字数（user_api_keys.nameのVARCHAR(100)）。
+// これを超えるとCreateApiKeyForUserがエラーを返しトークン発行が失敗するため、
+// ホスト名が長い場合は切り詰めて収める。
+const oauthApiKeyNameMaxLength = 100
+
+// newOAuthApiKeyName はredirect_uriのホストと現在時刻（JST）を付与したOAuth用APIキー名を生成する。
+func newOAuthApiKeyName(redirectURI string, now time.Time) string {
 	jst := time.FixedZone("JST", 9*60*60)
-	return fmt.Sprintf("%s %s", oauthApiKeyNamePrefix, now.In(jst).Format("2006-01-02 15:04"))
+	date := now.In(jst).Format(oauthApiKeyNameDateLayout)
+
+	host := "unknown"
+	if u, err := url.Parse(redirectURI); err == nil && u.Hostname() != "" {
+		host = u.Hostname()
+	}
+	// 書式中の固定部分と日時を除いた残りの文字数にホスト名を収める
+	maxHostLength := oauthApiKeyNameMaxLength - len([]rune(fmt.Sprintf(oauthApiKeyNameFormat, "", date)))
+	if hostRunes := []rune(host); len(hostRunes) > maxHostLength {
+		host = string(hostRunes[:maxHostLength])
+	}
+	return fmt.Sprintf(oauthApiKeyNameFormat, host, date)
 }
 
 // tokenResponse はRFC6749 5.1節 (Successful Response) の必要最小限のフィールド。
@@ -99,7 +120,7 @@ func newTokenHandler(redisClient rueidis.Client, userService *user.UserEntry) ht
 			return
 		}
 
-		key, plainKey, err := userService.CreateApiKeyForUser(r.Context(), userID, newOAuthApiKeyName(time.Now()))
+		key, plainKey, err := userService.CreateApiKeyForUser(r.Context(), userID, newOAuthApiKeyName(data.RedirectURI, time.Now()))
 		if err != nil {
 			log.Printf("mcp oauth token: failed to issue access token: %v", err)
 			writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to issue access token")

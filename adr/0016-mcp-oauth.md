@@ -35,7 +35,7 @@ Claude.aiからumi.mikanのMCPサーバーに接続するには、この一連�
   APIキーをそのままOAuthの `access_token` として返す。これにより、MCPサーバーの既存の認証
   ミドルウェア（`AuthMiddleware`、`backend/infrastructure/mcpserver/auth.go`）は無改造のまま、
   OAuth経由のトークンも他のAPIキーと同じ90日有効期限・設定ページからの一覧表示/失効の対象になる
-  （キー名は固定文字列 `"MCP OAuth (Claude connector)"` で判別できるようにする）。
+  （キー名は `MCP OAuth (<redirect_uriのホスト>) <発行日時>` とし、Claude.ai以外のMCPクライアントから接続された場合もどのクライアント由来か判別できるようにする。当初は固定文字列 `"MCP OAuth (Claude connector)"` だったが、Meta AIなど他のクライアントも同じ名前になり区別できなかったため変更した）。
 - **同意画面は既存フロントエンドのログインセッションを再利用**: 新しい認証UIを作らず、
   SvelteKitの `/oauth/authorize` ページ（`frontend/src/routes/oauth/authorize/`）で
   既存のCookieベースのログイン状態（`ensureValidAccessToken`）を確認し、未ログインなら

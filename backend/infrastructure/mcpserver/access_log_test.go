@@ -56,4 +56,26 @@ func TestAccessLogMiddleware(t *testing.T) {
 			t.Errorf("アクセスログが想定外: %q", buf.String())
 		}
 	})
+
+	t.Run("正常系: Unwrapで元のWriterを取り出せるため、http.NewResponseControllerが元のWriterの機能を使える", func(t *testing.T) {
+		inner := httptest.NewRecorder()
+		rec := &statusRecorder{ResponseWriter: inner, status: http.StatusOK}
+		if rec.Unwrap() != inner {
+			t.Error("Unwrapが元のWriterを返していない")
+		}
+	})
+
+	t.Run("正常系: 元のWriterがFlushに対応していなくてもFlushでパニックしない", func(t *testing.T) {
+		rec := &statusRecorder{ResponseWriter: nonFlushingWriter{httptest.NewRecorder()}, status: http.StatusOK}
+		rec.Flush()
+	})
 }
+
+// nonFlushingWriter はhttp.Flusherを実装しないResponseWriter
+type nonFlushingWriter struct {
+	inner *httptest.ResponseRecorder
+}
+
+func (w nonFlushingWriter) Header() http.Header         { return w.inner.Header() }
+func (w nonFlushingWriter) Write(b []byte) (int, error) { return w.inner.Write(b) }
+func (w nonFlushingWriter) WriteHeader(status int)      { w.inner.WriteHeader(status) }
