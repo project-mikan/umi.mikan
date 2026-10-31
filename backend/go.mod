@@ -3,21 +3,21 @@ module github.com/project-mikan/umi.mikan/backend
 go 1.27.3
 
 require (
-	connectrpc.com/connect v1.21.0
-	github.com/alicebob/miniredis/v2 v2.39.0
+	connectrpc.com/connect v1.21.1
+	github.com/alicebob/miniredis/v2 v2.40.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.12.3
 	github.com/modelcontextprotocol/go-sdk v1.8.0
-	github.com/prometheus/client_golang v1.24.1
-	github.com/redis/rueidis v1.0.78
+	github.com/prometheus/client_golang v1.25.0
+	github.com/redis/rueidis v1.0.79
 	github.com/sirupsen/logrus v1.10.2
 	github.com/stretchr/testify v1.12.1
 	go.uber.org/dig v1.19.0
 	golang.org/x/crypto v0.58.0
 	golang.org/x/time v0.16.0
-	google.golang.org/genai v1.71.0
-	google.golang.org/grpc v1.84.0
+	google.golang.org/genai v1.76.0
+	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
 )
 
@@ -225,7 +225,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/common v0.71.0 // indirect
+	github.com/prometheus/common v0.72.0 // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.5 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.23 // indirect
@@ -310,7 +310,6 @@ require (
 	golang.org/x/tools v0.52.0 // indirect
 	google.golang.org/api v0.298.0 // indirect
 	google.golang.org/genproto v0.0.0-20260729162451-8efbd57d26e0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260729162451-8efbd57d26e0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260918162117-cecb64721679 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
