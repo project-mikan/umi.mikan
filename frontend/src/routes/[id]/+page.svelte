@@ -3,32 +3,31 @@
   import { enhance } from "$app/forms";
   import { goto, invalidateAll } from "$app/navigation";
   import { beforeNavigate } from "$app/navigation";
-  import { page } from "$app/stores";
-  import { onMount } from "svelte";
-  import "$lib/i18n";
-  import Button from "$lib/components/atoms/Button.svelte";
-  import SaveButton from "$lib/components/atoms/SaveButton.svelte";
-  import DiaryCard from "$lib/components/molecules/DiaryCard.svelte";
-  import DiaryNavigation from "$lib/components/molecules/DiaryNavigation.svelte";
-  import FormField from "$lib/components/molecules/FormField.svelte";
-  import HighlightDisplay from "$lib/components/molecules/HighlightDisplay.svelte";
-  import Modal from "$lib/components/molecules/Modal.svelte";
-  import PastEntriesLinks from "$lib/components/molecules/PastEntriesLinks.svelte";
-  import DiaryChunkTimeline from "$lib/components/molecules/DiaryChunkTimeline.svelte";
-  import { getDayOfWeekKey } from "$lib/utils/date-utils";
-  import { createSubmitHandler } from "$lib/utils/form-utils";
-  import type { HighlightData } from "$lib/types/highlight";
+  import { page } from "$app/state";
+  import { onMount, untrack } from "svelte";
+  import "#lib/i18n.js";
+  import Button from "#lib/components/atoms/Button.svelte";
+  import SaveButton from "#lib/components/atoms/SaveButton.svelte";
+  import DiaryCard from "#lib/components/molecules/DiaryCard.svelte";
+  import DiaryNavigation from "#lib/components/molecules/DiaryNavigation.svelte";
+  import FormField from "#lib/components/molecules/FormField.svelte";
+  import HighlightDisplay from "#lib/components/molecules/HighlightDisplay.svelte";
+  import Modal from "#lib/components/molecules/Modal.svelte";
+  import PastEntriesLinks from "#lib/components/molecules/PastEntriesLinks.svelte";
+  import DiaryChunkTimeline from "#lib/components/molecules/DiaryChunkTimeline.svelte";
+  import { getDayOfWeekKey } from "#lib/utils/date-utils.js";
+  import { createSubmitHandler } from "#lib/utils/form-utils.js";
+  import type { HighlightData } from "#lib/types/highlight.js";
   import type { ActionData, PageData } from "./$types";
 
-  export let data: PageData;
-  export let form: ActionData;
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  // Reactive date formatting function
-  $: _formatDate = (ymd: {
+  // 曜日付きの日付表示（$_ を呼び出し時に読むので、言語切り替えにも追従する）
+  function _formatDate(ymd: {
     year: number;
     month: number;
     day: number;
-  }): string => {
+  }): string {
     const dayOfWeekKey = getDayOfWeekKey(ymd);
     const dayOfWeek = $_(`date.dayOfWeek.${dayOfWeekKey}`);
     return $_("date.format.yearMonthDayWithDayOfWeek", {
@@ -39,54 +38,61 @@
         dayOfWeek: dayOfWeek,
       },
     });
-  };
+  }
 
-  $: title = $_("page.title.individual", {
-    values: {
-      date: _formatDate(data.date),
-    },
-  });
+  let title = $derived(
+    $_("page.title.individual", {
+      values: {
+        date: _formatDate(data.date),
+      },
+    }),
+  );
 
-  $: content = data.entry?.content || "";
-  let formElement: HTMLFormElement;
-  let _showDeleteConfirm = false;
-  let loading = false;
-  let saved = false;
-  let isToday = false;
-  let isFutureDate = false;
-  let isHighlightOutdated = false; // ハイライトが古いかどうか
+  // 入力中の本文。data が変わる（保存後の再読み込み・別の日への遷移）とサーバーの値に戻る
+  let content = $derived(data.entry?.content || "");
+  let formElement: HTMLFormElement | undefined = $state();
+  let _showDeleteConfirm = $state(false);
+  let loading = $state(false);
+  let saved = $state(false);
+  let isHighlightOutdated = $state(false); // ハイライトが古いかどうか
 
   // ハイライトデータ
-  let highlightData: HighlightData | null = null;
-  let highlightVisible = true; // ハイライトの表示・非表示状態
+  let highlightData = $state<HighlightData | null>(null);
+  let highlightVisible = $state(true); // ハイライトの表示・非表示状態
 
   // 検索ハイライト（URLの?searchパラメータから取得）
-  $: searchKeyword = $page.url.searchParams.get("search") ?? "";
+  let searchKeyword = $derived(page.url.searchParams.get("search") ?? "");
 
   // 検索ハイライトをクリア
   function _clearSearchHighlight() {
-    goto($page.url.pathname, { replaceState: true });
+    goto(page.url.pathname, { replaceState: true });
   }
 
   // Textareaに渡すハイライトデータ（表示・非表示を反映）
   // 配列の参照を毎回変更してTextareaのリアクティビティを確実にトリガー
-  $: displayedHighlights =
-    highlightVisible && highlightData ? [...highlightData.highlights] : [];
+  let displayedHighlights = $derived(
+    highlightVisible && highlightData ? [...highlightData.highlights] : [],
+  );
 
-  // 未保存状態の管理
-  let initialContent = "";
-  let allowNavigation = false;
+  // 日記の一意性を判定するためのID（entryがない日は日付で判定）
+  function entryIdOf(d: PageData): string {
+    return d.entry?.id || `${d.date.year}-${d.date.month}-${d.date.day}`;
+  }
 
-  // 前回のdataを保持して変更を検出
-  let previousEntryId = "";
+  // 未保存状態の管理（初期値は表示時の日記。SSRでも正しい値になるようここで設定する）
+  let initialContent = $state(untrack(() => data.entry?.content || ""));
+  let allowNavigation = $state(false);
+
+  // 前回のentryのIDを保持して、別の日記に遷移したことを検出する
+  let previousEntryId = untrack(() => entryIdOf(data));
 
   // コンテンツの変更を監視して未保存状態を更新
-  $: hasUnsavedChanges = content !== initialContent && !allowNavigation;
-
-  // Check if user has LLM key configured
+  let hasUnsavedChanges = $derived(
+    content !== initialContent && !allowNavigation,
+  );
 
   // 日付判定（当日・未来日）
-  $: {
+  let dateFlags = $derived.by(() => {
     const now = new Date();
     const currentDate = new Date(
       data.date.year,
@@ -94,18 +100,26 @@
       data.date.day,
     );
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return {
+      isToday: currentDate.getTime() === today.getTime(),
+      isFutureDate: currentDate.getTime() > today.getTime(),
+    };
+  });
+  let isToday = $derived(dateFlags.isToday);
+  let isFutureDate = $derived(dateFlags.isFutureDate);
 
-    isToday = currentDate.getTime() === today.getTime();
-    isFutureDate = currentDate.getTime() > today.getTime();
-  }
-  // Check if highlight is outdated (diary updatedAt > highlight updatedAt)
-  $: {
-    if (!highlightData || !data.entry) {
-      isHighlightOutdated = false;
-    } else {
+  // ハイライトが古いか（日記の updatedAt > ハイライトの updatedAt）を判定し、古ければ非表示にする
+  $effect.pre(() => {
+    const entry = data.entry;
+    const highlight = highlightData;
+    untrack(() => {
+      if (!highlight || !entry) {
+        isHighlightOutdated = false;
+        return;
+      }
       // 日記エントリは秒単位、ハイライトはミリ秒単位なので統一
-      const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000; // 秒 → ミリ秒
-      const highlightUpdatedAt = Number(highlightData.updatedAt); // 既にミリ秒
+      const diaryUpdatedAt = Number(entry.updatedAt) * 1000; // 秒 → ミリ秒
+      const highlightUpdatedAt = Number(highlight.updatedAt); // 既にミリ秒
 
       // ハイライトが日記よりも古い場合
       const isOutdated = diaryUpdatedAt > highlightUpdatedAt;
@@ -117,35 +131,25 @@
       } else if (!isOutdated) {
         isHighlightOutdated = false;
       }
-    }
-  }
+    });
+  });
 
   // Character count calculation
-  $: characterCount = content ? content.length : 0;
+  let characterCount = $derived(content ? content.length : 0);
 
-  // データが変更された時に要約状態を更新
-  // ページ遷移時のみ（entryのIDが変わった時のみ）実行
-  $: {
-    // entryの一意性を判定するためのID
-    const currentEntryId =
-      data.entry?.id || `${data.date.year}-${data.date.month}-${data.date.day}`;
-
-    // ページが変更された場合のみ初期化
-    if (currentEntryId !== previousEntryId) {
+  // 別の日記に遷移した時（entryのIDが変わった時）だけ未保存状態を初期化する
+  $effect.pre(() => {
+    const currentEntryId = entryIdOf(data);
+    const entryContent = data.entry?.content || "";
+    untrack(() => {
+      if (currentEntryId === previousEntryId) return;
       previousEntryId = currentEntryId;
-
-      // 初期コンテンツを設定
-      initialContent = data.entry?.content || "";
-
-      // コンテンツ変数を初期化（ユーザー入力を上書きしない）
-      if (content !== initialContent) {
-        content = initialContent;
-      }
-
+      initialContent = entryContent;
+      content = entryContent;
       // 新しいページではallowNavigationをリセット
       allowNavigation = false;
-    }
-  }
+    });
+  });
 
   function handleHighlightUpdated(event: CustomEvent) {
     const newHighlight = event.detail.highlight;
@@ -210,7 +214,7 @@
   });
 
   // モバイルキーボード表示時の保存ボタン位置調整
-  let saveButtonBottom = "5rem"; // デフォルト: bottom-20 (QuickNavigationの上)
+  let saveButtonBottom = $state("5rem"); // デフォルト: bottom-20 (QuickNavigationの上)
 
   // ブラウザのページ離脱時の警告
   onMount(() => {
@@ -272,7 +276,7 @@
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{$_("diary.title")}</h1>
 		<div class="flex gap-2">
 			<button
-				on:click={_goToMonthly}
+				onclick={_goToMonthly}
 				class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
 			>
 				{$_("diary.viewThisMonth")}
@@ -342,7 +346,7 @@ use:enhance={createSubmitHandler(
 						</span>
 						<button
 							type="button"
-							on:click={_clearSearchHighlight}
+							onclick={_clearSearchHighlight}
 							class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200 font-medium"
 						>
 							{$_("diary.searchHighlightClear")}

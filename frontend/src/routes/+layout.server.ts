@@ -1,6 +1,6 @@
-import { getUserInfo } from "$lib/server/auth-api";
-import { isTokenExpiringSoon } from "$lib/utils/token-utils";
-import { setCSRFToken, getCSRFToken } from "$lib/server/csrf";
+import { getUserInfo } from "#lib/server/auth-api.js";
+import { isTokenExpiringSoon } from "#lib/utils/token-utils.js";
+import { setCSRFToken, getCSRFToken } from "#lib/server/csrf.js";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ cookies, url }) => {

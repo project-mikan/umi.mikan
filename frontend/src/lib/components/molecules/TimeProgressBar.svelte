@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
-  import { getDayInMilliseconds } from "$lib/utils/token-utils";
-  import "$lib/i18n";
+  import { getDayInMilliseconds } from "#lib/utils/token-utils.js";
+  import "#lib/i18n.js";
 
   let yearProgress = 0;
   let monthProgress = 0;

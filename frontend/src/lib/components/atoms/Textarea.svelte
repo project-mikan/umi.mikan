@@ -1,14 +1,14 @@
 <script lang="ts">
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
-  import type { DiaryHighlight } from "$lib/types/highlight";
+  import type { DiaryHighlight } from "#lib/types/highlight.js";
   import {
     CURSOR_ANCHOR_ZWS,
     cleanupCursorAnchors,
     getTextOffset,
     restoreCursorPosition,
-  } from "$lib/utils/cursor-utils";
-  import { highlightEntitiesAndHighlights } from "$lib/utils/diary-entity-highlighter";
-  import { htmlToPlainText } from "$lib/utils/html-text-converter";
+  } from "#lib/utils/cursor-utils.js";
+  import { highlightEntitiesAndHighlights } from "#lib/utils/diary-entity-highlighter.js";
+  import { htmlToPlainText } from "#lib/utils/html-text-converter.js";
 
   export let value = "";
   export let placeholder = "";

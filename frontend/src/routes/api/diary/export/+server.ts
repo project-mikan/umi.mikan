@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { exportDiaryEntries } from "$lib/server/diary-api";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { exportDiaryEntries } from "#lib/server/diary-api.js";
 import type { RequestHandler } from "./$types";
 
 // GET /api/diary/export?fromYear=2024&fromMonth=4&toYear=2026&toMonth=6

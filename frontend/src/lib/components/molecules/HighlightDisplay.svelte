@@ -1,11 +1,11 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
-  import { browser } from "$app/environment";
+  import { browser } from "$app/env";
   import { onMount, onDestroy, createEventDispatcher } from "svelte";
-  import { authenticatedFetch } from "$lib/auth-client";
-  import "$lib/i18n";
-  import Button from "$lib/components/atoms/Button.svelte";
-  import type { HighlightData } from "$lib/types/highlight";
+  import { authenticatedFetch } from "#lib/auth-client.js";
+  import "#lib/i18n.js";
+  import Button from "#lib/components/atoms/Button.svelte";
+  import type { HighlightData } from "#lib/types/highlight.js";
 
   export let diaryId: string;
   export let isHighlightOutdated = false;

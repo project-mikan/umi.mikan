@@ -1,6 +1,6 @@
 import { error, json } from "@sveltejs/kit";
-import { triggerLatestTrend } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { triggerLatestTrend } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies }) => {

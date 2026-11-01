@@ -9,7 +9,7 @@ import {
   LoginByPasswordRequestSchema,
   RefreshAccessTokenRequestSchema,
   RegisterByPasswordRequestSchema,
-} from "$lib/grpc/auth/auth_pb";
+} from "#lib/grpc/auth/auth_pb.js";
 import {
   UserService,
   UpdateUserNameRequestSchema,
@@ -28,7 +28,7 @@ import {
   type CreateApiKeyResponse,
   type ListApiKeysResponse,
   type DeleteApiKeyResponse,
-} from "$lib/grpc/user/user_pb";
+} from "#lib/grpc/user/user_pb.js";
 
 // モジュールレベルで Transport と Client を共有する（リクエストごとの生成コストを排除）
 const transport = createGrpcTransport({

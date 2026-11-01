@@ -22,7 +22,7 @@ import {
   type UpdateEntityAliasResponse,
   UpdateEntityRequestSchema,
   type UpdateEntityResponse,
-} from "$lib/grpc/entity/entity_pb";
+} from "#lib/grpc/entity/entity_pb.js";
 
 /**
  * 認証付きgRPCトランスポートを作成

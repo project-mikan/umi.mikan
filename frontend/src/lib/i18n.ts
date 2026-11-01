@@ -1,5 +1,5 @@
 import { init, locale, register, waitLocale } from "svelte-i18n";
-import { browser } from "$app/environment";
+import { browser } from "$app/env";
 
 register("en", () => import("../locales/en.json"));
 register("ja", () => import("../locales/ja.json"));

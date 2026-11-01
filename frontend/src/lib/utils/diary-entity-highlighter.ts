@@ -1,4 +1,4 @@
-import type { DiaryHighlight } from "$lib/types/highlight";
+import type { DiaryHighlight } from "#lib/types/highlight.js";
 
 function escapeHtml(text: string): string {
   return text

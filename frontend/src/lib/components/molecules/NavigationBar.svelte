@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { enhance } from "$app/forms";
-  import { dev } from "$app/environment";
+  import { dev } from "$app/env";
   import Button from "../atoms/Button.svelte";
   import LanguageSelector from "../atoms/LanguageSelector.svelte";
   import DarkModeToggle from "../atoms/DarkModeToggle.svelte";

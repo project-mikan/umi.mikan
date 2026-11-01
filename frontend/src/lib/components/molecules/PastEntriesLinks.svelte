@@ -1,8 +1,8 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-  import type { DateInfo } from "$lib/utils/date-utils";
-  import { formatDateToId } from "$lib/utils/date-utils";
+  import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
+  import type { DateInfo } from "#lib/utils/date-utils.js";
+  import { formatDateToId } from "#lib/utils/date-utils.js";
   import Link from "../atoms/Link.svelte";
   export let pastEntries: {
     oneWeekAgo: { date: DateInfo; entry: DiaryEntry | null };

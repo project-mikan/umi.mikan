@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+  import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
   import Button from "../atoms/Button.svelte";
   import Card from "../atoms/Card.svelte";
   export let title: string;

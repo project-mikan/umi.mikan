@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
-  import { autoPhraseEnabled } from "$lib/auto-phrase-store";
+  import "#lib/i18n.js";
+  import { autoPhraseEnabled } from "#lib/auto-phrase-store.js";
 
   function toggleAutoPhrase() {
     autoPhraseEnabled.toggle();

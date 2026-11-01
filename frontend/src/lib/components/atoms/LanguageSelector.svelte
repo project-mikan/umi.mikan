@@ -1,6 +1,6 @@
 <script lang="ts">
   import { locale } from "svelte-i18n";
-  import { browser } from "$app/environment";
+  import { browser } from "$app/env";
 
   let isOpen = false;
 

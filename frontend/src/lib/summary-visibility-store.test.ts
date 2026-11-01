@@ -17,7 +17,7 @@ Object.defineProperty(globalThis, "localStorage", {
 });
 
 // browser のモック
-vi.mock("$app/environment", () => ({
+vi.mock("$app/env", () => ({
   browser: true,
 }));
 

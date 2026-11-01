@@ -1,25 +1,26 @@
 <script lang="ts">
   import "../app.css";
-  import "$lib/i18n";
-  import { browser } from "$app/environment";
-  import { page } from "$app/stores";
-  import { onMount, onDestroy } from "svelte";
+  import "#lib/i18n.js";
+  import { browser } from "$app/env";
+  import { page } from "$app/state";
+  import { onMount, type Snippet } from "svelte";
   import { invalidateAll } from "$app/navigation";
-  import Head from "$lib/components/atoms/Head.svelte";
-  import NavigationBar from "$lib/components/molecules/NavigationBar.svelte";
-  import QuickNavigation from "$lib/components/molecules/QuickNavigation.svelte";
-  import Footer from "$lib/components/organisms/Footer.svelte";
-  import { summaryVisibility } from "$lib/summary-visibility-store";
-  import { autoPhraseEnabled } from "$lib/auto-phrase-store";
+  import Head from "#lib/components/atoms/Head.svelte";
+  import NavigationBar from "#lib/components/molecules/NavigationBar.svelte";
+  import QuickNavigation from "#lib/components/molecules/QuickNavigation.svelte";
+  import Footer from "#lib/components/organisms/Footer.svelte";
+  import { summaryVisibility } from "#lib/summary-visibility-store.js";
+  import { autoPhraseEnabled } from "#lib/auto-phrase-store.js";
   import type { LayoutData } from "./$types";
 
-  export let data: LayoutData;
+  let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-  $: isAuthenticated = data.isAuthenticated;
-  $: isAuthPage =
-    $page.url.pathname === "/login" ||
-    $page.url.pathname === "/register" ||
-    $page.url.pathname === "/oauth/authorize";
+  let isAuthenticated = $derived(data.isAuthenticated);
+  let isAuthPage = $derived(
+    page.url.pathname === "/login" ||
+      page.url.pathname === "/register" ||
+      page.url.pathname === "/oauth/authorize",
+  );
 
   let lastActiveTime = Date.now();
   // invalidateAll() の重複実行を防ぐフラグ
@@ -83,7 +84,7 @@
 	{/if}
 
 	<main class="{isAuthenticated && !isAuthPage ? 'container mx-auto py-8' : ''} text-gray-900 dark:text-gray-100 flex-1">
-		<slot />
+		{@render children()}
 	</main>
 
 	<Footer {isAuthenticated} />

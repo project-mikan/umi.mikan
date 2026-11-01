@@ -1,6 +1,6 @@
 import { error, json } from "@sveltejs/kit";
-import { getLatestTrend } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { getLatestTrend } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies }) => {

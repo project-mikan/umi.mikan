@@ -1,11 +1,11 @@
 import type { Cookies } from "@sveltejs/kit";
-import { refreshAccessToken } from "$lib/server/auth-api";
-import { isTokenExpiringSoon } from "$lib/utils/token-utils";
-import { isInvalidRefreshTokenError } from "$lib/utils/error-utils";
+import { refreshAccessToken } from "#lib/server/auth-api.js";
+import { isTokenExpiringSoon } from "#lib/utils/token-utils.js";
+import { isInvalidRefreshTokenError } from "#lib/utils/error-utils.js";
 import {
   ACCESS_TOKEN_COOKIE_OPTIONS,
   REFRESH_TOKEN_COOKIE_OPTIONS,
-} from "$lib/utils/cookie-utils";
+} from "#lib/utils/cookie-utils.js";
 
 export interface AuthResult {
   accessToken: string | null;

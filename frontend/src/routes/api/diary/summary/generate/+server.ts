@@ -1,7 +1,7 @@
 import { error, json } from "@sveltejs/kit";
-import { createYM, generateMonthlySummary } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { unixToMilliseconds } from "$lib/utils/token-utils";
+import { createYM, generateMonthlySummary } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { unixToMilliseconds } from "#lib/utils/token-utils.js";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
@@ -60,9 +60,10 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
       (err as Error)?.message?.includes("only allowed for past months") ||
       (err as { code?: number })?.code === 9 // gRPC FAILED_PRECONDITION
     ) {
-      throw error(400, {
-        message: "Monthly summary generation is only allowed for past months",
-      });
+      throw error(
+        400,
+        "Monthly summary generation is only allowed for past months",
+      );
     }
     // NOT_FOUND は正常ケース（対象月に日記エントリが存在しない）
     if (

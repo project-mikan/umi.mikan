@@ -6,11 +6,11 @@ import {
   getDiaryEntry,
   updateDiaryEntry,
   getDiaryEmbeddingStatus,
-} from "$lib/server/diary-api";
-import { getUserInfo } from "$lib/server/auth-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { getPastSameDates } from "$lib/utils/date-utils";
-import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+} from "#lib/server/diary-api.js";
+import { getUserInfo } from "#lib/server/auth-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { getPastSameDates } from "#lib/utils/date-utils.js";
+import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({

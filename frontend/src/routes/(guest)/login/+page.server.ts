@@ -1,15 +1,15 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { loginByPassword } from "$lib/server/auth-api";
+import { loginByPassword } from "#lib/server/auth-api.js";
 import {
   translateErrorMessage,
   isRateLimitError,
-} from "$lib/utils/error-utils";
+} from "#lib/utils/error-utils.js";
 import {
   ACCESS_TOKEN_COOKIE_OPTIONS,
   REFRESH_TOKEN_COOKIE_OPTIONS,
-} from "$lib/utils/cookie-utils";
-import { validateCSRFToken } from "$lib/server/csrf";
-import { getSafeRedirectPath } from "$lib/utils/redirect-utils";
+} from "#lib/utils/cookie-utils.js";
+import { validateCSRFToken } from "#lib/server/csrf.js";
+import { getSafeRedirectPath } from "#lib/utils/redirect-utils.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 // redirectTo はMCP OAuthの同意画面など、ログイン後に元の画面へ戻す必要がある場合に付与される。

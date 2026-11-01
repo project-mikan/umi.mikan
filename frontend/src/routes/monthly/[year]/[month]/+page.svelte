@@ -1,21 +1,21 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
   import { goto } from "$app/navigation";
-  import "$lib/i18n";
-  import { browser } from "$app/environment";
+  import "#lib/i18n.js";
+  import { browser } from "$app/env";
   import { onMount } from "svelte";
-  import { authenticatedFetch } from "$lib/auth-client";
+  import { authenticatedFetch } from "#lib/auth-client.js";
   import type {
     DiaryEntry,
     GetDiaryEntriesByMonthResponse,
     YMD,
-  } from "$lib/grpc/diary/diary_pb";
+  } from "#lib/grpc/diary/diary_pb.js";
   import type { PageData } from "./$types";
-  import MonthlyCalendar from "$lib/components/molecules/MonthlyCalendar.svelte";
-  import MonthlyList from "$lib/components/molecules/MonthlyList.svelte";
-  import MonthYearSelector from "$lib/components/molecules/MonthYearSelector.svelte";
-  import CharacterCountChart from "$lib/components/molecules/CharacterCountChart.svelte";
-  import SummaryDisplay from "$lib/components/molecules/SummaryDisplay.svelte";
+  import MonthlyCalendar from "#lib/components/molecules/MonthlyCalendar.svelte";
+  import MonthlyList from "#lib/components/molecules/MonthlyList.svelte";
+  import MonthYearSelector from "#lib/components/molecules/MonthYearSelector.svelte";
+  import CharacterCountChart from "#lib/components/molecules/CharacterCountChart.svelte";
+  import SummaryDisplay from "#lib/components/molecules/SummaryDisplay.svelte";
 
   $: title = $_("page.title.calendar");
 

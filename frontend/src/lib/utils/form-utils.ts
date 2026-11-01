@@ -1,5 +1,5 @@
+import type { ActionResult } from "$app/forms";
 import { invalidateAll } from "$app/navigation";
-import type { ActionResult } from "@sveltejs/kit";
 
 export function createSubmitHandler(
   setLoading: (loading: boolean) => void,

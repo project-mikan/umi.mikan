@@ -3,7 +3,7 @@
   import Input from "../atoms/Input.svelte";
   import Label from "../atoms/Label.svelte";
   import Textarea from "../atoms/Textarea.svelte";
-  import type { DiaryHighlight } from "$lib/types/highlight";
+  import type { DiaryHighlight } from "#lib/types/highlight.js";
 
   export let type: "input" | "textarea" = "input";
   export let inputType: "text" | "email" | "password" | "date" = "text";

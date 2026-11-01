@@ -8,9 +8,9 @@ import {
   createApiKey,
   listApiKeys,
   deleteApiKey,
-} from "$lib/server/auth-api";
-import { regenerateAllEmbeddings } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+} from "#lib/server/auth-api.js";
+import { regenerateAllEmbeddings } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies }) => {

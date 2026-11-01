@@ -2,7 +2,7 @@
   import { _ } from "svelte-i18n";
   import { onMount, onDestroy } from "svelte";
   import Button from "./Button.svelte";
-  import { attachHapticToButton } from "$lib/utils/haptic";
+  import { attachHapticToButton } from "#lib/utils/haptic.js";
 
   export let loading = false;
   export let saved = false;

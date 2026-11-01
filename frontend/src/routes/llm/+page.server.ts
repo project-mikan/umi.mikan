@@ -6,9 +6,9 @@ import { createGrpcTransport } from "@connectrpc/connect-node";
 import {
   UserService,
   GetPubSubMetricsRequestSchema,
-} from "$lib/grpc/user/user_pb";
-import { regenerateAllEmbeddings } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+} from "#lib/grpc/user/user_pb.js";
+import { regenerateAllEmbeddings } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 
 export const load: PageServerLoad = async ({ cookies }) => {
   const authResult = await ensureValidAccessToken(cookies);

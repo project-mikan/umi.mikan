@@ -1,9 +1,9 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
-  import { authenticatedFetch } from "$lib/auth-client";
-  import Head from "$lib/components/atoms/Head.svelte";
-  import Card from "$lib/components/atoms/Card.svelte";
+  import "#lib/i18n.js";
+  import { authenticatedFetch } from "#lib/auth-client.js";
+  import Head from "#lib/components/atoms/Head.svelte";
+  import Card from "#lib/components/atoms/Card.svelte";
 
   let isTriggering = false;
   let message = "";

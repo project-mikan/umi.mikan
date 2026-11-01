@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { getRegistrationConfig } from "$lib/server/auth-api";
+import { getRegistrationConfig } from "#lib/server/auth-api.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async () => {

@@ -1,6 +1,6 @@
 import { render } from "@testing-library/svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { htmlToPlainText as htmlToPlainTextImpl } from "$lib/utils/html-text-converter";
+import { htmlToPlainText as htmlToPlainTextImpl } from "#lib/utils/html-text-converter.js";
 import Textarea from "./Textarea.svelte";
 
 describe("Textarea Component Functionality", () => {

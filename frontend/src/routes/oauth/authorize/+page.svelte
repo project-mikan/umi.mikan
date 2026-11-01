@@ -1,55 +1,60 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
-  import { browser } from "$app/environment";
+  import "#lib/i18n.js";
+  import { browser } from "$app/env";
   import { enhance } from "$app/forms";
-  import { page } from "$app/stores";
-  import Alert from "$lib/components/atoms/Alert.svelte";
-  import Button from "$lib/components/atoms/Button.svelte";
-  import Link from "$lib/components/atoms/Link.svelte";
+  import { page } from "$app/state";
+  import Alert from "#lib/components/atoms/Alert.svelte";
+  import Button from "#lib/components/atoms/Button.svelte";
+  import Link from "#lib/components/atoms/Link.svelte";
   import type { ActionData, PageData } from "./$types";
 
-  export let data: PageData;
-  export let form: ActionData;
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let submitting = false;
+  let submitting = $state(false);
 
-  $: csrfToken = $page.data.csrfToken as string | undefined;
+  let csrfToken = $derived(page.data.csrfToken as string | undefined);
 
   // 同意画面に接続先ホストを表示し、ユーザーが何に同意しているか確認できるようにする。
   // redirect_uriはバックエンド側で登録済みURLとの一致検証済みだが、URLとして不正な
   // 値が渡ってきた場合に備えてパース失敗時はredirect_uriの生値をフォールバック表示する。
-  $: redirectHost = (() => {
+  let redirectHost = $derived.by(() => {
     if (!data.redirectUri) return "";
     try {
       return new URL(data.redirectUri).host;
     } catch {
       return data.redirectUri;
     }
-  })();
+  });
 
   // WebViewなどCookieを共有しない環境では未ログインから始まるため、
   // ログイン後にこの同意画面（OAuthパラメータ付き）へ戻れるようにする。
-  $: loginHref = `/login?redirectTo=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
+  let loginHref = $derived(
+    `/login?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search)}`,
+  );
 
   // action成功時にauthorization codeを含むredirect_uriへ遷移する。
   // SvelteKitのuse:enhanceはactionの戻り値をformに反映するだけで自動遷移はしないため、
   // ここで明示的にwindow.location.hrefを更新してMCPクライアント側に戻す。
-  // `$:` はSSR時にも評価されるため、window参照はブラウザでのみ行う
-  // （未ログインのWebView等で初回アクセス時にSSRが500になっていた）。
-  $: if (browser && form?.success && form.redirectUrl) {
-    window.location.href = form.redirectUrl;
-  }
+  // $effect はブラウザでのみ実行されるが、SSRで500になった過去の経緯から browser の判定も残す。
+  $effect(() => {
+    if (browser && form?.success && form.redirectUrl) {
+      window.location.href = form.redirectUrl;
+    }
+  });
 
   // MCPサーバー（別オリジン）からのリダイレクトチェーン経由の初回アクセスでは
   // SameSite=StrictのログインCookieが送信されず未ログイン判定になるため、
   // 同一オリジンへの自己リダイレクトを一度だけ行い「同一サイトナビゲーション」として
   // 再読み込みさせる（retry=1を付与し、無限ループを防ぐ）。
-  $: if (browser && data.needsSameSiteRetry) {
-    const retryUrl = new URL($page.url);
-    retryUrl.searchParams.set("retry", "1");
-    window.location.replace(retryUrl.toString());
-  }
+  // page.url は読み取り専用のため、コピーしてから書き換える。
+  $effect(() => {
+    if (browser && data.needsSameSiteRetry) {
+      const retryUrl = new URL(page.url.href);
+      retryUrl.searchParams.set("retry", "1");
+      window.location.replace(retryUrl.toString());
+    }
+  });
 </script>
 
 <svelte:head>

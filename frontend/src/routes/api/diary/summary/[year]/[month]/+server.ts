@@ -1,7 +1,7 @@
 import { error, json } from "@sveltejs/kit";
-import { createYM, getMonthlySummary } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { unixToMilliseconds } from "$lib/utils/token-utils";
+import { createYM, getMonthlySummary } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { unixToMilliseconds } from "#lib/utils/token-utils.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies, params }) => {

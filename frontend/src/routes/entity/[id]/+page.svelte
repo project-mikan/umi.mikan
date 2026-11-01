@@ -2,10 +2,10 @@
   import { _ } from "svelte-i18n";
   import { goto } from "$app/navigation";
   import { enhance } from "$app/forms";
-  import "$lib/i18n";
-  import Modal from "$lib/components/molecules/Modal.svelte";
-  import { EntityCategory } from "$lib/grpc/entity/entity_pb";
-  import { notifyEntityUpdated } from "$lib/utils/entity-events";
+  import "#lib/i18n.js";
+  import Modal from "#lib/components/molecules/Modal.svelte";
+  import { EntityCategory } from "#lib/grpc/entity/entity_pb.js";
+  import { notifyEntityUpdated } from "#lib/utils/entity-events.js";
   import type { ActionData, PageData } from "./$types";
 
   export let data: PageData;

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { goto } from "$app/navigation";
-  import "$lib/i18n";
-  import { EntityCategory } from "$lib/grpc/entity/entity_pb";
+  import "#lib/i18n.js";
+  import { EntityCategory } from "#lib/grpc/entity/entity_pb.js";
   import type { PageData } from "./$types";
 
   export let data: PageData;

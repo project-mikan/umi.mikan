@@ -271,6 +271,12 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
 - **Progressive Web App**: ホーム画面への追加対応（service worker・オフライン機能なし）
 - **Security Headers**: Content Security Policy (CSP), X-Frame-Options, X-Content-Type-Options, and Referrer Policy
 - **CSRF Protection**: Client-side CSRF token handling for form submissions
+- **SvelteKit 3**: `svelte.config.js` is no longer supported — all SvelteKit options (adapter, CSP, preprocess) are passed to `sveltekit({...})` in `frontend/vite.config.ts`. The adapter is always `@sveltejs/adapter-node` (dev and prod; `vite dev` doesn't use the adapter), so the prod Dockerfile builds without swapping config files. Other SvelteKit 3 rules:
+  - `$lib` was removed: import with `#lib/...` (Node subpath imports declared under `imports` in `frontend/package.json`). TS/JS modules need an explicit `.js` extension (`#lib/utils/form-utils.js`); `.svelte` files keep their extension
+  - `$app/stores` was removed: use `$app/state` (`page`, `navigating` — read without `$`). `$app/state` only stays reactive in **runes-mode** components (`$props` / `$state` / `$derived` / `$effect`); in legacy components (`export let` / `$:`) member reads are untracked and the UI won't update, so convert the component to runes before using it
+  - Use `$app/env` instead of the deprecated `$app/environment` (mock `$app/env` in tests). `page.url` is readonly — copy with `new URL(page.url.href)` before mutating
+  - `error(status, message)` takes a string as the second argument (extra fields go in a third argument)
+  - Biome 2.6 also formats YAML, so `pnpm-lock.yaml` is excluded in `frontend/biome.json` (otherwise `pnpm format` rewrites the lockfile)
 
 ### Database Schema
 
@@ -451,7 +457,7 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
 
 - **Always use i18n for user-facing text**: Use `$_("key")` for all UI text
 - **Translation files**: Update both `frontend/src/locales/ja.json` and `frontend/src/locales/en.json`
-- **Import requirements**: Include `import { _ } from "svelte-i18n";` and `import "$lib/i18n";`
+- **Import requirements**: Include `import { _ } from "svelte-i18n";` and `import "#lib/i18n.js";`
 - **Key structure**: Use nested objects (e.g., `timeProgress.yearProgress`)
 
 ### Component Creation

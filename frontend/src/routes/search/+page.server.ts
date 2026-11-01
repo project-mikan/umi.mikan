@@ -2,9 +2,9 @@ import { fail, redirect } from "@sveltejs/kit";
 import {
   searchDiaryEntries,
   searchDiaryEntriesSemantic,
-} from "$lib/server/diary-api.js";
-import { getUserInfo } from "$lib/server/auth-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+} from "#lib/server/diary-api.js";
+import { getUserInfo } from "#lib/server/auth-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ url, cookies }) => {

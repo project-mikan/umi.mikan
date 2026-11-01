@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
-  import AuthForm from "$lib/components/molecules/AuthForm.svelte";
+  import "#lib/i18n.js";
+  import AuthForm from "#lib/components/molecules/AuthForm.svelte";
   import type { ActionData } from "./$types";
 
   // フォームデータに含まれる可能性のあるプロパティを定義

@@ -1,7 +1,7 @@
 import { error, redirect } from "@sveltejs/kit";
-import { createYM, getDiaryEntriesByMonth } from "$lib/server/diary-api";
-import { getUserInfo } from "$lib/server/auth-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { createYM, getDiaryEntriesByMonth } from "#lib/server/diary-api.js";
+import { getUserInfo } from "#lib/server/auth-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
