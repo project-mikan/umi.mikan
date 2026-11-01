@@ -1,0 +1,15 @@
+apiVersion: 1
+
+# Discord の通知文。umi.mikan 用とブログ用の両方の contact point から使う
+templates:
+  - orgId: 1
+    name: discord.message
+    template: |
+      {{ define "discord.message" }}
+      {{ range .Alerts }}
+      **[{{ .Status | toUpper }}]** {{ .Labels.alertname }}
+      サービス: {{ .Labels.service }}
+      {{ .Annotations.summary }}
+      {{ .Annotations.description }}
+      {{ end }}
+      {{ end }}

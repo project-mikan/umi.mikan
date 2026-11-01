@@ -1,5 +1,7 @@
 apiVersion: 1
 
+# 通知文は templates.yml の discord.message で共通化している
+# url の環境変数が空だと Grafana が起動しないため、本番の compose-prod.yml には両方の値を必ず設定する
 contactPoints:
   - orgId: 1
     name: Discord
@@ -8,11 +10,16 @@ contactPoints:
         type: discord
         settings:
           url: ${DISCORD_WEBHOOK_URL}
-          message: |
-            {{ range .Alerts }}
-            **[{{ .Status | toUpper }}]** {{ .Labels.alertname }}
-            サービス: {{ .Labels.service }}
-            {{ .Annotations.summary }}
-            {{ .Annotations.description }}
-            {{ end }}
+          message: '{{ template "discord.message" . }}'
+        disableResolveMessage: false
+
+  # ブログ（usuyuki_blog_v2）用の Discord。ブログの .env.prod の DISCORD_WEBHOOK_URL と同じ値を本番で設定する
+  - orgId: 1
+    name: Discord Blog
+    receivers:
+      - uid: discord_blog_receiver
+        type: discord
+        settings:
+          url: ${DISCORD_BLOG_WEBHOOK_URL}
+          message: '{{ template "discord.message" . }}'
         disableResolveMessage: false

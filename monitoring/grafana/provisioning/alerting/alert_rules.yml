@@ -1,5 +1,7 @@
 apiVersion: 1
 
+# 全ルール共通の設定は YAML のアンカー（&）とマージキー（<<: *）で共有する。
+# 集計する期間を変えるときは、range_5m と各 expr の [5m]、description の「過去5分間」をまとめて変えること
 groups:
   - orgId: 1
     name: umi-mikan-errors
@@ -7,31 +9,34 @@ groups:
     interval: 1m
     rules:
       # backendサービスのエラーログ検知
+      # 同じ Loki にブログのログも入っているので、どのルールも project で絞り込む
       - uid: backend_error_logs
         title: Backend エラーログ検知
         condition: A
         data:
           - refId: A
             queryType: instant
-            relativeTimeRange:
+            relativeTimeRange: &range_5m
               from: 300
               to: 0
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="backend"} |~ "(?i)(error:|panic:|fatal:)" [5m])'
+              expr: 'count_over_time({project="umimikan", service="backend"} |~ "(?i)(error:|panic:|fatal:)" [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
-        noDataState: OK
-        execErrState: Error
-        for: 1m
+        <<: &rule_defaults
+          noDataState: OK
+          execErrState: Error
+          for: 1m
+          isPaused: false
         annotations:
           summary: "Backendサービスでエラーが検出されました"
           description: "過去5分間にbackendサービスでエラーログが{{ $values.A }}件発生しています"
         labels:
+          project: umimikan
           service: backend
           severity: error
-        isPaused: false
 
       # schedulerサービスのエラーログ検知
       - uid: scheduler_error_logs
@@ -40,25 +45,21 @@ groups:
         data:
           - refId: A
             queryType: instant
-            relativeTimeRange:
-              from: 300
-              to: 0
+            relativeTimeRange: *range_5m
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="scheduler", level=~"error|fatal|panic"} [5m])'
+              expr: 'count_over_time({project="umimikan", service="scheduler", level=~"error|fatal|panic"} [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
-        noDataState: OK
-        execErrState: Error
-        for: 1m
+        <<: *rule_defaults
         annotations:
           summary: "Schedulerサービスでエラーが検出されました"
           description: "過去5分間にschedulerサービスでエラーログが{{ $values.A }}件発生しています"
         labels:
+          project: umimikan
           service: scheduler
           severity: error
-        isPaused: false
 
       # subscriberサービスのエラーログ検知
       - uid: subscriber_error_logs
@@ -67,25 +68,21 @@ groups:
         data:
           - refId: A
             queryType: instant
-            relativeTimeRange:
-              from: 300
-              to: 0
+            relativeTimeRange: *range_5m
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="subscriber", level=~"error|fatal|panic"} [5m])'
+              expr: 'count_over_time({project="umimikan", service="subscriber", level=~"error|fatal|panic"} [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
-        noDataState: OK
-        execErrState: Error
-        for: 1m
+        <<: *rule_defaults
         annotations:
           summary: "Subscriberサービスでエラーが検出されました"
           description: "過去5分間にsubscriberサービスでエラーログが{{ $values.A }}件発生しています"
         labels:
+          project: umimikan
           service: subscriber
           severity: error
-        isPaused: false
 
       # frontendサービスのエラーログ検知
       - uid: frontend_error_logs
@@ -94,22 +91,74 @@ groups:
         data:
           - refId: A
             queryType: instant
-            relativeTimeRange:
-              from: 300
-              to: 0
+            relativeTimeRange: *range_5m
             datasourceUid: loki
             model:
-              expr: 'count_over_time({service="frontend"} |~ "(?i)(error:|panic:|fatal:)" [5m])'
+              expr: 'count_over_time({project="umimikan", service="frontend"} |~ "(?i)(error:|panic:|fatal:)" [5m])'
               intervalMs: 1000
               maxDataPoints: 43200
               queryType: instant
-        noDataState: OK
-        execErrState: Error
-        for: 1m
+        <<: *rule_defaults
         annotations:
           summary: "Frontendサービスでエラーが検出されました"
           description: "過去5分間にfrontendサービスでエラーログが{{ $values.A }}件発生しています"
         labels:
+          project: umimikan
           service: frontend
           severity: error
-        isPaused: false
+
+  # 同じサーバーで動くブログ（usuyuki_blog_v2）のアラート。ラベル project で通知先をブログ用の Discord に振り分ける
+  - orgId: 1
+    name: usuyuki-blog-errors
+    folder: usuyuki-blog
+    interval: 1m
+    rules:
+      # Astro のエラーログ検知
+      # 行は「error: メッセージ {JSON}」の形で JSON の前に接頭辞があり | json では解析できないため、正規表現で logType を見る
+      - uid: blog_astro_error_logs
+        title: Blog Astro エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange: *range_5m
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({project="usuyuki_blog_v2", service="astro"} |~ `"logType"\s*:\s*"(?i:error)"` [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        <<: *rule_defaults
+        annotations:
+          summary: "ブログの Astro でエラーが検出されました"
+          description: "過去5分間にブログの Astro でエラーログが{{ $values.A }}件発生しています"
+        labels:
+          project: usuyuki_blog_v2
+          service: astro
+          severity: error
+
+      # Ghost のエラーログ検知（Ghost の既定の pretty 形式のログは、レベルを大文字の ERROR で出す）
+      # - ヘルスチェックが無効なキーで10秒ごとに 401 を出し、それに伴うスパム防止の「ERROR Too many attempts.」も常に出るため除外する
+      # - 記事編集の競合（409）など、429 以外の 4xx のアクセスログはクライアント側の問題なので除外する
+      #   429 を残すのは、管理画面へのブルートフォースでスパム防止が働いたときに「ERROR "POST .../session/" 429」で気づけるようにするため
+      - uid: blog_ghost_error_logs
+        title: Blog Ghost エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange: *range_5m
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({project="usuyuki_blog_v2", service="ghost"} |= "ERROR" != "key=healthcheck" != "Too many attempts" !~ `" \S*4([0-13-9][0-9]|2[0-8])\S* [0-9]+ms` [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        <<: *rule_defaults
+        annotations:
+          summary: "ブログの Ghost でエラーが検出されました"
+          description: "過去5分間にブログの Ghost でエラーログが{{ $values.A }}件発生しています"
+        labels:
+          project: usuyuki_blog_v2
+          service: ghost
+          severity: error
