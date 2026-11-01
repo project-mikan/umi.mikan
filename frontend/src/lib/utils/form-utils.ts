@@ -1,5 +1,5 @@
 import type { ActionResult } from "$app/forms";
-import { invalidateAll } from "$app/navigation";
+import { refreshAll } from "$app/navigation";
 
 export function createSubmitHandler(
   setLoading: (loading: boolean) => void,
@@ -10,7 +10,7 @@ export function createSubmitHandler(
     return async ({ result }: { result: ActionResult }) => {
       setLoading(false);
       if (result.type === "success") {
-        await invalidateAll();
+        await refreshAll();
         if (setSaved) {
           setSaved(true);
           setTimeout(() => setSaved(false), 1000);

@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import { getDiaryHighlight } from "#lib/server/diary-api.js";
 import { unixToMilliseconds } from "#lib/utils/token-utils.js";
@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
       accessToken: authResult.accessToken,
     });
 
-    return json({
+    return Response.json({
       highlights: response.highlights.map((h) => ({
         start: h.start,
         end: h.end,

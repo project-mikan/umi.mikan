@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import { triggerDiaryHighlight } from "#lib/server/diary-api.js";
 import type { RequestHandler } from "./$types";
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
       accessToken: authResult.accessToken,
     });
 
-    return json({
+    return Response.json({
       queued: response.queued,
       message: response.message,
     });

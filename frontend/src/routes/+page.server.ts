@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({
     "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
   });
 
-  // 明示的な依存関係を設定してinvalidateAll()で確実に再読み込み
+  // 明示的な依存関係を設定してrefreshAll()で確実に再読み込み
   depends("diary:home");
 
   const authResult = await ensureValidAccessToken(cookies);

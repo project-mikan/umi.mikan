@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
   import { enhance } from "$app/forms";
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto, refreshAll } from "$app/navigation";
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import { onMount, untrack } from "svelte";
@@ -65,7 +65,7 @@
 
   // 検索ハイライトをクリア
   function _clearSearchHighlight() {
-    goto(page.url.pathname, { replaceState: true });
+    goto(page.url.pathname, { replace: true });
   }
 
   // Textareaに渡すハイライトデータ（表示・非表示を反映）
@@ -310,7 +310,7 @@ use:enhance={createSubmitHandler(
 		saved = s;
 		if (s) {
 			// 保存成功時にページデータを再読み込み（updatedAtを更新）
-			await invalidateAll();
+			await refreshAll();
 			// 保存成功時に初期コンテンツを更新
 			initialContent = content;
 			// hasUnsavedChangesの再計算に任せる

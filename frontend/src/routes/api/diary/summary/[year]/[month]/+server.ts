@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { createYM, getMonthlySummary } from "#lib/server/diary-api.js";
 import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import { unixToMilliseconds } from "#lib/utils/token-utils.js";
@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
       throw error(404, "Summary not found");
     }
 
-    return json({
+    return Response.json({
       summary: {
         id: summaryResponse.summary.id,
         month: {

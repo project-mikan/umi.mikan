@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { createYM, generateMonthlySummary } from "#lib/server/diary-api.js";
 import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import { unixToMilliseconds } from "#lib/utils/token-utils.js";
@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
       throw error(500, "Failed to generate summary");
     }
 
-    return json({
+    return Response.json({
       summary: {
         id: summaryResponse.summary.id,
         month: {

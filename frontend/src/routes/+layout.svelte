@@ -4,7 +4,7 @@
   import { browser } from "$app/env";
   import { page } from "$app/state";
   import { onMount, type Snippet } from "svelte";
-  import { invalidateAll } from "$app/navigation";
+  import { refreshAll } from "$app/navigation";
   import Head from "#lib/components/atoms/Head.svelte";
   import NavigationBar from "#lib/components/molecules/NavigationBar.svelte";
   import QuickNavigation from "#lib/components/molecules/QuickNavigation.svelte";
@@ -23,12 +23,12 @@
   );
 
   let lastActiveTime = Date.now();
-  // invalidateAll() の重複実行を防ぐフラグ
+  // refreshAll() の重複実行を防ぐフラグ
   let isRefreshing = false;
 
   // visibilitychange のみでトークンチェックを行う。
   // focus イベントと併用すると「タブを戻した時」に両方が同時に発火して
-  // invalidateAll() が2回呼ばれ、並行リフレッシュ競合が起きるため focus は使わない。
+  // refreshAll() が2回呼ばれ、並行リフレッシュ競合が起きるため focus は使わない。
   function handleVisibilityChange() {
     if (!browser || document.visibilityState !== "visible") return;
     const inactiveTime = Date.now() - lastActiveTime;
@@ -41,7 +41,7 @@
       !isRefreshing
     ) {
       isRefreshing = true;
-      invalidateAll().finally(() => {
+      refreshAll().finally(() => {
         isRefreshing = false;
       });
     }

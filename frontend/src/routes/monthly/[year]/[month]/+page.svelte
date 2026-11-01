@@ -181,14 +181,14 @@
     const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
     const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
     await fetchMonthData(prevYear, prevMonth);
-    await goto(`/monthly/${prevYear}/${prevMonth}`, { replaceState: true });
+    await goto(`/monthly/${prevYear}/${prevMonth}`, { replace: true });
   }
 
   async function _nextMonth() {
     const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
     const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
     await fetchMonthData(nextYear, nextMonth);
-    await goto(`/monthly/${nextYear}/${nextMonth}`, { replaceState: true });
+    await goto(`/monthly/${nextYear}/${nextMonth}`, { replace: true });
   }
 
   async function _goToToday() {
@@ -196,7 +196,7 @@
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
     await fetchMonthData(year, month);
-    await goto(`/monthly/${year}/${month}`, { replaceState: true });
+    await goto(`/monthly/${year}/${month}`, { replace: true });
   }
 
   function _showMonthSelector() {
@@ -206,7 +206,7 @@
   async function _handleMonthSelect(year: number, month: number) {
     showMonthSelector = false;
     await fetchMonthData(year, month);
-    await goto(`/monthly/${year}/${month}`, { replaceState: true });
+    await goto(`/monthly/${year}/${month}`, { replace: true });
   }
 
   function _handleMonthSelectorCancel() {
