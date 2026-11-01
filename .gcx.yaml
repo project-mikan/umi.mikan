@@ -1,0 +1,8 @@
+version: 1
+contexts:
+  umi-mikan:
+    stack: umi-mikan
+    datasources:
+      loki: loki
+      prometheus: prometheus
+current-context: umi-mikan

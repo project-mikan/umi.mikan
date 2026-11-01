@@ -360,6 +360,27 @@ Scheduler (5min interval) → Redis Pub/Sub → Subscriber → LLM APIs → Data
    - Perform a hard reload (Ctrl+Shift+R or Cmd+Shift+R) and verify that the behavior remains consistent
    - Verify that the behavior remains consistent after hard reload
 
+### 本番ログ調査（gcx）
+
+本番の Grafana（http://192.168.37.112:2008、LAN 内からのみ。Cloudflare Tunnel での外部公開はしていない）には、ブラウザではなく Grafana 公式 CLI の `gcx` で Grafana の API を通して Loki / Prometheus に問い合わせる。
+
+| やること | 使うもの |
+|---|---|
+| 接続先 | リポジトリ直下の `.gcx.yaml` がコンテキスト `umi-mikan`（データソース UID は `loki` / `prometheus`）を既定にする。このディレクトリで `gcx` を実行すれば自動で本番を向き、他のディレクトリではユーザー設定の既定コンテキストのまま |
+| 認証 | サービスアカウント `gcx-local`（ロールは Viewer、見るだけ）のトークン。トークンは `~/.config/gcx/config.yaml` にだけ保存し、リポジトリには置かない |
+| 初回ログイン | `make gcx-login`（`gcx login umi-mikan --server http://192.168.37.112:2008`）を自分の端末で実行し、トークンを入力する（表示はされない）。Claude Code の `!` は端末がなく入力できないため、ユーザーに別の端末で実行してもらう |
+| 接続確認 | `make gcx-check`（`gcx config check`） |
+| ログを探す | `gcx logs query '{service="backend"} \|= "error"' --since 1h -o raw` |
+| 件数の移り変わり | `gcx logs metrics 'sum by (service) (count_over_time({project="umimikan"} \|= "error" [10m]))' --since 6h` |
+| メトリクス | `gcx metrics query 'up' --since 10m` |
+
+- **ラベル**: Alloy（`monitoring/alloy/alloy-config.alloy`）が Docker のログに `job="docker"`・`service`（compose のサービス名。`backend` / `frontend` / `scheduler` / `subscriber` など）・`container`・`project`（本番は `umimikan`）を付ける。同じサーバーのブログ（`usuyuki_blog_v2`）のログも同じ Loki に入っているので、まとめて数えるときは `project` で絞り込む。`scheduler` / `subscriber` だけは logfmt から `level` ラベルも抽出している。ホストの `/var/log/*log` は `job="varlogs"`
+- **ログの量**: gRPC / ConnectRPC にはアクセスログがないため、`backend` は平常時ほとんど何も出さない。MCP サーバーへのリクエストは `|= "mcp access:"` で探せる
+- **保持期間**: Alloy は 7 日（168h）より古いログを送らないので、それ以前の調査はできない
+- **Drilldown**: Grafana の Logs / Metrics Drilldown（Grafana 13 に同梱）を使うため、`monitoring/loki/loki-config.yml` で `volume_enabled`・`allow_structured_metadata`・`discover_log_levels`・`pattern_ingester` を有効にしている。ブラウザで見るときは LAN から Grafana の Drilldown を開く
+- **`no route to host` になる場合**: macOS のローカルネットワークの許可が、gcx を起動したアプリ（Ghostty など）から引き継がれていない。herdr のような常駐プロセスの中で動かしているときは、許可を ON にした後にその常駐プロセスを起動し直す（Apple 製の `curl` は制限を受けないので、curl で届くのに gcx で届かないときはこれを疑う）
+- **トークンが失効・401 になった場合**: Grafana の Administration → Service accounts で `gcx-local` に新しいトークンを発行し、`make gcx-login` をやり直す
+
 ## Key Files
 
 - `compose.yml`: Development environment configuration
