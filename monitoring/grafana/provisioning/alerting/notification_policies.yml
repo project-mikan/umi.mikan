@@ -9,3 +9,8 @@ policies:
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 1h
+    routes:
+      # ブログのアラートはブログ用の Discord に送る
+      - receiver: Discord Blog
+        object_matchers:
+          - ["project", "=", "usuyuki_blog_v2"]

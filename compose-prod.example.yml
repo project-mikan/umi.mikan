@@ -154,6 +154,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_SERVER_ROOT_URL: "" # GrafanaのURL（例: https://grafana.example.com）
       DISCORD_WEBHOOK_URL: "" # DiscordのWebhook URLを設定してください
+      DISCORD_BLOG_WEBHOOK_URL: "" # ブログ（usuyuki_blog_v2）用DiscordのWebhook URL（ブログの .env.prod の DISCORD_WEBHOOK_URL と同じ値）
     volumes:
       - grafana_prod_volume:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning

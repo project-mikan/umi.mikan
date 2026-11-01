@@ -113,3 +113,66 @@ groups:
           service: frontend
           severity: error
         isPaused: false
+
+  # 同じサーバーで動くブログ（usuyuki_blog_v2）のアラート。ラベル project で通知先をブログ用の Discord に振り分ける
+  - orgId: 1
+    name: usuyuki-blog-errors
+    folder: usuyuki-blog
+    interval: 1m
+    rules:
+      # Astro のエラーログ検知（構造化ログの logType が error の行）
+      - uid: blog_astro_error_logs
+        title: Blog Astro エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({project="usuyuki_blog_v2", service="astro"} |= "\"logType\":\"error\"" [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "ブログの Astro でエラーが検出されました"
+          description: "過去5分間にブログの Astro でエラーログが{{ $values.A }}件発生しています"
+        labels:
+          project: usuyuki_blog_v2
+          service: astro
+          severity: error
+        isPaused: false
+
+      # Ghost のエラーログ検知
+      # ヘルスチェックが無効なキーで10秒ごとに401を出し、それに伴うスパム防止の Too many attempts も常時出るため除外する
+      - uid: blog_ghost_error_logs
+        title: Blog Ghost エラーログ検知
+        condition: A
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'count_over_time({project="usuyuki_blog_v2", service="ghost"} |= "ERROR" != "key=healthcheck" != "Too many attempts" [5m])'
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "ブログの Ghost でエラーが検出されました"
+          description: "過去5分間にブログの Ghost でエラーログが{{ $values.A }}件発生しています"
+        labels:
+          project: usuyuki_blog_v2
+          service: ghost
+          severity: error
+        isPaused: false

@@ -16,3 +16,20 @@ contactPoints:
             {{ .Annotations.description }}
             {{ end }}
         disableResolveMessage: false
+
+  # ブログ（usuyuki_blog_v2）用の Discord。ブログの .env.prod の DISCORD_WEBHOOK_URL と同じ値を本番で設定する
+  - orgId: 1
+    name: Discord Blog
+    receivers:
+      - uid: discord_blog_receiver
+        type: discord
+        settings:
+          url: ${DISCORD_BLOG_WEBHOOK_URL}
+          message: |
+            {{ range .Alerts }}
+            **[{{ .Status | toUpper }}]** {{ .Labels.alertname }}
+            サービス: {{ .Labels.service }}
+            {{ .Annotations.summary }}
+            {{ .Annotations.description }}
+            {{ end }}
+        disableResolveMessage: false
