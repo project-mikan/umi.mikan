@@ -238,8 +238,7 @@ struct DiaryDetailView: View {
     /// 最初にキーワードがマッチした行まで自動スクロールする。
     /// レイアウト確定を待つため少し遅らせてから実行する。
     private func scrollToFirstHighlight(_ proxy: ScrollViewProxy) async {
-        guard showsHighlight else { return }
-        guard let line = TextHighlighter.firstMatchLineIndex(lines: highlightLines, keywords: highlightKeywords) else {
+        guard showsHighlight, let line = TextHighlighter.firstMatchLineIndex(lines: highlightLines, keywords: highlightKeywords) else {
             return
         }
         try? await Task.sleep(for: .milliseconds(300))
