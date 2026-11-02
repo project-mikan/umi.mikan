@@ -25,7 +25,6 @@ COPY . .
 RUN --mount=type=cache,target=/root/.pnpm-store \
     --mount=type=cache,target=/frontend/.svelte-kit \
     --mount=type=cache,target=/tmp \
-    cp svelte.config.prod.js svelte.config.js && \
     pnpm prepare && \
     pnpm build
 

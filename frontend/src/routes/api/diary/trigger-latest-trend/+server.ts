@@ -1,6 +1,6 @@
-import { error, json } from "@sveltejs/kit";
-import { triggerLatestTrend } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { error } from "@sveltejs/kit";
+import { triggerLatestTrend } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies }) => {
@@ -16,14 +16,14 @@ export const POST: RequestHandler = async ({ cookies }) => {
     });
 
     if (!triggerResponse.success) {
-      return json({
+      return Response.json({
         success: false,
         message:
           triggerResponse.message || "Failed to trigger latest trend analysis",
       });
     }
 
-    return json({
+    return Response.json({
       success: true,
       message:
         triggerResponse.message ||

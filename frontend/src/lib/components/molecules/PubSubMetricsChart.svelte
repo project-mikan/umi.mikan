@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { browser } from "$app/environment";
+  import { browser } from "$app/env";
   import { _, locale, isLoading } from "svelte-i18n";
-  import "$lib/i18n";
+  import "#lib/i18n.js";
 
   // Chart.js の型定義
   let Chart: typeof import("chart.js").Chart;

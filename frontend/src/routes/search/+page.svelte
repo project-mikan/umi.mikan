@@ -1,22 +1,26 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { goto } from "$app/navigation";
-  import { navigating } from "$app/stores";
-  import "$lib/i18n";
-  import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-  import type { SemanticSearchResult } from "$lib/grpc/diary/diary_pb";
+  import { navigating } from "$app/state";
+  import "#lib/i18n.js";
+  import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
+  import type { SemanticSearchResult } from "#lib/grpc/diary/diary_pb.js";
   import type { PageData } from "./$types";
 
   type TextSegment = { text: string; isMatch: boolean };
 
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
 
-  let searchKeyword = data.keyword || "";
+  // 入力欄と検索モードはユーザーが書き換えられる。戻る・進むで data が変わったら URL の値に戻す
+  let searchKeyword = $derived(data.keyword || "");
   // 意味的検索が無効の場合はキーワードモードにフォールバック
-  let searchMode: "keyword" | "semantic" =
+  let searchMode: "keyword" | "semantic" = $derived(
     data.semanticSearchEnabled && data.mode === "semantic"
       ? "semantic"
-      : "keyword";
+      : "keyword",
+  );
+  // ナビゲーション中かどうか（検索ボタンのローディング表示に使う）
+  let isNavigating = $derived(navigating.to !== null);
 
   function _formatDate(ymd: {
     year: number;
@@ -168,7 +172,7 @@
 		{#if data.semanticSearchEnabled}
 			<div class="flex gap-2 mb-3">
 				<button
-					on:click={() => { searchMode = 'keyword'; }}
+					onclick={() => { searchMode = 'keyword'; }}
 					class="px-4 py-1.5 text-sm rounded-full transition-colors {searchMode === 'keyword'
 						? 'bg-blue-600 dark:bg-blue-500 text-white'
 						: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
@@ -176,7 +180,7 @@
 					{$_('search.modeKeyword')}
 				</button>
 				<button
-					on:click={() => { searchMode = 'semantic'; }}
+					onclick={() => { searchMode = 'semantic'; }}
 					class="px-4 py-1.5 text-sm rounded-full transition-colors {searchMode === 'semantic'
 						? 'bg-purple-600 dark:bg-purple-500 text-white'
 						: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
@@ -190,7 +194,7 @@
 			<input
 				type="text"
 				bind:value={searchKeyword}
-				on:keydown={_handleKeydown}
+				onkeydown={_handleKeydown}
 				placeholder={searchMode === 'semantic' ? $_('search.placeholderSemantic') : $_('search.placeholder')}
 				class="flex-1 px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:border-transparent {searchMode === 'semantic'
 					? 'border-purple-300 dark:border-purple-600 focus:ring-purple-500'
@@ -199,13 +203,13 @@
 
 			<!-- 検索ボタン（ナビゲーション中はローディング状態を表示） -->
 			<button
-				on:click={_handleSearch}
-				disabled={$navigating !== null}
-				class="px-6 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 {$navigating !== null ? 'opacity-75 cursor-not-allowed' : ''} {searchMode === 'semantic'
+				onclick={_handleSearch}
+				disabled={isNavigating}
+				class="px-6 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 {isNavigating ? 'opacity-75 cursor-not-allowed' : ''} {searchMode === 'semantic'
 					? 'bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 focus:ring-purple-500'
 					: 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 focus:ring-blue-500'}"
 			>
-				{#if $navigating !== null}
+				{#if isNavigating}
 					<!-- ローディングスピナー -->
 					<span class="flex items-center gap-2">
 						<svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -258,8 +262,8 @@
 				{#each data.searchResults.entries as entry}
 					<div
 						class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm dark:shadow-gray-900/20 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow cursor-pointer"
-						on:click={() => _viewEntry(entry)}
-						on:keydown={(e) => e.key === 'Enter' && _viewEntry(entry)}
+						onclick={() => _viewEntry(entry)}
+						onkeydown={(e) => e.key === 'Enter' && _viewEntry(entry)}
 						role="button"
 						tabindex="0"
 					>
@@ -314,8 +318,8 @@
 				{#each data.semanticResults.results as result}
 					<div
 						class="bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800 rounded-lg p-6 shadow-sm dark:shadow-gray-900/20 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow cursor-pointer"
-						on:click={() => _viewSemanticEntry(result)}
-						on:keydown={(e) => e.key === 'Enter' && _viewSemanticEntry(result)}
+						onclick={() => _viewSemanticEntry(result)}
+						onkeydown={(e) => e.key === 'Enter' && _viewSemanticEntry(result)}
 						role="button"
 						tabindex="0"
 					>

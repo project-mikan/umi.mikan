@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
-  import "$lib/i18n";
+  import "#lib/i18n.js";
   import BaseModal from "./BaseModal.svelte";
 
   export let isOpen = false;

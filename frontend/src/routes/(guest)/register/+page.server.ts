@@ -2,12 +2,12 @@ import { fail, redirect } from "@sveltejs/kit";
 import {
   registerByPassword,
   getRegistrationConfig,
-} from "$lib/server/auth-api";
+} from "#lib/server/auth-api.js";
 import {
   ACCESS_TOKEN_COOKIE_OPTIONS,
   REFRESH_TOKEN_COOKIE_OPTIONS,
-} from "$lib/utils/cookie-utils";
-import { validateCSRFToken } from "$lib/server/csrf";
+} from "#lib/utils/cookie-utils.js";
+import { validateCSRFToken } from "#lib/server/csrf.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ parent }) => {

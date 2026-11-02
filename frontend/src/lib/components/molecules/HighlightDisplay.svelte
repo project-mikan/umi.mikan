@@ -1,17 +1,18 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
-  import { browser } from "$app/environment";
-  import { onMount, onDestroy, createEventDispatcher } from "svelte";
-  import { authenticatedFetch } from "$lib/auth-client";
-  import "$lib/i18n";
-  import Button from "$lib/components/atoms/Button.svelte";
-  import type { HighlightData } from "$lib/types/highlight";
+  import { browser } from "$app/env";
+  import { onMount, onDestroy } from "svelte";
+  import { authenticatedFetch } from "#lib/auth-client.js";
+  import "#lib/i18n.js";
+  import Button from "#lib/components/atoms/Button.svelte";
+  import type { HighlightData } from "#lib/types/highlight.js";
 
   export let diaryId: string;
   export let isHighlightOutdated = false;
   export let diaryUpdatedAt: number;
-
-  const dispatch = createEventDispatcher();
+  // ハイライトの生成が終わった時・表示を切り替えた時に呼ぶ
+  export let onhighlightupdated: (highlight: HighlightData) => void = () => {};
+  export let onvisibilitychanged: (visible: boolean) => void = () => {};
 
   let highlightData: HighlightData | null = null;
   let highlightStatus:
@@ -72,7 +73,7 @@
           stopPolling();
 
           // 親コンポーネントに通知
-          dispatch("highlightUpdated", { highlight: result });
+          onhighlightupdated(result);
         }
       } else if (response.status === 404) {
         // ハイライトがまだ存在しない（生成中の可能性）
@@ -147,7 +148,7 @@
   function toggleHighlightVisibility() {
     highlightVisible = !highlightVisible;
     // 親コンポーネントに表示状態を通知
-    dispatch("highlightVisibilityChanged", { visible: highlightVisible });
+    onvisibilitychanged(highlightVisible);
   }
 
   // 初回読み込み時にハイライトを取得
@@ -164,7 +165,7 @@
         highlightStatus = "completed";
 
         // 親コンポーネントに通知
-        dispatch("highlightUpdated", { highlight: result });
+        onhighlightupdated(result);
 
         // 日記が更新されているかチェック
         if (diaryUpdatedAt > result.updatedAt) {

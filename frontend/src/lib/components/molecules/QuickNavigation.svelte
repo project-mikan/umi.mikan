@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
+  import "#lib/i18n.js";
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();

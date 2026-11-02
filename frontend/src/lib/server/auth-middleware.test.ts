@@ -4,16 +4,16 @@ import type { Cookies } from "@sveltejs/kit";
 import { Code, ConnectError } from "@connectrpc/connect";
 
 // Mock dependencies
-vi.mock("$lib/server/auth-api", () => ({
+vi.mock("#lib/server/auth-api.js", () => ({
   refreshAccessToken: vi.fn(),
 }));
 
-vi.mock("$lib/utils/token-utils", () => ({
+vi.mock("#lib/utils/token-utils.js", () => ({
   isTokenExpiringSoon: vi.fn(),
 }));
 
-const { refreshAccessToken } = await import("$lib/server/auth-api");
-const { isTokenExpiringSoon } = await import("$lib/utils/token-utils");
+const { refreshAccessToken } = await import("#lib/server/auth-api.js");
+const { isTokenExpiringSoon } = await import("#lib/utils/token-utils.js");
 
 // Create mock cookies object
 function createMockCookies(

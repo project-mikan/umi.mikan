@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from "svelte";
-  import type { DiaryHighlight } from "$lib/types/highlight";
+  import { onDestroy, onMount } from "svelte";
+  import type { DiaryHighlight } from "#lib/types/highlight.js";
   import {
     CURSOR_ANCHOR_ZWS,
     cleanupCursorAnchors,
     getTextOffset,
     restoreCursorPosition,
-  } from "$lib/utils/cursor-utils";
-  import { highlightEntitiesAndHighlights } from "$lib/utils/diary-entity-highlighter";
-  import { htmlToPlainText } from "$lib/utils/html-text-converter";
+  } from "#lib/utils/cursor-utils.js";
+  import { highlightEntitiesAndHighlights } from "#lib/utils/diary-entity-highlighter.js";
+  import { htmlToPlainText } from "#lib/utils/html-text-converter.js";
 
   export let value = "";
   export let placeholder = "";
@@ -19,11 +19,12 @@
   export let rows = 4;
   export let diaryHighlights: DiaryHighlight[] = [];
   export let searchKeyword = "";
+  // Ctrl+Enter で保存する時・フォーカスが外れて自動保存する時に呼ぶ
+  export let onsave: () => void = () => {};
+  export let onautosave: () => void = () => {};
 
   // ハイライトを適用すべき元のコンテンツ
   let savedContent = "";
-
-  const dispatch = createEventDispatcher();
 
   let contentElement: HTMLDivElement;
   let isUpdatingFromValue = false; // valueからの更新中かどうかのフラグ
@@ -228,7 +229,7 @@
   function _handleKeydown(event: KeyboardEvent) {
     if (event.ctrlKey && event.key === "Enter") {
       event.preventDefault();
-      dispatch("save");
+      onsave();
     } else if (event.key === "Enter") {
       // Ignore Enter key during IME composition (Japanese input)
       if (event.isComposing) {
@@ -363,7 +364,7 @@
     if (contentElement) {
       cleanupCursorAnchors(contentElement);
     }
-    dispatch("autosave");
+    onautosave();
   }
 </script>
 

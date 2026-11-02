@@ -1,5 +1,5 @@
-import { error, json } from "@sveltejs/kit";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { error } from "@sveltejs/kit";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies }) => {
@@ -15,7 +15,7 @@ export const POST: RequestHandler = async ({ cookies }) => {
     throw error(401, "Token refresh failed");
   }
 
-  return json({
+  return Response.json({
     accessToken: result.accessToken,
     refreshToken: cookies.get("refreshToken"),
   });

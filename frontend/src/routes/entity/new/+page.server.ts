@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { createEntity } from "$lib/server/entity-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { EntityCategory } from "$lib/grpc/entity/entity_pb";
+import { createEntity } from "#lib/server/entity-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { EntityCategory } from "#lib/grpc/entity/entity_pb.js";
 
 export const load: PageServerLoad = async ({ cookies }) => {
   const authResult = await ensureValidAccessToken(cookies);

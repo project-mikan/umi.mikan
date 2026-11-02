@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { browser } from "$app/environment";
+import { browser } from "$app/env";
 
 // word-break: auto-phraseが有効かどうかを管理するストア
 function createAutoPhraseStore() {

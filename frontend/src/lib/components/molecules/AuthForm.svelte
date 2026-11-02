@@ -1,30 +1,44 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { enhance } from "$app/forms";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import Alert from "../atoms/Alert.svelte";
   import Button from "../atoms/Button.svelte";
   import Link from "../atoms/Link.svelte";
   import FormField from "./FormField.svelte";
 
-  export let title: string;
-  export let submitText: string;
-  export let loadingText: string;
-  export let linkText: string;
-  export let linkHref: string;
-  export let showNameField = false;
-  export let showRegisterKeyField = false;
-  export let error: string | undefined = undefined;
-  export let isRateLimited = false;
+  interface Props {
+    title: string;
+    submitText: string;
+    loadingText: string;
+    linkText: string;
+    linkHref: string;
+    showNameField?: boolean;
+    showRegisterKeyField?: boolean;
+    error?: string | undefined;
+    isRateLimited?: boolean;
+  }
 
-  let loading = false;
-  let email = "";
-  let password = "";
-  let name = "";
-  let registerKey = "";
-  let validationError = "";
+  let {
+    title,
+    submitText,
+    loadingText,
+    linkText,
+    linkHref,
+    showNameField = false,
+    showRegisterKeyField = false,
+    error = undefined,
+    isRateLimited = false,
+  }: Props = $props();
 
-  $: csrfToken = $page.data.csrfToken;
+  let loading = $state(false);
+  let email = $state("");
+  let password = $state("");
+  let name = $state("");
+  let registerKey = $state("");
+  let validationError = $state("");
+
+  let csrfToken = $derived(page.data.csrfToken);
 
   // クライアント側の検証
   function validateForm(): boolean {

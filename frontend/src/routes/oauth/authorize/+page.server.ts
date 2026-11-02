@@ -1,10 +1,10 @@
 import { fail } from "@sveltejs/kit";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { validateCSRFToken } from "$lib/server/csrf";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { validateCSRFToken } from "#lib/server/csrf.js";
 import {
   issueMcpOAuthConsent,
   McpOAuthConsentError,
-} from "$lib/server/mcp-oauth-api";
+} from "#lib/server/mcp-oauth-api.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 // MCPサーバー（backend/infrastructure/mcpserver）の /oauth/authorize が

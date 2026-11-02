@@ -1,8 +1,8 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { enhance } from "$app/forms";
-  import "$lib/i18n";
-  import { notifyEntityUpdated } from "$lib/utils/entity-events";
+  import "#lib/i18n.js";
+  import { notifyEntityUpdated } from "#lib/utils/entity-events.js";
   import type { ActionData } from "./$types";
 
   export let form: ActionData;

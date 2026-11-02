@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock browser environment
-vi.mock("$app/environment", () => ({
+vi.mock("$app/env", () => ({
   browser: true,
 }));
 
@@ -54,7 +54,6 @@ describe("i18n", () => {
     expect(mockInit).toHaveBeenCalledWith({
       fallbackLocale: "en",
       initialLocale: "en",
-      warnOnMissingMessages: false,
     });
   });
 
@@ -72,7 +71,6 @@ describe("i18n", () => {
     expect(mockInit).toHaveBeenCalledWith({
       fallbackLocale: "en",
       initialLocale: "ja",
-      warnOnMissingMessages: false,
     });
   });
 

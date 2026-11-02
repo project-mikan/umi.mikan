@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
-  import { plainTextToHtml } from "$lib/utils/html-text-converter";
+  import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
+  import { plainTextToHtml } from "#lib/utils/html-text-converter.js";
 
   export let calendarDays: (number | null)[];
   export let entryMap: Map<number, DiaryEntry>;

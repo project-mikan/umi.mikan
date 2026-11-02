@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
+  import "#lib/i18n.js";
 
   export let activeSection = "";
   export let isOpen = false;

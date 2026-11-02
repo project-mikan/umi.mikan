@@ -1,11 +1,11 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
+  import "#lib/i18n.js";
   import { enhance } from "$app/forms";
   import { onMount } from "svelte";
-  import { attachHapticToButton } from "$lib/utils/haptic";
-  import Modal from "$lib/components/molecules/Modal.svelte";
-  import SettingsNav from "$lib/components/molecules/SettingsNav.svelte";
+  import { attachHapticToButton } from "#lib/utils/haptic.js";
+  import Modal from "#lib/components/molecules/Modal.svelte";
+  import SettingsNav from "#lib/components/molecules/SettingsNav.svelte";
   import type { ActionData, PageData } from "./$types";
 
   // Svelteアクション: ボタンに pointerdown で振動を付与する

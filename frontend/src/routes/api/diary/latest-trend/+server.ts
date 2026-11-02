@@ -1,6 +1,6 @@
-import { error, json } from "@sveltejs/kit";
-import { getLatestTrend } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { error } from "@sveltejs/kit";
+import { getLatestTrend } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies }) => {
@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
       accessToken: authResult.accessToken,
     });
 
-    return json({
+    return Response.json({
       health: trendResponse.health,
       healthReason: trendResponse.healthReason,
       mood: trendResponse.mood,

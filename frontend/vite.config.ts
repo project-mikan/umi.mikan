@@ -1,9 +1,36 @@
+import adapter from "@sveltejs/adapter-node";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vitest/config";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit()],
+  plugins: [
+    tailwindcss(),
+    // SvelteKit 3 から svelte.config.js は使われず、設定はここで sveltekit() に渡す。
+    // 本番は adapter-node で動かす（vite dev はアダプターを使わないので開発環境にも影響しない）
+    sveltekit({
+      preprocess: vitePreprocess(),
+      adapter: adapter(),
+      csp: {
+        mode: "hash",
+        directives: {
+          "default-src": ["self"],
+          "script-src": ["self"],
+          "style-src": ["self", "unsafe-inline"],
+          "img-src": ["self", "data:", "blob:"],
+          "font-src": ["self"],
+          // backend:8080 は Docker 内部のホスト名でブラウザから到達できないため指定しない
+          // （SvelteKit 3 の型はドットを含まないホスト名を受け付けない）
+          "connect-src": ["self", "http://localhost:2001"],
+          "form-action": ["self"],
+          "frame-ancestors": ["none"],
+          "object-src": ["none"],
+          "base-uri": ["self"],
+        },
+      },
+    }),
+  ],
   server: {
     // DockerのボリュームマウントでHMRが動作するようにpollingを使用。
     // ポーリングは監視ファイル全件をstatし続けるため、巨大なキャッシュディレクトリが

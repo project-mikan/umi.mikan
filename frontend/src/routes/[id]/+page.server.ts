@@ -6,11 +6,11 @@ import {
   getDiaryEntry,
   updateDiaryEntry,
   getDiaryEmbeddingStatus,
-} from "$lib/server/diary-api";
-import { getUserInfo } from "$lib/server/auth-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { getPastSameDates } from "$lib/utils/date-utils";
-import type { DiaryEntry } from "$lib/grpc/diary/diary_pb";
+} from "#lib/server/diary-api.js";
+import { getUserInfo } from "#lib/server/auth-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { getPastSameDates } from "#lib/utils/date-utils.js";
+import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({
@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({
     "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
   });
 
-  // 明示的な依存関係を設定してinvalidateAll()で確実に再読み込み
+  // 明示的な依存関係を設定してrefreshAll()で確実に再読み込み
   depends("diary:entry");
 
   const authResult = await ensureValidAccessToken(cookies);

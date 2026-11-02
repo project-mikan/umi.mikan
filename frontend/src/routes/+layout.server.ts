@@ -1,11 +1,11 @@
-import { getUserInfo } from "$lib/server/auth-api";
-import { isTokenExpiringSoon } from "$lib/utils/token-utils";
-import { setCSRFToken, getCSRFToken } from "$lib/server/csrf";
+import { getUserInfo } from "#lib/server/auth-api.js";
+import { isTokenExpiringSoon } from "#lib/utils/token-utils.js";
+import { setCSRFToken, getCSRFToken } from "#lib/server/csrf.js";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ cookies, url }) => {
   // ここではリフレッシュを行わない。
-  // invalidateAll() で +layout と +page が並行実行されるとき、
+  // refreshAll() で +layout と +page が並行実行されるとき、
   // 両方が refreshAccessToken() を呼ぶと同じ refreshToken を二重消費して競合が起きる。
   // リフレッシュは各 +page.server.ts の ensureValidAccessToken に任せる。
   const accessToken = cookies.get("accessToken");

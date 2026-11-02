@@ -1,10 +1,10 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
-  import { browser } from "$app/environment";
+  import { browser } from "$app/env";
   import { onMount } from "svelte";
-  import { authenticatedFetch } from "$lib/auth-client";
-  import { summaryVisibility } from "$lib/summary-visibility-store";
-  import "$lib/i18n";
+  import { authenticatedFetch } from "#lib/auth-client.js";
+  import { summaryVisibility } from "#lib/summary-visibility-store.js";
+  import "#lib/i18n.js";
 
   interface LatestTrendData {
     health: string; // "bad", "slight", "normal", "good"

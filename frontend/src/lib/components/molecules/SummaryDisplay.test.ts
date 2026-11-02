@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock authenticatedFetch
-vi.mock("$lib/auth-client", () => ({
+vi.mock("#lib/auth-client.js", () => ({
   authenticatedFetch: vi.fn(),
 }));
 
-import { authenticatedFetch } from "$lib/auth-client";
+import { authenticatedFetch } from "#lib/auth-client.js";
 
 // Types for test data
 interface TestSummary {

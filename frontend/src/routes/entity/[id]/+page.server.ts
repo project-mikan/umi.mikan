@@ -6,9 +6,9 @@ import {
   createEntityAlias,
   updateEntityAlias,
   deleteEntityAlias,
-} from "$lib/server/entity-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
-import { EntityCategory } from "$lib/grpc/entity/entity_pb";
+} from "#lib/server/entity-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
+import { EntityCategory } from "#lib/grpc/entity/entity_pb.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, cookies }) => {

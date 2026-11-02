@@ -4,8 +4,8 @@ import {
   createYMD,
   getDiaryEntry,
   updateDiaryEntry,
-} from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+} from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({
@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({
     "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
   });
 
-  // 明示的な依存関係を設定してinvalidateAll()で確実に再読み込み
+  // 明示的な依存関係を設定してrefreshAll()で確実に再読み込み
   depends("diary:home");
 
   const authResult = await ensureValidAccessToken(cookies);

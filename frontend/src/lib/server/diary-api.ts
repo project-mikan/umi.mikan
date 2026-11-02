@@ -39,7 +39,7 @@ import {
   type GetDiaryEmbeddingStatusResponse,
   ExportDiaryEntriesRequestSchema,
   type ExportDiaryEntriesResponse,
-} from "$lib/grpc/diary/diary_pb";
+} from "#lib/grpc/diary/diary_pb.js";
 
 // モジュールレベルで Transport と Client を共有する（リクエストごとの生成コストを排除）
 // 認証ヘッダは各 RPC 呼び出し時に CallOptions として個別に付与する

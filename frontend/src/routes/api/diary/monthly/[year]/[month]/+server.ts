@@ -1,6 +1,6 @@
-import { error, json } from "@sveltejs/kit";
-import { createYM, getDiaryEntriesByMonth } from "$lib/server/diary-api";
-import { ensureValidAccessToken } from "$lib/server/auth-middleware";
+import { error } from "@sveltejs/kit";
+import { createYM, getDiaryEntriesByMonth } from "#lib/server/diary-api.js";
+import { ensureValidAccessToken } from "#lib/server/auth-middleware.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
       })),
     };
 
-    return json(serializedEntries);
+    return Response.json(serializedEntries);
   } catch (err) {
     console.error("Failed to load diary entries:", err);
     console.error("Error details:", {

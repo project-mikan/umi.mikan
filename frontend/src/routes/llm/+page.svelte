@@ -1,9 +1,9 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
-  import "$lib/i18n";
-  import Head from "$lib/components/atoms/Head.svelte";
-  import Card from "$lib/components/atoms/Card.svelte";
-  import PubSubMetricsChart from "$lib/components/molecules/PubSubMetricsChart.svelte";
+  import "#lib/i18n.js";
+  import Head from "#lib/components/atoms/Head.svelte";
+  import Card from "#lib/components/atoms/Card.svelte";
+  import PubSubMetricsChart from "#lib/components/molecules/PubSubMetricsChart.svelte";
   import type { PageData } from "./$types";
 
   export let data: PageData;

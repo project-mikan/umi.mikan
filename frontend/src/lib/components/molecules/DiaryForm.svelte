@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import "$lib/i18n";
+  import "#lib/i18n.js";
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
   import Alert from "../atoms/Alert.svelte";
