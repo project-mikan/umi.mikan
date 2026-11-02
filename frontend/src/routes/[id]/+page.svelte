@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
   import { enhance } from "$app/forms";
-  import { goto, refreshAll } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import { onMount, untrack } from "svelte";
@@ -17,6 +17,12 @@
   import DiaryChunkTimeline from "#lib/components/molecules/DiaryChunkTimeline.svelte";
   import { getDayOfWeekKey } from "#lib/utils/date-utils.js";
   import { createSubmitHandler } from "#lib/utils/form-utils.js";
+  import {
+    createDiaryDraft,
+    diaryDateKey,
+    hasUnsavedDraft,
+    reconcileDiaryDraft,
+  } from "#lib/utils/diary-draft.js";
   import type { HighlightData } from "#lib/types/highlight.js";
   import type { ActionData, PageData } from "./$types";
 
@@ -48,13 +54,16 @@
     }),
   );
 
-  // 入力中の本文。data が変わる（保存後の再読み込み・別の日への遷移）とサーバーの値に戻る
-  let content = $derived(data.entry?.content || "");
+  // SSR でも初期表示が正しくなるよう、宣言時にサーバーの本文で初期化する
+  let draft = $state(
+    untrack(() =>
+      createDiaryDraft(diaryDateKey(data.date), data.entry?.content || ""),
+    ),
+  );
   let formElement: HTMLFormElement | undefined = $state();
   let _showDeleteConfirm = $state(false);
   let loading = $state(false);
   let saved = $state(false);
-  let isHighlightOutdated = $state(false); // ハイライトが古いかどうか
 
   // ハイライトデータ
   let highlightData = $state<HighlightData | null>(null);
@@ -74,25 +83,21 @@
     highlightVisible && highlightData ? [...highlightData.highlights] : [],
   );
 
-  // 日記の一意性を判定するためのID（entryがない日は日付で判定）
-  function entryIdOf(d: PageData): string {
-    return d.entry?.id || `${d.date.year}-${d.date.month}-${d.date.day}`;
-  }
-
-  // 未保存状態の管理（初期値は表示時の日記。SSRでも正しい値になるようここで設定する）
-  let initialContent = $state(untrack(() => data.entry?.content || ""));
   let allowNavigation = $state(false);
 
-  // 前回のentryのIDを保持して、別の日記に遷移したことを検出する
-  let previousEntryId = untrack(() => entryIdOf(data));
+  // 保存後の再読み込みや別の日への遷移に合わせる。同じ日の書きかけは消さずに残す
+  $effect.pre(() => {
+    const key = diaryDateKey(data.date);
+    const serverContent = data.entry?.content || "";
+    untrack(() => {
+      draft = reconcileDiaryDraft(draft, key, serverContent);
+    });
+  });
 
-  // コンテンツの変更を監視して未保存状態を更新
-  let hasUnsavedChanges = $derived(
-    content !== initialContent && !allowNavigation,
-  );
+  let hasUnsavedChanges = $derived(hasUnsavedDraft(draft) && !allowNavigation);
 
   // 日付判定（当日・未来日）
-  let dateFlags = $derived.by(() => {
+  let { isToday, isFutureDate } = $derived.by(() => {
     const now = new Date();
     const currentDate = new Date(
       data.date.year,
@@ -105,57 +110,30 @@
       isFutureDate: currentDate.getTime() > today.getTime(),
     };
   });
-  let isToday = $derived(dateFlags.isToday);
-  let isFutureDate = $derived(dateFlags.isFutureDate);
 
-  // ハイライトが古いか（日記の updatedAt > ハイライトの updatedAt）を判定し、古ければ非表示にする
+  // ハイライトが日記より古いか（日記の updatedAt > ハイライトの updatedAt）
+  let isHighlightOutdated = $derived.by(() => {
+    if (!highlightData || !data.entry) return false;
+    // 日記エントリは秒単位、ハイライトはミリ秒単位なので統一
+    const diaryUpdatedAt = Number(data.entry.updatedAt) * 1000;
+    const highlightUpdatedAt = Number(highlightData.updatedAt);
+    return diaryUpdatedAt > highlightUpdatedAt;
+  });
+
+  // ハイライトが古くなったら非表示にする（表示・非表示はユーザーも切り替えられる）
   $effect.pre(() => {
-    const entry = data.entry;
-    const highlight = highlightData;
-    untrack(() => {
-      if (!highlight || !entry) {
-        isHighlightOutdated = false;
-        return;
-      }
-      // 日記エントリは秒単位、ハイライトはミリ秒単位なので統一
-      const diaryUpdatedAt = Number(entry.updatedAt) * 1000; // 秒 → ミリ秒
-      const highlightUpdatedAt = Number(highlight.updatedAt); // 既にミリ秒
-
-      // ハイライトが日記よりも古い場合
-      const isOutdated = diaryUpdatedAt > highlightUpdatedAt;
-
-      // 古くなった場合は非表示にする
-      if (isOutdated && !isHighlightOutdated) {
-        isHighlightOutdated = true;
+    if (isHighlightOutdated) {
+      untrack(() => {
         highlightVisible = false;
-      } else if (!isOutdated) {
-        isHighlightOutdated = false;
-      }
-    });
+      });
+    }
   });
 
-  // Character count calculation
-  let characterCount = $derived(content ? content.length : 0);
-
-  // 別の日記に遷移した時（entryのIDが変わった時）だけ未保存状態を初期化する
-  $effect.pre(() => {
-    const currentEntryId = entryIdOf(data);
-    const entryContent = data.entry?.content || "";
-    untrack(() => {
-      if (currentEntryId === previousEntryId) return;
-      previousEntryId = currentEntryId;
-      initialContent = entryContent;
-      content = entryContent;
-      // 新しいページではallowNavigationをリセット
-      allowNavigation = false;
-    });
-  });
+  let characterCount = $derived(draft.content.length);
 
   function handleHighlightUpdated(event: CustomEvent) {
     const newHighlight = event.detail.highlight;
     highlightData = newHighlight;
-    // ハイライトが更新されたら古くないとマークして表示する
-    isHighlightOutdated = false;
     highlightVisible = true;
   }
 
@@ -306,17 +284,8 @@
 				action="?/save"
 use:enhance={createSubmitHandler(
 	(l) => loading = l,
-	async (s) => {
-		saved = s;
-		if (s) {
-			// 保存成功時にページデータを再読み込み（updatedAtを更新）
-			await refreshAll();
-			// 保存成功時に初期コンテンツを更新
-			initialContent = content;
-			// hasUnsavedChangesの再計算に任せる
-			// ハイライトの古い/新しいの判定はリアクティブステートメントに任せる
-		}
-	}
+	(s) => (saved = s),
+
 )}
 				slot="form"
 			>
@@ -363,7 +332,7 @@ use:enhance={createSubmitHandler(
 					rows={8}
 					diaryHighlights={displayedHighlights}
 					{searchKeyword}
-					bind:value={content}
+					bind:value={draft.content}
 					on:save={_handleSave}
 					on:autosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
 				/>

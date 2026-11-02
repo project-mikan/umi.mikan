@@ -1,117 +1,52 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import { enhance } from "$app/forms";
-  import { goto } from "$app/navigation";
   import { beforeNavigate } from "$app/navigation";
-  import { page } from "$app/state";
-  import { onMount, untrack } from "svelte";
+  import { browser } from "$app/env";
+  import { onMount } from "svelte";
   import "#lib/i18n.js";
   import Button from "#lib/components/atoms/Button.svelte";
   import SaveButton from "#lib/components/atoms/SaveButton.svelte";
-  import DiaryCard from "#lib/components/molecules/DiaryCard.svelte";
-  import FormField from "#lib/components/molecules/FormField.svelte";
+  import EditableDiaryCard from "#lib/components/molecules/EditableDiaryCard.svelte";
   import TimeProgressBar from "#lib/components/molecules/TimeProgressBar.svelte";
   import RecentDiaryStreak from "#lib/components/molecules/RecentDiaryStreak.svelte";
   import LatestTrendDisplay from "#lib/components/molecules/LatestTrendDisplay.svelte";
   import CollapsibleSection from "#lib/components/molecules/CollapsibleSection.svelte";
-  import { createSubmitHandler } from "#lib/utils/form-utils.js";
-  import type { DiaryEntry, YMD } from "#lib/grpc/diary/diary_pb.js";
   import type { PageData } from "./$types";
 
   let title = $derived($_("page.title.home"));
 
   let { data }: { data: PageData } = $props();
 
-  // 入力中の本文。data が変わる（保存後の再読み込み・日付の切り替え）とサーバーの値に戻る
-  let todayContent = $derived(data.today.entry?.content || "");
-  let yesterdayContent = $derived(data.yesterday.entry?.content || "");
-  let dayBeforeYesterdayContent = $derived(
-    data.dayBeforeYesterday.entry?.content || "",
-  );
+  type DiarySection = "today" | "yesterday" | "dayBeforeYesterday";
 
-  let formElement: HTMLFormElement | undefined = $state();
-  let yesterdayFormElement: HTMLFormElement | undefined = $state();
-  let dayBeforeYesterdayFormElement: HTMLFormElement | undefined = $state();
-  let todayLoading = $state(false);
-  let yesterdayLoading = $state(false);
-  let dayBeforeLoading = $state(false);
-  let todaySaved = $state(false);
-  let yesterdaySaved = $state(false);
-  let dayBeforeSaved = $state(false);
-
-  // Character count calculations
-  let todayCharacterCount = $derived(todayContent ? todayContent.length : 0);
-  let yesterdayCharacterCount = $derived(
-    yesterdayContent ? yesterdayContent.length : 0,
-  );
-  let dayBeforeYesterdayCharacterCount = $derived(
-    dayBeforeYesterdayContent ? dayBeforeYesterdayContent.length : 0,
-  );
-
-  // dataの一意性を判定するためのID（日付の組み合わせ）
-  function dataIdOf(d: PageData): string {
-    return `${d.today.date.year}-${d.today.date.month}-${d.today.date.day}`;
-  }
-
-  // 未保存状態の管理（初期値は表示時の日記。SSRでも正しい値になるようここで設定する）
-  let initialTodayContent = $state(
-    untrack(() => data.today.entry?.content || ""),
-  );
-  let initialYesterdayContent = $state(
-    untrack(() => data.yesterday.entry?.content || ""),
-  );
-  let initialDayBeforeYesterdayContent = $state(
-    untrack(() => data.dayBeforeYesterday.entry?.content || ""),
-  );
-  let allowNavigation = $state(false);
-
-  // 前回のdataのIDを保持して、日付が切り替わったことを検出する
-  let previousDataId = untrack(() => dataIdOf(data));
-
-  // 日付が切り替わった時（dataのIDが変わった時）だけ初期コンテンツをリセットする
-  $effect.pre(() => {
-    const currentDataId = dataIdOf(data);
-    const today = data.today.entry?.content || "";
-    const yesterday = data.yesterday.entry?.content || "";
-    const dayBeforeYesterday = data.dayBeforeYesterday.entry?.content || "";
-    untrack(() => {
-      if (currentDataId === previousDataId) return;
-      previousDataId = currentDataId;
-      initialTodayContent = today;
-      initialYesterdayContent = yesterday;
-      initialDayBeforeYesterdayContent = dayBeforeYesterday;
-      todayContent = today;
-      yesterdayContent = yesterday;
-      dayBeforeYesterdayContent = dayBeforeYesterday;
-      // 新しいページではallowNavigationをリセット
-      allowNavigation = false;
-    });
+  // 各カードの保存中・保存済み・未保存の状態（カードから bind で受け取る）
+  let loading = $state<Record<DiarySection, boolean>>({
+    today: false,
+    yesterday: false,
+    dayBeforeYesterday: false,
   });
-
-  // 各日記の未保存状態を監視
-  let todayHasUnsavedChanges = $derived(
-    todayContent !== initialTodayContent && !allowNavigation,
-  );
-  let yesterdayHasUnsavedChanges = $derived(
-    yesterdayContent !== initialYesterdayContent && !allowNavigation,
-  );
-  let dayBeforeYesterdayHasUnsavedChanges = $derived(
-    dayBeforeYesterdayContent !== initialDayBeforeYesterdayContent &&
-      !allowNavigation,
-  );
+  let saved = $state<Record<DiarySection, boolean>>({
+    today: false,
+    yesterday: false,
+    dayBeforeYesterday: false,
+  });
+  let unsaved = $state<Record<DiarySection, boolean>>({
+    today: false,
+    yesterday: false,
+    dayBeforeYesterday: false,
+  });
+  let editors = $state<Partial<Record<DiarySection, EditableDiaryCard>>>({});
 
   // いずれか1つでも未保存の変更があるかチェック
   let hasAnyUnsavedChanges = $derived(
-    todayHasUnsavedChanges ||
-      yesterdayHasUnsavedChanges ||
-      dayBeforeYesterdayHasUnsavedChanges,
+    unsaved.today || unsaved.yesterday || unsaved.dayBeforeYesterday,
   );
 
   // トグルセクションの開閉状態（localStorageから復元）
   let sideInfoOpen = $state(false);
 
   // localStorageから開閉状態を復元
-  if (typeof window !== "undefined") {
+  if (browser) {
     const stored = localStorage.getItem("sideInfoOpen");
     if (stored !== null) {
       sideInfoOpen = stored === "true";
@@ -128,33 +63,14 @@
     return `/monthly/${now.getFullYear()}/${now.getMonth() + 1}`;
   }
 
-  function formatDateStr(ymd: YMD): string {
-    return `${ymd.year}-${String(ymd.month).padStart(2, "0")}-${String(ymd.day).padStart(2, "0")}`;
-  }
-
-  function viewEntry(entry: DiaryEntry) {
-    const date = entry.date;
-    if (date) {
-      const dateStr = formatDateStr(date);
-      goto(`/${dateStr}`);
-    }
-  }
-
-  function handleSave() {
-    formElement?.requestSubmit();
-  }
-
-  function handleYesterdaySave() {
-    yesterdayFormElement?.requestSubmit();
-  }
-
-  function handleDayBeforeYesterdaySave() {
-    dayBeforeYesterdayFormElement?.requestSubmit();
+  // 指定したカードの日記を保存する
+  function save(section: DiarySection) {
+    editors[section]?.save();
   }
 
   // ページ遷移前の警告
   beforeNavigate((navigation) => {
-    if (hasAnyUnsavedChanges && !allowNavigation) {
+    if (hasAnyUnsavedChanges) {
       if (!confirm($_("diary.unsavedChangesWarning"))) {
         navigation.cancel();
       }
@@ -162,19 +78,15 @@
   });
 
   // 表示する保存ボタンを決定（フォーカスまたはスクロール位置に基づく）
-  let activeSection: "today" | "yesterday" | "dayBeforeYesterday" =
-    $state("today");
+  let activeSection: DiarySection = $state("today");
   let todayCard: HTMLElement | undefined = $state();
   let yesterdayCard: HTMLElement | undefined = $state();
   let dayBeforeYesterdayCard: HTMLElement | undefined = $state();
 
   // フォーカスベースのセクション検出（モバイルキーボード対応）
-  let focusedSection: "today" | "yesterday" | "dayBeforeYesterday" | null =
-    null;
+  let focusedSection: DiarySection | null = null;
 
-  function handleFocusIn(
-    section: "today" | "yesterday" | "dayBeforeYesterday",
-  ) {
+  function handleFocusIn(section: DiarySection) {
     focusedSection = section;
     activeSection = section;
   }
@@ -284,7 +196,7 @@
 
       // 画面中央がどのカードにも含まれない場合、画面内で最も近いカードを選択
       const candidates: Array<{
-        section: "today" | "yesterday" | "dayBeforeYesterday";
+        section: DiarySection;
         distance: number;
       }> = [];
 
@@ -379,64 +291,17 @@
 	<div class="space-y-6">
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div bind:this={todayCard} onfocusin={() => handleFocusIn("today")} onfocusout={handleFocusOut}>
-		<DiaryCard
+		<EditableDiaryCard
+			bind:this={editors.today}
+			bind:loading={loading.today}
+			bind:saved={saved.today}
+			bind:hasUnsavedChanges={unsaved.today}
 			title={$_("diary.today")}
+			date={data.today.date}
 			entry={data.today.entry}
-			showForm={true}
-			href={`/${formatDateStr(data.today.date)}`}
-		>
-			<form
-				bind:this={formElement}
-				method="POST"
-				action="?/saveToday"
-use:enhance={createSubmitHandler(
-	(loading) => todayLoading = loading,
-	(saved) => {
-		todaySaved = saved;
-		if (saved) {
-			// 保存成功時に初期コンテンツを更新
-			initialTodayContent = todayContent;
-			// 個別のフラグでallowNavigationを制御せず、hasUnsavedChangesの再計算に任せる
-		}
-	}
-)}
-				slot="form"
-			>
-				<input
-					type="hidden"
-					name="date"
-					value={formatDateStr(data.today.date)}
-				/>
-				{#if data.today.entry}
-					<input type="hidden" name="id" value={data.today.entry.id} />
-				{/if}
-				<FormField
-					type="textarea"
-					label=""
-					id="content"
-					name="content"
-					placeholder={$_("diary.placeholder")}
-					rows={8}
-					bind:value={todayContent}
-					on:save={handleSave}
-					on:autosave={() => { if (todayHasUnsavedChanges && !todayLoading) handleSave(); }}
-				/>
-
-				<!-- Character count display -->
-				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-					{$_("diary.characterCount", { values: { count: todayCharacterCount } })}
-					{#if todayCharacterCount >= 1000}
-						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
-							({$_("diary.autoSummaryEligible")})
-						</span>
-					{/if}
-				</div>
-
-				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
-					<SaveButton loading={todayLoading} saved={todaySaved} />
-				</div>
-			</form>
-		</DiaryCard>
+			action="?/saveToday"
+			inputId="content"
+		/>
 		</div>
 
 		<!-- トグル可能なセクション: さいきん -->
@@ -450,8 +315,8 @@ use:enhance={createSubmitHandler(
 					<RecentDiaryStreak recentDays={data.recentDays} />
 
 					<!-- トレンド分析 -->
-					{#if page.data.autoLatestTrendEnabled}
-						<LatestTrendDisplay userName={page.data.userName} />
+					{#if data.autoLatestTrendEnabled}
+						<LatestTrendDisplay userName={data.userName} />
 					{/if}
 				</div>
 			</CollapsibleSection>
@@ -459,128 +324,32 @@ use:enhance={createSubmitHandler(
 
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div bind:this={yesterdayCard} onfocusin={() => handleFocusIn("yesterday")} onfocusout={handleFocusOut}>
-		<DiaryCard
+		<EditableDiaryCard
+			bind:this={editors.yesterday}
+			bind:loading={loading.yesterday}
+			bind:saved={saved.yesterday}
+			bind:hasUnsavedChanges={unsaved.yesterday}
 			title={$_("diary.yesterday")}
+			date={data.yesterday.date}
 			entry={data.yesterday.entry}
-			showForm={true}
-			href={`/${formatDateStr(data.yesterday.date)}`}
-		>
-			<form
-				bind:this={yesterdayFormElement}
-				method="POST"
-				action="?/saveYesterday"
-use:enhance={createSubmitHandler(
-	(loading) => yesterdayLoading = loading,
-	(saved) => {
-		yesterdaySaved = saved;
-		if (saved) {
-			// 保存成功時に初期コンテンツを更新
-			initialYesterdayContent = yesterdayContent;
-		}
-	}
-)}
-				slot="form"
-			>
-				<input
-					type="hidden"
-					name="date"
-					value={formatDateStr(data.yesterday.date)}
-				/>
-				{#if data.yesterday.entry}
-					<input type="hidden" name="id" value={data.yesterday.entry.id} />
-				{/if}
-				<FormField
-					type="textarea"
-					label=""
-					id="yesterday-content"
-					name="content"
-					placeholder={$_("diary.placeholder")}
-					rows={8}
-					bind:value={yesterdayContent}
-					on:save={handleYesterdaySave}
-					on:autosave={() => { if (yesterdayHasUnsavedChanges && !yesterdayLoading) handleYesterdaySave(); }}
-				/>
-
-				<!-- Character count display -->
-				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-					{$_("diary.characterCount", { values: { count: yesterdayCharacterCount } })}
-					{#if yesterdayCharacterCount >= 1000}
-						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
-							({$_("diary.autoSummaryEligible")})
-						</span>
-					{/if}
-				</div>
-
-				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
-					<SaveButton loading={yesterdayLoading} saved={yesterdaySaved} />
-				</div>
-			</form>
-		</DiaryCard>
+			action="?/saveYesterday"
+			inputId="yesterday-content"
+		/>
 		</div>
 
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div bind:this={dayBeforeYesterdayCard} onfocusin={() => handleFocusIn("dayBeforeYesterday")} onfocusout={handleFocusOut}>
-		<DiaryCard
+		<EditableDiaryCard
+			bind:this={editors.dayBeforeYesterday}
+			bind:loading={loading.dayBeforeYesterday}
+			bind:saved={saved.dayBeforeYesterday}
+			bind:hasUnsavedChanges={unsaved.dayBeforeYesterday}
 			title={$_("diary.dayBeforeYesterday")}
+			date={data.dayBeforeYesterday.date}
 			entry={data.dayBeforeYesterday.entry}
-			showForm={true}
-			href={`/${formatDateStr(data.dayBeforeYesterday.date)}`}
-		>
-			<form
-				bind:this={dayBeforeYesterdayFormElement}
-				method="POST"
-				action="?/saveDayBeforeYesterday"
-use:enhance={createSubmitHandler(
-	(loading) => dayBeforeLoading = loading,
-	(saved) => {
-		dayBeforeSaved = saved;
-		if (saved) {
-			// 保存成功時に初期コンテンツを更新
-			initialDayBeforeYesterdayContent = dayBeforeYesterdayContent;
-		}
-	}
-)}
-				slot="form"
-			>
-				<input
-					type="hidden"
-					name="date"
-					value={formatDateStr(data.dayBeforeYesterday.date)}
-				/>
-				{#if data.dayBeforeYesterday.entry}
-					<input
-						type="hidden"
-						name="id"
-						value={data.dayBeforeYesterday.entry.id}
-					/>
-				{/if}
-				<FormField
-					type="textarea"
-					label=""
-					id="day-before-yesterday-content"
-					name="content"
-					placeholder={$_("diary.placeholder")}
-					rows={8}
-					bind:value={dayBeforeYesterdayContent}
-					on:save={handleDayBeforeYesterdaySave}
-					on:autosave={() => { if (dayBeforeYesterdayHasUnsavedChanges && !dayBeforeLoading) handleDayBeforeYesterdaySave(); }}
-				/>
-
-				<!-- Character count display -->
-				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-					{$_("diary.characterCount", { values: { count: dayBeforeYesterdayCharacterCount } })}
-					{#if dayBeforeYesterdayCharacterCount >= 1000}
-						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
-							({$_("diary.autoSummaryEligible")})
-						</span>
-					{/if}
-				</div>
-
-				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
-					<SaveButton loading={dayBeforeLoading} saved={dayBeforeSaved} />
-				</div>
-			</form>
-		</DiaryCard>
+			action="?/saveDayBeforeYesterday"
+			inputId="day-before-yesterday-content"
+		/>
 		</div>
 	</div>
 
@@ -590,29 +359,29 @@ use:enhance={createSubmitHandler(
 			{#if activeSection === "today"}
 				<SaveButton
 					type="button"
-					loading={todayLoading}
-					saved={todaySaved}
+					loading={loading.today}
+					saved={saved.today}
 					size="md"
 					label={$_("diary.saveTodayDiary")}
-					on:click={handleSave}
+					on:click={() => save("today")}
 				/>
 			{:else if activeSection === "yesterday"}
 				<SaveButton
 					type="button"
-					loading={yesterdayLoading}
-					saved={yesterdaySaved}
+					loading={loading.yesterday}
+					saved={saved.yesterday}
 					size="md"
 					label={$_("diary.saveYesterdayDiary")}
-					on:click={handleYesterdaySave}
+					on:click={() => save("yesterday")}
 				/>
 			{:else}
 				<SaveButton
 					type="button"
-					loading={dayBeforeLoading}
-					saved={dayBeforeSaved}
+					loading={loading.dayBeforeYesterday}
+					saved={saved.dayBeforeYesterday}
 					size="md"
 					label={$_("diary.saveDayBeforeYesterdayDiary")}
-					on:click={handleDayBeforeYesterdaySave}
+					on:click={() => save("dayBeforeYesterday")}
 				/>
 			{/if}
 		</div>

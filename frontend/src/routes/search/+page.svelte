@@ -2,7 +2,6 @@
   import { _ } from "svelte-i18n";
   import { goto } from "$app/navigation";
   import { navigating } from "$app/state";
-  import { untrack } from "svelte";
   import "#lib/i18n.js";
   import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
   import type { SemanticSearchResult } from "#lib/grpc/diary/diary_pb.js";
@@ -12,15 +11,13 @@
 
   let { data }: { data: PageData } = $props();
 
-  // 入力欄と検索モードの初期値はページ表示時の値だけを使う（以降はユーザー操作で変わる）
-  let searchKeyword = $state(untrack(() => data.keyword || ""));
+  // 入力欄と検索モードはユーザーが書き換えられる。戻る・進むで data が変わったら URL の値に戻す
+  let searchKeyword = $derived(data.keyword || "");
   // 意味的検索が無効の場合はキーワードモードにフォールバック
-  let searchMode: "keyword" | "semantic" = $state(
-    untrack(() =>
-      data.semanticSearchEnabled && data.mode === "semantic"
-        ? "semantic"
-        : "keyword",
-    ),
+  let searchMode: "keyword" | "semantic" = $derived(
+    data.semanticSearchEnabled && data.mode === "semantic"
+      ? "semantic"
+      : "keyword",
   );
   // ナビゲーション中かどうか（検索ボタンのローディング表示に使う）
   let isNavigating = $derived(navigating.to !== null);
