@@ -24,6 +24,7 @@ services:
       GOOGLE_CLOUD_PROJECT: "your-gcp-project-id"
       GOOGLE_CLOUD_LOCATION: "global"
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-service-account.json
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318 # トレースの送信先（未設定ならトレースは無効）
     restart: unless-stopped
     depends_on:
       postgres:
@@ -93,6 +94,7 @@ services:
       GOOGLE_CLOUD_PROJECT: "your-gcp-project-id"
       GOOGLE_CLOUD_LOCATION: "global"
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-service-account.json
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318 # トレースの送信先（未設定ならトレースは無効）
     restart: unless-stopped
     depends_on:
       postgres:
@@ -117,6 +119,7 @@ services:
       SCHEDULER_MONTHLY_INTERVAL: 30m
       SCHEDULER_LATEST_TREND_HOUR: 4
       SCHEDULER_LATEST_TREND_MINUTE: 0
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318 # トレースの送信先（未設定ならトレースは無効）
     restart: unless-stopped
     depends_on:
       postgres:
@@ -211,6 +214,28 @@ services:
     command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
     depends_on:
       - loki
+      - pyroscope
+    networks:
+      - internal
+
+  # トレースの保存先（Traces Drilldown 用）
+  tempo:
+    image: grafana/tempo:latest # メジャー・マイナー単位のタグが公開されていないためlatest
+    restart: unless-stopped
+    command: -target=all -config.file=/etc/tempo.yaml
+    volumes:
+      - ./monitoring/tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo_prod_volume:/var/tempo
+    networks:
+      - internal
+
+  # プロファイルの保存先（Profiles Drilldown 用）。Alloy が各サービスの pprof を取得して送る
+  pyroscope:
+    image: grafana/pyroscope:latest # メジャー・マイナー単位のタグが公開されていないためlatest
+    restart: unless-stopped
+    command: -config.file=/etc/pyroscope/config.yaml -retention-period=168h # Lokiと同じく7日で消す
+    volumes:
+      - pyroscope_prod_volume:/data
     networks:
       - internal
 
@@ -231,6 +256,8 @@ volumes:
   prometheus_prod_volume:
   grafana_prod_volume:
   loki_prod_volume:
+  tempo_prod_volume:
+  pyroscope_prod_volume:
 
 networks:
   internal:

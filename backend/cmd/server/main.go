@@ -12,14 +12,18 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"connectrpc.com/otelconnect"
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
 	connectadapter "github.com/project-mikan/umi.mikan/backend/infrastructure/connectrpc"
 	g "github.com/project-mikan/umi.mikan/backend/infrastructure/grpc"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/grpc/grpcconnect"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/mcpserver"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/observability"
 	"github.com/project-mikan/umi.mikan/backend/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -46,8 +50,22 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 		return fmt.Errorf("failed to load port: %w", err)
 	}
 
+	// トレースを Tempo に送る（OTEL_EXPORTER_OTLP_ENDPOINT が未設定なら無効）
+	shutdownTracing, err := observability.SetupTracing(context.Background(), "umi-mikan-backend")
+	if err != nil {
+		return fmt.Errorf("failed to setup tracing: %w", err)
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdownTracing(ctx); err != nil {
+			log.Printf("Error shutting down tracing: %v", err)
+		}
+	}()
+
 	// Create grpc server
 	grpcServer := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.UnaryInterceptor(middleware.AuthInterceptor),
 	)
 
@@ -80,6 +98,7 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	// Prometheusメトリクスサーバーを起動（デバッグエンドポイント含む）
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
+	observability.RegisterPprofHandlers(mux)
 	mux.HandleFunc("/debug/error", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error: debug test error triggered")
 		w.Header().Set("Content-Type", "application/json")
@@ -109,7 +128,12 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 
 	// ConnectRPC HTTP サーバーを起動（iOS/外部クライアント向け）
 	connectMux := http.NewServeMux()
-	authInterceptor := connect.WithInterceptors(connectadapter.NewAuthInterceptor())
+	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithoutMetrics())
+	if err != nil {
+		return fmt.Errorf("failed to create otelconnect interceptor: %w", err)
+	}
+	// 認証で弾かれたリクエストもトレースに残すため、トレースのインターセプターを先に置く
+	authInterceptor := connect.WithInterceptors(otelInterceptor, connectadapter.NewAuthInterceptor())
 	connectMux.Handle(grpcconnect.NewAuthServiceHandler(connectadapter.NewAuthServiceAdapter(app.AuthService), authInterceptor))
 	connectMux.Handle(grpcconnect.NewDiaryServiceHandler(connectadapter.NewDiaryServiceAdapter(app.DiaryService), authInterceptor))
 	connectMux.Handle(grpcconnect.NewEntityServiceHandler(connectadapter.NewEntityServiceAdapter(app.EntityService), authInterceptor))
@@ -128,7 +152,7 @@ func runServer(app *container.ServerApp, cleanup *container.Cleanup) error {
 	// AIクライアント（Claude Desktopなど）向けに日記取得・検索ツールを公開する
 	mcpServer := &http.Server{
 		Addr:         ":8014",
-		Handler:      mcpserver.NewHTTPHandler(app.DiaryService, app.DB, app.Redis, app.UserService, constants.LoadMCPServerBaseURL(), constants.LoadFrontendBaseURL()),
+		Handler:      otelhttp.NewHandler(mcpserver.NewHTTPHandler(app.DiaryService, app.DB, app.Redis, app.UserService, constants.LoadMCPServerBaseURL(), constants.LoadFrontendBaseURL()), "mcp"),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,

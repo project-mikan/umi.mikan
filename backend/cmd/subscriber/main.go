@@ -20,6 +20,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/llm"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/observability"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -152,9 +153,24 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 	}
 	logger.Info("Connected to Redis successfully")
 
-	// メトリクスサーバー開始
-	metricsServer := &http.Server{Addr: ":2005"}
-	http.Handle("/metrics", promhttp.Handler())
+	// トレースを Tempo に送る（OTEL_EXPORTER_OTLP_ENDPOINT が未設定なら無効）
+	shutdownTracing, err := observability.SetupTracing(ctx, "umi-mikan-subscriber")
+	if err != nil {
+		return fmt.Errorf("failed to setup tracing: %w", err)
+	}
+	defer func() {
+		tracingCtx, tracingCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer tracingCancel()
+		if err := shutdownTracing(tracingCtx); err != nil {
+			logger.WithError(err).Error("Error shutting down tracing")
+		}
+	}()
+
+	// メトリクスサーバー開始（Alloy がプロファイルを取りに来る pprof も同じポートで公開する）
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.Handler())
+	observability.RegisterPprofHandlers(metricsMux)
+	metricsServer := &http.Server{Addr: ":2005", Handler: metricsMux}
 
 	go func() {
 		logger.Info("Metrics server starting on :2005")
@@ -336,7 +352,7 @@ func runSubscriber(app *container.SubscriberApp, cleanup *container.Cleanup, log
 	return nil
 }
 
-func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, geminiRateLimiter *rate.Limiter, payload string, logger *logrus.Entry) error {
+func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client, llmFactory container.LLMClientFactory, lockService container.LockService, geminiRateLimiter *rate.Limiter, payload string, logger *logrus.Entry) (err error) {
 	start := time.Now()
 
 	// まずメッセージタイプを確認
@@ -348,7 +364,9 @@ func processMessage(ctx context.Context, db *sql.DB, redisClient rueidis.Client,
 		return fmt.Errorf("failed to unmarshal base message: %w", err)
 	}
 
-	var err error
+	ctx, endSpan := observability.StartSpan(ctx, "subscriber", "subscriber "+baseMessage.Type)
+	defer func() { endSpan(err) }()
+
 	switch baseMessage.Type {
 	case "monthly_summary":
 		processingDuration.WithLabelValues("monthly_summary").Observe(time.Since(start).Seconds())
