@@ -2,9 +2,17 @@
   import { _ } from "svelte-i18n";
   import "#lib/i18n.js";
 
-  export let activeSection = "";
-  export let isOpen = false;
-  export let onToggle: () => void;
+  interface Props {
+    activeSection?: string;
+    isOpen?: boolean;
+    onToggle: () => void;
+  }
+
+  let {
+    activeSection = $bindable(""),
+    isOpen = false,
+    onToggle,
+  }: Props = $props();
 
   interface NavItem {
     id: string;
@@ -15,7 +23,7 @@
   let isScrolling = false;
   let scrollTimeout: ReturnType<typeof setTimeout>;
 
-  $: navItems = [
+  let navItems = $derived([
     {
       id: "user-settings",
       title: $_("settings.nav.userSettings"),
@@ -49,7 +57,7 @@
         { id: "delete-account", title: $_("settings.deleteAccount.title") },
       ],
     },
-  ];
+  ]);
 
   function scrollToSection(sectionId: string) {
     const element = document.getElementById(sectionId);
@@ -83,8 +91,8 @@
 	class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300 {isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
 	role="button"
 	tabindex="0"
-	on:click={onToggle}
-	on:keydown={(e) => e.key === 'Escape' && onToggle()}
+	onclick={onToggle}
+	onkeydown={(e) => e.key === 'Escape' && onToggle()}
 ></div>
 
 <!-- Navigation Sidebar -->
@@ -100,7 +108,7 @@
 		</h2>
 		<button
 			type="button"
-			on:click={onToggle}
+			onclick={onToggle}
 			class="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
 			aria-label={$_("settings.nav.close")}
 		>
@@ -127,7 +135,7 @@
 							<li>
 								<button
 									type="button"
-									on:click={() => scrollToSection(child.id)}
+									onclick={() => scrollToSection(child.id)}
 									class="w-full text-left px-3 py-3 md:px-2 md:py-1 text-base md:text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors cursor-pointer relative z-20 {activeSection === child.id ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : ''}"
 									style="min-height: 44px; md:min-height: 32px;"
 								>

@@ -7,8 +7,12 @@
   import DarkModeToggle from "../atoms/DarkModeToggle.svelte";
   import BudouXToggle from "../atoms/BudouXToggle.svelte";
 
-  export let isAuthenticated = false;
-  export let isAuthPage = false;
+  interface Props {
+    isAuthenticated?: boolean;
+    isAuthPage?: boolean;
+  }
+
+  let { isAuthenticated = false, isAuthPage = false }: Props = $props();
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();

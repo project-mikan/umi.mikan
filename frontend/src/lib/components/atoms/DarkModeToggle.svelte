@@ -2,7 +2,7 @@
   import { browser } from "$app/env";
   import { onMount } from "svelte";
 
-  let isDarkMode = false;
+  let isDarkMode = $state(false);
 
   // Initialize dark mode from localStorage or system preference
   onMount(() => {
@@ -53,7 +53,7 @@
 <button
 	type="button"
 	class="flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-md transition-colors"
-	on:click={toggleDarkMode}
+	onclick={toggleDarkMode}
 	aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
 	title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
 >

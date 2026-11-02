@@ -8,27 +8,31 @@
   import { notifyEntityUpdated } from "#lib/utils/entity-events.js";
   import type { ActionData, PageData } from "./$types";
 
-  export let data: PageData;
-  export let form: ActionData;
+  interface Props {
+    data: PageData;
+    form: ActionData;
+  }
+
+  let { data, form }: Props = $props();
 
   // ローディング状態
-  let updateLoading = false;
-  let deleteLoading = false;
-  let createAliasLoading = false;
-  let updateAliasLoading = false;
-  let deleteAliasLoading = false;
+  let updateLoading = $state(false);
+  let deleteLoading = $state(false);
+  let createAliasLoading = $state(false);
+  let updateAliasLoading = $state(false);
+  let deleteAliasLoading = $state(false);
 
   // モーダル状態
-  let showDeleteConfirm = false;
-  let showDeleteAliasConfirm = false;
+  let showDeleteConfirm = $state(false);
+  let showDeleteAliasConfirm = $state(false);
   let selectedAliasId = "";
 
   // エイリアス追加用
-  let newAlias = "";
+  let newAlias = $state("");
 
   // エイリアス編集用
-  let editingAliasId = "";
-  let editingAliasValue = "";
+  let editingAliasId = $state("");
+  let editingAliasValue = $state("");
 
   // アクションメッセージの判定
   function isMessageForAction(actionName: string): boolean {
@@ -136,7 +140,7 @@
 <div class="max-w-4xl mx-auto p-6">
 	<!-- 戻るボタン -->
 	<button
-		on:click={() => goto("/entities")}
+		onclick={() => goto("/entities")}
 		class="mb-4 text-blue-600 dark:text-blue-400 hover:underline"
 	>
 		← {$_("entity.list.title")}
@@ -204,7 +208,7 @@
 					</button>
 					<button
 						type="button"
-						on:click={confirmDelete}
+						onclick={confirmDelete}
 						disabled={deleteLoading}
 						class="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:bg-red-300 dark:disabled:bg-red-800"
 					>
@@ -336,7 +340,7 @@
 								</button>
 								<button
 									type="button"
-									on:click={cancelEditAlias}
+									onclick={cancelEditAlias}
 									disabled={updateAliasLoading}
 									class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-500 focus:outline-none"
 									aria-label="キャンセル"
@@ -352,7 +356,7 @@
 								<span>{alias.alias}</span>
 								<button
 									type="button"
-									on:click={() => startEditAlias(alias.id, alias.alias)}
+									onclick={() => startEditAlias(alias.id, alias.alias)}
 									disabled={deleteAliasLoading || editingAliasId !== ""}
 									class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-200 focus:outline-none"
 									aria-label="編集"
@@ -363,7 +367,7 @@
 								</button>
 								<button
 									type="button"
-									on:click={() => confirmDeleteAlias(alias.id)}
+									onclick={() => confirmDeleteAlias(alias.id)}
 									disabled={deleteAliasLoading || editingAliasId !== ""}
 									class="text-blue-700 dark:text-blue-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none"
 									aria-label={$_("entity.detail.deleteAlias")}

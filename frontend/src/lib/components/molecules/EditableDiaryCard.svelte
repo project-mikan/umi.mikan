@@ -67,45 +67,47 @@
 </script>
 
 <DiaryCard {title} entry={entry ?? null} showForm={true} href={`/${dateKey}`}>
-	<form
-		bind:this={formElement}
-		method="POST"
-		{action}
-		use:enhance={createSubmitHandler(
-			(l) => (loading = l),
-			(s) => (saved = s),
-		)}
-		slot="form"
-	>
-		<input type="hidden" name="date" value={dateKey} />
-		{#if entry}
-			<input type="hidden" name="id" value={entry.id} />
-		{/if}
-		<FormField
-			type="textarea"
-			label=""
-			id={inputId}
-			name="content"
-			placeholder={$_("diary.placeholder")}
-			rows={8}
-			bind:value={draft.content}
-			onsave={save}
-			onautosave={() => {
-				if (hasUnsavedChanges && !loading) save();
-			}}
-		/>
+	{#snippet editor()}
+    <form
+  		bind:this={formElement}
+  		method="POST"
+  		{action}
+  		use:enhance={createSubmitHandler(
+  			(l) => (loading = l),
+  			(s) => (saved = s),
+  		)}
+  		
+  	>
+  		<input type="hidden" name="date" value={dateKey} />
+  		{#if entry}
+  			<input type="hidden" name="id" value={entry.id} />
+  		{/if}
+  		<FormField
+  			type="textarea"
+  			label=""
+  			id={inputId}
+  			name="content"
+  			placeholder={$_("diary.placeholder")}
+  			rows={8}
+  			bind:value={draft.content}
+  			onsave={save}
+  			onautosave={() => {
+  				if (hasUnsavedChanges && !loading) save();
+  			}}
+  		/>
 
-		<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-			{$_("diary.characterCount", { values: { count: characterCount } })}
-			{#if characterCount >= 1000}
-				<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
-					({$_("diary.autoSummaryEligible")})
-				</span>
-			{/if}
-		</div>
+  		<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+  			{$_("diary.characterCount", { values: { count: characterCount } })}
+  			{#if characterCount >= 1000}
+  				<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+  					({$_("diary.autoSummaryEligible")})
+  				</span>
+  			{/if}
+  		</div>
 
-		<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
-			<SaveButton {loading} {saved} />
-		</div>
-	</form>
+  		<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
+  			<SaveButton {loading} {saved} />
+  		</div>
+  	</form>
+  {/snippet}
 </DiaryCard>

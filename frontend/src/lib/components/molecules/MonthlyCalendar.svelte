@@ -3,10 +3,14 @@
   import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
   import { plainTextToHtml } from "#lib/utils/html-text-converter.js";
 
-  export let calendarDays: (number | null)[];
-  export let entryMap: Map<number, DiaryEntry>;
-  export let weekDays: string[];
-  export let onNavigateToEntry: (day: number) => void;
+  interface Props {
+    calendarDays: (number | null)[];
+    entryMap: Map<number, DiaryEntry>;
+    weekDays: string[];
+    onNavigateToEntry: (day: number) => void;
+  }
+
+  let { calendarDays, entryMap, weekDays, onNavigateToEntry }: Props = $props();
 </script>
 
 <div class="bg-white dark:bg-gray-800 shadow dark:shadow-gray-900/20 rounded-lg overflow-hidden">
@@ -27,7 +31,7 @@
 			<div class="h-32 border-r border-b border-gray-200 dark:border-gray-600 last:border-r-0">
 				{#if day !== null}
 					<button
-						on:click={() => onNavigateToEntry(day)}
+						onclick={() => onNavigateToEntry(day)}
 						class="w-full h-full p-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 					>
 						<div class="h-full flex flex-col">

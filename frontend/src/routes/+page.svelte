@@ -363,7 +363,7 @@
 					saved={saved.today}
 					size="md"
 					label={$_("diary.saveTodayDiary")}
-					on:click={() => save("today")}
+					onclick={() => save("today")}
 				/>
 			{:else if activeSection === "yesterday"}
 				<SaveButton
@@ -372,7 +372,7 @@
 					saved={saved.yesterday}
 					size="md"
 					label={$_("diary.saveYesterdayDiary")}
-					on:click={() => save("yesterday")}
+					onclick={() => save("yesterday")}
 				/>
 			{:else}
 				<SaveButton
@@ -381,7 +381,7 @@
 					saved={saved.dayBeforeYesterday}
 					size="md"
 					label={$_("diary.saveDayBeforeYesterdayDiary")}
-					on:click={() => save("dayBeforeYesterday")}
+					onclick={() => save("dayBeforeYesterday")}
 				/>
 			{/if}
 		</div>

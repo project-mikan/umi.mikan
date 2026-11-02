@@ -5,9 +5,9 @@
   import Head from "#lib/components/atoms/Head.svelte";
   import Card from "#lib/components/atoms/Card.svelte";
 
-  let isTriggering = false;
-  let message = "";
-  let messageType: "success" | "error" | "" = "";
+  let isTriggering = $state(false);
+  let message = $state("");
+  let messageType: "success" | "error" | "" = $state("");
 
   // トレンド分析を手動トリガー
   async function triggerLatestTrend() {
@@ -44,12 +44,13 @@
   type LogTarget = "frontend" | "backend";
   type LogLevel = "error" | "warn";
 
-  let logStatuses: Record<string, "idle" | "loading" | "success" | "error"> = {
-    "frontend-error": "idle",
-    "frontend-warn": "idle",
-    "backend-error": "idle",
-    "backend-warn": "idle",
-  };
+  let logStatuses: Record<string, "idle" | "loading" | "success" | "error"> =
+    $state({
+      "frontend-error": "idle",
+      "frontend-warn": "idle",
+      "backend-error": "idle",
+      "backend-warn": "idle",
+    });
 
   // エラー/警告ログを発生させる
   async function triggerLog(target: LogTarget, level: LogLevel) {
@@ -104,7 +105,7 @@
 				<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Frontend</p>
 				<button
 					type="button"
-					on:click={() => triggerLog("frontend", "error")}
+					onclick={() => triggerLog("frontend", "error")}
 					disabled={logStatuses["frontend-error"] === "loading"}
 					class="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md text-sm"
 				>
@@ -118,7 +119,7 @@
 				</button>
 				<button
 					type="button"
-					on:click={() => triggerLog("frontend", "warn")}
+					onclick={() => triggerLog("frontend", "warn")}
 					disabled={logStatuses["frontend-warn"] === "loading"}
 					class="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-white font-medium py-2 px-4 rounded-md text-sm"
 				>
@@ -137,7 +138,7 @@
 				<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Backend</p>
 				<button
 					type="button"
-					on:click={() => triggerLog("backend", "error")}
+					onclick={() => triggerLog("backend", "error")}
 					disabled={logStatuses["backend-error"] === "loading"}
 					class="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md text-sm"
 				>
@@ -151,7 +152,7 @@
 				</button>
 				<button
 					type="button"
-					on:click={() => triggerLog("backend", "warn")}
+					onclick={() => triggerLog("backend", "warn")}
 					disabled={logStatuses["backend-warn"] === "loading"}
 					class="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-white font-medium py-2 px-4 rounded-md text-sm"
 				>
@@ -178,7 +179,7 @@
 
 		<button
 			type="button"
-			on:click={triggerLatestTrend}
+			onclick={triggerLatestTrend}
 			disabled={isTriggering}
 			class="bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
 		>

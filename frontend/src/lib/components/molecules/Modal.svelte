@@ -2,13 +2,27 @@
   import Button from "../atoms/Button.svelte";
   import BaseModal from "./BaseModal.svelte";
 
-  export let isOpen = false;
-  export let title: string;
-  export let confirmText: string;
-  export let cancelText: string;
-  export let variant: "danger" | "primary" = "primary";
-  export let onConfirm: (() => void) | null = null;
-  export let onCancel: (() => void) | null = null;
+  interface Props {
+    isOpen?: boolean;
+    title: string;
+    confirmText: string;
+    cancelText: string;
+    variant?: "danger" | "primary";
+    onConfirm?: (() => void) | null;
+    onCancel?: (() => void) | null;
+    children?: import("svelte").Snippet;
+  }
+
+  let {
+    isOpen = false,
+    title,
+    confirmText,
+    cancelText,
+    variant = "primary",
+    onConfirm = null,
+    onCancel = null,
+    children,
+  }: Props = $props();
 
   const _iconPaths = {
     danger:
@@ -52,20 +66,20 @@
 					{title}
 				</h3>
 				<div class="mt-2">
-					<slot />
+					{@render children?.()}
 				</div>
 			</div>
 		</div>
 	</div>
 	<div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
 		<button
-			on:click={_handleConfirm}
+			onclick={_handleConfirm}
 			class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 {variant === 'danger' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'} text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
 		>
 			{confirmText}
 		</button>
 		<button
-			on:click={_handleCancel}
+			onclick={_handleCancel}
 			class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
 		>
 			{cancelText}

@@ -10,7 +10,7 @@
 
 <button
 	type="button"
-	on:click={toggleAutoPhrase}
+	onclick={toggleAutoPhrase}
 	class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
 	aria-label={$_("budoux.toggle")}
 	title={$_("budoux.description")}

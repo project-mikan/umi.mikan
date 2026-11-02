@@ -5,7 +5,11 @@
   import { EntityCategory } from "#lib/grpc/entity/entity_pb.js";
   import type { PageData } from "./$types";
 
-  export let data: PageData;
+  interface Props {
+    data: PageData;
+  }
+
+  let { data }: Props = $props();
 
   /**
    * カテゴリ名を表示用に変換
@@ -39,7 +43,7 @@
 			{$_("entity.list.title")}
 		</h1>
 		<button
-			on:click={() => goto("/entity/new")}
+			onclick={() => goto("/entity/new")}
 			class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 		>
 			{$_("entity.list.create")}
@@ -66,8 +70,8 @@
 			{#each data.entities as entity}
 				<div
 					class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm dark:shadow-gray-900/20 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow cursor-pointer"
-					on:click={() => viewEntity(entity.id)}
-					on:keydown={(e) => e.key === "Enter" && viewEntity(entity.id)}
+					onclick={() => viewEntity(entity.id)}
+					onkeydown={(e) => e.key === "Enter" && viewEntity(entity.id)}
 					role="button"
 					tabindex="0"
 				>

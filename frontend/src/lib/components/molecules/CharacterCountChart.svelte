@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { browser } from "$app/env";
   import { _, locale, isLoading } from "svelte-i18n";
   import "#lib/i18n.js";
   import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
 
   // Chart.js の型定義
-  let Chart: typeof import("chart.js").Chart;
+  let Chart: typeof import("chart.js").Chart | undefined = $state();
   let CategoryScale: typeof import("chart.js").CategoryScale;
   let LinearScale: typeof import("chart.js").LinearScale;
   let PointElement: typeof import("chart.js").PointElement;
@@ -17,12 +17,16 @@
   let Legend: typeof import("chart.js").Legend;
   let Filler: typeof import("chart.js").Filler;
 
-  export let entryMap: Map<number, DiaryEntry>;
-  export let year: number;
-  export let month: number;
+  interface Props {
+    entryMap: Map<number, DiaryEntry>;
+    year: number;
+    month: number;
+  }
 
-  let chartCanvas: HTMLCanvasElement;
-  let chart: InstanceType<typeof Chart> | null = null;
+  let { entryMap, year, month }: Props = $props();
+
+  let chartCanvas: HTMLCanvasElement | undefined = $state();
+  let chart: import("chart.js").Chart | null = $state(null);
 
   // 指定された月の日数を取得
   function getDaysInMonth(year: number, month: number): number {
@@ -30,20 +34,22 @@
   }
 
   // 文字数データを準備
-  $: chartData = (() => {
-    const daysInMonth = getDaysInMonth(year, month);
-    const labels: string[] = [];
-    const data: number[] = [];
+  let chartData = $derived(
+    (() => {
+      const daysInMonth = getDaysInMonth(year, month);
+      const labels: string[] = [];
+      const data: number[] = [];
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      labels.push(day.toString());
-      const entry = entryMap.get(day);
-      const characterCount = entry?.content ? entry.content.length : 0;
-      data.push(characterCount);
-    }
+      for (let day = 1; day <= daysInMonth; day++) {
+        labels.push(day.toString());
+        const entry = entryMap.get(day);
+        const characterCount = entry?.content ? entry.content.length : 0;
+        data.push(characterCount);
+      }
 
-    return { labels, data };
-  })();
+      return { labels, data };
+    })(),
+  );
 
   // チャートを更新
   function updateChart() {
@@ -76,14 +82,18 @@
   }
 
   // チャートデータが変わったら更新
-  $: if (chart && chartData) {
-    updateChart();
-  }
+  $effect(() => {
+    if (chart && chartData) {
+      untrack(() => updateChart());
+    }
+  });
 
   // ロケールが変わったら更新
-  $: if (chart && $locale) {
-    updateChart();
-  }
+  $effect(() => {
+    if (chart && $locale) {
+      untrack(() => updateChart());
+    }
+  });
 
   // Chart.jsを動的にインポートする関数
   async function loadChartJS() {
@@ -205,9 +215,11 @@
   }
 
   // Chart.jsが読み込まれて翻訳が完了したらチャートを作成
-  $: if (browser && !$isLoading && chartData && !chart && Chart) {
-    createChart();
-  }
+  $effect(() => {
+    if (browser && !$isLoading && chartData && !chart && Chart) {
+      untrack(() => createChart());
+    }
+  });
 
   onMount(async () => {
     // Chart.jsを動的にロード

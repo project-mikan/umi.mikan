@@ -10,7 +10,11 @@
     dayOfMonth: number;
   }
 
-  export let recentDays: DayStatus[] = [];
+  interface Props {
+    recentDays?: DayStatus[];
+  }
+
+  let { recentDays = [] }: Props = $props();
 
   // 日記ページに遷移
   function navigateToDiary(dateStr: string) {
@@ -35,7 +39,7 @@
 		{#each recentDays as day}
 			<button
 				type="button"
-				on:click={() => navigateToDiary(day.date)}
+				onclick={() => navigateToDiary(day.date)}
 				class="flex flex-col items-center justify-center p-1 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
 				title="{day.dayOfMonth}{$_('recentStreak.day')} ({getWeekdayShort(day.dayOfWeek)}) {day.hasEntry ? $_('recentStreak.written') : $_('recentStreak.notWritten')}"
 			>

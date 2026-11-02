@@ -277,107 +277,109 @@
 			entry={data.entry}
 			showForm={true}
 		>
-			<form
-				bind:this={formElement}
-				method="POST"
-				action="?/save"
-use:enhance={createSubmitHandler(
-	(l) => loading = l,
-	(s) => (saved = s),
+			{#snippet editor()}
+            <form
+  				bind:this={formElement}
+  				method="POST"
+  				action="?/save"
+  use:enhance={createSubmitHandler(
+  	(l) => loading = l,
+  	(s) => (saved = s),
 
-)}
-				slot="form"
-			>
-				<input type="hidden" name="date" value={_formatDateStr(data.date)} />
-				{#if data.entry}
-					<input type="hidden" name="id" value={data.entry.id} />
-				{/if}
-				<!-- Highlight controls -->
-				{#if data.entry && characterCount >= 500}
-					<HighlightDisplay
-						diaryId={data.entry.id}
-						{isHighlightOutdated}
-						diaryUpdatedAt={Number(data.entry.updatedAt)}
-						onhighlightupdated={handleHighlightUpdated}
-						onvisibilitychanged={handleHighlightVisibilityChanged}
-					/>
-				{/if}
+  )}
+  				
+  			>
+  				<input type="hidden" name="date" value={_formatDateStr(data.date)} />
+  				{#if data.entry}
+  					<input type="hidden" name="id" value={data.entry.id} />
+  				{/if}
+  				<!-- Highlight controls -->
+  				{#if data.entry && characterCount >= 500}
+  					<HighlightDisplay
+  						diaryId={data.entry.id}
+  						{isHighlightOutdated}
+  						diaryUpdatedAt={Number(data.entry.updatedAt)}
+  						onhighlightupdated={handleHighlightUpdated}
+  						onvisibilitychanged={handleHighlightVisibilityChanged}
+  					/>
+  				{/if}
 
-				<!-- 検索ハイライトバナー -->
-				{#if searchKeyword}
-					<div class="flex items-center gap-2 px-3 py-2 mb-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-md text-sm">
-						<svg class="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-							<path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-						</svg>
-						<span class="text-orange-800 dark:text-orange-200 flex-1">
-							{$_("diary.searchHighlightBanner", { values: { keyword: searchKeyword } })}
-						</span>
-						<button
-							type="button"
-							onclick={_clearSearchHighlight}
-							class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200 font-medium"
-						>
-							{$_("diary.searchHighlightClear")}
-						</button>
-					</div>
-				{/if}
+  				<!-- 検索ハイライトバナー -->
+  				{#if searchKeyword}
+  					<div class="flex items-center gap-2 px-3 py-2 mb-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-md text-sm">
+  						<svg class="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+  							<path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+  						</svg>
+  						<span class="text-orange-800 dark:text-orange-200 flex-1">
+  							{$_("diary.searchHighlightBanner", { values: { keyword: searchKeyword } })}
+  						</span>
+  						<button
+  							type="button"
+  							onclick={_clearSearchHighlight}
+  							class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200 font-medium"
+  						>
+  							{$_("diary.searchHighlightClear")}
+  						</button>
+  					</div>
+  				{/if}
 
-				<FormField
-					type="textarea"
-					label=""
-					id="content"
-					name="content"
-					placeholder={$_("diary.placeholder")}
-					rows={8}
-					diaryHighlights={displayedHighlights}
-					{searchKeyword}
-					bind:value={draft.content}
-					onsave={_handleSave}
-					onautosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
-				/>
+  				<FormField
+  					type="textarea"
+  					label=""
+  					id="content"
+  					name="content"
+  					placeholder={$_("diary.placeholder")}
+  					rows={8}
+  					diaryHighlights={displayedHighlights}
+  					{searchKeyword}
+  					bind:value={draft.content}
+  					onsave={_handleSave}
+  					onautosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
+  				/>
 
-				{#if form?.error}
-					<div class="mt-2 text-sm text-red-600 dark:text-red-400">
-						{form.error}
-					</div>
-				{/if}
+  				{#if form?.error}
+  					<div class="mt-2 text-sm text-red-600 dark:text-red-400">
+  						{form.error}
+  					</div>
+  				{/if}
 
-				<!-- Character count display -->
-				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-					{$_("diary.characterCount", { values: { count: characterCount } })}
-					{#if characterCount >= 1000}
-						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
-							({$_("diary.autoSummaryEligible")})
-						</span>
-					{/if}
-					{#if data.entry?.updatedAt}
-						<span class="ml-4">
-							{$_("common.updatedAt")}: {new Date(Number(data.entry.updatedAt) * 1000).toLocaleString()}
-						</span>
-					{/if}
-				</div>
+  				<!-- Character count display -->
+  				<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+  					{$_("diary.characterCount", { values: { count: characterCount } })}
+  					{#if characterCount >= 1000}
+  						<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+  							({$_("diary.autoSummaryEligible")})
+  						</span>
+  					{/if}
+  					{#if data.entry?.updatedAt}
+  						<span class="ml-4">
+  							{$_("common.updatedAt")}: {new Date(Number(data.entry.updatedAt) * 1000).toLocaleString()}
+  						</span>
+  					{/if}
+  				</div>
 
 
 
-				<div class="flex justify-between">
-					<div>
-						{#if data.entry}
-							<Button
-								type="button"
-								variant="danger"
-								size="md"
-								on:click={_confirmDelete}
-							>
-								{$_("diary.delete")}
-							</Button>
-						{/if}
-					</div>
-				</div>
+  				<div class="flex justify-between">
+  					<div>
+  						{#if data.entry}
+  							<Button
+  								type="button"
+  								variant="danger"
+  								size="md"
+  								onclick={_confirmDelete}
+  							>
+  								{$_("diary.delete")}
+  							</Button>
+  						{/if}
+  					</div>
+  				</div>
 
-				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
-					<SaveButton {loading} {saved} />
-				</div>
-			</form>
+  				<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
+  					<SaveButton {loading} {saved} />
+  				</div>
+  			</form>
+          {/snippet}
 		</DiaryCard>
 
 		<PastEntriesLinks pastEntries={data.pastEntries} />
@@ -391,7 +393,7 @@ use:enhance={createSubmitHandler(
 				{loading}
 				{saved}
 				size="md"
-				on:click={_handleSave}
+				onclick={_handleSave}
 			/>
 		</div>
 	</div>

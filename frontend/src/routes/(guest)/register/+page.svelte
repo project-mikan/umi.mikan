@@ -1,14 +1,19 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { _ } from "svelte-i18n";
   import "#lib/i18n.js";
   import AuthForm from "#lib/components/molecules/AuthForm.svelte";
   import type { ActionData, PageData } from "./$types";
 
-  export let form: ActionData;
-  export let data: PageData;
+  interface Props {
+    form: ActionData;
+    data: PageData;
+  }
 
-  let registerKeyRequired = data.registerKeyRequired;
+  let { form, data }: Props = $props();
+
+  // 初期値だけ SSR の値を使い、マウント後に最新の設定で上書きする
+  let registerKeyRequired = $state(untrack(() => data.registerKeyRequired));
 
   // コンポーネントマウント時に最新の設定を取得
   onMount(async () => {

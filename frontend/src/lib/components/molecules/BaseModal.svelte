@@ -1,9 +1,19 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  export let isOpen = false;
-  export let onBackdropClick: (() => void) | null = null;
-  export let maxWidth = "max-w-lg";
+  interface Props {
+    isOpen?: boolean;
+    onBackdropClick?: (() => void) | null;
+    maxWidth?: string;
+    children?: import("svelte").Snippet;
+  }
+
+  let {
+    isOpen = false,
+    onBackdropClick = null,
+    maxWidth = "max-w-lg",
+    children,
+  }: Props = $props();
 
   function _handleBackdropClick() {
     if (onBackdropClick) {
@@ -38,8 +48,8 @@
 			<!-- Backdrop -->
 			<button 
 				class="fixed inset-0 z-[9998] transition-opacity bg-gray-500 dark:bg-gray-700 opacity-75" 
-				on:click={_handleBackdropClick} 
-				on:keydown={_handleKeydown}
+				onclick={_handleBackdropClick} 
+				onkeydown={_handleKeydown}
 				aria-label="Close modal"
 			></button>
 
@@ -47,7 +57,7 @@
 
 			<!-- Modal content -->
 			<div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl dark:shadow-gray-900/20 transform transition-all sm:my-8 sm:align-middle {maxWidth} sm:w-full z-[10000] relative">
-				<slot />
+				{@render children?.()}
 			</div>
 		</div>
 	</div>

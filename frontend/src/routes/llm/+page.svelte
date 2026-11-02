@@ -6,9 +6,13 @@
   import PubSubMetricsChart from "#lib/components/molecules/PubSubMetricsChart.svelte";
   import type { PageData } from "./$types";
 
-  export let data: PageData;
+  interface Props {
+    data: PageData;
+  }
 
-  $: ({ metrics } = data);
+  let { data }: Props = $props();
+
+  let { metrics } = $derived(data);
 
   // 処理中タスクの表示用フォーマット
   function formatProcessingTask(task: {
@@ -27,7 +31,7 @@
   }
 
   // 統計情報のカード用データ
-  $: summaryCards = [
+  let summaryCards = $derived([
     {
       title: $_("llm.metrics.totalMonthlySummaries"),
       value: metrics.summary.totalMonthlySummaries,
@@ -38,10 +42,10 @@
       value: metrics.summary.pendingMonthlySummaries,
       color: "text-orange-600 dark:text-orange-400",
     },
-  ];
+  ]);
 
   // インデックス生成フローのステップ（AI処理に注目）
-  $: indexingSteps = [
+  let indexingSteps = $derived([
     {
       icon: "📄",
       label: $_("llm.ragDiagram.step.diaryText"),
@@ -88,10 +92,10 @@
       style:
         "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200",
     },
-  ];
+  ]);
 
   // 検索フローのステップ（AI処理に注目）
-  $: searchSteps = [
+  let searchSteps = $derived([
     {
       icon: "🔍",
       label: $_("llm.ragDiagram.step.naturalLanguageQuery"),
@@ -129,10 +133,10 @@
       style:
         "bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200",
     },
-  ];
+  ]);
 
   // RAGカード用データ
-  $: ragCards = [
+  let ragCards = $derived([
     {
       title: $_("llm.metrics.totalEmbeddings"),
       value: metrics.summary.totalEmbeddingDiaries,
@@ -149,7 +153,7 @@
     value: number;
     subLabel?: string;
     color: string;
-  }[];
+  }[]);
 </script>
 
 <Head title={$_("llm.title")} />

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { browser } from "$app/env";
   import { _, locale, isLoading } from "svelte-i18n";
   import "#lib/i18n.js";
 
   // Chart.js の型定義
-  let Chart: typeof import("chart.js").Chart;
+  let Chart: typeof import("chart.js").Chart | undefined = $state();
   let CategoryScale: typeof import("chart.js").CategoryScale;
   let LinearScale: typeof import("chart.js").LinearScale;
   let PointElement: typeof import("chart.js").PointElement;
@@ -17,45 +17,51 @@
   let Tooltip: typeof import("chart.js").Tooltip;
   let Legend: typeof import("chart.js").Legend;
 
-  export let hourlyMetrics: Array<{
-    timestamp: number;
-    monthlySummariesProcessed: number;
-    monthlySummariesFailed: number;
-    diaryEmbeddingsProcessed: number;
-    diaryEmbeddingsFailed: number;
-    semanticSearchesProcessed: number;
-  }>;
+  interface Props {
+    hourlyMetrics: Array<{
+      timestamp: number;
+      monthlySummariesProcessed: number;
+      monthlySummariesFailed: number;
+      diaryEmbeddingsProcessed: number;
+      diaryEmbeddingsFailed: number;
+      semanticSearchesProcessed: number;
+    }>;
+  }
 
-  let chartCanvas: HTMLCanvasElement;
-  let chart: InstanceType<typeof Chart> | null = null;
+  let { hourlyMetrics }: Props = $props();
+
+  let chartCanvas: HTMLCanvasElement | undefined = $state();
+  let chart: import("chart.js").Chart | null = $state(null);
 
   // 時間別データを準備
-  $: chartData = (() => {
-    const labels: string[] = [];
-    const monthlyProcessed: number[] = [];
-    const monthlyFailed: number[] = [];
-    const embeddingsProcessed: number[] = [];
-    const semanticSearchesProcessed: number[] = [];
+  let chartData = $derived(
+    (() => {
+      const labels: string[] = [];
+      const monthlyProcessed: number[] = [];
+      const monthlyFailed: number[] = [];
+      const embeddingsProcessed: number[] = [];
+      const semanticSearchesProcessed: number[] = [];
 
-    hourlyMetrics.forEach((metric) => {
-      const date = new Date(metric.timestamp * 1000);
-      const hour = date.getHours();
-      const day = date.getDate();
-      labels.push(`${day}日 ${hour}時`);
-      monthlyProcessed.push(metric.monthlySummariesProcessed);
-      monthlyFailed.push(metric.monthlySummariesFailed);
-      embeddingsProcessed.push(metric.diaryEmbeddingsProcessed);
-      semanticSearchesProcessed.push(metric.semanticSearchesProcessed);
-    });
+      hourlyMetrics.forEach((metric) => {
+        const date = new Date(metric.timestamp * 1000);
+        const hour = date.getHours();
+        const day = date.getDate();
+        labels.push(`${day}日 ${hour}時`);
+        monthlyProcessed.push(metric.monthlySummariesProcessed);
+        monthlyFailed.push(metric.monthlySummariesFailed);
+        embeddingsProcessed.push(metric.diaryEmbeddingsProcessed);
+        semanticSearchesProcessed.push(metric.semanticSearchesProcessed);
+      });
 
-    return {
-      labels,
-      monthlyProcessed,
-      monthlyFailed,
-      embeddingsProcessed,
-      semanticSearchesProcessed,
-    };
-  })();
+      return {
+        labels,
+        monthlyProcessed,
+        monthlyFailed,
+        embeddingsProcessed,
+        semanticSearchesProcessed,
+      };
+    })(),
+  );
 
   // チャートを更新
   function updateChart() {
@@ -92,14 +98,18 @@
   }
 
   // チャートデータが変わったら更新
-  $: if (chart && chartData) {
-    updateChart();
-  }
+  $effect(() => {
+    if (chart && chartData) {
+      untrack(() => updateChart());
+    }
+  });
 
   // ロケールが変わったら更新
-  $: if (chart && $locale) {
-    updateChart();
-  }
+  $effect(() => {
+    if (chart && $locale) {
+      untrack(() => updateChart());
+    }
+  });
 
   // Chart.jsを動的にインポートする関数
   async function loadChartJS() {
@@ -231,9 +241,11 @@
   }
 
   // Chart.jsが読み込まれて翻訳が完了したらチャートを作成
-  $: if (browser && !$isLoading && chartData && !chart && Chart) {
-    createChart();
-  }
+  $effect(() => {
+    if (browser && !$isLoading && chartData && !chart && Chart) {
+      untrack(() => createChart());
+    }
+  });
 
   onMount(async () => {
     // Chart.jsを動的にロード

@@ -3,17 +3,30 @@
   import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
   import Button from "../atoms/Button.svelte";
   import Card from "../atoms/Card.svelte";
-  export let title: string;
-  export let entry: DiaryEntry | null = null;
-  export let showForm = false;
-  export let onView: ((entry: DiaryEntry) => void) | null = null;
-  export let href: string | null = null;
+  import type { Snippet } from "svelte";
 
-  // contentをそのまま表示
-  $: highlightedContent = entry ? entry.content : "";
+  let {
+    title,
+    entry = null,
+    showForm = false,
+    onView = null,
+    href = null,
+    editor,
+    emptyMessage,
+  }: {
+    title: string;
+    entry?: DiaryEntry | null;
+    showForm?: boolean;
+    onView?: ((entry: DiaryEntry) => void) | null;
+    href?: string | null;
+    editor?: Snippet;
+    emptyMessage?: Snippet;
+  } = $props();
+
+  let highlightedContent = $derived(entry ? entry.content : "");
 </script>
 
-<Card padding="sm">
+<Card>
 	<div class="flex justify-between items-center">
 		<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
 			{#if href}
@@ -30,7 +43,7 @@
 	</div>
 
 	{#if showForm}
-		<slot name="form" />
+		{@render editor?.()}
 	{:else if entry}
 		<div
 			class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap auto-phrase-target"
@@ -42,7 +55,7 @@
 				<Button
 					variant="primary"
 					size="sm"
-					on:click={() => onView && onView(entry)}
+					onclick={() => onView && onView(entry)}
 				>
 					{$_("diary.viewDetail")}
 				</Button>
@@ -50,7 +63,7 @@
 		{/if}
 	{:else}
 		<p class="text-gray-500 dark:text-gray-400">
-			<slot name="empty-message" />
+			{@render emptyMessage?.()}
 		</p>
 	{/if}
 </Card>

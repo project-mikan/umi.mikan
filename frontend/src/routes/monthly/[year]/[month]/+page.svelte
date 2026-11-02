@@ -17,7 +17,7 @@
   import CharacterCountChart from "#lib/components/molecules/CharacterCountChart.svelte";
   import SummaryDisplay from "#lib/components/molecules/SummaryDisplay.svelte";
 
-  $: title = $_("page.title.calendar");
+  let title = $derived($_("page.title.calendar"));
 
   interface MonthlySummary {
     id: string;
@@ -39,53 +39,49 @@
     entries: SerializedDiaryEntry[];
   }
 
-  export let data: PageData;
+  interface Props {
+    data: PageData;
+  }
 
-  let entries: SerializedGetDiaryEntriesByMonthResponse = data.entries;
-  let currentYear = data.year;
-  let currentMonth = data.month;
-  let _loading = false;
-  let showMonthSelector = false;
-  let errorMessage = "";
-  let showErrorModal = false;
+  let { data }: Props = $props();
+
+  // 月の移動はクライアントで取得し直すので書き換えられるようにする
+  let entries: SerializedGetDiaryEntriesByMonthResponse = $derived(
+    data.entries,
+  );
+  let currentYear = $derived(data.year);
+  let currentMonth = $derived(data.month);
+  let _loading = $state(false);
+  let showMonthSelector = $state(false);
+  let errorMessage = $state("");
+  let showErrorModal = $state(false);
   let summaryError: string | null = null;
-  let isCurrentMonth = false;
-  let isFutureMonth = false;
-  let hasEntries = false;
-  let isSummaryGenerating = false; // 要約生成中のフラグ
-  let monthlySummary: MonthlySummary | null = null;
-  let isMonthlySummaryOutdated = false;
-  let lastMonthlySummaryUpdateTime = 0; // 最後に月次要約が更新された時刻（ミリ秒）
-  let isInitialLoad = true; // 初回読み込みかどうかのフラグ
+  let isSummaryGenerating = $state(false); // 要約生成中のフラグ
+  let monthlySummary: MonthlySummary | null = $state(null);
+  let lastMonthlySummaryUpdateTime = $state(0); // 最後に月次要約が更新された時刻（ミリ秒）
+  let isInitialLoad = $state(true); // 初回読み込みかどうかのフラグ
 
-  // Check if user has LLM key configured
-
-  // 現在の月かどうかの判定（リアクティブ）
-  $: {
+  // 表示中の月が今月か・未来の月か
+  let { isCurrentMonth, isFutureMonth } = $derived.by(() => {
     const now = new Date();
     const currentDate = new Date(currentYear, currentMonth - 1, 1);
     const todayDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    return {
+      isCurrentMonth: currentDate.getTime() === todayDate.getTime(),
+      isFutureMonth: currentDate.getTime() > todayDate.getTime(),
+    };
+  });
 
-    isCurrentMonth = currentDate.getTime() === todayDate.getTime();
-    isFutureMonth = currentDate.getTime() > todayDate.getTime();
-  }
+  let hasEntries = $derived(entries?.entries && entries.entries.length > 0);
 
-  // 日記エントリがあるかどうかの判定（リアクティブ）
-  $: {
-    hasEntries = entries?.entries && entries.entries.length > 0;
-  }
-
-  // データの更新
-  $: {
-    entries = data.entries;
-    currentYear = data.year;
-    currentMonth = data.month;
-    // 月が変わった時は初回読み込み扱いにリセット
+  // 月が変わった時は初回読み込み扱いにリセット
+  $effect.pre(() => {
+    void data;
     isInitialLoad = true;
-  }
+  });
 
-  // 月次要約が古いかどうかを判定（リアクティブ）
-  $: isMonthlySummaryOutdated = (() => {
+  // 月次要約が古いかどうかを判定
+  let isMonthlySummaryOutdated = $derived.by(() => {
     if (!monthlySummary || !entries?.entries) return false;
 
     // その月の全ての日記エントリの最新更新日時を取得
@@ -103,12 +99,8 @@
       lastMonthlySummaryUpdateTime > 0 &&
       now - lastMonthlySummaryUpdateTime < 5000;
 
-    // 要約が最新の日記エントリよりも新しい場合、または最近更新された場合は古くない
-    const isOutdated =
-      latestEntryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
-
-    return isOutdated;
-  })();
+    return latestEntryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
+  });
 
   // クライアントサイドでデータを再取得する関数
   async function fetchMonthData(year: number, month: number) {
@@ -146,18 +138,18 @@
   }
 
   // Reactive date formatting functions
-  $: _formatMonth = (year: number, month: number): string => {
+  let _formatMonth = $derived((year: number, month: number): string => {
     const date = new Date(year, month - 1, 1);
     return date.toLocaleDateString($locale || "en", {
       year: "numeric",
       month: "long",
     });
-  };
+  });
 
-  $: _formatMonthOnly = (month: number): string => {
+  let _formatMonthOnly = $derived((month: number): string => {
     const date = new Date(2000, month - 1, 1);
     return date.toLocaleDateString($locale || "en", { month: "long" });
-  };
+  });
 
   function getDaysInMonth(year: number, month: number): number {
     return new Date(year, month, 0).getDate();
@@ -257,7 +249,7 @@
   }
 
   // 無効化メッセージを取得（リアクティブ）
-  $: getDisabledMessage = (): string => {
+  let getDisabledMessage = $derived((): string => {
     if (isFutureMonth) {
       return $_("monthly.summary.futureMonthError");
     }
@@ -268,65 +260,71 @@
       return $_("monthly.summary.noEntriesError");
     }
     return "";
-  };
+  });
 
   // カレンダーデータの準備（リアクティブ）
-  $: daysInMonth = getDaysInMonth(currentYear, currentMonth);
-  $: firstDayOfWeek = getFirstDayOfWeek(currentYear, currentMonth);
-  $: calendarDays = (() => {
-    const days: (number | null)[] = [];
-    // 月の最初の日までの空白
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push(null);
-    }
-    // 月の日付
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
-    }
-    return days;
-  })();
+  let daysInMonth = $derived(getDaysInMonth(currentYear, currentMonth));
+  let firstDayOfWeek = $derived(getFirstDayOfWeek(currentYear, currentMonth));
+  let calendarDays = $derived(
+    (() => {
+      const days: (number | null)[] = [];
+      // 月の最初の日までの空白
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        days.push(null);
+      }
+      // 月の日付
+      for (let day = 1; day <= daysInMonth; day++) {
+        days.push(day);
+      }
+      return days;
+    })(),
+  );
 
   // 日記エントリをマップに変換（リアクティブ）
-  $: entryMap = (() => {
-    const map = new Map<number, DiaryEntry>();
-    if (entries && Array.isArray(entries.entries)) {
-      for (const entry of entries.entries) {
-        if (entry?.date) {
-          // シリアライズされたエントリをDiaryEntry形式に変換
-          const compatibleEntry = {
-            id: entry.id,
-            content: entry.content,
-            createdAt: BigInt(entry.createdAt),
-            updatedAt: BigInt(entry.updatedAt),
-            date: {
-              year: entry.date.year,
-              month: entry.date.month,
-              day: entry.date.day,
-              $typeName: "diary.YMD" as const,
-            } as YMD,
-            $typeName: "diary.DiaryEntry" as const,
-          } as DiaryEntry;
-          map.set(entry.date.day, compatibleEntry);
+  let entryMap = $derived(
+    (() => {
+      const map = new Map<number, DiaryEntry>();
+      if (entries && Array.isArray(entries.entries)) {
+        for (const entry of entries.entries) {
+          if (entry?.date) {
+            // シリアライズされたエントリをDiaryEntry形式に変換
+            const compatibleEntry = {
+              id: entry.id,
+              content: entry.content,
+              createdAt: BigInt(entry.createdAt),
+              updatedAt: BigInt(entry.updatedAt),
+              date: {
+                year: entry.date.year,
+                month: entry.date.month,
+                day: entry.date.day,
+                $typeName: "diary.YMD" as const,
+              } as YMD,
+              $typeName: "diary.DiaryEntry" as const,
+            } as DiaryEntry;
+            map.set(entry.date.day, compatibleEntry);
+          }
         }
       }
-    }
-    return map;
-  })();
+      return map;
+    })(),
+  );
 
   // Reactive weekdays
-  $: _weekDays = (() => {
-    const days = [];
-    const _date = new Date();
-    // 日曜日から始まる週の各曜日を取得
-    for (let i = 0; i < 7; i++) {
-      const dayDate = new Date();
-      dayDate.setDate(dayDate.getDate() - dayDate.getDay() + i);
-      days.push(
-        dayDate.toLocaleDateString($locale || "en", { weekday: "short" }),
-      );
-    }
-    return days;
-  })();
+  let _weekDays = $derived(
+    (() => {
+      const days = [];
+      const _date = new Date();
+      // 日曜日から始まる週の各曜日を取得
+      for (let i = 0; i < 7; i++) {
+        const dayDate = new Date();
+        dayDate.setDate(dayDate.getDate() - dayDate.getDay() + i);
+        days.push(
+          dayDate.toLocaleDateString($locale || "en", { weekday: "short" }),
+        );
+      }
+      return days;
+    })(),
+  );
 </script>
 
 <svelte:head>
@@ -337,7 +335,7 @@
 	<!-- 月ナビゲーション（最上段に配置） -->
 	<div class="flex justify-center items-center mb-6 space-x-4">
 		<button
-			on:click={_previousMonth}
+			onclick={_previousMonth}
 			class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
 			aria-label={$_("monthly.previousMonth")}
 		>
@@ -356,7 +354,7 @@
 			</svg>
 		</button>
 		<button 
-			on:click={_showMonthSelector}
+			onclick={_showMonthSelector}
 			class="text-xl font-semibold text-white bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 min-w-[200px] text-center rounded-md px-4 py-2 transition-colors cursor-pointer shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
 		>
 			{_formatMonth(currentYear, currentMonth)}
@@ -365,7 +363,7 @@
 			{/if}
 		</button>
 		<button
-			on:click={_nextMonth}
+			onclick={_nextMonth}
 			class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
 			aria-label={$_("monthly.nextMonth")}
 		>
@@ -473,7 +471,7 @@
 				</div>
 				<div class="flex justify-end">
 					<button
-						on:click={() => showErrorModal = false}
+						onclick={() => showErrorModal = false}
 						class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
 					>
 						{$_("common.close")}
