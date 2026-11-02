@@ -17,6 +17,7 @@
     size = "md",
     disabled = false,
     loading = false,
+    class: className,
     children,
     ...rest
   }: Props = $props();
@@ -44,6 +45,7 @@
   );
 </script>
 
-<button {type} class={classes} {disabled} {...rest}>
+<!-- 呼び出し側の class は上書きではなく追加にする -->
+<button {...rest} {type} class={[classes, className]} {disabled}>
 	{@render children?.()}
 </button>

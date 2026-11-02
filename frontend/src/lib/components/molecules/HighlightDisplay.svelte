@@ -10,7 +10,8 @@
   interface Props {
     diaryId: string;
     isHighlightOutdated?: boolean;
-    diaryUpdatedAt: number;
+    // 表示・非表示は親が持つ（古くなった時に親が非表示にするため）
+    visible?: boolean;
     // ハイライトの生成が終わった時・表示を切り替えた時に呼ぶ
     onhighlightupdated?: (highlight: HighlightData) => void;
     onvisibilitychanged?: (visible: boolean) => void;
@@ -18,8 +19,8 @@
 
   let {
     diaryId,
-    isHighlightOutdated = $bindable(false),
-    diaryUpdatedAt,
+    isHighlightOutdated = false,
+    visible = true,
     onhighlightupdated = () => {},
     onvisibilitychanged = () => {},
   }: Props = $props();
@@ -34,7 +35,6 @@
   let highlightGenerating = $state(false);
   let isRegenerating = false;
   let pollingInterval: ReturnType<typeof setInterval> | null = null;
-  let highlightVisible = $state(true); // ハイライトの表示・非表示状態
   let pollingAttempts = 0; // ポーリング試行回数
   let errorMessage = $state(""); // エラーメッセージ
 
@@ -156,9 +156,7 @@
 
   // ハイライトの表示・非表示を切り替え
   function toggleHighlightVisibility() {
-    highlightVisible = !highlightVisible;
-    // 親コンポーネントに表示状態を通知
-    onvisibilitychanged(highlightVisible);
+    onvisibilitychanged(!visible);
   }
 
   // 初回読み込み時にハイライトを取得
@@ -176,11 +174,6 @@
 
         // 親コンポーネントに通知
         onhighlightupdated(result);
-
-        // 日記が更新されているかチェック
-        if (diaryUpdatedAt > result.updatedAt) {
-          isHighlightOutdated = true;
-        }
       }
     } catch (err) {
       // ハイライトが存在しない場合は何もしない
@@ -237,12 +230,12 @@
 
 		{#if highlightData}
 			<Button
-				variant={highlightVisible ? "secondary" : "primary"}
+				variant={visible ? "secondary" : "primary"}
 				size="sm"
 				onclick={toggleHighlightVisibility}
 				disabled={highlightGenerating}
 			>
-				{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
+				{visible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
 			</Button>
 		{/if}
 	</div>

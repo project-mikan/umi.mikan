@@ -2,9 +2,8 @@
   import { _, locale } from "svelte-i18n";
   import { goto } from "$app/navigation";
   import "#lib/i18n.js";
-  import { browser } from "$app/env";
-  import { onMount } from "svelte";
-  import { authenticatedFetch } from "#lib/auth-client.js";
+  import { navigating } from "$app/state";
+  import { untrack } from "svelte";
   import type {
     DiaryEntry,
     GetDiaryEntriesByMonthResponse,
@@ -45,13 +44,14 @@
 
   let { data }: Props = $props();
 
-  // 月の移動はクライアントで取得し直すので書き換えられるようにする
+  // 月の移動は goto で読み込み直すので、data に追従させる
   let entries: SerializedGetDiaryEntriesByMonthResponse = $derived(
     data.entries,
   );
   let currentYear = $derived(data.year);
   let currentMonth = $derived(data.month);
-  let _loading = $state(false);
+  // 月の移動中かどうか（読み込み中の表示に使う）
+  let _loading = $derived(navigating.to !== null);
   let showMonthSelector = $state(false);
   let errorMessage = $state("");
   let showErrorModal = $state(false);
@@ -74,10 +74,16 @@
 
   let hasEntries = $derived(entries?.entries && entries.entries.length > 0);
 
-  // 月が変わった時は初回読み込み扱いにリセット
+  // 保存後などの再読み込みでは値が変わらないので、月が変わった時だけ下の effect が動く
+  let monthKey = $derived(`${data.year}-${data.month}`);
+
+  // 月が変わった時は前の月の要約を捨てて、初回読み込み扱いにリセット
   $effect.pre(() => {
-    void data;
-    isInitialLoad = true;
+    monthKey;
+    untrack(() => {
+      monthlySummary = null;
+      isInitialLoad = true;
+    });
   });
 
   // 月次要約が古いかどうかを判定
@@ -101,41 +107,6 @@
 
     return latestEntryUpdatedAt > summaryUpdatedAt && !recentlyUpdated;
   });
-
-  // クライアントサイドでデータを再取得する関数
-  async function fetchMonthData(year: number, month: number) {
-    if (!browser) return;
-
-    _loading = true;
-    try {
-      const response = await authenticatedFetch(
-        `/api/diary/monthly/${year}/${month}`,
-      );
-      if (response.ok) {
-        const newEntries: SerializedGetDiaryEntriesByMonthResponse =
-          await response.json();
-        entries = newEntries;
-        currentYear = year;
-        currentMonth = month;
-      } else if (response.status === 401) {
-        // Authentication failed completely, redirect to login
-        console.warn("Authentication failed, redirecting to login");
-        await goto("/login");
-      } else {
-        console.error(
-          "Failed to fetch entries:",
-          response.status,
-          response.statusText,
-        );
-      }
-    } catch (error) {
-      console.error("Failed to fetch entries:", error);
-      // If fetch fails completely, it might be a network issue or authentication problem
-      // Don't redirect automatically in this case, just log the error
-    } finally {
-      _loading = false;
-    }
-  }
 
   // Reactive date formatting functions
   let _formatMonth = $derived((year: number, month: number): string => {
@@ -172,14 +143,12 @@
   async function _previousMonth() {
     const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
     const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-    await fetchMonthData(prevYear, prevMonth);
     await goto(`/monthly/${prevYear}/${prevMonth}`, { replace: true });
   }
 
   async function _nextMonth() {
     const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
     const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-    await fetchMonthData(nextYear, nextMonth);
     await goto(`/monthly/${nextYear}/${nextMonth}`, { replace: true });
   }
 
@@ -187,7 +156,6 @@
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
-    await fetchMonthData(year, month);
     await goto(`/monthly/${year}/${month}`, { replace: true });
   }
 
@@ -197,7 +165,6 @@
 
   async function _handleMonthSelect(year: number, month: number) {
     showMonthSelector = false;
-    await fetchMonthData(year, month);
     await goto(`/monthly/${year}/${month}`, { replace: true });
   }
 

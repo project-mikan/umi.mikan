@@ -85,6 +85,18 @@
 
   let allowNavigation = $state(false);
 
+  // 保存後の再読み込みでは id が変わらないので、別の日に移った時だけ下の effect が動く
+  let entryId = $derived(data.entry?.id);
+
+  // 別の日に移ったら前の日のハイライトを捨てる（[id] 間の遷移ではページが作り直されないため）
+  $effect.pre(() => {
+    entryId;
+    untrack(() => {
+      highlightData = null;
+      highlightVisible = true;
+    });
+  });
+
   // 保存後の再読み込みや別の日への遷移に合わせる。同じ日の書きかけは消さずに残す
   $effect.pre(() => {
     const key = diaryDateKey(data.date);
@@ -295,13 +307,16 @@
   				{/if}
   				<!-- Highlight controls -->
   				{#if data.entry && characterCount >= 500}
-  					<HighlightDisplay
-  						diaryId={data.entry.id}
-  						{isHighlightOutdated}
-  						diaryUpdatedAt={Number(data.entry.updatedAt)}
-  						onhighlightupdated={handleHighlightUpdated}
-  						onvisibilitychanged={handleHighlightVisibilityChanged}
-  					/>
+  					<!-- 別の日に移ったら作り直して、その日のハイライトを取得し直す -->
+  					{#key data.entry.id}
+  						<HighlightDisplay
+  							diaryId={data.entry.id}
+  							{isHighlightOutdated}
+  							visible={highlightVisible}
+  							onhighlightupdated={handleHighlightUpdated}
+  							onvisibilitychanged={handleHighlightVisibilityChanged}
+  						/>
+  					{/key}
   				{/if}
 
   				<!-- 検索ハイライトバナー -->

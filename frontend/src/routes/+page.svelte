@@ -11,6 +11,7 @@
   import RecentDiaryStreak from "#lib/components/molecules/RecentDiaryStreak.svelte";
   import LatestTrendDisplay from "#lib/components/molecules/LatestTrendDisplay.svelte";
   import CollapsibleSection from "#lib/components/molecules/CollapsibleSection.svelte";
+  import type { DiaryDraft } from "#lib/utils/diary-draft.js";
   import type { PageData } from "./$types";
 
   let title = $derived($_("page.title.home"));
@@ -36,6 +37,8 @@
     dayBeforeYesterday: false,
   });
   let editors = $state<Partial<Record<DiarySection, EditableDiaryCard>>>({});
+  // 3枚のカードで共有する、日付ごとの書きかけ
+  let drafts = $state<Record<string, DiaryDraft>>({});
 
   // いずれか1つでも未保存の変更があるかチェック
   let hasAnyUnsavedChanges = $derived(
@@ -295,6 +298,7 @@
 			bind:this={editors.today}
 			bind:loading={loading.today}
 			bind:saved={saved.today}
+			bind:drafts
 			bind:hasUnsavedChanges={unsaved.today}
 			title={$_("diary.today")}
 			date={data.today.date}
@@ -328,6 +332,7 @@
 			bind:this={editors.yesterday}
 			bind:loading={loading.yesterday}
 			bind:saved={saved.yesterday}
+			bind:drafts
 			bind:hasUnsavedChanges={unsaved.yesterday}
 			title={$_("diary.yesterday")}
 			date={data.yesterday.date}
@@ -343,6 +348,7 @@
 			bind:this={editors.dayBeforeYesterday}
 			bind:loading={loading.dayBeforeYesterday}
 			bind:saved={saved.dayBeforeYesterday}
+			bind:drafts
 			bind:hasUnsavedChanges={unsaved.dayBeforeYesterday}
 			title={$_("diary.dayBeforeYesterday")}
 			date={data.dayBeforeYesterday.date}
