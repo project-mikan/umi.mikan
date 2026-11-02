@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/XSAM/otelsql"
 	_ "github.com/lib/pq" // postgres driver
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/observability"
 )
 
 // queryStringSlice はクエリを実行して最初の列の文字列スライスを返す内部ヘルパー
@@ -41,7 +43,8 @@ func queryCount(ctx context.Context, db DB, sqlstr string, args ...any) (int, er
 }
 
 func NewDB(host string, port int, user, password, dbname string) *sql.DB {
-	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname))
+	// クエリをトレースのスパンとして記録するため otelsql 経由で開く
+	db, err := otelsql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname), observability.SQLOptions()...)
 	if err != nil {
 		// TODO Log出す
 		log.Fatalf("failed to open db: %v", err)

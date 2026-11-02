@@ -78,7 +78,7 @@ graph TB
 | **Subscriber**    | Go + Redis                                             | 要約の非同期生成       |
 | **Database**      | PostgreSQL 17                                          | 日記保存               |
 | **Message Queue** | Redis Pub/Sub                                          | 重たい処理の非同期実行 |
-| **Monitoring**    | Prometheus + Grafana + Loki + Grafana Alloy            | Pub/Subやログの監視    |
+| **Monitoring**    | Prometheus + Grafana + Loki + Tempo + Pyroscope + Grafana Alloy | Pub/Subやログの監視    |
 
 ### データフロー
 
@@ -129,7 +129,7 @@ graph TB
 - **コンテナ**: Docker + Docker Compose
 - **DB**: PostgreSQL 17
 - **キャッシュ/キュー**: Redis 8
-- **監視**: Prometheus + Grafana + Loki + Grafana Alloy
+- **監視**: Prometheus + Grafana + Loki + Tempo（トレース）+ Pyroscope（プロファイル）+ Grafana Alloy
 
 ## はじめに
 

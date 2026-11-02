@@ -14,6 +14,7 @@ import (
 	"github.com/project-mikan/umi.mikan/backend/constants"
 	"github.com/project-mikan/umi.mikan/backend/container"
 	"github.com/project-mikan/umi.mikan/backend/infrastructure/database"
+	"github.com/project-mikan/umi.mikan/backend/infrastructure/observability"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/rueidis"
@@ -116,7 +117,9 @@ func (s *Scheduler) AddJob(job ScheduledJob) {
 
 				// Metrics tracking
 				start := time.Now()
-				err := job.Execute(s.ctx, s)
+				jobCtx, endSpan := observability.StartSpan(s.ctx, "scheduler", "scheduler "+job.Name())
+				err := job.Execute(jobCtx, s)
+				endSpan(err)
 				duration := time.Since(start)
 
 				jobDuration.WithLabelValues(job.Name()).Observe(duration.Seconds())
@@ -195,7 +198,9 @@ func (s *Scheduler) AddDailyJob(job DailyScheduledJob) {
 
 				// Metrics tracking
 				start := time.Now()
-				execErr := job.Execute(s.ctx, s)
+				jobCtx, endSpan := observability.StartSpan(s.ctx, "scheduler", "scheduler "+job.Name())
+				execErr := job.Execute(jobCtx, s)
+				endSpan(execErr)
 				duration := time.Since(start)
 
 				jobDuration.WithLabelValues(job.Name()).Observe(duration.Seconds())
@@ -250,9 +255,24 @@ func runScheduler(app *container.SchedulerApp, cleanup *container.Cleanup, logge
 	}
 	logger.Info("Connected to Redis successfully")
 
-	// メトリクスサーバー開始
-	metricsServer := &http.Server{Addr: ":2006"}
-	http.Handle("/metrics", promhttp.Handler())
+	// トレースを Tempo に送る（OTEL_EXPORTER_OTLP_ENDPOINT が未設定なら無効）
+	shutdownTracing, err := observability.SetupTracing(ctx, "umi-mikan-scheduler")
+	if err != nil {
+		return fmt.Errorf("failed to setup tracing: %w", err)
+	}
+	defer func() {
+		tracingCtx, tracingCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer tracingCancel()
+		if err := shutdownTracing(tracingCtx); err != nil {
+			logger.WithError(err).Error("Error shutting down tracing")
+		}
+	}()
+
+	// メトリクスサーバー開始（Alloy がプロファイルを取りに来る pprof も同じポートで公開する）
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.Handler())
+	observability.RegisterPprofHandlers(metricsMux)
+	metricsServer := &http.Server{Addr: ":2006", Handler: metricsMux}
 
 	go func() {
 		logger.Info("Metrics server starting on :2006")

@@ -1,0 +1,32 @@
+# Grafana Tempo（トレースの保存先）。単一バイナリ（monolithic）で動かすため Kafka は不要。
+# Traces Drilldown が使う TraceQL メトリクスは、Tempo 3 では live-store が直近のデータから計算する。
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+  log_level: warn
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+# Loki と同じく 7 日より古いトレースは消す
+backend_worker:
+  compaction:
+    block_retention: 168h
+
+usage_report:
+  reporting_enabled: false

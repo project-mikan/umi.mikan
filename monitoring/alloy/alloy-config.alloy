@@ -91,3 +91,30 @@ loki.write "loki" {
 		url = "http://loki:3100/loki/api/v1/push"
 	}
 }
+// Go のサービスが公開している pprof を定期的に取得し、Pyroscope に送る（Profiles Drilldown 用）
+pyroscope.scrape "go_services" {
+	targets = [
+		{"__address__" = "backend:8082", "service_name" = "umi-mikan-backend"},
+		{"__address__" = "subscriber:2005", "service_name" = "umi-mikan-subscriber"},
+		{"__address__" = "scheduler:2006", "service_name" = "umi-mikan-scheduler"},
+	]
+
+	profiling_config {
+		// runtime.SetMutexProfileFraction / SetBlockProfileRate を設定していないため、取得しても空になる
+		profile.mutex {
+			enabled = false
+		}
+
+		profile.block {
+			enabled = false
+		}
+	}
+
+	forward_to = [pyroscope.write.pyroscope.receiver]
+}
+
+pyroscope.write "pyroscope" {
+	endpoint {
+		url = "http://pyroscope:4040"
+	}
+}
