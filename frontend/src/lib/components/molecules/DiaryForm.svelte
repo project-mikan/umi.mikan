@@ -7,16 +7,28 @@
   import Button from "../atoms/Button.svelte";
   import FormField from "./FormField.svelte";
 
-  export let title: string;
-  export let content = "";
-  export let date = "";
-  export let error: string | undefined = undefined;
-  export let showDeleteButton = false;
-  export let onCancel: (() => void) | null = null;
-  export let onDelete: (() => void) | null = null;
+  interface Props {
+    title: string;
+    content?: string;
+    date?: string;
+    error?: string | undefined;
+    showDeleteButton?: boolean;
+    onCancel?: (() => void) | null;
+    onDelete?: (() => void) | null;
+  }
 
-  let isSubmitting = false;
-  let textarea: HTMLTextAreaElement;
+  let {
+    title,
+    content = $bindable(""),
+    date = $bindable(""),
+    error = undefined,
+    showDeleteButton = false,
+    onCancel = null,
+    onDelete = null,
+  }: Props = $props();
+
+  let isSubmitting = $state(false);
+  let textarea: HTMLTextAreaElement | undefined = $state();
 
   function _handleCancel() {
     if (onCancel) {
@@ -39,7 +51,7 @@
 		<Button
 			variant="secondary"
 			size="md"
-			on:click={_handleCancel}
+			onclick={_handleCancel}
 		>
 			{$_('diary.back')}
 		</Button>
@@ -80,7 +92,7 @@
 					name="content"
 					bind:this={textarea}
 					bind:value={content}
-					on:input={handleInput}
+					oninput={handleInput}
 					placeholder={$_('diary.placeholder')}
 					required
 					rows={12}
@@ -94,7 +106,7 @@
 						type="button"
 						variant="danger"
 						size="md"
-						on:click={onDelete}
+						onclick={onDelete}
 					>
 						{$_('diary.delete')}
 					</Button>
@@ -105,7 +117,7 @@
 						type="button"
 						variant="secondary"
 						size="md"
-						on:click={_handleCancel}
+						onclick={_handleCancel}
 					>
 						{$_('diary.cancel')}
 					</Button>

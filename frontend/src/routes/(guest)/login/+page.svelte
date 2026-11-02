@@ -10,7 +10,11 @@
     isRateLimited?: boolean;
   }
 
-  export let form: ActionData;
+  interface Props {
+    form: ActionData;
+  }
+
+  let { form }: Props = $props();
 </script>
 
 <AuthForm

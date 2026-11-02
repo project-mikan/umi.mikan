@@ -39,3 +39,13 @@ export function reconcileDiaryDraft(
   }
   return { key, content: draft.content, baseline: serverContent };
 }
+
+// 日付ごとの書きかけから指定した日のものを取り出し、サーバーの本文に合わせて返す
+export function reconcileDiaryDraftByDate(
+  drafts: Record<string, DiaryDraft>,
+  key: string,
+  serverContent: string,
+): DiaryDraft {
+  const current = drafts[key] ?? createDiaryDraft(key, serverContent);
+  return reconcileDiaryDraft(current, key, serverContent);
+}

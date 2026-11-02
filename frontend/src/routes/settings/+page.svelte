@@ -14,50 +14,47 @@
     return { destroy: detach };
   }
 
-  export let form: ActionData;
-  export let data: PageData;
+  interface Props {
+    form: ActionData;
+    data: PageData;
+  }
+
+  let { form, data }: Props = $props();
 
   // Helper function to check if message belongs to specific action
   function isMessageForAction(actionName: string): boolean {
     return form?.action === actionName;
   }
 
-  let usernameLoading = false;
-  let passwordLoading = false;
-  let autoSummaryLoading = false;
-  let deleteAccountLoading = false;
-  let regenerateEmbeddingsLoading = false;
+  let usernameLoading = $state(false);
+  let passwordLoading = $state(false);
+  let autoSummaryLoading = $state(false);
+  let deleteAccountLoading = $state(false);
+  let regenerateEmbeddingsLoading = $state(false);
 
   // Modal states
-  let showDeleteAccountConfirm = false;
+  let showDeleteAccountConfirm = $state(false);
 
   // Password visibility toggles
-  let showCurrentPassword = false;
-  let showNewPassword = false;
-  let showConfirmPassword = false;
+  let showCurrentPassword = $state(false);
+  let showNewPassword = $state(false);
+  let showConfirmPassword = $state(false);
 
   // AI機能設定（一度でも設定を保存した場合のみ存在する）
-  $: llmSetting = data.user?.llmSetting;
+  let llmSetting = $derived(data.user?.llmSetting);
 
-  // Local state for checkbox values
-  let autoSummaryMonthly = false;
-  let autoLatestTrend = false;
-  let semanticSearchEnabled = false;
-
-  // Update local state when data changes
-  $: {
-    if (llmSetting) {
-      autoSummaryMonthly = llmSetting.autoSummaryMonthly || false;
-      autoLatestTrend = llmSetting.autoLatestTrendEnabled || false;
-      semanticSearchEnabled = llmSetting.semanticSearchEnabled || false;
-    }
-  }
+  // チェックボックスの値（保存後はサーバーの値に合わせ直す）
+  let autoSummaryMonthly = $derived(llmSetting?.autoSummaryMonthly || false);
+  let autoLatestTrend = $derived(llmSetting?.autoLatestTrendEnabled || false);
+  let semanticSearchEnabled = $derived(
+    llmSetting?.semanticSearchEnabled || false,
+  );
 
   // Active section tracking
-  let activeSection = "";
+  let activeSection = $state("");
 
   // Mobile navigation state
-  let isMobileNavOpen = false;
+  let isMobileNavOpen = $state(false);
 
   function toggleMobileNav() {
     isMobileNavOpen = !isMobileNavOpen;
@@ -114,12 +111,12 @@
   // Modal helper functions
   // エクスポート関連の状態
   const currentDate = new Date();
-  let exportFromYear = currentDate.getFullYear() - 1;
-  let exportFromMonth = currentDate.getMonth() + 1; // 0始まりなので+1
-  let exportToYear = currentDate.getFullYear();
-  let exportToMonth = currentDate.getMonth() + 1;
-  let exportLoading = false;
-  let exportError = "";
+  let exportFromYear = $state(currentDate.getFullYear() - 1);
+  let exportFromMonth = $state(currentDate.getMonth() + 1); // 0始まりなので+1
+  let exportToYear = $state(currentDate.getFullYear());
+  let exportToMonth = $state(currentDate.getMonth() + 1);
+  let exportLoading = $state(false);
+  let exportError = $state("");
 
   // 年の選択肢（2000年〜現在年）
   const yearOptions = Array.from(
@@ -180,11 +177,11 @@
   }
 
   // APIキー関連の状態
-  let apiKeyLoading = false;
-  let deleteApiKeyLoading = false;
-  let showDeleteApiKeyConfirm = false;
-  let apiKeyToDelete: { id: string; name: string } | null = null;
-  let apiKeyCopied = false;
+  let apiKeyLoading = $state(false);
+  let deleteApiKeyLoading = $state(false);
+  let showDeleteApiKeyConfirm = $state(false);
+  let apiKeyToDelete: { id: string; name: string } | null = $state(null);
+  let apiKeyCopied = $state(false);
 
   function confirmDeleteApiKey(id: string, name: string) {
     apiKeyToDelete = { id, name };
@@ -266,7 +263,7 @@
 	<div class="md:hidden flex items-center mb-6">
 		<button
 			type="button"
-			on:click={toggleMobileNav}
+			onclick={toggleMobileNav}
 			class="p-2 mr-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
 			aria-label={$_("settings.nav.title")}
 		>
@@ -386,7 +383,7 @@
 						<button
 							type="button"
 							class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-							on:click={() => showCurrentPassword = !showCurrentPassword}
+							onclick={() => showCurrentPassword = !showCurrentPassword}
 							disabled={passwordLoading}
 						>
 							{#if showCurrentPassword}
@@ -420,7 +417,7 @@
 						<button
 							type="button"
 							class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-							on:click={() => showNewPassword = !showNewPassword}
+							onclick={() => showNewPassword = !showNewPassword}
 							disabled={passwordLoading}
 						>
 							{#if showNewPassword}
@@ -454,7 +451,7 @@
 						<button
 							type="button"
 							class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-							on:click={() => showConfirmPassword = !showConfirmPassword}
+							onclick={() => showConfirmPassword = !showConfirmPassword}
 							disabled={passwordLoading}
 						>
 							{#if showConfirmPassword}
@@ -741,7 +738,7 @@
 							<button
 								type="button"
 								disabled={exportLoading}
-								on:click={handleExport}
+								onclick={handleExport}
 								class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
 							>
 								{exportLoading ? $_("common.loading") : $_("settings.export.button")}
@@ -822,7 +819,7 @@
 									<button
 										type="button"
 										use:haptic
-										on:click={() => copyApiKey(String(form?.createdApiKey ?? ""))}
+										onclick={() => copyApiKey(String(form?.createdApiKey ?? ""))}
 										class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
 									>
 										{apiKeyCopied ? $_("settings.apiKeys.copied") : $_("settings.apiKeys.copyButton")}
@@ -867,7 +864,7 @@
 														type="button"
 														use:haptic
 														disabled={deleteApiKeyLoading}
-														on:click={() => confirmDeleteApiKey(apiKey.id, apiKey.name)}
+														onclick={() => confirmDeleteApiKey(apiKey.id, apiKey.name)}
 														class="px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors text-sm font-medium"
 													>
 														{$_("settings.apiKeys.deleteButton")}
@@ -915,7 +912,7 @@
 			<button
 				type="button"
 				disabled={deleteAccountLoading}
-				on:click={confirmDeleteAccount}
+				onclick={confirmDeleteAccount}
 				class="bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
 			>
 				{deleteAccountLoading ? $_("common.loading") : $_("settings.deleteAccount.button")}

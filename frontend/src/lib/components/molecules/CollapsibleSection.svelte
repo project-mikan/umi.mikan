@@ -2,8 +2,13 @@
   import { _ } from "svelte-i18n";
   import "#lib/i18n.js";
 
-  export let title: string;
-  export let isOpen = false;
+  interface Props {
+    title: string;
+    isOpen?: boolean;
+    children?: import("svelte").Snippet;
+  }
+
+  let { title, isOpen = $bindable(false), children }: Props = $props();
 
   function toggleSection() {
     isOpen = !isOpen;
@@ -13,7 +18,7 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-4">
 	<button
 		type="button"
-		on:click={toggleSection}
+		onclick={toggleSection}
 		class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors rounded-lg"
 	>
 		<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -38,7 +43,7 @@
 
 	{#if isOpen}
 		<div class="px-4 pb-4">
-			<slot />
+			{@render children?.()}
 		</div>
 	{/if}
 </div>

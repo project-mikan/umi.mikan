@@ -11,14 +11,17 @@
 
   let { data }: { data: PageData } = $props();
 
-  // 入力欄と検索モードはユーザーが書き換えられる。戻る・進むで data が変わったら URL の値に戻す
-  let searchKeyword = $derived(data.keyword || "");
+  // URL の検索条件。値が同じなら依存先へ変更を伝えないので、refreshAll で data が作り直されても入力は消えない
+  let urlKeyword = $derived(data.keyword || "");
   // 意味的検索が無効の場合はキーワードモードにフォールバック
-  let searchMode: "keyword" | "semantic" = $derived(
+  let urlMode: "keyword" | "semantic" = $derived(
     data.semanticSearchEnabled && data.mode === "semantic"
       ? "semantic"
       : "keyword",
   );
+  // 入力欄と検索モードはユーザーが書き換えられる。戻る・進むで URL の値が変わった時だけ戻す
+  let searchKeyword = $derived(urlKeyword);
+  let searchMode: "keyword" | "semantic" = $derived(urlMode);
   // ナビゲーション中かどうか（検索ボタンのローディング表示に使う）
   let isNavigating = $derived(navigating.to !== null);
 

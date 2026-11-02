@@ -4,17 +4,30 @@
   import Button from "./Button.svelte";
   import { attachHapticToButton } from "#lib/utils/haptic.js";
 
-  export let loading = false;
-  export let saved = false;
-  export let size: "sm" | "md" | "lg" = "md";
-  // カスタムラベル（未指定時はデフォルトのi18nキーを使用）
-  export let label: string | null = null;
-  // type="submit"か"button"かを選択可能にする
-  export let type: "submit" | "button" = "submit";
+  interface Props {
+    loading?: boolean;
+    saved?: boolean;
+    size?: "sm" | "md" | "lg";
+    // カスタムラベル（未指定時はデフォルトのi18nキーを使用）
+    label?: string | null;
+    // type="submit"か"button"かを選択可能にする
+    type?: "submit" | "button";
+    // type="button" のとき、親が独自のクリック処理を渡す
+    onclick?: () => void;
+  }
 
-  let buttonEl: HTMLElement;
+  let {
+    loading = false,
+    saved = false,
+    size = "md",
+    label = null,
+    type = "submit",
+    onclick,
+  }: Props = $props();
+
+  let buttonEl: HTMLElement | undefined = $state();
   let detach: (() => void) | null = null;
-  let wrapperEl: HTMLElement;
+  let wrapperEl: HTMLElement | undefined = $state();
 
   // パーティクルの型定義
   type Particle = {
@@ -27,18 +40,12 @@
     opacity: number;
   };
 
-  let particles: Particle[] = [];
+  let particles: Particle[] = $state([]);
   let particleId = 0;
   let animationFrame: ReturnType<typeof requestAnimationFrame> | null = null;
 
   // saved が true になったタイミングでパーティクルを生成する
   let prevSaved = false;
-  $: {
-    if (saved && !prevSaved) {
-      spawnParticles();
-    }
-    prevSaved = saved;
-  }
 
   function spawnParticles() {
     if (!wrapperEl) return;
@@ -100,7 +107,7 @@
     // ボタン押下（pointerdown）のタイミングで振動させる
     // iOS Safari は非同期コールバック内では haptic が無効になる場合があるため、
     // ユーザージェスチャーが確実に存在する pointerdown で発火する
-    detach = attachHapticToButton(buttonEl);
+    if (buttonEl) detach = attachHapticToButton(buttonEl);
   });
 
   onDestroy(() => {
@@ -109,12 +116,14 @@
       cancelAnimationFrame(animationFrame);
     }
   });
+  $effect(() => {
+    if (saved && !prevSaved) {
+      spawnParticles();
+    }
+    prevSaved = saved;
+  });
 </script>
 
-<!--
-  on:clickイベントをバブルアップ
-  親コンポーネントがtype="button"で独自のクリックハンドラを指定できるようにする
--->
 <div class="relative inline-block" bind:this={wrapperEl}>
   <!-- パーティクルを描画するSVGレイヤー（ボタンの上にpointer-events:noneで重ねる） -->
   {#if particles.length > 0}
@@ -135,7 +144,7 @@
   {/if}
 
   <div bind:this={buttonEl}>
-    <Button {type} variant={saved ? "success" : "primary"} {size} disabled={loading || saved} on:click>
+    <Button {type} variant={saved ? "success" : "primary"} {size} disabled={loading || saved} {onclick}>
       <!--
         display:grid + place-items:center で全状態を同じセルに重ね、
         非表示のスペーサー行が常に最大幅を確保することでサイズを固定する

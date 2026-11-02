@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import { goto, refreshAll } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import type { DateInfo } from "#lib/utils/date-utils.js";
   import {
     formatDateToId,
@@ -10,20 +10,22 @@
   } from "#lib/utils/date-utils.js";
   import Button from "../atoms/Button.svelte";
 
-  export let currentDate: DateInfo;
+  interface Props {
+    currentDate: DateInfo;
+  }
+
+  let { currentDate }: Props = $props();
 
   async function _goToPreviousDay() {
     const previousDate = getPreviousDate(currentDate);
     const id = formatDateToId(previousDate);
     await goto(`/${id}`);
-    await refreshAll();
   }
 
   async function _goToNextDay() {
     const nextDate = getNextDate(currentDate);
     const id = formatDateToId(nextDate);
     await goto(`/${id}`);
-    await refreshAll();
   }
 </script>
 
@@ -31,7 +33,7 @@
 	<Button
 		variant="secondary"
 		size="sm"
-		on:click={_goToPreviousDay}
+		onclick={_goToPreviousDay}
 		class="flex items-center gap-2"
 	>
 		<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +63,7 @@
 	<Button
 		variant="secondary"
 		size="sm"
-		on:click={_goToNextDay}
+		onclick={_goToNextDay}
 		class="flex items-center gap-2"
 	>
 		{$_("diary.nextDay")}

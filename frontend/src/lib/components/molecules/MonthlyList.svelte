@@ -3,11 +3,21 @@
   import type { DiaryEntry } from "#lib/grpc/diary/diary_pb.js";
   import { plainTextToHtml } from "#lib/utils/html-text-converter.js";
 
-  export let daysInMonth: number;
-  export let currentYear: number;
-  export let currentMonth: number;
-  export let entryMap: Map<number, DiaryEntry>;
-  export let onNavigateToEntry: (day: number) => void;
+  interface Props {
+    daysInMonth: number;
+    currentYear: number;
+    currentMonth: number;
+    entryMap: Map<number, DiaryEntry>;
+    onNavigateToEntry: (day: number) => void;
+  }
+
+  let {
+    daysInMonth,
+    currentYear,
+    currentMonth,
+    entryMap,
+    onNavigateToEntry,
+  }: Props = $props();
 </script>
 
 <div class="space-y-3">
@@ -15,7 +25,7 @@
 		{@const entry = entryMap.get(day)}
 		<div class="bg-white dark:bg-gray-800 shadow dark:shadow-gray-900/20 rounded-lg overflow-hidden">
 			<button
-				on:click={() => onNavigateToEntry(day)}
+				onclick={() => onNavigateToEntry(day)}
 				class="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
 			>
 				<div class="flex items-center justify-between mb-2">

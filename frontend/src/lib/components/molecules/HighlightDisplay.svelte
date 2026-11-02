@@ -7,26 +7,36 @@
   import Button from "#lib/components/atoms/Button.svelte";
   import type { HighlightData } from "#lib/types/highlight.js";
 
-  export let diaryId: string;
-  export let isHighlightOutdated = false;
-  export let diaryUpdatedAt: number;
-  // ハイライトの生成が終わった時・表示を切り替えた時に呼ぶ
-  export let onhighlightupdated: (highlight: HighlightData) => void = () => {};
-  export let onvisibilitychanged: (visible: boolean) => void = () => {};
+  interface Props {
+    diaryId: string;
+    isHighlightOutdated?: boolean;
+    // 表示・非表示は親が持つ（古くなった時に親が非表示にするため）
+    visible?: boolean;
+    // ハイライトの生成が終わった時・表示を切り替えた時に呼ぶ
+    onhighlightupdated?: (highlight: HighlightData) => void;
+    onvisibilitychanged?: (visible: boolean) => void;
+  }
 
-  let highlightData: HighlightData | null = null;
+  let {
+    diaryId,
+    isHighlightOutdated = false,
+    visible = true,
+    onhighlightupdated = () => {},
+    onvisibilitychanged = () => {},
+  }: Props = $props();
+
+  let highlightData: HighlightData | null = $state(null);
   let highlightStatus:
     | "none"
     | "queued"
     | "processing"
     | "completed"
-    | "error" = "none";
-  let highlightGenerating = false;
+    | "error" = $state("none");
+  let highlightGenerating = $state(false);
   let isRegenerating = false;
   let pollingInterval: ReturnType<typeof setInterval> | null = null;
-  let highlightVisible = true; // ハイライトの表示・非表示状態
   let pollingAttempts = 0; // ポーリング試行回数
-  let errorMessage = ""; // エラーメッセージ
+  let errorMessage = $state(""); // エラーメッセージ
 
   const MAX_POLLING_ATTEMPTS = 40; // 最大40回（120秒）
   const POLLING_INTERVAL = 3000; // 3秒間隔
@@ -146,9 +156,7 @@
 
   // ハイライトの表示・非表示を切り替え
   function toggleHighlightVisibility() {
-    highlightVisible = !highlightVisible;
-    // 親コンポーネントに表示状態を通知
-    onvisibilitychanged(highlightVisible);
+    onvisibilitychanged(!visible);
   }
 
   // 初回読み込み時にハイライトを取得
@@ -166,11 +174,6 @@
 
         // 親コンポーネントに通知
         onhighlightupdated(result);
-
-        // 日記が更新されているかチェック
-        if (diaryUpdatedAt > result.updatedAt) {
-          isHighlightOutdated = true;
-        }
       }
     } catch (err) {
       // ハイライトが存在しない場合は何もしない
@@ -181,10 +184,12 @@
     stopPolling();
   });
 
-  $: buttonLabel = highlightData
-    ? $_("diary.highlight.regenerate")
-    : $_("diary.highlight.generate");
-  $: buttonLoadingLabel = $_("diary.highlight.generating");
+  let buttonLabel = $derived(
+    highlightData
+      ? $_("diary.highlight.regenerate")
+      : $_("diary.highlight.generate"),
+  );
+  let buttonLoadingLabel = $derived($_("diary.highlight.generating"));
 </script>
 
 <div class="flex flex-col gap-2 my-4">
@@ -217,7 +222,7 @@
 		<Button
 			variant="secondary"
 			size="sm"
-			on:click={generateHighlight}
+			onclick={generateHighlight}
 			disabled={highlightGenerating}
 		>
 			{highlightGenerating ? buttonLoadingLabel : buttonLabel}
@@ -225,12 +230,12 @@
 
 		{#if highlightData}
 			<Button
-				variant={highlightVisible ? "secondary" : "primary"}
+				variant={visible ? "secondary" : "primary"}
 				size="sm"
-				on:click={toggleHighlightVisibility}
+				onclick={toggleHighlightVisibility}
 				disabled={highlightGenerating}
 			>
-				{highlightVisible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
+				{visible ? $_("diary.highlight.hide") : $_("diary.highlight.show")}
 			</Button>
 		{/if}
 	</div>

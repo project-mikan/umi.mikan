@@ -1,10 +1,26 @@
 <script lang="ts">
-  export let type: "button" | "submit" = "button";
-  export let variant: "primary" | "secondary" | "danger" | "success" | "gray" =
-    "primary";
-  export let size: "sm" | "md" | "lg" = "md";
-  export let disabled = false;
-  export let loading = false;
+  import type { Snippet } from "svelte";
+  import type { HTMLButtonAttributes } from "svelte/elements";
+
+  interface Props extends Omit<HTMLButtonAttributes, "type"> {
+    type?: "button" | "submit";
+    variant?: "primary" | "secondary" | "danger" | "success" | "gray";
+    size?: "sm" | "md" | "lg";
+    disabled?: boolean;
+    loading?: boolean;
+    children?: Snippet;
+  }
+
+  let {
+    type = "button",
+    variant = "primary",
+    size = "md",
+    disabled = false,
+    loading = false,
+    class: className,
+    children,
+    ...rest
+  }: Props = $props();
 
   const baseClasses =
     "font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors";
@@ -24,9 +40,12 @@
     lg: "px-6 py-3 text-base",
   };
 
-  $: classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""}`;
+  let classes = $derived(
+    `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""}`,
+  );
 </script>
 
-<button {type} class={classes} {disabled} on:click {...$$restProps}>
-	<slot />
+<!-- 呼び出し側の class は上書きではなく追加にする -->
+<button {...rest} {type} class={[classes, className]} {disabled}>
+	{@render children?.()}
 </button>

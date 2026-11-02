@@ -8,10 +8,11 @@
   import FormField from "./FormField.svelte";
   import { createSubmitHandler } from "#lib/utils/form-utils.js";
   import {
+    type DiaryDraft,
     createDiaryDraft,
     diaryDateKey,
     hasUnsavedDraft,
-    reconcileDiaryDraft,
+    reconcileDiaryDraftByDate,
   } from "#lib/utils/diary-draft.js";
   import type { DiaryEntry, YMD } from "#lib/grpc/diary/diary_pb.js";
 
@@ -25,6 +26,7 @@
     loading = $bindable(false),
     saved = $bindable(false),
     hasUnsavedChanges = $bindable(false),
+    drafts = $bindable({}),
   }: {
     title: string;
     date: YMD;
@@ -34,6 +36,8 @@
     loading?: boolean;
     saved?: boolean;
     hasUnsavedChanges?: boolean;
+    // 書きかけはカードの位置ではなく日付ごとに持つ。日付が変わってカードの日付がずれても、その日の書きかけを引き継ぐ
+    drafts?: Record<string, DiaryDraft>;
   } = $props();
 
   let formElement: HTMLFormElement | undefined = $state();
@@ -41,8 +45,11 @@
   let serverContent = $derived(entry?.content || "");
 
   // SSR でも初期表示が正しくなるよう、宣言時にサーバーの本文で初期化する
-  let draft = $state(
-    untrack(() => createDiaryDraft(diaryDateKey(date), entry?.content || "")),
+  untrack(() => {
+    drafts[dateKey] = reconcileDiaryDraftByDate(drafts, dateKey, serverContent);
+  });
+  let draft = $derived(
+    drafts[dateKey] ?? createDiaryDraft(dateKey, serverContent),
   );
 
   // 保存後や他のカードの保存で再読み込みされても、書きかけは消さずに残す
@@ -50,7 +57,7 @@
     const key = dateKey;
     const content = serverContent;
     untrack(() => {
-      draft = reconcileDiaryDraft(draft, key, content);
+      drafts[key] = reconcileDiaryDraftByDate(drafts, key, content);
     });
   });
 
@@ -67,45 +74,47 @@
 </script>
 
 <DiaryCard {title} entry={entry ?? null} showForm={true} href={`/${dateKey}`}>
-	<form
-		bind:this={formElement}
-		method="POST"
-		{action}
-		use:enhance={createSubmitHandler(
-			(l) => (loading = l),
-			(s) => (saved = s),
-		)}
-		slot="form"
-	>
-		<input type="hidden" name="date" value={dateKey} />
-		{#if entry}
-			<input type="hidden" name="id" value={entry.id} />
-		{/if}
-		<FormField
-			type="textarea"
-			label=""
-			id={inputId}
-			name="content"
-			placeholder={$_("diary.placeholder")}
-			rows={8}
-			bind:value={draft.content}
-			onsave={save}
-			onautosave={() => {
-				if (hasUnsavedChanges && !loading) save();
-			}}
-		/>
+	{#snippet editor()}
+    <form
+  		bind:this={formElement}
+  		method="POST"
+  		{action}
+  		use:enhance={createSubmitHandler(
+  			(l) => (loading = l),
+  			(s) => (saved = s),
+  		)}
+  		
+  	>
+  		<input type="hidden" name="date" value={dateKey} />
+  		{#if entry}
+  			<input type="hidden" name="id" value={entry.id} />
+  		{/if}
+  		<FormField
+  			type="textarea"
+  			label=""
+  			id={inputId}
+  			name="content"
+  			placeholder={$_("diary.placeholder")}
+  			rows={8}
+  			bind:value={draft.content}
+  			onsave={save}
+  			onautosave={() => {
+  				if (hasUnsavedChanges && !loading) save();
+  			}}
+  		/>
 
-		<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-			{$_("diary.characterCount", { values: { count: characterCount } })}
-			{#if characterCount >= 1000}
-				<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
-					({$_("diary.autoSummaryEligible")})
-				</span>
-			{/if}
-		</div>
+  		<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+  			{$_("diary.characterCount", { values: { count: characterCount } })}
+  			{#if characterCount >= 1000}
+  				<span class="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+  					({$_("diary.autoSummaryEligible")})
+  				</span>
+  			{/if}
+  		</div>
 
-		<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
-			<SaveButton {loading} {saved} />
-		</div>
-	</form>
+  		<div class="sticky bottom-4 flex justify-end hidden sm:flex mt-4 z-10">
+  			<SaveButton {loading} {saved} />
+  		</div>
+  	</form>
+  {/snippet}
 </DiaryCard>

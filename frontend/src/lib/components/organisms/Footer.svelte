@@ -4,7 +4,11 @@
   import Button from "../atoms/Button.svelte";
   import Link from "../atoms/Link.svelte";
 
-  export let isAuthenticated = false;
+  interface Props {
+    isAuthenticated?: boolean;
+  }
+
+  let { isAuthenticated = false }: Props = $props();
 </script>
 
 {#if isAuthenticated}

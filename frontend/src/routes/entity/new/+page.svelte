@@ -1,15 +1,21 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { _ } from "svelte-i18n";
   import { enhance } from "$app/forms";
   import "#lib/i18n.js";
   import { notifyEntityUpdated } from "#lib/utils/entity-events.js";
   import type { ActionData } from "./$types";
 
-  export let form: ActionData;
+  interface Props {
+    form: ActionData;
+  }
 
-  let name = form?.name || "";
-  let memo = form?.memo || "";
-  let isSubmitting = false;
+  let { form }: Props = $props();
+
+  // 入力欄はユーザーが書き換えるので、初期値だけ送信結果から復元する
+  let name = $state(untrack(() => form?.name || ""));
+  let memo = $state(untrack(() => form?.memo || ""));
+  let isSubmitting = $state(false);
 </script>
 
 <svelte:head>

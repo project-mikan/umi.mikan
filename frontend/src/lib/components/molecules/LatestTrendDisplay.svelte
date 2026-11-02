@@ -18,14 +18,18 @@
     modelVersion?: string;
   }
 
-  export let userName: string | null = null;
+  interface Props {
+    userName?: string | null;
+  }
 
-  let trendData: LatestTrendData | null = null;
-  let isLoading = true;
-  let errorMessage = "";
+  let { userName = null }: Props = $props();
+
+  let trendData: LatestTrendData | null = $state(null);
+  let isLoading = $state(true);
+  let errorMessage = $state("");
 
   // ストアから表示状態を取得
-  $: showTrend = $summaryVisibility.latestTrend;
+  let showTrend = $derived($summaryVisibility.latestTrend);
 
   function toggleTrend() {
     summaryVisibility.toggleLatestTrend();
@@ -235,7 +239,7 @@
 		{#if trendData && showTrend}
 			<button
 				type="button"
-				on:click|preventDefault|stopPropagation={toggleTrend}
+				onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleTrend(); }}
 				class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
 			>
 				{$_("latestTrend.hide")}
@@ -243,7 +247,7 @@
 		{:else if trendData}
 			<button
 				type="button"
-				on:click|preventDefault|stopPropagation={toggleTrend}
+				onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleTrend(); }}
 				class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
 			>
 				{$_("latestTrend.view")}

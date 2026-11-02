@@ -2,7 +2,7 @@
   import { locale } from "svelte-i18n";
   import { browser } from "$app/env";
 
-  let isOpen = false;
+  let isOpen = $state(false);
 
   const languages = [
     { code: "en", label: "English" },
@@ -20,11 +20,12 @@
     }
   }
 
-  $: currentLanguage =
-    languages.find((lang) => lang.code === $locale) || languages[0];
+  let currentLanguage = $derived(
+    languages.find((lang) => lang.code === $locale) || languages[0],
+  );
 </script>
 
-<svelte:window on:click={(e) => {
+<svelte:window onclick={(e) => {
 	const target = e.target as HTMLElement | null;
 	if (target && !target.closest('.language-selector')) {
 		isOpen = false;
@@ -35,7 +36,7 @@
 	<button
 		type="button"
 		class="flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-md transition-colors"
-		on:click={toggleDropdown}
+		onclick={toggleDropdown}
 		aria-expanded={isOpen}
 		aria-haspopup="true"
 	>
@@ -55,7 +56,7 @@
 					<button
 						type="button"
 						class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 {language.code === $locale ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''}"
-						on:click={() => selectLanguage(language.code)}
+						onclick={() => selectLanguage(language.code)}
 					>
 						{language.label}
 					</button>

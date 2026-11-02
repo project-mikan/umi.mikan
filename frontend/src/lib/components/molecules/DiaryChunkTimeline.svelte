@@ -2,18 +2,22 @@
   import { _ } from "svelte-i18n";
   import "#lib/i18n.js";
 
-  export let embeddingStatus: Promise<{
-    indexed: boolean;
-    modelVersion: string;
-    chunkModelVersion: string;
-    createdAt: number;
-    updatedAt: number;
-    chunkCount: number;
-    chunkSummaries: string[];
-  } | null> | null;
+  interface Props {
+    embeddingStatus: Promise<{
+      indexed: boolean;
+      modelVersion: string;
+      chunkModelVersion: string;
+      createdAt: number;
+      updatedAt: number;
+      chunkCount: number;
+      chunkSummaries: string[];
+    } | null> | null;
+  }
+
+  let { embeddingStatus }: Props = $props();
 
   // モバイル用トグル（デフォルトは非表示）
-  let mobileOpen = false;
+  let mobileOpen = $state(false);
 </script>
 
 {#await embeddingStatus}
@@ -29,7 +33,7 @@
         <!-- モバイルのみトグルボタン表示 -->
         <button
           type="button"
-          on:click={() => (mobileOpen = !mobileOpen)}
+          onclick={() => (mobileOpen = !mobileOpen)}
           class="sm:hidden flex items-center gap-1 text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
           aria-expanded={mobileOpen}
         >

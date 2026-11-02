@@ -5,6 +5,7 @@ import {
   diaryDateKey,
   hasUnsavedDraft,
   reconcileDiaryDraft,
+  reconcileDiaryDraftByDate,
 } from "./diary-draft";
 
 describe("diaryDateKey", () => {
@@ -125,6 +126,40 @@ describe("reconcileDiaryDraft", () => {
       expect(reconcileDiaryDraft(tc.draft, tc.key, tc.serverContent)).toEqual(
         tc.want,
       );
+    });
+  }
+});
+
+describe("reconcileDiaryDraftByDate", () => {
+  const drafts: Record<string, DiaryDraft> = {
+    "2026-11-01": { key: "2026-11-01", content: "書きかけ", baseline: "古い" },
+  };
+  const cases: Array<{
+    name: string;
+    key: string;
+    serverContent: string;
+    want: DiaryDraft;
+  }> = [
+    {
+      // 日付が変わって「今日」のカードが「昨日」に移っても、その日の書きかけを引き継ぐ
+      name: "その日の書きかけがある時は書きかけを残す",
+      key: "2026-11-01",
+      serverContent: "古い",
+      want: { key: "2026-11-01", content: "書きかけ", baseline: "古い" },
+    },
+    {
+      name: "その日の書きかけがない時はサーバーの本文から作る",
+      key: "2026-11-02",
+      serverContent: "新しい日",
+      want: { key: "2026-11-02", content: "新しい日", baseline: "新しい日" },
+    },
+  ];
+
+  for (const tc of cases) {
+    it(tc.name, () => {
+      expect(
+        reconcileDiaryDraftByDate(drafts, tc.key, tc.serverContent),
+      ).toEqual(tc.want);
     });
   }
 });

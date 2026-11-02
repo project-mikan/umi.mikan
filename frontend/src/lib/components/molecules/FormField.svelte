@@ -1,26 +1,48 @@
 <script lang="ts">
+  import type { HTMLInputAttributes } from "svelte/elements";
   import Input from "../atoms/Input.svelte";
   import Label from "../atoms/Label.svelte";
   import Textarea from "../atoms/Textarea.svelte";
   import type { DiaryHighlight } from "#lib/types/highlight.js";
 
-  export let type: "input" | "textarea" = "input";
-  export let inputType: "text" | "email" | "password" | "date" = "text";
-  export let label: string;
-  export let id: string;
-  export let name: string;
-  export let value = "";
-  export let placeholder = "";
-  export let required = false;
-  export let disabled = false;
-  export let autocomplete = "";
-  export let rows = 4;
-  export let srOnlyLabel = false;
-  export let diaryHighlights: DiaryHighlight[] = [];
-  export let searchKeyword = "";
-  // textarea の保存・自動保存のタイミングで呼ぶ
-  export let onsave: () => void = () => {};
-  export let onautosave: () => void = () => {};
+  interface Props {
+    type?: "input" | "textarea";
+    inputType?: "text" | "email" | "password" | "date";
+    label: string;
+    id: string;
+    name: string;
+    value?: string;
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    autocomplete?: HTMLInputAttributes["autocomplete"];
+    rows?: number;
+    srOnlyLabel?: boolean;
+    diaryHighlights?: DiaryHighlight[];
+    searchKeyword?: string;
+    // textarea の保存・自動保存のタイミングで呼ぶ
+    onsave?: () => void;
+    onautosave?: () => void;
+  }
+
+  let {
+    type = "input",
+    inputType = "text",
+    label,
+    id,
+    name,
+    value = $bindable(""),
+    placeholder = "",
+    required = false,
+    disabled = false,
+    autocomplete = "",
+    rows = 4,
+    srOnlyLabel = false,
+    diaryHighlights = [],
+    searchKeyword = "",
+    onsave = () => {},
+    onautosave = () => {},
+  }: Props = $props();
 </script>
 
 <div class="mb-4">

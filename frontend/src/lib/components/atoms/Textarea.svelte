@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, untrack } from "svelte";
   import type { DiaryHighlight } from "#lib/types/highlight.js";
   import {
     CURSOR_ANCHOR_ZWS,
@@ -7,30 +7,48 @@
     getTextOffset,
     restoreCursorPosition,
   } from "#lib/utils/cursor-utils.js";
+  import type { HTMLAttributes } from "svelte/elements";
   import { highlightEntitiesAndHighlights } from "#lib/utils/diary-entity-highlighter.js";
   import { htmlToPlainText } from "#lib/utils/html-text-converter.js";
 
-  export let value = "";
-  export let placeholder = "";
-  export let required = false;
-  export let disabled = false;
-  export let id = "";
-  export let name = "";
-  export let rows = 4;
-  export let diaryHighlights: DiaryHighlight[] = [];
-  export let searchKeyword = "";
-  // Ctrl+Enter で保存する時・フォーカスが外れて自動保存する時に呼ぶ
-  export let onsave: () => void = () => {};
-  export let onautosave: () => void = () => {};
+  interface Props extends HTMLAttributes<HTMLDivElement> {
+    value?: string;
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    id?: string;
+    name?: string;
+    rows?: number;
+    diaryHighlights?: DiaryHighlight[];
+    searchKeyword?: string;
+    // Ctrl+Enter で保存する時・フォーカスが外れて自動保存する時に呼ぶ
+    onsave?: () => void;
+    onautosave?: () => void;
+  }
+
+  let {
+    value = $bindable(""),
+    placeholder = "",
+    required = false,
+    disabled = false,
+    id = "",
+    name = "",
+    rows = 4,
+    diaryHighlights = [],
+    searchKeyword = "",
+    onsave = () => {},
+    onautosave = () => {},
+    ...rest
+  }: Props = $props();
 
   // ハイライトを適用すべき元のコンテンツ
-  let savedContent = "";
+  let savedContent = $state("");
 
-  let contentElement: HTMLDivElement;
-  let isUpdatingFromValue = false; // valueからの更新中かどうかのフラグ
-  let isComposing = false; // IME入力中かどうかのフラグ
+  let contentElement: HTMLDivElement | undefined = $state();
+  let isUpdatingFromValue = $state(false); // valueからの更新中かどうかのフラグ
+  let isComposing = $state(false); // IME入力中かどうかのフラグ
   let updateTimeout: ReturnType<typeof setTimeout> | null = null; // ハイライト更新のタイムアウト
-  let isTyping = false; // ユーザーが入力中かどうかのフラグ
+  let isTyping = $state(false); // ユーザーが入力中かどうかのフラグ
   // _handleKeydownがEnter処理直後に発火させる合成inputイベントかどうかのフラグ。
   // このタイミングではカーソルアンカー（ゼロ幅スペース）がまさにカーソル位置として
   // 使われている最中なので、_handleInputの先頭でアンカーを掃除するのを1回だけスキップする。
@@ -39,51 +57,6 @@
   // diaryHighlightsが変更されたときもsavedContentを更新
   // 配列の内容をシリアライズして比較（参照比較では毎回新しい配列なので不十分）
   let previousDiaryHighlightsKey = "";
-  $: {
-    // valueとdiaryHighlightsへの依存を明示（初期化タイミングを確実にする）
-    void value;
-
-    // diaryHighlightsの内容をキーに変換（長さ + 最初の要素の情報）
-    const currentKey = diaryHighlights
-      ? `${diaryHighlights.length}-${diaryHighlights[0]?.start ?? ""}-${diaryHighlights[0]?.end ?? ""}`
-      : "empty";
-
-    if (currentKey !== previousDiaryHighlightsKey) {
-      previousDiaryHighlightsKey = currentKey;
-      savedContent = value;
-    }
-  }
-
-  // ハイライトを適用したHTMLを生成
-  // 入力中でない場合のみハイライトを表示
-  // また、現在のvalueが保存されたコンテンツと一致する場合のみハイライトを適用
-  $: highlightedHTML = (() => {
-    // 入力中は常にプレーンテキスト
-    if (isTyping) {
-      return value.replace(/\n/g, "<br>");
-    }
-
-    const hasSearchKeyword = searchKeyword && searchKeyword.trim().length > 0;
-    const hasDiaryHighlights = diaryHighlights && diaryHighlights.length > 0;
-
-    // ハイライト情報が何もない場合はプレーンテキスト
-    if (!hasDiaryHighlights && !hasSearchKeyword) {
-      return value.replace(/\n/g, "<br>");
-    }
-
-    // diaryHighlightsを適用する場合は保存済みコンテンツと一致が必要
-    // （編集中のテキストには古いpositionデータを適用しない）
-    const highlightsToApply =
-      hasDiaryHighlights && value === savedContent ? diaryHighlights : [];
-
-    // ハイライトを適用
-    return highlightEntitiesAndHighlights(
-      value,
-      [],
-      highlightsToApply,
-      hasSearchKeyword ? searchKeyword.trim() : undefined,
-    );
-  })();
 
   // captureフェーズでTabキーをキャプチャするためのリスナー
   onMount(async () => {
@@ -109,22 +82,10 @@
 
   const baseClasses =
     "block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none resize-none min-h-24 whitespace-pre-wrap [&>br]:leading-none [&>br]:h-0";
-  $: classes = `${baseClasses} ${disabled ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50" : ""}`;
-
-  // Calculate min height based on rows
-  $: minHeight = `${rows * 1.5}rem`;
 
   // highlightedHTMLが変化したときにDOMを更新する
   // searchKeyword・diaryHighlights・value・isTypingの変化を一元的に処理する
   let previousHighlightedHTML = "";
-  $: {
-    if (contentElement && !isUpdatingFromValue && !isComposing && !isTyping) {
-      if (highlightedHTML !== previousHighlightedHTML) {
-        previousHighlightedHTML = highlightedHTML;
-        updateContentElement();
-      }
-    }
-  }
 
   function updateContentElement() {
     if (!contentElement) return;
@@ -350,7 +311,7 @@
       // 使われている最中なので、_handleInputでの掃除を1回だけスキップさせる
       skipNextAnchorCleanup = true;
       const inputEvent = new Event("input", { bubbles: true });
-      contentElement.dispatchEvent(inputEvent);
+      contentElement?.dispatchEvent(inputEvent);
       // isTypingはdispatchによって呼ばれた_handleInput内のsetTimeoutに任せる
       // ここで即座にisTyping = falseにするとhighlightedHTMLの変化でupdateContentElement()が
       // 呼ばれてカーソル位置が上書きされてしまう
@@ -366,6 +327,67 @@
     }
     onautosave();
   }
+
+  $effect.pre(() => {
+    // valueとdiaryHighlightsへの依存を明示（初期化タイミングを確実にする）
+    void value;
+
+    // diaryHighlightsの内容をキーに変換（長さ + 最初の要素の情報）
+    const currentKey = diaryHighlights
+      ? `${diaryHighlights.length}-${diaryHighlights[0]?.start ?? ""}-${diaryHighlights[0]?.end ?? ""}`
+      : "empty";
+
+    if (currentKey !== previousDiaryHighlightsKey) {
+      previousDiaryHighlightsKey = currentKey;
+      savedContent = value;
+    }
+  });
+  // ハイライトを適用したHTMLを生成
+  // 入力中でない場合のみハイライトを表示
+  // また、現在のvalueが保存されたコンテンツと一致する場合のみハイライトを適用
+  let highlightedHTML = $derived(
+    (() => {
+      // 入力中は常にプレーンテキスト
+      if (isTyping) {
+        return value.replace(/\n/g, "<br>");
+      }
+
+      const hasSearchKeyword = searchKeyword && searchKeyword.trim().length > 0;
+      const hasDiaryHighlights = diaryHighlights && diaryHighlights.length > 0;
+
+      // ハイライト情報が何もない場合はプレーンテキスト
+      if (!hasDiaryHighlights && !hasSearchKeyword) {
+        return value.replace(/\n/g, "<br>");
+      }
+
+      // diaryHighlightsを適用する場合は保存済みコンテンツと一致が必要
+      // （編集中のテキストには古いpositionデータを適用しない）
+      const highlightsToApply =
+        hasDiaryHighlights && value === savedContent ? diaryHighlights : [];
+
+      // ハイライトを適用
+      return highlightEntitiesAndHighlights(
+        value,
+        [],
+        highlightsToApply,
+        hasSearchKeyword ? searchKeyword.trim() : undefined,
+      );
+    })(),
+  );
+  let classes = $derived(
+    `${baseClasses} ${disabled ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50" : ""}`,
+  );
+  // Calculate min height based on rows
+  let minHeight = $derived(`${rows * 1.5}rem`);
+
+  $effect.pre(() => {
+    if (contentElement && !isUpdatingFromValue && !isComposing && !isTyping) {
+      if (highlightedHTML !== previousHighlightedHTML) {
+        previousHighlightedHTML = highlightedHTML;
+        untrack(() => updateContentElement());
+      }
+    }
+  });
 </script>
 
 <!-- Hidden input for form submission -->
@@ -379,15 +401,15 @@
 		contenteditable={!disabled}
 		class="{classes} auto-phrase-target"
 		style="min-height: {minHeight}; line-height: 18pt; font-size:11pt; font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;padding: 4px;"
-		on:input={_handleInput}
-		on:blur={_handleBlur}
-		on:compositionstart={() => { isComposing = true; }}
-		on:compositionupdate={_handleInput}
-		on:compositionend={(event) => {
+		oninput={_handleInput}
+		onblur={_handleBlur}
+		oncompositionstart={() => { isComposing = true; }}
+		oncompositionupdate={_handleInput}
+		oncompositionend={(event) => {
 			isComposing = false;
 			// IME確定後に処理を実行
 			_handleInput(event);
 		}}
-		{...$$restProps}
+		{...rest}
 	></div>
 </div>

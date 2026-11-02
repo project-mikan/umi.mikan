@@ -1,5 +1,10 @@
 <script lang="ts">
-  export let type: "error" | "success" | "warning" | "info" = "info";
+  interface Props {
+    type?: "error" | "success" | "warning" | "info";
+    children?: import("svelte").Snippet;
+  }
+
+  let { type = "info", children }: Props = $props();
 
   const typeClasses = {
     error:
@@ -11,9 +16,11 @@
     info: "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300",
   };
 
-  $: classes = `px-4 py-3 rounded auto-phrase-target ${typeClasses[type]}`;
+  let classes = $derived(
+    `px-4 py-3 rounded auto-phrase-target ${typeClasses[type]}`,
+  );
 </script>
 
 <div class={classes}>
-	<slot />
+	{@render children?.()}
 </div>

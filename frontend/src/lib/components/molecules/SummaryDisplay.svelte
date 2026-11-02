@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
   import { browser } from "$app/env";
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { authenticatedFetch } from "#lib/auth-client.js";
   import { summaryVisibility } from "#lib/summary-visibility-store.js";
   import "#lib/i18n.js";
@@ -15,32 +15,51 @@
     errorReason?: string;
   }
 
-  export let type: "daily" | "monthly"; // 日次または月次
-  export let summary: Summary | null = null;
-  export let fetchUrl: string; // 要約取得用URL
-  export let generateUrl: string; // 要約生成用URL
-  export let generatePayload: Record<string, unknown> = {}; // 生成時に送信するペイロード
-  export let isDisabled = false; // 生成ボタンを無効にするかどうか
-  export let disabledMessage = ""; // 無効時のメッセージ
-  export let isGenerating = false; // 親コンポーネントから生成状況を受け取る
-  export let isSummaryOutdated = false; // 要約が古いかどうか
-  // 要約の取得・生成の状況を親に知らせる
-  export let onsummaryupdated: (summary: Summary) => void = () => {};
-  export let ongenerationstarted: () => void = () => {};
-  export let ongenerationcompleted: () => void = () => {};
-  export let onerror: (message: string) => void = () => {};
+  interface Props {
+    type: "daily" | "monthly"; // 日次または月次
+    summary?: Summary | null;
+    fetchUrl: string; // 要約取得用URL
+    generateUrl: string; // 要約生成用URL
+    generatePayload?: Record<string, unknown>; // 生成時に送信するペイロード
+    isDisabled?: boolean; // 生成ボタンを無効にするかどうか
+    disabledMessage?: string; // 無効時のメッセージ
+    isGenerating?: boolean; // 親コンポーネントから生成状況を受け取る
+    isSummaryOutdated?: boolean; // 要約が古いかどうか
+    // 要約の取得・生成の状況を親に知らせる
+    onsummaryupdated?: (summary: Summary) => void;
+    ongenerationstarted?: () => void;
+    ongenerationcompleted?: () => void;
+    onerror?: (message: string) => void;
+  }
+
+  let {
+    type,
+    summary = $bindable(null),
+    fetchUrl,
+    generateUrl,
+    generatePayload = {},
+    isDisabled = false,
+    disabledMessage = "",
+    isGenerating = false,
+    isSummaryOutdated = false,
+    onsummaryupdated = () => {},
+    ongenerationstarted = () => {},
+    ongenerationcompleted = () => {},
+    onerror = () => {},
+  }: Props = $props();
 
   // ストアから表示状態を取得
-  $: showSummary =
-    type === "daily" ? $summaryVisibility.daily : $summaryVisibility.monthly;
+  let showSummary = $derived(
+    type === "daily" ? $summaryVisibility.daily : $summaryVisibility.monthly,
+  );
 
-  let summaryStatus: "none" | "queued" | "processing" | "completed" = summary
-    ? "completed"
-    : "none";
-  let summaryGenerating = false;
-  let isRegenerating = false; // 再生成かどうかのフラグ
+  let summaryStatus: "none" | "queued" | "processing" | "completed" = $state(
+    summary ? "completed" : "none",
+  );
+  let summaryGenerating = $state(false);
+  let isRegenerating = $state(false); // 再生成かどうかのフラグ
   let pollingInterval: ReturnType<typeof setInterval> | null = null;
-  let summaryJustUpdated = false;
+  let summaryJustUpdated = $state(false);
 
   // ポーリング機能
   async function pollSummaryStatus(_isUpdate = false) {
@@ -370,7 +389,7 @@
   });
 
   // プロパティ変更時の処理
-  $: {
+  $effect.pre(() => {
     if (isGenerating) {
       summaryGenerating = true;
       summaryStatus = "processing";
@@ -381,14 +400,21 @@
       summaryGenerating = false;
       summaryStatus = "none";
     }
-  }
+  });
 
   // fetchUrl または generatePayload が変更された時の処理（月変更時）
   let previousFetchUrl = "";
   let previousGeneratePayload = "";
 
-  $: {
+  $effect.pre(() => {
     const currentPayload = JSON.stringify(generatePayload);
+    const url = fetchUrl;
+    // 取得処理の中で読む状態まで監視しないよう、URL とパラメータの変化だけで動かす
+    untrack(() => resetOnTargetChange(url, currentPayload));
+  });
+
+  // 表示対象の月が変わったら状態を捨てて取得し直す
+  function resetOnTargetChange(fetchUrl: string, currentPayload: string) {
     if (
       browser &&
       previousFetchUrl &&
@@ -425,7 +451,7 @@
 		{#if summary && showSummary}
 			<button
 				type="button"
-				on:click|preventDefault|stopPropagation={toggleSummary}
+				onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSummary(); }}
 				class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
 			>
 				{$_("diary.summary.hide")}
@@ -433,7 +459,7 @@
 		{:else if summary}
 			<button
 				type="button"
-				on:click|preventDefault|stopPropagation={toggleSummary}
+				onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSummary(); }}
 				class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
 			>
 				{type === "daily" ? $_("diary.summary.view") : $_("monthly.summary.view")}
@@ -466,7 +492,7 @@
 			<div class="flex items-center gap-4">
 				<button
 					type="button"
-					on:click|preventDefault|stopPropagation={generateSummary}
+					onclick={(e) => { e.preventDefault(); e.stopPropagation(); generateSummary(); }}
 					disabled={summaryGenerating}
 					class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 				>
@@ -584,7 +610,7 @@
 				{#if summary}
 					<button
 						type="button"
-						on:click|preventDefault|stopPropagation={generateSummary}
+						onclick={(e) => { e.preventDefault(); e.stopPropagation(); generateSummary(); }}
 						disabled={summaryGenerating}
 						class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>
@@ -597,7 +623,7 @@
 				{:else}
 					<button
 						type="button"
-						on:click|preventDefault|stopPropagation={generateSummary}
+						onclick={(e) => { e.preventDefault(); e.stopPropagation(); generateSummary(); }}
 						disabled={summaryGenerating}
 						class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>

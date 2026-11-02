@@ -3,19 +3,24 @@
   import "#lib/i18n.js";
   import BaseModal from "./BaseModal.svelte";
 
-  export let isOpen = false;
-  export let currentYear: number;
-  export let currentMonth: number;
-  export let onSelect: (year: number, month: number) => void;
-  export let onCancel: () => void;
-
-  let selectedYear = currentYear;
-  let selectedMonth = currentMonth;
-
-  $: {
-    selectedYear = currentYear;
-    selectedMonth = currentMonth;
+  interface Props {
+    isOpen?: boolean;
+    currentYear: number;
+    currentMonth: number;
+    onSelect: (year: number, month: number) => void;
+    onCancel: () => void;
   }
+
+  let {
+    isOpen = false,
+    currentYear,
+    currentMonth,
+    onSelect,
+    onCancel,
+  }: Props = $props();
+
+  let selectedYear = $derived(currentYear);
+  let selectedMonth = $derived(currentMonth);
 
   function handleConfirm() {
     onSelect(selectedYear, selectedMonth);
@@ -27,20 +32,21 @@
 
   const currentDate = new Date();
   const minYear = 1900;
-  $: maxYear = currentDate.getFullYear();
+  let maxYear = $derived(currentDate.getFullYear());
 
-  $: years = Array.from(
-    { length: maxYear - minYear + 1 },
-    (_, i) => maxYear - i,
+  let years = $derived(
+    Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i),
   );
 
-  $: months = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date(2000, i, 1);
-    return {
-      value: i + 1,
-      label: date.toLocaleDateString($locale || "en", { month: "long" }),
-    };
-  });
+  let months = $derived(
+    Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(2000, i, 1);
+      return {
+        value: i + 1,
+        label: date.toLocaleDateString($locale || "en", { month: "long" }),
+      };
+    }),
+  );
 </script>
 
 <BaseModal {isOpen} onBackdropClick={handleCancel} maxWidth="max-w-lg">
@@ -92,13 +98,13 @@
 	<!-- Action buttons -->
 	<div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
 		<button
-			on:click={handleConfirm}
+			onclick={handleConfirm}
 			class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
 		>
 			{$_("monthSelector.confirm")}
 		</button>
 		<button
-			on:click={handleCancel}
+			onclick={handleCancel}
 			class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
 		>
 			{$_("monthSelector.cancel")}
