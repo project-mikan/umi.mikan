@@ -12,7 +12,6 @@ const initialLocale = browser
 init({
   fallbackLocale: "en",
   initialLocale,
-  warnOnMissingMessages: false,
 });
 
 // Set locale immediately for both SSR and client

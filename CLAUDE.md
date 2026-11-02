@@ -277,6 +277,7 @@ grpc_cli call localhost:2001 DiaryService.SearchDiaryEntries 'userID:"id" keywor
   - Use `$app/env` instead of the deprecated `$app/environment` (mock `$app/env` in tests). `page.url` is readonly — copy with `new URL(page.url.href)` before mutating
   - `error(status, message)` takes a string as the second argument (extra fields go in a third argument)
   - Never hold the diary text being edited in a writable `$derived` from `data`: every `refreshAll()` (after a save, or the layout's refresh on returning to the tab) recomputes it and throws away the draft. Keep it in `$state` and merge new server data with `reconcileDiaryDraft` (`lib/utils/diary-draft.ts`), which keeps same-day drafts. The home page cards are `EditableDiaryCard`. Writable `$derived` is fine for values that should follow the URL, such as the search box
+  - `createEventDispatcher` is deprecated in Svelte 5: components notify parents through callback props (`onsave`, `onautosave`, `onhighlightupdated`, `onsummaryupdated`, ...) instead, and parents pass them as props, not `on:xxx`. Many components still use legacy syntax (`export let` / `$:` / `on:` on DOM elements / `<slot>`), which is deprecated too but has not been migrated yet
   - Biome 2.6 also formats YAML, so `pnpm-lock.yaml` is excluded in `frontend/biome.json` (otherwise `pnpm format` rewrites the lockfile)
 
 ### Database Schema

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _, locale } from "svelte-i18n";
   import { browser } from "$app/env";
-  import { onMount, onDestroy, createEventDispatcher } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { authenticatedFetch } from "#lib/auth-client.js";
   import { summaryVisibility } from "#lib/summary-visibility-store.js";
   import "#lib/i18n.js";
@@ -24,12 +24,15 @@
   export let disabledMessage = ""; // 無効時のメッセージ
   export let isGenerating = false; // 親コンポーネントから生成状況を受け取る
   export let isSummaryOutdated = false; // 要約が古いかどうか
+  // 要約の取得・生成の状況を親に知らせる
+  export let onsummaryupdated: (summary: Summary) => void = () => {};
+  export let ongenerationstarted: () => void = () => {};
+  export let ongenerationcompleted: () => void = () => {};
+  export let onerror: (message: string) => void = () => {};
 
   // ストアから表示状態を取得
   $: showSummary =
     type === "daily" ? $summaryVisibility.daily : $summaryVisibility.monthly;
-
-  const dispatch = createEventDispatcher();
 
   let summaryStatus: "none" | "queued" | "processing" | "completed" = summary
     ? "completed"
@@ -122,9 +125,9 @@
 
               // 実際に更新された場合のみイベントを発火
               if (actuallyUpdated) {
-                dispatch("summaryUpdated", { summary: cleanedSummary });
+                onsummaryupdated(cleanedSummary);
               }
-              dispatch("generationCompleted");
+              ongenerationcompleted();
             } else {
               // 同じ内容の場合はポーリング継続
             }
@@ -160,7 +163,7 @@
     summaryStatus = "queued";
 
     // 生成開始をイベントで通知
-    dispatch("generationStarted");
+    ongenerationstarted();
 
     try {
       const response = await authenticatedFetch(generateUrl, {
@@ -221,9 +224,9 @@
 
               // 実際に更新された場合のみイベントを発火
               if (actuallyUpdated) {
-                dispatch("summaryUpdated", { summary: cleanedSummary });
+                onsummaryupdated(cleanedSummary);
               }
-              dispatch("generationCompleted");
+              ongenerationcompleted();
             } else {
               // 同じ内容の場合は状態を変更せずにポーリング継続
               // 実際の新しい要約が生成されるまで待機
@@ -238,20 +241,19 @@
         handleError(errorData, response.status);
         summaryGenerating = false;
         isRegenerating = false;
-        dispatch("generationCompleted");
+        ongenerationcompleted();
       }
     } catch (error) {
       console.error("Failed to generate summary:", error);
-      dispatch("error", {
-        message:
-          type === "daily"
-            ? $_("diary.summaryGenerationFailed")
-            : $_("monthly.summary.error"),
-      });
+      onerror(
+        type === "daily"
+          ? $_("diary.summaryGenerationFailed")
+          : $_("monthly.summary.error"),
+      );
       summaryStatus = "none";
       summaryGenerating = false;
       isRegenerating = false;
-      dispatch("generationCompleted");
+      ongenerationcompleted();
     }
   }
 
@@ -276,7 +278,7 @@
           : $_("monthly.summary.error");
     }
 
-    dispatch("error", { message: errorMessage });
+    onerror(errorMessage);
     summaryStatus = "none";
   }
 
@@ -303,7 +305,7 @@
             // "(Updating)"が含まれている場合のみ再生成として判定
             isRegenerating = summaryText.includes("Updating");
             startPolling(true);
-            dispatch("generationStarted");
+            ongenerationstarted();
           } else if (
             summaryText.includes("processing") ||
             summaryText.includes("Updating") ||
@@ -325,13 +327,13 @@
             }
 
             startPolling(true);
-            dispatch("generationStarted");
+            ongenerationstarted();
           } else {
             // 正常な要約が存在
             summary = result.summary;
             summaryStatus = "completed";
             summaryGenerating = false;
-            dispatch("summaryUpdated", { summary });
+            onsummaryupdated(result.summary);
           }
         }
       } else if (response.status !== 404) {

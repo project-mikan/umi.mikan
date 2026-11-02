@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import Input from "../atoms/Input.svelte";
   import Label from "../atoms/Label.svelte";
   import Textarea from "../atoms/Textarea.svelte";
@@ -19,8 +18,9 @@
   export let srOnlyLabel = false;
   export let diaryHighlights: DiaryHighlight[] = [];
   export let searchKeyword = "";
-
-  const dispatch = createEventDispatcher();
+  // textarea の保存・自動保存のタイミングで呼ぶ
+  export let onsave: () => void = () => {};
+  export let onautosave: () => void = () => {};
 </script>
 
 <div class="mb-4">
@@ -39,8 +39,8 @@
 			{diaryHighlights}
 			{searchKeyword}
 			bind:value
-			on:save={() => dispatch('save')}
-			on:autosave={() => dispatch('autosave')}
+			{onsave}
+			{onautosave}
 		/>
 	{:else}
 		<Input

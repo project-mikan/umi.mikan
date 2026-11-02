@@ -213,8 +213,8 @@
     showMonthSelector = false;
   }
 
-  function handleSummaryUpdated(event: CustomEvent) {
-    const newSummary = event.detail.summary;
+  // 月次の要約 API が返すので month も含まれている
+  function handleSummaryUpdated(newSummary: MonthlySummary) {
     const oldSummary = monthlySummary;
 
     // 要約が実際に変更されたかどうかを確認
@@ -237,8 +237,8 @@
     }
   }
 
-  function handleSummaryError(event: CustomEvent) {
-    summaryError = event.detail.message;
+  function handleSummaryError(message: string) {
+    summaryError = message;
   }
 
   function handleGenerationStarted() {
@@ -405,10 +405,10 @@
 		disabledMessage={getDisabledMessage()}
 		isSummaryOutdated={isMonthlySummaryOutdated}
 		isGenerating={isSummaryGenerating}
-		on:summaryUpdated={handleSummaryUpdated}
-		on:summaryError={handleSummaryError}
-		on:generationStarted={handleGenerationStarted}
-		on:generationCompleted={handleGenerationCompleted}
+		onsummaryupdated={(s) => handleSummaryUpdated(s as MonthlySummary)}
+		onerror={handleSummaryError}
+		ongenerationstarted={handleGenerationStarted}
+		ongenerationcompleted={handleGenerationCompleted}
 	/>
 
 	<!-- デスクトップ・タブレット: カレンダー表示 -->

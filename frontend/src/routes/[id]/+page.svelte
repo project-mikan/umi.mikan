@@ -131,15 +131,14 @@
 
   let characterCount = $derived(draft.content.length);
 
-  function handleHighlightUpdated(event: CustomEvent) {
-    const newHighlight = event.detail.highlight;
+  function handleHighlightUpdated(newHighlight: HighlightData) {
     highlightData = newHighlight;
     highlightVisible = true;
   }
 
-  function handleHighlightVisibilityChanged(event: CustomEvent) {
+  function handleHighlightVisibilityChanged(visible: boolean) {
     // ハイライトの表示・非表示状態を更新
-    highlightVisible = event.detail.visible;
+    highlightVisible = visible;
   }
 
   function _formatDateStr(ymd: {
@@ -299,8 +298,8 @@ use:enhance={createSubmitHandler(
 						diaryId={data.entry.id}
 						{isHighlightOutdated}
 						diaryUpdatedAt={Number(data.entry.updatedAt)}
-						on:highlightUpdated={handleHighlightUpdated}
-						on:highlightVisibilityChanged={handleHighlightVisibilityChanged}
+						onhighlightupdated={handleHighlightUpdated}
+						onvisibilitychanged={handleHighlightVisibilityChanged}
 					/>
 				{/if}
 
@@ -333,8 +332,8 @@ use:enhance={createSubmitHandler(
 					diaryHighlights={displayedHighlights}
 					{searchKeyword}
 					bind:value={draft.content}
-					on:save={_handleSave}
-					on:autosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
+					onsave={_handleSave}
+					onautosave={() => { if (hasUnsavedChanges && !loading) _handleSave(); }}
 				/>
 
 				{#if form?.error}

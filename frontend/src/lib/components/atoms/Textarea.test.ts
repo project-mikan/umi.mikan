@@ -737,3 +737,63 @@ describe("Textarea Component Functionality", () => {
     });
   });
 });
+
+describe("Textarea の保存コールバック", () => {
+  const cases: Array<{
+    name: string;
+    fire: (el: HTMLElement) => void;
+    wantSave: number;
+    wantAutosave: number;
+  }> = [
+    {
+      name: "正常系: Ctrl+Enter を押すと onsave が呼ばれる",
+      fire: (el) =>
+        el.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "Enter",
+            ctrlKey: true,
+            bubbles: true,
+            cancelable: true,
+          }),
+        ),
+      wantSave: 1,
+      wantAutosave: 0,
+    },
+    {
+      name: "正常系: フォーカスが外れると onautosave が呼ばれる",
+      fire: (el) => el.dispatchEvent(new FocusEvent("blur")),
+      wantSave: 0,
+      wantAutosave: 1,
+    },
+    {
+      // IME の変換を確定する前に保存すると、未確定の文字が失われるため
+      name: "異常系: IME 入力中にフォーカスが外れても onautosave は呼ばれない",
+      fire: (el) => {
+        el.dispatchEvent(
+          new CompositionEvent("compositionstart", { bubbles: true }),
+        );
+        el.dispatchEvent(new FocusEvent("blur"));
+      },
+      wantSave: 0,
+      wantAutosave: 0,
+    },
+  ];
+
+  for (const tc of cases) {
+    it(tc.name, () => {
+      const onsave = vi.fn();
+      const onautosave = vi.fn();
+      const { container } = render(Textarea, {
+        props: { value: "本文", onsave, onautosave },
+      });
+      const contentElement = container.querySelector(
+        "[contenteditable]",
+      ) as HTMLElement;
+
+      tc.fire(contentElement);
+
+      expect(onsave).toHaveBeenCalledTimes(tc.wantSave);
+      expect(onautosave).toHaveBeenCalledTimes(tc.wantAutosave);
+    });
+  }
+});

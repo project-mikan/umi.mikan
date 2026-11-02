@@ -89,8 +89,8 @@
 			placeholder={$_("diary.placeholder")}
 			rows={8}
 			bind:value={draft.content}
-			on:save={save}
-			on:autosave={() => {
+			onsave={save}
+			onautosave={() => {
 				if (hasUnsavedChanges && !loading) save();
 			}}
 		/>
